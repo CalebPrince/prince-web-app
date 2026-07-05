@@ -20,6 +20,7 @@ require dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\AiChatController;
 use App\Controllers\AuthController;
+use App\Controllers\DashboardController;
 use App\Controllers\InquiryController;
 use App\Controllers\ProjectController;
 use App\Controllers\TagController;
@@ -41,6 +42,7 @@ $router->post('/api/v1/auth/logout', [AuthController::class, 'logout']);
 $router->get('/api/v1/auth/me', [AuthController::class, 'me']);
 
 // Admin
+$router->get('/api/v1/admin/dashboard', [DashboardController::class, 'overview']);
 $router->get('/api/v1/admin/projects', [ProjectController::class, 'adminIndex']);
 $router->post('/api/v1/admin/projects', [ProjectController::class, 'store']);
 $router->put('/api/v1/admin/projects/{id}', [ProjectController::class, 'update']);
