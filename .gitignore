@@ -1,0 +1,6 @@
+storage/db/*.sqlite
+storage/db/*.sqlite-*
+storage/logs/*
+.env
+.claude/
+*.zip

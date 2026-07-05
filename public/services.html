@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services — Prince Caleb</title>
+<meta name="description" content="Custom software development, CMS ecosystems, and mobile app engineering services from Prince Caleb.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container d-flex align-items-center justify-content-between py-3">
+    <a href="/" class="brand-logo text-decoration-none">Prince Caleb<span class="dot">.</span></a>
+    <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation">☰</button>
+    <div class="d-none d-md-flex gap-1">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/about.html" class="nav-link">About</a>
+      <a href="/services.html" class="nav-link active">Services</a>
+      <a href="/projects.html" class="nav-link">Projects</a>
+      <a href="/contact.html" class="nav-link">Contact</a>
+    </div>
+    <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
+  </div>
+</nav>
+
+<div class="offcanvas offcanvas-end nav-drawer" tabindex="-1" id="nav-drawer">
+  <div class="offcanvas-header">
+    <span class="brand-logo">Prince Caleb<span class="dot">.</span></span>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/about.html" class="nav-link">About</a>
+    <a href="/services.html" class="nav-link">Services</a>
+    <a href="/projects.html" class="nav-link">Projects</a>
+    <a href="/contact.html" class="nav-link">Contact</a>
+    <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="container">
+    <p class="eyebrow mb-3 hero-animate hero-animate-1">Services</p>
+    <h1 class="display-6 mb-3 hero-animate hero-animate-2">Engineering, not templates.</h1>
+    <p class="fs-5 text-muted-custom hero-animate hero-animate-3" style="max-width: 60ch;">
+      Every engagement starts with understanding how your business actually works,
+      then building the smallest, fastest thing that does it well.
+    </p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-4 mb-5">
+      <div class="col-12">
+        <div class="service-card d-flex flex-column flex-md-row gap-4 reveal">
+          <div class="service-icon flex-shrink-0">⚙️</div>
+          <div>
+            <h4>Custom Solutions Built from Scratch</h4>
+            <p class="text-muted-custom mb-3">
+              Full-stack APIs, custom architectures, and performance optimization —
+              engineered around your actual business logic instead of bent to fit
+              a generic framework.
+            </p>
+            <ul class="text-muted-custom mb-0">
+              <li>REST/GraphQL APIs designed around your real data model</li>
+              <li>Database schema design and query performance tuning</li>
+              <li>Authentication, authorization, and role-based access control</li>
+              <li>Third-party integrations (payments, webhooks, messaging)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="service-card d-flex flex-column flex-md-row gap-4 reveal reveal-delay-1">
+          <div class="service-icon flex-shrink-0">🧩</div>
+          <div>
+            <h4>CMS Development &amp; Ecosystems</h4>
+            <p class="text-muted-custom mb-3">
+              Tailored WordPress and headless CMS setups built around your specific
+              editorial workflow — not a stock theme with plugins duct-taped on.
+            </p>
+            <ul class="text-muted-custom mb-0">
+              <li>Headless WordPress / decoupled frontend architecture</li>
+              <li>Custom post types, fields, and editorial workflows</li>
+              <li>Migration from legacy CMS platforms without data loss</li>
+              <li>Performance and SEO-focused theme development</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="service-card d-flex flex-column flex-md-row gap-4 reveal reveal-delay-2">
+          <div class="service-icon flex-shrink-0">📱</div>
+          <div>
+            <h4>Mobile App Design &amp; Engineering</h4>
+            <p class="text-muted-custom mb-3">
+              Cross-platform UI/UX and native workflows that feel fast and familiar —
+              one codebase, two platforms that don't feel like an afterthought.
+            </p>
+            <ul class="text-muted-custom mb-0">
+              <li>Cross-platform apps (React Native) with native-feel navigation</li>
+              <li>Offline-first data sync and local storage strategy</li>
+              <li>Push notifications, deep linking, and app store deployment</li>
+              <li>UI/UX design tailored to platform conventions</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="service-card d-flex flex-column flex-md-row align-items-md-center gap-4 mb-5 reveal" style="border: 1px dashed var(--accent);">
+      <div class="service-icon flex-shrink-0">✨</div>
+      <div>
+        <span class="eyebrow d-block mb-1">Also in the toolkit</span>
+        <h4 class="mb-2">Custom AI Integrations</h4>
+        <p class="text-muted-custom mb-3">
+          A supplemental capability I fold into any of the three disciplines above when it
+          genuinely earns its place — not a bolted-on gimmick.
+        </p>
+        <ul class="text-muted-custom mb-0">
+          <li>Chat assistants and support widgets wired to your own content and data</li>
+          <li>AI-assisted content, recommendation, and search features</li>
+          <li>Workflow automation that removes manual, repetitive steps</li>
+          <li>Sensible fallbacks so the product still works fully without the AI layer</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <a href="/contact.html" class="btn-brand">Discuss your project →</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+    <span class="brand-logo" style="color:#fff;">Prince Caleb<span class="dot">.</span></span>
+    <div class="d-flex gap-4">
+      <a href="/about.html">About</a>
+      <a href="/services.html">Services</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="container mt-3">
+    <small>&copy; 2026 Prince Caleb. All rights reserved.</small>
+  </div>
+</footer>
+
+<button type="button" id="ai-widget-toggle">💬 Ask AI</button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/animations.js"></script>
+<script src="/js/ai-boot.js"></script>
+</body>
+</html>
