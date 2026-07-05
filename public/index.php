@@ -24,6 +24,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\InquiryController;
 use App\Controllers\LiveChatController;
 use App\Controllers\ProjectController;
+use App\Controllers\SettingsController;
 use App\Controllers\TagController;
 use App\Router;
 
@@ -63,6 +64,8 @@ $router->delete('/api/v1/admin/tags/{id}', [TagController::class, 'destroy']);
 $router->get('/api/v1/admin/chats', [LiveChatController::class, 'adminIndex']);
 $router->get('/api/v1/admin/ai-test', [LiveChatController::class, 'aiTest']);
 $router->patch('/api/v1/admin/chats/{id}', [LiveChatController::class, 'markSeen']);
+$router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
+$router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
 $router->patch('/api/v1/admin/account', [AuthController::class, 'updateAccount']);
 $router->post('/api/v1/admin/account/password', [AuthController::class, 'changePassword']);
 

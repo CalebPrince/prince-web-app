@@ -38,6 +38,41 @@ async function savePassword(e) {
   }
 }
 
+async function saveIntegrations(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      gemini_api_key: document.getElementById("gemini-key").value.trim(),
+      slack_webhook_url: document.getElementById("slack-url").value.trim(),
+    });
+    showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
+  } catch (err) {
+    showMsg("integrations-msg", err.message, false);
+  }
+}
+
+async function testAi() {
+  const btn = document.getElementById("test-ai-btn");
+  btn.disabled = true;
+  btn.textContent = "Testing…";
+  try {
+    const r = await api.get("/api/v1/admin/ai-test");
+    if (!r.key_loaded || r.curl_available === false) {
+      showMsg("integrations-msg", r.hint, false);
+    } else if (r.http_status === 200) {
+      showMsg("integrations-msg", "✓ Gemini is working! Live Chat is fully AI-powered.", true);
+    } else if (r.curl_error) {
+      showMsg("integrations-msg", `Connection problem: ${r.curl_error} — the host may be blocking outbound requests; contact Namecheap support.`, false);
+    } else {
+      showMsg("integrations-msg", `Gemini rejected the key (HTTP ${r.http_status}): ${r.response_snippet || ""}`, false);
+    }
+  } catch (err) {
+    showMsg("integrations-msg", err.message, false);
+  }
+  btn.disabled = false;
+  btn.textContent = "Test AI connection";
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -46,4 +81,12 @@ async function savePassword(e) {
   document.getElementById("email").value = user.email;
   document.getElementById("email-form").addEventListener("submit", saveEmail);
   document.getElementById("password-form").addEventListener("submit", savePassword);
+
+  document.getElementById("integrations-form").addEventListener("submit", saveIntegrations);
+  document.getElementById("test-ai-btn").addEventListener("click", testAi);
+  try {
+    const settings = await api.get("/api/v1/admin/settings");
+    document.getElementById("gemini-key").value = settings.gemini_api_key || "";
+    document.getElementById("slack-url").value = settings.slack_webhook_url || "";
+  } catch (_) { /* fields stay empty */ }
 })();

@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   UNIQUE (ip_address, endpoint, window_start)
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+  name TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS chat_sessions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   token TEXT UNIQUE NOT NULL,

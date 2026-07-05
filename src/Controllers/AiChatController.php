@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Database;
 use App\Support\Response;
+use App\Support\Settings;
 
 /**
  * Secondary, opt-in AI assistant: recommends relevant case studies based on what
@@ -38,8 +39,9 @@ class AiChatController
              GROUP BY p.id"
         )->fetchAll();
 
-        if (!empty($config['gemini_api_key'])) {
-            $reply = self::askGemini($config['gemini_api_key'], $message, $projects);
+        $geminiKey = Settings::get('gemini_api_key');
+        if (!empty($geminiKey)) {
+            $reply = self::askGemini($geminiKey, $message, $projects);
             if ($reply !== null) {
                 Response::json(['reply' => $reply, 'mode' => 'ai']);
             }
@@ -50,6 +52,9 @@ class AiChatController
 
     private static function askGemini(string $apiKey, string $message, array $projects): ?string
     {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
         $catalog = implode("\n", array_map(
             fn($p) => "- {$p['title']} ({$p['tag_names']}): {$p['summary']}",
             $projects

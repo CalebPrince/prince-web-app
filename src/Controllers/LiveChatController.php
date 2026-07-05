@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Database;
 use App\Support\Response;
+use App\Support\Settings;
 
 /**
  * Live Chat: a requirements-gathering conversation that can generate an HTML
@@ -25,8 +26,7 @@ class LiveChatController
     /** GET /api/v1/chat/status — whether the AI assistant is online (Gemini configured) */
     public static function status(): void
     {
-        $config = self::config();
-        Response::json(['online' => !empty($config['gemini_api_key'])]);
+        Response::json(['online' => !empty(Settings::get('gemini_api_key'))]);
     }
 
     /** POST /api/v1/chat/message — body: {token?, message} */
@@ -54,9 +54,10 @@ class LiveChatController
         $projects = self::projectCatalog($pdo);
         $reply = null;
         $mode = 'fallback';
+        $geminiKey = Settings::get('gemini_api_key');
 
-        if (!empty($config['gemini_api_key'])) {
-            $reply = self::chatWithGemini($config['gemini_api_key'], $transcript, $projects);
+        if (!empty($geminiKey)) {
+            $reply = self::chatWithGemini($geminiKey, $transcript, $projects);
             if ($reply !== null) {
                 $mode = 'ai';
             }
@@ -85,7 +86,8 @@ class LiveChatController
         $config = self::config();
         RateLimitMiddleware::enforce('prototype', 5);
 
-        if (empty($config['gemini_api_key'])) {
+        $geminiKey = Settings::get('gemini_api_key');
+        if (empty($geminiKey)) {
             Response::error('Prototype generation is not available right now — please use the contact form.', 503);
         }
 
@@ -96,7 +98,7 @@ class LiveChatController
             Response::error('Tell me a bit about your project first.', 422);
         }
 
-        $html = self::prototypeWithGemini($config['gemini_api_key'], $transcript);
+        $html = self::prototypeWithGemini($geminiKey, $transcript);
         if ($html === null) {
             Response::error('Prototype generation failed — please try again in a moment.', 502);
         }
@@ -251,17 +253,24 @@ class LiveChatController
     public static function aiTest(): void
     {
         AuthMiddleware::requireAuth();
-        $config = self::config();
 
-        if (empty($config['gemini_api_key'])) {
+        $geminiKey = Settings::get('gemini_api_key');
+        if (empty($geminiKey)) {
             Response::json([
                 'key_loaded' => false,
-                'hint' => 'GEMINI_API_KEY is not reaching PHP — check it is in /home/<user>/.env with no quotes and no spaces around =',
+                'hint' => 'No Gemini key found — paste it in Settings → Integrations (or set GEMINI_API_KEY in .env).',
+            ]);
+        }
+        if (!function_exists('curl_init')) {
+            Response::json([
+                'key_loaded' => true,
+                'curl_available' => false,
+                'hint' => 'The PHP curl extension is not enabled on this host — enable it in Select PHP Version.',
             ]);
         }
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='
-            . $config['gemini_api_key'];
+            . $geminiKey;
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
@@ -420,6 +429,9 @@ class LiveChatController
 
     private static function callGemini(string $apiKey, string $body, int $timeout): ?string
     {
+        if (!function_exists('curl_init')) {
+            return null; // no curl on this host — callers fall back gracefully
+        }
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $apiKey;
         $ch = curl_init($url);
         curl_setopt_array($ch, [

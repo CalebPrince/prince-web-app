@@ -9,10 +9,12 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Support\Database;
+use App\Support\Settings;
 
 require_once dirname(__DIR__) . '/config/config.php';
 $config = appConfig();
 $pdo = Database::get();
+$slackUrl = Settings::get('slack_webhook_url');
 
 $pending = $pdo->query(
     "SELECT wq.id AS queue_id, i.* FROM webhook_queue wq
@@ -23,14 +25,14 @@ $pending = $pdo->query(
 foreach ($pending as $row) {
     $sent = false;
 
-    if (!empty($config['slack_webhook_url'])) {
+    if (!empty($slackUrl)) {
         $text = sprintf(
             "New inquiry from *%s* (%s):\n>%s",
             $row['name'],
             $row['email'],
             str_replace("\n", "\n>", $row['message'])
         );
-        $ch = curl_init($config['slack_webhook_url']);
+        $ch = curl_init($slackUrl);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
