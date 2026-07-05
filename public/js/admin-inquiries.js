@@ -15,12 +15,12 @@ async function loadInquiries(status = "") {
     <div class="admin-card p-3 mb-3" data-id="${i.id}">
       <div class="d-flex justify-content-between align-items-start mb-2">
         <div>
-          <strong>${i.name}</strong>
-          <span class="text-muted-custom small ms-2">${i.email}</span>
+          <strong>${escapeHtml(i.name)}</strong>
+          <span class="text-muted-custom small ms-2">${escapeHtml(i.email)}</span>
         </div>
         <span class="status-pill ${i.status}">${i.status}</span>
       </div>
-      <p class="mb-2">${i.message}</p>
+      <p class="mb-2">${escapeHtml(i.message)}</p>
       <div class="d-flex justify-content-between align-items-center">
         <small class="text-muted-custom">${new Date(i.created_at).toLocaleString()}</small>
         <div class="d-flex gap-2">

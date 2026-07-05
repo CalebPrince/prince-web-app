@@ -1,3 +1,14 @@
+// Escape user-supplied strings before injecting into innerHTML — inquiry
+// names/emails/messages come straight from the public contact form.
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 async function requireAdminAuth() {
   try {
     return await api.get("/api/v1/auth/me");
