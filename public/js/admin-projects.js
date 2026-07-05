@@ -68,10 +68,15 @@ async function saveProject() {
     is_published: document.getElementById("is_published").checked,
   };
 
-  if (id) {
-    await api.put(`/api/v1/admin/projects/${id}`, payload);
-  } else {
-    await api.post("/api/v1/admin/projects", payload);
+  try {
+    if (id) {
+      await api.put(`/api/v1/admin/projects/${id}`, payload);
+    } else {
+      await api.post("/api/v1/admin/projects", payload);
+    }
+  } catch (err) {
+    alert(err.message);
+    return;
   }
   projectModal.hide();
   await loadProjects();
@@ -79,7 +84,12 @@ async function saveProject() {
 
 async function deleteProject(id) {
   if (!confirm("Delete this project? This cannot be undone.")) return;
-  await api.delete(`/api/v1/admin/projects/${id}`);
+  try {
+    await api.delete(`/api/v1/admin/projects/${id}`);
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
   await loadProjects();
 }
 
