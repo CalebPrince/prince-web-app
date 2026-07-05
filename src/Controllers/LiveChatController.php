@@ -174,6 +174,51 @@ class LiveChatController
         Response::json(['status' => 'received']);
     }
 
+    /** POST /api/v1/chat/inquiry — body: {token?, name, email, message}
+     *  For visitors who want something other than a prototype (maintenance,
+     *  consulting, a question) — captures their details right in the chat. */
+    public static function inquiry(): void
+    {
+        $config = self::config();
+        RateLimitMiddleware::enforce('contact', $config['contact_rate_limit']);
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $name = trim((string) ($data['name'] ?? ''));
+        $email = trim((string) ($data['email'] ?? ''));
+        $message = trim((string) ($data['message'] ?? ''));
+
+        if ($name === '' || mb_strlen($name) > 255) {
+            Response::error('Your name is required.', 422);
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Response::error('A valid email address is required.', 422);
+        }
+        if ($message === '' || mb_strlen($message) > 5000) {
+            Response::error('A message under 5000 characters is required.', 422);
+        }
+
+        $pdo = Database::get();
+        $session = self::findOrCreateSession($pdo, $data['token'] ?? null);
+        $pdo->prepare(
+            "UPDATE chat_sessions SET client_name = ?, client_email = ?, client_comment = ?,
+             admin_seen = 0, updated_at = datetime('now') WHERE id = ?"
+        )->execute([$name, $email, $message, $session['id']]);
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO inquiries (name, email, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $name,
+            $email,
+            "[Live Chat] $message",
+            $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+        $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([(int) $pdo->lastInsertId()]);
+
+        Response::json(['status' => 'received'], 201);
+    }
+
     /** GET /api/v1/admin/chats — admin-only list of chat leads */
     public static function adminIndex(): void
     {
@@ -193,6 +238,42 @@ class LiveChatController
             unset($row['transcript_json']);
         }
         Response::json($rows);
+    }
+
+    /** GET /api/v1/admin/ai-test — admin-only Gemini connectivity diagnostic */
+    public static function aiTest(): void
+    {
+        AuthMiddleware::requireAuth();
+        $config = self::config();
+
+        if (empty($config['gemini_api_key'])) {
+            Response::json([
+                'key_loaded' => false,
+                'hint' => 'GEMINI_API_KEY is not reaching PHP — check it is in /home/<user>/.env with no quotes and no spaces around =',
+            ]);
+        }
+
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='
+            . $config['gemini_api_key'];
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode(['contents' => [['parts' => [['text' => 'Say "pong".']]]]]),
+            CURLOPT_TIMEOUT => 15,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        Response::json([
+            'key_loaded' => true,
+            'http_status' => $status,
+            'curl_error' => $curlError !== '' ? $curlError : null,
+            'response_snippet' => is_string($response) ? substr($response, 0, 500) : null,
+        ]);
     }
 
     /** PATCH /api/v1/admin/chats/{id} — body: {"admin_seen": true} */
@@ -274,9 +355,11 @@ class LiveChatController
         ));
 
         $system = "You are the live-chat assistant on Prince Caleb's web & mobile development portfolio. "
+            . "If the visitor just greets you (hi, hello, hey), reply with a warm one-sentence hello and ask "
+            . "what they'd like to build — nothing else. "
             . "Your job: understand what the visitor wants built so a concept prototype can be generated. "
             . "Find out (one short, friendly question at a time): what kind of site/app, its purpose and audience, "
-            . "the key pages or features, and any style/color preferences. Keep every reply under 80 words. "
+            . "the key pages or features, and any style/color preferences. Keep replies to 1-3 short sentences. "
             . "After you understand the basics (usually 2-3 exchanges), tell them to press the "
             . "\"Build my prototype\" button below the chat to see a live concept. "
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
@@ -352,6 +435,11 @@ class LiveChatController
 
     private static function keywordFallback(string $message, array $projects): string
     {
+        if (mb_strlen(trim($message)) < 25
+            && preg_match('/^(hi|hello|hey|hiya|yo|good\s+(morning|afternoon|evening))\b/i', trim($message))) {
+            return 'Hello! 👋 What kind of website or app are you thinking about? Describe it briefly and I\'ll help.';
+        }
+
         $needle = strtolower($message);
         $best = null;
         $bestScore = 0;

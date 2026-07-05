@@ -39,6 +39,7 @@ $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
 $router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePrototype']);
 $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'viewPrototype']);
 $router->post('/api/v1/chat/feedback', [LiveChatController::class, 'feedback']);
+$router->post('/api/v1/chat/inquiry', [LiveChatController::class, 'inquiry']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);
@@ -59,6 +60,7 @@ $router->post('/api/v1/admin/tags', [TagController::class, 'store']);
 $router->put('/api/v1/admin/tags/{id}', [TagController::class, 'update']);
 $router->delete('/api/v1/admin/tags/{id}', [TagController::class, 'destroy']);
 $router->get('/api/v1/admin/chats', [LiveChatController::class, 'adminIndex']);
+$router->get('/api/v1/admin/ai-test', [LiveChatController::class, 'aiTest']);
 $router->patch('/api/v1/admin/chats/{id}', [LiveChatController::class, 'markSeen']);
 $router->patch('/api/v1/admin/account', [AuthController::class, 'updateAccount']);
 $router->post('/api/v1/admin/account/password', [AuthController::class, 'changePassword']);
