@@ -1,22 +1,38 @@
 (function () {
   const toggle = document.getElementById("ai-widget-toggle");
   let sessionToken = sessionStorage.getItem("chat_token") || null;
+  let online = false;
   let canPrototype = false;
   let prototypeUrl = null;
 
   const panel = document.createElement("div");
   panel.id = "ai-widget-panel";
   panel.innerHTML = `
-    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-      <strong class="small">Live Chat — tell me what you need</strong>
+    <div class="p-3 border-bottom d-flex align-items-center gap-2">
+      <div class="chat-avatar">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+          <path d="M12 12a4.8 4.8 0 1 0 0-9.6 4.8 4.8 0 0 0 0 9.6zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+        </svg>
+      </div>
+      <div class="flex-grow-1 lh-sm">
+        <strong class="small d-block">Prince's Assistant</strong>
+        <span class="chat-status small"><span class="status-dot" id="chat-status-dot"></span><span id="chat-status-text">Connecting…</span></span>
+      </div>
       <button type="button" class="btn-close" id="ai-widget-close" aria-label="Close"></button>
     </div>
-    <div id="ai-widget-messages">
-      <div class="ai-msg bot">Hi! Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.</div>
-    </div>
+    <div id="ai-widget-messages"></div>
     <div id="ai-widget-actions" class="px-2 pb-2 d-none">
       <button type="button" class="btn-brand btn-sm w-100" id="build-prototype-btn">⚡ Build my prototype</button>
     </div>
+    <div class="px-3 pb-2">
+      <a href="#" id="leave-msg-link" class="small">✉️ Prefer to just leave a message?</a>
+    </div>
+    <form id="leave-msg-form" class="d-none p-2 border-top">
+      <input type="text" class="form-control form-control-sm mb-2" id="lm-name" placeholder="Your name" required>
+      <input type="email" class="form-control form-control-sm mb-2" id="lm-email" placeholder="Your email" required>
+      <textarea class="form-control form-control-sm mb-2" id="lm-message" rows="3" placeholder="What can Prince help you with?" required></textarea>
+      <button type="submit" class="btn-brand btn-sm w-100" id="lm-submit">Send message</button>
+    </form>
     <form id="ai-widget-form" class="d-flex gap-2 p-2 border-top">
       <input type="text" class="form-control form-control-sm" id="ai-widget-input" placeholder="e.g. a booking site for my salon" autocomplete="off" required>
       <button type="submit" class="btn btn-brand btn-sm">Send</button>
@@ -24,20 +40,47 @@
   `;
   document.body.appendChild(panel);
 
-  const messagesBox = () => document.getElementById("ai-widget-messages");
-
   function appendMessage(role, text) {
     const el = document.createElement("div");
     el.className = `ai-msg ${role}`;
     el.textContent = text;
-    messagesBox().appendChild(el);
+    document.getElementById("ai-widget-messages").appendChild(el);
     el.scrollIntoView({ block: "end" });
     return el;
+  }
+
+  function setStatus(isOnline) {
+    online = isOnline;
+    document.getElementById("chat-status-dot").classList.toggle("online", isOnline);
+    document.getElementById("chat-status-text").textContent = isOnline ? "Online" : "Offline";
   }
 
   function showPrototypeButton() {
     document.getElementById("ai-widget-actions").classList.toggle("d-none", !canPrototype);
   }
+
+  function toggleMessageForm(show) {
+    document.getElementById("leave-msg-form").classList.toggle("d-none", !show);
+    if (show) document.getElementById("lm-name").focus();
+  }
+
+  // ---- opening state ---------------------------------------------------------
+
+  (async function boot() {
+    appendMessage("bot", "Hi there! 👋 Welcome.");
+    let isOnline = false;
+    try {
+      isOnline = !!(await api.get("/api/v1/chat/status")).online;
+    } catch (_) { /* treat as offline */ }
+    setStatus(isOnline);
+
+    if (isOnline) {
+      appendMessage("bot", "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.");
+    } else {
+      appendMessage("bot", "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.");
+      toggleMessageForm(true);
+    }
+  })();
 
   // ---- chat -----------------------------------------------------------------
 
@@ -58,8 +101,37 @@
       pending.textContent = res.reply;
       showPrototypeButton();
     } catch (err) {
-      pending.textContent = "Sorry, something went wrong. Please use the contact form instead.";
+      pending.textContent = "Sorry, something went wrong. Please leave a message below instead.";
+      toggleMessageForm(true);
     }
+  });
+
+  // ---- leave a message -------------------------------------------------------
+
+  document.getElementById("leave-msg-link").addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleMessageForm(document.getElementById("leave-msg-form").classList.contains("d-none"));
+  });
+
+  document.getElementById("leave-msg-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("lm-submit");
+    btn.disabled = true;
+    try {
+      await api.post("/api/v1/chat/inquiry", {
+        token: sessionToken,
+        name: document.getElementById("lm-name").value.trim(),
+        email: document.getElementById("lm-email").value.trim(),
+        message: document.getElementById("lm-message").value.trim(),
+      });
+      const email = document.getElementById("lm-email").value.trim();
+      document.getElementById("leave-msg-form").reset();
+      toggleMessageForm(false);
+      appendMessage("bot", `Thanks! Your message is on its way — Prince will reply to you at ${email} soon. 📬`);
+    } catch (err) {
+      appendMessage("bot", err.message || "Could not send your message — please try again.");
+    }
+    btn.disabled = false;
   });
 
   // ---- prototype ------------------------------------------------------------
@@ -95,7 +167,7 @@
           <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="proto-changes">Request changes</button>
         </div>
         <form id="proto-feedback-form" class="d-none mt-2">
-          <textarea class="form-control form-control-sm mb-2" id="proto-comment" rows="2" placeholder="Any comments? (optional for approval)"></textarea>
+          <textarea class="form-control form-control-sm mb-2" id="proto-comment" rows="2" placeholder="Any comments?"></textarea>
           <input type="text" class="form-control form-control-sm mb-2" id="proto-name" placeholder="Your name" required>
           <input type="email" class="form-control form-control-sm mb-2" id="proto-email" placeholder="Your email" required>
           <button type="submit" class="btn-brand btn-sm w-100" id="proto-submit">Send to Prince</button>
@@ -103,7 +175,7 @@
       </div>
     `;
     document.getElementById("ai-widget-actions").classList.add("d-none");
-    panel.insertBefore(view, document.getElementById("ai-widget-form"));
+    panel.insertBefore(view, document.getElementById("leave-msg-form"));
 
     let decision = null;
     const form = document.getElementById("proto-feedback-form");

@@ -363,6 +363,29 @@ a:hover { color: var(--accent-strong); }
 .ai-msg.user { text-align: right; color: var(--ink); }
 .ai-msg.bot { color: var(--ink-soft); }
 
+/* Live-chat header */
+.chat-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.chat-status { color: var(--ink-soft); }
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+  margin-right: 4px;
+}
+.status-dot.online { background: #22c55e; }
+
 /* Live-chat prototype review */
 #ai-widget-panel { max-height: 80vh; }
 #prototype-frame {

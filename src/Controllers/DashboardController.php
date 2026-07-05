@@ -31,7 +31,8 @@ class DashboardController
         $webhooksPending = (int) $pdo->query("SELECT COUNT(*) FROM webhook_queue WHERE status = 'pending'")->fetchColumn();
         $newChatFeedback = (int) $pdo->query(
             "SELECT COUNT(*) FROM chat_sessions
-             WHERE prototype_status IN ('approved', 'changes_requested') AND admin_seen = 0"
+             WHERE admin_seen = 0
+               AND (prototype_status IN ('approved', 'changes_requested') OR client_email IS NOT NULL)"
         )->fetchColumn();
 
         $recentInquiries = $pdo->query(

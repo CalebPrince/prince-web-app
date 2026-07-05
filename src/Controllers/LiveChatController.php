@@ -22,6 +22,13 @@ class LiveChatController
 {
     private const MAX_TRANSCRIPT_MESSAGES = 40;
 
+    /** GET /api/v1/chat/status — whether the AI assistant is online (Gemini configured) */
+    public static function status(): void
+    {
+        $config = self::config();
+        Response::json(['online' => !empty($config['gemini_api_key'])]);
+    }
+
     /** POST /api/v1/chat/message — body: {token?, message} */
     public static function message(): void
     {
@@ -229,7 +236,7 @@ class LiveChatController
                     client_email, admin_seen, created_at, updated_at,
                     CASE WHEN prototype_html IS NULL THEN 0 ELSE 1 END AS has_prototype
              FROM chat_sessions
-             WHERE transcript_json != '[]'
+             WHERE transcript_json != '[]' OR client_email IS NOT NULL
              ORDER BY updated_at DESC"
         )->fetchAll();
 

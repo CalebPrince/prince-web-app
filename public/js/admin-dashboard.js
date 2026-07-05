@@ -9,7 +9,7 @@ function renderStats(data) {
 
   if (data.new_chat_feedback > 0) {
     document.getElementById("chat-feedback-text").textContent =
-      `🎉 ${data.new_chat_feedback} new prototype response(s) from Live Chat — click to review.`;
+      `🎉 ${data.new_chat_feedback} new Live Chat lead(s) — click to review.`;
     document.getElementById("chat-feedback-banner").classList.remove("d-none");
   }
 

@@ -1,16 +1,23 @@
-// Tiny, always-loaded bootstrap: defers the real widget JS until the visitor
-// actually wants it, so the AI feature never costs anything on first paint.
+// Tiny, always-loaded bootstrap for the Live Chat widget. The widget JS is
+// loaded on demand — but it auto-opens once per browser session so visitors
+// see the greeting (or the offline message) without having to click.
 document.addEventListener("DOMContentLoaded", () => {
   const toggle = document.getElementById("ai-widget-toggle");
   if (!toggle) return;
 
-  toggle.addEventListener(
-    "click",
-    () => {
-      const script = document.createElement("script");
-      script.src = "/js/ai-widget.js";
-      document.body.appendChild(script);
-    },
-    { once: true }
-  );
+  let loaded = false;
+  const load = () => {
+    if (loaded) return;
+    loaded = true;
+    const script = document.createElement("script");
+    script.src = "/js/ai-widget.js";
+    document.body.appendChild(script);
+  };
+
+  toggle.addEventListener("click", load, { once: true });
+
+  if (!sessionStorage.getItem("chat_auto_shown")) {
+    sessionStorage.setItem("chat_auto_shown", "1");
+    setTimeout(load, 1500);
+  }
 });

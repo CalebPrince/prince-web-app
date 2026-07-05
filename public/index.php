@@ -35,6 +35,7 @@ $router->get('/api/v1/projects/{slug}', [ProjectController::class, 'show']);
 $router->get('/api/v1/tags', [TagController::class, 'index']);
 $router->post('/api/v1/inquiries', [InquiryController::class, 'create']);
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
+$router->get('/api/v1/chat/status', [LiveChatController::class, 'status']);
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
 $router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePrototype']);
 $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'viewPrototype']);

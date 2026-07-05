@@ -2,10 +2,16 @@ let allChats = [];
 
 const STATUS_LABELS = {
   none: "chatting",
+  message: "left message",
   generated: "prototype built",
   approved: "approved",
   changes_requested: "changes requested",
 };
+
+// A session with contact details but no prototype is a direct "leave a message" lead.
+function statusKey(c) {
+  return c.prototype_status === "none" && c.client_name ? "message" : c.prototype_status;
+}
 
 function chatCard(c) {
   const who = c.client_name
@@ -22,7 +28,7 @@ function chatCard(c) {
     <div class="admin-card p-3 mb-3 ${c.admin_seen ? "" : "chat-unseen"}" data-id="${c.id}">
       <div class="d-flex justify-content-between align-items-start mb-2">
         <div>${who}${c.admin_seen ? "" : ' <span class="status-pill unread ms-1">new</span>'}</div>
-        <span class="status-pill chat-${c.prototype_status}">${STATUS_LABELS[c.prototype_status]}</span>
+        <span class="status-pill chat-${statusKey(c)}">${STATUS_LABELS[statusKey(c)]}</span>
       </div>
       ${c.client_comment ? `<div class="alert alert-light border py-2 small mb-2"><strong>Comment:</strong> ${escapeHtml(c.client_comment)}</div>` : ""}
       <details class="mb-2">
