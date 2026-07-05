@@ -7,6 +7,12 @@ function renderStats(data) {
   document.getElementById("stat-recent").textContent = data.inquiries.last_30_days;
   document.getElementById("stat-tags").textContent = data.tags_in_use;
 
+  if (data.new_chat_feedback > 0) {
+    document.getElementById("chat-feedback-text").textContent =
+      `🎉 ${data.new_chat_feedback} new prototype response(s) from Live Chat — click to review.`;
+    document.getElementById("chat-feedback-banner").classList.remove("d-none");
+  }
+
   if (data.webhooks_pending > 0) {
     const warn = document.getElementById("webhook-warning");
     warn.textContent = `${data.webhooks_pending} inquiry notification(s) still queued for Slack — check that the cron job is running.`;

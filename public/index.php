@@ -22,6 +22,7 @@ use App\Controllers\AiChatController;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\InquiryController;
+use App\Controllers\LiveChatController;
 use App\Controllers\ProjectController;
 use App\Controllers\TagController;
 use App\Router;
@@ -34,6 +35,10 @@ $router->get('/api/v1/projects/{slug}', [ProjectController::class, 'show']);
 $router->get('/api/v1/tags', [TagController::class, 'index']);
 $router->post('/api/v1/inquiries', [InquiryController::class, 'create']);
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
+$router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
+$router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePrototype']);
+$router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'viewPrototype']);
+$router->post('/api/v1/chat/feedback', [LiveChatController::class, 'feedback']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);
@@ -53,6 +58,8 @@ $router->get('/api/v1/admin/tags', [TagController::class, 'adminIndex']);
 $router->post('/api/v1/admin/tags', [TagController::class, 'store']);
 $router->put('/api/v1/admin/tags/{id}', [TagController::class, 'update']);
 $router->delete('/api/v1/admin/tags/{id}', [TagController::class, 'destroy']);
+$router->get('/api/v1/admin/chats', [LiveChatController::class, 'adminIndex']);
+$router->patch('/api/v1/admin/chats/{id}', [LiveChatController::class, 'markSeen']);
 $router->patch('/api/v1/admin/account', [AuthController::class, 'updateAccount']);
 $router->post('/api/v1/admin/account/password', [AuthController::class, 'changePassword']);
 

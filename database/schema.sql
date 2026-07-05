@@ -59,6 +59,22 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   UNIQUE (ip_address, endpoint, window_start)
 );
 
+CREATE TABLE IF NOT EXISTS chat_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT UNIQUE NOT NULL,
+  transcript_json TEXT NOT NULL DEFAULT '[]',
+  prototype_html TEXT,
+  prototype_status TEXT NOT NULL DEFAULT 'none'
+    CHECK (prototype_status IN ('none', 'generated', 'approved', 'changes_requested')),
+  client_comment TEXT,
+  client_name TEXT,
+  client_email TEXT,
+  admin_seen INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_feedback ON chat_sessions (prototype_status, admin_seen);
+
 CREATE TABLE IF NOT EXISTS webhook_queue (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   inquiry_id INTEGER NOT NULL REFERENCES inquiries(id) ON DELETE CASCADE,

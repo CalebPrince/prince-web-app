@@ -363,6 +363,16 @@ a:hover { color: var(--accent-strong); }
 .ai-msg.user { text-align: right; color: var(--ink); }
 .ai-msg.bot { color: var(--ink-soft); }
 
+/* Live-chat prototype review */
+#ai-widget-panel { max-height: 80vh; }
+#prototype-frame {
+  width: 100%;
+  height: 240px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
 /* Utility */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-soft) 25%, #eef1f5 37%, var(--bg-soft) 63%);

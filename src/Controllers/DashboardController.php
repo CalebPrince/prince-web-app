@@ -29,6 +29,10 @@ class DashboardController
 
         $tagsInUse = (int) $pdo->query('SELECT COUNT(DISTINCT tag_id) FROM project_tags')->fetchColumn();
         $webhooksPending = (int) $pdo->query("SELECT COUNT(*) FROM webhook_queue WHERE status = 'pending'")->fetchColumn();
+        $newChatFeedback = (int) $pdo->query(
+            "SELECT COUNT(*) FROM chat_sessions
+             WHERE prototype_status IN ('approved', 'changes_requested') AND admin_seen = 0"
+        )->fetchColumn();
 
         $recentInquiries = $pdo->query(
             'SELECT id, name, email, status, created_at FROM inquiries ORDER BY created_at DESC LIMIT 5'
@@ -51,6 +55,7 @@ class DashboardController
             ],
             'tags_in_use' => $tagsInUse,
             'webhooks_pending' => $webhooksPending,
+            'new_chat_feedback' => $newChatFeedback,
             'recent_inquiries' => $recentInquiries,
             'draft_projects' => $draftProjects,
         ]);
