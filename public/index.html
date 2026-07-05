@@ -47,9 +47,10 @@
   <div class="container">
     <div class="row align-items-center g-5">
       <div class="col-lg-7">
-        <p class="eyebrow mb-3 hero-animate hero-animate-1">Web &amp; Mobile App Developer</p>
-        <h1 class="display-5 mb-3 hero-animate hero-animate-2">Custom software, built to perform.</h1>
-        <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3">
+        <span class="availability-pill d-none mb-3 hero-animate hero-animate-1" data-content="availability_badge"></span>
+        <p class="eyebrow mb-3 hero-animate hero-animate-1" data-content="hero_eyebrow">Web &amp; Mobile App Developer</p>
+        <h1 class="display-5 mb-3 hero-animate hero-animate-2" data-content="hero_title">Custom software, built to perform.</h1>
+        <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" data-content="hero_subtitle">
           I design and engineer full-stack applications, tailored CMS ecosystems, and
           cross-platform mobile experiences — from scratch, with performance, security,
           and custom AI integrations built in wherever they genuinely earn their place.
@@ -71,7 +72,7 @@
 
 <section class="py-4 border-bottom" style="border-color: var(--line) !important;">
   <div class="container">
-    <div class="d-flex flex-wrap align-items-center gap-3 justify-content-center">
+    <div class="d-flex flex-wrap align-items-center gap-3 justify-content-center" id="tech-badges">
       <span class="text-muted-custom small fw-semibold me-2">TECH I WORK WITH</span>
       <span class="tech-badge">PHP</span>
       <span class="tech-badge">JavaScript</span>
@@ -94,22 +95,22 @@
       <div class="col-md-4">
         <div class="service-card reveal">
           <div class="service-icon">⚙️</div>
-          <h5>Custom Solutions Built from Scratch</h5>
-          <p class="text-muted-custom mb-0">Full-stack APIs, custom architectures, and performance optimization tailored to exactly how your business works — no bloated templates.</p>
+          <h5 data-content="service_1_title">Custom Solutions Built from Scratch</h5>
+          <p class="text-muted-custom mb-0" data-content="service_1_summary">Full-stack APIs, custom architectures, and performance optimization tailored to exactly how your business works — no bloated templates.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="service-card reveal reveal-delay-1">
           <div class="service-icon">🧩</div>
-          <h5>CMS Development &amp; Ecosystems</h5>
-          <p class="text-muted-custom mb-0">Tailored WordPress and headless CMS setups built around your specific editorial workflow and business logic.</p>
+          <h5 data-content="service_2_title">CMS Development &amp; Ecosystems</h5>
+          <p class="text-muted-custom mb-0" data-content="service_2_summary">Tailored WordPress and headless CMS setups built around your specific editorial workflow and business logic.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="service-card reveal reveal-delay-2">
           <div class="service-icon">📱</div>
-          <h5>Mobile App Design &amp; Engineering</h5>
-          <p class="text-muted-custom mb-0">Cross-platform UI/UX and native workflows that feel fast and familiar on both iOS and Android.</p>
+          <h5 data-content="service_3_title">Mobile App Design &amp; Engineering</h5>
+          <p class="text-muted-custom mb-0" data-content="service_3_summary">Cross-platform UI/UX and native workflows that feel fast and familiar on both iOS and Android.</p>
         </div>
       </div>
     </div>
@@ -345,6 +346,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/api.js"></script>
+<script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script>

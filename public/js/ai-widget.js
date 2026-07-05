@@ -67,17 +67,17 @@
   // ---- opening state ---------------------------------------------------------
 
   (async function boot() {
-    appendMessage("bot", "Hi there! 👋 Welcome.");
-    let isOnline = false;
+    let status = { online: false };
     try {
-      isOnline = !!(await api.get("/api/v1/chat/status")).online;
-    } catch (_) { /* treat as offline */ }
-    setStatus(isOnline);
+      status = await api.get("/api/v1/chat/status");
+    } catch (_) { /* offline defaults */ }
+    setStatus(!!status.online);
 
-    if (isOnline) {
-      appendMessage("bot", "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.");
+    appendMessage("bot", status.greeting || "Hi there! 👋 Welcome.");
+    if (status.online) {
+      appendMessage("bot", status.intro || "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.");
     } else {
-      appendMessage("bot", "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.");
+      appendMessage("bot", status.offline_message || "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.");
       toggleMessageForm(true);
     }
   })();

@@ -23,10 +23,18 @@ class LiveChatController
 {
     private const MAX_TRANSCRIPT_MESSAGES = 40;
 
-    /** GET /api/v1/chat/status — whether the AI assistant is online (Gemini configured) */
+    /** GET /api/v1/chat/status — availability plus the editable widget copy */
     public static function status(): void
     {
-        Response::json(['online' => !empty(Settings::get('gemini_api_key'))]);
+        Response::json([
+            'online' => !empty(Settings::get('gemini_api_key')),
+            'greeting' => Settings::get('chat_greeting')
+                ?? 'Hi there! 👋 Welcome.',
+            'intro' => Settings::get('chat_intro')
+                ?? "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.",
+            'offline_message' => Settings::get('chat_offline_message')
+                ?? "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.",
+        ]);
     }
 
     /** POST /api/v1/chat/message — body: {token?, message} */
@@ -379,6 +387,11 @@ class LiveChatController
             . "After you understand the basics (usually 2-3 exchanges), tell them to press the "
             . "\"Build my prototype\" button below the chat to see a live concept. "
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
+
+        $persona = Settings::get('chat_persona');
+        if (!empty($persona)) {
+            $system .= "\n\nAdditional instructions from Prince: " . $persona;
+        }
 
         $contents = [];
         foreach (array_slice($transcript, -12) as $turn) {

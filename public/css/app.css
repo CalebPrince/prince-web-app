@@ -363,6 +363,27 @@ a:hover { color: var(--accent-strong); }
 .ai-msg.user { text-align: right; color: var(--ink); }
 .ai-msg.bot { color: var(--ink-soft); }
 
+/* Availability pill (admin-managed via Site Content) */
+.availability-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+}
+.availability-pill::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+.availability-pill.d-none { display: none !important; }
+
 /* Live-chat header */
 .chat-avatar {
   width: 36px;

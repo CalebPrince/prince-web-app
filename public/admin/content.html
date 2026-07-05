@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Content — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+<link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="d-flex">
+  <div class="admin-sidebar p-3">
+    <div class="brand mb-4 fs-5">Prince Caleb<span class="dot">.</span></div>
+    <nav class="d-flex flex-column gap-1">
+      <a href="/admin/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="/admin/projects.html" class="nav-link">Projects</a>
+      <a href="/admin/inquiries.html" class="nav-link">Inquiries</a>
+      <a href="/admin/chats.html" class="nav-link">Chat Leads</a>
+      <a href="/admin/tags.html" class="nav-link">Tags</a>
+      <a href="/admin/content.html" class="nav-link active">Site Content</a>
+      <a href="/admin/settings.html" class="nav-link">Settings</a>
+      <hr class="sidebar-divider">
+      <a href="/" class="nav-link">&larr; View site</a>
+      <a href="#" class="nav-link" id="logout-link">Log out</a>
+    </nav>
+  </div>
+
+  <div class="flex-grow-1 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="mb-0">Site Content</h3>
+        <p class="text-muted-custom mb-0 small">Edit the public site copy — empty fields keep the built-in text.</p>
+      </div>
+      <button class="btn-brand" id="save-all-btn" form="content-form" type="submit">Save All Changes</button>
+    </div>
+
+    <div id="content-msg" class="alert py-2 small d-none"></div>
+
+    <form id="content-form">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3">Homepage hero</h5>
+            <div class="mb-3">
+              <label class="form-label">Availability badge <span class="text-muted-custom fw-normal">(empty = hidden)</span></label>
+              <input type="text" class="form-control" id="availability_badge" placeholder="Available for new projects">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Eyebrow</label>
+              <input type="text" class="form-control" id="hero_eyebrow" placeholder="Web & Mobile App Developer">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Headline</label>
+              <input type="text" class="form-control" id="hero_title" placeholder="Custom software, built to perform.">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Subtitle</label>
+              <textarea class="form-control" id="hero_subtitle" rows="3" placeholder="I design and engineer full-stack applications…"></textarea>
+            </div>
+            <div class="mb-0">
+              <label class="form-label">Tech badges <span class="text-muted-custom fw-normal">(comma-separated)</span></label>
+              <input type="text" class="form-control" id="tech_badges" placeholder="PHP, JavaScript, React, React Native, WordPress…">
+            </div>
+          </div>
+
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3">About page</h5>
+            <div class="mb-3">
+              <label class="form-label">Intro (hero paragraph)</label>
+              <textarea class="form-control" id="about_intro" rows="3" placeholder="I'm a web and mobile app developer who…"></textarea>
+            </div>
+            <div class="mb-0">
+              <label class="form-label">Bio — "How I got here" <span class="text-muted-custom fw-normal">(blank line = new paragraph)</span></label>
+              <textarea class="form-control" id="about_bio" rows="6" placeholder="I started out building small sites…"></textarea>
+            </div>
+          </div>
+
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3">Contact page</h5>
+            <div class="mb-0">
+              <label class="form-label">Intro text</label>
+              <textarea class="form-control" id="contact_intro" rows="2" placeholder="Tell me a bit about your project and I'll get back to you…"></textarea>
+            </div>
+          </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3">Social links <span class="text-muted-custom fs-6 fw-normal">(shown in the footer when set)</span></h5>
+            <div class="mb-3">
+              <label class="form-label">GitHub URL</label>
+              <input type="url" class="form-control" id="social_github" placeholder="https://github.com/CalebPrince">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">LinkedIn URL</label>
+              <input type="url" class="form-control" id="social_linkedin" placeholder="https://linkedin.com/in/…">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Twitter/X URL</label>
+              <input type="url" class="form-control" id="social_twitter" placeholder="https://x.com/…">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">WhatsApp link</label>
+              <input type="url" class="form-control" id="social_whatsapp" placeholder="https://wa.me/233…">
+            </div>
+            <div class="mb-0">
+              <label class="form-label">Public email</label>
+              <input type="email" class="form-control" id="social_email" placeholder="hello@princecaleb.dev">
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3">Services</h5>
+            <p class="text-muted-custom small">Title is shared; summary shows on the homepage card, description on the services page.</p>
+
+            <h6 class="mt-3">Service 1 ⚙️</h6>
+            <input type="text" class="form-control mb-2" id="service_1_title" placeholder="Custom Solutions Built from Scratch">
+            <textarea class="form-control mb-2" id="service_1_summary" rows="2" placeholder="Homepage summary…"></textarea>
+            <textarea class="form-control" id="service_1_desc" rows="2" placeholder="Services page description…"></textarea>
+
+            <h6 class="mt-4">Service 2 🧩</h6>
+            <input type="text" class="form-control mb-2" id="service_2_title" placeholder="CMS Development & Ecosystems">
+            <textarea class="form-control mb-2" id="service_2_summary" rows="2" placeholder="Homepage summary…"></textarea>
+            <textarea class="form-control" id="service_2_desc" rows="2" placeholder="Services page description…"></textarea>
+
+            <h6 class="mt-4">Service 3 📱</h6>
+            <input type="text" class="form-control mb-2" id="service_3_title" placeholder="Mobile App Design & Engineering">
+            <textarea class="form-control mb-2" id="service_3_summary" rows="2" placeholder="Homepage summary…"></textarea>
+            <textarea class="form-control" id="service_3_desc" rows="2" placeholder="Services page description…"></textarea>
+          </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3">Live Chat</h5>
+            <div class="mb-3">
+              <label class="form-label">Greeting <span class="text-muted-custom fw-normal">(first bubble)</span></label>
+              <input type="text" class="form-control" id="chat_greeting" placeholder="Hi there! 👋 Welcome.">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Intro <span class="text-muted-custom fw-normal">(second bubble when online)</span></label>
+              <textarea class="form-control" id="chat_intro" rows="3" placeholder="Describe the website or app you have in mind…"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Offline message</label>
+              <textarea class="form-control" id="chat_offline_message" rows="3" placeholder="We're offline at the moment…"></textarea>
+            </div>
+            <div class="mb-0">
+              <label class="form-label">AI personality <span class="text-muted-custom fw-normal">(extra instructions for the assistant)</span></label>
+              <textarea class="form-control" id="chat_persona" rows="4" placeholder="e.g. Always mention that discovery calls are free. Keep a warm, upbeat tone. My typical projects start at $2,000."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/admin-auth.js"></script>
+<script src="/js/admin-content.js"></script>
+</body>
+</html>
