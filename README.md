@@ -96,10 +96,13 @@ except the web root out of reach of the browser:
   public_html/                          # the CONTENTS of public/
 ```
 
-Deploys are manual: upload changed files via cPanel File Manager or FTP —
-public files into `public_html/`, everything else into the home directory.
+Deploys are automatic: pushing to `main` triggers
+`.github/workflows/deploy.yml`, which FTPS-syncs `public/` into
+`public_html/` and `src/`, `config/`, `database/` into the home directory.
+It needs three repository secrets — `FTP_SERVER`, `FTP_USERNAME`,
+`FTP_PASSWORD` — for an FTP account rooted at the cPanel home directory.
 `public/index.php` resolves the app via `dirname(__DIR__)`, so this split
-works unchanged.
+works unchanged. (Manual upload via cPanel File Manager still works too.)
 
 One-time setup on a new host:
 

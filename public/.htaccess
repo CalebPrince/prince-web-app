@@ -1,3 +1,8 @@
+# Deploy bookkeeping written by the GitHub Actions FTP sync — never serve it.
+<Files ".ftp-deploy-sync-state.json">
+  Require all denied
+</Files>
+
 RewriteEngine On
 
 # Serve real files/directories as-is; route everything else under /api/ through index.php
