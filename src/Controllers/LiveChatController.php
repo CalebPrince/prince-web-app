@@ -269,7 +269,7 @@ class LiveChatController
             ]);
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='
             . $geminiKey;
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -432,7 +432,7 @@ class LiveChatController
         if (!function_exists('curl_init')) {
             return null; // no curl on this host — callers fall back gracefully
         }
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,

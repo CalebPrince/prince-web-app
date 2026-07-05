@@ -65,7 +65,7 @@ class AiChatController
             . "In 2-3 sentences, recommend the most relevant case study/service and briefly say why. "
             . "If nothing matches well, suggest they use the contact form to discuss their project.";
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $apiKey;
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
         $body = json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]);
 
         $ch = curl_init($url);
