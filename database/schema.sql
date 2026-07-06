@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
   client_email TEXT,
   client_phone TEXT,
   admin_seen INTEGER NOT NULL DEFAULT 0,
+  ready_for_prototype INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

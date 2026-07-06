@@ -16,6 +16,9 @@ $chatSessionColumns = array_column($pdo->query('PRAGMA table_info(chat_sessions)
 if (!in_array('client_phone', $chatSessionColumns, true)) {
     $pdo->exec('ALTER TABLE chat_sessions ADD COLUMN client_phone TEXT');
 }
+if (!in_array('ready_for_prototype', $chatSessionColumns, true)) {
+    $pdo->exec('ALTER TABLE chat_sessions ADD COLUMN ready_for_prototype INTEGER NOT NULL DEFAULT 0');
+}
 
 $projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');
 if (!in_array('is_embeddable', $projectColumns, true)) {

@@ -62,12 +62,17 @@ class LiveChatController
         $projects = self::projectCatalog($pdo);
         $reply = null;
         $mode = 'fallback';
+        $justBecameReady = false;
         $geminiKey = Settings::get('gemini_api_key');
 
         if (!empty($geminiKey)) {
-            $reply = self::chatWithGemini($geminiKey, $transcript, $projects, $pdo);
-            if ($reply !== null) {
-                $mode = 'ai';
+            $result = self::chatWithGemini($geminiKey, $transcript, $projects, $pdo);
+            if ($result !== null) {
+                $justBecameReady = $result['ready'];
+                if ($result['reply'] !== null) {
+                    $reply = $result['reply'];
+                    $mode = 'ai';
+                }
             }
         }
         if ($reply === null) {
@@ -75,16 +80,19 @@ class LiveChatController
         }
 
         $transcript[] = ['role' => 'assistant', 'text' => $reply];
-        self::saveTranscript($pdo, (int) $session['id'], $transcript);
-
-        $userTurns = count(array_filter($transcript, fn($m) => $m['role'] === 'user'));
+        $readyForPrototype = (bool) $session['ready_for_prototype'] || $justBecameReady;
+        self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
 
         Response::json([
             'token' => $session['token'],
             'reply' => $reply,
             'mode' => $mode,
-            // The widget shows "Build my prototype" once the AI has enough context.
-            'can_prototype' => $mode === 'ai' && $userTurns >= 3,
+            // The widget shows "Build my prototype" once the AI itself has
+            // signaled (via the mark_ready_for_prototype tool) that it has
+            // enough real context — not just after N messages, since chit-chat
+            // shouldn't count. This sticks once earned, even if a later turn
+            // has to fall back to keyword mode.
+            'can_prototype' => $readyForPrototype,
         ]);
     }
 
@@ -94,13 +102,12 @@ class LiveChatController
         $pdo = Database::get();
         $session = self::requireSession($pdo, (string) ($params['token'] ?? ''));
         $transcript = json_decode($session['transcript_json'], true) ?: [];
-        $userTurns = count(array_filter($transcript, fn($m) => $m['role'] === 'user'));
         $hasPrototype = !empty($session['prototype_html']);
 
         Response::json([
             'token' => $session['token'],
             'transcript' => $transcript,
-            'can_build' => $userTurns >= 3,
+            'can_build' => (bool) $session['ready_for_prototype'],
             'has_prototype' => $hasPrototype,
             'prototype_status' => $session['prototype_status'],
             'prototype_url' => $hasPrototype ? '/api/v1/chat/prototype/' . $session['token'] : null,
@@ -385,7 +392,10 @@ class LiveChatController
         }
         $token = bin2hex(random_bytes(16));
         $pdo->prepare('INSERT INTO chat_sessions (token) VALUES (?)')->execute([$token]);
-        return ['id' => (int) $pdo->lastInsertId(), 'token' => $token, 'transcript_json' => '[]', 'prototype_status' => 'none'];
+        return [
+            'id' => (int) $pdo->lastInsertId(), 'token' => $token, 'transcript_json' => '[]',
+            'prototype_status' => 'none', 'ready_for_prototype' => 0,
+        ];
     }
 
     private static function requireSession(\PDO $pdo, string $token): array
@@ -402,10 +412,16 @@ class LiveChatController
         return $session;
     }
 
-    private static function saveTranscript(\PDO $pdo, int $sessionId, array $transcript): void
+    private static function saveTranscript(\PDO $pdo, int $sessionId, array $transcript, ?bool $readyForPrototype = null): void
     {
-        $pdo->prepare("UPDATE chat_sessions SET transcript_json = ?, updated_at = datetime('now') WHERE id = ?")
-            ->execute([json_encode($transcript), $sessionId]);
+        if ($readyForPrototype === null) {
+            $pdo->prepare("UPDATE chat_sessions SET transcript_json = ?, updated_at = datetime('now') WHERE id = ?")
+                ->execute([json_encode($transcript), $sessionId]);
+            return;
+        }
+        $pdo->prepare(
+            "UPDATE chat_sessions SET transcript_json = ?, ready_for_prototype = ?, updated_at = datetime('now') WHERE id = ?"
+        )->execute([json_encode($transcript), $readyForPrototype ? 1 : 0, $sessionId]);
     }
 
     private static function projectCatalog(\PDO $pdo): array
@@ -423,7 +439,8 @@ class LiveChatController
     /** Max Gemini <-> tool round-trips per visitor message, so a confused model can't loop forever. */
     private const MAX_TOOL_ROUNDS = 3;
 
-    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?string
+    /** @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords) */
+    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
     {
         $catalog = implode("\n", array_map(
             fn($p) => "- {$p['title']} ({$p['tag_names']}): {$p['summary']}",
@@ -442,10 +459,9 @@ class LiveChatController
             . "back-and-forth: ask about it one question at a time, following their lead rather than a fixed "
             . "script — what it's for, who it's for, what actually matters to them, style preferences, "
             . "whatever comes up naturally. Some visitors want to chat a while before they're ready to see "
-            . "anything; others are ready sooner — read the room. Only bring up the \"Build my prototype\" "
-            . "button once you genuinely understand enough to make a useful first draft — never mention it "
-            . "just because a couple of messages have gone by. Keep replies short and conversational (1-4 "
-            . "sentences), never a bulleted interview.\n\n"
+            . "anything; others are ready sooner — read the room. Never mention a \"Build my prototype\" "
+            . "button yourself — whether it's shown is handled separately. Keep replies short and "
+            . "conversational (1-4 sentences), never a bulleted interview.\n\n"
             . "You have tools available, and using them well is part of being helpful:\n"
             . "- get_site_info: use it for general questions about Prince's background, services, tech stack, "
             . "experience, location, or contact/social links, so you answer with real facts instead of guessing.\n"
@@ -454,7 +470,12 @@ class LiveChatController
             . "post worth mentioning — share it naturally, with the link.\n"
             . "- check_availability / book_appointment: use these when they want to talk it through live or "
             . "book a call. Always read the exact date, time, and timezone back to them and get an explicit "
-            . "yes before calling book_appointment — never book without confirmation.\n\n"
+            . "yes before calling book_appointment — never book without confirmation.\n"
+            . "- mark_ready_for_prototype: call this once — and only once — you have real, concrete detail "
+            . "about an actual project they want built (what it's for, who it's for, and roughly what pages "
+            . "or features matter). Never call it for greetings, small talk, general questions, or before "
+            . "they've described a specific project. This is what unlocks the prototype button for them, so "
+            . "call it as soon as that bar is genuinely met, not before and not after.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
         $persona = Settings::get('chat_persona');
@@ -471,6 +492,7 @@ class LiveChatController
         }
 
         $tools = [['functionDeclarations' => self::toolDeclarations()]];
+        $ready = false;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
             $body = json_encode([
@@ -497,16 +519,24 @@ class LiveChatController
             }
 
             if ($functionCall === null) {
-                return $text !== '' ? $text : null;
+                return ['reply' => $text !== '' ? $text : null, 'ready' => $ready];
+            }
+
+            if ($functionCall['name'] === 'mark_ready_for_prototype') {
+                $ready = true;
             }
 
             // Model wants a tool run: record its call, run it locally, feed the
             // result back, then let it produce the next turn (or another call).
             $contents[] = ['role' => 'model', 'parts' => [['functionCall' => $functionCall]]];
             $toolResponse = self::runTool($functionCall['name'], $functionCall['args'] ?? [], $pdo);
-            $contents[] = ['role' => 'user', 'parts' => [[
-                'functionResponse' => ['name' => $functionCall['name'], 'response' => $toolResponse],
-            ]]];
+            $responsePart = ['functionResponse' => ['name' => $functionCall['name'], 'response' => $toolResponse]];
+            // Newer models include an id on the functionCall and require it
+            // echoed back on the matching functionResponse.
+            if (isset($functionCall['id'])) {
+                $responsePart['functionResponse']['id'] = $functionCall['id'];
+            }
+            $contents[] = ['role' => 'user', 'parts' => [$responsePart]];
         }
 
         return null;
@@ -528,6 +558,15 @@ class LiveChatController
                 'name' => 'get_pricing',
                 'description' => 'Get the current service pricing tiers (name, price, tagline, features) '
                     . 'to answer questions about cost or packages accurately instead of guessing.',
+                'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+            ],
+            [
+                'name' => 'mark_ready_for_prototype',
+                'description' => 'Call once you have real, concrete detail about an actual project the '
+                    . 'visitor wants built — what it is, who it is for, and roughly what pages or features '
+                    . 'matter. This unlocks the "Build my prototype" button for them. Never call this for '
+                    . 'greetings, small talk, or general questions — only once a specific project has '
+                    . 'genuinely been described.',
                 'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
             ],
             [
@@ -588,6 +627,7 @@ class LiveChatController
                 'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
                 'book_appointment' => AppointmentController::createBooking($args),
                 'search_content' => self::toolSearchContent($pdo, (string) ($args['query'] ?? '')),
+                'mark_ready_for_prototype' => ['acknowledged' => true],
                 default => ['error' => 'Unknown tool.'],
             };
         } catch (\Throwable $e) {
@@ -781,9 +821,19 @@ class LiveChatController
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
+            // Silent failures here are indistinguishable from "model declined to
+            // answer" without this — log enough to diagnose a bad request shape
+            // (e.g. a malformed tool-response turn) versus a real outage.
+            error_log(sprintf(
+                'Gemini API call failed: status=%s curl_error=%s body=%s',
+                $status,
+                $curlError !== '' ? $curlError : 'none',
+                $response !== false ? substr($response, 0, 800) : 'n/a'
+            ));
             return [];
         }
         return json_decode($response, true) ?? [];
