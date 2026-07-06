@@ -2,7 +2,14 @@
 // available offline. Deliberately does NOT cache /api/* or /admin/* — this
 // site's content changes often (blog, projects, pricing), and serving stale
 // JSON or admin data offline would be worse than just failing normally.
-const CACHE_VERSION = "v1";
+//
+// CSS/JS use network-first (like navigation), not cache-first: this site is
+// under active, frequent deployment, and cache-first previously meant a
+// returning visitor's browser could keep serving pre-deploy CSS/JS for a
+// while after a push. Only genuinely static binary assets (icons) are
+// cache-first. Bump CACHE_VERSION on any change here to force old caches
+// to be dropped on next activate.
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `princecaleb-shell-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -37,16 +44,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (event.request.mode === "navigate") {
-    // Pages: try the network first so content stays current; fall back to
-    // cache only when genuinely offline.
+  if (event.request.mode === "navigate" || url.pathname.startsWith("/css/") || url.pathname.startsWith("/js/")) {
+    // Pages, CSS, and JS: network-first so a fresh deploy is visible
+    // immediately; cache is purely an offline fallback, never the primary
+    // source while online.
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request).then((r) => r || caches.match("/")))
+      fetch(event.request)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(event.request).then((r) => r || (event.request.mode === "navigate" ? caches.match("/") : undefined)))
     );
     return;
   }
 
-  // Static assets (css/js/icons/uploads): cache-first, refresh in the background.
+  // Everything else (icons, uploads, fonts): cache-first, refresh in the background.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const network = fetch(event.request)
