@@ -81,9 +81,77 @@
 
           <div class="admin-card p-4 mb-4">
             <h5 class="mb-3">Contact page</h5>
-            <div class="mb-0">
+            <div class="mb-3">
               <label class="form-label">Intro text</label>
               <textarea class="form-control" id="contact_intro" rows="2" placeholder="Tell me a bit about your project and I'll get back to you…"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Location</label>
+              <input type="text" class="form-control" id="contact_location" placeholder="Accra, Ghana">
+            </div>
+            <div class="mb-0">
+              <label class="form-label">Phone number</label>
+              <input type="text" class="form-control" id="contact_phone" placeholder="+233 20 804 9962">
+            </div>
+            <p class="text-muted-custom small mt-2 mb-0">Public email shown on the contact page comes from the Social links → Public email field below.</p>
+          </div>
+
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3">Homepage stats</h5>
+            <p class="text-muted-custom small">Value + suffix are combined and animated (e.g. "30" + "+" &rarr; "30+"). Only the fourth stat has a prefix (e.g. "&lt;").</p>
+
+            <h6 class="mt-3">Stat 1</h6>
+            <div class="row g-2 mb-2">
+              <div class="col-4"><input type="text" class="form-control" id="stat_1_value" placeholder="5"></div>
+              <div class="col-4"><input type="text" class="form-control" id="stat_1_suffix" placeholder="+"></div>
+              <div class="col-4"><input type="text" class="form-control" id="stat_1_label" placeholder="Years building software"></div>
+            </div>
+
+            <h6 class="mt-3">Stat 2</h6>
+            <div class="row g-2 mb-2">
+              <div class="col-4"><input type="text" class="form-control" id="stat_2_value" placeholder="30"></div>
+              <div class="col-4"><input type="text" class="form-control" id="stat_2_suffix" placeholder="+"></div>
+              <div class="col-4"><input type="text" class="form-control" id="stat_2_label" placeholder="Projects shipped"></div>
+            </div>
+
+            <h6 class="mt-3">Stat 3</h6>
+            <div class="row g-2 mb-2">
+              <div class="col-4"><input type="text" class="form-control" id="stat_3_value" placeholder="98"></div>
+              <div class="col-4"><input type="text" class="form-control" id="stat_3_suffix" placeholder="%"></div>
+              <div class="col-4"><input type="text" class="form-control" id="stat_3_label" placeholder="Client satisfaction"></div>
+            </div>
+
+            <h6 class="mt-3">Stat 4</h6>
+            <div class="row g-2">
+              <div class="col-3"><input type="text" class="form-control" id="stat_4_prefix" placeholder="&lt;"></div>
+              <div class="col-3"><input type="text" class="form-control" id="stat_4_value" placeholder="48"></div>
+              <div class="col-3"><input type="text" class="form-control" id="stat_4_suffix" placeholder="h"></div>
+              <div class="col-3"><input type="text" class="form-control" id="stat_4_label" placeholder="Avg response"></div>
+            </div>
+          </div>
+
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3">Testimonials <span class="text-muted-custom fs-6 fw-normal">(homepage)</span></h5>
+
+            <h6 class="mt-3">Testimonial 1</h6>
+            <textarea class="form-control mb-2" id="testimonial_1_quote" rows="2" placeholder="Quote, no quotation marks needed…"></textarea>
+            <div class="row g-2">
+              <div class="col-6"><input type="text" class="form-control" id="testimonial_1_name" placeholder="Amara K."></div>
+              <div class="col-6"><input type="text" class="form-control" id="testimonial_1_role" placeholder="Founder, boutique retail brand"></div>
+            </div>
+
+            <h6 class="mt-4">Testimonial 2</h6>
+            <textarea class="form-control mb-2" id="testimonial_2_quote" rows="2" placeholder="Quote, no quotation marks needed…"></textarea>
+            <div class="row g-2">
+              <div class="col-6"><input type="text" class="form-control" id="testimonial_2_name" placeholder="David O."></div>
+              <div class="col-6"><input type="text" class="form-control" id="testimonial_2_role" placeholder="Operations Lead, accounting firm"></div>
+            </div>
+
+            <h6 class="mt-4">Testimonial 3</h6>
+            <textarea class="form-control mb-2" id="testimonial_3_quote" rows="2" placeholder="Quote, no quotation marks needed…"></textarea>
+            <div class="row g-2">
+              <div class="col-6"><input type="text" class="form-control" id="testimonial_3_name" placeholder="Maya T."></div>
+              <div class="col-6"><input type="text" class="form-control" id="testimonial_3_role" placeholder="Studio Owner, wellness &amp; bookings"></div>
             </div>
           </div>
 

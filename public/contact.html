@@ -54,29 +54,50 @@
 </header>
 
 <section class="section">
-  <div class="container" style="max-width: 640px;">
-    <div class="contact-card reveal">
-      <form id="contact-form">
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="name">Name</label>
-          <input type="text" class="form-control" id="name" required maxlength="255">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+      <div class="col-lg-7">
+        <div class="contact-card reveal">
+          <form id="contact-form">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="name">Name</label>
+              <input type="text" class="form-control" id="name" required maxlength="255">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="email">Email</label>
+              <input type="email" class="form-control" id="email" required maxlength="255">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="message">Tell me about your project</label>
+              <textarea class="form-control" id="message" rows="5" required maxlength="5000"></textarea>
+            </div>
+            <!-- Honeypot: hidden from real visitors, bots often fill every field -->
+            <div style="position: absolute; left: -9999px;" aria-hidden="true">
+              <label for="website">Website</label>
+              <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+            <div id="form-alert" class="alert d-none"></div>
+            <button type="submit" class="btn-brand w-100" id="submit-btn">Send message</button>
+          </form>
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="email">Email</label>
-          <input type="email" class="form-control" id="email" required maxlength="255">
+      </div>
+      <div class="col-lg-4">
+        <div class="contact-card reveal reveal-delay-1">
+          <h5 class="mb-3">Get in touch directly</h5>
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span aria-hidden="true">📍</span>
+            <span data-content="contact_location">Accra, Ghana</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span aria-hidden="true">📞</span>
+            <a href="tel:+233208049962" data-content-href="contact_phone" class="text-muted-custom text-decoration-none">+233 20 804 9962</a>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span aria-hidden="true">✉️</span>
+            <a href="mailto:hello@princecaleb.dev" data-content-href="social_email" class="text-muted-custom text-decoration-none">hello@princecaleb.dev</a>
+          </div>
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="message">Tell me about your project</label>
-          <textarea class="form-control" id="message" rows="5" required maxlength="5000"></textarea>
-        </div>
-        <!-- Honeypot: hidden from real visitors, bots often fill every field -->
-        <div style="position: absolute; left: -9999px;" aria-hidden="true">
-          <label for="website">Website</label>
-          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
-        </div>
-        <div id="form-alert" class="alert d-none"></div>
-        <button type="submit" class="btn-brand w-100" id="submit-btn">Send message</button>
-      </form>
+      </div>
     </div>
   </div>
 </section>

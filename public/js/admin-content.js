@@ -3,9 +3,16 @@ const CONTENT_FIELDS = [
   "service_1_title", "service_1_summary", "service_1_desc",
   "service_2_title", "service_2_summary", "service_2_desc",
   "service_3_title", "service_3_summary", "service_3_desc",
-  "about_intro", "about_bio", "contact_intro",
+  "about_intro", "about_bio", "contact_intro", "contact_location", "contact_phone",
   "social_github", "social_linkedin", "social_twitter", "social_whatsapp", "social_email",
   "chat_greeting", "chat_intro", "chat_offline_message", "chat_persona",
+  "stat_1_value", "stat_1_suffix", "stat_1_label",
+  "stat_2_value", "stat_2_suffix", "stat_2_label",
+  "stat_3_value", "stat_3_suffix", "stat_3_label",
+  "stat_4_value", "stat_4_prefix", "stat_4_suffix", "stat_4_label",
+  "testimonial_1_quote", "testimonial_1_name", "testimonial_1_role",
+  "testimonial_2_quote", "testimonial_2_name", "testimonial_2_role",
+  "testimonial_3_quote", "testimonial_3_name", "testimonial_3_role",
 ];
 
 function showContentMsg(text, ok) {

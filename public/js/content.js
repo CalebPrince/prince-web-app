@@ -18,6 +18,14 @@
     }
   });
 
+  // Links whose href must stay in sync with the displayed value (phone/email)
+  document.querySelectorAll("[data-content-href]").forEach(el => {
+    const value = content[el.dataset.contentHref];
+    if (!value) return;
+    el.textContent = value;
+    el.href = el.dataset.contentHref === "social_email" ? `mailto:${value}` : `tel:${value.replace(/[^\d+]/g, "")}`;
+  });
+
   // Multi-paragraph blocks: blank-line-separated text becomes <p> elements
   document.querySelectorAll("[data-content-paragraphs]").forEach(el => {
     const value = content[el.dataset.contentParagraphs];
@@ -30,6 +38,49 @@
       el.appendChild(p);
     });
     if (el.lastElementChild) el.lastElementChild.classList.add("mb-0");
+  });
+
+  // Homepage stats: value/prefix/suffix feed the count-up animation in animations.js
+  const statDefs = [
+    { value: "stat_1_value", suffix: "stat_1_suffix", label: "stat_1_label" },
+    { value: "stat_2_value", suffix: "stat_2_suffix", label: "stat_2_label" },
+    { value: "stat_3_value", suffix: "stat_3_suffix", label: "stat_3_label" },
+    { value: "stat_4_value", prefix: "stat_4_prefix", suffix: "stat_4_suffix", label: "stat_4_label" },
+  ];
+  document.querySelectorAll(".stat-item").forEach((item, i) => {
+    const def = statDefs[i];
+    if (!def) return;
+    const valueEl = item.querySelector(".stat-value");
+    const labelEl = item.querySelector(".stat-label");
+    if (valueEl && content[def.value]) {
+      valueEl.dataset.countTo = content[def.value];
+      valueEl.textContent = "0";
+    }
+    if (valueEl && def.prefix && content[def.prefix]) valueEl.dataset.countPrefix = content[def.prefix];
+    if (valueEl && content[def.suffix]) valueEl.dataset.countSuffix = content[def.suffix];
+    if (labelEl && content[def.label]) labelEl.textContent = content[def.label];
+  });
+
+  // Testimonials: quote/name/role per card; avatar initial derives from the name
+  document.querySelectorAll(".testimonial-card").forEach((card, i) => {
+    const n = i + 1;
+    const quote = content[`testimonial_${n}_quote`];
+    const name = content[`testimonial_${n}_name`];
+    const role = content[`testimonial_${n}_role`];
+    if (quote) {
+      const el = card.querySelector(".testimonial-quote");
+      if (el) el.textContent = `"${quote}"`;
+    }
+    if (name) {
+      const nameEl = card.querySelector(".fw-semibold");
+      if (nameEl) nameEl.textContent = name;
+      const avatarEl = card.querySelector(".testimonial-avatar");
+      if (avatarEl) avatarEl.textContent = name.trim().charAt(0).toUpperCase();
+    }
+    if (role) {
+      const roleEl = card.querySelector(".small.text-muted-custom");
+      if (roleEl) roleEl.textContent = role;
+    }
   });
 
   // Tech badges: comma-separated list rebuilds the badge row
