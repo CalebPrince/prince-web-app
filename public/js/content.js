@@ -26,6 +26,28 @@
     el.href = el.dataset.contentHref === "social_email" ? `mailto:${value}` : `tel:${value.replace(/[^\d+]/g, "")}`;
   });
 
+  // Live Chat toggle button — on by default, hidden only if explicitly turned off
+  const chatToggle = document.getElementById("ai-widget-toggle");
+  if (chatToggle && content.live_chat_enabled === "0") {
+    chatToggle.classList.add("d-none");
+  }
+
+  // Floating WhatsApp contact button — hidden unless a link is configured
+  // and the widget hasn't been explicitly turned off
+  const whatsappOn = content.whatsapp_button_enabled !== "0";
+  const whatsappBtn = document.getElementById("whatsapp-float-btn");
+  if (whatsappBtn && content.social_whatsapp && whatsappOn) {
+    whatsappBtn.href = content.social_whatsapp;
+    whatsappBtn.classList.remove("d-none");
+  }
+
+  // Contact page's own WhatsApp row (separate element, same source setting)
+  const contactWhatsappRow = document.getElementById("contact-whatsapp-row");
+  if (contactWhatsappRow && content.social_whatsapp && whatsappOn) {
+    document.getElementById("contact-whatsapp-link").href = content.social_whatsapp;
+    contactWhatsappRow.classList.remove("d-none");
+  }
+
   // Multi-paragraph blocks: blank-line-separated text becomes <p> elements
   document.querySelectorAll("[data-content-paragraphs]").forEach(el => {
     const value = content[el.dataset.contentParagraphs];

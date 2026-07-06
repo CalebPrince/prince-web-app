@@ -18,6 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!sessionStorage.getItem("chat_auto_shown")) {
     sessionStorage.setItem("chat_auto_shown", "1");
-    setTimeout(load, 1500);
+    // Re-checked at fire time (not now) so content.js has had a chance to
+    // hide the button first if Live Chat has been turned off in Settings.
+    setTimeout(() => {
+      if (!toggle.classList.contains("d-none")) load();
+    }, 1500);
   }
 });

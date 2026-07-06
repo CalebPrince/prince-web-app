@@ -42,6 +42,7 @@ class SettingsController
         'pricing_tier_2_name', 'pricing_tier_2_price', 'pricing_tier_2_tagline', 'pricing_tier_2_features',
         'pricing_tier_3_name', 'pricing_tier_3_price', 'pricing_tier_3_tagline', 'pricing_tier_3_features',
         'pricing_currency', 'pricing_tier_1_amount',
+        'live_chat_enabled', 'whatsapp_button_enabled',
     ];
 
     /** GET /api/v1/content — public: set content values only (secrets excluded) */

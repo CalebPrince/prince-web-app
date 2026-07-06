@@ -160,6 +160,25 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
+          <h5 class="mb-1">Site widgets</h5>
+          <p class="text-muted-custom small">Show or hide the floating buttons on every public page — no need to remove the underlying contact details just to hide them temporarily.</p>
+          <form id="widgets-form">
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" id="widget-live-chat-enabled">
+              <label class="form-check-label" for="widget-live-chat-enabled">Show Live Chat button</label>
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="widget-whatsapp-enabled">
+              <label class="form-check-label" for="widget-whatsapp-enabled">Show WhatsApp button <span class="text-muted-custom fw-normal">(also needs a WhatsApp link set in Site Content)</span></label>
+            </div>
+            <div id="widgets-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Save</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
           <h5 class="mb-1">Maintenance mode</h5>
           <p class="text-muted-custom small">When enabled, visitors see a "down for maintenance" page (503) on every public page. Admin, API, and uploads stay reachable so you can turn it back off.</p>
           <form id="maintenance-form">

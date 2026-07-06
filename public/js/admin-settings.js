@@ -69,6 +69,19 @@ async function saveHours(e) {
   }
 }
 
+async function saveWidgets(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      live_chat_enabled: document.getElementById("widget-live-chat-enabled").checked ? "1" : "0",
+      whatsapp_button_enabled: document.getElementById("widget-whatsapp-enabled").checked ? "1" : "0",
+    });
+    showMsg("widgets-msg", "Saved — takes effect immediately for visitors.", true);
+  } catch (err) {
+    showMsg("widgets-msg", err.message, false);
+  }
+}
+
 async function savePayments(e) {
   e.preventDefault();
   try {
@@ -132,12 +145,16 @@ async function testAi() {
   document.getElementById("hours-form").addEventListener("submit", saveHours);
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
+  document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
+
+    document.getElementById("widget-live-chat-enabled").checked = settings.live_chat_enabled !== "0";
+    document.getElementById("widget-whatsapp-enabled").checked = settings.whatsapp_button_enabled !== "0";
 
     document.getElementById("paystack-public-key").value = settings.paystack_public_key || "";
     document.getElementById("paystack-secret-key").value = settings.paystack_secret_key || "";
