@@ -59,14 +59,39 @@ class InquiryController
         $pdo = Database::get();
         $status = $_GET['status'] ?? null;
 
+        $select = "SELECT i.*, wq.status AS notify_status, wq.attempts AS notify_attempts,
+                          wq.slack_sent, wq.email_sent
+                   FROM inquiries i
+                   LEFT JOIN webhook_queue wq ON wq.inquiry_id = i.id";
+
         if ($status) {
-            $stmt = $pdo->prepare('SELECT * FROM inquiries WHERE status = ? ORDER BY created_at DESC');
+            $stmt = $pdo->prepare("$select WHERE i.status = ? ORDER BY i.created_at DESC");
             $stmt->execute([$status]);
         } else {
-            $stmt = $pdo->query('SELECT * FROM inquiries ORDER BY created_at DESC');
+            $stmt = $pdo->query("$select ORDER BY i.created_at DESC");
         }
 
         Response::json($stmt->fetchAll());
+    }
+
+    /** GET /api/v1/admin/inquiries/export — CSV download */
+    public static function exportCsv(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $rows = $pdo->query('SELECT name, email, message, status, created_at FROM inquiries ORDER BY created_at DESC')
+            ->fetchAll();
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="inquiries-' . date('Y-m-d') . '.csv"');
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Name', 'Email', 'Message', 'Status', 'Created At'], ',', '"', '\\');
+        foreach ($rows as $row) {
+            fputcsv($out, [$row['name'], $row['email'], $row['message'], $row['status'], $row['created_at']], ',', '"', '\\');
+        }
+        fclose($out);
+        exit;
     }
 
     /** PATCH /api/v1/admin/inquiries/{id} — body: {"status": "read"|"flagged"|"archived"} */

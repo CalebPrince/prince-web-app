@@ -160,6 +160,26 @@ class ProjectController
         Response::json(['status' => 'updated']);
     }
 
+    /** PATCH /api/v1/admin/projects/reorder — body: {order: [id, id, ...]} in new display order */
+    public static function reorder(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $order = $data['order'] ?? [];
+
+        if (!is_array($order) || !$order) {
+            Response::error('order must be a non-empty array of project IDs.', 422);
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('UPDATE projects SET sort_order = ? WHERE id = ?');
+        foreach (array_values($order) as $index => $id) {
+            $stmt->execute([$index, (int) $id]);
+        }
+
+        Response::json(['status' => 'reordered']);
+    }
+
     /** DELETE /api/v1/admin/projects/{id} */
     public static function destroy(array $params): void
     {

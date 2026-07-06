@@ -1,5 +1,7 @@
 let projectModal = null;
 let galleryPaths = [];
+let currentProjects = [];
+let draggedId = null;
 
 async function uploadFile(file, isRetry = false) {
   const formData = new FormData();
@@ -50,10 +52,12 @@ function renderGalleryList() {
 }
 
 function renderProjectsTable(projects) {
+  currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
   tbody.innerHTML = projects.map(p => `
-    <tr>
-      <td class="ps-3">${p.title}</td>
+    <tr draggable="true" data-id="${p.id}">
+      <td class="ps-3 text-muted-custom" style="cursor:grab;" title="Drag to reorder">&#x2630;</td>
+      <td>${p.title}</td>
       <td class="text-capitalize">${p.category.replace("_", " ")}</td>
       <td>${p.tags.map(t => t.name).join(", ")}</td>
       <td><span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span></td>
@@ -69,6 +73,34 @@ function renderProjectsTable(projects) {
   });
   tbody.querySelectorAll(".delete-btn").forEach(btn => {
     btn.addEventListener("click", () => deleteProject(Number(btn.dataset.id)));
+  });
+
+  tbody.querySelectorAll("tr[draggable]").forEach(row => {
+    row.addEventListener("dragstart", () => {
+      draggedId = Number(row.dataset.id);
+      row.classList.add("opacity-50");
+    });
+    row.addEventListener("dragend", () => row.classList.remove("opacity-50"));
+    row.addEventListener("dragover", (e) => e.preventDefault());
+    row.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      const targetId = Number(row.dataset.id);
+      if (draggedId === null || draggedId === targetId) return;
+
+      const ids = currentProjects.map(p => p.id);
+      const fromIndex = ids.indexOf(draggedId);
+      const toIndex = ids.indexOf(targetId);
+      ids.splice(fromIndex, 1);
+      ids.splice(toIndex, 0, draggedId);
+
+      renderProjectsTable(ids.map(id => currentProjects.find(p => p.id === id)));
+      try {
+        await api.patch("/api/v1/admin/projects/reorder", { order: ids });
+      } catch (err) {
+        alert(err.message);
+        await loadProjects();
+      }
+    });
   });
 }
 

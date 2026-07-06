@@ -1,3 +1,18 @@
+function notifyBadge(i) {
+  const detail = `Slack: ${i.slack_sent ? "sent" : "not sent"} · Email: ${i.email_sent ? "sent" : "not sent"}`;
+  if (!i.notify_status) {
+    return "";
+  }
+  if (i.notify_status === "sent") {
+    return `<span class="status-pill published" title="${detail}">✓ Notified</span>`;
+  }
+  if (i.notify_attempts >= 5) {
+    return `<span class="status-pill flagged" title="${detail}">✗ Notification failed</span>`;
+  }
+  const label = i.notify_attempts > 0 ? `⏳ Retrying (${i.notify_attempts}/5)` : "⏳ Queued";
+  return `<span class="status-pill unread" title="${detail}">${label}</span>`;
+}
+
 async function loadInquiries(status = "") {
   const query = status ? `?status=${encodeURIComponent(status)}` : "";
   const inquiries = await api.get(`/api/v1/admin/inquiries${query}`);
@@ -18,7 +33,10 @@ async function loadInquiries(status = "") {
           <strong>${escapeHtml(i.name)}</strong>
           <span class="text-muted-custom small ms-2">${escapeHtml(i.email)}</span>
         </div>
-        <span class="status-pill ${i.status}">${i.status}</span>
+        <div class="d-flex gap-2 align-items-center">
+          ${notifyBadge(i)}
+          <span class="status-pill ${i.status}">${i.status}</span>
+        </div>
       </div>
       <p class="mb-2">${escapeHtml(i.message)}</p>
       <div class="d-flex justify-content-between align-items-center">
