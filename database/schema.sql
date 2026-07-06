@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS projects (
   repo_url TEXT,
   cover_image_path TEXT NOT NULL,
   gallery_json TEXT,
+  is_embeddable INTEGER NOT NULL DEFAULT 0,
   is_published INTEGER NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),

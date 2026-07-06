@@ -1,4 +1,53 @@
 let projectModal = null;
+let galleryPaths = [];
+
+async function uploadFile(file, isRetry = false) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/v1/admin/uploads", {
+    method: "POST",
+    credentials: "same-origin",
+    body: formData,
+  });
+
+  if (res.status === 401 && !isRetry) {
+    const refreshed = await fetch("/api/v1/auth/refresh", { method: "POST", credentials: "same-origin" });
+    if (refreshed.ok) return uploadFile(file, true);
+  }
+
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error((body && body.error) || "Upload failed.");
+  }
+  return body.path;
+}
+
+function setCoverPreview(path) {
+  const preview = document.getElementById("cover-preview");
+  if (path) {
+    preview.src = path;
+    preview.classList.remove("d-none");
+  } else {
+    preview.classList.add("d-none");
+  }
+}
+
+function renderGalleryList() {
+  const list = document.getElementById("gallery-list");
+  list.innerHTML = galleryPaths.map((path, i) => `
+    <div class="position-relative">
+      <img src="${path}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+      <button type="button" class="btn-close gallery-remove-btn" data-index="${i}"
+        style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;padding:4px;background-color:#fff;border-radius:50%;opacity:1;"></button>
+    </div>
+  `).join("");
+  list.querySelectorAll(".gallery-remove-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      galleryPaths.splice(Number(btn.dataset.index), 1);
+      renderGalleryList();
+    });
+  });
+}
 
 function renderProjectsTable(projects) {
   const tbody = document.getElementById("projects-tbody");
@@ -32,6 +81,11 @@ function openNewModal() {
   document.getElementById("project-form").reset();
   document.getElementById("project-id").value = "";
   document.getElementById("modal-title").textContent = "New Project";
+  document.getElementById("cover-upload-msg").textContent = "";
+  document.getElementById("gallery-upload-msg").textContent = "";
+  setCoverPreview(null);
+  galleryPaths = [];
+  renderGalleryList();
   projectModal.show();
 }
 
@@ -48,6 +102,12 @@ function openEditModal(project) {
   document.getElementById("sort_order").value = project.sort_order;
   document.getElementById("tags").value = project.tags.map(t => t.name).join(", ");
   document.getElementById("is_published").checked = !!project.is_published;
+  document.getElementById("is_embeddable").checked = !!project.is_embeddable;
+  document.getElementById("cover-upload-msg").textContent = "";
+  document.getElementById("gallery-upload-msg").textContent = "";
+  setCoverPreview(project.cover_image_path);
+  galleryPaths = [...(project.gallery || [])];
+  renderGalleryList();
   document.getElementById("modal-title").textContent = "Edit Project";
   projectModal.show();
 }
@@ -63,9 +123,11 @@ async function saveProject() {
     live_url: document.getElementById("live_url").value || null,
     repo_url: document.getElementById("repo_url").value || null,
     cover_image_path: document.getElementById("cover_image_path").value,
+    gallery: galleryPaths,
     sort_order: Number(document.getElementById("sort_order").value) || 0,
     tags: document.getElementById("tags").value.split(",").map(t => t.trim()).filter(Boolean),
     is_published: document.getElementById("is_published").checked,
+    is_embeddable: document.getElementById("is_embeddable").checked,
   };
 
   try {
@@ -101,6 +163,42 @@ async function deleteProject(id) {
   projectModal = new bootstrap.Modal(document.getElementById("project-modal"));
   document.getElementById("new-project-btn").addEventListener("click", openNewModal);
   document.getElementById("save-project-btn").addEventListener("click", saveProject);
+
+  document.getElementById("cover-upload-input").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const msg = document.getElementById("cover-upload-msg");
+    msg.textContent = "Uploading…";
+    try {
+      const path = await uploadFile(file);
+      document.getElementById("cover_image_path").value = path;
+      setCoverPreview(path);
+      msg.textContent = "Uploaded.";
+    } catch (err) {
+      msg.textContent = err.message;
+    }
+    e.target.value = "";
+  });
+
+  document.getElementById("gallery-upload-input").addEventListener("change", async (e) => {
+    const files = [...e.target.files];
+    if (!files.length) return;
+    const msg = document.getElementById("gallery-upload-msg");
+    msg.textContent = `Uploading ${files.length} image(s)…`;
+    for (const file of files) {
+      try {
+        galleryPaths.push(await uploadFile(file));
+      } catch (err) {
+        msg.textContent = err.message;
+        renderGalleryList();
+        e.target.value = "";
+        return;
+      }
+    }
+    msg.textContent = "";
+    renderGalleryList();
+    e.target.value = "";
+  });
 
   await loadProjects();
 })();

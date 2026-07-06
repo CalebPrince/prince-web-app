@@ -53,6 +53,7 @@ $projects = [
         'repo_url' => null,
         'cover_image_path' => '/uploads/church-media-cover.svg',
         'tags' => ['JavaScript', 'Web Audio API', 'HTML5'],
+        'is_embeddable' => 1,
     ],
     [
         'slug' => 'church-shape-it',
@@ -67,6 +68,7 @@ $projects = [
         'repo_url' => null,
         'cover_image_path' => '/uploads/church-shapeit-cover.svg',
         'tags' => ['JavaScript', 'Web Audio API', 'HTML5'],
+        'is_embeddable' => 1,
     ],
     [
         'slug' => 'lca-accra-church-website',
@@ -110,7 +112,7 @@ foreach ($projects as $project) {
     if ($existing) {
         $stmt = $pdo->prepare(
             "UPDATE projects SET title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
-             cover_image_path=?, is_published=1, updated_at=datetime('now') WHERE id=?"
+             cover_image_path=?, is_embeddable=?, is_published=1, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $project['title'],
@@ -120,14 +122,15 @@ foreach ($projects as $project) {
             $project['live_url'],
             $project['repo_url'],
             $project['cover_image_path'],
+            $project['is_embeddable'] ?? 0,
             $existing['id'],
         ]);
         $projectId = (int) $existing['id'];
         echo "Updated: {$project['title']}\n";
     } else {
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, is_published, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)'
+            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, is_embeddable, is_published, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)'
         );
         $stmt->execute([
             $project['slug'],
@@ -138,6 +141,7 @@ foreach ($projects as $project) {
             $project['live_url'],
             $project['repo_url'],
             $project['cover_image_path'],
+            $project['is_embeddable'] ?? 0,
             $nextSortOrder++,
         ]);
         $projectId = (int) $pdo->lastInsertId();

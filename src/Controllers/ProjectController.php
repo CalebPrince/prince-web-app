@@ -98,8 +98,8 @@ class ProjectController
 
         $pdo = Database::get();
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, is_published, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['slug'],
@@ -110,6 +110,8 @@ class ProjectController
             $data['live_url'] ?? null,
             $data['repo_url'] ?? null,
             $data['cover_image_path'],
+            self::encodeGallery($data['gallery'] ?? []),
+            !empty($data['is_embeddable']) ? 1 : 0,
             !empty($data['is_published']) ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
         ]);
@@ -135,7 +137,7 @@ class ProjectController
         $pdo = Database::get();
         $stmt = $pdo->prepare(
             "UPDATE projects SET slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
-             cover_image_path=?, is_published=?, sort_order=?, updated_at=datetime('now') WHERE id=?"
+             cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, sort_order=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $data['slug'],
@@ -146,6 +148,8 @@ class ProjectController
             $data['live_url'] ?? null,
             $data['repo_url'] ?? null,
             $data['cover_image_path'],
+            self::encodeGallery($data['gallery'] ?? []),
+            !empty($data['is_embeddable']) ? 1 : 0,
             !empty($data['is_published']) ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
             $id,
@@ -163,6 +167,13 @@ class ProjectController
         $pdo = Database::get();
         $pdo->prepare('DELETE FROM projects WHERE id = ?')->execute([(int) $params['id']]);
         Response::json(['status' => 'deleted']);
+    }
+
+    /** @param array<int,string> $paths */
+    private static function encodeGallery(array $paths): ?string
+    {
+        $paths = array_values(array_filter(array_map('trim', $paths), fn($p) => $p !== ''));
+        return $paths ? json_encode($paths) : null;
     }
 
     /** @param array<int,string> $tagNames */

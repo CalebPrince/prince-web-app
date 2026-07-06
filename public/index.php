@@ -26,6 +26,7 @@ use App\Controllers\LiveChatController;
 use App\Controllers\ProjectController;
 use App\Controllers\SettingsController;
 use App\Controllers\TagController;
+use App\Controllers\UploadController;
 use App\Router;
 
 $router = new Router();
@@ -52,6 +53,7 @@ $router->get('/api/v1/auth/me', [AuthController::class, 'me']);
 
 // Admin
 $router->get('/api/v1/admin/dashboard', [DashboardController::class, 'overview']);
+$router->get('/api/v1/admin/notifications', [DashboardController::class, 'notifications']);
 $router->get('/api/v1/admin/projects', [ProjectController::class, 'adminIndex']);
 $router->post('/api/v1/admin/projects', [ProjectController::class, 'store']);
 $router->put('/api/v1/admin/projects/{id}', [ProjectController::class, 'update']);
@@ -69,5 +71,6 @@ $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
 $router->patch('/api/v1/admin/account', [AuthController::class, 'updateAccount']);
 $router->post('/api/v1/admin/account/password', [AuthController::class, 'changePassword']);
+$router->post('/api/v1/admin/uploads', [UploadController::class, 'upload']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
