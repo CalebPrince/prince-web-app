@@ -186,6 +186,26 @@ a:hover { color: var(--accent-strong); }
   margin-bottom: 1.25rem;
 }
 
+/* Pricing tiers */
+.pricing-card { position: relative; }
+.pricing-card.featured { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+.pricing-card .pricing-badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+}
+.pricing-card .pricing-price { font-size: 2rem; font-weight: 800; }
+.pricing-card ul { list-style: none; padding-left: 0; }
+.pricing-card ul li { padding: 0.35rem 0; padding-left: 1.5rem; position: relative; }
+.pricing-card ul li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
 /* Project grid */
 .filter-pill {
   border: 1px solid var(--line);
@@ -216,6 +236,23 @@ a:hover { color: var(--accent-strong); }
 .pager-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .pager-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .pager-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Share buttons */
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.share-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 .project-card {
   background: var(--card-bg);

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+<title>Pricing — Prince Caleb</title>
+<meta name="description" content="Straightforward starting-point pricing for custom websites, web apps, and mobile apps — with every project scoped and quoted after a quick discovery call.">
+<meta name="keywords" content="custom software pricing Ghana, web developer rates Accra, app development cost Ghana">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://princecaleb.dev/pricing.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Prince Caleb">
+<meta property="og:title" content="Pricing — Prince Caleb">
+<meta property="og:description" content="Straightforward starting-point pricing for custom websites, web apps, and mobile apps.">
+<meta property="og:url" content="https://princecaleb.dev/pricing.html">
+<meta property="og:image" content="https://princecaleb.dev/uploads/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pricing — Prince Caleb">
+<meta name="twitter:description" content="Straightforward starting-point pricing for custom websites, web apps, and mobile apps.">
+<meta name="twitter:image" content="https://princecaleb.dev/uploads/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container d-flex align-items-center justify-content-between py-3">
+    <a href="/" class="brand-logo text-decoration-none">Prince Caleb<span class="dot">.</span></a>
+    <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation">☰</button>
+    <div class="d-none d-md-flex gap-1">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/about.html" class="nav-link">About</a>
+      <a href="/services.html" class="nav-link">Services</a>
+      <a href="/projects.html" class="nav-link">Projects</a>
+      <a href="/blog.html" class="nav-link">Blog</a>
+      <a href="/pricing.html" class="nav-link active">Pricing</a>
+      <a href="/contact.html" class="nav-link">Contact</a>
+    </div>
+    <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
+  </div>
+</nav>
+
+<div class="offcanvas offcanvas-end nav-drawer" tabindex="-1" id="nav-drawer">
+  <div class="offcanvas-header">
+    <span class="brand-logo">Prince Caleb<span class="dot">.</span></span>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/about.html" class="nav-link">About</a>
+    <a href="/services.html" class="nav-link">Services</a>
+    <a href="/projects.html" class="nav-link">Projects</a>
+    <a href="/blog.html" class="nav-link">Blog</a>
+    <a href="/pricing.html" class="nav-link">Pricing</a>
+    <a href="/contact.html" class="nav-link">Contact</a>
+    <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="container">
+    <p class="eyebrow mb-3 hero-animate hero-animate-1">Pricing</p>
+    <h1 class="display-6 mb-3 hero-animate hero-animate-2">Straightforward starting points.</h1>
+    <p class="fs-5 text-muted-custom mb-0 hero-animate hero-animate-3" style="max-width: 60ch;" data-content="pricing_intro">
+      Every project is scoped and quoted individually — these are starting ranges to help you budget, not fixed quotes. Get in touch with your details and I'll send a tailored number.
+    </p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+
+      <div class="col-md-6 col-lg-4">
+        <div class="pricing-card service-card reveal">
+          <span class="eyebrow d-block mb-2" data-content="pricing_tier_1_name">Starter</span>
+          <div class="pricing-price mb-1" data-content="pricing_tier_1_price">From $600</div>
+          <p class="text-muted-custom mb-3" data-content="pricing_tier_1_tagline">Landing pages, small brochure sites, and simple booking or contact tools.</p>
+          <ul class="mb-4" data-content-list="pricing_tier_1_features">
+            <li>Up to 5 pages, responsive design</li>
+            <li>Contact or booking form wired to email</li>
+            <li>Basic on-page SEO</li>
+            <li>~2 weeks typical delivery</li>
+          </ul>
+          <button type="button" id="starter-checkout-btn" class="btn-brand w-100 text-center mb-2 d-none">Pay deposit to start — <span id="starter-checkout-amount"></span></button>
+          <a href="/request.html" class="btn-brand-outline w-100 text-center">Get a quote</a>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="pricing-card featured service-card reveal reveal-delay-1">
+          <span class="pricing-badge">Most requested</span>
+          <span class="eyebrow d-block mb-2" data-content="pricing_tier_2_name">Growth</span>
+          <div class="pricing-price mb-1" data-content="pricing_tier_2_price">From $2,500</div>
+          <p class="text-muted-custom mb-3" data-content="pricing_tier_2_tagline">Custom web apps, CMS ecosystems, and dashboards built around your actual workflow.</p>
+          <ul class="mb-4" data-content-list="pricing_tier_2_features">
+            <li>Custom database &amp; API design</li>
+            <li>Admin dashboard / CMS</li>
+            <li>Third-party integrations (payments, messaging)</li>
+            <li>4–8 weeks typical delivery</li>
+          </ul>
+          <a href="/request.html" class="btn-brand w-100 text-center">Get a quote</a>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="pricing-card service-card reveal reveal-delay-2">
+          <span class="eyebrow d-block mb-2" data-content="pricing_tier_3_name">Custom / Enterprise</span>
+          <div class="pricing-price mb-1" data-content="pricing_tier_3_price">Custom quote</div>
+          <p class="text-muted-custom mb-3" data-content="pricing_tier_3_tagline">Multi-feature platforms, mobile apps, and ongoing engineering partnerships.</p>
+          <ul class="mb-4" data-content-list="pricing_tier_3_features">
+            <li>Cross-platform mobile apps</li>
+            <li>AI integrations &amp; automation</li>
+            <li>Ongoing support &amp; iteration</li>
+            <li>Scoped after a discovery call</li>
+          </ul>
+          <a href="/request.html" class="btn-brand-outline w-100 text-center">Get a quote</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="text-center mt-5">
+      <p class="text-muted-custom mb-3">Not sure which tier fits? Send over the details and I'll tell you honestly.</p>
+      <a href="/request.html" class="btn-brand">Request a project →</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+    <span class="brand-logo" style="color:#fff;">Prince Caleb<span class="dot">.</span></span>
+    <div class="d-flex gap-4">
+      <a href="/about.html">About</a>
+      <a href="/services.html">Services</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/blog.html">Blog</a>
+      <a href="/pricing.html">Pricing</a>
+      <a href="/contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="container mt-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+    <small>&copy; 2026 Prince Caleb. All rights reserved.</small>
+    <div class="d-flex gap-3">
+      <a href="/privacy.html" class="small">Privacy Policy</a>
+      <a href="/cookies.html" class="small">Cookie Policy</a>
+    </div>
+  </div>
+</footer>
+
+<button type="button" id="ai-widget-toggle">💬 Live Chat</button>
+
+<div class="modal fade" id="checkout-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pay deposit to start — Starter tier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="checkout-form">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="checkout-name" required maxlength="255">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="checkout-email" required maxlength="255">
+          </div>
+          <div id="checkout-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100" id="checkout-submit-btn">Continue to payment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/content.js"></script>
+<script src="/js/animations.js"></script>
+<script src="/js/ai-boot.js"></script>
+<script>
+(async function () {
+  let paymentConfig = null;
+  try {
+    paymentConfig = await api.get('/api/v1/payments/config');
+  } catch (_) {
+    return;
+  }
+  if (!paymentConfig.public_key || !paymentConfig.tier_1_amount) return;
+
+  document.getElementById('starter-checkout-amount').textContent =
+    `${paymentConfig.currency} ${paymentConfig.tier_1_amount.toLocaleString()}`;
+  const checkoutBtn = document.getElementById('starter-checkout-btn');
+  checkoutBtn.classList.remove('d-none');
+
+  const modalEl = document.getElementById('checkout-modal');
+  const modal = new bootstrap.Modal(modalEl);
+  checkoutBtn.addEventListener('click', () => modal.show());
+
+  document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('checkout-msg');
+    const submitBtn = document.getElementById('checkout-submit-btn');
+    msg.classList.add('d-none');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Preparing…';
+
+    try {
+      const prep = await api.post('/api/v1/payments/prepare', {
+        tier: 'starter',
+        name: document.getElementById('checkout-name').value,
+        email: document.getElementById('checkout-email').value,
+      });
+
+      modal.hide();
+      const handler = PaystackPop.setup({
+        key: paymentConfig.public_key,
+        email: prep.email,
+        amount: prep.amount,
+        currency: prep.currency,
+        ref: prep.reference,
+        callback: function (response) {
+          api.post('/api/v1/payments/verify', { reference: response.reference }).then((result) => {
+            alert(result.status === 'success'
+              ? "Payment received — thanks! I'll be in touch shortly to kick things off."
+              : 'Payment could not be confirmed. If you were charged, contact me and I\'ll sort it out.');
+          });
+        },
+        onClose: function () {},
+      });
+      handler.openIframe();
+    } catch (err) {
+      msg.className = 'alert alert-danger py-2 small';
+      msg.textContent = err.message || 'Something went wrong.';
+      msg.classList.remove('d-none');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Continue to payment';
+    }
+  });
+})();
+</script>
+</body>
+</html>

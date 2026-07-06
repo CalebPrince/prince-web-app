@@ -47,6 +47,12 @@ CREATE TABLE IF NOT EXISTS inquiries (
   status TEXT NOT NULL DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'flagged', 'archived')),
   ip_address TEXT NOT NULL,
   user_agent TEXT,
+  type TEXT NOT NULL DEFAULT 'contact' CHECK (type IN ('contact', 'project_request')),
+  project_type TEXT,
+  budget TEXT,
+  timeline TEXT,
+  features TEXT,
+  attachments TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_inquiries_status_created ON inquiries (status, created_at);
@@ -106,3 +112,32 @@ CREATE TABLE IF NOT EXISTS webhook_queue (
   email_sent INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS payment_links (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT UNIQUE NOT NULL,
+  client_name TEXT NOT NULL,
+  client_email TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  description TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'cancelled')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  paid_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reference TEXT UNIQUE NOT NULL,
+  email TEXT NOT NULL,
+  customer_name TEXT,
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  description TEXT,
+  source TEXT NOT NULL DEFAULT 'tier_checkout' CHECK (source IN ('tier_checkout', 'payment_link')),
+  payment_link_id INTEGER NULL REFERENCES payment_links(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'success', 'failed')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_payments_status_created ON payments (status, created_at);

@@ -30,6 +30,24 @@ class Validator
     }
 
     /** @return array<int,string> */
+    public static function validateProjectRequest(array $data): array
+    {
+        $errors = self::validateInquiry($data);
+
+        if (trim((string) ($data['project_type'] ?? '')) === '') {
+            $errors[] = 'Project type is required.';
+        }
+        if (trim((string) ($data['budget'] ?? '')) === '') {
+            $errors[] = 'Budget is required.';
+        }
+        if (trim((string) ($data['timeline'] ?? '')) === '') {
+            $errors[] = 'Timeline is required.';
+        }
+
+        return $errors;
+    }
+
+    /** @return array<int,string> */
     public static function validateProject(array $data): array
     {
         $errors = [];

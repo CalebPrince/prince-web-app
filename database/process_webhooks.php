@@ -31,11 +31,28 @@ foreach ($pending as $row) {
     $slackDone = !empty($row['slack_sent']) || empty($slackUrl);
     $emailDone = !empty($row['email_sent']) || empty($notifyEmail);
 
+    $isProjectRequest = ($row['type'] ?? 'contact') === 'project_request';
+    $attachments = $isProjectRequest && $row['attachments'] ? (json_decode($row['attachments'], true) ?: []) : [];
+    $attachmentLines = $attachments
+        ? "Attachments:\n" . implode("\n", array_map(fn ($p) => 'https://princecaleb.dev' . $p, $attachments)) . "\n\n"
+        : '';
+    $detailLines = $isProjectRequest ? sprintf(
+        "Project type: %s\nBudget: %s\nTimeline: %s\nFeatures: %s\n\n%s",
+        $row['project_type'] ?: '—',
+        $row['budget'] ?: '—',
+        $row['timeline'] ?: '—',
+        $row['features'] ?: '—',
+        $attachmentLines
+    ) : '';
+
     if (!$slackDone) {
+        $heading = $isProjectRequest ? 'New *project request*' : 'New inquiry';
         $text = sprintf(
-            "New inquiry from *%s* (%s):\n>%s",
+            "%s from *%s* (%s):\n%s>%s",
+            $heading,
             $row['name'],
             $row['email'],
+            $detailLines !== '' ? '>' . str_replace("\n", "\n>", rtrim($detailLines)) . "\n" : '',
             str_replace("\n", "\n>", $row['message'])
         );
         $ch = curl_init($slackUrl);
@@ -53,9 +70,10 @@ foreach ($pending as $row) {
     }
 
     if (!$emailDone) {
-        $subject = 'New inquiry from ' . $row['name'];
-        $body = "Name: {$row['name']}\nEmail: {$row['email']}\n\n{$row['message']}\n\n"
-            . "— sent automatically from the princecaleb.dev contact form.";
+        $subject = ($isProjectRequest ? 'New project request from ' : 'New inquiry from ') . $row['name'];
+        $body = "Name: {$row['name']}\nEmail: {$row['email']}\n\n{$detailLines}{$row['message']}\n\n"
+            . "— sent automatically from the princecaleb.dev "
+            . ($isProjectRequest ? 'project request form.' : 'contact form.');
         $emailDone = Mailer::send($notifyEmail, $subject, $body, $row['email']);
     }
 

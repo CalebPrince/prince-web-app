@@ -40,6 +40,18 @@
     if (el.lastElementChild) el.lastElementChild.classList.add("mb-0");
   });
 
+  // Bulleted lists: one line per <li>, replacing the static fallback items
+  document.querySelectorAll("[data-content-list]").forEach(el => {
+    const value = content[el.dataset.contentList];
+    if (!value) return;
+    el.innerHTML = "";
+    value.split("\n").map(line => line.trim()).filter(Boolean).forEach(line => {
+      const li = document.createElement("li");
+      li.textContent = line;
+      el.appendChild(li);
+    });
+  });
+
   // Homepage stats: value/prefix/suffix feed the count-up animation in animations.js
   const statDefs = [
     { value: "stat_1_value", suffix: "stat_1_suffix", label: "stat_1_label" },

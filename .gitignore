@@ -4,3 +4,5 @@ storage/logs/*
 .env
 .claude/
 *.zip
+public/uploads/project-requests/*
+!public/uploads/project-requests/.gitkeep

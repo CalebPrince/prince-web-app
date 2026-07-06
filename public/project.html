@@ -12,13 +12,13 @@
 <meta property="og:title" id="og-title" content="Case Study — Prince Caleb">
 <meta property="og:description" id="og-description" content="A custom software case study by Prince Caleb — web and mobile app development, from architecture to launch.">
 <meta property="og:url" id="og-url" content="https://princecaleb.dev/projects.html">
-<meta property="og:image" content="https://princecaleb.dev/uploads/og-image.png">
+<meta property="og:image" id="og-image" content="https://princecaleb.dev/uploads/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" id="twitter-title" content="Case Study — Prince Caleb">
 <meta name="twitter:description" id="twitter-description" content="A custom software case study by Prince Caleb — web and mobile app development, from architecture to launch.">
-<meta name="twitter:image" content="https://princecaleb.dev/uploads/og-image.png">
+<meta name="twitter:image" id="twitter-image" content="https://princecaleb.dev/uploads/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
@@ -38,6 +38,7 @@
       <a href="/services.html" class="nav-link">Services</a>
       <a href="/projects.html" class="nav-link active">Projects</a>
       <a href="/blog.html" class="nav-link">Blog</a>
+      <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
     <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
@@ -55,6 +56,7 @@
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
     <a href="/blog.html" class="nav-link">Blog</a>
+      <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
   </div>
@@ -76,6 +78,7 @@
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
       <a href="/blog.html">Blog</a>
+      <a href="/pricing.html">Pricing</a>
       <a href="/contact.html">Contact</a>
     </div>
   </div>
@@ -124,14 +127,17 @@
     const p = await api.get(`/api/v1/projects/${encodeURIComponent(slug)}`);
     const pageTitle = `${p.title} — Prince Caleb`;
     const canonicalUrl = `https://princecaleb.dev/project.html?slug=${encodeURIComponent(slug)}`;
+    const imageUrl = p.cover_image_path.startsWith('http') ? p.cover_image_path : `https://princecaleb.dev${p.cover_image_path}`;
     document.getElementById('page-title').textContent = pageTitle;
     document.getElementById('page-description')?.setAttribute('content', p.summary);
     document.getElementById('page-canonical')?.setAttribute('href', canonicalUrl);
     document.getElementById('og-title')?.setAttribute('content', pageTitle);
     document.getElementById('og-description')?.setAttribute('content', p.summary);
     document.getElementById('og-url')?.setAttribute('content', canonicalUrl);
+    document.getElementById('og-image')?.setAttribute('content', imageUrl);
     document.getElementById('twitter-title')?.setAttribute('content', pageTitle);
     document.getElementById('twitter-description')?.setAttribute('content', p.summary);
+    document.getElementById('twitter-image')?.setAttribute('content', imageUrl);
 
     const links = [];
     if (p.is_embeddable && p.live_url) {

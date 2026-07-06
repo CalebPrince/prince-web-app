@@ -52,6 +52,7 @@
       <a href="/services.html" class="nav-link">Services</a>
       <a href="/projects.html" class="nav-link">Projects</a>
       <a href="/blog.html" class="nav-link">Blog</a>
+      <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
     <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
@@ -69,6 +70,7 @@
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
     <a href="/blog.html" class="nav-link">Blog</a>
+    <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
   </div>
@@ -256,6 +258,40 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="container">
+    <p class="eyebrow text-center mb-2">Pricing</p>
+    <h2 class="text-center mb-5">Starting points, scoped to your project.</h2>
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-4">
+        <div class="pricing-card service-card reveal">
+          <span class="eyebrow d-block mb-2" data-content="pricing_tier_1_name">Starter</span>
+          <div class="pricing-price mb-1" data-content="pricing_tier_1_price">From $600</div>
+          <p class="text-muted-custom mb-0 small" data-content="pricing_tier_1_tagline">Landing pages and simple booking or contact tools.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pricing-card featured service-card reveal reveal-delay-1">
+          <span class="pricing-badge">Most requested</span>
+          <span class="eyebrow d-block mb-2" data-content="pricing_tier_2_name">Growth</span>
+          <div class="pricing-price mb-1" data-content="pricing_tier_2_price">From $2,500</div>
+          <p class="text-muted-custom mb-0 small" data-content="pricing_tier_2_tagline">Custom web apps, CMS ecosystems, and dashboards.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pricing-card service-card reveal reveal-delay-2">
+          <span class="eyebrow d-block mb-2" data-content="pricing_tier_3_name">Custom / Enterprise</span>
+          <div class="pricing-price mb-1" data-content="pricing_tier_3_price">Custom quote</div>
+          <p class="text-muted-custom mb-0 small" data-content="pricing_tier_3_tagline">Multi-feature platforms and mobile apps.</p>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <a href="/pricing.html" class="btn-brand-outline">See full pricing →</a>
+    </div>
+  </div>
+</section>
+
 <section class="section" style="background: var(--bg-soft);">
   <div class="container">
     <p class="eyebrow text-center mb-2">What clients say</p>
@@ -376,6 +412,7 @@
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
       <a href="/blog.html">Blog</a>
+      <a href="/pricing.html">Pricing</a>
       <a href="/contact.html">Contact</a>
     </div>
   </div>
@@ -435,7 +472,10 @@
           <div class="project-card">
             <img src="${p.cover_image_path}" alt="${p.title}">
             <div class="card-body">
-              ${p.category ? `<span class="eyebrow mb-2 d-block">${p.category}</span>` : ''}
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                ${p.category ? `<span class="eyebrow mb-0">${p.category}</span>` : '<span></span>'}
+                <span class="small text-muted-custom">⏱ ${p.reading_time} min read</span>
+              </div>
               <h5 class="mb-2">${p.title}</h5>
               <p class="small text-muted-custom mb-0">${p.excerpt}</p>
             </div>

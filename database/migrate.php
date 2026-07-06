@@ -30,4 +30,15 @@ if (!in_array('email_sent', $webhookColumns, true)) {
     $pdo->exec('ALTER TABLE webhook_queue ADD COLUMN email_sent INTEGER NOT NULL DEFAULT 0');
 }
 
+$inquiryColumns = array_column($pdo->query('PRAGMA table_info(inquiries)')->fetchAll(), 'name');
+if (!in_array('type', $inquiryColumns, true)) {
+    $pdo->exec("ALTER TABLE inquiries ADD COLUMN type TEXT NOT NULL DEFAULT 'contact'");
+}
+foreach (['project_type', 'budget', 'timeline', 'features', 'attachments'] as $col) {
+    if (!in_array($col, $inquiryColumns, true)) {
+        $pdo->exec("ALTER TABLE inquiries ADD COLUMN {$col} TEXT");
+    }
+}
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_inquiries_type ON inquiries (type)');
+
 echo "Schema applied.\n";
