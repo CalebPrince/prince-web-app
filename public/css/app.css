@@ -370,6 +370,17 @@ a:hover { color: var(--accent-strong); }
 }
 .site-footer a { color: #cbd5e1; }
 .site-footer a:hover { color: #fff; }
+.social-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.social-icon-link:hover { background: rgba(255, 255, 255, 0.16); transform: translateY(-2px); }
 
 /* AI chat widget */
 #ai-widget-toggle {
