@@ -5,6 +5,14 @@
 
 RewriteEngine On
 
+# Canonical host: always redirect www to the bare domain. Without this, the
+# site was reachable at both hosts with no redirect, and since the admin
+# session cookies aren't domain-scoped, they only apply to whichever host
+# was used at login — bouncing between the two looked like getting logged
+# out every time.
+RewriteCond %{HTTP_HOST} ^www\.princecaleb\.dev$ [NC]
+RewriteRule ^(.*)$ https://princecaleb.dev/$1 [R=301,L]
+
 # Serve real files/directories as-is; route everything else under /api/ through index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
