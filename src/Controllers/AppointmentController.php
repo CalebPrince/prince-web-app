@@ -83,14 +83,28 @@ class AppointmentController
     /** GET /api/v1/appointments/availability?date=YYYY-MM-DD — public */
     public static function availability(): void
     {
+        $result = self::getAvailableSlots((string) ($_GET['date'] ?? ''));
+        if (isset($result['error'])) {
+            Response::error($result['error'], 422);
+        }
+        Response::json(['slots' => $result['slots']]);
+    }
+
+    /**
+     * Pure availability lookup, reused by the public HTTP endpoint above and
+     * by the Live Chat check_availability tool (which can't use Response::json
+     * since that exits mid-conversation).
+     *
+     * @return array{enabled:bool, slots:array<int,string>, timezone?:string, error?:string}
+     */
+    public static function getAvailableSlots(string $date): array
+    {
         $cfg = self::config();
         if (!$cfg['enabled']) {
-            Response::json(['slots' => []]);
+            return ['enabled' => false, 'slots' => []];
         }
-
-        $date = $_GET['date'] ?? '';
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            Response::error('Invalid date.', 422);
+            return ['enabled' => true, 'slots' => [], 'error' => 'Invalid date — expected YYYY-MM-DD.'];
         }
 
         $slots = self::possibleSlots($date, $cfg);
@@ -104,7 +118,7 @@ class AppointmentController
             $slots = array_values(array_diff($slots, $booked));
         }
 
-        Response::json(['slots' => $slots]);
+        return ['enabled' => true, 'slots' => $slots, 'timezone' => $cfg['timezone']];
     }
 
     /** POST /api/v1/appointments/book — public, honeypot + rate-limited */
@@ -119,9 +133,25 @@ class AppointmentController
             Response::json(['status' => 'booked'], 201);
         }
 
+        $result = self::createBooking($data);
+        if (!$result['success']) {
+            Response::error($result['error'], $result['code'] ?? 422);
+        }
+        Response::json(['status' => 'booked'], 201);
+    }
+
+    /**
+     * Pure booking logic, reused by the public HTTP endpoint above and by the
+     * Live Chat book_appointment tool.
+     *
+     * @param array{name?:string,email?:string,phone?:string,date?:string,time?:string,topic?:string} $data
+     * @return array{success:bool, error?:string, code?:int, date?:string, time?:string, timezone?:string}
+     */
+    public static function createBooking(array $data): array
+    {
         $cfg = self::config();
         if (!$cfg['enabled']) {
-            Response::error('Booking is not available right now.', 422);
+            return ['success' => false, 'error' => 'Booking is not available right now.'];
         }
 
         $name = trim((string) ($data['name'] ?? ''));
@@ -131,18 +161,22 @@ class AppointmentController
         $time = trim((string) ($data['time'] ?? ''));
         $topic = trim((string) ($data['topic'] ?? ''));
 
-        $errors = [];
-        if ($name === '' || mb_strlen($name) > 255) $errors[] = 'Name is required.';
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid email is required.';
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) $errors[] = 'Invalid date.';
-        if (!preg_match('/^\d{2}:\d{2}$/', $time)) $errors[] = 'Invalid time.';
-        if ($errors) {
-            Response::json(['errors' => $errors], 422);
+        if ($name === '' || mb_strlen($name) > 255) {
+            return ['success' => false, 'error' => 'A valid name is required.'];
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'A valid email is required.'];
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return ['success' => false, 'error' => 'Invalid date — use YYYY-MM-DD.'];
+        }
+        if (!preg_match('/^\d{2}:\d{2}$/', $time)) {
+            return ['success' => false, 'error' => 'Invalid time — use HH:MM.'];
         }
 
         // Re-check the slot is still genuinely offered, not just well-formed.
         if (!in_array($time, self::possibleSlots($date, $cfg), true)) {
-            Response::error('That slot is no longer available.', 422);
+            return ['success' => false, 'error' => 'That slot is no longer available.'];
         }
 
         $pdo = Database::get();
@@ -153,7 +187,7 @@ class AppointmentController
             )->execute([$name, $email, $phone ?: null, $date, $time, $cfg['slotMinutes'], $topic ?: null]);
         } catch (\PDOException $e) {
             // Partial unique index violation — someone else booked it first.
-            Response::error('That slot was just booked by someone else — please pick another.', 409);
+            return ['success' => false, 'error' => 'That slot was just booked by someone else — please pick another.', 'code' => 409];
         }
 
         $notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');
@@ -170,7 +204,7 @@ class AppointmentController
             "Hi {$name},\n\nYou're booked in for {$date} at {$time} ({$cfg['timezone']}).\n\nIf you need to reschedule or cancel, just reply to this email.\n\n— Prince Caleb"
         );
 
-        Response::json(['status' => 'booked'], 201);
+        return ['success' => true, 'date' => $date, 'time' => $time, 'timezone' => $cfg['timezone']];
     }
 
     /** GET /api/v1/admin/appointments */

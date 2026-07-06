@@ -65,7 +65,7 @@ class LiveChatController
         $geminiKey = Settings::get('gemini_api_key');
 
         if (!empty($geminiKey)) {
-            $reply = self::chatWithGemini($geminiKey, $transcript, $projects);
+            $reply = self::chatWithGemini($geminiKey, $transcript, $projects, $pdo);
             if ($reply !== null) {
                 $mode = 'ai';
             }
@@ -84,7 +84,26 @@ class LiveChatController
             'reply' => $reply,
             'mode' => $mode,
             // The widget shows "Build my prototype" once the AI has enough context.
-            'can_prototype' => $mode === 'ai' && $userTurns >= 2,
+            'can_prototype' => $mode === 'ai' && $userTurns >= 3,
+        ]);
+    }
+
+    /** GET /api/v1/chat/session/{token} — rehydrates a session for the two-column workspace page */
+    public static function session(array $params): void
+    {
+        $pdo = Database::get();
+        $session = self::requireSession($pdo, (string) ($params['token'] ?? ''));
+        $transcript = json_decode($session['transcript_json'], true) ?: [];
+        $userTurns = count(array_filter($transcript, fn($m) => $m['role'] === 'user'));
+        $hasPrototype = !empty($session['prototype_html']);
+
+        Response::json([
+            'token' => $session['token'],
+            'transcript' => $transcript,
+            'can_build' => $userTurns >= 3,
+            'has_prototype' => $hasPrototype,
+            'prototype_status' => $session['prototype_status'],
+            'prototype_url' => $hasPrototype ? '/api/v1/chat/prototype/' . $session['token'] : null,
         ]);
     }
 
@@ -401,7 +420,10 @@ class LiveChatController
         )->fetchAll();
     }
 
-    private static function chatWithGemini(string $apiKey, array $transcript, array $projects): ?string
+    /** Max Gemini <-> tool round-trips per visitor message, so a confused model can't loop forever. */
+    private const MAX_TOOL_ROUNDS = 3;
+
+    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?string
     {
         $catalog = implode("\n", array_map(
             fn($p) => "- {$p['title']} ({$p['tag_names']}): {$p['summary']}",
@@ -409,13 +431,30 @@ class LiveChatController
         ));
 
         $system = "You are the live-chat assistant on Prince Caleb's web & mobile development portfolio. "
+            . "Talk like a genuinely curious, friendly person having a conversation — not an intake form. "
             . "If the visitor just greets you (hi, hello, hey), reply with a warm one-sentence hello and ask "
-            . "what they'd like to build — nothing else. "
-            . "Your job: understand what the visitor wants built so a concept prototype can be generated. "
-            . "Find out (one short, friendly question at a time): what kind of site/app, its purpose and audience, "
-            . "the key pages or features, and any style/color preferences. Keep replies to 1-3 short sentences. "
-            . "After you understand the basics (usually 2-3 exchanges), tell them to press the "
-            . "\"Build my prototype\" button below the chat to see a live concept. "
+            . "what brings them by — nothing else.\n\n"
+            . "Not every visitor wants to scope out a build. Some just have a general question — about what "
+            . "Prince builds, his experience, tech stack, process, turnaround, location, or pricing. Answer "
+            . "those directly and helpfully using your tools, as normal conversation — don't redirect every "
+            . "reply toward \"what would you like to build?\" unless that's genuinely where things are headed.\n\n"
+            . "When a visitor does describe something they want built, get to know it through natural "
+            . "back-and-forth: ask about it one question at a time, following their lead rather than a fixed "
+            . "script — what it's for, who it's for, what actually matters to them, style preferences, "
+            . "whatever comes up naturally. Some visitors want to chat a while before they're ready to see "
+            . "anything; others are ready sooner — read the room. Only bring up the \"Build my prototype\" "
+            . "button once you genuinely understand enough to make a useful first draft — never mention it "
+            . "just because a couple of messages have gone by. Keep replies short and conversational (1-4 "
+            . "sentences), never a bulleted interview.\n\n"
+            . "You have tools available, and using them well is part of being helpful:\n"
+            . "- get_site_info: use it for general questions about Prince's background, services, tech stack, "
+            . "experience, location, or contact/social links, so you answer with real facts instead of guessing.\n"
+            . "- get_pricing: use it whenever cost, packages, or \"how much\" comes up, so you quote real numbers.\n"
+            . "- search_content: use it when something they describe reminds you of a past project or blog "
+            . "post worth mentioning — share it naturally, with the link.\n"
+            . "- check_availability / book_appointment: use these when they want to talk it through live or "
+            . "book a call. Always read the exact date, time, and timezone back to them and get an explicit "
+            . "yes before calling book_appointment — never book without confirmation.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
         $persona = Settings::get('chat_persona');
@@ -431,12 +470,261 @@ class LiveChatController
             ];
         }
 
-        $body = json_encode([
-            'system_instruction' => ['parts' => [['text' => $system]]],
-            'contents' => $contents,
-        ]);
+        $tools = [['functionDeclarations' => self::toolDeclarations()]];
 
-        return self::callGemini($apiKey, $body, 15);
+        for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
+            $body = json_encode([
+                'system_instruction' => ['parts' => [['text' => $system]]],
+                'contents' => $contents,
+                'tools' => $tools,
+            ]);
+
+            $result = self::callGeminiRaw($apiKey, $body, 20);
+            $parts = $result['candidates'][0]['content']['parts'] ?? null;
+            if (!is_array($parts)) {
+                return null;
+            }
+
+            $functionCall = null;
+            $text = '';
+            foreach ($parts as $part) {
+                if (isset($part['functionCall']['name'])) {
+                    $functionCall = $part['functionCall'];
+                }
+                if (isset($part['text'])) {
+                    $text .= $part['text'];
+                }
+            }
+
+            if ($functionCall === null) {
+                return $text !== '' ? $text : null;
+            }
+
+            // Model wants a tool run: record its call, run it locally, feed the
+            // result back, then let it produce the next turn (or another call).
+            $contents[] = ['role' => 'model', 'parts' => [['functionCall' => $functionCall]]];
+            $toolResponse = self::runTool($functionCall['name'], $functionCall['args'] ?? [], $pdo);
+            $contents[] = ['role' => 'user', 'parts' => [[
+                'functionResponse' => ['name' => $functionCall['name'], 'response' => $toolResponse],
+            ]]];
+        }
+
+        return null;
+    }
+
+    /** @return array<int,array<string,mixed>> Gemini function declarations for the chat tools. */
+    private static function toolDeclarations(): array
+    {
+        return [
+            [
+                'name' => 'get_site_info',
+                'description' => 'Get background info about Prince — bio, services offered, tech stack, '
+                    . 'experience highlights, location, and contact/social links. Use this for general '
+                    . 'questions that are not about scoping a specific project, e.g. "what do you build", '
+                    . '"where are you based", "do you work with WordPress", "how experienced are you".',
+                'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+            ],
+            [
+                'name' => 'get_pricing',
+                'description' => 'Get the current service pricing tiers (name, price, tagline, features) '
+                    . 'to answer questions about cost or packages accurately instead of guessing.',
+                'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+            ],
+            [
+                'name' => 'check_availability',
+                'description' => 'Check real bookable call slots for a given date, so you can offer the '
+                    . 'visitor an actual time instead of guessing.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'date' => ['type' => 'STRING', 'description' => 'Date in YYYY-MM-DD format.'],
+                    ],
+                    'required' => ['date'],
+                ],
+            ],
+            [
+                'name' => 'book_appointment',
+                'description' => 'Book a call. Only call this after reading the exact date, time, and '
+                    . 'timezone back to the visitor and getting an explicit yes.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'name' => ['type' => 'STRING'],
+                        'email' => ['type' => 'STRING'],
+                        'date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
+                        'time' => ['type' => 'STRING', 'description' => 'HH:MM, 24-hour'],
+                        'phone' => ['type' => 'STRING'],
+                        'topic' => ['type' => 'STRING'],
+                    ],
+                    'required' => ['name', 'email', 'date', 'time'],
+                ],
+            ],
+            [
+                'name' => 'search_content',
+                'description' => 'Search past projects and blog posts for something relevant to what the '
+                    . 'visitor described, so you can reference real, specific work instead of speaking in '
+                    . 'generalities.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'query' => [
+                            'type' => 'STRING',
+                            'description' => 'A few keywords, e.g. "restaurant ordering app" or "SEO blog".',
+                        ],
+                    ],
+                    'required' => ['query'],
+                ],
+            ],
+        ];
+    }
+
+    /** @return array<string,mixed> JSON-safe result for the functionResponse turn. */
+    private static function runTool(string $name, array $args, \PDO $pdo): array
+    {
+        try {
+            return match ($name) {
+                'get_site_info' => self::toolGetSiteInfo(),
+                'get_pricing' => self::toolGetPricing(),
+                'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
+                'book_appointment' => AppointmentController::createBooking($args),
+                'search_content' => self::toolSearchContent($pdo, (string) ($args['query'] ?? '')),
+                default => ['error' => 'Unknown tool.'],
+            };
+        } catch (\Throwable $e) {
+            return ['error' => 'Tool failed to run.'];
+        }
+    }
+
+    private static function toolGetSiteInfo(): array
+    {
+        $fields = [
+            'about_bio' => 'bio',
+            'about_intro' => 'intro',
+            'availability_badge' => 'current_availability',
+            'tech_badges' => 'tech_stack',
+            'contact_location' => 'location',
+            'social_email' => 'email',
+            'social_github' => 'github',
+            'social_linkedin' => 'linkedin',
+            'social_whatsapp' => 'whatsapp',
+        ];
+        $info = [];
+        foreach ($fields as $settingKey => $outKey) {
+            $value = Settings::get($settingKey);
+            if (!empty($value)) {
+                $info[$outKey] = $value;
+            }
+        }
+
+        $services = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $title = Settings::get("service_{$i}_title");
+            if (empty($title)) {
+                continue;
+            }
+            $services[] = [
+                'title' => $title,
+                'summary' => Settings::get("service_{$i}_summary"),
+                'description' => Settings::get("service_{$i}_desc"),
+            ];
+        }
+        if ($services) {
+            $info['services'] = $services;
+        }
+
+        $highlights = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $label = Settings::get("stat_{$i}_label");
+            $value = Settings::get("stat_{$i}_value");
+            if (empty($label) || empty($value)) {
+                continue;
+            }
+            $highlights[] = trim(
+                (Settings::get("stat_{$i}_prefix") ?? '') . $value . (Settings::get("stat_{$i}_suffix") ?? '')
+                . ' ' . $label
+            );
+        }
+        if ($highlights) {
+            $info['highlights'] = $highlights;
+        }
+
+        return $info;
+    }
+
+    private static function toolGetPricing(): array
+    {
+        $tiers = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $name = Settings::get("pricing_tier_{$i}_name");
+            if (empty($name)) {
+                continue;
+            }
+            $tiers[] = [
+                'name' => $name,
+                'price' => Settings::get("pricing_tier_{$i}_price"),
+                'tagline' => Settings::get("pricing_tier_{$i}_tagline"),
+                'features' => array_values(array_filter(array_map(
+                    'trim',
+                    explode("\n", (string) Settings::get("pricing_tier_{$i}_features"))
+                ))),
+            ];
+        }
+        return ['currency' => Settings::get('pricing_currency') ?: 'GHS', 'tiers' => $tiers];
+    }
+
+    private static function toolSearchContent(\PDO $pdo, string $query): array
+    {
+        $words = array_filter(
+            preg_split('/\W+/', strtolower(trim($query))) ?: [],
+            fn($w) => strlen($w) > 2
+        );
+        if (!$words) {
+            return ['results' => []];
+        }
+
+        $score = function (string $haystack) use ($words): int {
+            $haystack = strtolower($haystack);
+            $n = 0;
+            foreach ($words as $w) {
+                if (str_contains($haystack, $w)) {
+                    $n++;
+                }
+            }
+            return $n;
+        };
+
+        $results = [];
+        foreach ($pdo->query('SELECT title, slug, summary, case_study_body FROM projects WHERE is_published = 1') as $p) {
+            $s = $score($p['title'] . ' ' . $p['summary'] . ' ' . ($p['case_study_body'] ?? ''));
+            if ($s > 0) {
+                $results[] = [
+                    'score' => $s,
+                    'type' => 'project',
+                    'title' => $p['title'],
+                    'url' => '/project.html?slug=' . urlencode($p['slug']),
+                    'snippet' => $p['summary'],
+                ];
+            }
+        }
+        foreach ($pdo->query('SELECT title, slug, excerpt FROM blog_posts WHERE is_published = 1') as $b) {
+            $s = $score($b['title'] . ' ' . $b['excerpt']);
+            if ($s > 0) {
+                $results[] = [
+                    'score' => $s,
+                    'type' => 'blog_post',
+                    'title' => $b['title'],
+                    'url' => '/blog-post.html?slug=' . urlencode($b['slug']),
+                    'snippet' => $b['excerpt'],
+                ];
+            }
+        }
+
+        usort($results, fn($a, $b) => $b['score'] <=> $a['score']);
+        $top = array_slice($results, 0, 3);
+        foreach ($top as &$t) {
+            unset($t['score']);
+        }
+        return ['results' => $top];
     }
 
     private static function prototypeWithGemini(string $apiKey, array $transcript): ?string
@@ -472,8 +760,15 @@ class LiveChatController
 
     private static function callGemini(string $apiKey, string $body, int $timeout): ?string
     {
+        $decoded = self::callGeminiRaw($apiKey, $body, $timeout);
+        return $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    }
+
+    /** @return array<string,mixed> Decoded Gemini response, or [] on any transport/HTTP failure. */
+    private static function callGeminiRaw(string $apiKey, string $body, int $timeout): array
+    {
         if (!function_exists('curl_init')) {
-            return null; // no curl on this host — callers fall back gracefully
+            return []; // no curl on this host — callers fall back gracefully
         }
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
         $ch = curl_init($url);
@@ -489,10 +784,9 @@ class LiveChatController
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
-            return null;
+            return [];
         }
-        $decoded = json_decode($response, true);
-        return $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        return json_decode($response, true) ?? [];
     }
 
     private static function keywordFallback(string $message, array $projects): string

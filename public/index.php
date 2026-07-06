@@ -78,6 +78,7 @@ $router->get('/api/v1/appointments/availability', [AppointmentController::class,
 $router->post('/api/v1/appointments/book', [AppointmentController::class, 'book']);
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
 $router->get('/api/v1/chat/status', [LiveChatController::class, 'status']);
+$router->get('/api/v1/chat/session/{token}', [LiveChatController::class, 'session']);
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
 $router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePrototype']);
 $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'viewPrototype']);
