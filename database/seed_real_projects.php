@@ -23,7 +23,7 @@ $projects = [
         'category' => 'custom_solution',
         'live_url' => 'https://videowatch.duckdns.org',
         'repo_url' => null,
-        'cover_image_path' => '/uploads/videowatch-cover.svg',
+        'cover_image_path' => '/uploads/videowatch-real.jpg',
         'tags' => ['Python', 'FastAPI', 'Node.js', 'SQLite'],
     ],
     [
@@ -37,7 +37,7 @@ $projects = [
         'category' => 'custom_solution',
         'live_url' => 'https://ledger-command.duckdns.org',
         'repo_url' => null,
-        'cover_image_path' => '/uploads/ledger-command-cover.svg',
+        'cover_image_path' => '/uploads/ledger-command-real.jpg',
         'tags' => ['Python', 'FastAPI', 'Node.js', 'SQLite', 'AI'],
     ],
     [
@@ -51,7 +51,7 @@ $projects = [
         'category' => 'custom_solution',
         'live_url' => 'https://lcamedia.duckdns.org/church-media/',
         'repo_url' => null,
-        'cover_image_path' => '/uploads/church-media-cover.svg',
+        'cover_image_path' => '/uploads/church-media-real.jpg',
         'tags' => ['JavaScript', 'Web Audio API', 'HTML5'],
         'is_embeddable' => 1,
     ],
@@ -66,7 +66,7 @@ $projects = [
         'category' => 'custom_solution',
         'live_url' => 'https://lcamedia.duckdns.org/church-shapeit/',
         'repo_url' => null,
-        'cover_image_path' => '/uploads/church-shapeit-cover.svg',
+        'cover_image_path' => '/uploads/church-shapeit-real.jpg',
         'tags' => ['JavaScript', 'Web Audio API', 'HTML5'],
         'is_embeddable' => 1,
     ],
@@ -81,8 +81,22 @@ $projects = [
         'category' => 'cms',
         'live_url' => 'https://lca-accra.com',
         'repo_url' => null,
-        'cover_image_path' => '/uploads/lca-accra-cover.svg',
+        'cover_image_path' => '/uploads/lca-accra-real.jpg',
         'tags' => ['PHP', 'MySQL', 'Bootstrap 5', 'jQuery'],
+    ],
+    [
+        'slug' => 'simply-my-care',
+        'title' => 'Simply My Care',
+        'summary' => 'Custom PHP website and staff/client portal for a UK home care and supported living provider, replacing a previous WordPress site.',
+        'case_study_body' =>
+            "Simply My Care needed a website that did more than describe services — it needed to actually run the day-to-day operations of a home care and supported living provider: staff scheduling, client care plans, and secure communication between carers, clients, and admin. The previous WordPress site couldn't support any of that without a maze of plugins, so it was rebuilt from scratch in native PHP.\n\n" .
+            "The platform is deliberately framework-free — a good fit for a small, focused application where a full framework's overhead wasn't worth it. Every database query runs through a single Database:: PDO wrapper, authentication and role checks live in one Auth:: class, and every POST form is CSRF-protected. Staff and clients each get a role-scoped portal: staff see their weekly rota, assigned clients, and log completed visits; clients see their upcoming visits, care plan, and care team, with internal messaging connecting everyone without exposing anyone else's records.\n\n" .
+            "Email — enquiries, password resets, notifications — runs through PHPMailer over SMTP rather than PHP's unreliable built-in mail() function. The site deploys to IONOS shared hosting via FTP, with a gitignored config.local.php keeping real database credentials out of version control.",
+        'category' => 'custom_solution',
+        'live_url' => 'https://simplymycare.co.uk',
+        'repo_url' => 'https://github.com/CalebPrince/simplymycare',
+        'cover_image_path' => '/uploads/simplymycare-real.jpg',
+        'tags' => ['PHP', 'MySQL', 'Bootstrap 5', 'PHPMailer'],
     ],
 ];
 
