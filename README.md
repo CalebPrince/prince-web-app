@@ -120,6 +120,16 @@ storage/
    client-side popup alone), with the webhook endpoint
    (`/api/v1/payments/webhook`, HMAC-SHA512 signature checked) as a backstop
    if the browser never calls back.
+9. **Site widgets** (Live Chat, WhatsApp) are on by default and can be
+   switched off independently from Admin → Settings without touching the
+   underlying contact details — disabling Live Chat also cancels its
+   auto-open popup, not just the button.
+10. **Newsletter** signup lives on `/blog.html` (honeypot + rate-limited,
+    same pattern as the other public forms). Subscribers land in
+    `newsletter_subscribers` and get a one-click unsubscribe link
+    (`/api/v1/newsletter/unsubscribe?token=...`) — re-subscribing an
+    unsubscribed address just reactivates the existing row instead of
+    erroring. Admin view/export/remove at `/admin/newsletter.html`.
 
 ## Deployment (Namecheap cPanel)
 

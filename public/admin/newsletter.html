@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tags — Admin</title>
+<title>Newsletter — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -19,12 +19,12 @@
       <a href="/admin/dashboard.html" class="nav-link">Dashboard</a>
       <a href="/admin/projects.html" class="nav-link">Projects</a>
       <a href="/admin/blog.html" class="nav-link">Blog</a>
-      <a href="/admin/newsletter.html" class="nav-link">Newsletter</a>
+      <a href="/admin/newsletter.html" class="nav-link active">Newsletter</a>
       <a href="/admin/inquiries.html" class="nav-link"><span>Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
       <a href="/admin/quote-requests.html" class="nav-link">Quote Requests</a>
       <a href="/admin/payments.html" class="nav-link">Payments</a>
       <a href="/admin/chats.html" class="nav-link"><span>Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
-      <a href="/admin/tags.html" class="nav-link active">Tags</a>
+      <a href="/admin/tags.html" class="nav-link">Tags</a>
       <a href="/admin/content.html" class="nav-link">Site Content</a>
       <a href="/admin/settings.html" class="nav-link">Settings</a>
       <hr class="sidebar-divider">
@@ -36,49 +36,26 @@
   <div class="flex-grow-1 p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-        <h3 class="mb-0">Tags</h3>
-        <p class="text-muted-custom mb-0 small">Rename or remove the tags used across your projects.</p>
+        <h3 class="mb-0">Newsletter</h3>
+        <p class="text-muted-custom mb-0 small">Subscribers from the blog signup form.</p>
       </div>
-      <button class="btn-brand" id="new-tag-btn">+ New Tag</button>
+      <a href="/api/v1/admin/newsletter/export" class="btn btn-sm btn-outline-secondary">Export CSV</a>
     </div>
 
     <div class="admin-card p-0">
       <table class="table mb-0 align-middle">
         <thead>
           <tr>
-            <th class="ps-3">Name</th>
-            <th>Slug</th>
-            <th>Projects</th>
+            <th class="ps-3">Email</th>
+            <th>Status</th>
+            <th>Subscribed</th>
             <th class="text-end pe-3">Actions</th>
           </tr>
         </thead>
-        <tbody id="tags-tbody"></tbody>
+        <tbody id="subscribers-tbody"></tbody>
       </table>
     </div>
-    <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No tags yet — they're also created automatically when you save a project.</div>
-  </div>
-</div>
-
-<div class="modal fade" id="tag-modal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modal-title">New Tag</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="tag-form">
-          <input type="hidden" id="tag-id">
-          <label class="form-label">Name</label>
-          <input type="text" class="form-control" id="tag-name" maxlength="50" required>
-          <div class="form-text">Shown on project cards; the URL slug is generated automatically.</div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn-brand" id="save-tag-btn">Save Tag</button>
-      </div>
-    </div>
+    <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No subscribers yet.</div>
   </div>
 </div>
 
@@ -86,6 +63,6 @@
 <script src="/js/api.js"></script>
 <script src="/js/admin-auth.js"></script>
 <script src="/js/admin-nav-badges.js"></script>
-<script src="/js/admin-tags.js"></script>
+<script src="/js/admin-newsletter.js"></script>
 </body>
 </html>

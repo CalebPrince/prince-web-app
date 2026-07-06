@@ -43,6 +43,7 @@ use App\Controllers\BlogController;
 use App\Controllers\DashboardController;
 use App\Controllers\InquiryController;
 use App\Controllers\LiveChatController;
+use App\Controllers\NewsletterController;
 use App\Controllers\PaymentController;
 use App\Controllers\ProjectController;
 use App\Controllers\ProjectRequestController;
@@ -67,6 +68,8 @@ $router->get('/api/v1/payments/link/{token}', [PaymentController::class, 'showLi
 $router->post('/api/v1/payments/prepare', [PaymentController::class, 'prepare']);
 $router->post('/api/v1/payments/verify', [PaymentController::class, 'verify']);
 $router->post('/api/v1/payments/webhook', [PaymentController::class, 'webhook']);
+$router->post('/api/v1/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
+$router->get('/api/v1/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
 $router->get('/api/v1/chat/status', [LiveChatController::class, 'status']);
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
@@ -111,5 +114,8 @@ $router->delete('/api/v1/admin/blog/{id}', [BlogController::class, 'destroy']);
 $router->get('/api/v1/admin/payments', [PaymentController::class, 'adminIndex']);
 $router->get('/api/v1/admin/payment-links', [PaymentController::class, 'adminIndexLinks']);
 $router->post('/api/v1/admin/payment-links', [PaymentController::class, 'createLink']);
+$router->get('/api/v1/admin/newsletter', [NewsletterController::class, 'adminIndex']);
+$router->get('/api/v1/admin/newsletter/export', [NewsletterController::class, 'exportCsv']);
+$router->delete('/api/v1/admin/newsletter/{id}', [NewsletterController::class, 'destroy']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
