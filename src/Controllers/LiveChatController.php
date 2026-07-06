@@ -513,36 +513,48 @@ class LiveChatController
                 return null;
             }
 
-            $functionCall = null;
+            $functionCalls = [];
             $text = '';
             foreach ($parts as $part) {
                 if (isset($part['functionCall']['name'])) {
-                    $functionCall = $part['functionCall'];
+                    $functionCalls[] = $part['functionCall'];
                 }
                 if (isset($part['text'])) {
                     $text .= $part['text'];
                 }
             }
 
-            if ($functionCall === null) {
+            if (!$functionCalls) {
                 return ['reply' => $text !== '' ? $text : null, 'ready' => $ready];
             }
 
-            if ($functionCall['name'] === 'mark_ready_for_prototype') {
-                $ready = true;
+            foreach ($functionCalls as $call) {
+                if ($call['name'] === 'mark_ready_for_prototype') {
+                    $ready = true;
+                }
             }
 
-            // Model wants a tool run: record its call, run it locally, feed the
-            // result back, then let it produce the next turn (or another call).
-            $contents[] = ['role' => 'model', 'parts' => [['functionCall' => $functionCall]]];
-            $toolResponse = self::runTool($functionCall['name'], $functionCall['args'] ?? [], $pdo);
-            $responsePart = ['functionResponse' => ['name' => $functionCall['name'], 'response' => $toolResponse]];
-            // Newer models include an id on the functionCall and require it
-            // echoed back on the matching functionResponse.
-            if (isset($functionCall['id'])) {
-                $responsePart['functionResponse']['id'] = $functionCall['id'];
+            // Echo the model's turn back exactly as received — thinking-enabled
+            // models attach an opaque thoughtSignature alongside each
+            // functionCall part that must be round-tripped verbatim, or the
+            // model can't correctly process the tool result on the next turn.
+            // Reconstructing a stripped-down {functionCall} part here (as an
+            // earlier version of this code did) silently breaks every
+            // tool-using turn while plain text turns keep working fine.
+            $contents[] = ['role' => 'model', 'parts' => $parts];
+
+            // One functionResponse part per call, in the same order (required
+            // for parallel/multi function calls in a single turn).
+            $responseParts = [];
+            foreach ($functionCalls as $call) {
+                $toolResponse = self::runTool($call['name'], $call['args'] ?? [], $pdo);
+                $responsePart = ['functionResponse' => ['name' => $call['name'], 'response' => $toolResponse]];
+                if (isset($call['id'])) {
+                    $responsePart['functionResponse']['id'] = $call['id'];
+                }
+                $responseParts[] = $responsePart;
             }
-            $contents[] = ['role' => 'user', 'parts' => [$responsePart]];
+            $contents[] = ['role' => 'user', 'parts' => $responseParts];
         }
 
         return null;
