@@ -300,6 +300,10 @@ a:hover { color: var(--accent-strong); }
   align-items: center;
   justify-content: center;
   border: 1px solid var(--line);
+  overflow: hidden;
+}
+.bio-photo img {
+  object-fit: cover;
 }
 
 /* Contact form */
