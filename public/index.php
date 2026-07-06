@@ -2,6 +2,25 @@
 
 declare(strict_types=1);
 
+// Maintenance mode: mirrors the .htaccess-level enforcement (which is what
+// actually protects static pages in production, since those bypass PHP
+// entirely) so the same behavior can be tested under `php -S` locally.
+$__requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
+$__maintenanceExempt = ['/admin', '/api', '/uploads', '/css', '/js', '/maintenance.html'];
+$__isExempt = false;
+foreach ($__maintenanceExempt as $__prefix) {
+    if (str_starts_with($__requestPath, $__prefix)) {
+        $__isExempt = true;
+        break;
+    }
+}
+if (!$__isExempt && is_file(__DIR__ . '/.maintenance')) {
+    http_response_code(503);
+    header('Retry-After: 3600');
+    readfile(__DIR__ . '/maintenance.html');
+    exit;
+}
+
 // When running under `php -S` (dev server), let it serve real static files
 // directly and only route through here for /api/* requests.
 if (php_sapi_name() === 'cli-server') {
@@ -56,9 +75,11 @@ $router->get('/api/v1/admin/dashboard', [DashboardController::class, 'overview']
 $router->get('/api/v1/admin/notifications', [DashboardController::class, 'notifications']);
 $router->get('/api/v1/admin/projects', [ProjectController::class, 'adminIndex']);
 $router->post('/api/v1/admin/projects', [ProjectController::class, 'store']);
+$router->patch('/api/v1/admin/projects/reorder', [ProjectController::class, 'reorder']);
 $router->put('/api/v1/admin/projects/{id}', [ProjectController::class, 'update']);
 $router->delete('/api/v1/admin/projects/{id}', [ProjectController::class, 'destroy']);
 $router->get('/api/v1/admin/inquiries', [InquiryController::class, 'adminIndex']);
+$router->get('/api/v1/admin/inquiries/export', [InquiryController::class, 'exportCsv']);
 $router->patch('/api/v1/admin/inquiries/{id}', [InquiryController::class, 'updateStatus']);
 $router->get('/api/v1/admin/tags', [TagController::class, 'adminIndex']);
 $router->post('/api/v1/admin/tags', [TagController::class, 'store']);

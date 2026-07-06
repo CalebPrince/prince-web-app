@@ -67,7 +67,22 @@ class Router
         }
 
         http_response_code(404);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Not found']);
+
+        // API consumers get JSON; a human hitting a broken link gets the
+        // branded page. This mirrors the ErrorDocument 404 that Apache
+        // serves in production for static-file requests that never reach
+        // this router at all.
+        if (str_starts_with($path, '/api/')) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Not found']);
+            return;
+        }
+
+        $notFoundPage = dirname(__DIR__) . '/public/404.html';
+        if (is_file($notFoundPage)) {
+            readfile($notFoundPage);
+        } else {
+            echo 'Not found';
+        }
     }
 }

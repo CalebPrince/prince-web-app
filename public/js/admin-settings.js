@@ -69,6 +69,18 @@ async function saveHours(e) {
   }
 }
 
+async function saveMaintenance(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      maintenance_mode: document.getElementById("maintenance-enabled").checked ? "1" : "",
+    });
+    showMsg("maintenance-msg", "Saved — takes effect immediately for visitors.", true);
+  } catch (err) {
+    showMsg("maintenance-msg", err.message, false);
+  }
+}
+
 async function testAi() {
   const btn = document.getElementById("test-ai-btn");
   btn.disabled = true;
@@ -103,11 +115,13 @@ async function testAi() {
   document.getElementById("integrations-form").addEventListener("submit", saveIntegrations);
   document.getElementById("test-ai-btn").addEventListener("click", testAi);
   document.getElementById("hours-form").addEventListener("submit", saveHours);
+  document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
+    document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 
     document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
     const days = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);

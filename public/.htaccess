@@ -13,7 +13,25 @@ RewriteEngine On
 RewriteCond %{HTTP_HOST} ^www\.princecaleb\.dev$ [NC]
 RewriteRule ^(.*)$ https://princecaleb.dev/$1 [R=301,L]
 
+# Maintenance mode: toggled from Admin -> Settings, which creates/deletes
+# the .maintenance marker file next to this .htaccess. When present, every
+# public-facing request gets a 503 (served via ErrorDocument below) except
+# admin, api, uploads, and the static assets the maintenance page itself
+# needs — so the admin can still log in and switch it back off.
+RewriteCond %{DOCUMENT_ROOT}/.maintenance -f
+RewriteCond %{REQUEST_URI} !^/admin
+RewriteCond %{REQUEST_URI} !^/api
+RewriteCond %{REQUEST_URI} !^/uploads
+RewriteCond %{REQUEST_URI} !^/css
+RewriteCond %{REQUEST_URI} !^/js
+RewriteCond %{REQUEST_URI} !^/maintenance\.html$
+RewriteRule ^ - [R=503,L]
+ErrorDocument 503 /maintenance.html
+
 # Serve real files/directories as-is; route everything else under /api/ through index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^api/ index.php [L]
+
+# Branded 404 page instead of the host's default error page
+ErrorDocument 404 /404.html

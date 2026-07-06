@@ -14,6 +14,7 @@ class SettingsController
     private const ADMIN_ONLY_KEYS = [
         'gemini_api_key', 'slack_webhook_url', 'notification_email',
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
+        'maintenance_mode',
     ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */
@@ -76,6 +77,19 @@ class SettingsController
                 Response::error('Value too long.', 422);
             }
             Settings::set($key, $value);
+
+            // The DB value is just UI state — the .maintenance marker file next
+            // to .htaccess is what actually gates public requests (both there
+            // and in index.php's matching check for local dev), so keep it
+            // in sync whenever this setting changes.
+            if ($key === 'maintenance_mode') {
+                $markerPath = dirname(__DIR__, 2) . '/public/.maintenance';
+                if ($value !== '') {
+                    file_put_contents($markerPath, 'Enabled at ' . date('c'));
+                } elseif (file_exists($markerPath)) {
+                    unlink($markerPath);
+                }
+            }
         }
         Response::json(['status' => 'saved']);
     }

@@ -122,6 +122,21 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
+          <h5 class="mb-1">Maintenance mode</h5>
+          <p class="text-muted-custom small">When enabled, visitors see a "down for maintenance" page (503) on every public page. Admin, API, and uploads stay reachable so you can turn it back off.</p>
+          <form id="maintenance-form">
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="maintenance-enabled">
+              <label class="form-check-label" for="maintenance-enabled">Site is down for maintenance</label>
+            </div>
+            <div id="maintenance-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Save</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
           <h5 class="mb-1">Change password</h5>
           <p class="text-muted-custom small">All other signed-in devices are logged out when you change it.</p>
           <form id="password-form">
