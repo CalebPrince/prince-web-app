@@ -11,15 +11,27 @@ use App\Support\Validator;
 
 class BlogController
 {
+    private const WORDS_PER_MINUTE = 200;
+
+    private static function readingTime(string $body): int
+    {
+        return max(1, (int) ceil(str_word_count($body) / self::WORDS_PER_MINUTE));
+    }
+
     /** GET /api/v1/blog — public, published only */
     public static function index(): void
     {
         $pdo = Database::get();
         $stmt = $pdo->query(
-            'SELECT id, slug, title, excerpt, category, cover_image_path, created_at
+            'SELECT id, slug, title, excerpt, category, cover_image_path, body, created_at
              FROM blog_posts WHERE is_published = 1 ORDER BY sort_order ASC'
         );
-        Response::json($stmt->fetchAll());
+        $posts = $stmt->fetchAll();
+        foreach ($posts as &$post) {
+            $post['reading_time'] = self::readingTime($post['body']);
+            unset($post['body']);
+        }
+        Response::json($posts);
     }
 
     /** GET /api/v1/blog/{slug} */
@@ -34,6 +46,7 @@ class BlogController
             Response::error('Post not found', 404);
         }
 
+        $post['reading_time'] = self::readingTime($post['body']);
         Response::json($post);
     }
 

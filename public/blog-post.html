@@ -45,6 +45,7 @@
       <a href="/services.html" class="nav-link">Services</a>
       <a href="/projects.html" class="nav-link">Projects</a>
       <a href="/blog.html" class="nav-link active">Blog</a>
+      <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
     <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
@@ -62,6 +63,7 @@
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
     <a href="/blog.html" class="nav-link">Blog</a>
+      <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
   </div>
@@ -83,6 +85,7 @@
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
       <a href="/blog.html">Blog</a>
+      <a href="/pricing.html">Pricing</a>
       <a href="/contact.html">Contact</a>
     </div>
   </div>
@@ -164,10 +167,16 @@ const CATEGORY_KEYWORDS = {
       mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
     });
 
+    const shareUrl = encodeURIComponent(canonicalUrl);
+    const shareTitle = encodeURIComponent(p.title);
+
     container.innerHTML = `
       <header class="hero pb-0">
         <div class="container">
-          ${p.category ? `<p class="eyebrow mb-3 hero-animate hero-animate-1">${p.category}</p>` : ''}
+          <div class="d-flex flex-wrap align-items-center gap-3 mb-3 hero-animate hero-animate-1">
+            ${p.category ? `<p class="eyebrow mb-0">${p.category}</p>` : ''}
+            <span class="small text-muted-custom">⏱ ${p.reading_time} min read</span>
+          </div>
           <h1 class="display-6 mb-3 hero-animate hero-animate-2">${p.title}</h1>
           <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width:65ch;">${p.excerpt}</p>
         </div>
@@ -176,6 +185,12 @@ const CATEGORY_KEYWORDS = {
         <img src="${p.cover_image_path}" alt="${p.title}" class="w-100 rounded-4 mb-5 reveal" style="aspect-ratio:16/9;object-fit:cover;">
         <div class="row">
           <div class="col-lg-8 reveal">
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              <a class="share-btn" target="_blank" rel="noopener" href="https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}">𝕏 Share</a>
+              <a class="share-btn" target="_blank" rel="noopener" href="https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}">in Share</a>
+              <a class="share-btn" target="_blank" rel="noopener" href="https://wa.me/?text=${shareTitle}%20${shareUrl}">💬 WhatsApp</a>
+              <button type="button" class="share-btn" id="copy-link-btn">🔗 Copy link</button>
+            </div>
             <p class="text-muted-custom" style="white-space: pre-line;">${p.body}</p>
           </div>
         </div>
@@ -185,6 +200,18 @@ const CATEGORY_KEYWORDS = {
         </div>
       </div>
     `;
+
+    document.getElementById('copy-link-btn')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      try {
+        await navigator.clipboard.writeText(canonicalUrl);
+        const original = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = original; }, 2000);
+      } catch (_) {
+        alert('Could not copy the link — you can copy it from the address bar.');
+      }
+    });
   } catch (e) {
     container.innerHTML = `
       <div class="container py-5 text-center">
