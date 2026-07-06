@@ -48,6 +48,7 @@ class SettingsController
         'timeline_3_label', 'timeline_3_title', 'timeline_3_desc',
         'timeline_4_label', 'timeline_4_title', 'timeline_4_desc',
         'timeline_5_label', 'timeline_5_title', 'timeline_5_desc',
+        'github_username',
     ];
 
     /** GET /api/v1/content — public: set content values only (secrets excluded) */

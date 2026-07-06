@@ -202,6 +202,19 @@
       <span class="tech-badge">REST APIs</span>
       <span class="tech-badge">Custom AI Integrations</span>
     </div>
+  </div>
+</section>
+
+<section class="section d-none" style="background: var(--bg-soft);" id="github-feed-section">
+  <div class="container" style="max-width: 760px;">
+    <p class="eyebrow text-center mb-2">Recent activity</p>
+    <h3 class="text-center mb-5">What I've been building lately.</h3>
+    <div id="github-feed" class="row g-3"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container text-center reveal">
     <h3 class="mb-3">Want to work together?</h3>
     <a href="/contact.html" class="btn-brand">Get in touch →</a>
   </div>
@@ -246,6 +259,55 @@ document.querySelectorAll('#career-timeline .timeline-item').forEach(item => {
     if (!wasExpanded) item.classList.add('expanded');
   });
 });
+
+(async function () {
+  let content = {};
+  try {
+    content = await api.get('/api/v1/content');
+  } catch (_) {
+    return;
+  }
+  const username = content.github_username;
+  if (!username) return;
+
+  try {
+    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=pushed&per_page=5`);
+    if (!res.ok) return;
+    const repos = await res.json();
+    if (!Array.isArray(repos) || repos.length === 0) return;
+
+    const rtf = (date) => {
+      const days = Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
+      if (days < 1) return 'today';
+      if (days === 1) return 'yesterday';
+      if (days < 30) return `${days} day${days === 1 ? '' : 's'} ago`;
+      const months = Math.floor(days / 30);
+      if (days < 365) return `${months} month${months === 1 ? '' : 's'} ago`;
+      const years = Math.floor(days / 365);
+      return `${years} year${years === 1 ? '' : 's'} ago`;
+    };
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    document.getElementById('github-feed').innerHTML = repos.map((repo, i) => `
+      <div class="col-md-6 reveal reveal-delay-${(i % 4) + 1}">
+        <a href="${esc(repo.html_url)}" target="_blank" rel="noopener" class="text-decoration-none">
+          <div class="service-card h-100">
+            <h6 class="mb-1">${esc(repo.name)}</h6>
+            <p class="text-muted-custom small mb-2">${esc(repo.description) || 'No description provided.'}</p>
+            <div class="d-flex gap-3 small text-muted-custom">
+              ${repo.language ? `<span>● ${esc(repo.language)}</span>` : ''}
+              <span>★ ${Number(repo.stargazers_count) || 0}</span>
+              <span>Updated ${rtf(repo.pushed_at)}</span>
+            </div>
+          </div>
+        </a>
+      </div>
+    `).join('');
+    document.getElementById('github-feed-section').classList.remove('d-none');
+  } catch (_) {
+    // GitHub unreachable or rate-limited — fail quietly, section stays hidden
+  }
+})();
 </script>
 <script src="/js/pwa-register.js"></script>
 </body>

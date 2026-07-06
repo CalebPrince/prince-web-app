@@ -141,6 +141,11 @@ storage/
     JS (project type + feature checkboxes + timeline → a rounded price
     range) — no backend call, since it's explicitly a rough estimate, not
     a quote. Links out to `/request.html` for an exact number.
+13. **Career timeline** and **GitHub activity feed** on `/about.html` are
+    both admin-configurable and hidden until set: the timeline's five
+    stages are editable text (Admin → Site Content), and the GitHub feed
+    fetches directly from `api.github.com` in the visitor's browser (no
+    backend call, no API key needed) once a `github_username` is set.
 
 ## Deployment (Namecheap cPanel)
 
