@@ -69,6 +69,26 @@ async function saveHours(e) {
   }
 }
 
+async function saveBooking(e) {
+  e.preventDefault();
+  const days = [...document.querySelectorAll(".booking-day:checked")].map(el => el.value);
+  try {
+    await api.put("/api/v1/admin/settings", {
+      booking_enabled: document.getElementById("booking-enabled").checked ? "1" : "0",
+      booking_days: days.join(","),
+      booking_start_time: document.getElementById("booking-start").value,
+      booking_end_time: document.getElementById("booking-end").value,
+      booking_timezone: document.getElementById("booking-timezone").value.trim(),
+      booking_slot_minutes: document.getElementById("booking-slot-minutes").value.trim(),
+      booking_lead_days: document.getElementById("booking-lead-days").value.trim(),
+      booking_min_notice_hours: document.getElementById("booking-min-notice").value.trim(),
+    });
+    showMsg("booking-msg", "Saved — takes effect immediately.", true);
+  } catch (err) {
+    showMsg("booking-msg", err.message, false);
+  }
+}
+
 async function saveWidgets(e) {
   e.preventDefault();
   try {
@@ -146,6 +166,7 @@ async function testAi() {
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
+  document.getElementById("booking-form").addEventListener("submit", saveBooking);
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
@@ -167,5 +188,15 @@ async function testAi() {
     document.getElementById("hours-start").value = settings.chat_hours_start || "";
     document.getElementById("hours-end").value = settings.chat_hours_end || "";
     document.getElementById("hours-timezone").value = settings.chat_timezone || "";
+
+    document.getElementById("booking-enabled").checked = settings.booking_enabled === "1";
+    const bookingDays = (settings.booking_days || "").split(",").map(d => d.trim()).filter(Boolean);
+    document.querySelectorAll(".booking-day").forEach(el => { el.checked = bookingDays.includes(el.value); });
+    document.getElementById("booking-start").value = settings.booking_start_time || "09:00";
+    document.getElementById("booking-end").value = settings.booking_end_time || "17:00";
+    document.getElementById("booking-timezone").value = settings.booking_timezone || "Africa/Accra";
+    document.getElementById("booking-slot-minutes").value = settings.booking_slot_minutes || "30";
+    document.getElementById("booking-lead-days").value = settings.booking_lead_days || "14";
+    document.getElementById("booking-min-notice").value = settings.booking_min_notice_hours || "24";
   } catch (_) { /* fields stay empty */ }
 })();

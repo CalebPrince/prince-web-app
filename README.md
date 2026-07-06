@@ -159,6 +159,15 @@ storage/
     IP address or cookie/visitor ID, via a tiny fire-and-forget beacon
     (`js/analytics.js`) on every public page (never on `/admin/*`).
     Disclosed in the Privacy Policy.
+17. **Appointment booking** (`/book.html`) uses an internal availability
+    model, not an external calendar account — the admin sets bookable
+    weekdays/hours/slot length in Settings (same pattern as Live Chat
+    hours), and slots are generated on the fly and checked against
+    existing bookings. A partial unique index
+    (`idx_appointments_slot_active`, `WHERE status != 'cancelled'`) is the
+    real source of truth for conflict prevention — a cancelled booking
+    frees its slot, but two active bookings can never collide even under
+    a race. Admin view/cancel at `/admin/appointments.html`.
 
 ## Deployment (Namecheap cPanel)
 

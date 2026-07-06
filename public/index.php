@@ -39,6 +39,7 @@ require dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\AiChatController;
 use App\Controllers\AnalyticsController;
+use App\Controllers\AppointmentController;
 use App\Controllers\AuthController;
 use App\Controllers\BlogController;
 use App\Controllers\DashboardController;
@@ -72,6 +73,9 @@ $router->post('/api/v1/payments/webhook', [PaymentController::class, 'webhook'])
 $router->post('/api/v1/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 $router->get('/api/v1/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 $router->post('/api/v1/analytics/track', [AnalyticsController::class, 'track']);
+$router->get('/api/v1/appointments/config', [AppointmentController::class, 'publicConfig']);
+$router->get('/api/v1/appointments/availability', [AppointmentController::class, 'availability']);
+$router->post('/api/v1/appointments/book', [AppointmentController::class, 'book']);
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
 $router->get('/api/v1/chat/status', [LiveChatController::class, 'status']);
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
@@ -117,6 +121,8 @@ $router->get('/api/v1/admin/payments', [PaymentController::class, 'adminIndex'])
 $router->get('/api/v1/admin/payment-links', [PaymentController::class, 'adminIndexLinks']);
 $router->post('/api/v1/admin/payment-links', [PaymentController::class, 'createLink']);
 $router->get('/api/v1/admin/analytics/summary', [AnalyticsController::class, 'summary']);
+$router->get('/api/v1/admin/appointments', [AppointmentController::class, 'adminIndex']);
+$router->patch('/api/v1/admin/appointments/{id}', [AppointmentController::class, 'updateStatus']);
 $router->get('/api/v1/admin/newsletter', [NewsletterController::class, 'adminIndex']);
 $router->get('/api/v1/admin/newsletter/export', [NewsletterController::class, 'exportCsv']);
 $router->delete('/api/v1/admin/newsletter/{id}', [NewsletterController::class, 'destroy']);

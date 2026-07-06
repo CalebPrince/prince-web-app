@@ -16,6 +16,8 @@ class SettingsController
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
         'maintenance_mode',
         'paystack_public_key', 'paystack_secret_key',
+        'booking_enabled', 'booking_days', 'booking_start_time', 'booking_end_time',
+        'booking_slot_minutes', 'booking_lead_days', 'booking_min_notice_hours', 'booking_timezone',
     ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */

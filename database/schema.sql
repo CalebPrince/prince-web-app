@@ -161,3 +161,21 @@ CREATE TABLE IF NOT EXISTS page_views (
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_path_created ON page_views (path, created_at);
 CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views (created_at);
+
+CREATE TABLE IF NOT EXISTS appointments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_name TEXT NOT NULL,
+  client_email TEXT NOT NULL,
+  client_phone TEXT,
+  appointment_date TEXT NOT NULL,
+  appointment_time TEXT NOT NULL,
+  duration_minutes INTEGER NOT NULL DEFAULT 30,
+  topic TEXT,
+  status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled', 'completed')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments (appointment_date, status);
+-- Partial unique index: a cancelled booking frees the slot for someone else,
+-- but two active (confirmed/completed) bookings can never share a slot.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_slot_active
+  ON appointments (appointment_date, appointment_time) WHERE status != 'cancelled';
