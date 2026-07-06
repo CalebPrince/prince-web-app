@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+<title>Cookie Policy — Prince Caleb</title>
+<meta name="description" content="What this site stores in your browser, and why — no tracking or advertising cookies.">
+<link rel="canonical" href="https://princecaleb.dev/cookies.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="container d-flex align-items-center justify-content-between py-3">
+    <a href="/" class="brand-logo text-decoration-none">Prince Caleb<span class="dot">.</span></a>
+    <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation">☰</button>
+    <div class="d-none d-md-flex gap-1">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/about.html" class="nav-link">About</a>
+      <a href="/services.html" class="nav-link">Services</a>
+      <a href="/projects.html" class="nav-link">Projects</a>
+      <a href="/blog.html" class="nav-link">Blog</a>
+      <a href="/contact.html" class="nav-link">Contact</a>
+    </div>
+    <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
+  </div>
+</nav>
+
+<div class="offcanvas offcanvas-end nav-drawer" tabindex="-1" id="nav-drawer">
+  <div class="offcanvas-header">
+    <span class="brand-logo">Prince Caleb<span class="dot">.</span></span>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <a href="/" class="nav-link">Home</a>
+    <a href="/about.html" class="nav-link">About</a>
+    <a href="/services.html" class="nav-link">Services</a>
+    <a href="/projects.html" class="nav-link">Projects</a>
+    <a href="/blog.html" class="nav-link">Blog</a>
+    <a href="/contact.html" class="nav-link">Contact</a>
+    <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="container">
+    <p class="eyebrow mb-3">Legal</p>
+    <h1 class="display-6 mb-3">Cookie Policy</h1>
+    <p class="fs-5 text-muted-custom mb-0" style="max-width: 60ch;">
+      Short version: this site doesn't use tracking or advertising cookies, so there's no consent banner. Here's exactly what is stored in your browser.
+    </p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container" style="max-width: 760px;">
+
+    <h3 class="mb-3">What this site stores</h3>
+    <div class="table-responsive mb-4">
+      <table class="table align-middle">
+        <thead>
+          <tr><th>Name</th><th>Type</th><th>Purpose</th><th>Lifetime</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>theme</code></td>
+            <td>Local storage</td>
+            <td>Remembers your light/dark mode choice</td>
+            <td>Until you clear browser data</td>
+          </tr>
+          <tr>
+            <td><code>chat_token</code></td>
+            <td>Session storage</td>
+            <td>Keeps your Live Chat conversation connected to the right session</td>
+            <td>Cleared when you close the tab</td>
+          </tr>
+          <tr>
+            <td><code>access_token</code> / <code>refresh_token</code></td>
+            <td>Cookie (HttpOnly)</td>
+            <td>Keeps the site owner signed into the admin panel</td>
+            <td>15 minutes / 30 days — only ever set when logging into <code>/admin</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mb-3">What's not here</h3>
+    <p class="text-muted-custom mb-4">No Google Analytics, no advertising pixels, no third-party tracking scripts, and nothing that follows you to other sites. That's also why you won't see a cookie consent banner — there's genuinely nothing here that needs your consent under most privacy laws.</p>
+
+    <h3 class="mb-3">Managing or clearing these</h3>
+    <p class="text-muted-custom mb-4">The <code>theme</code> and <code>chat_token</code> entries can be cleared anytime from your browser's site data settings, with no effect beyond resetting your color mode or starting a fresh chat conversation. The admin session cookies only ever apply if you're logged into the admin panel — regular visitors never receive them.</p>
+
+    <h3 class="mb-3">Contact</h3>
+    <p class="text-muted-custom mb-0">Questions about this policy: <a href="mailto:hello@princecaleb.dev" data-content-href="social_email">hello@princecaleb.dev</a>. See also the <a href="/privacy.html">Privacy Policy</a> for how form and chat submissions are handled.</p>
+    <p class="text-muted-custom small mt-4 mb-0">Last updated: July 2026.</p>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+    <span class="brand-logo" style="color:#fff;">Prince Caleb<span class="dot">.</span></span>
+    <div class="d-flex gap-4">
+      <a href="/about.html">About</a>
+      <a href="/services.html">Services</a>
+      <a href="/projects.html">Projects</a>
+      <a href="/blog.html">Blog</a>
+      <a href="/contact.html">Contact</a>
+    </div>
+  </div>
+  <div class="container mt-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+    <small>&copy; 2026 Prince Caleb. All rights reserved.</small>
+    <div class="d-flex gap-3">
+      <a href="/privacy.html" class="small">Privacy Policy</a>
+      <a href="/cookies.html" class="small">Cookie Policy</a>
+    </div>
+  </div>
+</footer>
+
+<button type="button" id="ai-widget-toggle">💬 Live Chat</button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/content.js"></script>
+<script src="/js/animations.js"></script>
+<script src="/js/ai-boot.js"></script>
+</body>
+</html>
