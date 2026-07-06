@@ -541,13 +541,28 @@ class LiveChatController
             // Reconstructing a stripped-down {functionCall} part here (as an
             // earlier version of this code did) silently breaks every
             // tool-using turn while plain text turns keep working fine.
-            $contents[] = ['role' => 'model', 'parts' => $parts];
+            //
+            // Also: json_decode(..., true) turns Gemini's empty `{}` (e.g. a
+            // no-arg tool's args) into a PHP `[]`, which json_encode then
+            // re-serializes as a JSON *array*, not the object Gemini sent —
+            // it rejects that on the next call. Restore `{}` before echoing.
+            $echoParts = $parts;
+            foreach ($echoParts as &$p) {
+                if (($p['functionCall']['args'] ?? null) === []) {
+                    $p['functionCall']['args'] = (object) [];
+                }
+            }
+            unset($p);
+            $contents[] = ['role' => 'model', 'parts' => $echoParts];
 
             // One functionResponse part per call, in the same order (required
             // for parallel/multi function calls in a single turn).
             $responseParts = [];
             foreach ($functionCalls as $call) {
                 $toolResponse = self::runTool($call['name'], $call['args'] ?? [], $pdo);
+                if ($toolResponse === []) {
+                    $toolResponse = (object) []; // same empty-object-vs-array fix, for no-data tool results
+                }
                 $responsePart = ['functionResponse' => ['name' => $call['name'], 'response' => $toolResponse]];
                 if (isset($call['id'])) {
                     $responsePart['functionResponse']['id'] = $call['id'];
