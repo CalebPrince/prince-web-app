@@ -267,7 +267,9 @@ document.querySelectorAll('#career-timeline .timeline-item').forEach(item => {
   } catch (_) {
     return;
   }
-  const username = content.github_username;
+  // Accept either a bare username or a full profile URL (e.g. someone
+  // pastes "https://github.com/CalebPrince" into the settings field).
+  const username = (content.github_username || '').trim().replace(/^https?:\/\/(www\.)?github\.com\//i, '').replace(/\/+$/, '');
   if (!username) return;
 
   try {
