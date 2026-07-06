@@ -137,6 +137,10 @@ storage/
     ever changes). The service worker deliberately never caches `/api/*`
     or `/admin/*`, only the static app shell, so nothing stale is ever
     served for content or admin data.
+12. **Project estimation calculator** on `/pricing.html` is pure client-side
+    JS (project type + feature checkboxes + timeline → a rounded price
+    range) — no backend call, since it's explicitly a rough estimate, not
+    a quote. Links out to `/request.html` for an exact number.
 
 ## Deployment (Namecheap cPanel)
 

@@ -138,6 +138,80 @@
   </div>
 </section>
 
+<section class="section" style="background: var(--bg-soft);">
+  <div class="container" style="max-width: 640px;">
+    <p class="eyebrow text-center mb-2">Estimate your project</p>
+    <h2 class="text-center mb-2">Get a ballpark in 10 seconds.</h2>
+    <p class="text-muted-custom text-center mb-4">A rough estimate based on your answers — not a quote. The real number comes after a quick discovery call.</p>
+
+    <div class="contact-card">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Project type</label>
+        <select class="form-select" id="calc-type">
+          <option value="website">Website</option>
+          <option value="webapp">Web application</option>
+          <option value="mobile">Mobile app</option>
+          <option value="cms">CMS (WordPress / headless)</option>
+          <option value="ai">AI integration / automation</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Features you need</label>
+        <div class="d-flex flex-wrap gap-3">
+          <div class="form-check">
+            <input class="form-check-input calc-feature" type="checkbox" value="accounts" id="calc-feat-accounts">
+            <label class="form-check-label" for="calc-feat-accounts">User accounts &amp; login</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input calc-feature" type="checkbox" value="dashboard" id="calc-feat-dashboard">
+            <label class="form-check-label" for="calc-feat-dashboard">Admin dashboard</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input calc-feature" type="checkbox" value="payments" id="calc-feat-payments">
+            <label class="form-check-label" for="calc-feat-payments">Payments</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input calc-feature" type="checkbox" value="integrations" id="calc-feat-integrations">
+            <label class="form-check-label" for="calc-feat-integrations">Third-party integrations</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input calc-feature" type="checkbox" value="mobile_companion" id="calc-feat-mobile">
+            <label class="form-check-label" for="calc-feat-mobile">Mobile companion app</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input calc-feature" type="checkbox" value="ai" id="calc-feat-ai">
+            <label class="form-check-label" for="calc-feat-ai">AI / chat features</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input calc-feature" type="checkbox" value="i18n" id="calc-feat-i18n">
+            <label class="form-check-label" for="calc-feat-i18n">Multi-language support</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Timeline</label>
+        <select class="form-select" id="calc-timeline">
+          <option value="asap">As soon as possible</option>
+          <option value="month" selected>Within 1 month</option>
+          <option value="quarter">2–3 months</option>
+          <option value="flexible">Flexible / not urgent</option>
+        </select>
+      </div>
+
+      <button type="button" class="btn-brand w-100 mb-4" id="calc-btn">Calculate estimate</button>
+
+      <div id="calc-result" class="d-none text-center">
+        <p class="text-muted-custom mb-1 small">Estimated range</p>
+        <div class="pricing-price mb-3" id="calc-result-range">—</div>
+        <a href="/request.html" class="btn-brand-outline" id="calc-request-link">Get an exact quote →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer class="site-footer">
   <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
     <span class="brand-logo" style="color:#fff;">Prince Caleb<span class="dot">.</span></span>
@@ -256,6 +330,46 @@
     }
   });
 })();
+</script>
+<script>
+const CALC_BASE = {
+  website: [600, 1000],
+  webapp: [2500, 4000],
+  mobile: [4000, 7000],
+  cms: [1500, 2500],
+  ai: [2000, 3500],
+  other: [1500, 3000],
+};
+const CALC_FEATURES = {
+  accounts: [300, 500],
+  dashboard: [500, 800],
+  payments: [400, 700],
+  integrations: [300, 600],
+  mobile_companion: [1500, 2500],
+  ai: [500, 1000],
+  i18n: [400, 700],
+};
+const CALC_TIMELINE_MULTIPLIER = { asap: 1.2, month: 1, quarter: 0.95, flexible: 0.9 };
+
+document.getElementById('calc-btn').addEventListener('click', () => {
+  const type = document.getElementById('calc-type').value;
+  const timeline = document.getElementById('calc-timeline').value;
+  const [baseLow, baseHigh] = CALC_BASE[type];
+  const multiplier = CALC_TIMELINE_MULTIPLIER[timeline];
+
+  let low = baseLow;
+  let high = baseHigh;
+  document.querySelectorAll('.calc-feature:checked').forEach(cb => {
+    const [featLow, featHigh] = CALC_FEATURES[cb.value];
+    low += featLow;
+    high += featHigh;
+  });
+  low = Math.round((low * multiplier) / 50) * 50;
+  high = Math.round((high * multiplier) / 50) * 50;
+
+  document.getElementById('calc-result-range').textContent = `$${low.toLocaleString()} – $${high.toLocaleString()}`;
+  document.getElementById('calc-result').classList.remove('d-none');
+});
 </script>
 <script src="/js/pwa-register.js"></script>
 </body>
