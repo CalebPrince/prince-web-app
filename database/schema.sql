@@ -87,5 +87,7 @@ CREATE TABLE IF NOT EXISTS webhook_queue (
   inquiry_id INTEGER NOT NULL REFERENCES inquiries(id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed')),
   attempts INTEGER NOT NULL DEFAULT 0,
+  slack_sent INTEGER NOT NULL DEFAULT 0,
+  email_sent INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
