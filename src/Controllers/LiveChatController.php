@@ -436,8 +436,14 @@ class LiveChatController
         )->fetchAll();
     }
 
-    /** Max Gemini <-> tool round-trips per visitor message, so a confused model can't loop forever. */
-    private const MAX_TOOL_ROUNDS = 3;
+    /**
+     * Max Gemini <-> tool round-trips per visitor message. Each round is a full
+     * sequential model call, so this directly caps worst-case reply latency —
+     * kept low (2 rounds x 12s = 24s worst case) so the chat can't hang the
+     * visitor for a minute-plus waiting on a chain of tool calls.
+     */
+    private const MAX_TOOL_ROUNDS = 2;
+    private const GEMINI_CHAT_TIMEOUT_SECONDS = 12;
 
     /** @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords) */
     private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
@@ -501,7 +507,7 @@ class LiveChatController
                 'tools' => $tools,
             ]);
 
-            $result = self::callGeminiRaw($apiKey, $body, 20);
+            $result = self::callGeminiRaw($apiKey, $body, self::GEMINI_CHAT_TIMEOUT_SECONDS);
             $parts = $result['candidates'][0]['content']['parts'] ?? null;
             if (!is_array($parts)) {
                 return null;

@@ -1,10 +1,30 @@
 const api = {
   async request(path, options = {}, isRetry = false) {
-    const res = await fetch(path, {
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      ...options,
-    });
+    const { timeoutMs, ...fetchOptions } = options;
+    let signal = fetchOptions.signal;
+    let timeoutId;
+    if (timeoutMs) {
+      const controller = new AbortController();
+      signal = controller.signal;
+      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    }
+
+    let res;
+    try {
+      res = await fetch(path, {
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", ...(fetchOptions.headers || {}) },
+        ...fetchOptions,
+        signal,
+      });
+    } catch (err) {
+      if (err.name === "AbortError") {
+        throw new Error("That's taking longer than expected — please try again.");
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     // Access tokens only live 15 minutes; on a 401, refresh the session once
     // and retry instead of surfacing the error to the page.
@@ -28,8 +48,8 @@ const api = {
   get(path) {
     return this.request(path);
   },
-  post(path, data) {
-    return this.request(path, { method: "POST", body: JSON.stringify(data || {}) });
+  post(path, data, extra = {}) {
+    return this.request(path, { method: "POST", body: JSON.stringify(data || {}), ...extra });
   },
   put(path, data) {
     return this.request(path, { method: "PUT", body: JSON.stringify(data || {}) });

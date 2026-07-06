@@ -72,12 +72,12 @@
     const pending = appendMessage("bot", "Typing…");
 
     try {
-      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken });
+      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 30000 });
       pending.textContent = res.reply;
       canBuild = !!res.can_prototype;
       updateBuildButton();
     } catch (err) {
-      pending.textContent = "Sorry, something went wrong — please try again.";
+      pending.textContent = err.message || "Sorry, something went wrong — please try again.";
     }
   });
 

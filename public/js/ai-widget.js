@@ -94,14 +94,14 @@
     const pending = appendMessage("bot", "Typing…");
 
     try {
-      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken });
+      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 30000 });
       sessionToken = res.token;
       sessionStorage.setItem("chat_token", sessionToken);
       canPrototype = !!res.can_prototype;
       pending.textContent = res.reply;
       showPrototypeButton();
     } catch (err) {
-      pending.textContent = "Sorry, something went wrong. Please leave a message below instead.";
+      pending.textContent = err.message || "Sorry, something went wrong. Please leave a message below instead.";
       showMessageForm();
     }
   });
