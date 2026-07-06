@@ -96,9 +96,15 @@ class SettingsController
             // The DB value is just UI state — the .maintenance marker file next
             // to .htaccess is what actually gates public requests (both there
             // and in index.php's matching check for local dev), so keep it
-            // in sync whenever this setting changes.
+            // in sync whenever this setting changes. DOCUMENT_ROOT is used
+            // (rather than a hardcoded 'public/' segment) because the web root
+            // is named differently in production (public_html/, per README's
+            // deploy layout) than in local dev (public/) — DOCUMENT_ROOT is
+            // the one thing .htaccess, index.php, and this write path can all
+            // agree on across both environments.
             if ($key === 'maintenance_mode') {
-                $markerPath = dirname(__DIR__, 2) . '/public/.maintenance';
+                $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+                $markerPath = $docRoot . '/.maintenance';
                 if ($value !== '') {
                     file_put_contents($markerPath, 'Enabled at ' . date('c'));
                 } elseif (file_exists($markerPath)) {
