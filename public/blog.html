@@ -81,6 +81,7 @@
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">
       No articles match this filter yet.
     </div>
+    <div id="pagination" class="d-flex flex-wrap gap-2 justify-content-center mt-5"></div>
   </div>
 </section>
 
@@ -113,7 +114,10 @@
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script>
+const PAGE_SIZE = 10;
 let allPosts = [];
+let filteredPosts = [];
+let currentPage = 1;
 
 function renderGrid(posts) {
   const grid = document.getElementById('blog-grid');
@@ -140,21 +144,53 @@ function renderGrid(posts) {
   `).join('');
 }
 
+function renderPagination() {
+  const bar = document.getElementById('pagination');
+  const totalPages = Math.ceil(filteredPosts.length / PAGE_SIZE);
+  if (totalPages <= 1) {
+    bar.innerHTML = '';
+    return;
+  }
+  let html = `<button class="pager-btn" id="pager-prev" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="pager-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+  }
+  html += `<button class="pager-btn" id="pager-next" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+  bar.innerHTML = html;
+
+  bar.querySelectorAll('[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => goToPage(Number(btn.dataset.page)));
+  });
+  document.getElementById('pager-prev')?.addEventListener('click', () => goToPage(currentPage - 1));
+  document.getElementById('pager-next')?.addEventListener('click', () => goToPage(currentPage + 1));
+}
+
+function goToPage(page) {
+  currentPage = page;
+  renderCurrentPage();
+  document.getElementById('blog-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderCurrentPage() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  renderGrid(filteredPosts.slice(start, start + PAGE_SIZE));
+  renderPagination();
+}
+
 function applyFilter(category) {
   document.querySelectorAll('.filter-pill').forEach(el => {
     el.classList.toggle('active', el.dataset.category === category);
   });
-  if (!category) {
-    renderGrid(allPosts);
-    return;
-  }
-  renderGrid(allPosts.filter(p => p.category === category));
+  filteredPosts = category ? allPosts.filter(p => p.category === category) : allPosts;
+  currentPage = 1;
+  renderCurrentPage();
 }
 
 (async function init() {
   try {
     allPosts = await api.get('/api/v1/blog');
-    renderGrid(allPosts);
+    filteredPosts = allPosts;
+    renderCurrentPage();
 
     const categories = [...new Set(allPosts.map(p => p.category).filter(Boolean))].sort();
     const filterBar = document.getElementById('category-filters');

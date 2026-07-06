@@ -1,4 +1,7 @@
 let postModal = null;
+const PAGE_SIZE = 10;
+let allPosts = [];
+let currentPage = 1;
 
 async function uploadFile(file, isRetry = false) {
   const formData = new FormData();
@@ -46,16 +49,54 @@ function renderPostsTable(posts) {
   `).join("");
 
   tbody.querySelectorAll(".edit-btn").forEach(btn => {
-    btn.addEventListener("click", () => openEditModal(posts.find(p => p.id === Number(btn.dataset.id))));
+    btn.addEventListener("click", () => openEditModal(allPosts.find(p => p.id === Number(btn.dataset.id))));
   });
   tbody.querySelectorAll(".delete-btn").forEach(btn => {
     btn.addEventListener("click", () => deletePost(Number(btn.dataset.id)));
   });
 }
 
+function renderPagination() {
+  const bar = document.getElementById("pagination");
+  const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
+  if (totalPages <= 1) {
+    bar.innerHTML = "";
+    return;
+  }
+  let html = `<button class="pager-btn" id="pager-prev" ${currentPage === 1 ? "disabled" : ""}>← Prev</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="pager-btn${i === currentPage ? " active" : ""}" data-page="${i}">${i}</button>`;
+  }
+  html += `<button class="pager-btn" id="pager-next" ${currentPage === totalPages ? "disabled" : ""}>Next →</button>`;
+  bar.innerHTML = html;
+
+  bar.querySelectorAll("[data-page]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentPage = Number(btn.dataset.page);
+      renderCurrentPage();
+    });
+  });
+  document.getElementById("pager-prev")?.addEventListener("click", () => {
+    currentPage--;
+    renderCurrentPage();
+  });
+  document.getElementById("pager-next")?.addEventListener("click", () => {
+    currentPage++;
+    renderCurrentPage();
+  });
+}
+
+function renderCurrentPage() {
+  const totalPages = Math.max(1, Math.ceil(allPosts.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  renderPostsTable(allPosts.slice(start, start + PAGE_SIZE));
+  renderPagination();
+}
+
 async function loadPosts() {
-  const posts = await api.get("/api/v1/admin/blog");
-  renderPostsTable(posts);
+  allPosts = await api.get("/api/v1/admin/blog");
+  renderCurrentPage();
 }
 
 function openNewModal() {
