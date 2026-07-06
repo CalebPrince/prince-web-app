@@ -21,6 +21,8 @@ $staticPages = [
     ['loc' => '/services.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
     ['loc' => '/projects.html', 'priority' => '0.8', 'changefreq' => 'weekly'],
     ['loc' => '/blog.html', 'priority' => '0.8', 'changefreq' => 'weekly'],
+    ['loc' => '/pricing.html', 'priority' => '0.7', 'changefreq' => 'monthly'],
+    ['loc' => '/request.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
     ['loc' => '/contact.html', 'priority' => '0.5', 'changefreq' => 'yearly'],
     ['loc' => '/privacy.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
     ['loc' => '/cookies.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
