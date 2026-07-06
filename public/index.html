@@ -6,6 +6,8 @@
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
 <title>Prince Caleb — Web &amp; Mobile App Developer</title>
 <meta name="description" content="Prince Caleb builds custom web apps, CMS ecosystems, and mobile experiences from scratch — fast, secure, and built to last.">
+<meta name="keywords" content="custom software developer Ghana, web developer Accra, mobile app developer Ghana, custom dashboards, business automation">
+<meta name="robots" content="index, follow">
 <link rel="canonical" href="https://princecaleb.dev/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Prince Caleb">
@@ -19,6 +21,18 @@
 <meta name="twitter:title" content="Prince Caleb — Web &amp; Mobile App Developer">
 <meta name="twitter:description" content="Custom web apps, CMS ecosystems, and mobile experiences from scratch — fast, secure, and built to last.">
 <meta name="twitter:image" content="https://princecaleb.dev/uploads/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Prince Caleb",
+  "url": "https://princecaleb.dev/",
+  "image": "https://princecaleb.dev/uploads/og-image.png",
+  "description": "Custom web apps, CMS ecosystems, and mobile experiences from scratch — fast, secure, and built to last.",
+  "areaServed": "Accra, Ghana",
+  "sameAs": []
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
@@ -37,6 +51,7 @@
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
       <a href="/projects.html" class="nav-link">Projects</a>
+      <a href="/blog.html" class="nav-link">Blog</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
     <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
@@ -53,6 +68,7 @@
     <a href="/about.html" class="nav-link">About</a>
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
+    <a href="/blog.html" class="nav-link">Blog</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
   </div>
@@ -229,6 +245,17 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="container">
+    <p class="eyebrow text-center mb-2">From the blog</p>
+    <h2 class="text-center mb-5">Practical guides on custom software &amp; automation.</h2>
+    <div id="home-blog-preview" class="row g-4"></div>
+    <div class="text-center mt-4">
+      <a href="/blog.html" class="btn-brand-outline">Read all articles →</a>
+    </div>
+  </div>
+</section>
+
 <section class="section" style="background: var(--bg-soft);">
   <div class="container">
     <p class="eyebrow text-center mb-2">What clients say</p>
@@ -348,11 +375,16 @@
       <a href="/about.html">About</a>
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
+      <a href="/blog.html">Blog</a>
       <a href="/contact.html">Contact</a>
     </div>
   </div>
-  <div class="container mt-3">
+  <div class="container mt-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
     <small>&copy; 2026 Prince Caleb. All rights reserved.</small>
+    <div class="d-flex gap-3">
+      <a href="/privacy.html" class="small">Privacy Policy</a>
+      <a href="/cookies.html" class="small">Cookie Policy</a>
+    </div>
   </div>
 </footer>
 
@@ -390,6 +422,29 @@
     `).join('');
   } catch (e) {
     console.error('Failed to load projects', e);
+  }
+})();
+
+(async function () {
+  try {
+    const posts = await api.get('/api/v1/blog');
+    const previewBox = document.getElementById('home-blog-preview');
+    previewBox.innerHTML = posts.slice(0, 3).map((p, i) => `
+      <div class="col-md-4 reveal reveal-delay-${i + 1}">
+        <a href="/blog-post.html?slug=${p.slug}" class="text-decoration-none">
+          <div class="project-card">
+            <img src="${p.cover_image_path}" alt="${p.title}">
+            <div class="card-body">
+              ${p.category ? `<span class="eyebrow mb-2 d-block">${p.category}</span>` : ''}
+              <h5 class="mb-2">${p.title}</h5>
+              <p class="small text-muted-custom mb-0">${p.excerpt}</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error('Failed to load blog posts', e);
   }
 })();
 </script>

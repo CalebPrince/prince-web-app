@@ -4,20 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
-<title>Projects — Prince Caleb</title>
-<meta name="description" content="A portfolio of custom web applications, CMS ecosystems, and mobile apps by Prince Caleb.">
-<link rel="canonical" href="https://princecaleb.dev/projects.html">
+<title>Blog — Prince Caleb</title>
+<meta name="description" content="Practical guides on custom software, automation, and web/mobile development for businesses in Accra and beyond.">
+<meta name="keywords" content="custom software Ghana, business automation Accra, custom dashboards, mobile app development, AI chatbots, CMS development">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://princecaleb.dev/blog.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Prince Caleb">
-<meta property="og:title" content="Projects — Prince Caleb">
-<meta property="og:description" content="A portfolio of custom web applications, CMS ecosystems, and mobile apps by Prince Caleb.">
-<meta property="og:url" content="https://princecaleb.dev/projects.html">
+<meta property="og:title" content="Blog — Prince Caleb">
+<meta property="og:description" content="Practical guides on custom software, automation, and web/mobile development for businesses in Accra and beyond.">
+<meta property="og:url" content="https://princecaleb.dev/blog.html">
 <meta property="og:image" content="https://princecaleb.dev/uploads/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Projects — Prince Caleb">
-<meta name="twitter:description" content="A portfolio of custom web applications, CMS ecosystems, and mobile apps by Prince Caleb.">
+<meta name="twitter:title" content="Blog — Prince Caleb">
+<meta name="twitter:description" content="Practical guides on custom software, automation, and web/mobile development for businesses in Accra and beyond.">
 <meta name="twitter:image" content="https://princecaleb.dev/uploads/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,8 +38,8 @@
       <a href="/" class="nav-link">Home</a>
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
-      <a href="/projects.html" class="nav-link active">Projects</a>
-      <a href="/blog.html" class="nav-link">Blog</a>
+      <a href="/projects.html" class="nav-link">Projects</a>
+      <a href="/blog.html" class="nav-link active">Blog</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
     <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
@@ -62,22 +64,22 @@
 
 <header class="hero">
   <div class="container">
-    <p class="eyebrow mb-3 hero-animate hero-animate-1">Projects</p>
-    <h1 class="display-6 mb-3 hero-animate hero-animate-2">Selected work.</h1>
+    <p class="eyebrow mb-3 hero-animate hero-animate-1">Blog</p>
+    <h1 class="display-6 mb-3 hero-animate hero-animate-2">Insights &amp; how-tos.</h1>
     <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width: 60ch;">
-      Filter by technology to see relevant case studies, or browse everything.
+      Practical guides on custom software, automation, and web/mobile development — filter by topic, or browse everything.
     </p>
-    <div id="tag-filters" class="d-flex flex-wrap gap-2 hero-animate hero-animate-4">
-      <button class="filter-pill active" data-tag="">All</button>
+    <div id="category-filters" class="d-flex flex-wrap gap-2 hero-animate hero-animate-4">
+      <button class="filter-pill active" data-category="">All</button>
     </div>
   </div>
 </header>
 
 <section class="section">
   <div class="container">
-    <div id="projects-grid" class="row g-4"></div>
+    <div id="blog-grid" class="row g-4"></div>
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">
-      No projects match this filter yet.
+      No articles match this filter yet.
     </div>
   </div>
 </section>
@@ -102,20 +104,6 @@
   </div>
 </footer>
 
-<div class="modal fade" id="live-demo-modal" tabindex="-1">
-  <div class="modal-dialog modal-fullscreen">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="live-demo-title">Live Demo</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-0">
-        <iframe id="live-demo-frame" src="" title="Live demo" style="width:100%;height:100%;border:0;"></iframe>
-      </div>
-    </div>
-  </div>
-</div>
-
 <button type="button" id="ai-widget-toggle">💬 Live Chat</button>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -125,89 +113,62 @@
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script>
-let allProjects = [];
-let liveDemoModal = null;
+let allPosts = [];
 
-function renderGrid(projects) {
-  const grid = document.getElementById('projects-grid');
+function renderGrid(posts) {
+  const grid = document.getElementById('blog-grid');
   const empty = document.getElementById('empty-state');
-  if (projects.length === 0) {
+  if (posts.length === 0) {
     grid.innerHTML = '';
     empty.classList.remove('d-none');
     return;
   }
   empty.classList.add('d-none');
-  grid.innerHTML = projects.map((p, i) => `
+  grid.innerHTML = posts.map((p, i) => `
     <div class="col-md-6 col-lg-4 reveal reveal-delay-${(i % 4) + 1}">
-      <div class="position-relative">
-        <a href="/project.html?slug=${p.slug}" class="text-decoration-none">
-          <div class="project-card">
-            <img src="${p.cover_image_path}" alt="${p.title}">
-            <div class="card-body">
-              <h5 class="mb-2">${p.title}</h5>
-              <p class="small text-muted-custom mb-3">${p.summary}</p>
-              <div class="mt-auto">
-                ${p.tags.map(t => `<span class="tag-chip">${t.name}</span>`).join('')}
-              </div>
-            </div>
+      <a href="/blog-post.html?slug=${p.slug}" class="text-decoration-none">
+        <div class="project-card">
+          <img src="${p.cover_image_path}" alt="${p.title}">
+          <div class="card-body">
+            ${p.category ? `<span class="eyebrow mb-2 d-block">${p.category}</span>` : ''}
+            <h5 class="mb-2">${p.title}</h5>
+            <p class="small text-muted-custom mb-0">${p.excerpt}</p>
           </div>
-        </a>
-        ${p.is_embeddable && p.live_url ? `
-          <button type="button" class="btn-brand btn-sm live-demo-card-btn" data-url="${p.live_url}" data-title="${p.title}"
-            style="position:absolute;top:12px;right:12px;">▶ Live Demo</button>
-        ` : ''}
-      </div>
+        </div>
+      </a>
     </div>
   `).join('');
-
-  grid.querySelectorAll('.live-demo-card-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      document.getElementById('live-demo-title').textContent = `Live Demo — ${btn.dataset.title}`;
-      document.getElementById('live-demo-frame').src = btn.dataset.url;
-      liveDemoModal.show();
-    });
-  });
 }
 
-function applyFilter(tagSlug) {
+function applyFilter(category) {
   document.querySelectorAll('.filter-pill').forEach(el => {
-    el.classList.toggle('active', el.dataset.tag === tagSlug);
+    el.classList.toggle('active', el.dataset.category === category);
   });
-  if (!tagSlug) {
-    renderGrid(allProjects);
+  if (!category) {
+    renderGrid(allPosts);
     return;
   }
-  renderGrid(allProjects.filter(p => p.tags.some(t => t.slug === tagSlug)));
+  renderGrid(allPosts.filter(p => p.category === category));
 }
 
 (async function init() {
-  liveDemoModal = new bootstrap.Modal(document.getElementById('live-demo-modal'));
-  document.getElementById('live-demo-modal').addEventListener('hidden.bs.modal', () => {
-    document.getElementById('live-demo-frame').src = '';
-  });
-
   try {
-    const [projects, tags] = await Promise.all([
-      api.get('/api/v1/projects'),
-      api.get('/api/v1/tags'),
-    ]);
-    allProjects = projects;
-    renderGrid(projects);
+    allPosts = await api.get('/api/v1/blog');
+    renderGrid(allPosts);
 
-    const filterBar = document.getElementById('tag-filters');
-    tags.forEach(t => {
+    const categories = [...new Set(allPosts.map(p => p.category).filter(Boolean))].sort();
+    const filterBar = document.getElementById('category-filters');
+    categories.forEach(cat => {
       const btn = document.createElement('button');
       btn.className = 'filter-pill';
-      btn.dataset.tag = t.slug;
-      btn.textContent = t.name;
-      btn.addEventListener('click', () => applyFilter(t.slug));
+      btn.dataset.category = cat;
+      btn.textContent = cat;
+      btn.addEventListener('click', () => applyFilter(cat));
       filterBar.appendChild(btn);
     });
-    filterBar.querySelector('[data-tag=""]').addEventListener('click', () => applyFilter(''));
+    filterBar.querySelector('[data-category=""]').addEventListener('click', () => applyFilter(''));
   } catch (e) {
-    console.error('Failed to load projects', e);
+    console.error('Failed to load blog posts', e);
   }
 })();
 </script>
