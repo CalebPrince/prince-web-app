@@ -27,7 +27,7 @@ class LiveChatController
     public static function status(): void
     {
         Response::json([
-            'online' => !empty(Settings::get('gemini_api_key')),
+            'online' => !empty(Settings::get('gemini_api_key')) && self::isWithinScheduledHours(),
             'greeting' => Settings::get('chat_greeting')
                 ?? 'Hi there! 👋 Welcome.',
             'intro' => Settings::get('chat_intro')
@@ -191,7 +191,7 @@ class LiveChatController
         Response::json(['status' => 'received']);
     }
 
-    /** POST /api/v1/chat/inquiry — body: {token?, name, email, message}
+    /** POST /api/v1/chat/inquiry — body: {token?, name, email, phone?, message}
      *  For visitors who want something other than a prototype (maintenance,
      *  consulting, a question) — captures their details right in the chat. */
     public static function inquiry(): void
@@ -202,6 +202,7 @@ class LiveChatController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $name = trim((string) ($data['name'] ?? ''));
         $email = trim((string) ($data['email'] ?? ''));
+        $phone = trim((string) ($data['phone'] ?? ''));
         $message = trim((string) ($data['message'] ?? ''));
 
         if ($name === '' || mb_strlen($name) > 255) {
@@ -210,6 +211,9 @@ class LiveChatController
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             Response::error('A valid email address is required.', 422);
         }
+        if ($phone !== '' && mb_strlen($phone) > 30) {
+            Response::error('Phone number is too long.', 422);
+        }
         if ($message === '' || mb_strlen($message) > 5000) {
             Response::error('A message under 5000 characters is required.', 422);
         }
@@ -217,9 +221,9 @@ class LiveChatController
         $pdo = Database::get();
         $session = self::findOrCreateSession($pdo, $data['token'] ?? null);
         $pdo->prepare(
-            "UPDATE chat_sessions SET client_name = ?, client_email = ?, client_comment = ?,
+            "UPDATE chat_sessions SET client_name = ?, client_email = ?, client_phone = ?, client_comment = ?,
              admin_seen = 0, updated_at = datetime('now') WHERE id = ?"
-        )->execute([$name, $email, $message, $session['id']]);
+        )->execute([$name, $email, $phone ?: null, $message, $session['id']]);
 
         $stmt = $pdo->prepare(
             'INSERT INTO inquiries (name, email, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)'
@@ -227,7 +231,7 @@ class LiveChatController
         $stmt->execute([
             $name,
             $email,
-            "[Live Chat] $message",
+            "[Live Chat]" . ($phone !== '' ? " Phone: $phone\n\n" : ' ') . $message,
             $_SERVER['REMOTE_ADDR'] ?? 'unknown',
             $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
@@ -243,7 +247,7 @@ class LiveChatController
         $pdo = Database::get();
         $rows = $pdo->query(
             "SELECT id, token, transcript_json, prototype_status, client_comment, client_name,
-                    client_email, admin_seen, created_at, updated_at,
+                    client_email, client_phone, admin_seen, created_at, updated_at,
                     CASE WHEN prototype_html IS NULL THEN 0 ELSE 1 END AS has_prototype
              FROM chat_sessions
              WHERE transcript_json != '[]' OR client_email IS NOT NULL
@@ -311,6 +315,32 @@ class LiveChatController
     }
 
     // ---- internals ----------------------------------------------------------
+
+    /** True when Live Chat should be considered online right now, per Admin → Settings hours. */
+    private static function isWithinScheduledHours(): bool
+    {
+        if (empty(Settings::get('chat_hours_enabled'))) {
+            return true; // no schedule configured — always online whenever the Gemini key is present
+        }
+
+        $tz = Settings::get('chat_timezone') ?: 'Africa/Accra';
+        try {
+            $now = new \DateTime('now', new \DateTimeZone($tz));
+        } catch (\Exception $e) {
+            $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        }
+
+        $days = array_filter(array_map('trim', explode(',', strtolower((string) Settings::get('chat_hours_days')))));
+        if (!in_array(strtolower($now->format('D')), $days, true)) {
+            return false;
+        }
+
+        $start = Settings::get('chat_hours_start') ?: '00:00';
+        $end = Settings::get('chat_hours_end') ?: '23:59';
+        $current = $now->format('H:i');
+
+        return $current >= $start && $current <= $end;
+    }
 
     private static function config(): array
     {

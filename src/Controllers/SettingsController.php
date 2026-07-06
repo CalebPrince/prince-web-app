@@ -10,8 +10,11 @@ use App\Support\Settings;
 
 class SettingsController
 {
-    /** Secrets — admin read/write only, never exposed publicly. */
-    private const SECRET_KEYS = ['gemini_api_key', 'slack_webhook_url'];
+    /** Secrets and behavior config — admin read/write only, never exposed publicly. */
+    private const ADMIN_ONLY_KEYS = [
+        'gemini_api_key', 'slack_webhook_url',
+        'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
+    ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */
     private const CONTENT_KEYS = [
@@ -44,7 +47,7 @@ class SettingsController
     {
         AuthMiddleware::requireAuth();
         $out = [];
-        foreach (array_merge(self::SECRET_KEYS, self::CONTENT_KEYS) as $key) {
+        foreach (array_merge(self::ADMIN_ONLY_KEYS, self::CONTENT_KEYS) as $key) {
             $out[$key] = Settings::get($key);
         }
         Response::json($out);
@@ -56,7 +59,7 @@ class SettingsController
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
-        foreach (array_merge(self::SECRET_KEYS, self::CONTENT_KEYS) as $key) {
+        foreach (array_merge(self::ADMIN_ONLY_KEYS, self::CONTENT_KEYS) as $key) {
             if (!array_key_exists($key, $data)) {
                 continue;
             }

@@ -24,12 +24,10 @@
     <div id="ai-widget-actions" class="px-2 pb-2 d-none">
       <button type="button" class="btn-brand btn-sm w-100" id="build-prototype-btn">⚡ Build my prototype</button>
     </div>
-    <div class="px-3 pb-2">
-      <a href="#" id="leave-msg-link" class="small">✉️ Prefer to just leave a message?</a>
-    </div>
     <form id="leave-msg-form" class="d-none p-2 border-top">
       <input type="text" class="form-control form-control-sm mb-2" id="lm-name" placeholder="Your name" required>
       <input type="email" class="form-control form-control-sm mb-2" id="lm-email" placeholder="Your email" required>
+      <input type="tel" class="form-control form-control-sm mb-2" id="lm-phone" placeholder="Phone number (optional)">
       <textarea class="form-control form-control-sm mb-2" id="lm-message" rows="3" placeholder="What can Prince help you with?" required></textarea>
       <button type="submit" class="btn-brand btn-sm w-100" id="lm-submit">Send message</button>
     </form>
@@ -59,9 +57,12 @@
     document.getElementById("ai-widget-actions").classList.toggle("d-none", !canPrototype);
   }
 
-  function toggleMessageForm(show) {
-    document.getElementById("leave-msg-form").classList.toggle("d-none", !show);
-    if (show) document.getElementById("lm-name").focus();
+  // Online visitors get the chat input; offline (or a hard chat failure) gets
+  // the leave-a-message form. There's no manual toggle between the two.
+  function showMessageForm() {
+    document.getElementById("leave-msg-form").classList.remove("d-none");
+    document.getElementById("ai-widget-form").classList.add("d-none");
+    document.getElementById("lm-name").focus();
   }
 
   // ---- opening state ---------------------------------------------------------
@@ -78,7 +79,7 @@
       appendMessage("bot", status.intro || "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.");
     } else {
       appendMessage("bot", status.offline_message || "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.");
-      toggleMessageForm(true);
+      showMessageForm();
     }
   })();
 
@@ -102,16 +103,11 @@
       showPrototypeButton();
     } catch (err) {
       pending.textContent = "Sorry, something went wrong. Please leave a message below instead.";
-      toggleMessageForm(true);
+      showMessageForm();
     }
   });
 
   // ---- leave a message -------------------------------------------------------
-
-  document.getElementById("leave-msg-link").addEventListener("click", (e) => {
-    e.preventDefault();
-    toggleMessageForm(document.getElementById("leave-msg-form").classList.contains("d-none"));
-  });
 
   document.getElementById("leave-msg-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -122,11 +118,12 @@
         token: sessionToken,
         name: document.getElementById("lm-name").value.trim(),
         email: document.getElementById("lm-email").value.trim(),
+        phone: document.getElementById("lm-phone").value.trim(),
         message: document.getElementById("lm-message").value.trim(),
       });
       const email = document.getElementById("lm-email").value.trim();
       document.getElementById("leave-msg-form").reset();
-      toggleMessageForm(false);
+      document.getElementById("leave-msg-form").classList.add("d-none");
       appendMessage("bot", `Thanks! Your message is on its way — Prince will reply to you at ${email} soon. 📬`);
     } catch (err) {
       appendMessage("bot", err.message || "Could not send your message — please try again.");

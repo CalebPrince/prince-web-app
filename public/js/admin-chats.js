@@ -15,7 +15,7 @@ function statusKey(c) {
 
 function chatCard(c) {
   const who = c.client_name
-    ? `<strong>${escapeHtml(c.client_name)}</strong> <span class="text-muted-custom small ms-1">${escapeHtml(c.client_email || "")}</span>`
+    ? `<strong>${escapeHtml(c.client_name)}</strong> <span class="text-muted-custom small ms-1">${escapeHtml(c.client_email || "")}${c.client_phone ? " · " + escapeHtml(c.client_phone) : ""}</span>`
     : `<strong>Anonymous visitor</strong>`;
 
   const transcript = c.transcript.map(t => `
@@ -40,6 +40,7 @@ function chatCard(c) {
         <div class="d-flex gap-2">
           ${c.has_prototype ? `<a class="btn btn-sm btn-outline-secondary" href="/api/v1/chat/prototype/${c.token}" target="_blank" rel="noopener">View prototype ↗</a>` : ""}
           ${c.client_email ? `<a class="btn btn-sm btn-outline-secondary" href="mailto:${escapeHtml(c.client_email)}">Reply by email</a>` : ""}
+          ${c.client_phone ? `<a class="btn btn-sm btn-outline-secondary" href="tel:${escapeHtml(c.client_phone)}">Call</a>` : ""}
           ${c.admin_seen ? "" : `<button class="btn btn-sm btn-brand seen-btn" data-id="${c.id}">Mark seen</button>`}
         </div>
       </div>

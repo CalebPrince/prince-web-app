@@ -51,6 +51,23 @@ async function saveIntegrations(e) {
   }
 }
 
+async function saveHours(e) {
+  e.preventDefault();
+  const days = [...document.querySelectorAll(".hours-day:checked")].map(el => el.value);
+  try {
+    await api.put("/api/v1/admin/settings", {
+      chat_hours_enabled: document.getElementById("hours-enabled").checked ? "1" : "",
+      chat_hours_days: days.join(","),
+      chat_hours_start: document.getElementById("hours-start").value,
+      chat_hours_end: document.getElementById("hours-end").value,
+      chat_timezone: document.getElementById("hours-timezone").value.trim(),
+    });
+    showMsg("hours-msg", "Saved — Live Chat availability updates immediately.", true);
+  } catch (err) {
+    showMsg("hours-msg", err.message, false);
+  }
+}
+
 async function testAi() {
   const btn = document.getElementById("test-ai-btn");
   btn.disabled = true;
@@ -84,9 +101,17 @@ async function testAi() {
 
   document.getElementById("integrations-form").addEventListener("submit", saveIntegrations);
   document.getElementById("test-ai-btn").addEventListener("click", testAi);
+  document.getElementById("hours-form").addEventListener("submit", saveHours);
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
+
+    document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
+    const days = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);
+    document.querySelectorAll(".hours-day").forEach(el => { el.checked = days.includes(el.value); });
+    document.getElementById("hours-start").value = settings.chat_hours_start || "";
+    document.getElementById("hours-end").value = settings.chat_hours_end || "";
+    document.getElementById("hours-timezone").value = settings.chat_timezone || "";
   } catch (_) { /* fields stay empty */ }
 })();

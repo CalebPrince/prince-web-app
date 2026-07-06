@@ -76,6 +76,47 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
+          <h5 class="mb-1">Live Chat availability</h5>
+          <p class="text-muted-custom small">Control the days/hours Live Chat shows as online. Outside these hours (or when disabled below), visitors see the offline message and leave-a-message form instead.</p>
+          <form id="hours-form">
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="hours-enabled">
+              <label class="form-check-label" for="hours-enabled">Restrict Live Chat to specific hours</label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label d-block">Days online</label>
+              <div class="d-flex flex-wrap gap-3">
+                <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input hours-day" id="day-mon" value="mon"><label class="form-check-label" for="day-mon">Mon</label></div>
+                <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input hours-day" id="day-tue" value="tue"><label class="form-check-label" for="day-tue">Tue</label></div>
+                <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input hours-day" id="day-wed" value="wed"><label class="form-check-label" for="day-wed">Wed</label></div>
+                <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input hours-day" id="day-thu" value="thu"><label class="form-check-label" for="day-thu">Thu</label></div>
+                <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input hours-day" id="day-fri" value="fri"><label class="form-check-label" for="day-fri">Fri</label></div>
+                <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input hours-day" id="day-sat" value="sat"><label class="form-check-label" for="day-sat">Sat</label></div>
+                <div class="form-check form-check-inline"><input type="checkbox" class="form-check-input hours-day" id="day-sun" value="sun"><label class="form-check-label" for="day-sun">Sun</label></div>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-4">
+                <label class="form-label">Start time</label>
+                <input type="time" class="form-control" id="hours-start">
+              </div>
+              <div class="col-4">
+                <label class="form-label">End time</label>
+                <input type="time" class="form-control" id="hours-end">
+              </div>
+              <div class="col-4">
+                <label class="form-label">Timezone</label>
+                <input type="text" class="form-control" id="hours-timezone" placeholder="Africa/Accra">
+              </div>
+            </div>
+            <div id="hours-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Save Availability</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
           <h5 class="mb-1">Change password</h5>
           <p class="text-muted-custom small">All other signed-in devices are logged out when you change it.</p>
           <form id="password-form">
