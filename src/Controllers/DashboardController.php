@@ -61,4 +61,27 @@ class DashboardController
             'draft_projects' => $draftProjects,
         ]);
     }
+
+    /** GET /api/v1/admin/notifications — lightweight unread counts for the sidebar badges */
+    public static function notifications(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        $unreadInquiries = (int) $pdo->query(
+            "SELECT COUNT(*) FROM inquiries WHERE status = 'unread'"
+        )->fetchColumn();
+
+        // Matches LiveChatController::adminIndex's own listing filter, so the
+        // badge count always agrees with the "new" pills shown on that page.
+        $unseenChats = (int) $pdo->query(
+            "SELECT COUNT(*) FROM chat_sessions
+             WHERE admin_seen = 0 AND (transcript_json != '[]' OR client_email IS NOT NULL)"
+        )->fetchColumn();
+
+        Response::json([
+            'unread_inquiries' => $unreadInquiries,
+            'unseen_chats' => $unseenChats,
+        ]);
+    }
 }

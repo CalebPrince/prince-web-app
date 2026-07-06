@@ -12,8 +12,24 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
   color: #94a3b8;
   padding: 0.6rem 1rem;
   border-radius: 8px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   text-decoration: none;
+}
+.notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
 }
 .admin-sidebar a.nav-link.active,
 .admin-sidebar a.nav-link:hover {
