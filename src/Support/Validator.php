@@ -54,4 +54,30 @@ class Validator
 
         return $errors;
     }
+
+    /** @return array<int,string> */
+    public static function validateBlogPost(array $data): array
+    {
+        $errors = [];
+
+        if (trim((string) ($data['title'] ?? '')) === '') {
+            $errors[] = 'Title is required.';
+        }
+        if (trim((string) ($data['slug'] ?? '')) === '') {
+            $errors[] = 'Slug is required.';
+        } elseif (!preg_match('/^[a-z0-9\-]+$/', $data['slug'])) {
+            $errors[] = 'Slug must contain only lowercase letters, numbers, and hyphens.';
+        }
+        if (trim((string) ($data['excerpt'] ?? '')) === '') {
+            $errors[] = 'Excerpt is required.';
+        }
+        if (trim((string) ($data['body'] ?? '')) === '') {
+            $errors[] = 'Body is required.';
+        }
+        if (trim((string) ($data['cover_image_path'] ?? '')) === '') {
+            $errors[] = 'Cover image path is required.';
+        }
+
+        return $errors;
+    }
 }
