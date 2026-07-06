@@ -44,6 +44,7 @@ async function saveIntegrations(e) {
     await api.put("/api/v1/admin/settings", {
       gemini_api_key: document.getElementById("gemini-key").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
+      notification_email: document.getElementById("notification-email").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
   } catch (err) {
@@ -106,6 +107,7 @@ async function testAi() {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
+    document.getElementById("notification-email").value = settings.notification_email || "";
 
     document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
     const days = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);

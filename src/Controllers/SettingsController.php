@@ -12,7 +12,7 @@ class SettingsController
 {
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
-        'gemini_api_key', 'slack_webhook_url',
+        'gemini_api_key', 'slack_webhook_url', 'notification_email',
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
     ];
 

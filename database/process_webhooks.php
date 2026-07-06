@@ -9,12 +9,14 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Support\Database;
+use App\Support\Mailer;
 use App\Support\Settings;
 
 require_once dirname(__DIR__) . '/config/config.php';
 $config = appConfig();
 $pdo = Database::get();
 $slackUrl = Settings::get('slack_webhook_url');
+$notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');
 
 $pending = $pdo->query(
     "SELECT wq.id AS queue_id, i.* FROM webhook_queue wq
@@ -23,8 +25,10 @@ $pending = $pdo->query(
 )->fetchAll();
 
 foreach ($pending as $row) {
-    $sent = false;
-
+    // Both channels are attempted every pass; only a channel that hasn't
+    // succeeded yet (or was never configured) blocks this row from
+    // being marked "sent", so one flaky channel doesn't hide the other.
+    $slackOk = true;
     if (!empty($slackUrl)) {
         $text = sprintf(
             "New inquiry from *%s* (%s):\n>%s",
@@ -43,13 +47,18 @@ foreach ($pending as $row) {
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        $sent = $response !== false && $status === 200;
-    } else {
-        // No webhook configured — nothing to dispatch, but don't loop forever retrying.
-        $sent = true;
+        $slackOk = $response !== false && $status === 200;
     }
 
-    if ($sent) {
+    $emailOk = true;
+    if (!empty($notifyEmail)) {
+        $subject = 'New inquiry from ' . $row['name'];
+        $body = "Name: {$row['name']}\nEmail: {$row['email']}\n\n{$row['message']}\n\n"
+            . "— sent automatically from the princecaleb.dev contact form.";
+        $emailOk = Mailer::send($notifyEmail, $subject, $body, $row['email']);
+    }
+
+    if ($slackOk && $emailOk) {
         $pdo->prepare("UPDATE webhook_queue SET status = 'sent' WHERE id = ?")->execute([$row['queue_id']]);
     } else {
         $pdo->prepare('UPDATE webhook_queue SET attempts = attempts + 1 WHERE id = ?')->execute([$row['queue_id']]);

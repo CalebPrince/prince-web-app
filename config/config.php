@@ -50,6 +50,8 @@ if (!function_exists('appConfig')) {
                 'ai_rate_limit' => 20,
                 'gemini_api_key' => env('GEMINI_API_KEY'),
                 'slack_webhook_url' => env('SLACK_WEBHOOK_URL'),
+                'mail_from' => env('MAIL_FROM', 'noreply@princecaleb.dev'),
+                'mail_from_name' => env('MAIL_FROM_NAME', 'Prince Caleb Portfolio'),
             ];
         }
         return $config;
