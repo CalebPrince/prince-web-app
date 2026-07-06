@@ -25,6 +25,9 @@ RewriteCond %{REQUEST_URI} !^/api
 RewriteCond %{REQUEST_URI} !^/uploads
 RewriteCond %{REQUEST_URI} !^/css
 RewriteCond %{REQUEST_URI} !^/js
+RewriteCond %{REQUEST_URI} !^/icons
+RewriteCond %{REQUEST_URI} !^/manifest\.json$
+RewriteCond %{REQUEST_URI} !^/sw\.js$
 RewriteCond %{REQUEST_URI} !^/maintenance\.(html|php)$
 RewriteRule ^ /maintenance.php [L]
 

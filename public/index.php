@@ -6,7 +6,7 @@ declare(strict_types=1);
 // actually protects static pages in production, since those bypass PHP
 // entirely) so the same behavior can be tested under `php -S` locally.
 $__requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
-$__maintenanceExempt = ['/admin', '/api', '/uploads', '/css', '/js', '/maintenance.html'];
+$__maintenanceExempt = ['/admin', '/api', '/uploads', '/css', '/js', '/icons', '/manifest.json', '/sw.js', '/maintenance.html'];
 $__isExempt = false;
 foreach ($__maintenanceExempt as $__prefix) {
     if (str_starts_with($__requestPath, $__prefix)) {

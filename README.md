@@ -130,6 +130,13 @@ storage/
     (`/api/v1/newsletter/unsubscribe?token=...`) — re-subscribing an
     unsubscribed address just reactivates the existing row instead of
     erroring. Admin view/export/remove at `/admin/newsletter.html`.
+11. **PWA**: `public/manifest.json` + `public/sw.js` make the site
+    installable. The app icons (`public/icons/`) are hand-encoded PNGs
+    written directly with PHP's zlib functions — no GD/Imagick dependency —
+    via `database/generate_pwa_icons.php` (re-run it if the icon design
+    ever changes). The service worker deliberately never caches `/api/*`
+    or `/admin/*`, only the static app shell, so nothing stale is ever
+    served for content or admin data.
 
 ## Deployment (Namecheap cPanel)
 

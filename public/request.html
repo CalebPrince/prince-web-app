@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" type="image/png" href="/icons/icon-32.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
 <title>Request a Project — Prince Caleb</title>
 <meta name="description" content="Tell me about your project — type, budget, timeline, and features — and get a tailored quote.">
@@ -265,5 +269,6 @@ document.getElementById('request-form').addEventListener('submit', async (e) => 
   }
 });
 </script>
+<script src="/js/pwa-register.js"></script>
 </body>
 </html>
