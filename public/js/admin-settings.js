@@ -69,6 +69,21 @@ async function saveHours(e) {
   }
 }
 
+async function savePayments(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      paystack_public_key: document.getElementById("paystack-public-key").value.trim(),
+      paystack_secret_key: document.getElementById("paystack-secret-key").value.trim(),
+      pricing_currency: document.getElementById("pricing-currency").value,
+      pricing_tier_1_amount: document.getElementById("pricing-tier-1-amount").value.trim(),
+    });
+    showMsg("payments-msg", "Saved — takes effect immediately.", true);
+  } catch (err) {
+    showMsg("payments-msg", err.message, false);
+  }
+}
+
 async function saveMaintenance(e) {
   e.preventDefault();
   try {
@@ -116,12 +131,18 @@ async function testAi() {
   document.getElementById("test-ai-btn").addEventListener("click", testAi);
   document.getElementById("hours-form").addEventListener("submit", saveHours);
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
+  document.getElementById("payments-form").addEventListener("submit", savePayments);
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
+
+    document.getElementById("paystack-public-key").value = settings.paystack_public_key || "";
+    document.getElementById("paystack-secret-key").value = settings.paystack_secret_key || "";
+    document.getElementById("pricing-currency").value = settings.pricing_currency || "GHS";
+    document.getElementById("pricing-tier-1-amount").value = settings.pricing_tier_1_amount || "";
 
     document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
     const days = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);

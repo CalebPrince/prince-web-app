@@ -52,43 +52,64 @@ class InquiryController
         Response::json(['status' => 'received'], 201);
     }
 
-    /** GET /api/v1/admin/inquiries?status=unread */
+    /** GET /api/v1/admin/inquiries?status=unread&type=project_request */
     public static function adminIndex(): void
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $status = $_GET['status'] ?? null;
+        $type = $_GET['type'] ?? null;
 
         $select = "SELECT i.*, wq.status AS notify_status, wq.attempts AS notify_attempts,
                           wq.slack_sent, wq.email_sent
                    FROM inquiries i
                    LEFT JOIN webhook_queue wq ON wq.inquiry_id = i.id";
 
+        $where = [];
+        $params = [];
         if ($status) {
-            $stmt = $pdo->prepare("$select WHERE i.status = ? ORDER BY i.created_at DESC");
-            $stmt->execute([$status]);
-        } else {
-            $stmt = $pdo->query("$select ORDER BY i.created_at DESC");
+            $where[] = 'i.status = ?';
+            $params[] = $status;
         }
+        if ($type) {
+            $where[] = 'i.type = ?';
+            $params[] = $type;
+        }
+
+        $sql = $select . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . ' ORDER BY i.created_at DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
 
         Response::json($stmt->fetchAll());
     }
 
-    /** GET /api/v1/admin/inquiries/export — CSV download */
+    /** GET /api/v1/admin/inquiries/export?type=contact — CSV download */
     public static function exportCsv(): void
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $rows = $pdo->query('SELECT name, email, message, status, created_at FROM inquiries ORDER BY created_at DESC')
-            ->fetchAll();
+        $type = $_GET['type'] ?? null;
+
+        $sql = 'SELECT name, email, message, type, project_type, budget, timeline, features, status, created_at FROM inquiries';
+        if ($type) {
+            $stmt = $pdo->prepare("$sql WHERE type = ? ORDER BY created_at DESC");
+            $stmt->execute([$type]);
+        } else {
+            $stmt = $pdo->query("$sql ORDER BY created_at DESC");
+        }
+        $rows = $stmt->fetchAll();
 
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="inquiries-' . date('Y-m-d') . '.csv"');
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Name', 'Email', 'Message', 'Status', 'Created At'], ',', '"', '\\');
+        fputcsv($out, ['Name', 'Email', 'Message', 'Type', 'Project Type', 'Budget', 'Timeline', 'Features', 'Status', 'Created At'], ',', '"', '\\');
         foreach ($rows as $row) {
-            fputcsv($out, [$row['name'], $row['email'], $row['message'], $row['status'], $row['created_at']], ',', '"', '\\');
+            fputcsv($out, [
+                $row['name'], $row['email'], $row['message'], $row['type'],
+                $row['project_type'], $row['budget'], $row['timeline'], $row['features'],
+                $row['status'], $row['created_at'],
+            ], ',', '"', '\\');
         }
         fclose($out);
         exit;

@@ -20,6 +20,8 @@
       <a href="/admin/projects.html" class="nav-link">Projects</a>
       <a href="/admin/blog.html" class="nav-link">Blog</a>
       <a href="/admin/inquiries.html" class="nav-link"><span>Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
+      <a href="/admin/quote-requests.html" class="nav-link">Quote Requests</a>
+      <a href="/admin/payments.html" class="nav-link">Payments</a>
       <a href="/admin/chats.html" class="nav-link"><span>Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
       <a href="/admin/tags.html" class="nav-link">Tags</a>
       <a href="/admin/content.html" class="nav-link">Site Content</a>
@@ -117,6 +119,41 @@
             </div>
             <div id="hours-msg" class="alert py-2 small d-none"></div>
             <button type="submit" class="btn-brand">Save Availability</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
+          <h5 class="mb-1">Payments (Paystack)</h5>
+          <p class="text-muted-custom small">Get your keys from the Paystack dashboard (Settings → API Keys &amp; Webhooks). Use test keys first — they start with <code>pk_test_</code> / <code>sk_test_</code>.</p>
+          <form id="payments-form">
+            <div class="mb-3">
+              <label class="form-label">Public key</label>
+              <input type="text" class="form-control" id="paystack-public-key" placeholder="pk_test_..." autocomplete="off">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Secret key</label>
+              <input type="password" class="form-control" id="paystack-secret-key" placeholder="sk_test_..." autocomplete="off">
+            </div>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Currency</label>
+                <select class="form-select" id="pricing-currency">
+                  <option value="GHS">GHS — Ghanaian Cedi</option>
+                  <option value="NGN">NGN — Nigerian Naira</option>
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="ZAR">ZAR — South African Rand</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Starter tier checkout amount</label>
+                <input type="number" min="0" step="1" class="form-control" id="pricing-tier-1-amount" placeholder="600">
+              </div>
+            </div>
+            <p class="text-muted-custom small">Only the Starter tier gets a direct "pay now" checkout button — Growth and Custom stay quote-only since their scope varies. Leave the amount empty to hide the checkout button entirely.</p>
+            <div id="payments-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Save Payment Settings</button>
           </form>
         </div>
       </div>
