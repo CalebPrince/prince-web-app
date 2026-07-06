@@ -146,6 +146,19 @@ storage/
     stages are editable text (Admin → Site Content), and the GitHub feed
     fetches directly from `api.github.com` in the visitor's browser (no
     backend call, no API key needed) once a `github_username` is set.
+14. **Blog code snippets**: post bodies support ` ```lang ` fenced code
+    blocks (plain text otherwise), rendered with highlight.js. Fence
+    content is HTML-escaped even though surrounding prose isn't (prose is
+    admin-authored and trusted; code often contains `<`/`>`/`&` that must
+    render literally).
+15. **Accessibility**: every public page has a skip-to-content link
+    (`.skip-link`, visible on keyboard focus) targeting a landmark at the
+    start of the page's main content.
+16. **Analytics** (`/admin/analytics.html`) is first-party and deliberately
+    minimal — `page_views` stores only path, referrer, and timestamp, no
+    IP address or cookie/visitor ID, via a tiny fire-and-forget beacon
+    (`js/analytics.js`) on every public page (never on `/admin/*`).
+    Disclosed in the Privacy Policy.
 
 ## Deployment (Namecheap cPanel)
 

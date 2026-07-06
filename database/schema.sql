@@ -149,3 +149,15 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
   unsubscribe_token TEXT UNIQUE NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Deliberately minimal: path + referrer + date only. No IP address, no
+-- cookie/visitor ID, no cross-site tracking — just enough to see which
+-- pages get read, not who's reading them.
+CREATE TABLE IF NOT EXISTS page_views (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  path TEXT NOT NULL,
+  referrer TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_page_views_path_created ON page_views (path, created_at);
+CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views (created_at);

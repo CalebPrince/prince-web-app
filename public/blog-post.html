@@ -33,10 +33,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
 </head>
 <body>
+<a href="#post-content" class="skip-link">Skip to main content</a>
 
 <nav class="site-nav">
   <div class="container d-flex align-items-center justify-content-between py-3">
@@ -107,6 +109,7 @@
 <button type="button" id="ai-widget-toggle">💬 Live Chat</button>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>
 <script src="/js/content.js"></script>
@@ -120,6 +123,30 @@ const CATEGORY_KEYWORDS = {
   'Mobile Apps': 'mobile app development, React Native development',
   'AI & Chatbots': 'AI chatbots, AI integration services',
 };
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Body is plain text with optional ```lang fenced code blocks. Prose stays
+// as-is (admin-authored, trusted); code content is HTML-escaped since
+// snippets often contain <, >, & that must render literally.
+function renderBody(body) {
+  const parts = body.split(/```(\w*)\n?([\s\S]*?)```/g);
+  let html = '';
+  for (let i = 0; i < parts.length; i += 3) {
+    const prose = parts[i];
+    if (prose && prose.trim()) {
+      html += `<p style="white-space: pre-line;">${prose.trim()}</p>`;
+    }
+    const lang = parts[i + 1];
+    const code = parts[i + 2];
+    if (code !== undefined) {
+      html += `<pre><code class="language-${escapeHtml(lang || 'plaintext')}">${escapeHtml(code.trim())}</code></pre>`;
+    }
+  }
+  return html;
+}
 
 (async function () {
   const slug = new URLSearchParams(window.location.search).get('slug');
@@ -197,7 +224,7 @@ const CATEGORY_KEYWORDS = {
               <a class="share-btn" target="_blank" rel="noopener" href="https://wa.me/?text=${shareTitle}%20${shareUrl}">💬 WhatsApp</a>
               <button type="button" class="share-btn" id="copy-link-btn">🔗 Copy link</button>
             </div>
-            <p class="text-muted-custom" style="white-space: pre-line;">${p.body}</p>
+            <div class="text-muted-custom">${renderBody(p.body)}</div>
           </div>
         </div>
         <div class="text-center mt-5 pt-4 border-top reveal">
@@ -206,6 +233,10 @@ const CATEGORY_KEYWORDS = {
         </div>
       </div>
     `;
+
+    if (window.hljs) {
+      container.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+    }
 
     document.getElementById('copy-link-btn')?.addEventListener('click', async (e) => {
       const btn = e.currentTarget;
@@ -227,6 +258,7 @@ const CATEGORY_KEYWORDS = {
   }
 })();
 </script>
+<script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
 </body>
 </html>

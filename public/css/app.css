@@ -237,6 +237,32 @@ a:hover { color: var(--accent-strong); }
 .pager-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .pager-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* Skip-to-content link: off-screen until keyboard-focused */
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: 0.5rem;
+  z-index: 2000;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 0.5rem; color: #fff; }
+
+/* Blog post code blocks (highlight.js supplies syntax colors only) */
+pre code.hljs {
+  display: block;
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
 /* Share buttons */
 .share-btn {
   display: inline-flex;

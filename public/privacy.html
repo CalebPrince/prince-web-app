@@ -18,6 +18,7 @@
 <link href="/css/app.css" rel="stylesheet">
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <nav class="site-nav">
   <div class="container d-flex align-items-center justify-content-between py-3">
@@ -54,7 +55,7 @@
   </div>
 </div>
 
-<header class="hero">
+<header class="hero" id="main-content">
   <div class="container">
     <p class="eyebrow mb-3">Legal</p>
     <h1 class="display-6 mb-3">Privacy Policy</h1>
@@ -70,6 +71,7 @@
     <h3 class="mb-3">What I collect</h3>
     <p class="text-muted-custom">When you use the <strong>contact form</strong>, I collect your name, email address, and message — plus, for spam prevention, your IP address and browser user-agent. If you arrived from a specific project page, I also note which one.</p>
     <p class="text-muted-custom mb-4">When you use the <strong>Live Chat widget</strong>, the conversation itself is stored so I can follow up. If you choose to leave a message, request a concept prototype, or give feedback on one, I also collect your name, email, and — if you provide it — a phone number.</p>
+    <p class="text-muted-custom mb-4">I also log basic, anonymous <strong>page views</strong> — the page path and referring site only. No IP address, no cookies, and no cross-site tracking — this data was never tied to you individually, and I have no way to connect it back to a specific visitor.</p>
 
     <h3 class="mb-3">How it's used</h3>
     <p class="text-muted-custom mb-4">Solely to respond to you and to run the Live Chat feature. When Live Chat is online, your messages are sent to Google's Gemini API to generate a reply (see "Third parties" below). Submissions may also trigger an email or Slack notification to me personally, so I see new messages quickly — those notifications aren't visible to anyone else.</p>
@@ -127,6 +129,7 @@
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
+<script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
 </body>
 </html>

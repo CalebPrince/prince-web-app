@@ -38,6 +38,7 @@ if (php_sapi_name() === 'cli-server') {
 require dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\AiChatController;
+use App\Controllers\AnalyticsController;
 use App\Controllers\AuthController;
 use App\Controllers\BlogController;
 use App\Controllers\DashboardController;
@@ -70,6 +71,7 @@ $router->post('/api/v1/payments/verify', [PaymentController::class, 'verify']);
 $router->post('/api/v1/payments/webhook', [PaymentController::class, 'webhook']);
 $router->post('/api/v1/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 $router->get('/api/v1/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
+$router->post('/api/v1/analytics/track', [AnalyticsController::class, 'track']);
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
 $router->get('/api/v1/chat/status', [LiveChatController::class, 'status']);
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
@@ -114,6 +116,7 @@ $router->delete('/api/v1/admin/blog/{id}', [BlogController::class, 'destroy']);
 $router->get('/api/v1/admin/payments', [PaymentController::class, 'adminIndex']);
 $router->get('/api/v1/admin/payment-links', [PaymentController::class, 'adminIndexLinks']);
 $router->post('/api/v1/admin/payment-links', [PaymentController::class, 'createLink']);
+$router->get('/api/v1/admin/analytics/summary', [AnalyticsController::class, 'summary']);
 $router->get('/api/v1/admin/newsletter', [NewsletterController::class, 'adminIndex']);
 $router->get('/api/v1/admin/newsletter/export', [NewsletterController::class, 'exportCsv']);
 $router->delete('/api/v1/admin/newsletter/{id}', [NewsletterController::class, 'destroy']);

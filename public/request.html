@@ -31,6 +31,7 @@
 <link href="/css/app.css" rel="stylesheet">
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <nav class="site-nav">
   <div class="container d-flex align-items-center justify-content-between py-3">
@@ -67,7 +68,7 @@
   </div>
 </div>
 
-<header class="hero">
+<header class="hero" id="main-content">
   <div class="container text-center">
     <p class="eyebrow mb-3 hero-animate hero-animate-1">Request a project</p>
     <h1 class="display-6 mb-3 hero-animate hero-animate-2">Tell me about what you're building.</h1>
@@ -269,6 +270,7 @@ document.getElementById('request-form').addEventListener('submit', async (e) => 
   }
 });
 </script>
+<script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
 </body>
 </html>
