@@ -43,6 +43,11 @@ class SettingsController
         'pricing_tier_3_name', 'pricing_tier_3_price', 'pricing_tier_3_tagline', 'pricing_tier_3_features',
         'pricing_currency', 'pricing_tier_1_amount',
         'live_chat_enabled', 'whatsapp_button_enabled',
+        'timeline_1_label', 'timeline_1_title', 'timeline_1_desc',
+        'timeline_2_label', 'timeline_2_title', 'timeline_2_desc',
+        'timeline_3_label', 'timeline_3_title', 'timeline_3_desc',
+        'timeline_4_label', 'timeline_4_title', 'timeline_4_desc',
+        'timeline_5_label', 'timeline_5_title', 'timeline_5_desc',
     ];
 
     /** GET /api/v1/content — public: set content values only (secrets excluded) */

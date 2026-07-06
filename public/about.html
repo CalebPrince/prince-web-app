@@ -110,6 +110,50 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="container" style="max-width: 700px;">
+    <h3 class="text-center mb-2">How the journey's gone so far</h3>
+    <p class="text-muted-custom text-center mb-5">Tap a stage to read more.</p>
+    <div class="timeline" id="career-timeline">
+      <div class="timeline-item reveal" data-timeline="1">
+        <div class="timeline-marker"></div>
+        <span class="eyebrow d-block mb-1" data-content="timeline_1_label">Stage 1</span>
+        <h5 class="mb-1" data-content="timeline_1_title">Getting started</h5>
+        <p class="text-muted-custom timeline-desc mb-0" data-content="timeline_1_desc">Began building small websites and scripts, learning by shipping real projects for real clients instead of just tutorials.</p>
+        <span class="timeline-toggle-hint">Tap to expand ↓</span>
+      </div>
+      <div class="timeline-item reveal reveal-delay-1" data-timeline="2">
+        <div class="timeline-marker"></div>
+        <span class="eyebrow d-block mb-1" data-content="timeline_2_label">Stage 2</span>
+        <h5 class="mb-1" data-content="timeline_2_title">Going full-stack</h5>
+        <p class="text-muted-custom timeline-desc mb-0" data-content="timeline_2_desc">Expanded into full-stack API development, database schema design, and CMS architecture — moving from "make it work" to "make it work well."</p>
+        <span class="timeline-toggle-hint">Tap to expand ↓</span>
+      </div>
+      <div class="timeline-item reveal reveal-delay-2" data-timeline="3">
+        <div class="timeline-marker"></div>
+        <span class="eyebrow d-block mb-1" data-content="timeline_3_label">Stage 3</span>
+        <h5 class="mb-1" data-content="timeline_3_title">Mobile &amp; cross-platform</h5>
+        <p class="text-muted-custom timeline-desc mb-0" data-content="timeline_3_desc">Added React Native to the toolkit, building apps that feel native on both iOS and Android from a single codebase.</p>
+        <span class="timeline-toggle-hint">Tap to expand ↓</span>
+      </div>
+      <div class="timeline-item reveal reveal-delay-3" data-timeline="4">
+        <div class="timeline-marker"></div>
+        <span class="eyebrow d-block mb-1" data-content="timeline_4_label">Stage 4</span>
+        <h5 class="mb-1" data-content="timeline_4_title">AI, where it earns its place</h5>
+        <p class="text-muted-custom timeline-desc mb-0" data-content="timeline_4_desc">Started folding custom AI features — chat, automation, content — into projects, but only when they genuinely improve the product.</p>
+        <span class="timeline-toggle-hint">Tap to expand ↓</span>
+      </div>
+      <div class="timeline-item reveal reveal-delay-4" data-timeline="5">
+        <div class="timeline-marker"></div>
+        <span class="eyebrow d-block mb-1" data-content="timeline_5_label">Today</span>
+        <h5 class="mb-1" data-content="timeline_5_title">Working with founders &amp; small teams</h5>
+        <p class="text-muted-custom timeline-desc mb-0" data-content="timeline_5_desc">Focused on people who need something built right the first time — not a stack of plugins, and not a six-month engagement for a problem that doesn't need one.</p>
+        <span class="timeline-toggle-hint">Tap to expand ↓</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section" style="background: var(--bg-soft);">
   <div class="container" style="max-width: 760px;">
     <h3 class="mb-4">How I approach a project</h3>
@@ -194,6 +238,15 @@
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
+<script>
+document.querySelectorAll('#career-timeline .timeline-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const wasExpanded = item.classList.contains('expanded');
+    document.querySelectorAll('#career-timeline .timeline-item').forEach(i => i.classList.remove('expanded'));
+    if (!wasExpanded) item.classList.add('expanded');
+  });
+});
+</script>
 <script src="/js/pwa-register.js"></script>
 </body>
 </html>
