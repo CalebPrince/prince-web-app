@@ -10,6 +10,8 @@
   --muted: #64748b;
   --bg: #ffffff;
   --bg-soft: #f8fafc;
+  --card-bg: #ffffff;
+  --nav-bg: rgba(255, 255, 255, 0.9);
   --line: #e2e8f0;
   --accent: #4f46e5;
   --accent-strong: #4338ca;
@@ -20,6 +22,22 @@
   --shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
   --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
 }
+
+[data-theme="dark"] {
+  --ink: #f1f5f9;
+  --ink-soft: #cbd5e1;
+  --muted: #94a3b8;
+  --bg: #0b1220;
+  --bg-soft: #111a2e;
+  --card-bg: #131e33;
+  --nav-bg: rgba(11, 18, 32, 0.9);
+  --line: #253044;
+  --accent-soft: rgba(99, 102, 241, 0.16);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+[data-theme="dark"] body { color-scheme: dark; }
+[data-theme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
 
 * { box-sizing: border-box; }
 
@@ -69,7 +87,7 @@ a:hover { color: var(--accent-strong); }
 
 /* Nav */
 .site-nav {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--nav-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
   position: sticky;
@@ -103,13 +121,26 @@ a:hover { color: var(--accent-strong); }
 .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Mobile nav drawer */
-.nav-drawer { width: 300px; }
+.nav-drawer { width: 300px; background: var(--bg); color: var(--ink-soft); }
 .nav-drawer .offcanvas-header { border-bottom: 1px solid var(--line); }
 .nav-drawer .nav-link {
   padding: 0.85rem 0.25rem;
   border-bottom: 1px solid var(--line);
   font-size: 1.05rem;
 }
+
+/* Theme toggle */
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Hero */
 .hero {
@@ -134,7 +165,7 @@ a:hover { color: var(--accent-strong); }
 
 /* Service / discipline cards */
 .service-card {
-  background: #fff;
+  background: var(--card-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 2rem;
@@ -158,7 +189,7 @@ a:hover { color: var(--accent-strong); }
 /* Project grid */
 .filter-pill {
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--card-bg);
   color: var(--ink-soft);
   border-radius: 999px;
   padding: 0.4rem 1rem;
@@ -168,10 +199,10 @@ a:hover { color: var(--accent-strong); }
   transition: all 0.15s ease;
 }
 .filter-pill:hover { border-color: var(--accent); color: var(--accent); }
-.filter-pill.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.filter-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .project-card {
-  background: #fff;
+  background: var(--card-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
@@ -200,7 +231,7 @@ a:hover { color: var(--accent-strong); }
   align-items: center;
   gap: 0.4rem;
   border: 1px solid var(--line);
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 10px;
   padding: 0.5rem 0.9rem;
   font-size: 0.85rem;
@@ -243,7 +274,7 @@ a:hover { color: var(--accent-strong); }
 
 /* Testimonials */
 .testimonial-card {
-  background: #fff;
+  background: var(--card-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 2rem;
@@ -271,12 +302,14 @@ a:hover { color: var(--accent-strong); }
 
 /* FAQ accordion — restyled to match brand instead of Bootstrap defaults */
 .faq-accordion .accordion-item {
+  background: var(--card-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius) !important;
   margin-bottom: 1rem;
   overflow: hidden;
 }
 .faq-accordion .accordion-button {
+  background: var(--card-bg);
   font-weight: 600;
   color: var(--ink);
   padding: 1.25rem 1.5rem;
@@ -289,6 +322,7 @@ a:hover { color: var(--accent-strong); }
 .faq-accordion .accordion-button:focus { box-shadow: none; border-color: var(--line); }
 .faq-accordion .accordion-button::after { flex-shrink: 0; }
 .faq-accordion .accordion-body { padding: 0 1.5rem 1.25rem; color: var(--muted); }
+[data-theme="dark"] .faq-accordion .accordion-button::after { filter: invert(1) grayscale(100%) brightness(1.8); }
 
 /* About page */
 .bio-photo {
@@ -308,18 +342,22 @@ a:hover { color: var(--accent-strong); }
 
 /* Contact form */
 .contact-card {
-  background: #fff;
+  background: var(--card-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 2.5rem;
 }
 .form-control {
+  background: var(--bg);
+  color: var(--ink);
   border-radius: 10px;
   border: 1px solid var(--line);
   padding: 0.65rem 0.9rem;
 }
 .form-control:focus {
+  background: var(--bg);
+  color: var(--ink);
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
@@ -353,7 +391,7 @@ a:hover { color: var(--accent-strong); }
   right: 1.5rem;
   width: 340px;
   max-width: calc(100vw - 2rem);
-  background: #fff;
+  background: var(--card-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
@@ -418,7 +456,7 @@ a:hover { color: var(--accent-strong); }
   height: 240px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--card-bg);
 }
 
 /* Utility */

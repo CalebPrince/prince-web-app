@@ -1,4 +1,5 @@
 const CONTENT_FIELDS = [
+  "default_theme",
   "availability_badge", "hero_eyebrow", "hero_title", "hero_subtitle", "tech_badges",
   "service_1_title", "service_1_summary", "service_1_desc",
   "service_2_title", "service_2_summary", "service_2_desc",

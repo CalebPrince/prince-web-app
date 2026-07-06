@@ -18,8 +18,8 @@
     <nav class="d-flex flex-column gap-1">
       <a href="/admin/dashboard.html" class="nav-link">Dashboard</a>
       <a href="/admin/projects.html" class="nav-link">Projects</a>
-      <a href="/admin/inquiries.html" class="nav-link">Inquiries<span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
-      <a href="/admin/chats.html" class="nav-link">Chat Leads<span id="nav-badge-chats" class="notif-badge d-none"></span></a>
+      <a href="/admin/inquiries.html" class="nav-link"><span>Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
+      <a href="/admin/chats.html" class="nav-link"><span>Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
       <a href="/admin/tags.html" class="nav-link">Tags</a>
       <a href="/admin/content.html" class="nav-link active">Site Content</a>
       <a href="/admin/settings.html" class="nav-link">Settings</a>
@@ -43,6 +43,18 @@
     <form id="content-form">
       <div class="row g-4">
         <div class="col-lg-6">
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3">Appearance</h5>
+            <div class="mb-0">
+              <label class="form-label">Default color mode <span class="text-muted-custom fw-normal">(applies to first-time visitors; they can still toggle it themselves)</span></label>
+              <select class="form-select" id="default_theme">
+                <option value="">Match visitor's system</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+          </div>
+
           <div class="admin-card p-4 mb-4">
             <h5 class="mb-3">Homepage hero</h5>
             <div class="mb-3">

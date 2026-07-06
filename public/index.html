@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
 <title>Prince Caleb — Web &amp; Mobile App Developer</title>
 <meta name="description" content="Prince Caleb builds custom web apps, CMS ecosystems, and mobile experiences from scratch — fast, secure, and built to last.">
 <link rel="canonical" href="https://princecaleb.dev/">
@@ -29,6 +30,7 @@
 <nav class="site-nav">
   <div class="container d-flex align-items-center justify-content-between py-3">
     <a href="/" class="brand-logo text-decoration-none">Prince Caleb<span class="dot">.</span></a>
+    <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
     <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation">☰</button>
     <div class="d-none d-md-flex gap-1">
       <a href="/" class="nav-link active">Home</a>
@@ -74,7 +76,7 @@
         </div>
       </div>
       <div class="col-lg-5">
-        <div class="p-4 rounded-4 hero-animate hero-animate-3" style="background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-lg);">
+        <div class="p-4 rounded-4 hero-animate hero-animate-3" style="background: var(--card-bg); border: 1px solid var(--line); box-shadow: var(--shadow-lg);">
           <p class="eyebrow mb-3">Featured work</p>
           <div id="hero-featured" class="skeleton" style="height: 220px;"></div>
         </div>
@@ -358,6 +360,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>

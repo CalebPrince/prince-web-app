@@ -18,6 +18,7 @@ class SettingsController
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */
     private const CONTENT_KEYS = [
+        'default_theme',
         'hero_eyebrow', 'hero_title', 'hero_subtitle', 'availability_badge',
         'tech_badges',
         'service_1_title', 'service_1_summary', 'service_1_desc',
