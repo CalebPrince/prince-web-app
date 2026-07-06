@@ -505,11 +505,18 @@ class LiveChatController
                 'system_instruction' => ['parts' => [['text' => $system]]],
                 'contents' => $contents,
                 'tools' => $tools,
+                'generationConfig' => ['maxOutputTokens' => 2048],
             ]);
 
             $result = self::callGeminiRaw($apiKey, $body, self::GEMINI_CHAT_TIMEOUT_SECONDS);
             $parts = $result['candidates'][0]['content']['parts'] ?? null;
             if (!is_array($parts)) {
+                error_log(sprintf(
+                    'Gemini chat returned no usable content (round %d): finishReason=%s promptFeedback=%s',
+                    $round,
+                    $result['candidates'][0]['finishReason'] ?? 'none',
+                    json_encode($result['promptFeedback'] ?? null)
+                ));
                 return null;
             }
 
@@ -525,6 +532,14 @@ class LiveChatController
             }
 
             if (!$functionCalls) {
+                if ($text === '') {
+                    error_log(sprintf(
+                        'Gemini chat returned parts with no text/functionCall (round %d): finishReason=%s parts=%s',
+                        $round,
+                        $result['candidates'][0]['finishReason'] ?? 'none',
+                        json_encode($parts)
+                    ));
+                }
                 return ['reply' => $text !== '' ? $text : null, 'ready' => $ready];
             }
 
