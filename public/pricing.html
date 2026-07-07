@@ -434,10 +434,12 @@
 
       saveDraft();
       setCheckoutMessage();
-      setCheckoutBanner('info', 'Secure checkout opened. Complete payment to confirm your starter deposit.');
 
-      modal.hide();
-      const handler = PaystackPop.setup({
+      if (!window.PaystackPop || typeof window.PaystackPop.setup !== 'function') {
+        throw new Error('Secure checkout could not load. Please refresh and try again.');
+      }
+
+      const handler = window.PaystackPop.setup({
         key: paymentConfig.public_key,
         email: prep.email,
         amount: prep.amount,
@@ -459,9 +461,18 @@
           setCheckoutBanner('info', 'Checkout closed. You can reopen it anytime from the Starter card.');
         },
       });
-      handler.openIframe();
+
+      try {
+        handler.openIframe();
+      } catch (_) {
+        throw new Error('Could not open secure checkout. Please allow pop-ups and try again.');
+      }
+
+      modal.hide();
+      setCheckoutBanner('info', 'Secure checkout opened. Complete payment to confirm your starter deposit.');
     } catch (err) {
       setCheckoutMessage('danger', err.message || 'Something went wrong while preparing checkout.');
+      setCheckoutBanner('danger', err.message || 'Could not open secure checkout. Please try again.');
     } finally {
       checkoutInFlight = false;
       checkoutSubmitBtn.textContent = 'Continue to payment';

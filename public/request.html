@@ -85,93 +85,122 @@
       <div class="col-lg-8">
         <div class="contact-card reveal">
           <form id="request-form">
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label fw-semibold" for="name">Name</label>
-                <input type="text" class="form-control" id="name" required maxlength="255" placeholder="Your full name">
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span id="request-step-label" class="small text-muted-custom">Step 1 of 3</span>
+                <span id="request-step-percent" class="small text-muted-custom">33%</span>
               </div>
-              <div class="col-md-6">
-                <label class="form-label fw-semibold" for="email">Email</label>
-                <input type="email" class="form-control" id="email" required maxlength="255" placeholder="you@example.com">
+              <div class="progress" role="progressbar" aria-label="Form progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33" style="height:8px;">
+                <div id="request-step-progress" class="progress-bar" style="width: 33%"></div>
               </div>
+            </div>
 
-              <div class="col-md-4">
-                <label class="form-label fw-semibold" for="project_type">Project type</label>
-                <select class="form-select" id="project_type" required>
-                  <option value="" selected disabled>Select one</option>
-                  <option>Website</option>
-                  <option>Web application</option>
-                  <option>Mobile app</option>
-                  <option>CMS (WordPress / headless)</option>
-                  <option>AI integration / automation</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold" for="budget">Budget</label>
-                <select class="form-select" id="budget" required>
-                  <option value="" selected disabled>Select a range</option>
-                  <option>Under $1,000</option>
-                  <option>$1,000 – $5,000</option>
-                  <option>$5,000 – $15,000</option>
-                  <option>$15,000+</option>
-                  <option>Not sure yet</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label fw-semibold" for="timeline">Timeline</label>
-                <select class="form-select" id="timeline" required>
-                  <option value="" selected disabled>Select one</option>
-                  <option>As soon as possible</option>
-                  <option>Within 1 month</option>
-                  <option>2–3 months</option>
-                  <option>Flexible / not urgent</option>
-                </select>
-              </div>
+            <div class="request-step" data-step="1">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="name">Name</label>
+                  <input type="text" class="form-control" id="name" required maxlength="255" placeholder="Your full name">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold" for="email">Email</label>
+                  <input type="email" class="form-control" id="email" required maxlength="255" placeholder="you@example.com">
+                </div>
 
-              <div class="col-12">
-                <label class="form-label fw-semibold">Features you need (optional)</label>
-                <div class="d-flex flex-wrap gap-3">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="User accounts & login" id="feat-1" name="features">
-                    <label class="form-check-label" for="feat-1">User accounts &amp; login</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Admin dashboard" id="feat-2" name="features">
-                    <label class="form-check-label" for="feat-2">Admin dashboard</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Payments" id="feat-3" name="features">
-                    <label class="form-check-label" for="feat-3">Payments</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Third-party integrations" id="feat-4" name="features">
-                    <label class="form-check-label" for="feat-4">Third-party integrations</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Mobile companion app" id="feat-5" name="features">
-                    <label class="form-check-label" for="feat-5">Mobile companion app</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="AI / chat features" id="feat-6" name="features">
-                    <label class="form-check-label" for="feat-6">AI / chat features</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Multi-language support" id="feat-7" name="features">
-                    <label class="form-check-label" for="feat-7">Multi-language support</label>
-                  </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold" for="project_type">Project type</label>
+                  <select class="form-select" id="project_type" required>
+                    <option value="" selected disabled>Select one</option>
+                    <option>Website</option>
+                    <option>Web application</option>
+                    <option>Mobile app</option>
+                    <option>CMS (WordPress / headless)</option>
+                    <option>AI integration / automation</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold" for="budget">Budget</label>
+                  <select class="form-select" id="budget" required>
+                    <option value="" selected disabled>Select a range</option>
+                    <option>Under $1,000</option>
+                    <option>$1,000 – $5,000</option>
+                    <option>$5,000 – $15,000</option>
+                    <option>$15,000+</option>
+                    <option>Not sure yet</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold" for="timeline">Timeline</label>
+                  <select class="form-select" id="timeline" required>
+                    <option value="" selected disabled>Select one</option>
+                    <option>As soon as possible</option>
+                    <option>Within 1 month</option>
+                    <option>2–3 months</option>
+                    <option>Flexible / not urgent</option>
+                  </select>
                 </div>
               </div>
+            </div>
 
-              <div class="col-12">
-                <label class="form-label fw-semibold" for="message">Tell me more about your project</label>
-                <textarea class="form-control" id="message" rows="5" required maxlength="5000" placeholder="What problem are you solving? Who's it for? Any existing systems it needs to work with?"></textarea>
+            <div class="request-step d-none" data-step="2">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Features you need (optional)</label>
+                  <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="User accounts & login" id="feat-1" name="features">
+                      <label class="form-check-label" for="feat-1">User accounts &amp; login</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="Admin dashboard" id="feat-2" name="features">
+                      <label class="form-check-label" for="feat-2">Admin dashboard</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="Payments" id="feat-3" name="features">
+                      <label class="form-check-label" for="feat-3">Payments</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="Third-party integrations" id="feat-4" name="features">
+                      <label class="form-check-label" for="feat-4">Third-party integrations</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="Mobile companion app" id="feat-5" name="features">
+                      <label class="form-check-label" for="feat-5">Mobile companion app</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="AI / chat features" id="feat-6" name="features">
+                      <label class="form-check-label" for="feat-6">AI / chat features</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="Multi-language support" id="feat-7" name="features">
+                      <label class="form-check-label" for="feat-7">Multi-language support</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="message">Tell me more about your project</label>
+                  <textarea class="form-control" id="message" rows="5" required maxlength="5000" placeholder="What problem are you solving? Who's it for? Any existing systems it needs to work with?"></textarea>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label fw-semibold" for="attachments">Attachments (optional)</label>
+                  <input type="file" class="form-control" id="attachments" name="attachments" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp">
+                  <div class="form-text">Briefs, mockups, or reference docs. Up to 5 files, 10MB each — PDF, Word, or images.</div>
+                </div>
               </div>
+            </div>
 
-              <div class="col-12">
-                <label class="form-label fw-semibold" for="attachments">Attachments (optional)</label>
-                <input type="file" class="form-control" id="attachments" name="attachments" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp">
-                <div class="form-text">Briefs, mockups, or reference docs. Up to 5 files, 10MB each — PDF, Word, or images.</div>
+            <div class="request-step d-none" data-step="3">
+              <h3 class="h5 mb-3">Review your request</h3>
+              <div class="row g-3 small">
+                <div class="col-md-6"><span class="text-muted-custom">Name:</span><div id="review-name" class="fw-semibold"></div></div>
+                <div class="col-md-6"><span class="text-muted-custom">Email:</span><div id="review-email" class="fw-semibold"></div></div>
+                <div class="col-md-4"><span class="text-muted-custom">Project type:</span><div id="review-type" class="fw-semibold"></div></div>
+                <div class="col-md-4"><span class="text-muted-custom">Budget:</span><div id="review-budget" class="fw-semibold"></div></div>
+                <div class="col-md-4"><span class="text-muted-custom">Timeline:</span><div id="review-timeline" class="fw-semibold"></div></div>
+                <div class="col-12"><span class="text-muted-custom">Features:</span><div id="review-features" class="fw-semibold"></div></div>
+                <div class="col-12"><span class="text-muted-custom">Project details:</span><div id="review-message" class="fw-semibold"></div></div>
               </div>
             </div>
 
@@ -182,7 +211,11 @@
             </div>
 
             <div id="form-alert" class="alert d-none mt-3"></div>
-            <button type="submit" class="btn-brand w-100 mt-3" id="submit-btn">Send project request</button>
+            <div class="d-flex gap-2 mt-3">
+              <button type="button" class="btn btn-outline-secondary d-none" id="request-prev-btn">Back</button>
+              <button type="button" class="btn-brand w-100" id="request-next-btn">Next</button>
+              <button type="submit" class="btn-brand w-100 d-none" id="submit-btn">Send project request</button>
+            </div>
           </form>
         </div>
       </div>
@@ -223,54 +256,230 @@
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script>
-document.getElementById('request-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
+(function () {
+  const form = document.getElementById('request-form');
   const alertBox = document.getElementById('form-alert');
+  const nextBtn = document.getElementById('request-next-btn');
+  const prevBtn = document.getElementById('request-prev-btn');
   const submitBtn = document.getElementById('submit-btn');
-  alertBox.classList.add('d-none');
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Sending…';
+  const stepLabel = document.getElementById('request-step-label');
+  const stepPercent = document.getElementById('request-step-percent');
+  const stepProgress = document.getElementById('request-step-progress');
+  const progressWrap = stepProgress.closest('.progress');
+  const steps = Array.from(document.querySelectorAll('.request-step'));
+  const DRAFT_KEY = 'project_request_draft_v1';
 
-  const formData = new FormData();
-  formData.append('name', document.getElementById('name').value);
-  formData.append('email', document.getElementById('email').value);
-  formData.append('project_type', document.getElementById('project_type').value);
-  formData.append('budget', document.getElementById('budget').value);
-  formData.append('timeline', document.getElementById('timeline').value);
-  formData.append('message', document.getElementById('message').value);
-  formData.append('website', document.getElementById('website').value);
-  document.querySelectorAll('input[name="features"]:checked').forEach(cb => {
-    formData.append('features[]', cb.value);
-  });
-  const files = document.getElementById('attachments').files;
-  for (let i = 0; i < files.length; i++) {
-    formData.append('attachments[]', files[i]);
+  const projectTypeFromQuery = {
+    website: 'Website',
+    webapp: 'Web application',
+    mobile: 'Mobile app',
+    cms: 'CMS (WordPress / headless)',
+    ai: 'AI integration / automation',
+    other: 'Other',
+  };
+  const timelineFromQuery = {
+    asap: 'As soon as possible',
+    month: 'Within 1 month',
+    quarter: '2–3 months',
+    flexible: 'Flexible / not urgent',
+  };
+  const featureIdFromQuery = {
+    accounts: 'feat-1',
+    dashboard: 'feat-2',
+    payments: 'feat-3',
+    integrations: 'feat-4',
+    mobile_companion: 'feat-5',
+    ai: 'feat-6',
+    i18n: 'feat-7',
+  };
+
+  let currentStep = 1;
+
+  function activeStepElement() {
+    return steps[currentStep - 1];
   }
 
-  try {
-    const res = await fetch('/api/v1/project-requests', {
-      method: 'POST',
-      credentials: 'same-origin',
-      body: formData,
-    });
-    const body = await res.json().catch(() => null);
-    if (!res.ok) {
-      const message = (body && (body.error || (body.errors && body.errors.join(' ')))) || 'Something went wrong.';
-      throw new Error(message);
+  function saveDraft() {
+    const payload = {
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      project_type: document.getElementById('project_type').value,
+      budget: document.getElementById('budget').value,
+      timeline: document.getElementById('timeline').value,
+      message: document.getElementById('message').value,
+      features: Array.from(document.querySelectorAll('input[name="features"]:checked')).map(cb => cb.value),
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+  }
+
+  function loadDraft() {
+    try {
+      return JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+    } catch (_) {
+      return {};
     }
-    document.getElementById('request-form').reset();
-    alertBox.className = 'alert alert-success';
-    alertBox.textContent = "Thanks — I'll review your project and get back to you within a couple of business days.";
-    alertBox.classList.remove('d-none');
-  } catch (err) {
-    alertBox.className = 'alert alert-danger';
-    alertBox.textContent = err.message || 'Something went wrong. Please try again.';
-    alertBox.classList.remove('d-none');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Send project request';
   }
-});
+
+  function applyDraft(draft) {
+    if (draft.name) document.getElementById('name').value = draft.name;
+    if (draft.email) document.getElementById('email').value = draft.email;
+    if (draft.project_type) document.getElementById('project_type').value = draft.project_type;
+    if (draft.budget) document.getElementById('budget').value = draft.budget;
+    if (draft.timeline) document.getElementById('timeline').value = draft.timeline;
+    if (draft.message) document.getElementById('message').value = draft.message;
+    if (Array.isArray(draft.features)) {
+      document.querySelectorAll('input[name="features"]').forEach(cb => {
+        cb.checked = draft.features.includes(cb.value);
+      });
+    }
+  }
+
+  function applyPricingPrefill() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('source') !== 'pricing-calculator') return;
+
+    const type = params.get('type');
+    const timeline = params.get('timeline');
+    const features = (params.get('features') || '').split(',').map(v => v.trim()).filter(Boolean);
+    const low = params.get('estimate_low');
+    const high = params.get('estimate_high');
+
+    if (type && projectTypeFromQuery[type] && !document.getElementById('project_type').value) {
+      document.getElementById('project_type').value = projectTypeFromQuery[type];
+    }
+    if (timeline && timelineFromQuery[timeline] && !document.getElementById('timeline').value) {
+      document.getElementById('timeline').value = timelineFromQuery[timeline];
+    }
+    features.forEach(key => {
+      const id = featureIdFromQuery[key];
+      if (!id) return;
+      const cb = document.getElementById(id);
+      if (cb) cb.checked = true;
+    });
+
+    const messageEl = document.getElementById('message');
+    if ((low || high) && !messageEl.value.trim()) {
+      messageEl.value = `Estimator context: ${low ? '$' + Number(low).toLocaleString() : ''}${low && high ? ' - ' : ''}${high ? '$' + Number(high).toLocaleString() : ''}.\n\nProject details:`;
+    }
+  }
+
+  function updateReview() {
+    const features = Array.from(document.querySelectorAll('input[name="features"]:checked')).map(cb => cb.value);
+    document.getElementById('review-name').textContent = document.getElementById('name').value || '—';
+    document.getElementById('review-email').textContent = document.getElementById('email').value || '—';
+    document.getElementById('review-type').textContent = document.getElementById('project_type').value || '—';
+    document.getElementById('review-budget').textContent = document.getElementById('budget').value || '—';
+    document.getElementById('review-timeline').textContent = document.getElementById('timeline').value || '—';
+    document.getElementById('review-features').textContent = features.length ? features.join(', ') : 'None selected';
+    document.getElementById('review-message').textContent = document.getElementById('message').value || '—';
+  }
+
+  function validateCurrentStep() {
+    const container = activeStepElement();
+    const requiredFields = Array.from(container.querySelectorAll('[required]'));
+    for (const field of requiredFields) {
+      if (!field.checkValidity()) {
+        field.reportValidity();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function renderStep() {
+    steps.forEach((stepEl, idx) => {
+      stepEl.classList.toggle('d-none', idx !== currentStep - 1);
+    });
+
+    const percent = Math.round((currentStep / steps.length) * 100);
+    stepLabel.textContent = `Step ${currentStep} of ${steps.length}`;
+    stepPercent.textContent = `${percent}%`;
+    stepProgress.style.width = `${percent}%`;
+    progressWrap.setAttribute('aria-valuenow', String(percent));
+
+    prevBtn.classList.toggle('d-none', currentStep === 1);
+    nextBtn.classList.toggle('d-none', currentStep === steps.length);
+    submitBtn.classList.toggle('d-none', currentStep !== steps.length);
+
+    prevBtn.classList.toggle('w-100', currentStep > 1 && currentStep === steps.length);
+    nextBtn.classList.add('w-100');
+
+    if (currentStep === steps.length) updateReview();
+  }
+
+  nextBtn.addEventListener('click', () => {
+    alertBox.classList.add('d-none');
+    if (!validateCurrentStep()) return;
+    saveDraft();
+    currentStep = Math.min(steps.length, currentStep + 1);
+    renderStep();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    alertBox.classList.add('d-none');
+    currentStep = Math.max(1, currentStep - 1);
+    renderStep();
+  });
+
+  form.addEventListener('input', saveDraft);
+  form.addEventListener('change', saveDraft);
+
+  applyDraft(loadDraft());
+  applyPricingPrefill();
+  renderStep();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertBox.classList.add('d-none');
+    if (!validateCurrentStep()) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    const formData = new FormData();
+    formData.append('name', document.getElementById('name').value);
+    formData.append('email', document.getElementById('email').value);
+    formData.append('project_type', document.getElementById('project_type').value);
+    formData.append('budget', document.getElementById('budget').value);
+    formData.append('timeline', document.getElementById('timeline').value);
+    formData.append('message', document.getElementById('message').value);
+    formData.append('website', document.getElementById('website').value);
+    document.querySelectorAll('input[name="features"]:checked').forEach(cb => {
+      formData.append('features[]', cb.value);
+    });
+    const files = document.getElementById('attachments').files;
+    for (let i = 0; i < files.length; i++) {
+      formData.append('attachments[]', files[i]);
+    }
+
+    try {
+      const res = await fetch('/api/v1/project-requests', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: formData,
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        const message = (body && (body.error || (body.errors && body.errors.join(' ')))) || 'Something went wrong.';
+        throw new Error(message);
+      }
+      form.reset();
+      localStorage.removeItem(DRAFT_KEY);
+      currentStep = 1;
+      renderStep();
+      alertBox.className = 'alert alert-success mt-3';
+      alertBox.textContent = "Thanks — I'll review your project and get back to you within a couple of business days.";
+      alertBox.classList.remove('d-none');
+    } catch (err) {
+      alertBox.className = 'alert alert-danger mt-3';
+      alertBox.textContent = err.message || 'Something went wrong. Please try again.';
+      alertBox.classList.remove('d-none');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send project request';
+    }
+  });
+})();
 </script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
