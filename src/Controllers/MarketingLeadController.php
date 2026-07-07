@@ -332,18 +332,25 @@ class MarketingLeadController
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'Marketing lead pitch generation failed: status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 800) : 'n/a'
+            ));
             return null;
         }
 
         $decoded = json_decode($response, true);
         $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
         if ($text === null) {
+            error_log('Marketing lead pitch: no text in Gemini response: ' . substr($response, 0, 800));
             return null;
         }
 
         $text = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $text));
         $parsed = json_decode($text, true);
         if (!is_array($parsed) || empty($parsed['subject']) || empty($parsed['body'])) {
+            error_log('Marketing lead pitch: could not parse JSON from model output: ' . substr($text, 0, 800));
             return null;
         }
 
