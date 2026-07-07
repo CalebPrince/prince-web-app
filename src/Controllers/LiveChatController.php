@@ -64,6 +64,7 @@ class LiveChatController
         $projects = self::projectCatalog($pdo);
         $reply = null;
         $mode = 'fallback';
+        $provider = null; // debug aid: which path actually served this reply — 'gemini', 'openrouter', or null (keyword fallback)
         $justBecameReady = false;
         $geminiKey = Settings::get('gemini_api_key');
 
@@ -74,6 +75,7 @@ class LiveChatController
                 if ($result['reply'] !== null) {
                     $reply = $result['reply'];
                     $mode = 'ai';
+                    $provider = 'gemini';
                 }
             }
         }
@@ -91,6 +93,7 @@ class LiveChatController
                     if ($result['reply'] !== null) {
                         $reply = $result['reply'];
                         $mode = 'ai';
+                        $provider = 'openrouter';
                     }
                 }
             }
@@ -108,6 +111,11 @@ class LiveChatController
             'token' => $session['token'],
             'reply' => $reply,
             'mode' => $mode,
+            // Temporary debug aid for verifying the Gemini->OpenRouter
+            // fallback actually triggers in production — 'gemini',
+            // 'openrouter', or null (keyword fallback served this reply).
+            // Safe to remove later; not relied on by any UI logic.
+            'provider' => $provider,
             // The widget shows "Build my prototype" once the AI itself has
             // signaled (via the mark_ready_for_prototype tool) that it has
             // enough real context — not just after N messages, since chit-chat

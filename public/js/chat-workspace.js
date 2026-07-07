@@ -76,6 +76,8 @@
       pending.textContent = res.reply;
       canBuild = !!res.can_prototype;
       updateBuildButton();
+      // Temporary debug aid — remove once the OpenRouter fallback is confirmed working in production.
+      console.log(`[chat debug] mode=${res.mode} provider=${res.provider || "keyword fallback"}`);
     } catch (err) {
       pending.textContent = err.message || "Sorry, something went wrong — please try again.";
     }

@@ -99,6 +99,8 @@
       sessionStorage.setItem("chat_token", sessionToken);
       canPrototype = !!res.can_prototype;
       pending.textContent = res.reply;
+      // Temporary debug aid — remove once the OpenRouter fallback is confirmed working in production.
+      console.log(`[chat debug] mode=${res.mode} provider=${res.provider || "keyword fallback"}`);
       showPrototypeButton();
     } catch (err) {
       pending.textContent = err.message || "Sorry, something went wrong. Please leave a message below instead.";
