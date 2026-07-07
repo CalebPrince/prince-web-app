@@ -180,3 +180,23 @@ CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments (appointment_da
 -- but two active (confirmed/completed) bookings can never share a slot.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_slot_active
   ON appointments (appointment_date, appointment_time) WHERE status != 'cancelled';
+
+-- A client-facing review pipeline: admin requests a testimonial (generates a
+-- token + emails a link), the client submits a quote+rating via that token,
+-- then admin approves before it's shown publicly. Separate from the static
+-- testimonial_1/2/3 homepage CMS fields, which stay admin-authored.
+CREATE TABLE IF NOT EXISTS testimonials (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT UNIQUE NOT NULL,
+  client_name TEXT NOT NULL,
+  client_email TEXT NOT NULL,
+  project_reference TEXT,
+  rating INTEGER CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5)),
+  quote TEXT,
+  status TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('requested', 'submitted', 'approved', 'rejected')),
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  requested_at TEXT NOT NULL DEFAULT (datetime('now')),
+  submitted_at TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_testimonials_status_sort ON testimonials (status, sort_order);

@@ -168,6 +168,12 @@ storage/
     real source of truth for conflict prevention — a cancelled booking
     frees its slot, but two active bookings can never collide even under
     a race. Admin view/cancel at `/admin/appointments.html`.
+18. **Testimonials** are a client-facing review pipeline, separate from the
+    hand-authored `testimonial_1/2/3` homepage CMS fields: admin sends a
+    request (`/admin/testimonials.html`) which emails a one-time link
+    (`/testimonial.html?token=...`), the client submits a quote + star
+    rating through that link, and admin approves it before it appears on
+    the public `/testimonials.html` page.
 
 ## Deployment (Namecheap cPanel)
 

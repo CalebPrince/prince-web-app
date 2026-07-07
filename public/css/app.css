@@ -603,6 +603,31 @@ pre code.hljs {
   background: var(--card-bg);
 }
 
+/* Testimonial star rating picker (testimonial.html) */
+.star-picker { display: flex; gap: 0.4rem; }
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--line);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.1s ease, transform 0.1s ease;
+}
+.star-btn:hover { transform: scale(1.1); }
+.star-btn.active { color: #f59e0b; }
+
+/* Public testimonials listing (testimonials.html) */
+.testimonial-list-card {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  height: 100%;
+}
+.testimonial-list-card .stars { color: #f59e0b; letter-spacing: 2px; }
+
 /* Live Chat workspace — two-column build-and-preview page (chat.html) */
 .workspace-shell { padding: 2rem 0; }
 .workspace-grid {

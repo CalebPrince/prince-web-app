@@ -51,6 +51,7 @@ use App\Controllers\ProjectController;
 use App\Controllers\ProjectRequestController;
 use App\Controllers\SettingsController;
 use App\Controllers\TagController;
+use App\Controllers\TestimonialController;
 use App\Controllers\UploadController;
 use App\Router;
 
@@ -84,6 +85,9 @@ $router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePro
 $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'viewPrototype']);
 $router->post('/api/v1/chat/feedback', [LiveChatController::class, 'feedback']);
 $router->post('/api/v1/chat/inquiry', [LiveChatController::class, 'inquiry']);
+$router->get('/api/v1/testimonials', [TestimonialController::class, 'publicList']);
+$router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'getByToken']);
+$router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'submit']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);
@@ -127,5 +131,9 @@ $router->patch('/api/v1/admin/appointments/{id}', [AppointmentController::class,
 $router->get('/api/v1/admin/newsletter', [NewsletterController::class, 'adminIndex']);
 $router->get('/api/v1/admin/newsletter/export', [NewsletterController::class, 'exportCsv']);
 $router->delete('/api/v1/admin/newsletter/{id}', [NewsletterController::class, 'destroy']);
+$router->get('/api/v1/admin/testimonials', [TestimonialController::class, 'adminIndex']);
+$router->post('/api/v1/admin/testimonials', [TestimonialController::class, 'request']);
+$router->patch('/api/v1/admin/testimonials/{id}', [TestimonialController::class, 'update']);
+$router->delete('/api/v1/admin/testimonials/{id}', [TestimonialController::class, 'destroy']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

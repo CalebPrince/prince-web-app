@@ -96,6 +96,11 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
 .status-pill.chat-approved { background: #dcfce7; color: #166534; }
 .status-pill.chat-changes_requested { background: #fef3c7; color: #92400e; }
 
+.status-pill.requested { background: #e0f2fe; color: #075985; }
+.status-pill.submitted { background: #fef3c7; color: #92400e; }
+.status-pill.approved { background: #dcfce7; color: #166534; }
+.status-pill.rejected { background: #fee2e2; color: #991b1b; }
+
 .chat-unseen { border-left: 3px solid #6366f1; }
 
 .auth-shell {
