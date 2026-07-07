@@ -43,12 +43,12 @@ class LiveChatController
     public static function message(): void
     {
         // Worst case is a full Gemini failure (2 rounds x 12s) followed by a
-        // full OpenRouter fallback (2 rounds x 18s) = ~60s of curl time alone.
+        // full OpenRouter fallback (2 rounds x 30s) = ~84s of curl time alone.
         // Without this, the host's default max_execution_time (often 30s on
         // shared hosting) kills the process mid-request with no response at
         // all, which the browser surfaces as a bare "Failed to fetch" rather
         // than a clean error.
-        set_time_limit(65);
+        set_time_limit(95);
 
         $config = self::config();
         RateLimitMiddleware::enforce('ai_chat', $config['ai_rate_limit']);
@@ -488,7 +488,9 @@ class LiveChatController
     // Gemini's 12s budget here was cutting the fallback off mid-response
     // (curl reports the 200 status from the headers it did receive, but
     // returns false because the body never finished downloading in time).
-    private const OPENROUTER_CHAT_TIMEOUT_SECONDS = 18;
+    // Confirmed live in production: even 18s wasn't enough (same "status=200
+    // body=n/a" signature), so this needs real headroom for a free-tier model.
+    private const OPENROUTER_CHAT_TIMEOUT_SECONDS = 30;
 
     /** Shared by both providers, so Gemini and the OpenRouter fallback can never drift into inconsistent behavior. */
     private static function buildSystemPrompt(array $projects): string
@@ -564,12 +566,22 @@ class LiveChatController
         $ready = false;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-            $body = json_encode([
+            $payload = [
                 'system_instruction' => ['parts' => [['text' => $system]]],
                 'contents' => $contents,
-                'tools' => $tools,
                 'generationConfig' => ['maxOutputTokens' => 2048],
-            ]);
+            ];
+            // On the last allowed round, don't offer tools at all — otherwise
+            // a model that wants a second sequential tool call (e.g. search
+            // one thing, then decide to call mark_ready_for_prototype) uses
+            // up every round on functionCalls and never emits final text,
+            // which surfaced as the whole turn silently falling all the way
+            // through to keyword matching. Forcing text here guarantees a
+            // real reply using whatever tool results are already in hand.
+            if ($round < self::MAX_TOOL_ROUNDS - 1) {
+                $payload['tools'] = $tools;
+            }
+            $body = json_encode($payload);
 
             $result = self::callGeminiRaw($apiKey, $body, self::GEMINI_CHAT_TIMEOUT_SECONDS);
             $parts = $result['candidates'][0]['content']['parts'] ?? null;
@@ -677,7 +689,13 @@ class LiveChatController
         $ready = false;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-            $payload = ['model' => $model, 'messages' => $messages, 'tools' => $tools];
+            $payload = ['model' => $model, 'messages' => $messages];
+            // See chatWithGemini — force text on the last round so a model
+            // wanting a second sequential tool call can't run out the clock
+            // on functionCalls and never produce a reply.
+            if ($round < self::MAX_TOOL_ROUNDS - 1) {
+                $payload['tools'] = $tools;
+            }
             $result = self::callOpenRouterRaw($apiKey, $payload, self::OPENROUTER_CHAT_TIMEOUT_SECONDS);
             if ($result === null) {
                 return null;

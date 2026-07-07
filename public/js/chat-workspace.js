@@ -72,7 +72,7 @@
     const pending = appendMessage("bot", "Typing…");
 
     try {
-      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 68000 });
+      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 98000 });
       pending.textContent = res.reply;
       canBuild = !!res.can_prototype;
       updateBuildButton();
