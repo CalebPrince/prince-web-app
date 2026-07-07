@@ -2,7 +2,6 @@
   const toggle = document.getElementById("ai-widget-toggle");
   let sessionToken = sessionStorage.getItem("chat_token") || null;
   let online = false;
-  let canPrototype = false;
 
   const panel = document.createElement("div");
   panel.id = "ai-widget-panel";
@@ -22,9 +21,6 @@
     </div>
     <div id="ai-widget-messages"></div>
     <div id="ai-widget-menu" class="ai-menu"></div>
-    <div id="ai-widget-actions" class="px-2 pb-2 d-none">
-      <button type="button" class="btn-brand btn-sm w-100" id="build-prototype-btn">⚡ Build my prototype</button>
-    </div>
     <form id="leave-msg-form" class="d-none p-2 border-top">
       <input type="text" class="form-control form-control-sm mb-2" id="lm-name" placeholder="Your name" required>
       <input type="email" class="form-control form-control-sm mb-2" id="lm-email" placeholder="Your email" required>
@@ -52,10 +48,6 @@
     online = isOnline;
     document.getElementById("chat-status-dot").classList.toggle("online", isOnline);
     document.getElementById("chat-status-text").textContent = isOnline ? "Online" : "Offline";
-  }
-
-  function showPrototypeButton() {
-    document.getElementById("ai-widget-actions").classList.toggle("d-none", !canPrototype);
   }
 
   // Online visitors get the chat input; offline (or a hard chat failure) gets
@@ -165,9 +157,18 @@
     document.getElementById("ai-widget-menu").innerHTML = "";
   }
 
+  function clearMessages() {
+    document.getElementById("ai-widget-messages").innerHTML = "";
+  }
+
   // Buttons vanish the instant one is clicked (before its handler runs), so a
   // slow handler (e.g. projectLead's network call) can't be double-fired and
   // stale buttons from a previous step never linger once the user moves on.
+  // The visible transcript also clears on every click — each menu step is a
+  // fresh decision point, not something to keep scrolling back through, and
+  // it's what makes the opening greeting disappear once the visitor engages.
+  // (Free-text AI replies, which don't go through this function, still
+  // accumulate normally — that conversation is worth scrolling back through.)
   function renderButtonRow(buttons) {
     const container = document.getElementById("ai-widget-menu");
     container.innerHTML = "";
@@ -182,6 +183,7 @@
       btn.textContent = b.label;
       btn.addEventListener("click", () => {
         container.innerHTML = "";
+        clearMessages();
         b.onClick();
       });
       container.appendChild(btn);
@@ -281,9 +283,9 @@
     } catch (_) { /* offline defaults */ }
     setStatus(!!status.online);
 
-    appendMessage("bot", status.greeting || "Hi there! 👋 Welcome.");
+    appendMessage("bot", status.greeting || "Hi there! 👋 Welcome to our development hub. We build high-performance web and mobile applications designed to scale.");
     if (status.online) {
-      appendMessage("bot", status.intro || "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.");
+      appendMessage("bot", status.intro || "Pick an option below, or describe the website or app you have in mind and I'll help however I can.");
       renderMenu("main", { skipPrompt: true });
     } else {
       appendMessage("bot", status.offline_message || "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.");
@@ -301,11 +303,9 @@
       const res = await api.post("/api/v1/chat/message", { message: text, token: sessionToken }, { timeoutMs: 98000 });
       sessionToken = res.token;
       sessionStorage.setItem("chat_token", sessionToken);
-      canPrototype = !!res.can_prototype;
       pending.textContent = res.reply;
       // Temporary debug aid — remove once the OpenRouter fallback is confirmed working in production.
       console.log(`[chat debug] mode=${res.mode} provider=${res.provider || "keyword fallback"}`);
-      showPrototypeButton();
     } catch (err) {
       pending.textContent = err.message || "Sorry, something went wrong. Please leave a message below instead.";
       showMessageForm();
@@ -351,15 +351,6 @@
     btn.disabled = false;
   });
 
-  // ---- prototype ------------------------------------------------------------
-
-  // Building and reviewing the prototype happens in the full two-column
-  // workspace page (more room for the preview) — this just hands off the
-  // same session token so the conversation continues right where it left off.
-  document.getElementById("build-prototype-btn").addEventListener("click", () => {
-    window.location.href = "/chat.html?token=" + encodeURIComponent(sessionToken);
-  });
-
   // ---- shell ------------------------------------------------------------------
 
   document.getElementById("ai-widget-menu-btn").addEventListener("click", () => {
@@ -370,6 +361,7 @@
         document.getElementById("ai-widget-form").classList.remove("d-none");
       }
     }
+    clearMessages();
     renderMenu("main");
   });
 

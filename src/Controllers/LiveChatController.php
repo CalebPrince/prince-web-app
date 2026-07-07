@@ -31,9 +31,9 @@ class LiveChatController
             'online' => (!empty(Settings::get('gemini_api_key')) || !empty(Settings::get('openrouter_api_key')))
                 && self::isWithinScheduledHours(),
             'greeting' => Settings::get('chat_greeting')
-                ?? 'Hi there! 👋 Welcome.',
+                ?? 'Hi there! 👋 Welcome to our development hub. We build high-performance web and mobile applications designed to scale.',
             'intro' => Settings::get('chat_intro')
-                ?? "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.",
+                ?? "Pick an option below, or describe the website or app you have in mind and I'll help however I can.",
             'offline_message' => Settings::get('chat_offline_message')
                 ?? "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.",
         ]);
