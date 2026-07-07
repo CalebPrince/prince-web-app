@@ -338,6 +338,8 @@
     const params = new URLSearchParams(window.location.search);
     if (params.get('source') !== 'pricing-calculator') return;
 
+    if (typeof window.trackUiEvent === 'function') window.trackUiEvent('request_prefill_from_pricing');
+
     const type = params.get('type');
     const timeline = params.get('timeline');
     const features = (params.get('features') || '').split(',').map(v => v.trim()).filter(Boolean);
@@ -413,6 +415,7 @@
     saveDraft();
     currentStep = Math.min(steps.length, currentStep + 1);
     renderStep();
+    if (typeof window.trackUiEvent === 'function') window.trackUiEvent(`request_step_${currentStep}`);
   });
 
   prevBtn.addEventListener('click', () => {
@@ -470,10 +473,12 @@
       alertBox.className = 'alert alert-success mt-3';
       alertBox.textContent = "Thanks — I'll review your project and get back to you within a couple of business days.";
       alertBox.classList.remove('d-none');
+      if (typeof window.trackUiEvent === 'function') window.trackUiEvent('request_submit_success');
     } catch (err) {
       alertBox.className = 'alert alert-danger mt-3';
       alertBox.textContent = err.message || 'Something went wrong. Please try again.';
       alertBox.classList.remove('d-none');
+      if (typeof window.trackUiEvent === 'function') window.trackUiEvent('request_submit_failed');
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Send project request';

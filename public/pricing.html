@@ -470,9 +470,11 @@
 
       modal.hide();
       setCheckoutBanner('info', 'Secure checkout opened. Complete payment to confirm your starter deposit.');
+      if (typeof window.trackUiEvent === 'function') window.trackUiEvent('pricing_checkout_opened');
     } catch (err) {
       setCheckoutMessage('danger', err.message || 'Something went wrong while preparing checkout.');
       setCheckoutBanner('danger', err.message || 'Could not open secure checkout. Please try again.');
+      if (typeof window.trackUiEvent === 'function') window.trackUiEvent('pricing_checkout_failed_open');
     } finally {
       checkoutInFlight = false;
       checkoutSubmitBtn.textContent = 'Continue to payment';
@@ -532,6 +534,8 @@ document.getElementById('calc-btn').addEventListener('click', () => {
   });
   if (selectedFeatures.length) params.set('features', selectedFeatures.join(','));
   requestLink.href = `/request.html?${params.toString()}`;
+
+  if (typeof window.trackUiEvent === 'function') window.trackUiEvent('pricing_calculator_run');
 });
 </script>
 <script src="/js/analytics.js"></script>
