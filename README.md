@@ -200,7 +200,9 @@ storage/
     Send" opens the admin's own mail client with the draft prefilled
     (`mailto:`), and the lead is only marked `sent` after that. The audit
     fetch has an SSRF guard (`MarketingLeadController::isSafeUrl`) blocking
-    loopback/private/reserved IP targets.
+    loopback/private/reserved IP targets. `website_url` is optional — a
+    business with no site yet is a valid lead too, and skips straight to a
+    generic (not fabricated-findings) pitch instead of an audit.
 
 ## Deployment (Namecheap cPanel)
 

@@ -2,6 +2,9 @@ let currentLead = null;
 let pitchModal = null;
 
 function siteCheckBadge(lead) {
+  if (!lead.website_url) {
+    return '<span class="status-pill audited">No website</span>';
+  }
   if (lead.status === "pending") {
     return '<span class="text-muted-custom small">Not checked yet</span>';
   }
@@ -20,10 +23,12 @@ function siteCheckBadge(lead) {
 
 function actionButtons(lead) {
   const buttons = [];
-  if (lead.status === "pending" || lead.audit_findings) {
+  // A lead with no website has nothing to audit — it can go straight to a
+  // (generic, non-fabricated) pitch instead.
+  if (lead.website_url && (lead.status === "pending" || lead.audit_findings)) {
     buttons.push(`<button class="btn btn-sm btn-outline-secondary audit-btn" data-id="${lead.id}">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`);
   }
-  if (lead.audit_findings && !lead.audit_findings.error) {
+  if (!lead.website_url || (lead.audit_findings && !lead.audit_findings.error)) {
     buttons.push(`<button class="btn btn-sm btn-outline-secondary pitch-btn" data-id="${lead.id}">${lead.pitch_body ? "Regenerate pitch" : "Generate pitch"}</button>`);
   }
   if (lead.pitch_body) {
@@ -51,7 +56,9 @@ async function loadLeads() {
         <div class="fw-semibold">${escapeHtml(lead.business_name)}</div>
         ${lead.contact_email ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_email)}</div>` : '<div class="small text-muted-custom">No contact email yet</div>'}
       </td>
-      <td class="small"><a href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a></td>
+      <td class="small">${lead.website_url
+        ? `<a href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a>`
+        : '<span class="text-muted-custom">No website</span>'}</td>
       <td><span class="status-pill ${lead.status}">${lead.status.replace("_", " ")}</span></td>
       <td>${siteCheckBadge(lead)}</td>
       <td class="text-end pe-3">
@@ -108,10 +115,14 @@ function openPitchModal(lead) {
   document.getElementById("pitch-modal-alert").classList.add("d-none");
 
   const list = document.getElementById("pitch-findings-list");
-  const issues = (lead.audit_findings && lead.audit_findings.issues) || [];
-  list.innerHTML = issues.length
-    ? issues.map(i => `<li>${escapeHtml(i.detail)}</li>`).join("")
-    : '<li class="text-muted-custom">No specific issues found by the audit.</li>';
+  if (!lead.website_url) {
+    list.innerHTML = '<li class="text-muted-custom">No website on file — this is a generic introduction, not based on any audit.</li>';
+  } else {
+    const issues = (lead.audit_findings && lead.audit_findings.issues) || [];
+    list.innerHTML = issues.length
+      ? issues.map(i => `<li>${escapeHtml(i.detail)}</li>`).join("")
+      : '<li class="text-muted-custom">No specific issues found by the audit.</li>';
+  }
 
   pitchModal.show();
 }

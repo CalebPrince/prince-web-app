@@ -60,4 +60,40 @@ if (!in_array('reminder_sent', $appointmentColumns, true)) {
     $pdo->exec('ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0');
 }
 
+// SQLite can't relax a NOT NULL constraint via ALTER TABLE — rebuild the
+// table if website_url is still marked NOT NULL from before leads with no
+// website were supported.
+$leadColumns = $pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll();
+foreach ($leadColumns as $col) {
+    if ($col['name'] === 'website_url' && (int) $col['notnull'] === 1) {
+        $pdo->exec('BEGIN TRANSACTION');
+        $pdo->exec('ALTER TABLE marketing_leads RENAME TO marketing_leads_old');
+        $pdo->exec("CREATE TABLE marketing_leads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            business_name TEXT NOT NULL,
+            website_url TEXT,
+            contact_email TEXT,
+            status TEXT NOT NULL DEFAULT 'pending'
+              CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
+            audit_findings TEXT,
+            pitch_subject TEXT,
+            pitch_body TEXT,
+            notes TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            sent_at TEXT
+        )");
+        $pdo->exec(
+            'INSERT INTO marketing_leads (id, business_name, website_url, contact_email, status, audit_findings,
+             pitch_subject, pitch_body, notes, created_at, updated_at, sent_at)
+             SELECT id, business_name, website_url, contact_email, status, audit_findings,
+             pitch_subject, pitch_body, notes, created_at, updated_at, sent_at FROM marketing_leads_old'
+        );
+        $pdo->exec('DROP TABLE marketing_leads_old');
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at)');
+        $pdo->exec('COMMIT');
+        break;
+    }
+}
+
 echo "Schema applied.\n";

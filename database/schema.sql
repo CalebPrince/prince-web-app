@@ -210,11 +210,14 @@ CREATE INDEX IF NOT EXISTS idx_testimonials_status_sort ON testimonials (status,
 -- response time — genuinely verifiable, never fabricated), then drafts an
 -- AI pitch grounded only in the actual findings. Sending stays a deliberate,
 -- one-at-a-time action (opens the admin's own mail client) rather than a
--- bulk auto-send, since these are unsolicited contacts.
+-- bulk auto-send, since these are unsolicited contacts. website_url is
+-- nullable: a business with no site yet is a valid, arguably stronger lead
+-- (the pitch is just a generic "let's build your first site" intro instead
+-- of audit findings).
 CREATE TABLE IF NOT EXISTS marketing_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   business_name TEXT NOT NULL,
-  website_url TEXT NOT NULL,
+  website_url TEXT,
   contact_email TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),

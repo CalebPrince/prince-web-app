@@ -11,10 +11,12 @@ use App\Support\Settings;
 
 /**
  * Internal outreach tool ("Developer's Edge"): admin tracks target
- * businesses, runs a real technical audit of each site, drafts an AI pitch
- * grounded only in the actual findings, and manually approves each send —
- * there is no bulk-send / auto-blast path, since these are unsolicited
- * contacts and every message should be a deliberate, reviewed decision.
+ * businesses, runs a real technical audit of each site (when one exists —
+ * a business with no website yet is just as valid a lead), drafts an AI
+ * pitch grounded only in the actual findings, and manually approves each
+ * send — there is no bulk-send / auto-blast path, since these are
+ * unsolicited contacts and every message should be a deliberate, reviewed
+ * decision.
  */
 class MarketingLeadController
 {
@@ -32,7 +34,7 @@ class MarketingLeadController
         Response::json($rows);
     }
 
-    /** POST /api/v1/admin/marketing-leads — body: {business_name, website_url, contact_email?} */
+    /** POST /api/v1/admin/marketing-leads — body: {business_name, website_url?, contact_email?} */
     public static function store(): void
     {
         AuthMiddleware::requireAuth();
@@ -45,8 +47,11 @@ class MarketingLeadController
         if ($businessName === '' || mb_strlen($businessName) > 255) {
             Response::error('Business name is required.', 422);
         }
-        if (!preg_match('#^https?://#i', $websiteUrl) || !filter_var($websiteUrl, FILTER_VALIDATE_URL)) {
-            Response::error('A valid website URL (http:// or https://) is required.', 422);
+        // No website at all is a valid lead — a business that hasn't built
+        // one yet is a real prospect, just pitched differently (see
+        // draftPitch()). Only validate the URL shape when one is given.
+        if ($websiteUrl !== '' && (!preg_match('#^https?://#i', $websiteUrl) || !filter_var($websiteUrl, FILTER_VALIDATE_URL))) {
+            Response::error('If provided, website URL must be a valid http:// or https:// address.', 422);
         }
         if ($contactEmail !== '' && !filter_var($contactEmail, FILTER_VALIDATE_EMAIL)) {
             Response::error('Contact email is not valid.', 422);
@@ -54,7 +59,7 @@ class MarketingLeadController
 
         $pdo = Database::get();
         $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_email) VALUES (?, ?, ?)')
-            ->execute([$businessName, $websiteUrl, $contactEmail ?: null]);
+            ->execute([$businessName, $websiteUrl ?: null, $contactEmail ?: null]);
 
         Response::json(['id' => (int) $pdo->lastInsertId()], 201);
     }
@@ -108,6 +113,9 @@ class MarketingLeadController
         $pdo = Database::get();
         $lead = self::findOrFail($pdo, (int) $params['id']);
 
+        if (empty($lead['website_url'])) {
+            Response::error('This lead has no website to audit — go straight to generating a pitch instead.', 422);
+        }
         if (!self::isSafeUrl($lead['website_url'])) {
             Response::error('That URL cannot be audited (invalid, or resolves to a private/internal address).', 422);
         }
@@ -127,7 +135,11 @@ class MarketingLeadController
         $pdo = Database::get();
         $lead = self::findOrFail($pdo, (int) $params['id']);
 
-        if (empty($lead['audit_findings'])) {
+        // A lead with no website has nothing to audit — the pitch is just a
+        // generic "let's build your first site" intro. A lead WITH a website
+        // must still be audited first, so its pitch is always grounded in
+        // real findings, never guessed at.
+        if (!empty($lead['website_url']) && empty($lead['audit_findings'])) {
             Response::error('Run the audit first — the pitch is only ever based on real findings.', 422);
         }
 
@@ -136,7 +148,7 @@ class MarketingLeadController
             Response::error('No Gemini API key configured — add one in Admin → Settings.', 503);
         }
 
-        $findings = json_decode($lead['audit_findings'], true) ?: [];
+        $findings = $lead['audit_findings'] ? (json_decode($lead['audit_findings'], true) ?: []) : ['no_website' => true];
         $pitch = self::draftPitch($geminiKey, $lead['business_name'], $findings);
         if ($pitch === null) {
             Response::error('Pitch generation failed — please try again in a moment.', 502);
@@ -277,17 +289,24 @@ class MarketingLeadController
             return null;
         }
 
-        $issues = $findings['issues'] ?? [];
-        $issuesList = $issues
-            ? implode("\n", array_map(fn($i) => "- {$i['detail']}", $issues))
-            : '(no specific technical issues were found)';
+        if (!empty($findings['no_website'])) {
+            $context = "This business does not appear to have a website at all. Draft a short, friendly email "
+                . "introducing Prince's web & mobile development services, focused on the opportunity of "
+                . "getting a first professional website/online presence — do NOT claim their site has any "
+                . "problems, since there is no existing site to critique.";
+        } else {
+            $issues = $findings['issues'] ?? [];
+            $issuesList = $issues
+                ? implode("\n", array_map(fn($i) => "- {$i['detail']}", $issues))
+                : '(no specific technical issues were found)';
+            $context = "Only reference these ACTUAL, verified findings from a real technical check of their "
+                . "site — never invent, exaggerate, or imply any other problems:\n{$issuesList}\n\n"
+                . "If no specific issues are listed, do not claim their site has problems — write a brief, "
+                . "generic note introducing Prince's services instead.";
+        }
 
         $prompt = "You are drafting a short, honest cold outreach email from Prince Caleb, a web & mobile "
-            . "developer, to a business called \"{$businessName}\" about their website.\n\n"
-            . "Only reference these ACTUAL, verified findings from a real technical check of their site — "
-            . "never invent, exaggerate, or imply any other problems:\n{$issuesList}\n\n"
-            . "If no specific issues are listed, do not claim their site has problems — write a brief, "
-            . "generic note introducing Prince's services instead.\n\n"
+            . "developer, to a business called \"{$businessName}\" about their website.\n\n{$context}\n\n"
             . "Rules: 3-5 short sentences, friendly and specific, not salesy or hyperbolic, no false urgency, "
             . "ends with a low-pressure invitation to reply if interested. Sign off as Prince Caleb.\n\n"
             . "Respond as JSON only: {\"subject\": \"...\", \"body\": \"...\"} — no markdown fences, no commentary.";
