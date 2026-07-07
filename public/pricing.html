@@ -416,6 +416,12 @@
     const validationError = validateCheckout(name, email);
     if (validationError) {
       setCheckoutMessage('warning', validationError);
+      // Reset the in‑flight flag so the button can be pressed again
+      checkoutInFlight = false;
+      // Restore the original button label
+      checkoutSubmitBtn.textContent = 'Continue to payment';
+      // Re‑enable the button and update its disabled state
+      syncCheckoutSubmitState();
       return;
     }
 
