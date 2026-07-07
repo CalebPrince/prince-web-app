@@ -515,7 +515,7 @@
             try {
               const result = await api.post('/api/v1/payments/verify', { reference: response.reference }, { timeoutMs: 15000 });
               if (result.status === 'success') {
-                setCheckoutBanner('success', 'Payment received. Thank you! I will reach out shortly to kick things off.');
+                window.location.href = `/payment-success.html?source=starter&reference=${encodeURIComponent(response.reference)}`;
               } else {
                 setCheckoutBanner('warning', 'Payment completed but confirmation is still pending. If you were charged, I will reconcile it shortly.');
               }
