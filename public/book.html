@@ -181,6 +181,21 @@
   maxDate.setDate(maxDate.getDate() + 60); // generous client-side cap; server enforces the real lead window
   dateInput.max = maxDate.toISOString().slice(0, 10);
 
+  // Allows deep-linking into the booking form with prefilled context and, optionally,
+  // a specific date/time, e.g. /book.html?name=Ama&email=ama%40example.com&date=2026-07-14&time=10:00
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefillName = urlParams.get('name');
+  const prefillEmail = urlParams.get('email');
+  const prefillPhone = urlParams.get('phone');
+  const prefillTopic = urlParams.get('topic');
+  const prefillDate = urlParams.get('date');
+  const prefillTime = urlParams.get('time');
+
+  if (prefillName) document.getElementById('booking-name').value = prefillName;
+  if (prefillEmail) document.getElementById('booking-email').value = prefillEmail;
+  if (prefillPhone) document.getElementById('booking-phone').value = prefillPhone;
+  if (prefillTopic) document.getElementById('booking-topic').value = prefillTopic;
+
   let selectedTime = null;
 
   async function loadSlots() {
@@ -211,6 +226,15 @@
   }
 
   dateInput.addEventListener('change', loadSlots);
+
+  if (prefillDate && prefillDate >= dateInput.min && prefillDate <= dateInput.max) {
+    dateInput.value = prefillDate;
+    loadSlots().then(() => {
+      if (!prefillTime) return;
+      const slotBtn = document.querySelector(`.slot-btn[data-time="${CSS.escape(prefillTime)}"]`);
+      if (slotBtn) slotBtn.click();
+    });
+  }
 
   document.getElementById('booking-form').addEventListener('submit', async (e) => {
     e.preventDefault();

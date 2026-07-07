@@ -249,23 +249,26 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="checkout-form">
+        <form id="checkout-form" novalidate>
           <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" id="checkout-name" required maxlength="255" placeholder="Your full name">
+            <label class="form-label">Full name</label>
+            <input type="text" class="form-control" id="checkout-name" required maxlength="255" placeholder="e.g. Ama Owusu">
+            <div class="invalid-feedback" id="checkout-name-feedback"></div>
           </div>
           <div class="mb-3">
             <label class="form-label">Email</label>
             <input type="email" class="form-control" id="checkout-email" required maxlength="255" placeholder="you@example.com">
+            <div class="invalid-feedback" id="checkout-email-feedback"></div>
           </div>
           <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" id="checkout-tos" required>
             <label class="form-check-label small" for="checkout-tos">
               I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and understand this is a non-refundable project deposit unless otherwise agreed in writing.
             </label>
+            <div class="invalid-feedback" id="checkout-tos-feedback"></div>
           </div>
           <div id="checkout-msg" class="alert py-2 small d-none"></div>
-          <button type="submit" class="btn-brand w-100" id="checkout-submit-btn" disabled>Continue to payment</button>
+          <button type="submit" class="btn-brand w-100" id="checkout-submit-btn">Continue to payment</button>
         </form>
       </div>
     </div>
@@ -289,7 +292,15 @@
   const checkoutTos = document.getElementById('checkout-tos');
   const checkoutMsg = document.getElementById('checkout-msg');
   const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+  const checkoutNameFeedback = document.getElementById('checkout-name-feedback');
+  const checkoutEmailFeedback = document.getElementById('checkout-email-feedback');
+  const checkoutTosFeedback = document.getElementById('checkout-tos-feedback');
   const CHECKOUT_DRAFT_KEY = 'starter_checkout_draft_v1';
+
+  // Requires at least two name parts (first + last), letters/hyphens/apostrophes only,
+  // so "Kofi" alone fails but "Kofi Mensah" and "Mary-Jane O'Brien Asante" both pass.
+  const FULL_NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['-][A-Za-zÀ-ÖØ-öø-ÿ]+)*(?:\s+[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['-][A-Za-zÀ-ÖØ-öø-ÿ]+)*)+$/;
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function setCheckoutBanner(type, text) {
     if (!checkoutNote) return;
@@ -341,11 +352,30 @@
     }));
   }
 
-  function validateCheckout(name, email) {
-    if (name.length < 2) return 'Please enter your full name.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please enter a valid email address.';
-    if (!checkoutTos.checked) return 'Please accept the Terms of Service to continue.';
+  function setFieldError(input, feedbackEl, message) {
+    if (message) {
+      input.classList.add('is-invalid');
+      if (feedbackEl) feedbackEl.textContent = message;
+    } else {
+      input.classList.remove('is-invalid');
+      if (feedbackEl) feedbackEl.textContent = '';
+    }
+  }
+
+  function nameError(name) {
+    if (!name) return 'Please enter your full name.';
+    if (!FULL_NAME_REGEX.test(name)) return 'Please enter both your first and last name.';
     return '';
+  }
+
+  function emailError(email) {
+    if (!email) return 'Please enter your email address.';
+    if (!EMAIL_REGEX.test(email)) return 'Please enter a valid email address.';
+    return '';
+  }
+
+  function tosError() {
+    return checkoutTos.checked ? '' : 'Please accept the Terms of Service to continue.';
   }
 
   function currencyDisplay(code) {
@@ -354,10 +384,7 @@
   }
 
   function syncCheckoutSubmitState() {
-    const ready = checkoutName.value.trim().length > 1
-      && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutEmail.value.trim())
-      && checkoutTos.checked;
-    checkoutSubmitBtn.disabled = !ready || checkoutInFlight;
+    checkoutSubmitBtn.disabled = !!checkoutInFlight;
   }
 
   let paymentConfig = null;
@@ -389,6 +416,9 @@
 
   checkoutBtn.addEventListener('click', () => {
     setCheckoutMessage();
+    setFieldError(checkoutName, checkoutNameFeedback, '');
+    setFieldError(checkoutEmail, checkoutEmailFeedback, '');
+    setFieldError(checkoutTos, checkoutTosFeedback, '');
     modal.show();
   });
 
@@ -397,13 +427,31 @@
     (firstEmpty || checkoutName).focus();
   });
 
-  checkoutName.addEventListener('blur', saveDraft);
-  checkoutEmail.addEventListener('blur', saveDraft);
-  checkoutTos.addEventListener('change', saveDraft);
+  checkoutName.addEventListener('blur', () => {
+    saveDraft();
+    setFieldError(checkoutName, checkoutNameFeedback, nameError(checkoutName.value.trim()));
+  });
+  checkoutEmail.addEventListener('blur', () => {
+    saveDraft();
+    setFieldError(checkoutEmail, checkoutEmailFeedback, emailError(checkoutEmail.value.trim()));
+  });
+  checkoutTos.addEventListener('change', () => {
+    saveDraft();
+    setFieldError(checkoutTos, checkoutTosFeedback, tosError());
+  });
 
-  checkoutName.addEventListener('input', syncCheckoutSubmitState);
-  checkoutEmail.addEventListener('input', syncCheckoutSubmitState);
-  checkoutTos.addEventListener('change', syncCheckoutSubmitState);
+  // Once a field has shown an error, re-validate live as the person types/toggles
+  // so the message clears the moment it's fixed, instead of waiting for another blur.
+  checkoutName.addEventListener('input', () => {
+    if (checkoutName.classList.contains('is-invalid')) {
+      setFieldError(checkoutName, checkoutNameFeedback, nameError(checkoutName.value.trim()));
+    }
+  });
+  checkoutEmail.addEventListener('input', () => {
+    if (checkoutEmail.classList.contains('is-invalid')) {
+      setFieldError(checkoutEmail, checkoutEmailFeedback, emailError(checkoutEmail.value.trim()));
+    }
+  });
 
   let checkoutInFlight = false;
   syncCheckoutSubmitState();
@@ -413,9 +461,18 @@
 
     const name = checkoutName.value.trim();
     const email = checkoutEmail.value.trim();
-    const validationError = validateCheckout(name, email);
+
+    const nameMsg = nameError(name);
+    const emailMsg = emailError(email);
+    const tosMsg = tosError();
+    setFieldError(checkoutName, checkoutNameFeedback, nameMsg);
+    setFieldError(checkoutEmail, checkoutEmailFeedback, emailMsg);
+    setFieldError(checkoutTos, checkoutTosFeedback, tosMsg);
+
+    const validationError = nameMsg || emailMsg || tosMsg;
     if (validationError) {
       setCheckoutMessage('warning', validationError);
+      (nameMsg ? checkoutName : (emailMsg ? checkoutEmail : checkoutTos)).focus();
       // Reset the in‑flight flag so the button can be pressed again
       checkoutInFlight = false;
       // Restore the original button label

@@ -43,8 +43,10 @@
 <script src="/js/theme.js"></script>
 <script>
 (async function () {
+  console.log('Pay page script initialized');
   const container = document.getElementById('pay-content');
   const token = new URLSearchParams(window.location.search).get('token');
+  console.log('Token from URL:', token);
 
   function escapeHtml(value) {
     return String(value || '')
@@ -56,6 +58,7 @@
   }
 
   function renderState(title, description) {
+    console.log('Render state:', title, description);
     container.innerHTML = `
       <div class="contact-card text-center">
         <h4 class="mb-2">${escapeHtml(title)}</h4>
@@ -75,11 +78,16 @@
       try {
         return await api.post('/api/v1/payments/verify', { reference }, { timeoutMs: 15000 });
       } catch (err) {
+        console.error('Verification attempt', attempt, 'failed:', err);
         lastError = err;
       }
     }
     throw lastError;
   }
+
+  window.addEventListener('error', (e) => {
+    console.error('Global error caught:', e.error);
+  });
 
   if (!token) {
     renderState('Missing payment link', 'This payment URL is incomplete.');
@@ -92,7 +100,9 @@
       api.get(`/api/v1/payments/link/${encodeURIComponent(token)}`),
       api.get('/api/v1/payments/config'),
     ]);
+    console.log('Fetched link and config', link, config);
   } catch (e) {
+    console.error('Error fetching payment data', e);
     renderState('Payment link not found', 'This link may have expired or the token is incorrect.');
     return;
   }

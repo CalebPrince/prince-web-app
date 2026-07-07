@@ -377,8 +377,10 @@
     const type = params.get('type');
     const timeline = params.get('timeline');
     const features = (params.get('features') || '').split(',').map(v => v.trim()).filter(Boolean);
-    const low = params.get('estimate_low');
-    const high = params.get('estimate_high');
+    const lowNum = Number(params.get('estimate_low'));
+    const highNum = Number(params.get('estimate_high'));
+    const low = Number.isFinite(lowNum) && lowNum > 0 ? lowNum : null;
+    const high = Number.isFinite(highNum) && highNum > 0 ? highNum : null;
 
     if (type && projectTypeFromQuery[type] && !document.getElementById('project_type').value) {
       document.getElementById('project_type').value = projectTypeFromQuery[type];
@@ -395,7 +397,7 @@
 
     const messageEl = document.getElementById('message');
     if ((low || high) && !messageEl.value.trim()) {
-      messageEl.value = `Estimator context: ${low ? '$' + Number(low).toLocaleString() : ''}${low && high ? ' - ' : ''}${high ? '$' + Number(high).toLocaleString() : ''}.\n\nProject details:`;
+      messageEl.value = `Estimator context: ${low ? '$' + low.toLocaleString() : ''}${low && high ? ' - ' : ''}${high ? '$' + high.toLocaleString() : ''}.\n\nProject details:`;
     }
   }
 
@@ -460,6 +462,15 @@
 
   form.addEventListener('input', saveDraft);
   form.addEventListener('change', saveDraft);
+
+  // A fresh link from the pricing calculator should win over any abandoned draft
+  // from a previous visit — otherwise applyPricingPrefill()'s "only fill empty
+  // fields" guards see the draft's values and silently skip the URL prefill.
+  const arrivingFromPricingCalculator =
+    new URLSearchParams(window.location.search).get('source') === 'pricing-calculator';
+  if (arrivingFromPricingCalculator) {
+    localStorage.removeItem(DRAFT_KEY);
+  }
 
   applyDraft(loadDraft());
   applyPricingPrefill();

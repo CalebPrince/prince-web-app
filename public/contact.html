@@ -167,6 +167,19 @@
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script>
+(function () {
+  // Allows deep-linking into the contact form with prefilled context, e.g.
+  // /contact.html?name=Ama+Owusu&email=ama%40example.com&message=Hi%2C+I%27m+interested+in...
+  const params = new URLSearchParams(window.location.search);
+  const prefillName = params.get('name');
+  const prefillEmail = params.get('email');
+  const prefillMessage = params.get('message');
+
+  if (prefillName) document.getElementById('name').value = prefillName;
+  if (prefillEmail) document.getElementById('email').value = prefillEmail;
+  if (prefillMessage) document.getElementById('message').value = prefillMessage;
+})();
+
 document.getElementById('contact-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const alertBox = document.getElementById('form-alert');
