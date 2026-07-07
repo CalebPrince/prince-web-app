@@ -568,6 +568,7 @@ pre code.hljs {
 /* Live-chat quick-reply menu */
 .ai-menu { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 1rem 0.75rem; }
 .ai-menu:empty { padding: 0; }
+.ai-menu-hint { flex-basis: 100%; font-size: 0.75rem; color: var(--ink-soft); font-style: italic; margin-bottom: 0.15rem; }
 .ai-menu-btn {
   border: 1.5px solid var(--line);
   background: var(--card-bg);

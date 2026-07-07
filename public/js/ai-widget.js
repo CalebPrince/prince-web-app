@@ -80,8 +80,8 @@
       prompt: "How can I help you today?",
       options: [
         { label: "🚀 Start a Project / Get a Quote", to: "startProject" },
-        { label: "🛠️ Tech Stack & Capabilities", to: "techStack" },
-        { label: "💼 View Portfolio / Case Studies", action: "portfolio" },
+        { label: "⚡ Tech Stack & Capabilities", to: "techStack" },
+        { label: "💼 View Portfolio & Case Studies", action: "portfolio" },
         { label: "📞 Existing Client Support", to: "support" },
         { label: "💬 Talk to a Human", action: "humanHandoff" },
       ],
@@ -171,6 +171,10 @@
   function renderButtonRow(buttons) {
     const container = document.getElementById("ai-widget-menu");
     container.innerHTML = "";
+    const hint = document.createElement("div");
+    hint.className = "ai-menu-hint";
+    hint.textContent = "Tap an option below to reply:";
+    container.appendChild(hint);
     buttons.forEach((b) => {
       const btn = document.createElement("button");
       btn.type = "button";
