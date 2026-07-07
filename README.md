@@ -191,6 +191,16 @@ storage/
     issued at setup time). A short-lived `pending_2fa` cookie (5 min) links
     the two steps — no full session exists until the second factor checks
     out.
+21. **Marketing Leads** (`/admin/marketing-leads.html`, admin-only — no
+    public routes at all) is an internal outreach tool: add a target
+    business, run a real technical audit of its site (SSL, mobile viewport
+    meta tag, title/meta description, response time — genuinely verifiable,
+    never fabricated), then draft an AI pitch that only references the
+    actual findings. There is deliberately no bulk-send path — "Approve &
+    Send" opens the admin's own mail client with the draft prefilled
+    (`mailto:`), and the lead is only marked `sent` after that. The audit
+    fetch has an SSRF guard (`MarketingLeadController::isSafeUrl`) blocking
+    loopback/private/reserved IP targets.
 
 ## Deployment (Namecheap cPanel)
 

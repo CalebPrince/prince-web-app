@@ -45,6 +45,7 @@ use App\Controllers\BlogController;
 use App\Controllers\DashboardController;
 use App\Controllers\InquiryController;
 use App\Controllers\LiveChatController;
+use App\Controllers\MarketingLeadController;
 use App\Controllers\NewsletterController;
 use App\Controllers\PaymentController;
 use App\Controllers\ProjectController;
@@ -141,5 +142,12 @@ $router->get('/api/v1/admin/testimonials', [TestimonialController::class, 'admin
 $router->post('/api/v1/admin/testimonials', [TestimonialController::class, 'request']);
 $router->patch('/api/v1/admin/testimonials/{id}', [TestimonialController::class, 'update']);
 $router->delete('/api/v1/admin/testimonials/{id}', [TestimonialController::class, 'destroy']);
+$router->get('/api/v1/admin/marketing-leads', [MarketingLeadController::class, 'adminIndex']);
+$router->post('/api/v1/admin/marketing-leads', [MarketingLeadController::class, 'store']);
+$router->patch('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::class, 'update']);
+$router->delete('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::class, 'destroy']);
+$router->post('/api/v1/admin/marketing-leads/{id}/audit', [MarketingLeadController::class, 'runAudit']);
+$router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLeadController::class, 'generatePitch']);
+$router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

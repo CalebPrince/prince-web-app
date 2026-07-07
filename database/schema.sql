@@ -204,3 +204,26 @@ CREATE TABLE IF NOT EXISTS testimonials (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_testimonials_status_sort ON testimonials (status, sort_order);
+
+-- Internal outreach tool: admin adds a target business, runs a real
+-- technical audit of its site (SSL, viewport meta, title/description,
+-- response time — genuinely verifiable, never fabricated), then drafts an
+-- AI pitch grounded only in the actual findings. Sending stays a deliberate,
+-- one-at-a-time action (opens the admin's own mail client) rather than a
+-- bulk auto-send, since these are unsolicited contacts.
+CREATE TABLE IF NOT EXISTS marketing_leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  business_name TEXT NOT NULL,
+  website_url TEXT NOT NULL,
+  contact_email TEXT,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
+  audit_findings TEXT,
+  pitch_subject TEXT,
+  pitch_body TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  sent_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at);

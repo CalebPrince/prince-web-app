@@ -1,0 +1,203 @@
+let currentLead = null;
+let pitchModal = null;
+
+function siteCheckBadge(lead) {
+  if (lead.status === "pending") {
+    return '<span class="text-muted-custom small">Not checked yet</span>';
+  }
+  if (!lead.audit_findings) {
+    return '<span class="text-muted-custom small">—</span>';
+  }
+  if (lead.audit_findings.error) {
+    return `<span class="status-pill rejected">Unreachable</span>`;
+  }
+  const count = (lead.audit_findings.issues || []).length;
+  if (count === 0) {
+    return '<span class="status-pill sent">No issues found</span>';
+  }
+  return `<span class="status-pill pitch_ready">${count} issue${count === 1 ? "" : "s"} found</span>`;
+}
+
+function actionButtons(lead) {
+  const buttons = [];
+  if (lead.status === "pending" || lead.audit_findings) {
+    buttons.push(`<button class="btn btn-sm btn-outline-secondary audit-btn" data-id="${lead.id}">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`);
+  }
+  if (lead.audit_findings && !lead.audit_findings.error) {
+    buttons.push(`<button class="btn btn-sm btn-outline-secondary pitch-btn" data-id="${lead.id}">${lead.pitch_body ? "Regenerate pitch" : "Generate pitch"}</button>`);
+  }
+  if (lead.pitch_body) {
+    buttons.push(`<button class="btn btn-sm btn-brand review-btn" data-id="${lead.id}">Review &amp; Send</button>`);
+  }
+  buttons.push(`<button class="btn btn-sm btn-outline-danger remove-btn" data-id="${lead.id}">Delete</button>`);
+  return buttons.join(" ");
+}
+
+async function loadLeads() {
+  const rows = await api.get("/api/v1/admin/marketing-leads");
+  const tbody = document.getElementById("leads-tbody");
+  const empty = document.getElementById("empty-state");
+
+  if (rows.length === 0) {
+    tbody.innerHTML = "";
+    empty.classList.remove("d-none");
+    return;
+  }
+  empty.classList.add("d-none");
+
+  tbody.innerHTML = rows.map(lead => `
+    <tr>
+      <td class="ps-3">
+        <div class="fw-semibold">${escapeHtml(lead.business_name)}</div>
+        ${lead.contact_email ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_email)}</div>` : '<div class="small text-muted-custom">No contact email yet</div>'}
+      </td>
+      <td class="small"><a href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a></td>
+      <td><span class="status-pill ${lead.status}">${lead.status.replace("_", " ")}</span></td>
+      <td>${siteCheckBadge(lead)}</td>
+      <td class="text-end pe-3">
+        <div class="d-flex gap-1 justify-content-end flex-wrap">${actionButtons(lead)}</div>
+      </td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll(".audit-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Checking…";
+      try {
+        await api.post(`/api/v1/admin/marketing-leads/${btn.dataset.id}/audit`, {});
+      } catch (err) {
+        alert(err.message || "Audit failed.");
+      }
+      await loadLeads();
+    });
+  });
+
+  tbody.querySelectorAll(".pitch-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Drafting…";
+      try {
+        await api.post(`/api/v1/admin/marketing-leads/${btn.dataset.id}/generate-pitch`, {});
+      } catch (err) {
+        alert(err.message || "Pitch generation failed.");
+      }
+      await loadLeads();
+    });
+  });
+
+  tbody.querySelectorAll(".review-btn").forEach(btn => {
+    btn.addEventListener("click", () => openPitchModal(rows.find(r => r.id === Number(btn.dataset.id))));
+  });
+
+  tbody.querySelectorAll(".remove-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Delete this lead?")) return;
+      await api.delete(`/api/v1/admin/marketing-leads/${btn.dataset.id}`);
+      await loadLeads();
+    });
+  });
+}
+
+function openPitchModal(lead) {
+  currentLead = lead;
+  document.getElementById("pitch-modal-business").textContent = lead.business_name;
+  document.getElementById("pitch-contact-email").value = lead.contact_email || "";
+  document.getElementById("pitch-subject").value = lead.pitch_subject || "";
+  document.getElementById("pitch-body").value = lead.pitch_body || "";
+  document.getElementById("pitch-modal-alert").classList.add("d-none");
+
+  const list = document.getElementById("pitch-findings-list");
+  const issues = (lead.audit_findings && lead.audit_findings.issues) || [];
+  list.innerHTML = issues.length
+    ? issues.map(i => `<li>${escapeHtml(i.detail)}</li>`).join("")
+    : '<li class="text-muted-custom">No specific issues found by the audit.</li>';
+
+  pitchModal.show();
+}
+
+async function savePitchEdits() {
+  await api.patch(`/api/v1/admin/marketing-leads/${currentLead.id}`, {
+    contact_email: document.getElementById("pitch-contact-email").value.trim(),
+    pitch_subject: document.getElementById("pitch-subject").value.trim(),
+    pitch_body: document.getElementById("pitch-body").value.trim(),
+  });
+}
+
+document.getElementById("pitch-save-btn").addEventListener("click", async () => {
+  const alertBox = document.getElementById("pitch-modal-alert");
+  try {
+    await savePitchEdits();
+    alertBox.className = "alert alert-success py-2 small";
+    alertBox.textContent = "Saved.";
+    alertBox.classList.remove("d-none");
+    await loadLeads();
+  } catch (err) {
+    alertBox.className = "alert alert-danger py-2 small";
+    alertBox.textContent = err.message || "Could not save.";
+    alertBox.classList.remove("d-none");
+  }
+});
+
+document.getElementById("pitch-approve-send-btn").addEventListener("click", async () => {
+  const alertBox = document.getElementById("pitch-modal-alert");
+  const email = document.getElementById("pitch-contact-email").value.trim();
+  if (!email) {
+    alertBox.className = "alert alert-danger py-2 small";
+    alertBox.textContent = "Add a contact email before sending.";
+    alertBox.classList.remove("d-none");
+    return;
+  }
+
+  try {
+    await savePitchEdits();
+    const subject = document.getElementById("pitch-subject").value.trim();
+    const body = document.getElementById("pitch-body").value.trim();
+
+    // Opens the admin's own mail client with the draft prefilled — this is
+    // the actual send action; nothing goes out from the server directly.
+    window.location.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    await api.post(`/api/v1/admin/marketing-leads/${currentLead.id}/send`, {});
+    pitchModal.hide();
+    await loadLeads();
+  } catch (err) {
+    alertBox.className = "alert alert-danger py-2 small";
+    alertBox.textContent = err.message || "Could not mark as sent.";
+    alertBox.classList.remove("d-none");
+  }
+});
+
+document.getElementById("add-lead-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const alertBox = document.getElementById("add-lead-alert");
+  const btn = document.getElementById("add-lead-submit-btn");
+  alertBox.classList.add("d-none");
+  btn.disabled = true;
+
+  try {
+    await api.post("/api/v1/admin/marketing-leads", {
+      business_name: document.getElementById("lead-name").value,
+      website_url: document.getElementById("lead-url").value,
+      contact_email: document.getElementById("lead-email").value,
+    });
+    document.getElementById("add-lead-form").reset();
+    bootstrap.Modal.getInstance(document.getElementById("add-lead-modal")).hide();
+    await loadLeads();
+  } catch (err) {
+    alertBox.className = "alert alert-danger py-2 small";
+    alertBox.textContent = err.message || "Could not add lead.";
+    alertBox.classList.remove("d-none");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+(async function init() {
+  const user = await requireAdminAuth();
+  if (!user) return;
+  wireLogout();
+
+  pitchModal = new bootstrap.Modal(document.getElementById("pitch-modal"));
+  await loadLeads();
+})();

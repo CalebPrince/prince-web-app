@@ -101,6 +101,11 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
 .status-pill.approved { background: #dcfce7; color: #166534; }
 .status-pill.rejected { background: #fee2e2; color: #991b1b; }
 
+.status-pill.pending { background: #f1f5f9; color: #64748b; }
+.status-pill.audited { background: #e0e7ff; color: #3730a3; }
+.status-pill.pitch_ready { background: #fef3c7; color: #92400e; }
+.status-pill.sent { background: #dcfce7; color: #166534; }
+
 .chat-unseen { border-left: 3px solid #6366f1; }
 
 .auth-shell {
