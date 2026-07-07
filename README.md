@@ -167,7 +167,10 @@ storage/
     (`idx_appointments_slot_active`, `WHERE status != 'cancelled'`) is the
     real source of truth for conflict prevention — a cancelled booking
     frees its slot, but two active bookings can never collide even under
-    a race. Admin view/cancel at `/admin/appointments.html`.
+    a race. Admin view/cancel at `/admin/appointments.html`. A separate
+    cron script (`database/send_appointment_reminders.php`) emails a
+    reminder ~24h before each confirmed booking, guarded by a
+    `reminder_sent` flag so it only ever sends once per booking.
 18. **Testimonials** are a client-facing review pipeline, separate from the
     hand-authored `testimonial_1/2/3` homepage CMS fields: admin sends a
     request (`/admin/testimonials.html`) which emails a one-time link
@@ -215,6 +218,8 @@ One-time setup on a new host:
    ```
 4. Add a cron job (every 5 minutes):
    `/usr/local/bin/php /home/<cpanel-user>/database/process_webhooks.php > /dev/null`
+4b. Add a second cron job (every 30 minutes) for booking reminders:
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_appointment_reminders.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin → Settings → Payments (Paystack), paste in your Paystack public

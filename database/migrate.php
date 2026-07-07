@@ -44,4 +44,9 @@ foreach (['project_type', 'budget', 'timeline', 'features', 'attachments'] as $c
 }
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_inquiries_type ON inquiries (type)');
 
+$appointmentColumns = array_column($pdo->query('PRAGMA table_info(appointments)')->fetchAll(), 'name');
+if (!in_array('reminder_sent', $appointmentColumns, true)) {
+    $pdo->exec('ALTER TABLE appointments ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0');
+}
+
 echo "Schema applied.\n";
