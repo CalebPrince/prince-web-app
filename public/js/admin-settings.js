@@ -15,6 +15,50 @@ async function saveEmail(e) {
   }
 }
 
+function showTwofaView(view) {
+  ["disabled", "enabled", "setup", "backup"].forEach(v => {
+    document.getElementById(`twofa-${v}-view`).classList.toggle("d-none", v !== view);
+  });
+}
+
+let pendingTwofaSecret = null;
+
+async function startTwofaSetup() {
+  const res = await api.post("/api/v1/admin/2fa/setup", {});
+  pendingTwofaSecret = res.secret;
+  document.getElementById("twofa-secret").textContent = res.secret;
+  document.getElementById("twofa-confirm-form").reset();
+  document.getElementById("twofa-setup-msg").classList.add("d-none");
+  showTwofaView("setup");
+}
+
+async function confirmTwofaSetup(e) {
+  e.preventDefault();
+  try {
+    const res = await api.post("/api/v1/admin/2fa/confirm", {
+      secret: pendingTwofaSecret,
+      code: document.getElementById("twofa-confirm-code").value.trim(),
+    });
+    document.getElementById("twofa-backup-codes").innerHTML = res.backup_codes.map(c => `<div>${c}</div>`).join("");
+    showTwofaView("backup");
+  } catch (err) {
+    showMsg("twofa-setup-msg", err.message, false);
+  }
+}
+
+async function disableTwofa(e) {
+  e.preventDefault();
+  try {
+    await api.post("/api/v1/admin/2fa/disable", {
+      password: document.getElementById("twofa-disable-password").value,
+    });
+    document.getElementById("twofa-disable-form").reset();
+    showTwofaView("disabled");
+  } catch (err) {
+    showMsg("twofa-disable-msg", err.message, false);
+  }
+}
+
 async function savePassword(e) {
   e.preventDefault();
   const current = document.getElementById("current-password").value;
@@ -159,6 +203,13 @@ async function testAi() {
   document.getElementById("email").value = user.email;
   document.getElementById("email-form").addEventListener("submit", saveEmail);
   document.getElementById("password-form").addEventListener("submit", savePassword);
+
+  showTwofaView(user.totp_enabled ? "enabled" : "disabled");
+  document.getElementById("twofa-start-btn").addEventListener("click", startTwofaSetup);
+  document.getElementById("twofa-confirm-form").addEventListener("submit", confirmTwofaSetup);
+  document.getElementById("twofa-disable-form").addEventListener("submit", disableTwofa);
+  document.getElementById("twofa-cancel-btn").addEventListener("click", () => showTwofaView("disabled"));
+  document.getElementById("twofa-backup-done-btn").addEventListener("click", () => showTwofaView("enabled"));
 
   document.getElementById("integrations-form").addEventListener("submit", saveIntegrations);
   document.getElementById("test-ai-btn").addEventListener("click", testAi);

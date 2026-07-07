@@ -274,6 +274,54 @@
           </form>
         </div>
       </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
+          <h5 class="mb-1">Two-factor authentication</h5>
+          <p class="text-muted-custom small">Adds a second step at login using an authenticator app (Google Authenticator, Authy, etc.) — protects the account guarding your whole site.</p>
+
+          <div id="twofa-disabled-view">
+            <span class="status-pill draft mb-3 d-inline-block">Disabled</span>
+            <div>
+              <button type="button" class="btn-brand" id="twofa-start-btn">Set up two-factor authentication</button>
+            </div>
+          </div>
+
+          <div id="twofa-enabled-view" class="d-none">
+            <span class="status-pill published mb-3 d-inline-block">Enabled</span>
+            <form id="twofa-disable-form">
+              <div class="mb-3">
+                <label class="form-label">Current password</label>
+                <input type="password" class="form-control" id="twofa-disable-password" autocomplete="current-password" required>
+              </div>
+              <div id="twofa-disable-msg" class="alert py-2 small d-none"></div>
+              <button type="submit" class="btn btn-outline-danger btn-sm">Disable two-factor authentication</button>
+            </form>
+          </div>
+
+          <div id="twofa-setup-view" class="d-none">
+            <p class="small mb-2">1. Add this to your authenticator app (manual entry key):</p>
+            <div class="p-2 mb-3 rounded" style="background: var(--bg-soft); font-family: monospace; word-break: break-all;" id="twofa-secret"></div>
+            <p class="small mb-2">2. Enter the 6-digit code it shows:</p>
+            <form id="twofa-confirm-form">
+              <div class="mb-3">
+                <input type="text" class="form-control" id="twofa-confirm-code" inputmode="numeric" maxlength="6" placeholder="123456" required>
+              </div>
+              <div id="twofa-setup-msg" class="alert py-2 small d-none"></div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn-brand btn-sm">Enable</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="twofa-cancel-btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="twofa-backup-view" class="d-none">
+            <div class="alert alert-warning py-2 small">Save these backup codes somewhere safe — each works once, and they won't be shown again. Use one if you ever lose access to your authenticator app.</div>
+            <div class="p-2 mb-3 rounded" style="background: var(--bg-soft); font-family: monospace;" id="twofa-backup-codes"></div>
+            <button type="button" class="btn-brand btn-sm" id="twofa-backup-done-btn">Done</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

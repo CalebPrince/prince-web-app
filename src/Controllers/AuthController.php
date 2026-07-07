@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\Database;
 use App\Support\Jwt;
 use App\Support\Response;
+use App\Support\Totp;
 
 class AuthController
 {
@@ -72,8 +73,97 @@ class AuthController
             Response::error('Invalid credentials', 401);
         }
 
+        if (!empty($user['totp_enabled'])) {
+            self::issuePending2faCookie($user);
+            Response::json(['requires_2fa' => true]);
+        }
+
         self::issueTokens($user);
         Response::json(['id' => (int) $user['id'], 'email' => $user['email']]);
+    }
+
+    private static function issuePending2faCookie(array $user): void
+    {
+        $config = self::config();
+        $now = time();
+        $ttl = 5 * 60;
+        $token = Jwt::encode([
+            'sub' => (int) $user['id'],
+            'tv' => (int) $user['token_version'],
+            'type' => '2fa_pending',
+            'iat' => $now,
+            'exp' => $now + $ttl,
+        ], $config['jwt_secret']);
+
+        setcookie('pending_2fa', $token, [
+            'expires' => $now + $ttl,
+            'path' => '/',
+            'httponly' => true,
+            'secure' => $config['environment'] !== 'development',
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    /** POST /api/v1/auth/verify-2fa — body: {code} (TOTP) or {backup_code} */
+    public static function verifyTwoFactor(): void
+    {
+        $config = self::config();
+        $token = $_COOKIE['pending_2fa'] ?? null;
+        if (!$token) {
+            Response::error('No pending login — please sign in again.', 401);
+        }
+
+        $payload = Jwt::decode($token, $config['jwt_secret']);
+        if (!$payload || ($payload['type'] ?? null) !== '2fa_pending') {
+            Response::error('That sign-in attempt has expired — please sign in again.', 401);
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ? AND is_active = 1');
+        $stmt->execute([$payload['sub']]);
+        $user = $stmt->fetch();
+
+        if (!$user || (int) $user['token_version'] !== (int) $payload['tv'] || empty($user['totp_enabled'])) {
+            Response::error('That sign-in attempt has expired — please sign in again.', 401);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $code = trim((string) ($data['code'] ?? ''));
+        $backupCode = trim((string) ($data['backup_code'] ?? ''));
+
+        $verified = false;
+        if ($code !== '') {
+            $verified = Totp::verify((string) $user['totp_secret'], $code);
+        } elseif ($backupCode !== '') {
+            $verified = self::consumeBackupCode($pdo, (int) $user['id'], (string) $user['totp_backup_codes'], $backupCode);
+        }
+
+        if (!$verified) {
+            Response::error('Incorrect code — please try again.', 401);
+        }
+
+        setcookie('pending_2fa', '', ['expires' => 1, 'path' => '/']);
+        self::issueTokens($user);
+        Response::json(['id' => (int) $user['id'], 'email' => $user['email']]);
+    }
+
+    private static function consumeBackupCode(\PDO $pdo, int $userId, string $codesJson, string $submitted): bool
+    {
+        $normalized = strtoupper(preg_replace('/\s+/', '', $submitted) ?? '');
+        $hashes = json_decode($codesJson, true) ?: [];
+        $matchHash = hash('sha256', $normalized);
+
+        $index = array_search($matchHash, $hashes, true);
+        if ($index === false) {
+            return false;
+        }
+
+        // Single-use: remove it so the same backup code can't be replayed.
+        unset($hashes[$index]);
+        $pdo->prepare('UPDATE users SET totp_backup_codes = ? WHERE id = ?')
+            ->execute([json_encode(array_values($hashes)), $userId]);
+
+        return true;
     }
 
     public static function refresh(): void
@@ -112,7 +202,11 @@ class AuthController
     public static function me(): void
     {
         $user = AuthMiddleware::requireAuth();
-        Response::json(['id' => (int) $user['id'], 'email' => $user['email']]);
+        Response::json([
+            'id' => (int) $user['id'],
+            'email' => $user['email'],
+            'totp_enabled' => (bool) $user['totp_enabled'],
+        ]);
     }
 
     /** PATCH /api/v1/admin/account — change the login email */
@@ -162,5 +256,65 @@ class AuthController
         $user['token_version'] = (int) $user['token_version'] + 1;
         self::issueTokens($user);
         Response::json(['status' => 'password_changed']);
+    }
+
+    /**
+     * POST /api/v1/admin/2fa/setup — generates a candidate secret. Nothing is
+     * persisted until /confirm verifies the admin actually scanned/entered it
+     * correctly, so a setup that's abandoned mid-way never half-enables 2FA.
+     */
+    public static function setupTwoFactor(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $secret = Totp::generateSecret();
+        Response::json([
+            'secret' => $secret,
+            'otpauth_uri' => Totp::provisioningUri($secret, $user['email']),
+        ]);
+    }
+
+    /** POST /api/v1/admin/2fa/confirm — body: {secret, code} */
+    public static function confirmTwoFactor(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $secret = trim((string) ($data['secret'] ?? ''));
+        $code = trim((string) ($data['code'] ?? ''));
+
+        if ($secret === '' || !Totp::verify($secret, $code)) {
+            Response::error('That code doesn\'t match — check your authenticator app and try again.', 422);
+        }
+
+        $backupCodes = [];
+        $hashedCodes = [];
+        for ($i = 0; $i < 8; $i++) {
+            $plain = strtoupper(bin2hex(random_bytes(4))); // e.g. "A1B2C3D4"
+            $backupCodes[] = $plain;
+            $hashedCodes[] = hash('sha256', $plain);
+        }
+
+        $pdo = Database::get();
+        $pdo->prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1, totp_backup_codes = ? WHERE id = ?')
+            ->execute([$secret, json_encode($hashedCodes), $user['id']]);
+
+        Response::json(['status' => 'enabled', 'backup_codes' => $backupCodes]);
+    }
+
+    /** POST /api/v1/admin/2fa/disable — body: {password} */
+    public static function disableTwoFactor(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $password = (string) ($data['password'] ?? '');
+
+        if (!password_verify($password, $user['password_hash'])) {
+            Response::error('Current password is incorrect.', 401);
+        }
+
+        Database::get()
+            ->prepare('UPDATE users SET totp_secret = NULL, totp_enabled = 0, totp_backup_codes = NULL WHERE id = ?')
+            ->execute([$user['id']]);
+
+        Response::json(['status' => 'disabled']);
     }
 }

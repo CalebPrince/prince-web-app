@@ -93,6 +93,7 @@ $router->get('/api/v1/search', [SearchController::class, 'search']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);
+$router->post('/api/v1/auth/verify-2fa', [AuthController::class, 'verifyTwoFactor']);
 $router->post('/api/v1/auth/refresh', [AuthController::class, 'refresh']);
 $router->post('/api/v1/auth/logout', [AuthController::class, 'logout']);
 $router->get('/api/v1/auth/me', [AuthController::class, 'me']);
@@ -119,6 +120,9 @@ $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
 $router->patch('/api/v1/admin/account', [AuthController::class, 'updateAccount']);
 $router->post('/api/v1/admin/account/password', [AuthController::class, 'changePassword']);
+$router->post('/api/v1/admin/2fa/setup', [AuthController::class, 'setupTwoFactor']);
+$router->post('/api/v1/admin/2fa/confirm', [AuthController::class, 'confirmTwoFactor']);
+$router->post('/api/v1/admin/2fa/disable', [AuthController::class, 'disableTwoFactor']);
 $router->post('/api/v1/admin/uploads', [UploadController::class, 'upload']);
 $router->get('/api/v1/admin/blog', [BlogController::class, 'adminIndex']);
 $router->post('/api/v1/admin/blog', [BlogController::class, 'store']);

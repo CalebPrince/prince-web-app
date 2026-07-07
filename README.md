@@ -182,6 +182,15 @@ storage/
     across published projects and blog posts server-side
     (`/api/v1/search?q=`) — no external search service, consistent with
     the rest of the app's zero-dependency approach.
+20. **Two-factor authentication** for the admin login is a hand-rolled RFC
+    6238 TOTP implementation (`src/Support/Totp.php`, no dependency —
+    verified against the RFC 4226 reference test vectors), compatible with
+    Google Authenticator/Authy. Enable/disable from Admin → Settings; once
+    on, login is a two-step flow (`requires_2fa` from `/auth/login`, then
+    `/auth/verify-2fa` with a code or one of 8 single-use backup codes
+    issued at setup time). A short-lived `pending_2fa` cookie (5 min) links
+    the two steps — no full session exists until the second factor checks
+    out.
 
 ## Deployment (Namecheap cPanel)
 

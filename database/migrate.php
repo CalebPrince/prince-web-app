@@ -12,6 +12,17 @@ $pdo->exec($schema);
 
 // SQLite has no "ADD COLUMN IF NOT EXISTS" — guard new columns on tables that
 // may already exist from before this migration was written.
+$userColumns = array_column($pdo->query('PRAGMA table_info(users)')->fetchAll(), 'name');
+if (!in_array('totp_secret', $userColumns, true)) {
+    $pdo->exec('ALTER TABLE users ADD COLUMN totp_secret TEXT');
+}
+if (!in_array('totp_enabled', $userColumns, true)) {
+    $pdo->exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0');
+}
+if (!in_array('totp_backup_codes', $userColumns, true)) {
+    $pdo->exec('ALTER TABLE users ADD COLUMN totp_backup_codes TEXT');
+}
+
 $chatSessionColumns = array_column($pdo->query('PRAGMA table_info(chat_sessions)')->fetchAll(), 'name');
 if (!in_array('client_phone', $chatSessionColumns, true)) {
     $pdo->exec('ALTER TABLE chat_sessions ADD COLUMN client_phone TEXT');
