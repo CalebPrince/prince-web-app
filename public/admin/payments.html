@@ -134,16 +134,16 @@
         <form id="link-form">
           <div class="mb-3">
             <label class="form-label">Client name</label>
-            <input type="text" class="form-control" id="client-name" required>
+            <input type="text" class="form-control" id="client-name" required placeholder="Client full name">
           </div>
           <div class="mb-3">
             <label class="form-label">Client email</label>
-            <input type="email" class="form-control" id="client-email" required>
+            <input type="email" class="form-control" id="client-email" required placeholder="client@example.com">
           </div>
           <div class="row g-3 mb-3">
             <div class="col-md-6">
               <label class="form-label">Amount</label>
-              <input type="number" min="0" step="0.01" class="form-control" id="link-amount" required>
+              <input type="number" min="0" step="0.01" class="form-control" id="link-amount" required placeholder="0.00">
             </div>
             <div class="col-md-6">
               <label class="form-label">Currency</label>
@@ -165,7 +165,7 @@
         <div id="link-result" class="d-none mt-3">
           <label class="form-label">Shareable link</label>
           <div class="input-group">
-            <input type="text" class="form-control" id="link-result-url" readonly>
+            <input type="text" class="form-control" id="link-result-url" readonly placeholder="Generated link appears here">
             <button class="btn btn-outline-secondary" type="button" id="copy-link-result-btn">Copy</button>
           </div>
         </div>
