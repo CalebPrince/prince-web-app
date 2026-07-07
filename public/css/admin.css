@@ -172,3 +172,22 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
 [data-theme="dark"] #link-modal select::placeholder {
   color: #cbd5e1;
 }
+
+.has-help-icon {
+  position: relative;
+}
+.admin-help-toggle {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  color: #94a3b8;
+  cursor: help;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  z-index: 10;
+}
+.admin-help-toggle:hover {
+  color: #6366f1;
+}

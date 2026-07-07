@@ -97,7 +97,7 @@ storage/
    (with cover image upload), an inquiries inbox (read/flag/archive) split
    into general contact vs. quote requests, a payments section (Paystack
    transaction log + generate-a-payment-link), tag management, site content
-   (all editable homepage/pricing copy), and account settings.
+   (all editable homepage/pricing copy), and account settings. Includes contextual SVG tooltips for quick help on forms and cards.
 6. **Blog** (`/blog.html`, `/blog-post.html`) is a normal CRUD resource
    (`blog_posts` table) with category filtering, pagination (10/page),
    reading-time estimates, share buttons, and per-post OG/Twitter meta +
