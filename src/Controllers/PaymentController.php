@@ -271,6 +271,16 @@ class PaymentController
         Response::json($rows);
     }
 
+    /** DELETE /api/v1/admin/payments/{reference} */
+    public static function destroy(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('DELETE FROM payments WHERE reference = ?');
+        $stmt->execute([$params['reference']]);
+        Response::json(['status' => 'deleted']);
+    }
+
     /** GET /api/v1/admin/payment-links */
     public static function adminIndexLinks(): void
     {

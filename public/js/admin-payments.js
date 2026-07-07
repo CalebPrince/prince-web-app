@@ -63,9 +63,24 @@ async function loadPayments() {
       <td class="small text-muted-custom">${new Date(p.created_at).toLocaleString()}</td>
       <td class="text-end pe-3">
         ${p.status === 'pending' ? `<button class="btn btn-sm btn-outline-secondary recheck-btn" data-reference="${escapeHtml(p.reference)}">Recheck</button>` : ''}
+        <button class="btn btn-sm btn-outline-danger delete-btn ms-1" data-reference="${escapeHtml(p.reference)}">Delete</button>
       </td>
     </tr>
   `).join('');
+
+  tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to delete this transaction?')) return;
+      btn.disabled = true;
+      try {
+        await api.delete('/api/v1/admin/payments/' + btn.dataset.reference);
+        await loadPayments();
+      } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+      }
+    });
+  });
 
   tbody.querySelectorAll('.recheck-btn').forEach(btn => {
     btn.addEventListener('click', async () => {

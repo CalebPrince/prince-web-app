@@ -130,6 +130,7 @@ $router->post('/api/v1/admin/blog', [BlogController::class, 'store']);
 $router->put('/api/v1/admin/blog/{id}', [BlogController::class, 'update']);
 $router->delete('/api/v1/admin/blog/{id}', [BlogController::class, 'destroy']);
 $router->get('/api/v1/admin/payments', [PaymentController::class, 'adminIndex']);
+$router->delete('/api/v1/admin/payments/{reference}', [PaymentController::class, 'destroy']);
 $router->get('/api/v1/admin/payment-links', [PaymentController::class, 'adminIndexLinks']);
 $router->post('/api/v1/admin/payment-links', [PaymentController::class, 'createLink']);
 $router->get('/api/v1/admin/analytics/summary', [AnalyticsController::class, 'summary']);
