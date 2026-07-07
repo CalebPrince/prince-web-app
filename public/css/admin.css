@@ -122,3 +122,53 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
   width: 100%;
   max-width: 380px;
 }
+
+/* Payment link popup form colors for both light and dark themes. */
+#link-modal .modal-title {
+  color: #000;
+}
+
+#link-modal .form-control::placeholder,
+#link-modal .form-select::placeholder,
+#link-modal input::placeholder,
+#link-modal textarea::placeholder,
+#link-modal select::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+[data-theme="dark"] #link-modal .modal-content {
+  background: #131e33;
+  border-color: #253044;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] #link-modal .modal-header {
+  border-bottom-color: #253044;
+}
+
+[data-theme="dark"] #link-modal .modal-title {
+  color: #fff;
+}
+
+[data-theme="dark"] #link-modal .form-label {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] #link-modal .form-control,
+[data-theme="dark"] #link-modal .form-select,
+[data-theme="dark"] #link-modal input,
+[data-theme="dark"] #link-modal textarea,
+[data-theme="dark"] #link-modal select {
+  background: #0b1220;
+  border-color: #253044;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] #link-modal .form-control::placeholder,
+[data-theme="dark"] #link-modal .form-select::placeholder,
+[data-theme="dark"] #link-modal input::placeholder,
+[data-theme="dark"] #link-modal textarea::placeholder,
+[data-theme="dark"] #link-modal select::placeholder {
+  color: #cbd5e1;
+}

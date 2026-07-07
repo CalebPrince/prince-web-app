@@ -6,6 +6,7 @@
 
 :root {
   --ink: #0f172a;
+  --heading-color: #000000;
   --ink-soft: #334155;
   --muted: #64748b;
   --bg: #ffffff;
@@ -25,6 +26,7 @@
 
 [data-theme="dark"] {
   --ink: #f1f5f9;
+  --heading-color: #ffffff;
   --ink-soft: #cbd5e1;
   --muted: #94a3b8;
   --bg: #0b1220;
@@ -50,9 +52,27 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-  color: var(--ink);
+  color: var(--heading-color);
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+
+/* Keep placeholders legible in both themes, especially dark mode. */
+input::placeholder,
+textarea::placeholder,
+select::placeholder,
+.form-control::placeholder,
+.form-select::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] select::placeholder,
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] .form-select::placeholder {
+  color: #cbd5e1;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -488,6 +508,48 @@ pre code.hljs {
   color: var(--ink);
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Frontend popup modal theme behavior (pricing checkout + live demo). */
+#checkout-modal .modal-title,
+#live-demo-modal .modal-title {
+  color: #000;
+}
+
+[data-theme="dark"] #checkout-modal .modal-content,
+[data-theme="dark"] #live-demo-modal .modal-content {
+  background: var(--card-bg);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+[data-theme="dark"] #checkout-modal .modal-header,
+[data-theme="dark"] #live-demo-modal .modal-header {
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] #checkout-modal .modal-title,
+[data-theme="dark"] #live-demo-modal .modal-title {
+  color: #fff;
+}
+
+[data-theme="dark"] #checkout-modal .form-label {
+  color: var(--ink-soft);
+}
+
+[data-theme="dark"] #checkout-modal .form-control,
+[data-theme="dark"] #checkout-modal .form-select {
+  background: var(--bg);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+[data-theme="dark"] #checkout-modal .form-control::placeholder,
+[data-theme="dark"] #checkout-modal .form-select::placeholder,
+[data-theme="dark"] #checkout-modal input::placeholder,
+[data-theme="dark"] #checkout-modal textarea::placeholder,
+[data-theme="dark"] #checkout-modal select::placeholder {
+  color: #cbd5e1;
 }
 
 /* Footer */
