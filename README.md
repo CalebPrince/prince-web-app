@@ -215,12 +215,20 @@ storage/
     Settings → Integrations (defaults to `openrouter/free` if no model is
     given). Centralized in one class rather than duplicated per controller,
     since the Gemini call itself has already been the source of several
-    subtle bugs this project had to debug. Live Chat's tool-calling
-    conversation loop (`LiveChatController::chatWithGemini`) is intentionally
-    excluded — Gemini's `functionCall`/`functionResponse` shape and
-    OpenAI-style `tools`/`tool_calls` differ enough that a shared fallback
-    isn't worth the complexity there, so that one stays Gemini-only (with
-    its existing keyword-matching fallback on total failure).
+    subtle bugs this project had to debug.
+
+    Live Chat's tool-calling conversation
+    (`LiveChatController::chatWithGemini`/`chatWithOpenRouter`) gets the same
+    fallback, but as a second, independent implementation rather than a
+    shared one: Gemini's `functionCall`/`functionResponse` shape (with a
+    `thoughtSignature` that must round-trip verbatim) and OpenAI-style
+    `tools`/`tool_calls` (matched by `tool_call_id`) are different enough
+    that there's no safe way to hand off *mid-round* — a failed turn is
+    retried as a whole fresh turn on the other provider instead. Both
+    implementations share one source of truth for the system prompt
+    (`buildSystemPrompt`) and the tool declarations (`toolDeclarations`,
+    translated to OpenAI's schema by `toolDeclarationsOpenAiFormat`) so the
+    two providers can't drift into inconsistent behavior.
 
 ## Deployment (Namecheap cPanel)
 

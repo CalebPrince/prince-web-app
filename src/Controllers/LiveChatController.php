@@ -28,7 +28,8 @@ class LiveChatController
     public static function status(): void
     {
         Response::json([
-            'online' => !empty(Settings::get('gemini_api_key')) && self::isWithinScheduledHours(),
+            'online' => (!empty(Settings::get('gemini_api_key')) || !empty(Settings::get('openrouter_api_key')))
+                && self::isWithinScheduledHours(),
             'greeting' => Settings::get('chat_greeting')
                 ?? 'Hi there! 👋 Welcome.',
             'intro' => Settings::get('chat_intro')
@@ -69,13 +70,32 @@ class LiveChatController
         if (!empty($geminiKey)) {
             $result = self::chatWithGemini($geminiKey, $transcript, $projects, $pdo);
             if ($result !== null) {
-                $justBecameReady = $result['ready'];
+                $justBecameReady = $justBecameReady || $result['ready'];
                 if ($result['reply'] !== null) {
                     $reply = $result['reply'];
                     $mode = 'ai';
                 }
             }
         }
+
+        // Gemini failed outright, or produced no usable reply text — retry
+        // the whole turn against OpenRouter before falling back to keyword
+        // matching. This is a fresh, independent turn on the other
+        // provider, not a mid-conversation handoff (see chatWithOpenRouter).
+        if ($reply === null) {
+            $openRouterKey = Settings::get('openrouter_api_key');
+            if (!empty($openRouterKey)) {
+                $result = self::chatWithOpenRouter($openRouterKey, $transcript, $projects, $pdo);
+                if ($result !== null) {
+                    $justBecameReady = $justBecameReady || $result['ready'];
+                    if ($result['reply'] !== null) {
+                        $reply = $result['reply'];
+                        $mode = 'ai';
+                    }
+                }
+            }
+        }
+
         if ($reply === null) {
             $reply = self::keywordFallback($message, $projects);
         }
@@ -445,8 +465,8 @@ class LiveChatController
     private const MAX_TOOL_ROUNDS = 2;
     private const GEMINI_CHAT_TIMEOUT_SECONDS = 12;
 
-    /** @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords) */
-    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
+    /** Shared by both providers, so Gemini and the OpenRouter fallback can never drift into inconsistent behavior. */
+    private static function buildSystemPrompt(array $projects): string
     {
         $catalog = implode("\n", array_map(
             fn($p) => "- {$p['title']} ({$p['tag_names']}): {$p['summary']}",
@@ -488,6 +508,14 @@ class LiveChatController
         if (!empty($persona)) {
             $system .= "\n\nAdditional instructions from Prince: " . $persona;
         }
+
+        return $system;
+    }
+
+    /** @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords) */
+    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
+    {
+        $system = self::buildSystemPrompt($projects);
 
         $contents = [];
         foreach (array_slice($transcript, -12) as $turn) {
@@ -588,6 +616,135 @@ class LiveChatController
         }
 
         return null;
+    }
+
+    /**
+     * Fallback for when Gemini fails entirely (quota, outage, bad response):
+     * runs the same tool-calling conversation against OpenRouter instead,
+     * using OpenAI-style tools/tool_calls. This is a whole separate,
+     * self-contained turn (not a mid-conversation provider swap) — Gemini's
+     * thoughtSignature and OpenAI's tool_call_id have no equivalent in the
+     * other format, so there's no safe way to hand off partway through a
+     * round; either the whole turn runs on one provider or the other.
+     *
+     * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords)
+     */
+    private static function chatWithOpenRouter(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
+    {
+        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects)]];
+        foreach (array_slice($transcript, -12) as $turn) {
+            $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
+        }
+
+        $tools = self::toolDeclarationsOpenAiFormat();
+        $model = Settings::get('openrouter_model') ?: 'openrouter/free';
+        $ready = false;
+
+        for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
+            $payload = ['model' => $model, 'messages' => $messages, 'tools' => $tools];
+            $result = self::callOpenRouterRaw($apiKey, $payload, self::GEMINI_CHAT_TIMEOUT_SECONDS);
+            if ($result === null) {
+                return null;
+            }
+
+            $message = $result['choices'][0]['message'] ?? null;
+            if (!is_array($message)) {
+                error_log('OpenRouter chat: no message in response: ' . json_encode($result));
+                return null;
+            }
+
+            $toolCalls = $message['tool_calls'] ?? null;
+            if (!$toolCalls) {
+                $text = $message['content'] ?? null;
+                return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
+            }
+
+            foreach ($toolCalls as $call) {
+                if (($call['function']['name'] ?? '') === 'mark_ready_for_prototype') {
+                    $ready = true;
+                }
+            }
+
+            // Echo the assistant's own tool-call turn back verbatim (OpenAI
+            // format requires this preceding message to carry the same
+            // tool_calls the model just made), then one "tool" message per
+            // call carrying that tool's result, matched by tool_call_id.
+            $messages[] = $message;
+            foreach ($toolCalls as $call) {
+                $name = $call['function']['name'] ?? '';
+                $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
+                $toolResult = self::runTool($name, $args, $pdo);
+                $messages[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => $call['id'] ?? '',
+                    'content' => json_encode($toolResult),
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    private static function callOpenRouterRaw(string $apiKey, array $payload, int $timeout): ?array
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+                'HTTP-Referer: https://princecaleb.dev',
+                'X-Title: Prince Caleb Portfolio',
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'Live Chat OpenRouter fallback failed: status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 800) : 'n/a'
+            ));
+            return null;
+        }
+
+        return json_decode($response, true);
+    }
+
+    /** Translates the Gemini-format tool declarations to OpenAI-style tools/functions — one source of truth for both. */
+    private static function toolDeclarationsOpenAiFormat(): array
+    {
+        $tools = [];
+        foreach (self::toolDeclarations() as $decl) {
+            $params = $decl['parameters'];
+            $params['type'] = strtolower($params['type']);
+            if (isset($params['properties']) && is_array($params['properties'])) {
+                foreach ($params['properties'] as &$prop) {
+                    if (isset($prop['type'])) {
+                        $prop['type'] = strtolower($prop['type']);
+                    }
+                }
+                unset($prop);
+            }
+            $tools[] = [
+                'type' => 'function',
+                'function' => [
+                    'name' => $decl['name'],
+                    'description' => $decl['description'],
+                    'parameters' => $params,
+                ],
+            ];
+        }
+        return $tools;
     }
 
     /** @return array<int,array<string,mixed>> Gemini function declarations for the chat tools. */
