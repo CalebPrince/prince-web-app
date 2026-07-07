@@ -62,6 +62,21 @@ class AnalyticsController
         $stmt->execute([$since]);
         $topEvents = $stmt->fetchAll();
 
+        $eventCounts = [];
+        foreach ($topEvents as $row) {
+            $eventCounts[$row['path']] = (int) $row['views'];
+        }
+        $funnel = [
+            'calculator_runs' => $eventCounts['/__event/pricing_calculator_run'] ?? 0,
+            'request_prefill' => $eventCounts['/__event/request_prefill_from_pricing'] ?? 0,
+            'request_step_2' => $eventCounts['/__event/request_step_2'] ?? 0,
+            'request_step_3' => $eventCounts['/__event/request_step_3'] ?? 0,
+            'request_submit_success' => $eventCounts['/__event/request_submit_success'] ?? 0,
+            'request_submit_failed' => $eventCounts['/__event/request_submit_failed'] ?? 0,
+            'checkout_opened' => $eventCounts['/__event/pricing_checkout_opened'] ?? 0,
+            'checkout_failed_open' => $eventCounts['/__event/pricing_checkout_failed_open'] ?? 0,
+        ];
+
         $stmt = $pdo->prepare(
             "SELECT date(created_at) AS day, COUNT(*) AS views FROM page_views WHERE created_at >= ?
              GROUP BY day ORDER BY day ASC"
@@ -86,6 +101,7 @@ class AnalyticsController
             'total_views' => $totalViews,
             'top_pages' => $topPages,
             'top_events' => $topEvents,
+            'funnel' => $funnel,
             'by_day' => $byDay,
             'top_referrers' => $topReferrers,
             'days' => $days,

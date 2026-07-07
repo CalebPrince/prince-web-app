@@ -9,6 +9,10 @@ async function loadAnalytics(days = 30) {
   const data = await api.get(`/api/v1/admin/analytics/summary?days=${days}`);
 
   document.getElementById('stat-total-views').textContent = data.total_views.toLocaleString();
+  document.getElementById('funnel-calculator-runs').textContent = Number(data.funnel?.calculator_runs || 0).toLocaleString();
+  document.getElementById('funnel-step3').textContent = Number(data.funnel?.request_step_3 || 0).toLocaleString();
+  document.getElementById('funnel-success').textContent = Number(data.funnel?.request_submit_success || 0).toLocaleString();
+  document.getElementById('funnel-checkout-fails').textContent = Number(data.funnel?.checkout_failed_open || 0).toLocaleString();
 
   const pagesTbody = document.getElementById('top-pages-tbody');
   pagesTbody.innerHTML = data.top_pages.length

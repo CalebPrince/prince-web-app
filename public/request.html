@@ -95,6 +95,8 @@
               </div>
             </div>
 
+            <div id="request-draft-note" class="alert alert-info py-2 small d-none">Saved draft restored.</div>
+
             <div class="request-step" data-step="1">
               <div class="row g-3">
                 <div class="col-md-6">
@@ -267,7 +269,10 @@
   const stepProgress = document.getElementById('request-step-progress');
   const progressWrap = stepProgress.closest('.progress');
   const steps = Array.from(document.querySelectorAll('.request-step'));
+  const draftNote = document.getElementById('request-draft-note');
   const DRAFT_KEY = 'project_request_draft_v1';
+  const MAX_ATTACHMENTS = 5;
+  const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
   const projectTypeFromQuery = {
     website: 'Website',
@@ -321,17 +326,46 @@
   }
 
   function applyDraft(draft) {
+    let restored = false;
     if (draft.name) document.getElementById('name').value = draft.name;
+    restored = restored || !!draft.name;
     if (draft.email) document.getElementById('email').value = draft.email;
+    restored = restored || !!draft.email;
     if (draft.project_type) document.getElementById('project_type').value = draft.project_type;
+    restored = restored || !!draft.project_type;
     if (draft.budget) document.getElementById('budget').value = draft.budget;
+    restored = restored || !!draft.budget;
     if (draft.timeline) document.getElementById('timeline').value = draft.timeline;
+    restored = restored || !!draft.timeline;
     if (draft.message) document.getElementById('message').value = draft.message;
+    restored = restored || !!draft.message;
     if (Array.isArray(draft.features)) {
       document.querySelectorAll('input[name="features"]').forEach(cb => {
         cb.checked = draft.features.includes(cb.value);
       });
+      restored = restored || draft.features.length > 0;
     }
+    if (restored) {
+      draftNote.classList.remove('d-none');
+      setTimeout(() => draftNote.classList.add('d-none'), 4000);
+    }
+  }
+
+  function validateAttachments() {
+    const input = document.getElementById('attachments');
+    const files = input.files;
+    if (!files || files.length === 0) return true;
+
+    if (files.length > MAX_ATTACHMENTS) {
+      throw new Error(`You can upload up to ${MAX_ATTACHMENTS} attachments.`);
+    }
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_BYTES) {
+        throw new Error(`${file.name} exceeds the 10MB limit.`);
+      }
+    }
+    return true;
   }
 
   function applyPricingPrefill() {
@@ -435,6 +469,15 @@
     e.preventDefault();
     alertBox.classList.add('d-none');
     if (!validateCurrentStep()) return;
+
+    try {
+      validateAttachments();
+    } catch (err) {
+      alertBox.className = 'alert alert-danger mt-3';
+      alertBox.textContent = err.message || 'Attachment validation failed.';
+      alertBox.classList.remove('d-none');
+      return;
+    }
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending…';
