@@ -184,9 +184,14 @@
     });
   }
 
-  function renderMenu(nodeId) {
+  // skipPrompt lets a caller that just showed its own equivalent line (e.g.
+  // boot()'s admin-configured intro, which often already asks "what can I
+  // help with") drop straight to buttons instead of restating the question.
+  function renderMenu(nodeId, { skipPrompt = false } = {}) {
     const node = MENU[nodeId];
-    appendMessage("bot", node.prompt);
+    if (!skipPrompt) {
+      appendMessage("bot", node.prompt);
+    }
     const buttons = node.options.map((opt) => ({ label: opt.label, onClick: () => handleOption(opt) }));
     if (node.back) {
       buttons.push({ label: "⬅ Back", variant: "back", onClick: () => renderMenu(node.back) });
@@ -275,7 +280,7 @@
     appendMessage("bot", status.greeting || "Hi there! 👋 Welcome.");
     if (status.online) {
       appendMessage("bot", status.intro || "Describe the website or app you have in mind — I'll ask a couple of questions, then build you a live concept prototype you can react to.");
-      renderMenu("main");
+      renderMenu("main", { skipPrompt: true });
     } else {
       appendMessage("bot", status.offline_message || "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.");
       showMessageForm();
