@@ -28,6 +28,7 @@ $staticPages = [
     ['loc' => '/contact.html', 'priority' => '0.5', 'changefreq' => 'yearly'],
     ['loc' => '/privacy.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
     ['loc' => '/cookies.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
+    ['loc' => '/terms.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
 ];
 
 $projects = $pdo->query(
