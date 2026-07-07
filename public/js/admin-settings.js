@@ -87,6 +87,8 @@ async function saveIntegrations(e) {
   try {
     await api.put("/api/v1/admin/settings", {
       gemini_api_key: document.getElementById("gemini-key").value.trim(),
+      openrouter_api_key: document.getElementById("openrouter-key").value.trim(),
+      openrouter_model: document.getElementById("openrouter-model").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
     });
@@ -221,6 +223,8 @@ async function testAi() {
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
+    document.getElementById("openrouter-key").value = settings.openrouter_api_key || "";
+    document.getElementById("openrouter-model").value = settings.openrouter_model || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;

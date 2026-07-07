@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\AiText;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
@@ -120,8 +121,7 @@ class LiveChatController
         $config = self::config();
         RateLimitMiddleware::enforce('prototype', 5);
 
-        $geminiKey = Settings::get('gemini_api_key');
-        if (empty($geminiKey)) {
+        if (empty(Settings::get('gemini_api_key')) && empty(Settings::get('openrouter_api_key'))) {
             Response::error('Prototype generation is not available right now — please use the contact form.', 503);
         }
 
@@ -132,7 +132,7 @@ class LiveChatController
             Response::error('Tell me a bit about your project first.', 422);
         }
 
-        $html = self::prototypeWithGemini($geminiKey, $transcript);
+        $html = self::prototypeWithGemini($transcript);
         if ($html === null) {
             Response::error('Prototype generation failed — please try again in a moment.', 502);
         }
@@ -815,7 +815,7 @@ class LiveChatController
         return ['results' => $top];
     }
 
-    private static function prototypeWithGemini(string $apiKey, array $transcript): ?string
+    private static function prototypeWithGemini(array $transcript): ?string
     {
         $conversation = implode("\n", array_map(
             fn($t) => ($t['role'] === 'user' ? 'Client' : 'Assistant') . ': ' . $t['text'],
@@ -832,8 +832,7 @@ class LiveChatController
             . "- Add a small fixed badge bottom-left: \"Concept by Prince Caleb — princecaleb.dev\".\n"
             . "Output ONLY the HTML document, no markdown fences, no commentary.";
 
-        $body = json_encode(['contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]]]);
-        $html = self::callGemini($apiKey, $body, 45);
+        $html = AiText::generate($prompt, null, 45);
         if ($html === null) {
             return null;
         }
@@ -844,12 +843,6 @@ class LiveChatController
         $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|\S+)/i', '', $html);
 
         return trim($html) !== '' ? $html : null;
-    }
-
-    private static function callGemini(string $apiKey, string $body, int $timeout): ?string
-    {
-        $decoded = self::callGeminiRaw($apiKey, $body, $timeout);
-        return $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
     }
 
     /** @return array<string,mixed> Decoded Gemini response, or [] on any transport/HTTP failure. */

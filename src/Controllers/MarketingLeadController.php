@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\AiText;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
@@ -143,13 +144,12 @@ class MarketingLeadController
             Response::error('Run the audit first — the pitch is only ever based on real findings.', 422);
         }
 
-        $geminiKey = Settings::get('gemini_api_key');
-        if (empty($geminiKey)) {
-            Response::error('No Gemini API key configured — add one in Admin → Settings.', 503);
+        if (empty(Settings::get('gemini_api_key')) && empty(Settings::get('openrouter_api_key'))) {
+            Response::error('No AI provider configured — add a Gemini or OpenRouter key in Admin → Settings.', 503);
         }
 
         $findings = $lead['audit_findings'] ? (json_decode($lead['audit_findings'], true) ?: []) : ['no_website' => true];
-        $pitch = self::draftPitch($geminiKey, $lead['business_name'], $findings);
+        $pitch = self::draftPitch($lead['business_name'], $findings);
         if ($pitch === null) {
             Response::error('Pitch generation failed — please try again in a moment.', 502);
         }
@@ -283,12 +283,8 @@ class MarketingLeadController
     }
 
     /** @return array{subject:string,body:string}|null */
-    private static function draftPitch(string $apiKey, string $businessName, array $findings): ?array
+    private static function draftPitch(string $businessName, array $findings): ?array
     {
-        if (!function_exists('curl_init')) {
-            return null;
-        }
-
         if (!empty($findings['no_website'])) {
             $context = "This business does not appear to have a website at all. Draft a short, friendly email "
                 . "introducing Prince's web & mobile development services, focused on the opportunity of "
@@ -316,34 +312,9 @@ class MarketingLeadController
             . "Do NOT include a sign-off or any contact details — those are appended separately.\n\n"
             . "Respond as JSON only: {\"subject\": \"...\", \"body\": \"...\"} — no markdown fences, no commentary.";
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
-        $body = json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_TIMEOUT => 20,
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($response === false || $status !== 200) {
-            error_log(sprintf(
-                'Marketing lead pitch generation failed: status=%s body=%s',
-                $status,
-                is_string($response) ? substr($response, 0, 800) : 'n/a'
-            ));
-            return null;
-        }
-
-        $decoded = json_decode($response, true);
-        $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        $text = AiText::generate($prompt, null, 20);
         if ($text === null) {
-            error_log('Marketing lead pitch: no text in Gemini response: ' . substr($response, 0, 800));
+            error_log('Marketing lead pitch: both Gemini and OpenRouter (if configured) failed.');
             return null;
         }
 

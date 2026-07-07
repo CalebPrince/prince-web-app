@@ -207,6 +207,20 @@ storage/
     urgency, and unverifiable financial-harm claims; the sign-off and
     contact channels (WhatsApp/phone from Settings, portfolio URL) are
     appended in PHP from real data, never left for the model to guess at.
+22. **OpenRouter fallback** (`src/Support/AiText.php`): every plain
+    single-shot "prompt in, text out" AI call (pitch drafting, prototype
+    generation, the secondary AI assistant) tries Gemini first and, if that
+    fails for any reason (quota, outage, bad response), retries once
+    against OpenRouter using whichever key/model is set in Admin →
+    Settings → Integrations (defaults to `openrouter/free` if no model is
+    given). Centralized in one class rather than duplicated per controller,
+    since the Gemini call itself has already been the source of several
+    subtle bugs this project had to debug. Live Chat's tool-calling
+    conversation loop (`LiveChatController::chatWithGemini`) is intentionally
+    excluded — Gemini's `functionCall`/`functionResponse` shape and
+    OpenAI-style `tools`/`tool_calls` differ enough that a shared fallback
+    isn't worth the complexity there, so that one stays Gemini-only (with
+    its existing keyword-matching fallback on total failure).
 
 ## Deployment (Namecheap cPanel)
 

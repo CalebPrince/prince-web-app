@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\RateLimitMiddleware;
+use App\Support\AiText;
 use App\Support\Database;
 use App\Support\Response;
-use App\Support\Settings;
 
 /**
  * Secondary, opt-in AI assistant: recommends relevant case studies based on what
  * a visitor describes. Never blocks or degrades the primary site — it's rate
  * limited on its own bucket and falls back to simple keyword matching if no
- * Gemini API key is configured, so the feature is fully optional infrastructure.
+ * AI provider is configured (or if Gemini and OpenRouter both fail), so the
+ * feature is fully optional infrastructure.
  */
 class AiChatController
 {
@@ -39,22 +40,16 @@ class AiChatController
              GROUP BY p.id"
         )->fetchAll();
 
-        $geminiKey = Settings::get('gemini_api_key');
-        if (!empty($geminiKey)) {
-            $reply = self::askGemini($geminiKey, $message, $projects);
-            if ($reply !== null) {
-                Response::json(['reply' => $reply, 'mode' => 'ai']);
-            }
+        $reply = self::askAi($message, $projects);
+        if ($reply !== null) {
+            Response::json(['reply' => $reply, 'mode' => 'ai']);
         }
 
         Response::json(['reply' => self::keywordFallback($message, $projects), 'mode' => 'fallback']);
     }
 
-    private static function askGemini(string $apiKey, string $message, array $projects): ?string
+    private static function askAi(string $message, array $projects): ?string
     {
-        if (!function_exists('curl_init')) {
-            return null;
-        }
         $catalog = implode("\n", array_map(
             fn($p) => "- {$p['title']} ({$p['tag_names']}): {$p['summary']}",
             $projects
@@ -65,27 +60,7 @@ class AiChatController
             . "In 2-3 sentences, recommend the most relevant case study/service and briefly say why. "
             . "If nothing matches well, suggest they use the contact form to discuss their project.";
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
-        $body = json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]);
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_TIMEOUT => 10,
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($response === false || $status !== 200) {
-            return null;
-        }
-
-        $decoded = json_decode($response, true);
-        return $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        return AiText::generate($prompt, null, 10);
     }
 
     private static function keywordFallback(string $message, array $projects): string
