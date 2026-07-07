@@ -146,23 +146,16 @@
     if (inFlight) return;
     inFlight = true;
     msg.classList.add('d-none');
-    const btn = document.getElementById('pay-now-btn');
     btn.disabled = true;
     btn.textContent = 'Preparing secure checkout...';
 
     try {
+      console.log('Pay button clicked, token:', token);
       const prep = await api.post('/api/v1/payments/prepare', { link_token: token }, { timeoutMs: 15000 });
+      console.log('Prepare response:', prep);
       showMessage('info', 'Secure checkout opened. Complete payment to continue.');
 
-      // Validate email before opening Paystack
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(prep.email)) {
-        showMessage('warning', 'Invalid email address.');
-        // Reset UI so user can correct (if they have a way to edit email)
-        inFlight = false;
-        btn.disabled = false;
-        btn.textContent = 'Pay Now';
-        return;
-      }
+      
 
       const handler = PaystackPop.setup({
         key: config.public_key,
