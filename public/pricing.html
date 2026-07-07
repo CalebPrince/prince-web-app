@@ -445,17 +445,19 @@
         amount: prep.amount,
         currency: prep.currency,
         ref: prep.reference,
-        callback: async function (response) {
-          try {
-            const result = await api.post('/api/v1/payments/verify', { reference: response.reference }, { timeoutMs: 15000 });
-            if (result.status === 'success') {
-              setCheckoutBanner('success', 'Payment received. Thank you! I will reach out shortly to kick things off.');
-            } else {
-              setCheckoutBanner('warning', 'Payment completed but confirmation is still pending. If you were charged, I will reconcile it shortly.');
+        callback: function (response) {
+          (async () => {
+            try {
+              const result = await api.post('/api/v1/payments/verify', { reference: response.reference }, { timeoutMs: 15000 });
+              if (result.status === 'success') {
+                setCheckoutBanner('success', 'Payment received. Thank you! I will reach out shortly to kick things off.');
+              } else {
+                setCheckoutBanner('warning', 'Payment completed but confirmation is still pending. If you were charged, I will reconcile it shortly.');
+              }
+            } catch (_) {
+              setCheckoutBanner('warning', 'Payment submitted, but verification is delayed. If you were charged, I will reconcile it shortly.');
             }
-          } catch (_) {
-            setCheckoutBanner('warning', 'Payment submitted, but verification is delayed. If you were charged, I will reconcile it shortly.');
-          }
+          })();
         },
         onClose: function () {
           setCheckoutBanner('info', 'Checkout closed. You can reopen it anytime from the Starter card.');

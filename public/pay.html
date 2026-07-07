@@ -160,25 +160,27 @@
         amount: prep.amount,
         currency: prep.currency,
         ref: prep.reference,
-        callback: async function (response) {
+        callback: function (response) {
           btn.disabled = true;
           btn.textContent = 'Verifying payment...';
-          try {
-            const result = await verifyWithRetry(response.reference);
-            if (result.status === 'success') {
-              container.innerHTML = '<div class="contact-card text-center"><h4 class="mb-2">Payment received</h4><p class="text-muted-custom mb-3">Thank you. I will be in touch shortly.</p><a href="/" class="btn-brand">Back to home</a></div>';
-            } else {
-              showMessage('warning', 'Payment completed but confirmation is still pending. If you were charged, I will reconcile it shortly.');
+          (async () => {
+            try {
+              const result = await verifyWithRetry(response.reference);
+              if (result.status === 'success') {
+                container.innerHTML = '<div class="contact-card text-center"><h4 class="mb-2">Payment received</h4><p class="text-muted-custom mb-3">Thank you. I will be in touch shortly.</p><a href="/" class="btn-brand">Back to home</a></div>';
+              } else {
+                showMessage('warning', 'Payment completed but confirmation is still pending. If you were charged, I will reconcile it shortly.');
+                btn.disabled = false;
+                btn.textContent = 'Try Again';
+                inFlight = false;
+              }
+            } catch (_) {
+              showMessage('warning', 'Verification is delayed. If you were charged, I will reconcile it shortly.');
               btn.disabled = false;
               btn.textContent = 'Try Again';
               inFlight = false;
             }
-          } catch (_) {
-            showMessage('warning', 'Verification is delayed. If you were charged, I will reconcile it shortly.');
-            btn.disabled = false;
-            btn.textContent = 'Try Again';
-            inFlight = false;
-          }
+          })();
         },
         onClose: function () {
           showMessage('info', 'Checkout closed before completion. You can try again anytime.');
