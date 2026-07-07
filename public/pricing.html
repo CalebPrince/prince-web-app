@@ -348,6 +348,11 @@
     return '';
   }
 
+  function currencyDisplay(code) {
+    const normalized = String(code || '').toUpperCase();
+    return normalized === 'USD' ? '$' : normalized;
+  }
+
   function syncCheckoutSubmitState() {
     const ready = checkoutName.value.trim().length > 1
       && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutEmail.value.trim())
@@ -367,8 +372,11 @@
     return;
   }
 
+  const checkoutCurrency = currencyDisplay(paymentConfig.currency);
   document.getElementById('starter-checkout-amount').textContent =
-    `${paymentConfig.currency} ${paymentConfig.tier_1_amount.toLocaleString()}`;
+    checkoutCurrency === '$'
+      ? `${checkoutCurrency}${paymentConfig.tier_1_amount.toLocaleString()}`
+      : `${checkoutCurrency} ${paymentConfig.tier_1_amount.toLocaleString()}`;
   checkoutBtn.classList.remove('d-none');
 
   const modalEl = document.getElementById('checkout-modal');
