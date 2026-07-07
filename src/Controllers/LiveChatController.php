@@ -472,6 +472,11 @@ class LiveChatController
      */
     private const MAX_TOOL_ROUNDS = 2;
     private const GEMINI_CHAT_TIMEOUT_SECONDS = 12;
+    // Free-tier OpenRouter models are often slower than Gemini — reusing
+    // Gemini's 12s budget here was cutting the fallback off mid-response
+    // (curl reports the 200 status from the headers it did receive, but
+    // returns false because the body never finished downloading in time).
+    private const OPENROUTER_CHAT_TIMEOUT_SECONDS = 18;
 
     /** Shared by both providers, so Gemini and the OpenRouter fallback can never drift into inconsistent behavior. */
     private static function buildSystemPrompt(array $projects): string
@@ -650,7 +655,7 @@ class LiveChatController
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
             $payload = ['model' => $model, 'messages' => $messages, 'tools' => $tools];
-            $result = self::callOpenRouterRaw($apiKey, $payload, self::GEMINI_CHAT_TIMEOUT_SECONDS);
+            $result = self::callOpenRouterRaw($apiKey, $payload, self::OPENROUTER_CHAT_TIMEOUT_SECONDS);
             if ($result === null) {
                 return null;
             }
