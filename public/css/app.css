@@ -565,6 +565,27 @@ pre code.hljs {
 .ai-msg.user { text-align: right; color: var(--ink); }
 .ai-msg.bot { color: var(--ink-soft); }
 
+/* Live-chat quick-reply menu */
+.ai-menu { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 1rem 0.75rem; }
+.ai-menu:empty { padding: 0; }
+.ai-menu-btn {
+  border: 1.5px solid var(--line);
+  background: var(--card-bg);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+.ai-menu-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ai-menu-btn:disabled { opacity: 0.5; cursor: default; }
+.ai-menu-btn.ai-menu-back { background: transparent; border-style: dashed; color: var(--ink-soft); }
+#ai-widget-menu-btn { color: var(--ink-soft); font-size: 1.1rem; line-height: 1; background: none; border: none; }
+#ai-widget-menu-btn:hover { color: var(--accent); }
+
 /* Availability pill (admin-managed via Site Content) */
 .availability-pill {
   display: inline-flex;
