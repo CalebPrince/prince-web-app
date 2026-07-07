@@ -8,9 +8,8 @@
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
-<title>Privacy Policy — Prince Caleb</title>
-<meta name="description" content="What information this site collects, why, and how it's used.">
-<link rel="canonical" href="https://princecaleb.dev/privacy.html">
+<title>Search — Prince Caleb</title>
+<meta name="robots" content="noindex, follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
@@ -24,7 +23,6 @@
   <div class="container d-flex align-items-center justify-content-between py-3">
     <a href="/" class="brand-logo text-decoration-none">Prince Caleb<span class="dot">.</span></a>
     <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
-    <a href="/search.html" class="nav-search-btn" aria-label="Search">🔍</a>
     <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation">☰</button>
     <div class="d-none d-md-flex gap-1">
       <a href="/" class="nav-link">Home</a>
@@ -50,7 +48,7 @@
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
     <a href="/blog.html" class="nav-link">Blog</a>
-      <a href="/pricing.html" class="nav-link">Pricing</a>
+    <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
   </div>
@@ -58,44 +56,22 @@
 
 <header class="hero" id="main-content">
   <div class="container">
-    <p class="eyebrow mb-3">Legal</p>
-    <h1 class="display-6 mb-3">Privacy Policy</h1>
-    <p class="fs-5 text-muted-custom mb-0" style="max-width: 60ch;">
-      Plain-language version: I collect the minimum needed to respond to you, I don't sell or advertise with your data, and I'll tell you exactly where it goes below.
-    </p>
+    <p class="eyebrow mb-3">Search</p>
+    <h1 class="display-6 mb-4">Find a project or article.</h1>
+    <form id="search-form" class="d-flex gap-2" style="max-width: 560px;">
+      <input type="search" class="form-control form-control-lg" id="search-input" placeholder="e.g. booking app, SEO, WordPress…" autofocus>
+      <button type="submit" class="btn-brand">Search</button>
+    </form>
   </div>
 </header>
 
 <section class="section">
-  <div class="container" style="max-width: 760px;">
-
-    <h3 class="mb-3">What I collect</h3>
-    <p class="text-muted-custom">When you use the <strong>contact form</strong>, I collect your name, email address, and message — plus, for spam prevention, your IP address and browser user-agent. If you arrived from a specific project page, I also note which one.</p>
-    <p class="text-muted-custom mb-4">When you use the <strong>Live Chat widget</strong>, the conversation itself is stored so I can follow up. If you choose to leave a message, request a concept prototype, or give feedback on one, I also collect your name, email, and — if you provide it — a phone number.</p>
-    <p class="text-muted-custom mb-4">I also log basic, anonymous <strong>page views</strong> — the page path and referring site only. No IP address, no cookies, and no cross-site tracking — this data was never tied to you individually, and I have no way to connect it back to a specific visitor.</p>
-
-    <h3 class="mb-3">How it's used</h3>
-    <p class="text-muted-custom mb-4">Solely to respond to you and to run the Live Chat feature. When Live Chat is online, your messages are sent to Google's Gemini API to generate a reply (see "Third parties" below). Submissions may also trigger an email or Slack notification to me personally, so I see new messages quickly — those notifications aren't visible to anyone else.</p>
-
-    <h3 class="mb-3">Third parties</h3>
-    <p class="text-muted-custom">
-      <strong>Google Gemini API</strong> — powers Live Chat replies and concept prototype generation. Message content you send through the chat is processed by Google under their own privacy terms.<br>
-      <strong>Slack</strong> — used only for my own internal notification of new inquiries, if configured. Visitors never interact with Slack directly.
-    </p>
-    <p class="text-muted-custom mb-4">I don't use this data for advertising, and I don't sell or share it with anyone else.</p>
-
-    <h3 class="mb-3">Cookies &amp; local storage</h3>
-    <p class="text-muted-custom mb-4">This site doesn't use tracking or advertising cookies. See the <a href="/cookies.html">Cookie Policy</a> for exactly what's stored in your browser and why.</p>
-
-    <h3 class="mb-3">Your rights</h3>
-    <p class="text-muted-custom mb-4">You can ask me to show you, correct, or delete any information I hold about you at any time — just get in touch using the details below.</p>
-
-    <h3 class="mb-3">Changes</h3>
-    <p class="text-muted-custom mb-4">If this policy changes in any meaningful way, I'll update the date below and, where reasonable, the change will speak for itself in plain language — no silent rewrites.</p>
-
-    <h3 class="mb-3">Contact</h3>
-    <p class="text-muted-custom mb-0">Questions about this policy or your data: <a href="mailto:hello@princecaleb.dev" data-content-href="social_email">hello@princecaleb.dev</a>.</p>
-    <p class="text-muted-custom small mt-4 mb-0">Last updated: July 2026.</p>
+  <div class="container">
+    <div id="search-status" class="text-muted-custom mb-3"></div>
+    <div id="search-results" class="row g-4"></div>
+    <div id="empty-state" class="text-center text-muted-custom py-5 d-none">
+      No matches yet — try a different word, or <a href="/contact.html">get in touch</a> and ask directly.
+    </div>
   </div>
 </section>
 
@@ -130,6 +106,7 @@
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
+<script src="/js/search.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
 </body>

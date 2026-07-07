@@ -142,6 +142,22 @@ a:hover { color: var(--accent-strong); }
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
+/* Nav search icon (links to /search.html) */
+.nav-search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.4rem 0.6rem;
+  text-decoration: none;
+}
+.nav-search-btn:hover { border-color: var(--accent); color: var(--accent); }
+
 /* Hero */
 .hero {
   background: var(--bg-soft);

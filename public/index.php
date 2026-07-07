@@ -49,6 +49,7 @@ use App\Controllers\NewsletterController;
 use App\Controllers\PaymentController;
 use App\Controllers\ProjectController;
 use App\Controllers\ProjectRequestController;
+use App\Controllers\SearchController;
 use App\Controllers\SettingsController;
 use App\Controllers\TagController;
 use App\Controllers\TestimonialController;
@@ -88,6 +89,7 @@ $router->post('/api/v1/chat/inquiry', [LiveChatController::class, 'inquiry']);
 $router->get('/api/v1/testimonials', [TestimonialController::class, 'publicList']);
 $router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'getByToken']);
 $router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'submit']);
+$router->get('/api/v1/search', [SearchController::class, 'search']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);

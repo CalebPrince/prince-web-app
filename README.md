@@ -174,6 +174,11 @@ storage/
     (`/testimonial.html?token=...`), the client submits a quote + star
     rating through that link, and admin approves it before it appears on
     the public `/testimonials.html` page.
+19. **Site-wide search** (`/search.html`, reachable via the 🔍 icon next to
+    the theme toggle on every public page) does simple keyword scoring
+    across published projects and blog posts server-side
+    (`/api/v1/search?q=`) — no external search service, consistent with
+    the rest of the app's zero-dependency approach.
 
 ## Deployment (Namecheap cPanel)
 
