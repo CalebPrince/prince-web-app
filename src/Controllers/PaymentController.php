@@ -22,6 +22,7 @@ use App\Support\Settings;
 class PaymentController
 {
     private const API_BASE = 'https://api.paystack.co';
+    private const TOS_VERSION = '2026-07-07';
 
     /** GET /api/v1/payments/config — public: what the checkout UI needs to render */
     public static function config(): void
@@ -52,7 +53,7 @@ class PaymentController
         Response::json($link);
     }
 
-    /** POST /api/v1/payments/prepare — public, rate-limited. Body: {tier} or {link_token} */
+    /** POST /api/v1/payments/prepare — public, rate-limited. Body: {tier,name,email,tos_accepted} or {link_token} */
     public static function prepare(): void
     {
         require_once dirname(__DIR__, 2) . '/config/config.php';
@@ -77,6 +78,9 @@ class PaymentController
                 'description' => $link['description'],
                 'source' => 'payment_link',
                 'payment_link_id' => (int) $link['id'],
+                'tos_accepted' => null,
+                'tos_accepted_at' => null,
+                'tos_version' => null,
             ]);
 
             Response::json([
@@ -92,8 +96,12 @@ class PaymentController
         if (($data['tier'] ?? '') === 'starter') {
             $email = trim((string) ($data['email'] ?? ''));
             $name = trim((string) ($data['name'] ?? ''));
+            $tosAccepted = !empty($data['tos_accepted']);
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 Response::error('A valid email address is required.', 422);
+            }
+            if (!$tosAccepted) {
+                Response::error('You must accept the Terms of Service to continue.', 422);
             }
 
             $amountSetting = Settings::get('pricing_tier_1_amount');
@@ -111,6 +119,9 @@ class PaymentController
                 'description' => 'Starter tier — project deposit',
                 'source' => 'tier_checkout',
                 'payment_link_id' => null,
+                'tos_accepted' => 1,
+                'tos_accepted_at' => gmdate('Y-m-d H:i:s'),
+                'tos_version' => self::TOS_VERSION,
             ]);
 
             Response::json([
@@ -232,8 +243,8 @@ class PaymentController
     {
         $reference = 'PSK_' . bin2hex(random_bytes(12));
         $pdo->prepare(
-            'INSERT INTO payments (reference, email, customer_name, amount, currency, description, source, payment_link_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO payments (reference, email, customer_name, amount, currency, description, source, payment_link_id, tos_accepted, tos_accepted_at, tos_version)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )->execute([
             $reference,
             $fields['email'],
@@ -243,6 +254,9 @@ class PaymentController
             $fields['description'],
             $fields['source'],
             $fields['payment_link_id'],
+            $fields['tos_accepted'] ?? null,
+            $fields['tos_accepted_at'] ?? null,
+            $fields['tos_version'] ?? null,
         ]);
 
         return $reference;

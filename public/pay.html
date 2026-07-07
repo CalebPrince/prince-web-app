@@ -46,8 +46,38 @@
   const container = document.getElementById('pay-content');
   const token = new URLSearchParams(window.location.search).get('token');
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function renderState(title, description) {
+    container.innerHTML = `
+      <div class="contact-card text-center">
+        <h4 class="mb-2">${escapeHtml(title)}</h4>
+        <p class="text-muted-custom mb-0">${escapeHtml(description)}</p>
+      </div>
+    `;
+  }
+
+  async function verifyWithRetry(reference) {
+    let lastError;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        return await api.post('/api/v1/payments/verify', { reference }, { timeoutMs: 15000 });
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError;
+  }
+
   if (!token) {
-    container.innerHTML = '<div class="text-center py-5"><h4>Missing payment link</h4></div>';
+    renderState('Missing payment link', 'This payment URL is incomplete.');
     return;
   }
 
@@ -58,44 +88,62 @@
       api.get('/api/v1/payments/config'),
     ]);
   } catch (e) {
-    container.innerHTML = '<div class="text-center py-5"><h4>Payment link not found</h4><p class="text-muted-custom">This link may have expired or the token is incorrect.</p></div>';
+    renderState('Payment link not found', 'This link may have expired or the token is incorrect.');
     return;
   }
 
   if (link.status === 'paid') {
-    container.innerHTML = `
-      <div class="text-center py-5">
-        <h4>✓ Already paid</h4>
-        <p class="text-muted-custom">This invoice has already been settled. Thank you!</p>
-      </div>`;
+    renderState('Already paid', 'This invoice has already been settled. Thank you.');
     return;
   }
 
   if (!config.public_key) {
-    container.innerHTML = '<div class="text-center py-5"><h4>Payments are temporarily unavailable</h4></div>';
+    renderState('Payments are temporarily unavailable', 'Please try again later or contact me directly.');
     return;
   }
 
+  const safeDescription = escapeHtml(link.description || 'Payment');
+  const safeClientName = escapeHtml(link.client_name || 'Client');
+  const formattedAmount = `${escapeHtml(link.currency)} ${(link.amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+
   container.innerHTML = `
     <div class="contact-card">
-      <h4 class="mb-1">${link.description}</h4>
-      <p class="text-muted-custom mb-3">For ${link.client_name}</p>
-      <div class="pricing-price mb-4">${link.currency} ${(link.amount / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+      <h4 class="mb-1">${safeDescription}</h4>
+      <p class="text-muted-custom mb-2">For ${safeClientName}</p>
+      <div class="pricing-price mb-3">${formattedAmount}</div>
+      <p class="small text-muted-custom mb-3">You will be redirected to Paystack's secure checkout.</p>
       <button type="button" class="btn-brand w-100" id="pay-now-btn">Pay Now</button>
       <div id="pay-msg" class="alert py-2 small d-none mt-3"></div>
     </div>
   `;
 
-  document.getElementById('pay-now-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('pay-now-btn');
+  const msg = document.getElementById('pay-msg');
+
+  function showMessage(type, text) {
+    const classMap = {
+      info: 'alert alert-info py-2 small mt-3',
+      success: 'alert alert-success py-2 small mt-3',
+      warning: 'alert alert-warning py-2 small mt-3',
+      danger: 'alert alert-danger py-2 small mt-3',
+    };
+    msg.className = classMap[type] || classMap.info;
+    msg.textContent = text;
+    msg.classList.remove('d-none');
+  }
+
+  let inFlight = false;
+  btn.addEventListener('click', async () => {
+    if (inFlight) return;
+    inFlight = true;
+    msg.classList.add('d-none');
     const btn = document.getElementById('pay-now-btn');
-    const msg = document.getElementById('pay-msg');
     btn.disabled = true;
-    btn.textContent = 'Preparing…';
+    btn.textContent = 'Preparing secure checkout...';
 
     try {
-      const prep = await api.post('/api/v1/payments/prepare', { link_token: token });
-      btn.textContent = 'Pay Now';
-      btn.disabled = false;
+      const prep = await api.post('/api/v1/payments/prepare', { link_token: token }, { timeoutMs: 15000 });
+      showMessage('info', 'Secure checkout opened. Complete payment to continue.');
 
       const handler = PaystackPop.setup({
         key: config.public_key,
@@ -103,26 +151,39 @@
         amount: prep.amount,
         currency: prep.currency,
         ref: prep.reference,
-        callback: function (response) {
-          api.post('/api/v1/payments/verify', { reference: response.reference }).then((result) => {
+        callback: async function (response) {
+          btn.disabled = true;
+          btn.textContent = 'Verifying payment...';
+          try {
+            const result = await verifyWithRetry(response.reference);
             if (result.status === 'success') {
-              container.innerHTML = '<div class="text-center py-5"><h4>✓ Payment received</h4><p class="text-muted-custom">Thank you — I\'ll be in touch shortly.</p></div>';
+              container.innerHTML = '<div class="contact-card text-center"><h4 class="mb-2">Payment received</h4><p class="text-muted-custom mb-3">Thank you. I will be in touch shortly.</p><a href="/" class="btn-brand">Back to home</a></div>';
             } else {
-              msg.className = 'alert alert-danger py-2 small mt-3';
-              msg.textContent = 'Payment could not be confirmed. If you were charged, please contact me directly.';
-              msg.classList.remove('d-none');
+              showMessage('warning', 'Payment completed but confirmation is still pending. If you were charged, I will reconcile it shortly.');
+              btn.disabled = false;
+              btn.textContent = 'Try Again';
+              inFlight = false;
             }
-          });
+          } catch (_) {
+            showMessage('warning', 'Verification is delayed. If you were charged, I will reconcile it shortly.');
+            btn.disabled = false;
+            btn.textContent = 'Try Again';
+            inFlight = false;
+          }
         },
-        onClose: function () {},
+        onClose: function () {
+          showMessage('info', 'Checkout closed before completion. You can try again anytime.');
+          btn.disabled = false;
+          btn.textContent = 'Pay Now';
+          inFlight = false;
+        },
       });
       handler.openIframe();
     } catch (err) {
-      msg.className = 'alert alert-danger py-2 small mt-3';
-      msg.textContent = err.message || 'Something went wrong.';
-      msg.classList.remove('d-none');
+      showMessage('danger', err.message || 'Something went wrong while preparing checkout.');
       btn.disabled = false;
       btn.textContent = 'Pay Now';
+      inFlight = false;
     }
   });
 })();

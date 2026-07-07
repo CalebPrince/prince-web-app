@@ -140,6 +140,9 @@ CREATE TABLE IF NOT EXISTS payments (
   description TEXT,
   source TEXT NOT NULL DEFAULT 'tier_checkout' CHECK (source IN ('tier_checkout', 'payment_link')),
   payment_link_id INTEGER NULL REFERENCES payment_links(id) ON DELETE SET NULL,
+  tos_accepted INTEGER,
+  tos_accepted_at TEXT,
+  tos_version TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'success', 'failed')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

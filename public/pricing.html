@@ -96,6 +96,7 @@
             <li>~2 weeks typical delivery</li>
           </ul>
           <button type="button" id="starter-checkout-btn" class="btn-brand w-100 text-center mb-2 d-none">Pay deposit to start — <span id="starter-checkout-amount"></span></button>
+          <div id="starter-checkout-note" class="d-none"></div>
           <a href="/request.html" class="btn-brand-outline w-100 text-center">Get a quote</a>
         </div>
       </div>
@@ -257,8 +258,14 @@
             <label class="form-label">Email</label>
             <input type="email" class="form-control" id="checkout-email" required maxlength="255" placeholder="you@example.com">
           </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="checkout-tos" required>
+            <label class="form-check-label small" for="checkout-tos">
+              I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and understand this is a non-refundable project deposit unless otherwise agreed in writing.
+            </label>
+          </div>
           <div id="checkout-msg" class="alert py-2 small d-none"></div>
-          <button type="submit" class="btn-brand w-100" id="checkout-submit-btn">Continue to payment</button>
+          <button type="submit" class="btn-brand w-100" id="checkout-submit-btn" disabled>Continue to payment</button>
         </form>
       </div>
     </div>
@@ -274,37 +281,152 @@
 <script src="/js/ai-boot.js"></script>
 <script>
 (async function () {
+  const checkoutBtn = document.getElementById('starter-checkout-btn');
+  const checkoutNote = document.getElementById('starter-checkout-note');
+  const checkoutForm = document.getElementById('checkout-form');
+  const checkoutName = document.getElementById('checkout-name');
+  const checkoutEmail = document.getElementById('checkout-email');
+  const checkoutTos = document.getElementById('checkout-tos');
+  const checkoutMsg = document.getElementById('checkout-msg');
+  const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+  const CHECKOUT_DRAFT_KEY = 'starter_checkout_draft_v1';
+
+  function setCheckoutBanner(type, text) {
+    if (!checkoutNote) return;
+    if (!text) {
+      checkoutNote.className = 'd-none';
+      checkoutNote.textContent = '';
+      return;
+    }
+    const cls = {
+      info: 'alert alert-info py-2 small mt-2',
+      success: 'alert alert-success py-2 small mt-2',
+      warning: 'alert alert-warning py-2 small mt-2',
+      danger: 'alert alert-danger py-2 small mt-2',
+    };
+    checkoutNote.className = cls[type] || cls.info;
+    checkoutNote.textContent = text;
+  }
+
+  function setCheckoutMessage(type, text) {
+    if (!text) {
+      checkoutMsg.className = 'alert py-2 small d-none';
+      checkoutMsg.textContent = '';
+      return;
+    }
+    const cls = {
+      info: 'alert alert-info py-2 small',
+      success: 'alert alert-success py-2 small',
+      warning: 'alert alert-warning py-2 small',
+      danger: 'alert alert-danger py-2 small',
+    };
+    checkoutMsg.className = cls[type] || cls.info;
+    checkoutMsg.textContent = text;
+    checkoutMsg.classList.remove('d-none');
+  }
+
+  function readDraft() {
+    try {
+      return JSON.parse(localStorage.getItem(CHECKOUT_DRAFT_KEY) || '{}');
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveDraft() {
+    localStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify({
+      name: checkoutName.value.trim(),
+      email: checkoutEmail.value.trim(),
+      tosAccepted: !!checkoutTos.checked,
+    }));
+  }
+
+  function validateCheckout(name, email) {
+    if (name.length < 2) return 'Please enter your full name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please enter a valid email address.';
+    if (!checkoutTos.checked) return 'Please accept the Terms of Service to continue.';
+    return '';
+  }
+
+  function syncCheckoutSubmitState() {
+    const ready = checkoutName.value.trim().length > 1
+      && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutEmail.value.trim())
+      && checkoutTos.checked;
+    checkoutSubmitBtn.disabled = !ready || checkoutInFlight;
+  }
+
   let paymentConfig = null;
   try {
     paymentConfig = await api.get('/api/v1/payments/config');
-  } catch (_) {
+  } catch (err) {
+    setCheckoutBanner('warning', err.message || 'Could not load payment settings right now.');
     return;
   }
-  if (!paymentConfig.public_key || !paymentConfig.tier_1_amount) return;
+  if (!paymentConfig.public_key || !paymentConfig.tier_1_amount) {
+    setCheckoutBanner('warning', 'Online deposit checkout is temporarily unavailable.');
+    return;
+  }
 
   document.getElementById('starter-checkout-amount').textContent =
     `${paymentConfig.currency} ${paymentConfig.tier_1_amount.toLocaleString()}`;
-  const checkoutBtn = document.getElementById('starter-checkout-btn');
   checkoutBtn.classList.remove('d-none');
 
   const modalEl = document.getElementById('checkout-modal');
   const modal = new bootstrap.Modal(modalEl);
-  checkoutBtn.addEventListener('click', () => modal.show());
 
-  document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+  const draft = readDraft();
+  if (draft.name) checkoutName.value = draft.name;
+  if (draft.email) checkoutEmail.value = draft.email;
+  if (draft.tosAccepted) checkoutTos.checked = true;
+
+  checkoutBtn.addEventListener('click', () => {
+    setCheckoutMessage();
+    modal.show();
+  });
+
+  modalEl.addEventListener('shown.bs.modal', () => {
+    const firstEmpty = !checkoutName.value.trim() ? checkoutName : (!checkoutEmail.value.trim() ? checkoutEmail : null);
+    (firstEmpty || checkoutName).focus();
+  });
+
+  checkoutName.addEventListener('blur', saveDraft);
+  checkoutEmail.addEventListener('blur', saveDraft);
+  checkoutTos.addEventListener('change', saveDraft);
+
+  checkoutName.addEventListener('input', syncCheckoutSubmitState);
+  checkoutEmail.addEventListener('input', syncCheckoutSubmitState);
+  checkoutTos.addEventListener('change', syncCheckoutSubmitState);
+
+  let checkoutInFlight = false;
+  syncCheckoutSubmitState();
+  checkoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = document.getElementById('checkout-msg');
-    const submitBtn = document.getElementById('checkout-submit-btn');
-    msg.classList.add('d-none');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Preparing…';
+    if (checkoutInFlight) return;
+
+    const name = checkoutName.value.trim();
+    const email = checkoutEmail.value.trim();
+    const validationError = validateCheckout(name, email);
+    if (validationError) {
+      setCheckoutMessage('warning', validationError);
+      return;
+    }
+
+    checkoutInFlight = true;
+    setCheckoutMessage('info', 'Preparing your secure checkout...');
+    syncCheckoutSubmitState();
+    checkoutSubmitBtn.textContent = 'Preparing secure checkout...';
 
     try {
       const prep = await api.post('/api/v1/payments/prepare', {
         tier: 'starter',
-        name: document.getElementById('checkout-name').value,
-        email: document.getElementById('checkout-email').value,
-      });
+        name,
+        email,
+        tos_accepted: true,
+      }, { timeoutMs: 15000 });
+
+      saveDraft();
+      setCheckoutMessage();
+      setCheckoutBanner('info', 'Secure checkout opened. Complete payment to confirm your starter deposit.');
 
       modal.hide();
       const handler = PaystackPop.setup({
@@ -313,23 +435,29 @@
         amount: prep.amount,
         currency: prep.currency,
         ref: prep.reference,
-        callback: function (response) {
-          api.post('/api/v1/payments/verify', { reference: response.reference }).then((result) => {
-            alert(result.status === 'success'
-              ? "Payment received — thanks! I'll be in touch shortly to kick things off."
-              : 'Payment could not be confirmed. If you were charged, contact me and I\'ll sort it out.');
-          });
+        callback: async function (response) {
+          try {
+            const result = await api.post('/api/v1/payments/verify', { reference: response.reference }, { timeoutMs: 15000 });
+            if (result.status === 'success') {
+              setCheckoutBanner('success', 'Payment received. Thank you! I will reach out shortly to kick things off.');
+            } else {
+              setCheckoutBanner('warning', 'Payment completed but confirmation is still pending. If you were charged, I will reconcile it shortly.');
+            }
+          } catch (_) {
+            setCheckoutBanner('warning', 'Payment submitted, but verification is delayed. If you were charged, I will reconcile it shortly.');
+          }
         },
-        onClose: function () {},
+        onClose: function () {
+          setCheckoutBanner('info', 'Checkout closed. You can reopen it anytime from the Starter card.');
+        },
       });
       handler.openIframe();
     } catch (err) {
-      msg.className = 'alert alert-danger py-2 small';
-      msg.textContent = err.message || 'Something went wrong.';
-      msg.classList.remove('d-none');
+      setCheckoutMessage('danger', err.message || 'Something went wrong while preparing checkout.');
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Continue to payment';
+      checkoutInFlight = false;
+      checkoutSubmitBtn.textContent = 'Continue to payment';
+      syncCheckoutSubmitState();
     }
   });
 })();
@@ -359,6 +487,7 @@ document.getElementById('calc-btn').addEventListener('click', () => {
   const timeline = document.getElementById('calc-timeline').value;
   const [baseLow, baseHigh] = CALC_BASE[type];
   const multiplier = CALC_TIMELINE_MULTIPLIER[timeline];
+  const selectedFeatures = [];
 
   let low = baseLow;
   let high = baseHigh;
@@ -366,12 +495,24 @@ document.getElementById('calc-btn').addEventListener('click', () => {
     const [featLow, featHigh] = CALC_FEATURES[cb.value];
     low += featLow;
     high += featHigh;
+    selectedFeatures.push(cb.value);
   });
   low = Math.round((low * multiplier) / 50) * 50;
   high = Math.round((high * multiplier) / 50) * 50;
 
   document.getElementById('calc-result-range').textContent = `$${low.toLocaleString()} – $${high.toLocaleString()}`;
   document.getElementById('calc-result').classList.remove('d-none');
+
+  const requestLink = document.getElementById('calc-request-link');
+  const params = new URLSearchParams({
+    source: 'pricing-calculator',
+    type,
+    timeline,
+    estimate_low: String(low),
+    estimate_high: String(high),
+  });
+  if (selectedFeatures.length) params.set('features', selectedFeatures.join(','));
+  requestLink.href = `/request.html?${params.toString()}`;
 });
 </script>
 <script src="/js/analytics.js"></script>

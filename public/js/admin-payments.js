@@ -10,6 +10,19 @@ function formatAmount(subunits, currency) {
   return `${currency} ${(subunits / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
+function renderTermsCell(payment) {
+  if (payment.source !== 'tier_checkout') {
+    return '<span class="small text-muted-custom">N/A</span>';
+  }
+  if (!payment.tos_accepted) {
+    return '<span class="status-pill flagged">Missing</span>';
+  }
+
+  const acceptedAt = payment.tos_accepted_at ? new Date(payment.tos_accepted_at).toLocaleString() : 'Recorded';
+  const version = payment.tos_version ? escapeHtml(payment.tos_version) : 'unknown';
+  return `<span class="status-pill published">Accepted</span><br><span class="small text-muted-custom">v${version} · ${escapeHtml(acceptedAt)}</span>`;
+}
+
 function renderPaymentStats(rows) {
   const successful = rows.filter(p => p.status === 'success');
   const revenueByCurrency = {};
@@ -45,6 +58,7 @@ async function loadPayments() {
       <td>${escapeHtml(p.customer_name || '—')}<br><span class="small text-muted-custom">${escapeHtml(p.email)}</span></td>
       <td>${formatAmount(p.amount, p.currency)}</td>
       <td class="small text-muted-custom">${p.source === 'payment_link' ? 'Payment link' : 'Tier checkout'}</td>
+      <td>${renderTermsCell(p)}</td>
       <td><span class="status-pill ${STATUS_PILL_CLASS[p.status] || 'read'}">${p.status}</span></td>
       <td class="small text-muted-custom">${new Date(p.created_at).toLocaleString()}</td>
       <td class="text-end pe-3">
