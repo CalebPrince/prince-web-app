@@ -49,11 +49,18 @@ class AnalyticsController
         $totalViews = (int) $stmt->fetch()['c'];
 
         $stmt = $pdo->prepare(
-            'SELECT path, COUNT(*) AS views FROM page_views WHERE created_at >= ?
-             GROUP BY path ORDER BY views DESC LIMIT 10'
+            "SELECT path, COUNT(*) AS views FROM page_views WHERE created_at >= ? AND path NOT LIKE '/__event/%'
+               GROUP BY path ORDER BY views DESC LIMIT 10"
         );
         $stmt->execute([$since]);
         $topPages = $stmt->fetchAll();
+
+        $stmt = $pdo->prepare(
+            "SELECT path, COUNT(*) AS views FROM page_views WHERE created_at >= ? AND path LIKE '/__event/%'
+             GROUP BY path ORDER BY views DESC LIMIT 15"
+        );
+        $stmt->execute([$since]);
+        $topEvents = $stmt->fetchAll();
 
         $stmt = $pdo->prepare(
             "SELECT date(created_at) AS day, COUNT(*) AS views FROM page_views WHERE created_at >= ?
@@ -78,6 +85,7 @@ class AnalyticsController
         Response::json([
             'total_views' => $totalViews,
             'top_pages' => $topPages,
+            'top_events' => $topEvents,
             'by_day' => $byDay,
             'top_referrers' => $topReferrers,
             'days' => $days,

@@ -1,5 +1,10 @@
 let viewsChart = null;
 
+function humanizeEventPath(path) {
+  const slug = String(path || '').replace('/__event/', '');
+  return slug.replace(/[_-]+/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
 async function loadAnalytics(days = 30) {
   const data = await api.get(`/api/v1/admin/analytics/summary?days=${days}`);
 
@@ -14,6 +19,16 @@ async function loadAnalytics(days = 30) {
         </tr>
       `).join('')
     : '<tr><td colspan="2" class="text-center text-muted-custom py-3">No data yet.</td></tr>';
+
+  const eventsTbody = document.getElementById('top-events-tbody');
+  eventsTbody.innerHTML = (data.top_events || []).length
+    ? data.top_events.map(e => `
+        <tr>
+          <td class="ps-3">${escapeHtml(humanizeEventPath(e.path))}</td>
+          <td class="text-end pe-3">${Number(e.views).toLocaleString()}</td>
+        </tr>
+      `).join('')
+    : '<tr><td colspan="2" class="text-center text-muted-custom py-3">No event data yet.</td></tr>';
 
   const referrersTbody = document.getElementById('top-referrers-tbody');
   referrersTbody.innerHTML = data.top_referrers.length
