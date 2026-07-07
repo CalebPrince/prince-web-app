@@ -74,7 +74,18 @@ class AiText
         }
 
         $decoded = json_decode($response, true);
-        return $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        if ($text === null) {
+            // A 200 with no usable text (safety block, empty candidates,
+            // truncation) is otherwise indistinguishable from "model declined"
+            // with no way to diagnose it after the fact.
+            error_log(sprintf(
+                'AiText: Gemini returned 200 but no usable text: finishReason=%s promptFeedback=%s',
+                $decoded['candidates'][0]['finishReason'] ?? 'none',
+                json_encode($decoded['promptFeedback'] ?? null)
+            ));
+        }
+        return $text;
     }
 
     private static function callOpenRouter(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
@@ -119,6 +130,14 @@ class AiText
         }
 
         $decoded = json_decode($response, true);
-        return $decoded['choices'][0]['message']['content'] ?? null;
+        $text = $decoded['choices'][0]['message']['content'] ?? null;
+        if ($text === null) {
+            error_log(sprintf(
+                'AiText: OpenRouter returned 200 but no usable text: finishReason=%s body=%s',
+                $decoded['choices'][0]['finish_reason'] ?? 'none',
+                substr($response, 0, 500)
+            ));
+        }
+        return $text;
     }
 }

@@ -508,11 +508,15 @@ class LiveChatController
             . "reply toward \"what would you like to build?\" unless that's genuinely where things are headed.\n\n"
             . "When a visitor does describe something they want built, get to know it through natural "
             . "back-and-forth: ask about it one question at a time, following their lead rather than a fixed "
-            . "script — what it's for, who it's for, what actually matters to them, style preferences, "
-            . "whatever comes up naturally. Some visitors want to chat a while before they're ready to see "
-            . "anything; others are ready sooner — read the room. Never mention a \"Build my prototype\" "
-            . "button yourself — whether it's shown is handled separately. Keep replies short and "
-            . "conversational (1-4 sentences), never a bulleted interview.\n\n"
+            . "script. Don't stop at the bare basics (what it's for, who it's for) — once those are covered, "
+            . "keep going and dig into how it should actually work: the core workflow step by step, how the "
+            . "different roles interact, what happens to data as it moves through, and any specifics they "
+            . "mention in passing (priority/ordering, notifications, timing) that are worth a follow-up "
+            . "question rather than leaving vague. Some visitors want to chat a while before they're ready to "
+            . "see anything; others are ready sooner — read the room, but when in doubt ask one more clarifying "
+            . "question rather than calling it done early. Never mention a \"Build my prototype\" button "
+            . "yourself — whether it's shown is handled separately. Keep replies short and conversational "
+            . "(1-4 sentences), never a bulleted interview.\n\n"
             . "You have tools available, and using them well is part of being helpful:\n"
             . "- get_site_info: use it for general questions about Prince's background, services, tech stack, "
             . "experience, location, or contact/social links, so you answer with real facts instead of guessing.\n"
@@ -522,11 +526,12 @@ class LiveChatController
             . "- check_availability / book_appointment: use these when they want to talk it through live or "
             . "book a call. Always read the exact date, time, and timezone back to them and get an explicit "
             . "yes before calling book_appointment — never book without confirmation.\n"
-            . "- mark_ready_for_prototype: call this once — and only once — you have real, concrete detail "
-            . "about an actual project they want built (what it's for, who it's for, and roughly what pages "
-            . "or features matter). Never call it for greetings, small talk, general questions, or before "
-            . "they've described a specific project. This is what unlocks the prototype button for them, so "
-            . "call it as soon as that bar is genuinely met, not before and not after.\n\n"
+            . "- mark_ready_for_prototype: call this once — and only once — the conversation has covered more "
+            . "than just the basics: what it's for, who it's for, AND at least the core workflow (the actual "
+            . "steps a user or role goes through) or a couple of specific features/details they care about — "
+            . "not just a one-line pitch. Never call it for greetings, small talk, general questions, or "
+            . "before a real back-and-forth has happened. This is what unlocks the prototype button for them, "
+            . "so if you're unsure whether you have enough, ask one more question instead of calling it.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
         $persona = Settings::get('chat_persona');
@@ -542,8 +547,13 @@ class LiveChatController
     {
         $system = self::buildSystemPrompt($projects);
 
+        // The full transcript (already capped at MAX_TRANSCRIPT_MESSAGES) is
+        // sent, not a truncated tail — messages here are short and providers'
+        // context windows are enormous, so there's no real cost reason to
+        // trim, and a visitor's early project description is exactly what
+        // the model needs to still see turns later in a longer conversation.
         $contents = [];
-        foreach (array_slice($transcript, -12) as $turn) {
+        foreach ($transcript as $turn) {
             $contents[] = [
                 'role' => $turn['role'] === 'user' ? 'user' : 'model',
                 'parts' => [['text' => $turn['text']]],
@@ -657,7 +667,8 @@ class LiveChatController
     private static function chatWithOpenRouter(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
     {
         $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects)]];
-        foreach (array_slice($transcript, -12) as $turn) {
+        // See chatWithGemini — full transcript, not a truncated tail.
+        foreach ($transcript as $turn) {
             $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
         }
 
@@ -792,11 +803,12 @@ class LiveChatController
             ],
             [
                 'name' => 'mark_ready_for_prototype',
-                'description' => 'Call once you have real, concrete detail about an actual project the '
-                    . 'visitor wants built — what it is, who it is for, and roughly what pages or features '
-                    . 'matter. This unlocks the "Build my prototype" button for them. Never call this for '
-                    . 'greetings, small talk, or general questions — only once a specific project has '
-                    . 'genuinely been described.',
+                'description' => 'Call once the conversation has gone beyond the basics (what it is, who '
+                    . 'it is for) into the actual workflow — the steps a user or role goes through, or a '
+                    . 'couple of specific features/details they care about. A one-line project pitch alone '
+                    . 'is not enough. This unlocks the "Build my prototype" button for them. Never call this '
+                    . 'for greetings, small talk, general questions, or before a real back-and-forth has '
+                    . 'happened — if unsure, ask one more question first.',
                 'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
             ],
             [
