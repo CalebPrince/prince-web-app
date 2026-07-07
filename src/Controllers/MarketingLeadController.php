@@ -305,10 +305,15 @@ class MarketingLeadController
                 . "generic note introducing Prince's services instead.";
         }
 
-        $prompt = "You are drafting a short, honest cold outreach email from Prince Caleb, a web & mobile "
-            . "developer, to a business called \"{$businessName}\" about their website.\n\n{$context}\n\n"
-            . "Rules: 3-5 short sentences, friendly and specific, not salesy or hyperbolic, no false urgency, "
-            . "ends with a low-pressure invitation to reply if interested. Sign off as Prince Caleb.\n\n"
+        $prompt = "You are drafting the BODY of a short, honest cold outreach email from Prince Caleb, a web & "
+            . "mobile developer, to a business called \"{$businessName}\".\n\n{$context}\n\n"
+            . "Structure: 1-2 sentences tied to what's actually true above, then a short \"here's how I can "
+            . "help\" offer mentioning relevant services in general terms (custom websites, mobile apps, "
+            . "booking/ordering systems, automation) WITHOUT claiming specific problems that weren't verified "
+            . "above, then a low-pressure closing line inviting a reply.\n\n"
+            . "Rules: 4-6 short sentences total, friendly and specific, never salesy or hyperbolic, no invented "
+            . "statistics, no false urgency, no claims of financial harm or lost business you can't verify. "
+            . "Do NOT include a sign-off or any contact details — those are appended separately.\n\n"
             . "Respond as JSON only: {\"subject\": \"...\", \"body\": \"...\"} — no markdown fences, no commentary.";
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
@@ -342,6 +347,30 @@ class MarketingLeadController
             return null;
         }
 
-        return ['subject' => (string) $parsed['subject'], 'body' => (string) $parsed['body']];
+        return [
+            'subject' => (string) $parsed['subject'],
+            'body' => (string) $parsed['body'] . "\n\n" . self::signatureBlock(),
+        ];
+    }
+
+    /**
+     * Real contact details pulled from the same Settings the rest of the
+     * site uses — never AI-generated, so a pitch can never invent or
+     * mangle a phone number/link. Omits anything not actually configured.
+     */
+    private static function signatureBlock(): string
+    {
+        $lines = ['— Prince Caleb', 'Web & Mobile App Developer', '🌐 https://princecaleb.dev'];
+
+        $whatsapp = Settings::get('social_whatsapp');
+        if (!empty($whatsapp)) {
+            $lines[] = "💬 WhatsApp: {$whatsapp}";
+        }
+        $phone = Settings::get('contact_phone');
+        if (!empty($phone)) {
+            $lines[] = "📞 {$phone}";
+        }
+
+        return implode("\n", $lines);
     }
 }

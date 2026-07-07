@@ -202,7 +202,11 @@ storage/
     fetch has an SSRF guard (`MarketingLeadController::isSafeUrl`) blocking
     loopback/private/reserved IP targets. `website_url` is optional — a
     business with no site yet is a valid lead too, and skips straight to a
-    generic (not fabricated-findings) pitch instead of an audit.
+    generic (not fabricated-findings) pitch instead of an audit. The
+    generated body is instructed to avoid invented statistics, false
+    urgency, and unverifiable financial-harm claims; the sign-off and
+    contact channels (WhatsApp/phone from Settings, portfolio URL) are
+    appended in PHP from real data, never left for the model to guess at.
 
 ## Deployment (Namecheap cPanel)
 
