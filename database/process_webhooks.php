@@ -19,7 +19,7 @@ $slackUrl = Settings::get('slack_webhook_url');
 $notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');
 
 $pending = $pdo->query(
-    "SELECT wq.id AS queue_id, wq.slack_sent, wq.email_sent, i.* FROM webhook_queue wq
+    "SELECT wq.id AS queue_id, wq.slack_sent, wq.email_sent, wq.attempts, i.* FROM webhook_queue wq
      JOIN inquiries i ON i.id = wq.inquiry_id
      WHERE wq.status = 'pending' AND wq.attempts < 5"
 )->fetchAll();
@@ -81,9 +81,11 @@ foreach ($pending as $row) {
         $pdo->prepare("UPDATE webhook_queue SET status = 'sent', slack_sent = 1, email_sent = 1 WHERE id = ?")
             ->execute([$row['queue_id']]);
     } else {
+        $newAttempts = $row['attempts'] + 1;
+        $newStatus = $newAttempts >= 5 ? 'failed' : 'pending';
         $pdo->prepare(
-            'UPDATE webhook_queue SET attempts = attempts + 1, slack_sent = ?, email_sent = ? WHERE id = ?'
-        )->execute([(int) $slackDone, (int) $emailDone, $row['queue_id']]);
+            'UPDATE webhook_queue SET status = ?, attempts = ?, slack_sent = ?, email_sent = ? WHERE id = ?'
+        )->execute([$newStatus, $newAttempts, (int) $slackDone, (int) $emailDone, $row['queue_id']]);
     }
 }
 
