@@ -123,6 +123,10 @@
           <label class="form-label fw-semibold">Pitch body</label>
           <textarea class="form-control" id="pitch-body" rows="8"></textarea>
         </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small text-uppercase text-muted-custom">Preview <span class="text-muted-custom fw-normal text-lowercase">(links are clickable here to sanity-check them — the actual email is still plain text; most mail clients auto-link URLs on their own)</span></label>
+          <div id="pitch-preview" class="p-2 rounded small" style="background: var(--bg-soft); white-space: pre-wrap;"></div>
+        </div>
         <div id="pitch-modal-alert" class="alert py-2 small d-none"></div>
       </div>
       <div class="modal-footer">

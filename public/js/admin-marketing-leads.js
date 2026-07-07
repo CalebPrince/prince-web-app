@@ -106,6 +106,15 @@ async function loadLeads() {
   });
 }
 
+function renderPitchPreview() {
+  const text = document.getElementById("pitch-body").value;
+  const escaped = escapeHtml(text);
+  document.getElementById("pitch-preview").innerHTML = escaped.replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener">$1</a>'
+  );
+}
+
 function openPitchModal(lead) {
   currentLead = lead;
   document.getElementById("pitch-modal-business").textContent = lead.business_name;
@@ -113,6 +122,7 @@ function openPitchModal(lead) {
   document.getElementById("pitch-subject").value = lead.pitch_subject || "";
   document.getElementById("pitch-body").value = lead.pitch_body || "";
   document.getElementById("pitch-modal-alert").classList.add("d-none");
+  renderPitchPreview();
 
   const list = document.getElementById("pitch-findings-list");
   if (!lead.website_url) {
@@ -203,6 +213,8 @@ document.getElementById("add-lead-form").addEventListener("submit", async (e) =>
     btn.disabled = false;
   }
 });
+
+document.getElementById("pitch-body").addEventListener("input", renderPitchPreview);
 
 (async function init() {
   const user = await requireAdminAuth();
