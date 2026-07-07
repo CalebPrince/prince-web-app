@@ -87,7 +87,7 @@
       <div class="col-md-6 col-lg-4">
         <div class="pricing-card service-card reveal">
           <span class="eyebrow d-block mb-2" data-content="pricing_tier_1_name">Starter</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_1_price">From $600</div>
+          <div class="pricing-price mb-1" data-content="pricing_tier_1_price">From GHS 6,000</div>
           <p class="text-muted-custom mb-3" data-content="pricing_tier_1_tagline">Landing pages, small brochure sites, and simple booking or contact tools.</p>
           <ul class="mb-4" data-content-list="pricing_tier_1_features">
             <li>Up to 5 pages, responsive design</li>
@@ -105,7 +105,7 @@
         <div class="pricing-card featured service-card reveal reveal-delay-1">
           <span class="pricing-badge">Most requested</span>
           <span class="eyebrow d-block mb-2" data-content="pricing_tier_2_name">Growth</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_2_price">From $2,500</div>
+          <div class="pricing-price mb-1" data-content="pricing_tier_2_price">From GHS 25,000</div>
           <p class="text-muted-custom mb-3" data-content="pricing_tier_2_tagline">Custom web apps, CMS ecosystems, and dashboards built around your actual workflow.</p>
           <ul class="mb-4" data-content-list="pricing_tier_2_features">
             <li>Custom database &amp; API design</li>
@@ -380,7 +380,9 @@
 
   function currencyDisplay(code) {
     const normalized = String(code || '').toUpperCase();
-    return normalized === 'USD' ? '$' : normalized;
+    if (normalized === 'USD') return '$';
+    if (normalized === 'GHS') return 'GHS';
+    return normalized;
   }
 
   function syncCheckoutSubmitState() {
@@ -550,21 +552,21 @@
 </script>
 <script>
 const CALC_BASE = {
-  website: [600, 1000],
-  webapp: [2500, 4000],
-  mobile: [4000, 7000],
-  cms: [1500, 2500],
-  ai: [2000, 3500],
-  other: [1500, 3000],
+  website: [6000, 10000],
+  webapp: [25000, 40000],
+  mobile: [40000, 70000],
+  cms: [15000, 25000],
+  ai: [20000, 35000],
+  other: [15000, 30000],
 };
 const CALC_FEATURES = {
-  accounts: [300, 500],
-  dashboard: [500, 800],
-  payments: [400, 700],
-  integrations: [300, 600],
-  mobile_companion: [1500, 2500],
-  ai: [500, 1000],
-  i18n: [400, 700],
+  accounts: [3000, 5000],
+  dashboard: [5000, 8000],
+  payments: [4000, 7000],
+  integrations: [3000, 6000],
+  mobile_companion: [15000, 25000],
+  ai: [5000, 10000],
+  i18n: [4000, 7000],
 };
 const CALC_TIMELINE_MULTIPLIER = { asap: 1.2, month: 1, quarter: 0.95, flexible: 0.9 };
 
@@ -583,10 +585,10 @@ document.getElementById('calc-btn').addEventListener('click', () => {
     high += featHigh;
     selectedFeatures.push(cb.value);
   });
-  low = Math.round((low * multiplier) / 50) * 50;
-  high = Math.round((high * multiplier) / 50) * 50;
+  low = Math.round((low * multiplier) / 500) * 500;
+  high = Math.round((high * multiplier) / 500) * 500;
 
-  document.getElementById('calc-result-range').textContent = `$${low.toLocaleString()} – $${high.toLocaleString()}`;
+  document.getElementById('calc-result-range').textContent = `GHS ${low.toLocaleString()} – GHS ${high.toLocaleString()}`;
   document.getElementById('calc-result').classList.remove('d-none');
 
   const requestLink = document.getElementById('calc-request-link');

@@ -10,6 +10,17 @@ $pdo = Database::get();
 $schema = file_get_contents(__DIR__ . '/schema.sql');
 $pdo->exec($schema);
 
+$pricingDefaultUpdates = [
+    'pricing_currency' => ['USD', 'GHS'],
+    'pricing_tier_1_amount' => ['600', '6000'],
+    'pricing_tier_1_price' => ['From $600', 'From GHS 6,000'],
+    'pricing_tier_2_price' => ['From $2,500', 'From GHS 25,000'],
+];
+$pricingUpdateStmt = $pdo->prepare('UPDATE settings SET value = ? WHERE name = ? AND value = ?');
+foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
+    $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
+}
+
 // SQLite has no "ADD COLUMN IF NOT EXISTS" — guard new columns on tables that
 // may already exist from before this migration was written.
 $userColumns = array_column($pdo->query('PRAGMA table_info(users)')->fetchAll(), 'name');
