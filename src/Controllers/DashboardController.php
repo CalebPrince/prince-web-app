@@ -43,6 +43,12 @@ class DashboardController
             'SELECT id, title, updated_at FROM projects WHERE is_published = 0 ORDER BY updated_at DESC LIMIT 5'
         )->fetchAll();
 
+        $upcomingAppointments = $pdo->query(
+            "SELECT id, client_name, appointment_date, appointment_time, topic FROM appointments
+             WHERE status = 'confirmed' AND appointment_date >= date('now')
+             ORDER BY appointment_date ASC, appointment_time ASC LIMIT 5"
+        )->fetchAll();
+
         Response::json([
             'projects' => [
                 'total' => (int) $projects['total'],
@@ -59,6 +65,7 @@ class DashboardController
             'new_chat_feedback' => $newChatFeedback,
             'recent_inquiries' => $recentInquiries,
             'draft_projects' => $draftProjects,
+            'upcoming_appointments' => $upcomingAppointments,
         ]);
     }
 

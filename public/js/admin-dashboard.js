@@ -50,6 +50,21 @@ function renderDraftProjects(drafts) {
   `).join("");
 }
 
+function renderUpcomingAppointments(appointments) {
+  const box = document.getElementById("upcoming-appointments");
+  document.getElementById("appointments-empty").classList.toggle("d-none", appointments.length > 0);
+
+  box.innerHTML = appointments.map(a => `
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div class="me-3 text-truncate">
+        <strong>${escapeHtml(a.client_name)}</strong>
+        ${a.topic ? `<span class="text-muted-custom small ms-2">${escapeHtml(a.topic)}</span>` : ""}
+      </div>
+      <small class="text-muted-custom flex-shrink-0">${new Date(`${a.appointment_date}T00:00`).toLocaleDateString()} · ${a.appointment_time}</small>
+    </div>
+  `).join("");
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -62,4 +77,5 @@ function renderDraftProjects(drafts) {
   renderStats(data);
   renderRecentInquiries(data.recent_inquiries);
   renderDraftProjects(data.draft_projects);
+  renderUpcomingAppointments(data.upcoming_appointments);
 })();
