@@ -46,6 +46,37 @@
       <button class="btn-brand" id="new-link-btn">+ Generate Payment Link</button>
     </div>
 
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="stat-label">Revenue (successful)</div>
+          <div class="stat-value" id="stat-revenue">–</div>
+          <div class="stat-sub" id="stat-revenue-sub"></div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value" id="stat-pending">–</div>
+          <div class="stat-sub">awaiting confirmation</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="stat-label">Failed</div>
+          <div class="stat-value" id="stat-failed">–</div>
+          <div class="stat-sub">did not go through</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value" id="stat-total">–</div>
+          <div class="stat-sub">all time</div>
+        </div>
+      </div>
+    </div>
+
     <ul class="nav nav-tabs mb-3">
       <li class="nav-item"><button class="nav-link active" data-tab="transactions" id="tab-transactions">Transactions</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="links" id="tab-links">Payment Links</button></li>
@@ -61,7 +92,8 @@
               <th>Amount</th>
               <th>Source</th>
               <th>Status</th>
-              <th class="text-end pe-3">Date</th>
+              <th>Date</th>
+              <th class="text-end pe-3"></th>
             </tr>
           </thead>
           <tbody id="payments-tbody"></tbody>

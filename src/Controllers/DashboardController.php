@@ -49,6 +49,18 @@ class DashboardController
              ORDER BY appointment_date ASC, appointment_time ASC LIMIT 5"
         )->fetchAll();
 
+        // Grouped by currency rather than summed outright — payment links can be
+        // issued in a different currency than the site's default pricing_currency.
+        $revenueByCurrency = $pdo->query(
+            "SELECT currency, COALESCE(SUM(amount), 0) AS total FROM payments
+             WHERE status = 'success' GROUP BY currency"
+        )->fetchAll();
+        $paymentsPending = (int) $pdo->query("SELECT COUNT(*) FROM payments WHERE status = 'pending'")->fetchColumn();
+        $recentPayments = $pdo->query(
+            'SELECT reference, email, customer_name, amount, currency, status, created_at
+             FROM payments ORDER BY created_at DESC LIMIT 5'
+        )->fetchAll();
+
         Response::json([
             'projects' => [
                 'total' => (int) $projects['total'],
@@ -63,9 +75,17 @@ class DashboardController
             'tags_in_use' => $tagsInUse,
             'webhooks_pending' => $webhooksPending,
             'new_chat_feedback' => $newChatFeedback,
+            'payments' => [
+                'revenue_by_currency' => array_map(
+                    fn($r) => ['currency' => $r['currency'], 'total' => (int) $r['total']],
+                    $revenueByCurrency
+                ),
+                'pending' => $paymentsPending,
+            ],
             'recent_inquiries' => $recentInquiries,
             'draft_projects' => $draftProjects,
             'upcoming_appointments' => $upcomingAppointments,
+            'recent_payments' => $recentPayments,
         ]);
     }
 

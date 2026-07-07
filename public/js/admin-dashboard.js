@@ -1,3 +1,7 @@
+function formatAmount(subunits, currency) {
+  return `${currency} ${(subunits / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+}
+
 function renderStats(data) {
   document.getElementById("stat-published").textContent = data.projects.published;
   document.getElementById("stat-published-sub").textContent =
@@ -6,6 +10,12 @@ function renderStats(data) {
   document.getElementById("stat-unread-sub").textContent = `${data.inquiries.total} total`;
   document.getElementById("stat-recent").textContent = data.inquiries.last_30_days;
   document.getElementById("stat-tags").textContent = data.tags_in_use;
+
+  const revenue = data.payments.revenue_by_currency;
+  document.getElementById("stat-revenue").textContent =
+    revenue.length > 0 ? revenue.map(r => formatAmount(r.total, r.currency)).join(" + ") : "—";
+  document.getElementById("stat-revenue-sub").textContent =
+    data.payments.pending > 0 ? `${data.payments.pending} pending` : "no pending payments";
 
   if (data.new_chat_feedback > 0) {
     document.getElementById("chat-feedback-text").textContent =
@@ -50,6 +60,26 @@ function renderDraftProjects(drafts) {
   `).join("");
 }
 
+const PAYMENT_STATUS_PILL_CLASS = { success: "published", pending: "unread", failed: "flagged" };
+
+function renderRecentPayments(payments) {
+  const box = document.getElementById("recent-payments");
+  document.getElementById("payments-empty").classList.toggle("d-none", payments.length > 0);
+
+  box.innerHTML = payments.map(p => `
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div class="me-3 text-truncate">
+        <strong>${escapeHtml(p.customer_name || p.email)}</strong>
+        <span class="text-muted-custom small ms-2">${formatAmount(p.amount, p.currency)}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-shrink-0">
+        <span class="status-pill ${PAYMENT_STATUS_PILL_CLASS[p.status] || "read"}">${p.status}</span>
+        <small class="text-muted-custom">${new Date(p.created_at).toLocaleDateString()}</small>
+      </div>
+    </div>
+  `).join("");
+}
+
 function renderUpcomingAppointments(appointments) {
   const box = document.getElementById("upcoming-appointments");
   document.getElementById("appointments-empty").classList.toggle("d-none", appointments.length > 0);
@@ -78,4 +108,5 @@ function renderUpcomingAppointments(appointments) {
   renderRecentInquiries(data.recent_inquiries);
   renderDraftProjects(data.draft_projects);
   renderUpcomingAppointments(data.upcoming_appointments);
+  renderRecentPayments(data.recent_payments);
 })();

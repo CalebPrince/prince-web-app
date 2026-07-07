@@ -10,8 +10,25 @@ function formatAmount(subunits, currency) {
   return `${currency} ${(subunits / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
+function renderPaymentStats(rows) {
+  const successful = rows.filter(p => p.status === 'success');
+  const revenueByCurrency = {};
+  successful.forEach(p => {
+    revenueByCurrency[p.currency] = (revenueByCurrency[p.currency] || 0) + p.amount;
+  });
+  const revenueEntries = Object.entries(revenueByCurrency);
+
+  document.getElementById('stat-revenue').textContent =
+    revenueEntries.length > 0 ? revenueEntries.map(([currency, total]) => formatAmount(total, currency)).join(' + ') : '—';
+  document.getElementById('stat-revenue-sub').textContent = `${successful.length} successful`;
+  document.getElementById('stat-pending').textContent = rows.filter(p => p.status === 'pending').length;
+  document.getElementById('stat-failed').textContent = rows.filter(p => p.status === 'failed').length;
+  document.getElementById('stat-total').textContent = rows.length;
+}
+
 async function loadPayments() {
   const rows = await api.get('/api/v1/admin/payments');
+  renderPaymentStats(rows);
   const tbody = document.getElementById('payments-tbody');
   const empty = document.getElementById('payments-empty');
 
@@ -29,9 +46,29 @@ async function loadPayments() {
       <td>${formatAmount(p.amount, p.currency)}</td>
       <td class="small text-muted-custom">${p.source === 'payment_link' ? 'Payment link' : 'Tier checkout'}</td>
       <td><span class="status-pill ${STATUS_PILL_CLASS[p.status] || 'read'}">${p.status}</span></td>
-      <td class="text-end pe-3 small text-muted-custom">${new Date(p.created_at).toLocaleString()}</td>
+      <td class="small text-muted-custom">${new Date(p.created_at).toLocaleString()}</td>
+      <td class="text-end pe-3">
+        ${p.status === 'pending' ? `<button class="btn btn-sm btn-outline-secondary recheck-btn" data-reference="${escapeHtml(p.reference)}">Recheck</button>` : ''}
+      </td>
     </tr>
   `).join('');
+
+  tbody.querySelectorAll('.recheck-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+      try {
+        // Same public verify endpoint the checkout page itself calls after a
+        // successful charge -- reused here to re-ask Paystack directly for a
+        // row that's been stuck pending (e.g. the webhook never fired).
+        await api.post('/api/v1/payments/verify', { reference: btn.dataset.reference });
+      } catch (_) {
+        // Paystack may legitimately report "not found" for a checkout the
+        // customer never finished -- either way, reload to show the result.
+      }
+      await loadPayments();
+    });
+  });
 }
 
 async function loadLinks() {
