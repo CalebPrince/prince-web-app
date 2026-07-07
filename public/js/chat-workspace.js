@@ -72,7 +72,7 @@
     const pending = appendMessage("bot", "Typing…");
 
     try {
-      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 45000 });
+      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 68000 });
       pending.textContent = res.reply;
       canBuild = !!res.can_prototype;
       updateBuildButton();
@@ -90,7 +90,7 @@
     const original = btn.textContent;
     btn.textContent = "Building your prototype… (up to a minute)";
     try {
-      const res = await api.post("/api/v1/chat/prototype", { token: sessionToken });
+      const res = await api.post("/api/v1/chat/prototype", { token: sessionToken }, { timeoutMs: 105000 });
       prototypeUrl = res.url;
       showPreviewFrame();
     } catch (err) {

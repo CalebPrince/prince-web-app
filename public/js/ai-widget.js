@@ -94,7 +94,7 @@
     const pending = appendMessage("bot", "Typing…");
 
     try {
-      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 45000 });
+      const res = await api.post("/api/v1/chat/message", { message, token: sessionToken }, { timeoutMs: 68000 });
       sessionToken = res.token;
       sessionStorage.setItem("chat_token", sessionToken);
       canPrototype = !!res.can_prototype;

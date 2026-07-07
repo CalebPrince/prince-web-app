@@ -42,6 +42,14 @@ class LiveChatController
     /** POST /api/v1/chat/message — body: {token?, message} */
     public static function message(): void
     {
+        // Worst case is a full Gemini failure (2 rounds x 12s) followed by a
+        // full OpenRouter fallback (2 rounds x 18s) = ~60s of curl time alone.
+        // Without this, the host's default max_execution_time (often 30s on
+        // shared hosting) kills the process mid-request with no response at
+        // all, which the browser surfaces as a bare "Failed to fetch" rather
+        // than a clean error.
+        set_time_limit(65);
+
         $config = self::config();
         RateLimitMiddleware::enforce('ai_chat', $config['ai_rate_limit']);
 
@@ -146,6 +154,10 @@ class LiveChatController
     /** POST /api/v1/chat/prototype — body: {token} */
     public static function generatePrototype(): void
     {
+        // AiText::generate tries Gemini (45s) then OpenRouter (45s) — up to
+        // 90s of curl time in the worst case. Same reasoning as message().
+        set_time_limit(100);
+
         $config = self::config();
         RateLimitMiddleware::enforce('prototype', 5);
 
