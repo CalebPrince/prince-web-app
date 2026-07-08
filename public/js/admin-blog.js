@@ -36,6 +36,11 @@ function setCoverPreview(path) {
 
 function renderPostsTable(posts) {
   const tbody = document.getElementById("posts-tbody");
+  if (posts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted-custom py-4">No posts yet.</td></tr>';
+    return;
+  }
+
   tbody.innerHTML = posts.map(p => `
     <tr>
       <td class="ps-3">${escapeHtml(p.title)}</td>
@@ -95,7 +100,8 @@ function renderCurrentPage() {
 }
 
 async function loadPosts() {
-  allPosts = await api.get("/api/v1/admin/blog");
+  const response = await api.get("/api/v1/admin/blog");
+  allPosts = Array.isArray(response) ? response : [];
   renderCurrentPage();
 }
 

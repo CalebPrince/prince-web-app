@@ -40,14 +40,15 @@ function renderPaymentStats(rows) {
 }
 
 async function loadPayments() {
-  const rows = await api.get('/api/v1/admin/payments');
+  const response = await api.get('/api/v1/admin/payments');
+  const rows = Array.isArray(response) ? response : [];
   renderPaymentStats(rows);
   const tbody = document.getElementById('payments-tbody');
   const empty = document.getElementById('payments-empty');
 
   if (rows.length === 0) {
-    tbody.innerHTML = '';
-    empty.classList.remove('d-none');
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted-custom py-4">No transactions yet.</td></tr>';
+    empty.classList.add('d-none');
     return;
   }
   empty.classList.add('d-none');
@@ -101,13 +102,14 @@ async function loadPayments() {
 }
 
 async function loadLinks() {
-  const rows = await api.get('/api/v1/admin/payment-links');
+  const response = await api.get('/api/v1/admin/payment-links');
+  const rows = Array.isArray(response) ? response : [];
   const tbody = document.getElementById('links-tbody');
   const empty = document.getElementById('links-empty');
 
   if (rows.length === 0) {
-    tbody.innerHTML = '';
-    empty.classList.remove('d-none');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted-custom py-4">No payment links yet.</td></tr>';
+    empty.classList.add('d-none');
     return;
   }
   empty.classList.add('d-none');

@@ -39,13 +39,14 @@ function actionButtons(lead) {
 }
 
 async function loadLeads() {
-  const rows = await api.get("/api/v1/admin/marketing-leads");
+  const response = await api.get("/api/v1/admin/marketing-leads");
+  const rows = Array.isArray(response) ? response : [];
   const tbody = document.getElementById("leads-tbody");
   const empty = document.getElementById("empty-state");
 
   if (rows.length === 0) {
-    tbody.innerHTML = "";
-    empty.classList.remove("d-none");
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
+    empty.classList.add("d-none");
     return;
   }
   empty.classList.add("d-none");

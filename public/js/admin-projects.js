@@ -54,6 +54,11 @@ function renderGalleryList() {
 function renderProjectsTable(projects) {
   currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
+  if (projects.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
+    return;
+  }
+
   tbody.innerHTML = projects.map(p => `
     <tr draggable="true" data-id="${p.id}">
       <td class="ps-3 text-muted-custom" style="cursor:grab;" title="Drag to reorder">&#x2630;</td>
@@ -105,7 +110,8 @@ function renderProjectsTable(projects) {
 }
 
 async function loadProjects() {
-  const projects = await api.get("/api/v1/admin/projects");
+  const response = await api.get("/api/v1/admin/projects");
+  const projects = Array.isArray(response) ? response : [];
   renderProjectsTable(projects);
 }
 

@@ -4,7 +4,12 @@ let allTags = [];
 function renderTagsTable(tags) {
   const tbody = document.getElementById("tags-tbody");
   const empty = document.getElementById("empty-state");
-  empty.classList.toggle("d-none", tags.length > 0);
+  empty.classList.add("d-none");
+
+  if (tags.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted-custom py-4">No tags yet. They are also created automatically when you save a project.</td></tr>';
+    return;
+  }
 
   tbody.innerHTML = tags.map(t => `
     <tr>
@@ -27,7 +32,8 @@ function renderTagsTable(tags) {
 }
 
 async function loadTags() {
-  allTags = await api.get("/api/v1/admin/tags");
+  const response = await api.get("/api/v1/admin/tags");
+  allTags = Array.isArray(response) ? response : [];
   renderTagsTable(allTags);
 }
 

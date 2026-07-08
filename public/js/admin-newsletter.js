@@ -1,11 +1,12 @@
 async function loadSubscribers() {
-  const rows = await api.get('/api/v1/admin/newsletter');
+  const response = await api.get('/api/v1/admin/newsletter');
+  const rows = Array.isArray(response) ? response : [];
   const tbody = document.getElementById('subscribers-tbody');
   const empty = document.getElementById('empty-state');
 
   if (rows.length === 0) {
-    tbody.innerHTML = '';
-    empty.classList.remove('d-none');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted-custom py-4">No subscribers yet.</td></tr>';
+    empty.classList.add('d-none');
     return;
   }
   empty.classList.add('d-none');
