@@ -53,7 +53,8 @@ function resetProposalForm() {
 }
 
 async function loadQuoteRequests() {
-  quoteRequests = await api.get('/api/v1/admin/proposals/quote-requests');
+  const rows = await api.get('/api/v1/admin/proposals/quote-requests');
+  quoteRequests = Array.isArray(rows) ? rows : [];
   const select = document.getElementById('inquiry-id');
   select.innerHTML = '<option value="">No linked quote request</option>' + quoteRequests.map(q =>
     `<option value="${q.id}">${escapeHtml(q.name)} - ${escapeHtml(q.project_type || 'Project')} - ${new Date(q.created_at).toLocaleDateString()}</option>`
@@ -61,7 +62,8 @@ async function loadQuoteRequests() {
 }
 
 async function loadProposals() {
-  const rows = await api.get('/api/v1/admin/proposals');
+  const response = await api.get('/api/v1/admin/proposals');
+  const rows = Array.isArray(response) ? response : [];
   const tbody = document.getElementById('proposals-table-body');
   if (!rows.length) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No proposals yet.</td></tr>';
