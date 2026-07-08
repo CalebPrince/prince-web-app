@@ -19,6 +19,7 @@ class SettingsController
         'paystack_public_key', 'paystack_secret_key',
         'booking_enabled', 'booking_days', 'booking_start_time', 'booking_end_time',
         'booking_slot_minutes', 'booking_lead_days', 'booking_min_notice_hours', 'booking_timezone',
+        'social_draft_enabled', 'social_draft_frequency', 'social_draft_last_run',
     ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */

@@ -279,6 +279,9 @@ One-time setup on a new host:
 4d. Add a fourth cron job (once a day) for stale quote-request alerts (only
     fires if a Make.com webhook URL is set in Admin -> Settings):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_stale_lead_alerts.php > /dev/null`
+4e. Add a fifth cron job (once a day) for AI social post drafts (only
+    fires if enabled in Admin -> Settings -> Content):
+    `/usr/local/bin/php /home/<cpanel-user>/database/generate_social_drafts.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

@@ -334,3 +334,24 @@ CREATE TABLE IF NOT EXISTS integration_events (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_integration_events_created ON integration_events (created_at);
+
+-- AI-drafted social posts, generated on a schedule (see
+-- database/generate_social_drafts.php) from the most recent published
+-- content not yet drafted (blog post, project, or approved testimonial),
+-- falling back to an original evergreen post when nothing new exists.
+-- Admin reviews/edits before approving; approval fires a Make.com event
+-- (sent_to_makecom guards against firing twice) so the actual publishing
+-- is handled by Make.com's platform connectors, not built here.
+CREATE TABLE IF NOT EXISTS social_post_drafts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_type TEXT NOT NULL CHECK (source_type IN ('blog', 'project', 'testimonial', 'general')),
+  source_id INTEGER,
+  content TEXT NOT NULL,
+  short_content TEXT,
+  hashtags TEXT,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'rejected')),
+  sent_to_makecom INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_social_post_drafts_status ON social_post_drafts (status, created_at);

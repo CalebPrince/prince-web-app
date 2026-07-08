@@ -117,6 +117,19 @@ async function saveHours(e) {
   }
 }
 
+async function saveSocialDraft(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      social_draft_enabled: document.getElementById("social-draft-enabled").checked ? "1" : "",
+      social_draft_frequency: document.getElementById("social-draft-frequency").value,
+    });
+    showMsg("social-draft-msg", "Saved.", true);
+  } catch (err) {
+    showMsg("social-draft-msg", err.message, false);
+  }
+}
+
 async function saveBooking(e) {
   e.preventDefault();
   const days = [...document.querySelectorAll(".booking-day:checked")].map(el => el.value);
@@ -230,6 +243,7 @@ async function testAi() {
   document.getElementById("payments-form").addEventListener("submit", savePayments);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
   document.getElementById("booking-form").addEventListener("submit", saveBooking);
+  document.getElementById("social-draft-form").addEventListener("submit", saveSocialDraft);
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
@@ -255,6 +269,9 @@ async function testAi() {
     document.getElementById("hours-start").value = settings.chat_hours_start || "";
     document.getElementById("hours-end").value = settings.chat_hours_end || "";
     document.getElementById("hours-timezone").value = settings.chat_timezone || "";
+
+    document.getElementById("social-draft-enabled").checked = settings.social_draft_enabled === "1";
+    document.getElementById("social-draft-frequency").value = settings.social_draft_frequency || "daily";
 
     document.getElementById("booking-enabled").checked = settings.booking_enabled === "1";
     const bookingDays = (settings.booking_days || "").split(",").map(d => d.trim()).filter(Boolean);

@@ -29,6 +29,7 @@
       <a href="/admin/payments.html" class="nav-link">Payments</a>
       <a href="/admin/pricing.html" class="nav-link">Pricing</a>
       <a href="/admin/testimonials.html" class="nav-link">Testimonials</a>
+      <a href="/admin/social-drafts.html" class="nav-link">Social Drafts</a>
       <a href="/admin/marketing-leads.html" class="nav-link">Marketing Leads</a>
       <a href="/admin/chats.html" class="nav-link"><span>Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
       <a href="/admin/tags.html" class="nav-link">Tags</a>
@@ -100,6 +101,7 @@
               <div class="form-text">
                 Backs up the webhook above — if a Make.com scenario is paused or the webhook URL isn't set yet, it can fetch missed events from
                 <code>GET https://princecaleb.dev/api/v1/integrations/events?since_id=0</code> with header <code>Authorization: Bearer &lt;key&gt;</code>.
+                By default this only returns events the webhook failed to deliver, so a scheduled poller can safely run alongside the webhook with no double-processing — add <code>&amp;include_delivered=1</code> to see the full log instead.
               </div>
             </div>
             <div class="mb-3">
@@ -112,6 +114,28 @@
               <button type="submit" class="btn-brand">Save Integrations</button>
               <button type="button" class="btn btn-outline-secondary" id="test-ai-btn">Test AI connection</button>
             </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
+          <h5 class="mb-1">Social post drafts</h5>
+          <p class="text-muted-custom small">Auto-drafts a social media post (see Admin &rarr; Social Drafts) from your latest published content, using the same AI keys configured above. You review and approve each one before it goes anywhere.</p>
+          <form id="social-draft-form">
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="social-draft-enabled">
+              <label class="form-check-label" for="social-draft-enabled">Generate drafts automatically</label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Frequency</label>
+              <select class="form-select" id="social-draft-frequency">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+            <div id="social-draft-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Save</button>
           </form>
         </div>
       </div>

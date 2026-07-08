@@ -57,6 +57,7 @@ use App\Controllers\ProjectController;
 use App\Controllers\ProjectRequestController;
 use App\Controllers\SearchController;
 use App\Controllers\SettingsController;
+use App\Controllers\SocialDraftController;
 use App\Controllers\TagController;
 use App\Controllers\TestimonialController;
 use App\Controllers\UploadController;
@@ -185,5 +186,9 @@ $router->delete('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::
 $router->post('/api/v1/admin/marketing-leads/{id}/audit', [MarketingLeadController::class, 'runAudit']);
 $router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLeadController::class, 'generatePitch']);
 $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);
+$router->get('/api/v1/admin/social-drafts', [SocialDraftController::class, 'index']);
+$router->post('/api/v1/admin/social-drafts/generate', [SocialDraftController::class, 'generate']);
+$router->patch('/api/v1/admin/social-drafts/{id}', [SocialDraftController::class, 'update']);
+$router->delete('/api/v1/admin/social-drafts/{id}', [SocialDraftController::class, 'destroy']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

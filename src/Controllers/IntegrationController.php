@@ -16,7 +16,7 @@ use App\Support\Settings;
  */
 class IntegrationController
 {
-    /** GET /api/v1/integrations/events?since_id=0&limit=50 */
+    /** GET /api/v1/integrations/events?since_id=0&limit=50&include_delivered=0 */
     public static function events(): void
     {
         $expectedKey = Settings::get('integration_api_key');
@@ -27,11 +27,22 @@ class IntegrationController
 
         $sinceId = (int) ($_GET['since_id'] ?? 0);
         $limit = min(200, max(1, (int) ($_GET['limit'] ?? 50)));
+        // Default to catch-up mode: only events the live push never delivered.
+        // A poller can safely run alongside the push webhook with zero
+        // overlap — anything push already handled is excluded here, so
+        // there's nothing for the poller to double-process. Pass
+        // include_delivered=1 to see the full log instead (e.g. for an
+        // admin audit view).
+        $includeDelivered = !empty($_GET['include_delivered']);
+
+        $sql = 'SELECT id, event, data, push_delivered, created_at FROM integration_events WHERE id > ?';
+        if (!$includeDelivered) {
+            $sql .= ' AND push_delivered = 0';
+        }
+        $sql .= ' ORDER BY id ASC LIMIT ?';
 
         $pdo = Database::get();
-        $stmt = $pdo->prepare(
-            'SELECT id, event, data, push_delivered, created_at FROM integration_events WHERE id > ? ORDER BY id ASC LIMIT ?'
-        );
+        $stmt = $pdo->prepare($sql);
         $stmt->bindValue(1, $sinceId, \PDO::PARAM_INT);
         $stmt->bindValue(2, $limit, \PDO::PARAM_INT);
         $stmt->execute();
