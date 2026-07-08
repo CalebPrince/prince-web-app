@@ -352,6 +352,24 @@ storage/
     which record (with a denormalized label so the entry stays readable even
     after the underlying record is deleted or renamed), and JSON-encoded
     extra details where relevant (e.g. changed pricing keys).
+33. **Composio connected accounts** (Admin → Settings → Connected Accounts,
+    `src/Support/Composio.php`, `ComposioController.php`): lets the app take
+    real actions in third-party apps (LinkedIn, Twitter/X to start) on the
+    admin's behalf, via Composio's OAuth-managed tool-calling API — additive
+    alongside Make.com, not a replacement of its 5 existing automation
+    events. Each toolkit needs an Auth Config ID (created once in the
+    Composio dashboard) pasted into Settings, then a one-time Connect flow
+    that opens Composio's OAuth authorization in a new tab. Once connected,
+    approving a social draft (`SocialDraftController::update()`) also
+    attempts to publish it directly via the connected toolkit — success/
+    failure is recorded on the draft (`published_at`/`publish_error`) and in
+    the Activity Log, but never blocks the approval itself if publishing
+    fails. **Status: foundation built, not yet exercised against a live
+    Composio account** — the exact tool slugs used for publishing
+    (`LINKEDIN_CREATE_LINKED_IN_POST`, `TWITTER_CREATION_OF_A_POST`) are a
+    best guess pending confirmation once real credentials exist; expect to
+    adjust `Composio::executeTool()`'s request/response handling the first
+    time this runs for real.
 
 ## Deployment (Namecheap cPanel)
 

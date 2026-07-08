@@ -45,6 +45,8 @@ function renderDraftsTable(drafts) {
       <td>
         <span class="status-pill ${STATUS_CLASS[d.status] || 'unread'}">${escapeHtml(d.status)}</span>
         ${d.ai_provider ? `<div class="small text-muted-custom mt-1">${escapeHtml(providerLabel(d.ai_provider))}</div>` : ''}
+        ${d.published_at ? `<div class="small text-muted-custom mt-1">✓ Published ${new Date(d.published_at + 'Z').toLocaleString()}</div>` : ''}
+        ${d.publish_error ? `<div class="small text-danger mt-1">${escapeHtml(d.publish_error)}</div>` : ''}
       </td>
       <td class="small text-muted-custom">${new Date(d.created_at).toLocaleString()}</td>
       <td class="text-end pe-3">

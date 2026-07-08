@@ -110,6 +110,20 @@
               <input type="email" class="form-control" id="notification-email" placeholder="you@example.com" autocomplete="off">
               <div class="form-text">Sent via the server's PHP mail() — delivered by the cron job, not instantly.</div>
             </div>
+            <div class="mb-3">
+              <label class="form-label">Composio API key <span class="text-muted-custom fw-normal">(action-taking — see Connected Accounts below)</span></label>
+              <input type="password" class="form-control" id="composio-api-key" placeholder="Paste your Composio API key" autocomplete="off">
+              <div class="form-text">Get a key at composio.dev — required before any Connected Account below can be used.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Composio LinkedIn Auth Config ID <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" id="composio-linkedin-auth-config-id" placeholder="ac_..." autocomplete="off">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Composio Twitter/X Auth Config ID <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" id="composio-twitter-auth-config-id" placeholder="ac_..." autocomplete="off">
+              <div class="form-text">Create an Auth Config per app in your Composio dashboard, then paste its ID here — this unlocks the Connect button for that app below.</div>
+            </div>
             <div id="integrations-msg" class="alert py-2 small d-none"></div>
             <div class="d-flex gap-2">
               <button type="submit" class="btn-brand">Save Integrations</button>
@@ -138,6 +152,15 @@
             <div id="social-draft-msg" class="alert py-2 small d-none"></div>
             <button type="submit" class="btn-brand">Save</button>
           </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
+          <h5 class="mb-1">Connected accounts <span class="text-muted-custom fw-normal">(Composio)</span></h5>
+          <p class="text-muted-custom small">Lets the app take real actions in these apps on your behalf — e.g. publishing an approved social draft directly instead of routing through Make.com. Each one needs an Auth Config ID from your Composio dashboard first, then Connect walks you through authorizing it.</p>
+          <div id="composio-accounts-list"></div>
+          <div id="composio-msg" class="alert py-2 small d-none mt-2"></div>
         </div>
       </div>
 

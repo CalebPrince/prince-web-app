@@ -356,6 +356,11 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
   ai_provider TEXT,
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'rejected')),
   sent_to_makecom INTEGER NOT NULL DEFAULT 0,
+  -- Set when a Composio-connected toolkit (LinkedIn/Twitter) actually
+  -- published this draft on approval — publish_error holds the reason when
+  -- that attempt failed, so the admin can see why nothing went out.
+  published_at TEXT,
+  publish_error TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

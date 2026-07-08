@@ -93,8 +93,12 @@ async function saveIntegrations(e) {
       makecom_webhook_url: document.getElementById("makecom-url").value.trim(),
       integration_api_key: document.getElementById("integration-api-key").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
+      composio_api_key: document.getElementById("composio-api-key").value.trim(),
+      composio_linkedin_auth_config_id: document.getElementById("composio-linkedin-auth-config-id").value.trim(),
+      composio_twitter_auth_config_id: document.getElementById("composio-twitter-auth-config-id").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
+    await loadComposioAccounts();
   } catch (err) {
     showMsg("integrations-msg", err.message, false);
   }
@@ -190,6 +194,72 @@ async function saveMaintenance(e) {
   }
 }
 
+const COMPOSIO_STATUS_DISPLAY = {
+  ACTIVE: { text: "Connected", cls: "approved" },
+  INITIATED: { text: "Pending authorization", cls: "pending" },
+};
+
+async function loadComposioAccounts() {
+  const list = document.getElementById("composio-accounts-list");
+  try {
+    const accounts = await api.get("/api/v1/admin/composio/status");
+    list.innerHTML = Object.entries(accounts).map(([slug, acct]) => {
+      const display = acct.status
+        ? (COMPOSIO_STATUS_DISPLAY[acct.status] || { text: acct.status, cls: "rejected" })
+        : { text: "Not connected", cls: "pending" };
+      const canConnect = !!acct.auth_config_id;
+      return `
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <div>
+            <div class="fw-semibold">${escapeHtml(acct.label)}</div>
+            <span class="status-pill ${display.cls}">${escapeHtml(display.text)}</span>
+          </div>
+          <div class="d-flex gap-2">
+            ${acct.account_id
+              ? `<button type="button" class="btn btn-sm btn-outline-danger composio-disconnect-btn" data-toolkit="${slug}">Disconnect</button>`
+              : `<button type="button" class="btn btn-sm btn-outline-secondary composio-connect-btn" data-toolkit="${slug}" ${canConnect ? "" : "disabled"} title="${canConnect ? "" : "Add an Auth Config ID above first"}">Connect</button>`}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    list.querySelectorAll(".composio-connect-btn").forEach(btn => {
+      btn.addEventListener("click", () => connectComposio(btn.dataset.toolkit));
+    });
+    list.querySelectorAll(".composio-disconnect-btn").forEach(btn => {
+      btn.addEventListener("click", () => disconnectComposio(btn.dataset.toolkit));
+    });
+  } catch (err) {
+    list.innerHTML = "";
+    showMsg("composio-msg", err.message, false);
+  }
+}
+
+async function connectComposio(toolkit) {
+  try {
+    const result = await api.post("/api/v1/admin/composio/connect", { toolkit });
+    if (result.redirect_url) {
+      window.open(result.redirect_url, "_blank", "noopener");
+      showMsg("composio-msg", "Complete the authorization in the new tab, then come back and refresh this page to see the updated status.", true);
+    } else {
+      showMsg("composio-msg", "Connection started, but no authorization link was returned — check Composio's dashboard.", false);
+    }
+    await loadComposioAccounts();
+  } catch (err) {
+    showMsg("composio-msg", err.message, false);
+  }
+}
+
+async function disconnectComposio(toolkit) {
+  if (!confirm("Disconnect this account? The app will no longer be able to act on it.")) return;
+  try {
+    await api.post("/api/v1/admin/composio/disconnect", { toolkit });
+    await loadComposioAccounts();
+  } catch (err) {
+    showMsg("composio-msg", err.message, false);
+  }
+}
+
 async function testAi() {
   const btn = document.getElementById("test-ai-btn");
   btn.disabled = true;
@@ -253,6 +323,9 @@ async function testAi() {
     document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
+    document.getElementById("composio-api-key").value = settings.composio_api_key || "";
+    document.getElementById("composio-linkedin-auth-config-id").value = settings.composio_linkedin_auth_config_id || "";
+    document.getElementById("composio-twitter-auth-config-id").value = settings.composio_twitter_auth_config_id || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 
     document.getElementById("widget-live-chat-enabled").checked = settings.live_chat_enabled !== "0";
@@ -283,4 +356,6 @@ async function testAi() {
     document.getElementById("booking-lead-days").value = settings.booking_lead_days || "14";
     document.getElementById("booking-min-notice").value = settings.booking_min_notice_hours || "24";
   } catch (_) { /* fields stay empty */ }
+
+  await loadComposioAccounts();
 })();
