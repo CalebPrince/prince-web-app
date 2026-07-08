@@ -3,7 +3,9 @@
 A premium, zero-bloat portfolio and client-acquisition site for a web & mobile
 app developer: a fast static/vanilla-JS public site backed by a custom PHP
 REST API, a full admin CRUD panel (projects, blog, inquiries, quote requests,
-payments), a Paystack-powered checkout/invoicing flow, and a secondary
+proposals, payments, clients), a Paystack-powered checkout/invoicing flow, a
+password-protected client portal, an AI-assisted marketing pipeline (pitch
+drafting, social post drafts, Make.com automation events), and a secondary
 opt-in AI assistant widget.
 
 Backend: plain PHP (no framework), PDO + SQLite.
@@ -56,9 +58,19 @@ public/                  # web root — only this folder is web-exposed
 src/
   Controllers/            # ProjectController, BlogController, TagController,
                             InquiryController, ProjectRequestController,
-                            PaymentController, AuthController, AiChatController
-  Middleware/              # AuthMiddleware (JWT), RateLimitMiddleware
-  Support/                 # Database (PDO singleton), Jwt, Validator, Response, Mailer
+                            ProposalController, PaymentController, ClientController,
+                            ClientAuthController, ClientPortalController,
+                            SocialDraftController, IntegrationController,
+                            MarketingLeadController, TestimonialController,
+                            NewsletterController, AppointmentController,
+                            SettingsController, AuthController, AiChatController,
+                            LiveChatController, and more
+  Middleware/              # AuthMiddleware (admin JWT), ClientAuthMiddleware
+                            (client portal JWT, isolated via a `type` claim —
+                            see #27), RateLimitMiddleware
+  Support/                 # Database (PDO singleton), Jwt, Settings, Validator,
+                            Response, Mailer, AiText (Gemini/OpenRouter fallback),
+                            MakeWebhook (push + log every automation event)
   Router.php                # tiny hand-rolled router — no framework dependency
   autoload.php               # minimal PSR-4-style autoloader for the App\ namespace
 config/config.php         # env-based settings, memoized via appConfig()
@@ -71,6 +83,10 @@ database/
                               # the 50 blog posts + their generated SVG cover art
   generate_sitemap.php       # regenerates public/sitemap.xml
   process_webhooks.php      # drains webhook_queue → Slack/email (run via cron/Task Scheduler)
+  send_appointment_reminders.php  # ~24h-before booking reminder emails (cron)
+  send_milestone_reminders.php    # unpaid proposal milestone nudges (cron)
+  send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
+  generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
 storage/
   db/portfolio.sqlite       # SQLite database file (gitignored)
   logs/
@@ -236,6 +252,69 @@ storage/
     (`buildSystemPrompt`) and the tool declarations (`toolDeclarations`,
     translated to OpenAI's schema by `toolDeclarationsOpenAiFormat`) so the
     two providers can't drift into inconsistent behavior.
+24. **Proposals & payment milestones** (`/admin/proposals.html`): admin turns
+    a quote request into a formal proposal — scope, timeline, currency, and
+    a list of payment milestones, each auto-generating its own
+    `payment_links` row. The client reviews at `/proposal.html?token=...`
+    and must type their name and check an agreement box before accepting
+    (`proposals.accepted_by_name`/`accepted_ip`/`accepted_user_agent` record
+    the audit trail); only then do the milestone "Pay now" buttons unlock.
+    Accepted proposals can't be edited, nor can any proposal with a paid
+    milestone. `database/send_milestone_reminders.php` (cron) nudges the
+    client once, 3 days after acceptance, for any milestone still unpaid,
+    guarded by `proposal_milestones.reminder_sent` so it only ever fires once.
+25. **Payment reconciliation** (`/admin/payments.html`): beyond the Paystack
+    transaction log, admin can mark a transaction `reviewed`, leave a note,
+    and re-ask Paystack to verify a `pending` *or* `failed` charge (reuses
+    the same public verify endpoint the checkout page itself calls).
+26. **Quote request pipeline** (`/admin/quote-requests.html`): a
+    `pipeline_stage` column (New → Reviewing → Proposal Sent → Won → Lost)
+    separate from the existing read/unread mailbox `status`, since those are
+    different concepts. Stage auto-advances to Proposal Sent when a proposal
+    is linked and Won when that proposal is accepted; everything else is a
+    manual dropdown, with a matching filter.
+27. **Client portal** (`/client/*`): password-protected client accounts,
+    provisioned by an admin "Invite to portal" action (never self-signup),
+    showing a client's proposal/milestone status, a file exchange
+    (`client_files`, admin- or client-uploaded, same extension + magic-byte
+    validation as the project-request attachments), and two-way messaging
+    (`client_messages`). Client auth mirrors the admin JWT-cookie system in
+    `ClientAuthMiddleware`/`ClientAuthController` almost line for line, but
+    is fully isolated from it: separate cookies (`client_access_token` vs
+    `access_token`) and a distinct `type` claim in the JWT payload, so a
+    stolen/replayed client token is rejected by admin routes and vice versa
+    even though both share the same signing secret.
+28. **Case study CMS improvements** (`/admin/projects.html`): projects can
+    now carry a `outcome_metrics` results section, link to one approved
+    `testimonials` row (rendered as a quote on the case study page — HTML
+    escaped, since a testimonial's quote text originates from a public
+    client-submission form, unlike the rest of a project's admin-authored
+    fields), and an `is_featured` flag. The homepage hero previously always
+    showed whichever project had the lowest `sort_order`; it now prefers the
+    explicitly featured one, falling back to the old behavior if none is set.
+29. **Make.com automation events** (`src/Support/MakeWebhook.php`): a single
+    configurable webhook URL (Admin → Settings → Integrations) receives a
+    JSON event for proposal acceptance, content publishing, testimonial
+    approval, newsletter signups, and stale quote requests — one Make.com
+    scenario routes all of them with a Router module keyed on the `event`
+    field. Every event is also logged to `integration_events` regardless of
+    whether the live push succeeded, and `GET /api/v1/integrations/events`
+    (Bearer-authenticated with a key generated in Settings) lets a scheduled
+    Make.com poller catch up on anything the webhook missed — it defaults to
+    only undelivered events, so the poller can run continuously alongside
+    the push webhook with no double-processing.
+30. **AI social post drafts** (`/admin/social-drafts.html`): a scheduled
+    (daily/weekly, Admin → Settings) or manually-triggered job drafts a
+    social post — a LinkedIn/Facebook-length version, an X/Twitter-length
+    version, and hashtags — from the most recently published blog post,
+    case study, or approved testimonial that hasn't already been drafted,
+    falling back to an original evergreen post (rotated across a few angles)
+    when there's nothing new to spotlight. Reuses `AiText::generate()` (the
+    same Gemini/OpenRouter fallback as Marketing Leads pitch drafting) and
+    the same "grounded prompt → JSON out" pattern. Admin reviews/edits
+    before approving; approval fires the `social_post_approved` Make.com
+    event above — actual publishing to social platforms happens in Make.com
+    via its platform connectors, not in this app.
 
 ## Deployment (Namecheap cPanel)
 
@@ -294,6 +373,13 @@ One-time setup on a new host:
    `https://princecaleb.dev/api/v1/payments/webhook` under Settings → API
    Keys & Webhooks so payments still reconcile even if a customer closes the
    tab before the in-browser verify call fires.
+7. Optional integrations, all in Admin -> Settings -> Integrations: a Gemini
+   and/or OpenRouter API key powers Live Chat, Marketing Leads pitch
+   drafting, and AI social post drafts (all degrade gracefully — keyword
+   fallback, generic pitch, or a clear "could not generate" error — if
+   neither is configured). A Make.com webhook URL + a generated integration
+   API key enable the automation events in #29; nothing breaks if these are
+   left blank, the relevant code paths just no-op.
 
 ## Notes for production
 
