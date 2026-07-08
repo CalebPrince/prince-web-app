@@ -43,3 +43,21 @@ RewriteRule ^s/ index.php [L]
 
 # Branded 404 page instead of the host's default error page
 ErrorDocument 404 /404.html
+
+# The host's default cache-control for CSS/JS is 7 days, which is too long
+# for a site with no cache-busting (no build step, no hashed filenames —
+# public/*.html link straight to /css/app.css, /js/*.js). A change deployed
+# today wouldn't reach a returning visitor's browser for up to a week.
+# Shortening it to 1 hour keeps real caching benefit for same-session
+# navigation without silently hiding fixes/features for days.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "public, max-age=3600"
+  </FilesMatch>
+</IfModule>
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 hour"
+  ExpiresByType application/javascript "access plus 1 hour"
+  ExpiresByType text/javascript "access plus 1 hour"
+</IfModule>
