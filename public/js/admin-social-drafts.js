@@ -18,6 +18,7 @@ const SOURCE_LABEL = {
 const PROVIDER_LABEL = {
   gemini: 'Gemini',
   openrouter: 'OpenRouter',
+  claude: 'Claude',
 };
 
 function renderDraftsTable(drafts) {

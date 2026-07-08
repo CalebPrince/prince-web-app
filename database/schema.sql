@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
   short_content TEXT,
   hashtags TEXT,
   image_url TEXT,
-  ai_provider TEXT CHECK (ai_provider IS NULL OR ai_provider IN ('gemini', 'openrouter')),
+  ai_provider TEXT CHECK (ai_provider IS NULL OR ai_provider IN ('gemini', 'openrouter', 'claude')),
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'rejected')),
   sent_to_makecom INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
