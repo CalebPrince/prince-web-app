@@ -24,17 +24,33 @@ class AiText
     /** @return string|null null only if Gemini AND OpenRouter (if configured) both failed, or neither is configured */
     public static function generate(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20): ?string
     {
+        $result = self::generateWithProvider($prompt, $systemInstruction, $timeoutSeconds);
+        return $result['text'] ?? null;
+    }
+
+    /**
+     * Same as generate(), but also reports which provider actually produced
+     * the text — useful anywhere the caller wants to record/display that
+     * (e.g. a per-item "generated with Gemini/OpenRouter" label).
+     *
+     * @return array{text:string,provider:'gemini'|'openrouter'}|null
+     */
+    public static function generateWithProvider(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20): ?array
+    {
         $geminiKey = Settings::get('gemini_api_key');
         if (!empty($geminiKey)) {
             $text = self::callGemini($geminiKey, $prompt, $systemInstruction, $timeoutSeconds);
             if ($text !== null) {
-                return $text;
+                return ['text' => $text, 'provider' => 'gemini'];
             }
         }
 
         $openRouterKey = Settings::get('openrouter_api_key');
         if (!empty($openRouterKey)) {
-            return self::callOpenRouter($openRouterKey, $prompt, $systemInstruction, $timeoutSeconds);
+            $text = self::callOpenRouter($openRouterKey, $prompt, $systemInstruction, $timeoutSeconds);
+            if ($text !== null) {
+                return ['text' => $text, 'provider' => 'openrouter'];
+            }
         }
 
         return null;

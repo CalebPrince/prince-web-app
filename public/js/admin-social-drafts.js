@@ -15,6 +15,11 @@ const SOURCE_LABEL = {
   general: 'Original idea',
 };
 
+const PROVIDER_LABEL = {
+  gemini: 'Gemini',
+  openrouter: 'OpenRouter',
+};
+
 function renderDraftsTable(drafts) {
   currentDrafts = drafts;
   const tbody = document.getElementById('drafts-tbody');
@@ -31,7 +36,10 @@ function renderDraftsTable(drafts) {
     <tr>
       <td class="ps-3">${SOURCE_LABEL[d.source_type] || d.source_type}</td>
       <td class="small text-muted-custom" style="max-width: 420px;">${escapeHtml((d.content || '').slice(0, 140))}${(d.content || '').length > 140 ? '…' : ''}</td>
-      <td><span class="status-pill ${STATUS_CLASS[d.status] || 'unread'}">${escapeHtml(d.status)}</span></td>
+      <td>
+        <span class="status-pill ${STATUS_CLASS[d.status] || 'unread'}">${escapeHtml(d.status)}</span>
+        ${d.ai_provider ? `<div class="small text-muted-custom mt-1">${PROVIDER_LABEL[d.ai_provider] || escapeHtml(d.ai_provider)}</div>` : ''}
+      </td>
       <td class="small text-muted-custom">${new Date(d.created_at).toLocaleString()}</td>
       <td class="text-end pe-3">
         <button type="button" class="btn btn-sm btn-outline-secondary review-btn" data-id="${d.id}">Review</button>
@@ -61,15 +69,31 @@ async function loadDrafts() {
   renderDraftsTable(Array.isArray(drafts) ? drafts : []);
 }
 
+function updateImagePreview() {
+  const url = document.getElementById('draft-image-url').value.trim();
+  const preview = document.getElementById('draft-image-preview');
+  if (url) {
+    preview.src = url;
+    preview.classList.remove('d-none');
+  } else {
+    preview.classList.add('d-none');
+  }
+}
+
 function openDraftModal(id) {
   const draft = currentDrafts.find(d => d.id === id);
   if (!draft) return;
   currentDraftId = id;
 
   document.getElementById('draft-modal-source').textContent = SOURCE_LABEL[draft.source_type] || draft.source_type;
+  document.getElementById('draft-modal-provider').textContent = draft.ai_provider
+    ? `Generated with ${PROVIDER_LABEL[draft.ai_provider] || draft.ai_provider}`
+    : '';
   document.getElementById('draft-content').value = draft.content || '';
   document.getElementById('draft-short-content').value = draft.short_content || '';
   document.getElementById('draft-hashtags').value = draft.hashtags || '';
+  document.getElementById('draft-image-url').value = draft.image_url || '';
+  updateImagePreview();
   document.getElementById('draft-modal-alert').classList.add('d-none');
 
   const approveBtn = document.getElementById('draft-approve-btn');
@@ -91,6 +115,7 @@ async function saveDraft(extra = {}) {
     content: document.getElementById('draft-content').value.trim(),
     short_content: document.getElementById('draft-short-content').value.trim(),
     hashtags: document.getElementById('draft-hashtags').value.trim(),
+    image_url: document.getElementById('draft-image-url').value.trim(),
     ...extra,
   };
   await api.patch(`/api/v1/admin/social-drafts/${currentDraftId}`, payload);
@@ -103,6 +128,7 @@ async function saveDraft(extra = {}) {
   wireLogout();
 
   draftModal = new bootstrap.Modal(document.getElementById('draft-modal'));
+  document.getElementById('draft-image-url').addEventListener('input', updateImagePreview);
 
   document.getElementById('generate-now-btn').addEventListener('click', async () => {
     const btn = document.getElementById('generate-now-btn');

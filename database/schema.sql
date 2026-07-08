@@ -349,9 +349,25 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
   content TEXT NOT NULL,
   short_content TEXT,
   hashtags TEXT,
+  image_url TEXT,
+  ai_provider TEXT CHECK (ai_provider IS NULL OR ai_provider IN ('gemini', 'openrouter')),
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'rejected')),
   sent_to_makecom INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_social_post_drafts_status ON social_post_drafts (status, created_at);
+
+-- Self-hosted URL shortener, mainly so AI-drafted social posts can link back
+-- to a blog post/case study without burning half of X/Twitter's character
+-- budget on a long querystring URL. One row per distinct target_url —
+-- ShortLink::getOrCreate() reuses an existing code rather than minting a
+-- new one every time the same page is referenced.
+CREATE TABLE IF NOT EXISTS short_links (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  code TEXT UNIQUE NOT NULL,
+  target_url TEXT UNIQUE NOT NULL,
+  clicks INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_short_links_code ON short_links (code);

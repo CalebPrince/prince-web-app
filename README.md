@@ -60,17 +60,20 @@ src/
                             InquiryController, ProjectRequestController,
                             ProposalController, PaymentController, ClientController,
                             ClientAuthController, ClientPortalController,
-                            SocialDraftController, IntegrationController,
-                            MarketingLeadController, TestimonialController,
-                            NewsletterController, AppointmentController,
-                            SettingsController, AuthController, AiChatController,
-                            LiveChatController, and more
+                            SocialDraftController, ShortLinkController,
+                            IntegrationController, MarketingLeadController,
+                            TestimonialController, NewsletterController,
+                            AppointmentController, SettingsController,
+                            AuthController, AiChatController, LiveChatController,
+                            and more
   Middleware/              # AuthMiddleware (admin JWT), ClientAuthMiddleware
                             (client portal JWT, isolated via a `type` claim —
                             see #27), RateLimitMiddleware
   Support/                 # Database (PDO singleton), Jwt, Settings, Validator,
-                            Response, Mailer, AiText (Gemini/OpenRouter fallback),
-                            MakeWebhook (push + log every automation event)
+                            Response, Mailer, AiText (Gemini/OpenRouter fallback,
+                            can report which provider succeeded), MakeWebhook
+                            (push + log every automation event), ShortLink
+                            (getOrCreate/resolve for the /s/{code} redirector)
   Router.php                # tiny hand-rolled router — no framework dependency
   autoload.php               # minimal PSR-4-style autoloader for the App\ namespace
 config/config.php         # env-based settings, memoized via appConfig()
@@ -311,10 +314,22 @@ storage/
     falling back to an original evergreen post (rotated across a few angles)
     when there's nothing new to spotlight. Reuses `AiText::generate()` (the
     same Gemini/OpenRouter fallback as Marketing Leads pitch drafting) and
-    the same "grounded prompt → JSON out" pattern. Admin reviews/edits
+    the same "grounded prompt → JSON out" pattern. A blog/case-study draft
+    also carries that source's cover image (`image_url`, editable/clearable
+    in the review modal); evergreen and testimonial drafts have none by
+    default since there's no natural image to attach. Admin reviews/edits
     before approving; approval fires the `social_post_approved` Make.com
     event above — actual publishing to social platforms happens in Make.com
-    via its platform connectors, not in this app.
+    via its platform connectors, not in this app. Each draft also records
+    which provider (`ai_provider`: `gemini` or `openrouter`) actually
+    generated it, shown in the admin list and review modal — useful for
+    noticing if Gemini's quota is exhausted and everything is quietly
+    falling back to OpenRouter. Blog/case-study links in the drafted text
+    go through a self-hosted shortener (`src/Support/ShortLink.php`,
+    `princecaleb.dev/s/{code}`, public redirect via `ShortLinkController`)
+    rather than the full `/blog-post.html?slug=...` URL, since every
+    character counts on the X/Twitter-length version — `getOrCreate()`
+    reuses the same code if the same page is ever linked again.
 
 ## Deployment (Namecheap cPanel)
 

@@ -57,6 +57,7 @@ use App\Controllers\ProjectController;
 use App\Controllers\ProjectRequestController;
 use App\Controllers\SearchController;
 use App\Controllers\SettingsController;
+use App\Controllers\ShortLinkController;
 use App\Controllers\SocialDraftController;
 use App\Controllers\TagController;
 use App\Controllers\TestimonialController;
@@ -66,6 +67,7 @@ use App\Router;
 $router = new Router();
 
 // Public
+$router->get('/s/{code}', [ShortLinkController::class, 'redirect']);
 $router->get('/api/v1/projects', [ProjectController::class, 'index']);
 $router->get('/api/v1/projects/{slug}', [ProjectController::class, 'show']);
 $router->get('/api/v1/tags', [TagController::class, 'index']);

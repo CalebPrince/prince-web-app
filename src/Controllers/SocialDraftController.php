@@ -9,6 +9,7 @@ use App\Support\AiText;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
+use App\Support\ShortLink;
 
 /**
  * AI-drafted social posts. generateDraft() is shared between the scheduled
@@ -57,7 +58,7 @@ class SocialDraftController
 
         $fields = [];
         $values = [];
-        foreach (['content', 'short_content', 'hashtags'] as $key) {
+        foreach (['content', 'short_content', 'hashtags', 'image_url'] as $key) {
             if (array_key_exists($key, $data)) {
                 $fields[] = "$key = ?";
                 $values[] = trim((string) $data[$key]) !== '' ? trim((string) $data[$key]) : null;
@@ -88,6 +89,7 @@ class SocialDraftController
                 'content' => $fresh['content'],
                 'short_content' => $fresh['short_content'],
                 'hashtags' => $fresh['hashtags'],
+                'image_url' => $fresh['image_url'],
                 'source_type' => $fresh['source_type'],
             ]);
             $pdo->prepare('UPDATE social_post_drafts SET sent_to_makecom = 1 WHERE id = ?')->execute([$id]);
@@ -111,13 +113,13 @@ class SocialDraftController
         $source = self::findSource($pdo);
         $prompt = $source ? self::promptForSource($source) : self::generalPrompt();
 
-        $text = AiText::generate($prompt, null, 20);
-        if ($text === null) {
+        $result = AiText::generateWithProvider($prompt, null, 20);
+        if ($result === null) {
             error_log('Social draft generation: both Gemini and OpenRouter (if configured) failed.');
             return null;
         }
 
-        $text = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $text));
+        $text = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['text']));
         $parsed = json_decode($text, true);
         if (!is_array($parsed) || empty($parsed['content'])) {
             error_log('Social draft generation: could not parse JSON from model output: ' . substr($text, 0, 800));
@@ -125,7 +127,7 @@ class SocialDraftController
         }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags) VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, image_url, ai_provider) VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $source['type'] ?? 'general',
@@ -133,6 +135,8 @@ class SocialDraftController
             (string) $parsed['content'],
             !empty($parsed['short_content']) ? (string) $parsed['short_content'] : null,
             !empty($parsed['hashtags']) ? (string) $parsed['hashtags'] : null,
+            $source['image'] ?? null,
+            $result['provider'],
         ]);
 
         return ['id' => (int) $pdo->lastInsertId()];
@@ -141,7 +145,7 @@ class SocialDraftController
     private static function findSource(\PDO $pdo): ?array
     {
         $stmt = $pdo->query(
-            "SELECT id, slug, title, excerpt FROM blog_posts
+            "SELECT id, slug, title, excerpt, cover_image_path FROM blog_posts
              WHERE is_published = 1
                AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'blog' AND source_id IS NOT NULL)
              ORDER BY created_at DESC LIMIT 1"
@@ -153,12 +157,13 @@ class SocialDraftController
                 'id' => (int) $blog['id'],
                 'title' => $blog['title'],
                 'summary' => $blog['excerpt'],
-                'url' => self::absoluteUrl('/blog-post.html?slug=' . $blog['slug']),
+                'url' => ShortLink::getOrCreate(self::absoluteUrl('/blog-post.html?slug=' . $blog['slug'])),
+                'image' => self::absoluteUrl($blog['cover_image_path']),
             ];
         }
 
         $stmt = $pdo->query(
-            "SELECT id, slug, title, summary FROM projects
+            "SELECT id, slug, title, summary, cover_image_path FROM projects
              WHERE is_published = 1
                AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'project' AND source_id IS NOT NULL)
              ORDER BY created_at DESC LIMIT 1"
@@ -170,7 +175,8 @@ class SocialDraftController
                 'id' => (int) $project['id'],
                 'title' => $project['title'],
                 'summary' => $project['summary'],
-                'url' => self::absoluteUrl('/project.html?slug=' . $project['slug']),
+                'url' => ShortLink::getOrCreate(self::absoluteUrl('/project.html?slug=' . $project['slug'])),
+                'image' => self::absoluteUrl($project['cover_image_path']),
             ];
         }
 

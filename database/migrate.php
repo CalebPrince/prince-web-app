@@ -127,6 +127,14 @@ if (!in_array('reminder_sent', $milestoneColumns, true)) {
     $pdo->exec('ALTER TABLE proposal_milestones ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0');
 }
 
+$socialDraftColumns = array_column($pdo->query('PRAGMA table_info(social_post_drafts)')->fetchAll(), 'name');
+if (!in_array('image_url', $socialDraftColumns, true)) {
+    $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN image_url TEXT');
+}
+if (!in_array('ai_provider', $socialDraftColumns, true)) {
+    $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN ai_provider TEXT');
+}
+
 // SQLite can't relax a NOT NULL constraint via ALTER TABLE — rebuild the
 // table if website_url is still marked NOT NULL from before leads with no
 // website were supported.

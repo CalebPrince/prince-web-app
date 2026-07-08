@@ -77,7 +77,10 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Review draft — <span id="draft-modal-source"></span></h5>
+        <div>
+          <h5 class="modal-title mb-0">Review draft — <span id="draft-modal-source"></span></h5>
+          <span class="small text-muted-custom" id="draft-modal-provider"></span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -92,6 +95,13 @@
         <div class="mb-3">
           <label class="form-label fw-semibold">Hashtags</label>
           <input type="text" class="form-control" id="draft-hashtags" placeholder="#WebDevelopment #Ghana">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Image URL <span class="text-muted-custom fw-normal">(auto-filled from the source's cover image when available — clear it to send with no image)</span></label>
+          <div class="d-flex align-items-center gap-2">
+            <img id="draft-image-preview" class="d-none" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);">
+            <input type="text" class="form-control" id="draft-image-url" placeholder="https://...">
+          </div>
         </div>
         <div id="draft-modal-alert" class="alert py-2 small d-none"></div>
       </div>

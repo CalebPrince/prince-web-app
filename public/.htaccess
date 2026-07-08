@@ -36,5 +36,10 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^api/ index.php [L]
 
+# Short links (/s/{code}, see ShortLinkController) also route through index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^s/ index.php [L]
+
 # Branded 404 page instead of the host's default error page
 ErrorDocument 404 /404.html
