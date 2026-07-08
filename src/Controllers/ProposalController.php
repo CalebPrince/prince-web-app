@@ -194,7 +194,8 @@ class ProposalController
             }
 
             if ($inquiryId) {
-                $pdo->prepare("UPDATE inquiries SET status = 'read' WHERE id = ?")->execute([$inquiryId]);
+                $pdo->prepare("UPDATE inquiries SET status = 'read', pipeline_stage = 'proposal_sent' WHERE id = ?")
+                    ->execute([$inquiryId]);
             }
 
             $pdo->commit();
@@ -372,7 +373,8 @@ class ProposalController
             Response::error('Please type your name to confirm acceptance.', 422);
         }
 
-        Database::get()->prepare(
+        $pdo = Database::get();
+        $pdo->prepare(
             "UPDATE proposals SET status = 'accepted', accepted_at = datetime('now'), updated_at = datetime('now'),
              accepted_by_name = ?, accepted_ip = ?, accepted_user_agent = ? WHERE token = ?"
         )->execute([
@@ -381,6 +383,10 @@ class ProposalController
             $_SERVER['HTTP_USER_AGENT'] ?? null,
             $params['token'],
         ]);
+
+        if ($proposal['inquiry_id']) {
+            $pdo->prepare("UPDATE inquiries SET pipeline_stage = 'won' WHERE id = ?")->execute([$proposal['inquiry_id']]);
+        }
 
         Response::json(['status' => 'accepted']);
     }

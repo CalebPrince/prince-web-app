@@ -52,13 +52,14 @@ class InquiryController
         Response::json(['status' => 'received'], 201);
     }
 
-    /** GET /api/v1/admin/inquiries?status=unread&type=project_request */
+    /** GET /api/v1/admin/inquiries?status=unread&type=project_request&pipeline_stage=won */
     public static function adminIndex(): void
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $status = $_GET['status'] ?? null;
         $type = $_GET['type'] ?? null;
+        $pipelineStage = $_GET['pipeline_stage'] ?? null;
 
         $select = "SELECT i.*, wq.status AS notify_status, wq.attempts AS notify_attempts,
                           wq.slack_sent, wq.email_sent
@@ -75,6 +76,10 @@ class InquiryController
             $where[] = 'i.type = ?';
             $params[] = $type;
         }
+        if ($pipelineStage) {
+            $where[] = 'i.pipeline_stage = ?';
+            $params[] = $pipelineStage;
+        }
 
         $sql = $select . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . ' ORDER BY i.created_at DESC';
         $stmt = $pdo->prepare($sql);
@@ -90,7 +95,7 @@ class InquiryController
         $pdo = Database::get();
         $type = $_GET['type'] ?? null;
 
-        $sql = 'SELECT name, email, message, type, project_type, budget, timeline, features, status, created_at FROM inquiries';
+        $sql = 'SELECT name, email, message, type, project_type, budget, timeline, features, status, pipeline_stage, created_at FROM inquiries';
         if ($type) {
             $stmt = $pdo->prepare("$sql WHERE type = ? ORDER BY created_at DESC");
             $stmt->execute([$type]);
@@ -103,32 +108,47 @@ class InquiryController
         header('Content-Disposition: attachment; filename="inquiries-' . date('Y-m-d') . '.csv"');
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Name', 'Email', 'Message', 'Type', 'Project Type', 'Budget', 'Timeline', 'Features', 'Status', 'Created At'], ',', '"', '\\');
+        fputcsv($out, ['Name', 'Email', 'Message', 'Type', 'Project Type', 'Budget', 'Timeline', 'Features', 'Status', 'Pipeline Stage', 'Created At'], ',', '"', '\\');
         foreach ($rows as $row) {
             fputcsv($out, [
                 $row['name'], $row['email'], $row['message'], $row['type'],
                 $row['project_type'], $row['budget'], $row['timeline'], $row['features'],
-                $row['status'], $row['created_at'],
+                $row['status'], $row['pipeline_stage'], $row['created_at'],
             ], ',', '"', '\\');
         }
         fclose($out);
         exit;
     }
 
-    /** PATCH /api/v1/admin/inquiries/{id} — body: {"status": "read"|"flagged"|"archived"} */
+    /** PATCH /api/v1/admin/inquiries/{id} — body: {status?, pipeline_stage?} */
     public static function updateStatus(array $params): void
     {
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $status = $data['status'] ?? '';
 
-        if (!in_array($status, ['unread', 'read', 'flagged', 'archived'], true)) {
-            Response::error('Invalid status', 422);
+        $fields = [];
+        $values = [];
+        if (array_key_exists('status', $data)) {
+            if (!in_array($data['status'], ['unread', 'read', 'flagged', 'archived'], true)) {
+                Response::error('Invalid status', 422);
+            }
+            $fields[] = 'status = ?';
+            $values[] = $data['status'];
+        }
+        if (array_key_exists('pipeline_stage', $data)) {
+            if (!in_array($data['pipeline_stage'], ['new', 'reviewing', 'proposal_sent', 'won', 'lost'], true)) {
+                Response::error('Invalid pipeline stage', 422);
+            }
+            $fields[] = 'pipeline_stage = ?';
+            $values[] = $data['pipeline_stage'];
+        }
+        if (!$fields) {
+            Response::error('Nothing to update.', 422);
         }
 
+        $values[] = (int) $params['id'];
         $pdo = Database::get();
-        $pdo->prepare('UPDATE inquiries SET status = ? WHERE id = ?')
-            ->execute([$status, (int) $params['id']]);
+        $pdo->prepare('UPDATE inquiries SET ' . implode(', ', $fields) . ' WHERE id = ?')->execute($values);
 
         Response::json(['status' => 'updated']);
     }

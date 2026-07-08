@@ -1,3 +1,18 @@
+const STAGE_CLASS = {
+  new: 'unread',
+  reviewing: 'pending',
+  proposal_sent: 'sent',
+  won: 'published',
+  lost: 'flagged',
+};
+const STAGE_LABEL = {
+  new: 'New',
+  reviewing: 'Reviewing',
+  proposal_sent: 'Proposal Sent',
+  won: 'Won',
+  lost: 'Lost',
+};
+
 function notifyBadge(i) {
   const detail = `Slack: ${i.slack_sent ? "sent" : "not sent"} · Email: ${i.email_sent ? "sent" : "not sent"}`;
   if (!i.notify_status) {
@@ -41,6 +56,8 @@ async function loadInquiries(status = "") {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (typeof PAGE_TYPE !== "undefined" && PAGE_TYPE) params.set("type", PAGE_TYPE);
+  const stageFilter = document.getElementById("stage-filter");
+  if (stageFilter && stageFilter.value) params.set("pipeline_stage", stageFilter.value);
   const query = params.toString() ? `?${params.toString()}` : "";
   const inquiries = await api.get(`/api/v1/admin/inquiries${query}`);
   const list = document.getElementById("inquiries-list");
@@ -63,6 +80,7 @@ async function loadInquiries(status = "") {
         </div>
         <div class="d-flex gap-2 align-items-center">
           ${notifyBadge(i)}
+          ${i.type === "project_request" ? `<span class="status-pill ${STAGE_CLASS[i.pipeline_stage] || 'unread'}">${STAGE_LABEL[i.pipeline_stage] || i.pipeline_stage}</span>` : ""}
           <span class="status-pill ${i.status}">${i.status}</span>
         </div>
       </div>
@@ -70,8 +88,13 @@ async function loadInquiries(status = "") {
       <p class="mb-2">${escapeHtml(i.message)}</p>
       <div class="d-flex justify-content-between align-items-center">
         <small class="text-muted-custom">${new Date(i.created_at).toLocaleString()}</small>
-        <div class="d-flex gap-2">
-          ${i.type === "project_request" ? `<a class="btn btn-sm btn-outline-primary" href="/admin/proposals.html?inquiry_id=${encodeURIComponent(i.id)}">Create Proposal</a>` : ""}
+        <div class="d-flex gap-2 align-items-center">
+          ${i.type === "project_request" ? `
+            <select class="form-select form-select-sm stage-select" data-id="${i.id}" style="width:auto;">
+              ${Object.keys(STAGE_LABEL).map(s => `<option value="${s}" ${s === i.pipeline_stage ? "selected" : ""}>${STAGE_LABEL[s]}</option>`).join("")}
+            </select>
+            <a class="btn btn-sm btn-outline-primary" href="/admin/proposals.html?inquiry_id=${encodeURIComponent(i.id)}">Create Proposal</a>
+          ` : ""}
           <button class="btn btn-sm btn-outline-secondary status-btn" data-id="${i.id}" data-status="read">Mark Read</button>
           <button class="btn btn-sm btn-outline-danger status-btn" data-id="${i.id}" data-status="flagged">Flag</button>
           <button class="btn btn-sm btn-outline-secondary status-btn" data-id="${i.id}" data-status="archived">Archive</button>
@@ -86,6 +109,13 @@ async function loadInquiries(status = "") {
       await loadInquiries(document.getElementById("status-filter").value);
     });
   });
+
+  list.querySelectorAll(".stage-select").forEach(select => {
+    select.addEventListener("change", async () => {
+      await api.patch(`/api/v1/admin/inquiries/${select.dataset.id}`, { pipeline_stage: select.value });
+      await loadInquiries(document.getElementById("status-filter").value);
+    });
+  });
 }
 
 (async function init() {
@@ -94,6 +124,10 @@ async function loadInquiries(status = "") {
   wireLogout();
 
   document.getElementById("status-filter").addEventListener("change", (e) => loadInquiries(e.target.value));
+  const stageFilter = document.getElementById("stage-filter");
+  if (stageFilter) {
+    stageFilter.addEventListener("change", () => loadInquiries(document.getElementById("status-filter").value));
+  }
 
   const exportLink = document.getElementById("export-csv-link");
   if (exportLink && typeof PAGE_TYPE !== "undefined" && PAGE_TYPE) {

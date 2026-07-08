@@ -64,6 +64,9 @@ foreach (['project_type', 'budget', 'timeline', 'features', 'attachments'] as $c
         $pdo->exec("ALTER TABLE inquiries ADD COLUMN {$col} TEXT");
     }
 }
+if (!in_array('pipeline_stage', $inquiryColumns, true)) {
+    $pdo->exec("ALTER TABLE inquiries ADD COLUMN pipeline_stage TEXT NOT NULL DEFAULT 'new'");
+}
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_inquiries_type ON inquiries (type)');
 
 $appointmentColumns = array_column($pdo->query('PRAGMA table_info(appointments)')->fetchAll(), 'name');

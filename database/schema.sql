@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS inquiries (
   ip_address TEXT NOT NULL,
   user_agent TEXT,
   type TEXT NOT NULL DEFAULT 'contact' CHECK (type IN ('contact', 'project_request')),
+  pipeline_stage TEXT NOT NULL DEFAULT 'new'
+    CHECK (pipeline_stage IN ('new', 'reviewing', 'proposal_sent', 'won', 'lost')),
   project_type TEXT,
   budget TEXT,
   timeline TEXT,
