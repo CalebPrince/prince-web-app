@@ -320,3 +320,17 @@ CREATE TABLE IF NOT EXISTS client_messages (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_client_messages_client ON client_messages (client_id, created_at);
+
+-- Backs the Make.com integration's pull fallback: every event MakeWebhook
+-- pushes gets logged here too (whether or not the push itself succeeded),
+-- so a Make.com scenario that missed the live webhook — paused, down,
+-- URL not yet configured — can catch up later via GET
+-- /api/v1/integrations/events?since_id=... instead of losing the event.
+CREATE TABLE IF NOT EXISTS integration_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event TEXT NOT NULL,
+  data TEXT NOT NULL,
+  push_delivered INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_integration_events_created ON integration_events (created_at);

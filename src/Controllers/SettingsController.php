@@ -12,7 +12,8 @@ class SettingsController
 {
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
-        'gemini_api_key', 'openrouter_api_key', 'openrouter_model', 'slack_webhook_url', 'makecom_webhook_url', 'notification_email',
+        'gemini_api_key', 'openrouter_api_key', 'openrouter_model', 'slack_webhook_url', 'makecom_webhook_url',
+        'integration_api_key', 'notification_email',
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
         'maintenance_mode',
         'paystack_public_key', 'paystack_secret_key',

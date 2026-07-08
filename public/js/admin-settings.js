@@ -91,6 +91,7 @@ async function saveIntegrations(e) {
       openrouter_model: document.getElementById("openrouter-model").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
       makecom_webhook_url: document.getElementById("makecom-url").value.trim(),
+      integration_api_key: document.getElementById("integration-api-key").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
@@ -216,6 +217,14 @@ async function testAi() {
 
   document.getElementById("integrations-form").addEventListener("submit", saveIntegrations);
   document.getElementById("test-ai-btn").addEventListener("click", testAi);
+  document.getElementById("generate-api-key-btn").addEventListener("click", () => {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    const key = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    const input = document.getElementById("integration-api-key");
+    input.type = "text";
+    input.value = key;
+  });
   document.getElementById("hours-form").addEventListener("submit", saveHours);
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
@@ -228,6 +237,7 @@ async function testAi() {
     document.getElementById("openrouter-model").value = settings.openrouter_model || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";
+    document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 

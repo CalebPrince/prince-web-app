@@ -47,6 +47,7 @@ use App\Controllers\ClientController;
 use App\Controllers\ClientPortalController;
 use App\Controllers\DashboardController;
 use App\Controllers\InquiryController;
+use App\Controllers\IntegrationController;
 use App\Controllers\LiveChatController;
 use App\Controllers\MarketingLeadController;
 use App\Controllers\NewsletterController;
@@ -109,6 +110,7 @@ $router->get('/api/v1/testimonials', [TestimonialController::class, 'publicList'
 $router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'getByToken']);
 $router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'submit']);
 $router->get('/api/v1/search', [SearchController::class, 'search']);
+$router->get('/api/v1/integrations/events', [IntegrationController::class, 'events']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);
