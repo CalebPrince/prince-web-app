@@ -89,6 +89,7 @@ async function loadProposals() {
           <div class="d-inline-flex flex-wrap justify-content-end gap-2">
             <a href="${url}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">View</a>
             <button type="button" class="btn btn-sm btn-outline-secondary copy-proposal-btn" data-url="${escapeHtml(url)}">Copy link</button>
+            <button type="button" class="btn btn-sm btn-brand send-proposal-btn" data-id="${p.id}">Email</button>
           </div>
         </td>
       </tr>
@@ -104,6 +105,28 @@ async function loadProposals() {
         setTimeout(() => { btn.textContent = old; }, 2000);
       } catch (_) {
         prompt('Copy this proposal link:', btn.dataset.url);
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.send-proposal-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const resultBox = document.getElementById('proposal-result');
+      const old = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        const result = await api.post(`/api/v1/admin/proposals/${btn.dataset.id}/send`, {});
+        resultBox.className = 'alert alert-success py-2 small';
+        resultBox.innerHTML = `Proposal email sent. <a href="${escapeHtml(result.url)}" target="_blank" rel="noopener">Open proposal</a>`;
+        resultBox.classList.remove('d-none');
+      } catch (err) {
+        resultBox.className = 'alert alert-danger py-2 small';
+        resultBox.textContent = err.message || 'Could not send proposal email.';
+        resultBox.classList.remove('d-none');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = old;
       }
     });
   });

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
+use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -29,6 +30,41 @@ class ProposalController
         )->fetchAll();
 
         Response::json($rows);
+    }
+
+    /** POST /api/v1/admin/proposals/{id}/send */
+    public static function send(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+        if ($id <= 0) {
+            Response::error('Proposal not found.', 404);
+        }
+
+        $stmt = Database::get()->prepare('SELECT * FROM proposals WHERE id = ?');
+        $stmt->execute([$id]);
+        $proposal = $stmt->fetch();
+        if (!$proposal) {
+            Response::error('Proposal not found.', 404);
+        }
+
+        $url = self::absoluteUrl('/proposal.html?token=' . $proposal['token']);
+        $sent = Mailer::send(
+            $proposal['client_email'],
+            'Your project proposal is ready',
+            "Hi {$proposal['client_name']},\n\n"
+                . "Your project proposal is ready for review:\n\n{$url}\n\n"
+                . "Please open the link to review the scope, timeline, terms, and payment milestones. "
+                . "Once you accept the proposal, the payment buttons will unlock for the agreed milestones.\n\n"
+                . "If anything needs adjusting, just reply to this email.\n\n"
+                . "Prince Caleb"
+        );
+
+        if (!$sent) {
+            Response::error('Could not send the proposal email. Please copy the link and send it manually.', 500);
+        }
+
+        Response::json(['status' => 'sent', 'url' => $url]);
     }
 
     /** GET /api/v1/admin/proposals/quote-requests */
@@ -221,5 +257,17 @@ class ProposalController
 
         $proposal['milestones'] = $milestones;
         return $proposal;
+    }
+
+    private static function absoluteUrl(string $path): string
+    {
+        $host = $_SERVER['HTTP_HOST'] ?? 'princecaleb.dev';
+        $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https' ? 'https' : 'http';
+        if ($host === 'princecaleb.dev' || str_ends_with($host, '.princecaleb.dev')) {
+            $scheme = 'https';
+        }
+
+        return $scheme . '://' . $host . $path;
     }
 }

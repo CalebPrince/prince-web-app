@@ -138,6 +138,7 @@ $router->get('/api/v1/admin/payment-links', [PaymentController::class, 'adminInd
 $router->post('/api/v1/admin/payment-links', [PaymentController::class, 'createLink']);
 $router->get('/api/v1/admin/proposals', [ProposalController::class, 'adminIndex']);
 $router->post('/api/v1/admin/proposals', [ProposalController::class, 'store']);
+$router->post('/api/v1/admin/proposals/{id}/send', [ProposalController::class, 'send']);
 $router->get('/api/v1/admin/proposals/quote-requests', [ProposalController::class, 'quoteRequests']);
 $router->get('/api/v1/admin/analytics/summary', [AnalyticsController::class, 'summary']);
 $router->get('/api/v1/admin/appointments', [AppointmentController::class, 'adminIndex']);
