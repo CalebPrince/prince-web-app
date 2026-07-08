@@ -107,6 +107,11 @@ if (!in_array('client_id', $paymentLinkColumns, true)) {
     $pdo->exec('ALTER TABLE payment_links ADD COLUMN client_id INTEGER REFERENCES clients(id)');
 }
 
+$milestoneColumns = array_column($pdo->query('PRAGMA table_info(proposal_milestones)')->fetchAll(), 'name');
+if (!in_array('reminder_sent', $milestoneColumns, true)) {
+    $pdo->exec('ALTER TABLE proposal_milestones ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0');
+}
+
 // SQLite can't relax a NOT NULL constraint via ALTER TABLE — rebuild the
 // table if website_url is still marked NOT NULL from before leads with no
 // website were supported.

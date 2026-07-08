@@ -184,6 +184,7 @@ CREATE TABLE IF NOT EXISTS proposal_milestones (
   currency TEXT NOT NULL DEFAULT 'GHS',
   due_note TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0,
+  reminder_sent INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_proposal_milestones_proposal ON proposal_milestones (proposal_id, sort_order);
