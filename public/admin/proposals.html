@@ -49,8 +49,28 @@
     </div>
 
     <div id="proposal-result" class="alert alert-success py-2 small d-none"></div>
-    <div id="proposals-list"></div>
-    <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No proposals yet.</div>
+    <div id="proposal-page-error" class="alert alert-danger py-2 small d-none"></div>
+    <div class="admin-card p-0 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Proposal</th>
+              <th>Client</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Milestones</th>
+              <th class="text-end">Link</th>
+            </tr>
+          </thead>
+          <tbody id="proposals-table-body">
+            <tr>
+              <td colspan="6" class="text-center text-muted-custom py-4">Loading proposals...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 

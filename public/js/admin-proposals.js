@@ -62,38 +62,38 @@ async function loadQuoteRequests() {
 
 async function loadProposals() {
   const rows = await api.get('/api/v1/admin/proposals');
-  const list = document.getElementById('proposals-list');
-  const empty = document.getElementById('empty-state');
+  const tbody = document.getElementById('proposals-table-body');
   if (!rows.length) {
-    list.innerHTML = '';
-    empty.classList.remove('d-none');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No proposals yet.</td></tr>';
     return;
   }
-  empty.classList.add('d-none');
 
-  list.innerHTML = rows.map(p => {
+  tbody.innerHTML = rows.map(p => {
     const url = `${window.location.origin}/proposal.html?token=${p.token}`;
     return `
-      <div class="admin-card p-3 mb-3">
-        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
-          <div>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-              <h5 class="mb-0">${escapeHtml(p.title)}</h5>
-              <span class="status-pill ${STATUS_CLASS[p.status] || 'read'}">${escapeHtml(p.status)}</span>
-            </div>
-            <div class="small text-muted-custom">${escapeHtml(p.client_name)} &middot; ${escapeHtml(p.client_email)}</div>
-            <div class="small text-muted-custom">${formatAmount(p.total_amount, p.currency)} &middot; ${p.milestone_count || 0} milestone(s), ${p.paid_milestone_count || 0} paid</div>
-          </div>
-          <div class="d-flex flex-wrap align-items-center gap-2">
+      <tr>
+        <td>
+          <div class="fw-semibold">${escapeHtml(p.title)}</div>
+          <div class="small text-muted-custom">${new Date(p.created_at).toLocaleString()}</div>
+        </td>
+        <td>
+          <div>${escapeHtml(p.client_name)}</div>
+          <div class="small text-muted-custom">${escapeHtml(p.client_email)}</div>
+        </td>
+        <td>${formatAmount(p.total_amount, p.currency)}</td>
+        <td><span class="status-pill ${STATUS_CLASS[p.status] || 'read'}">${escapeHtml(p.status)}</span></td>
+        <td>${p.paid_milestone_count || 0}/${p.milestone_count || 0} paid</td>
+        <td class="text-end">
+          <div class="d-inline-flex flex-wrap justify-content-end gap-2">
             <a href="${url}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">View</a>
             <button type="button" class="btn btn-sm btn-outline-secondary copy-proposal-btn" data-url="${escapeHtml(url)}">Copy link</button>
           </div>
-        </div>
-      </div>
+        </td>
+      </tr>
     `;
   }).join('');
 
-  list.querySelectorAll('.copy-proposal-btn').forEach(btn => {
+  tbody.querySelectorAll('.copy-proposal-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(btn.dataset.url);
@@ -158,6 +158,17 @@ async function createProposal(e) {
   }
 }
 
+function showPageError(message) {
+  const box = document.getElementById('proposal-page-error');
+  box.textContent = message;
+  box.classList.remove('d-none');
+}
+
+function showProposalListError(message) {
+  document.getElementById('proposals-table-body').innerHTML =
+    `<tr><td colspan="6" class="text-center text-danger py-4">${escapeHtml(message)}</td></tr>`;
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -174,7 +185,17 @@ async function createProposal(e) {
   document.getElementById('inquiry-id').addEventListener('change', e => prefillFromQuote(e.target.value));
   document.getElementById('proposal-form').addEventListener('submit', createProposal);
 
-  await Promise.all([loadQuoteRequests(), loadProposals()]);
+  try {
+    await loadQuoteRequests();
+  } catch (err) {
+    showPageError(`Could not load quote requests: ${err.message}`);
+  }
+
+  try {
+    await loadProposals();
+  } catch (err) {
+    showProposalListError(`Could not load proposals: ${err.message}`);
+  }
   const inquiryId = new URLSearchParams(window.location.search).get('inquiry_id');
   if (inquiryId) {
     resetProposalForm();
