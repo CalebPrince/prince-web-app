@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
@@ -95,8 +96,15 @@ class NewsletterController
     /** DELETE /api/v1/admin/newsletter/{id} */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
-        Database::get()->prepare('DELETE FROM newsletter_subscribers WHERE id = ?')->execute([(int) $params['id']]);
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT email FROM newsletter_subscribers WHERE id = ?');
+        $stmt->execute([$id]);
+        $email = $stmt->fetchColumn();
+
+        $pdo->prepare('DELETE FROM newsletter_subscribers WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'newsletter_subscriber', $id, $email ?: null);
         Response::json(['status' => 'deleted']);
     }
 }

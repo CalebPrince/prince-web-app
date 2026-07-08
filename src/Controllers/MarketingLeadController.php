@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\AiText;
 use App\Support\Database;
 use App\Support\Response;
@@ -102,8 +103,15 @@ class MarketingLeadController
     /** DELETE /api/v1/admin/marketing-leads/{id} */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
-        Database::get()->prepare('DELETE FROM marketing_leads WHERE id = ?')->execute([(int) $params['id']]);
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT business_name FROM marketing_leads WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+
+        $pdo->prepare('DELETE FROM marketing_leads WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'marketing_lead', $id, $name ?: null);
         Response::json(['status' => 'deleted']);
     }
 

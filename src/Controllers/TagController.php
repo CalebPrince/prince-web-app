@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\Response;
 
@@ -87,9 +88,15 @@ class TagController
     /** DELETE /api/v1/admin/tags/{id} — project_tags rows cascade */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
         $pdo = Database::get();
-        $pdo->prepare('DELETE FROM tags WHERE id = ?')->execute([(int) $params['id']]);
+        $stmt = $pdo->prepare('SELECT name FROM tags WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+
+        $pdo->prepare('DELETE FROM tags WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'tag', $id, $name ?: null);
         Response::json(['status' => 'deleted']);
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
@@ -245,9 +246,15 @@ class ProjectController
     /** DELETE /api/v1/admin/projects/{id} */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
         $pdo = Database::get();
-        $pdo->prepare('DELETE FROM projects WHERE id = ?')->execute([(int) $params['id']]);
+        $stmt = $pdo->prepare('SELECT title FROM projects WHERE id = ?');
+        $stmt->execute([$id]);
+        $title = $stmt->fetchColumn();
+
+        $pdo->prepare('DELETE FROM projects WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'project', $id, $title ?: null);
         Response::json(['status' => 'deleted']);
     }
 

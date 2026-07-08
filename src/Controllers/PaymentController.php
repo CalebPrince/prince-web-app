@@ -6,7 +6,9 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
+use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -236,7 +238,54 @@ class PaymentController
                 ->execute([$payment['payment_link_id']]);
         }
 
+        if ($verifiedSuccess) {
+            self::sendOnboardingEmail($payment);
+        }
+
         return $newStatus;
+    }
+
+    /**
+     * Fires once per payment — this is only ever reached on the genuine
+     * pending -> success transition, since the early-return idempotency
+     * guard above short-circuits every later verify/webhook call for the
+     * same reference.
+     */
+    private static function sendOnboardingEmail(array $payment): void
+    {
+        $email = trim((string) ($payment['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        $name = trim((string) ($payment['customer_name'] ?? '')) ?: 'there';
+        $description = $payment['description'] ?: 'your project';
+        $amount = number_format(((int) $payment['amount']) / 100, 2);
+        $currency = $payment['currency'] ?: 'GHS';
+        $bookingUrl = self::absoluteUrl('/book.html');
+
+        $body = "Hi {$name},\n\n"
+            . "Thanks for your payment of {$currency} {$amount} for {$description} — it's been received and confirmed.\n\n"
+            . "Here's what happens next:\n"
+            . "1. I'll review the details and reach out within 1 business day to confirm scope and timeline.\n"
+            . "2. If we haven't already, let's book a kickoff call to align on requirements: {$bookingUrl}\n"
+            . "3. In the meantime, it helps to have ready: any brand assets (logo, colors), example sites/apps you like, and a short list of must-have features.\n\n"
+            . "I'll keep you updated at each milestone. If you have questions in the meantime, just reply to this email.\n\n"
+            . "Looking forward to working with you,\nPrince Caleb";
+
+        Mailer::send($email, 'Payment received — next steps for ' . $description, $body);
+    }
+
+    private static function absoluteUrl(string $path): string
+    {
+        $host = $_SERVER['HTTP_HOST'] ?? 'princecaleb.dev';
+        $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https' ? 'https' : 'http';
+        if ($host === 'princecaleb.dev' || str_ends_with($host, '.princecaleb.dev')) {
+            $scheme = 'https';
+        }
+
+        return $scheme . '://' . $host . $path;
     }
 
     private static function createPaymentRow(\PDO $pdo, array $fields): string
@@ -274,10 +323,11 @@ class PaymentController
     /** DELETE /api/v1/admin/payments/{reference} */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $stmt = $pdo->prepare('DELETE FROM payments WHERE reference = ?');
         $stmt->execute([$params['reference']]);
+        ActivityLog::log($user, 'deleted', 'payment', $params['reference'] ?? null);
         Response::json(['status' => 'deleted']);
     }
 
@@ -327,7 +377,7 @@ class PaymentController
     /** POST /api/v1/admin/payment-links — body: {client_name, client_email, amount, currency, description} */
     public static function createLink(): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $clientName = trim((string) ($data['client_name'] ?? ''));
@@ -351,6 +401,12 @@ class PaymentController
             'INSERT INTO payment_links (token, client_name, client_email, amount, currency, description)
              VALUES (?, ?, ?, ?, ?, ?)'
         )->execute([$token, $clientName, $clientEmail, (int) round($amount * 100), $currency, $description]);
+
+        ActivityLog::log($user, 'created', 'payment_link', $token, $clientName, [
+            'amount' => $amount,
+            'currency' => $currency,
+            'description' => $description,
+        ]);
 
         Response::json(['token' => $token, 'url' => '/pay.html?token=' . $token], 201);
     }

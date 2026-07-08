@@ -37,6 +37,7 @@ if (php_sapi_name() === 'cli-server') {
 
 require dirname(__DIR__) . '/src/autoload.php';
 
+use App\Controllers\ActivityLogController;
 use App\Controllers\AiChatController;
 use App\Controllers\AnalyticsController;
 use App\Controllers\AppointmentController;
@@ -192,5 +193,7 @@ $router->get('/api/v1/admin/social-drafts', [SocialDraftController::class, 'inde
 $router->post('/api/v1/admin/social-drafts/generate', [SocialDraftController::class, 'generate']);
 $router->patch('/api/v1/admin/social-drafts/{id}', [SocialDraftController::class, 'update']);
 $router->delete('/api/v1/admin/social-drafts/{id}', [SocialDraftController::class, 'destroy']);
+$router->get('/api/v1/admin/activity-log', [ActivityLogController::class, 'index']);
+$router->get('/api/v1/admin/activity-log/entity-types', [ActivityLogController::class, 'entityTypes']);
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

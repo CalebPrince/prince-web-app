@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\Mailer;
 use App\Support\MakeWebhook;
@@ -145,7 +146,7 @@ class TestimonialController
     /** PATCH /api/v1/admin/testimonials/{id} — body: {status?, sort_order?} */
     public static function update(array $params): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = (int) $params['id'];
 
@@ -161,6 +162,10 @@ class TestimonialController
 
             $pdo->prepare("UPDATE testimonials SET status = ?, updated_at = datetime('now') WHERE id = ?")
                 ->execute([$data['status'], $id]);
+
+            if ($existing && $existing['status'] !== $data['status']) {
+                ActivityLog::log($user, $data['status'], 'testimonial', $id, $existing['client_name']);
+            }
 
             if ($existing && $existing['status'] !== 'approved' && $data['status'] === 'approved') {
                 MakeWebhook::send('testimonial_approved', [
@@ -182,8 +187,15 @@ class TestimonialController
     /** DELETE /api/v1/admin/testimonials/{id} */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
-        Database::get()->prepare('DELETE FROM testimonials WHERE id = ?')->execute([(int) $params['id']]);
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT client_name FROM testimonials WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+
+        $pdo->prepare('DELETE FROM testimonials WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'testimonial', $id, $name ?: null);
         Response::json(['status' => 'deleted']);
     }
 

@@ -330,6 +330,28 @@ storage/
     rather than the full `/blog-post.html?slug=...` URL, since every
     character counts on the X/Twitter-length version — `getOrCreate()`
     reuses the same code if the same page is ever linked again.
+31. **Automated onboarding email**: `PaymentController::verifyAndRecord()`
+    sends a "payment received — next steps" email (via `Mailer::send()`)
+    right after the genuine pending → success transition for a payment. It's
+    naturally guarded against firing twice — both the client-side `/verify`
+    call and the Paystack webhook route through the same method, and its
+    existing idempotency check (`if ($payment['status'] === 'success') return
+    'success';`) short-circuits every call after the first for a given
+    reference. The email covers what happens next, a link to `/book.html` for
+    a kickoff call, and what to have ready (brand assets, references,
+    must-have features).
+32. **Admin activity log** (`/admin/activity-log.html`): an audit trail of
+    admin actions, written via `src/Support/ActivityLog.php` and stored in
+    `admin_activity_log` (never throws — a logging failure never blocks the
+    action that triggered it). Covers every admin DELETE endpoint (projects,
+    blog posts, tags, payments, client files, newsletter subscribers,
+    testimonials, marketing leads, social drafts), payment link creation,
+    pricing settings changes, testimonial approve/reject, and inquiry
+    status/pipeline-stage changes. The viewer page filters by entity type and
+    paginates 50 rows at a time — each row shows who acted, what action, on
+    which record (with a denormalized label so the entry stays readable even
+    after the underlying record is deleted or renamed), and JSON-encoded
+    extra details where relevant (e.g. changed pricing keys).
 
 ## Deployment (Namecheap cPanel)
 

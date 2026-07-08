@@ -371,3 +371,20 @@ CREATE TABLE IF NOT EXISTS short_links (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_short_links_code ON short_links (code);
+
+-- Audit trail of admin actions (deletes, status changes, price edits, etc.),
+-- written via ActivityLog::log(). entity_label is a denormalized snapshot
+-- (e.g. a client name or slug) so the log stays readable after the record
+-- itself is deleted or renamed.
+CREATE TABLE IF NOT EXISTS admin_activity_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  user_email TEXT,
+  action TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT,
+  entity_label TEXT,
+  details TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_admin_activity_log_created ON admin_activity_log (created_at);

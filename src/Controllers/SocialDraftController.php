@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\AiText;
 use App\Support\Database;
 use App\Support\MakeWebhook;
@@ -101,8 +102,10 @@ class SocialDraftController
     /** DELETE /api/v1/admin/social-drafts/{id} */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
-        Database::get()->prepare('DELETE FROM social_post_drafts WHERE id = ?')->execute([(int) ($params['id'] ?? 0)]);
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+        Database::get()->prepare('DELETE FROM social_post_drafts WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'social_draft', $id);
         Response::json(['status' => 'deleted']);
     }
 

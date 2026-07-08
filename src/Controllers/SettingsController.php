@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -82,8 +83,9 @@ class SettingsController
     /** PUT /api/v1/admin/settings — body: any whitelisted keys */
     public static function adminUpdate(): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $changedPricingKeys = [];
 
         foreach (array_merge(self::ADMIN_ONLY_KEYS, self::CONTENT_KEYS) as $key) {
             if (!array_key_exists($key, $data)) {
@@ -94,6 +96,10 @@ class SettingsController
                 Response::error('Value too long.', 422);
             }
             Settings::set($key, $value);
+
+            if (str_starts_with($key, 'pricing_')) {
+                $changedPricingKeys[] = $key;
+            }
 
             // The DB value is just UI state — the .maintenance marker file next
             // to .htaccess is what actually gates public requests (both there
@@ -114,6 +120,11 @@ class SettingsController
                 }
             }
         }
+
+        if ($changedPricingKeys) {
+            ActivityLog::log($user, 'updated', 'pricing_settings', null, null, ['keys' => $changedPricingKeys]);
+        }
+
         Response::json(['status' => 'saved']);
     }
 }

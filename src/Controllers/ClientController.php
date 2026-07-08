@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\Mailer;
 use App\Support\Response;
@@ -206,12 +207,12 @@ class ClientController
     /** DELETE /api/v1/admin/clients/{id}/files/{fileId} */
     public static function deleteFile(array $params): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
         $clientId = (int) ($params['id'] ?? 0);
         $fileId = (int) ($params['fileId'] ?? 0);
 
         $pdo = Database::get();
-        $stmt = $pdo->prepare('SELECT file_path FROM client_files WHERE id = ? AND client_id = ?');
+        $stmt = $pdo->prepare('SELECT file_path, original_name FROM client_files WHERE id = ? AND client_id = ?');
         $stmt->execute([$fileId, $clientId]);
         $file = $stmt->fetch();
         if (!$file) {
@@ -224,6 +225,7 @@ class ClientController
         }
 
         $pdo->prepare('DELETE FROM client_files WHERE id = ?')->execute([$fileId]);
+        ActivityLog::log($user, 'deleted', 'client_file', $fileId, $file['original_name'] ?: null);
         Response::json(['status' => 'deleted']);
     }
 

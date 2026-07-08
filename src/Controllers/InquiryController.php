@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Validator;
@@ -123,8 +124,9 @@ class InquiryController
     /** PATCH /api/v1/admin/inquiries/{id} — body: {status?, pipeline_stage?} */
     public static function updateStatus(array $params): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = (int) $params['id'];
 
         $fields = [];
         $values = [];
@@ -146,9 +148,20 @@ class InquiryController
             Response::error('Nothing to update.', 422);
         }
 
-        $values[] = (int) $params['id'];
         $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT name FROM inquiries WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+
+        $values[] = $id;
         $pdo->prepare('UPDATE inquiries SET ' . implode(', ', $fields) . ' WHERE id = ?')->execute($values);
+
+        if (array_key_exists('status', $data)) {
+            ActivityLog::log($user, 'status_changed', 'inquiry', $id, $name ?: null, ['status' => $data['status']]);
+        }
+        if (array_key_exists('pipeline_stage', $data)) {
+            ActivityLog::log($user, 'pipeline_stage_changed', 'inquiry', $id, $name ?: null, ['pipeline_stage' => $data['pipeline_stage']]);
+        }
 
         Response::json(['status' => 'updated']);
     }

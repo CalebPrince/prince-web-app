@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
@@ -160,9 +161,15 @@ class BlogController
     /** DELETE /api/v1/admin/blog/{id} */
     public static function destroy(array $params): void
     {
-        AuthMiddleware::requireAuth();
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
         $pdo = Database::get();
-        $pdo->prepare('DELETE FROM blog_posts WHERE id = ?')->execute([(int) $params['id']]);
+        $stmt = $pdo->prepare('SELECT title FROM blog_posts WHERE id = ?');
+        $stmt->execute([$id]);
+        $title = $stmt->fetchColumn();
+
+        $pdo->prepare('DELETE FROM blog_posts WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'blog_post', $id, $title ?: null);
         Response::json(['status' => 'deleted']);
     }
 }
