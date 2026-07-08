@@ -67,6 +67,18 @@ class ProposalController
         Response::json(['status' => 'sent', 'url' => $url]);
     }
 
+    /** GET /api/v1/admin/proposals/{id} */
+    public static function adminShow(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $proposal = self::findProposalById((int) ($params['id'] ?? 0));
+        if (!$proposal) {
+            Response::error('Proposal not found.', 404);
+        }
+
+        Response::json($proposal);
+    }
+
     /** GET /api/v1/admin/proposals/quote-requests */
     public static function quoteRequests(): void
     {
@@ -198,6 +210,137 @@ class ProposalController
         ], 201);
     }
 
+    /** PUT /api/v1/admin/proposals/{id} */
+    public static function update(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+        $existing = self::findProposalById($id);
+        if (!$existing) {
+            Response::error('Proposal not found.', 404);
+        }
+        if ($existing['status'] === 'accepted') {
+            Response::error('Accepted proposals cannot be edited.', 422);
+        }
+
+        $paidCount = 0;
+        foreach ($existing['milestones'] as $milestone) {
+            if (($milestone['payment_status'] ?? '') === 'paid') {
+                $paidCount++;
+            }
+        }
+        if ($paidCount > 0) {
+            Response::error('Proposals with paid milestones cannot be edited.', 422);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $clientName = trim((string) ($data['client_name'] ?? ''));
+        $clientEmail = trim((string) ($data['client_email'] ?? ''));
+        $title = trim((string) ($data['title'] ?? ''));
+        $scope = trim((string) ($data['scope'] ?? ''));
+        $timeline = trim((string) ($data['timeline'] ?? ''));
+        $terms = trim((string) ($data['terms'] ?? ''));
+        $currency = strtoupper(trim((string) ($data['currency'] ?? ''))) ?: (Settings::get('pricing_currency') ?: 'GHS');
+        $milestones = is_array($data['milestones'] ?? null) ? $data['milestones'] : [];
+        $inquiryId = !empty($data['inquiry_id']) ? (int) $data['inquiry_id'] : null;
+
+        $errors = [];
+        if ($clientName === '') $errors[] = 'Client name is required.';
+        if (!filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid client email is required.';
+        if ($title === '') $errors[] = 'Proposal title is required.';
+        if ($scope === '') $errors[] = 'Scope is required.';
+        if (!in_array($currency, ['GHS', 'NGN', 'USD', 'ZAR'], true)) $errors[] = 'Currency is not supported.';
+        if (!$milestones) $errors[] = 'Add at least one payment milestone.';
+
+        $cleanMilestones = [];
+        $totalAmount = 0;
+        foreach ($milestones as $idx => $milestone) {
+            $milestoneTitle = trim((string) ($milestone['title'] ?? ''));
+            $amount = (float) ($milestone['amount'] ?? 0);
+            $dueNote = trim((string) ($milestone['due_note'] ?? ''));
+            if ($milestoneTitle === '' && $amount <= 0) {
+                continue;
+            }
+            if ($milestoneTitle === '') {
+                $errors[] = 'Each milestone needs a title.';
+            }
+            if ($amount <= 0) {
+                $errors[] = 'Each milestone amount must be greater than zero.';
+            }
+            $subunits = (int) round($amount * 100);
+            $totalAmount += $subunits;
+            $cleanMilestones[] = [
+                'title' => $milestoneTitle,
+                'amount' => $subunits,
+                'due_note' => $dueNote,
+                'sort_order' => $idx,
+            ];
+        }
+
+        if ($errors) {
+            Response::json(['errors' => array_values(array_unique($errors))], 422);
+        }
+
+        $pdo = Database::get();
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare(
+                "UPDATE proposals SET inquiry_id = ?, client_name = ?, client_email = ?, title = ?, scope = ?,
+                 timeline = ?, total_amount = ?, currency = ?, terms = ?, updated_at = datetime('now') WHERE id = ?"
+            )->execute([
+                $inquiryId,
+                $clientName,
+                $clientEmail,
+                $title,
+                $scope,
+                $timeline ?: null,
+                $totalAmount,
+                $currency,
+                $terms ?: null,
+                $id,
+            ]);
+
+            $linkIds = array_filter(array_map(
+                fn ($milestone) => !empty($milestone['payment_link_id']) ? (int) $milestone['payment_link_id'] : null,
+                $existing['milestones']
+            ));
+            $pdo->prepare('DELETE FROM proposal_milestones WHERE proposal_id = ?')->execute([$id]);
+            foreach ($linkIds as $linkId) {
+                $pdo->prepare("DELETE FROM payment_links WHERE id = ? AND status != 'paid'")->execute([$linkId]);
+            }
+
+            foreach ($cleanMilestones as $milestone) {
+                $linkToken = bin2hex(random_bytes(12));
+                $description = "{$title} - {$milestone['title']}";
+                $pdo->prepare(
+                    'INSERT INTO payment_links (token, client_name, client_email, amount, currency, description)
+                     VALUES (?, ?, ?, ?, ?, ?)'
+                )->execute([$linkToken, $clientName, $clientEmail, $milestone['amount'], $currency, $description]);
+                $paymentLinkId = (int) $pdo->lastInsertId();
+
+                $pdo->prepare(
+                    'INSERT INTO proposal_milestones (proposal_id, payment_link_id, title, amount, currency, due_note, sort_order)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)'
+                )->execute([
+                    $id,
+                    $paymentLinkId,
+                    $milestone['title'],
+                    $milestone['amount'],
+                    $currency,
+                    $milestone['due_note'] ?: null,
+                    $milestone['sort_order'],
+                ]);
+            }
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            Response::error('Could not update proposal.', 500);
+        }
+
+        Response::json(['status' => 'updated', 'url' => '/proposal.html?token=' . $existing['token']]);
+    }
+
     /** GET /api/v1/proposals/{token} */
     public static function show(array $params): void
     {
@@ -256,6 +399,33 @@ class ProposalController
         unset($milestone);
 
         $proposal['milestones'] = $milestones;
+        return $proposal;
+    }
+
+    private static function findProposalById(int $id): array|false
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT * FROM proposals WHERE id = ?');
+        $stmt->execute([$id]);
+        $proposal = $stmt->fetch();
+        if (!$proposal) {
+            return false;
+        }
+
+        $stmt = $pdo->prepare(
+            "SELECT pm.*, pl.token AS payment_token, pl.status AS payment_status
+             FROM proposal_milestones pm
+             LEFT JOIN payment_links pl ON pl.id = pm.payment_link_id
+             WHERE pm.proposal_id = ?
+             ORDER BY pm.sort_order, pm.id"
+        );
+        $stmt->execute([$proposal['id']]);
+        $proposal['milestones'] = $stmt->fetchAll();
+
         return $proposal;
     }
 

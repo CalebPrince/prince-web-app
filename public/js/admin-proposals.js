@@ -1,5 +1,6 @@
 let proposalModal = null;
 let quoteRequests = [];
+let editingProposalId = null;
 
 const STATUS_CLASS = {
   draft: 'read',
@@ -43,7 +44,11 @@ function milestoneRow(title = '', amount = '', dueNote = '') {
 }
 
 function resetProposalForm() {
+  editingProposalId = null;
   document.getElementById('proposal-form').reset();
+  document.getElementById('proposal-modal-title').textContent = 'Create Proposal';
+  document.getElementById('proposal-submit-btn').textContent = 'Create Proposal';
+  document.getElementById('inquiry-id').disabled = false;
   document.getElementById('proposal-terms').value = defaultTerms();
   document.getElementById('proposal-msg').classList.add('d-none');
   const wrap = document.getElementById('milestones-wrap');
@@ -88,6 +93,7 @@ async function loadProposals() {
         <td class="text-end">
           <div class="d-inline-flex flex-wrap justify-content-end gap-2">
             <a href="${url}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">View</a>
+            <button type="button" class="btn btn-sm btn-outline-secondary edit-proposal-btn" data-id="${p.id}" ${p.status === 'accepted' ? 'disabled' : ''}>Edit</button>
             <button type="button" class="btn btn-sm btn-outline-secondary copy-proposal-btn" data-url="${escapeHtml(url)}">Copy link</button>
             <button type="button" class="btn btn-sm btn-brand send-proposal-btn" data-id="${p.id}">Email</button>
           </div>
@@ -107,6 +113,10 @@ async function loadProposals() {
         prompt('Copy this proposal link:', btn.dataset.url);
       }
     });
+  });
+
+  tbody.querySelectorAll('.edit-proposal-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditProposal(btn.dataset.id));
   });
 
   tbody.querySelectorAll('.send-proposal-btn').forEach(btn => {
@@ -130,6 +140,42 @@ async function loadProposals() {
       }
     });
   });
+}
+
+async function openEditProposal(id) {
+  const msg = document.getElementById('proposal-msg');
+  msg.classList.add('d-none');
+  try {
+    const proposal = await api.get(`/api/v1/admin/proposals/${id}`);
+    editingProposalId = proposal.id;
+    document.getElementById('proposal-form').reset();
+    document.getElementById('proposal-modal-title').textContent = 'Edit Proposal';
+    document.getElementById('proposal-submit-btn').textContent = 'Save Changes';
+    document.getElementById('inquiry-id').value = proposal.inquiry_id || '';
+    document.getElementById('inquiry-id').disabled = true;
+    document.getElementById('client-name').value = proposal.client_name || '';
+    document.getElementById('client-email').value = proposal.client_email || '';
+    document.getElementById('proposal-title').value = proposal.title || '';
+    document.getElementById('proposal-currency').value = proposal.currency || 'GHS';
+    document.getElementById('proposal-scope').value = proposal.scope || '';
+    document.getElementById('proposal-timeline').value = proposal.timeline || '';
+    document.getElementById('proposal-terms').value = proposal.terms || '';
+
+    const wrap = document.getElementById('milestones-wrap');
+    wrap.innerHTML = '';
+    (proposal.milestones || []).forEach(m => {
+      wrap.appendChild(milestoneRow(m.title || '', Number(m.amount || 0) / 100, m.due_note || ''));
+    });
+    if (!wrap.children.length) {
+      wrap.appendChild(milestoneRow());
+    }
+    proposalModal.show();
+  } catch (err) {
+    const resultBox = document.getElementById('proposal-result');
+    resultBox.className = 'alert alert-danger py-2 small';
+    resultBox.textContent = err.message || 'Could not load proposal.';
+    resultBox.classList.remove('d-none');
+  }
 }
 
 function prefillFromQuote(id) {
@@ -158,22 +204,28 @@ async function createProposal(e) {
   e.preventDefault();
   const msg = document.getElementById('proposal-msg');
   msg.classList.add('d-none');
+  const payload = {
+    inquiry_id: document.getElementById('inquiry-id').value,
+    client_name: document.getElementById('client-name').value.trim(),
+    client_email: document.getElementById('client-email').value.trim(),
+    title: document.getElementById('proposal-title').value.trim(),
+    currency: document.getElementById('proposal-currency').value,
+    scope: document.getElementById('proposal-scope').value.trim(),
+    timeline: document.getElementById('proposal-timeline').value.trim(),
+    terms: document.getElementById('proposal-terms').value.trim(),
+    milestones: collectMilestones(),
+  };
   try {
-    const result = await api.post('/api/v1/admin/proposals', {
-      inquiry_id: document.getElementById('inquiry-id').value,
-      client_name: document.getElementById('client-name').value.trim(),
-      client_email: document.getElementById('client-email').value.trim(),
-      title: document.getElementById('proposal-title').value.trim(),
-      currency: document.getElementById('proposal-currency').value,
-      scope: document.getElementById('proposal-scope').value.trim(),
-      timeline: document.getElementById('proposal-timeline').value.trim(),
-      terms: document.getElementById('proposal-terms').value.trim(),
-      milestones: collectMilestones(),
-    });
+    const result = editingProposalId
+      ? await api.put(`/api/v1/admin/proposals/${editingProposalId}`, payload)
+      : await api.post('/api/v1/admin/proposals', payload);
     proposalModal.hide();
     const url = `${window.location.origin}${result.url}`;
     const resultBox = document.getElementById('proposal-result');
-    resultBox.innerHTML = `Proposal created. <a href="${url}" target="_blank" rel="noopener">Open proposal</a>`;
+    resultBox.className = 'alert alert-success py-2 small';
+    resultBox.innerHTML = editingProposalId
+      ? `Proposal updated. <a href="${url}" target="_blank" rel="noopener">Open proposal</a>`
+      : `Proposal created. <a href="${url}" target="_blank" rel="noopener">Open proposal</a>`;
     resultBox.classList.remove('d-none');
     await loadProposals();
   } catch (err) {
