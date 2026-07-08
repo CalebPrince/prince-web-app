@@ -56,7 +56,7 @@ function renderProjectsTable(projects) {
   currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
     return;
   }
 
@@ -66,8 +66,10 @@ function renderProjectsTable(projects) {
       <td>${p.title}</td>
       <td class="text-capitalize">${p.category.replace("_", " ")}</td>
       <td>${p.tags.map(t => t.name).join(", ")}</td>
-      <td><span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span></td>
-      <td>${p.is_featured ? '<span class="status-pill published">&#9733; Featured</span>' : ""}</td>
+      <td>
+        <span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span>
+        ${p.is_featured ? '<span class="status-pill published ms-1">&#9733; Featured</span>' : ""}
+      </td>
       <td class="text-end pe-3">
         <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${p.id}">Edit</button>
         <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${p.id}">Delete</button>
