@@ -19,11 +19,6 @@ use App\Support\Settings;
  * works — actually wiring a capability to it (e.g. syncing a booking to
  * Google Calendar) is separate work per toolkit.
  *
- * LinkedIn/Twitter are deliberately not here — both gate posting access
- * behind their own developer-app approval process, which Composio can't
- * route around (it only manages OAuth once you already have API access).
- * That publishing need is handled by Make.com's own pre-approved social
- * connectors instead (see MakeWebhook's social_post_approved event).
  */
 class ComposioController
 {
@@ -31,6 +26,7 @@ class ComposioController
     private const TOOLKITS = [
         'google_calendar' => 'Google Calendar',
         'gmail' => 'Gmail',
+        'slack' => 'Slack',
         'whatsapp' => 'WhatsApp Business',
     ];
 

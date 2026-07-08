@@ -352,25 +352,16 @@ storage/
     which record (with a denormalized label so the entry stays readable even
     after the underlying record is deleted or renamed), and JSON-encoded
     extra details where relevant (e.g. changed pricing keys).
-33. **Composio connected accounts** (Admin → Settings → Connected Accounts,
+33. **Composio connected accounts** (Admin -> Settings -> Connected Accounts,
     `src/Support/Composio.php`, `ComposioController.php`): lets the app take
-    real actions in third-party apps (Google Calendar, Gmail, WhatsApp
-    Business — extendable via `ComposioController::TOOLKITS`) on the admin's
+    real actions in third-party apps (Google Calendar, Gmail, Slack, WhatsApp
+    Business - extendable via `ComposioController::TOOLKITS`) on the admin's
     behalf, via Composio's OAuth-managed tool-calling API. Each toolkit
     needs an Auth Config ID (created once in the Composio dashboard) pasted
     into Settings, then a one-time Connect flow that opens Composio's OAuth
-    authorization in a new tab. LinkedIn/Twitter deliberately aren't here —
-    both gate posting access behind their own developer-app approval
-    process, which Composio can't route around (it only manages OAuth once
-    you already have API access). Social publishing is handled by Make.com
-    instead: the `social_post_approved` event (see item 29) already fires
-    on every approved draft, and a LinkedIn "Create a Post" module added to
-    that Make.com scenario — authorized with a simple click, since Make.com
-    already has its own approved LinkedIn app — publishes it directly, no
-    separate developer account needed. **Status: Calendar/Gmail/WhatsApp
-    connect flow built, not yet exercised against a live Composio
-    account** — no capability is wired to any of them yet, just the OAuth
-    connection itself.
+    authorization in a new tab. Booking actions can be configured per tool
+    from the same Settings form. **Status: Calendar/Gmail/Slack/WhatsApp
+    connect flow built, not yet exercised against a live Composio account.**
 
 ## Deployment (Namecheap cPanel)
 

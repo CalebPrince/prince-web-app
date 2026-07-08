@@ -96,7 +96,16 @@ async function saveIntegrations(e) {
       composio_api_key: document.getElementById("composio-api-key").value.trim(),
       composio_google_calendar_auth_config_id: document.getElementById("composio-google-calendar-auth-config-id").value.trim(),
       composio_gmail_auth_config_id: document.getElementById("composio-gmail-auth-config-id").value.trim(),
+      composio_slack_auth_config_id: document.getElementById("composio-slack-auth-config-id").value.trim(),
       composio_whatsapp_auth_config_id: document.getElementById("composio-whatsapp-auth-config-id").value.trim(),
+      composio_google_calendar_booking_tool: document.getElementById("composio-google-calendar-booking-tool").value.trim(),
+      composio_google_calendar_id: document.getElementById("composio-google-calendar-id").value.trim(),
+      composio_gmail_booking_tool: document.getElementById("composio-gmail-booking-tool").value.trim(),
+      composio_gmail_booking_to: document.getElementById("composio-gmail-booking-to").value.trim(),
+      composio_slack_booking_tool: document.getElementById("composio-slack-booking-tool").value.trim(),
+      composio_slack_channel: document.getElementById("composio-slack-channel").value.trim(),
+      composio_whatsapp_booking_tool: document.getElementById("composio-whatsapp-booking-tool").value.trim(),
+      composio_whatsapp_booking_to: document.getElementById("composio-whatsapp-booking-to").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
     await loadComposioAccounts();
@@ -327,7 +336,16 @@ async function testAi() {
     document.getElementById("composio-api-key").value = settings.composio_api_key || "";
     document.getElementById("composio-google-calendar-auth-config-id").value = settings.composio_google_calendar_auth_config_id || "";
     document.getElementById("composio-gmail-auth-config-id").value = settings.composio_gmail_auth_config_id || "";
+    document.getElementById("composio-slack-auth-config-id").value = settings.composio_slack_auth_config_id || "";
     document.getElementById("composio-whatsapp-auth-config-id").value = settings.composio_whatsapp_auth_config_id || "";
+    document.getElementById("composio-google-calendar-booking-tool").value = settings.composio_google_calendar_booking_tool || "";
+    document.getElementById("composio-google-calendar-id").value = settings.composio_google_calendar_id || "";
+    document.getElementById("composio-gmail-booking-tool").value = settings.composio_gmail_booking_tool || "";
+    document.getElementById("composio-gmail-booking-to").value = settings.composio_gmail_booking_to || "";
+    document.getElementById("composio-slack-booking-tool").value = settings.composio_slack_booking_tool || "";
+    document.getElementById("composio-slack-channel").value = settings.composio_slack_channel || "";
+    document.getElementById("composio-whatsapp-booking-tool").value = settings.composio_whatsapp_booking_tool || "";
+    document.getElementById("composio-whatsapp-booking-to").value = settings.composio_whatsapp_booking_to || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 
     document.getElementById("widget-live-chat-enabled").checked = settings.live_chat_enabled !== "0";

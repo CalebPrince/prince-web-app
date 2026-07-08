@@ -24,7 +24,12 @@ class SettingsController
         'composio_api_key',
         'composio_google_calendar_auth_config_id', 'composio_google_calendar_account_id',
         'composio_gmail_auth_config_id', 'composio_gmail_account_id',
+        'composio_slack_auth_config_id', 'composio_slack_account_id',
         'composio_whatsapp_auth_config_id', 'composio_whatsapp_account_id',
+        'composio_google_calendar_booking_tool', 'composio_google_calendar_id',
+        'composio_gmail_booking_tool', 'composio_gmail_booking_to',
+        'composio_slack_booking_tool', 'composio_slack_channel',
+        'composio_whatsapp_booking_tool', 'composio_whatsapp_booking_to',
     ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */

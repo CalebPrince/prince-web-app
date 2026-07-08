@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\Composio;
 use App\Support\Database;
 use App\Support\Mailer;
 use App\Support\Response;
@@ -185,6 +186,7 @@ class AppointmentController
                 'INSERT INTO appointments (client_name, client_email, client_phone, appointment_date, appointment_time, duration_minutes, topic)
                  VALUES (?, ?, ?, ?, ?, ?, ?)'
             )->execute([$name, $email, $phone ?: null, $date, $time, $cfg['slotMinutes'], $topic ?: null]);
+            $appointmentId = (int) $pdo->lastInsertId();
         } catch (\PDOException $e) {
             // Partial unique index violation — someone else booked it first.
             return ['success' => false, 'error' => 'That slot was just booked by someone else — please pick another.', 'code' => 409];
@@ -204,7 +206,99 @@ class AppointmentController
             "Hi {$name},\n\nYou're booked in for {$date} at {$time} ({$cfg['timezone']}).\n\nIf you need to reschedule or cancel, just reply to this email.\n\n— Prince Caleb"
         );
 
+        self::sendComposioBookingActions([
+            'id' => $appointmentId,
+            'name' => $name,
+            'email' => $email,
+            'phone' => $phone,
+            'date' => $date,
+            'time' => $time,
+            'duration_minutes' => $cfg['slotMinutes'],
+            'timezone' => $cfg['timezone'],
+            'topic' => $topic,
+        ]);
+
         return ['success' => true, 'date' => $date, 'time' => $time, 'timezone' => $cfg['timezone']];
+    }
+
+    /** Best-effort Composio fan-out after a confirmed booking. Booking itself never depends on these calls. */
+    private static function sendComposioBookingActions(array $booking): void
+    {
+        if (empty(Settings::get('composio_api_key'))) {
+            return;
+        }
+
+        $start = self::bookingDateTime($booking['date'], $booking['time'], $booking['timezone']);
+        $end = $start ? (clone $start)->modify('+' . (int) $booking['duration_minutes'] . ' minutes') : null;
+        $summary = 'New booking: ' . $booking['name'] . ' - ' . $booking['date'] . ' ' . $booking['time'];
+        $details = self::bookingMessage($booking);
+
+        self::executeBookingAction('google_calendar', [
+            'calendar_id' => Settings::get('composio_google_calendar_id') ?: 'primary',
+            'summary' => 'Call with ' . $booking['name'],
+            'description' => $details,
+            'start' => $start ? $start->format(\DateTimeInterface::ATOM) : "{$booking['date']}T{$booking['time']}:00",
+            'end' => $end ? $end->format(\DateTimeInterface::ATOM) : null,
+            'timezone' => $booking['timezone'],
+            'attendees' => [$booking['email']],
+        ], 'GOOGLECALENDAR_CREATE_EVENT');
+
+        $gmailTo = Settings::get('composio_gmail_booking_to') ?: (Settings::get('notification_email') ?: Settings::get('social_email'));
+        if (!empty($gmailTo)) {
+            self::executeBookingAction('gmail', [
+                'to' => $gmailTo,
+                'subject' => $summary,
+                'body' => $details,
+            ], 'GMAIL_SEND_EMAIL');
+        }
+
+        self::executeBookingAction('slack', [
+            'channel' => Settings::get('composio_slack_channel') ?: null,
+            'text' => $details,
+        ], 'SLACK_SEND_MESSAGE');
+
+        $whatsappTo = Settings::get('composio_whatsapp_booking_to') ?: $booking['phone'];
+        if (!empty($whatsappTo)) {
+            self::executeBookingAction('whatsapp', [
+                'to' => $whatsappTo,
+                'message' => $details,
+            ], 'WHATSAPP_SEND_MESSAGE');
+        }
+    }
+
+    private static function executeBookingAction(string $toolkit, array $payload, string $defaultTool): void
+    {
+        $accountId = Settings::get("composio_{$toolkit}_account_id");
+        $tool = Settings::get("composio_{$toolkit}_booking_tool") ?: $defaultTool;
+        if (empty($accountId) || empty($tool)) {
+            return;
+        }
+
+        $payload = array_filter($payload, fn($value) => $value !== null && $value !== '' && $value !== []);
+        $result = Composio::executeTool($tool, $accountId, $payload);
+        if ($result === null) {
+            error_log("Composio booking action failed for {$toolkit} using {$tool}");
+        }
+    }
+
+    private static function bookingDateTime(string $date, string $time, string $timezone): ?\DateTime
+    {
+        try {
+            return new \DateTime("{$date} {$time}", new \DateTimeZone($timezone));
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private static function bookingMessage(array $booking): string
+    {
+        return "New booking confirmed\n"
+            . "Name: {$booking['name']}\n"
+            . "Email: {$booking['email']}\n"
+            . 'Phone: ' . ($booking['phone'] ?: '-') . "\n"
+            . 'Topic: ' . ($booking['topic'] ?: '-') . "\n"
+            . "Date: {$booking['date']}\n"
+            . "Time: {$booking['time']} ({$booking['timezone']})";
     }
 
     /** GET /api/v1/admin/appointments */

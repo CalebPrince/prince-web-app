@@ -7,8 +7,8 @@ namespace App\Support;
 /**
  * Thin plain-cURL wrapper around Composio's REST API (no SDK — this app has
  * no Composer/build step, same reasoning as the direct-cURL Gemini/OpenRouter/
- * Paystack integrations). Composio exposes third-party apps (LinkedIn,
- * Google Calendar, Gmail, WhatsApp, etc.) as OAuth-authenticated "tools" an
+ * Paystack integrations). Composio exposes third-party apps (Google Calendar,
+ * Gmail, Slack, WhatsApp, etc.) as OAuth-authenticated "tools" an
  * app can call on a connected user's behalf — unlike those single-secret-key
  * integrations, every toolkit here needs its own one-time OAuth "connect"
  * flow (see ComposioController) before executeTool()/executeProxy() will
@@ -76,8 +76,8 @@ class Composio
     }
 
     /**
-     * Calls a named Composio tool/action (e.g. a LinkedIn post-creation
-     * action) against a connected account. Endpoint/payload shape is a
+     * Calls a named Composio tool/action against a connected account.
+     * Endpoint/payload shape is a
      * best-effort guess pending live confirmation — see class docblock.
      *
      * @return array<string,mixed>|null null on any failure (network, auth, tool error)
