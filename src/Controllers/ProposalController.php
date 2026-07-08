@@ -1,0 +1,225 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Middleware\AuthMiddleware;
+use App\Support\Database;
+use App\Support\Response;
+use App\Support\Settings;
+
+class ProposalController
+{
+    /** GET /api/v1/admin/proposals */
+    public static function adminIndex(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $rows = $pdo->query(
+            "SELECT p.*, i.project_type, i.budget, i.timeline AS requested_timeline,
+                    COUNT(pm.id) AS milestone_count,
+                    SUM(CASE WHEN pl.status = 'paid' THEN 1 ELSE 0 END) AS paid_milestone_count
+             FROM proposals p
+             LEFT JOIN inquiries i ON i.id = p.inquiry_id
+             LEFT JOIN proposal_milestones pm ON pm.proposal_id = p.id
+             LEFT JOIN payment_links pl ON pl.id = pm.payment_link_id
+             GROUP BY p.id
+             ORDER BY p.created_at DESC"
+        )->fetchAll();
+
+        Response::json($rows);
+    }
+
+    /** GET /api/v1/admin/proposals/quote-requests */
+    public static function quoteRequests(): void
+    {
+        AuthMiddleware::requireAuth();
+        $rows = Database::get()->query(
+            "SELECT id, name, email, message, project_type, budget, timeline, features, created_at
+             FROM inquiries
+             WHERE type = 'project_request'
+             ORDER BY created_at DESC
+             LIMIT 100"
+        )->fetchAll();
+
+        Response::json($rows);
+    }
+
+    /** POST /api/v1/admin/proposals */
+    public static function store(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        $clientName = trim((string) ($data['client_name'] ?? ''));
+        $clientEmail = trim((string) ($data['client_email'] ?? ''));
+        $title = trim((string) ($data['title'] ?? ''));
+        $scope = trim((string) ($data['scope'] ?? ''));
+        $timeline = trim((string) ($data['timeline'] ?? ''));
+        $terms = trim((string) ($data['terms'] ?? ''));
+        $currency = strtoupper(trim((string) ($data['currency'] ?? ''))) ?: (Settings::get('pricing_currency') ?: 'GHS');
+        $milestones = is_array($data['milestones'] ?? null) ? $data['milestones'] : [];
+        $inquiryId = !empty($data['inquiry_id']) ? (int) $data['inquiry_id'] : null;
+
+        $errors = [];
+        if ($clientName === '') $errors[] = 'Client name is required.';
+        if (!filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid client email is required.';
+        if ($title === '') $errors[] = 'Proposal title is required.';
+        if ($scope === '') $errors[] = 'Scope is required.';
+        if (!in_array($currency, ['GHS', 'NGN', 'USD', 'ZAR'], true)) $errors[] = 'Currency is not supported.';
+        if (!$milestones) $errors[] = 'Add at least one payment milestone.';
+
+        $cleanMilestones = [];
+        $totalAmount = 0;
+        foreach ($milestones as $idx => $milestone) {
+            $milestoneTitle = trim((string) ($milestone['title'] ?? ''));
+            $amount = (float) ($milestone['amount'] ?? 0);
+            $dueNote = trim((string) ($milestone['due_note'] ?? ''));
+            if ($milestoneTitle === '' && $amount <= 0) {
+                continue;
+            }
+            if ($milestoneTitle === '') {
+                $errors[] = 'Each milestone needs a title.';
+            }
+            if ($amount <= 0) {
+                $errors[] = 'Each milestone amount must be greater than zero.';
+            }
+            $subunits = (int) round($amount * 100);
+            $totalAmount += $subunits;
+            $cleanMilestones[] = [
+                'title' => $milestoneTitle,
+                'amount' => $subunits,
+                'due_note' => $dueNote,
+                'sort_order' => $idx,
+            ];
+        }
+
+        if ($errors) {
+            Response::json(['errors' => array_values(array_unique($errors))], 422);
+        }
+
+        $pdo = Database::get();
+        $token = bin2hex(random_bytes(16));
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare(
+                'INSERT INTO proposals (token, inquiry_id, client_name, client_email, title, scope, timeline, total_amount, currency, terms, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            )->execute([
+                $token,
+                $inquiryId,
+                $clientName,
+                $clientEmail,
+                $title,
+                $scope,
+                $timeline ?: null,
+                $totalAmount,
+                $currency,
+                $terms ?: null,
+                'sent',
+            ]);
+            $proposalId = (int) $pdo->lastInsertId();
+
+            foreach ($cleanMilestones as $milestone) {
+                $linkToken = bin2hex(random_bytes(12));
+                $description = "{$title} - {$milestone['title']}";
+                $pdo->prepare(
+                    'INSERT INTO payment_links (token, client_name, client_email, amount, currency, description)
+                     VALUES (?, ?, ?, ?, ?, ?)'
+                )->execute([$linkToken, $clientName, $clientEmail, $milestone['amount'], $currency, $description]);
+                $paymentLinkId = (int) $pdo->lastInsertId();
+
+                $pdo->prepare(
+                    'INSERT INTO proposal_milestones (proposal_id, payment_link_id, title, amount, currency, due_note, sort_order)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)'
+                )->execute([
+                    $proposalId,
+                    $paymentLinkId,
+                    $milestone['title'],
+                    $milestone['amount'],
+                    $currency,
+                    $milestone['due_note'] ?: null,
+                    $milestone['sort_order'],
+                ]);
+            }
+
+            if ($inquiryId) {
+                $pdo->prepare("UPDATE inquiries SET status = 'read' WHERE id = ?")->execute([$inquiryId]);
+            }
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            Response::error('Could not create proposal.', 500);
+        }
+
+        Response::json([
+            'id' => $proposalId,
+            'token' => $token,
+            'url' => '/proposal.html?token=' . $token,
+        ], 201);
+    }
+
+    /** GET /api/v1/proposals/{token} */
+    public static function show(array $params): void
+    {
+        $proposal = self::findProposal($params['token'] ?? '');
+        if (!$proposal) {
+            Response::error('Proposal not found.', 404);
+        }
+
+        Response::json($proposal);
+    }
+
+    /** POST /api/v1/proposals/{token}/accept */
+    public static function accept(array $params): void
+    {
+        $proposal = self::findProposal($params['token'] ?? '');
+        if (!$proposal) {
+            Response::error('Proposal not found.', 404);
+        }
+        if ($proposal['status'] === 'declined') {
+            Response::error('This proposal is no longer available.', 422);
+        }
+
+        Database::get()->prepare(
+            "UPDATE proposals SET status = 'accepted', accepted_at = datetime('now'), updated_at = datetime('now') WHERE token = ?"
+        )->execute([$params['token']]);
+
+        Response::json(['status' => 'accepted']);
+    }
+
+    private static function findProposal(string $token): array|false
+    {
+        if ($token === '') {
+            return false;
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT * FROM proposals WHERE token = ?');
+        $stmt->execute([$token]);
+        $proposal = $stmt->fetch();
+        if (!$proposal) {
+            return false;
+        }
+
+        $stmt = $pdo->prepare(
+            "SELECT pm.*, pl.token AS payment_token, pl.status AS payment_status
+             FROM proposal_milestones pm
+             LEFT JOIN payment_links pl ON pl.id = pm.payment_link_id
+             WHERE pm.proposal_id = ?
+             ORDER BY pm.sort_order, pm.id"
+        );
+        $stmt->execute([$proposal['id']]);
+        $milestones = $stmt->fetchAll();
+        foreach ($milestones as &$milestone) {
+            $milestone['payment_url'] = $milestone['payment_token'] ? '/pay.html?token=' . $milestone['payment_token'] : null;
+        }
+        unset($milestone);
+
+        $proposal['milestones'] = $milestones;
+        return $proposal;
+    }
+}

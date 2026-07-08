@@ -48,6 +48,7 @@ use App\Controllers\LiveChatController;
 use App\Controllers\MarketingLeadController;
 use App\Controllers\NewsletterController;
 use App\Controllers\PaymentController;
+use App\Controllers\ProposalController;
 use App\Controllers\ProjectController;
 use App\Controllers\ProjectRequestController;
 use App\Controllers\SearchController;
@@ -73,6 +74,8 @@ $router->get('/api/v1/payments/link/{token}', [PaymentController::class, 'showLi
 $router->post('/api/v1/payments/prepare', [PaymentController::class, 'prepare']);
 $router->post('/api/v1/payments/verify', [PaymentController::class, 'verify']);
 $router->post('/api/v1/payments/webhook', [PaymentController::class, 'webhook']);
+$router->get('/api/v1/proposals/{token}', [ProposalController::class, 'show']);
+$router->post('/api/v1/proposals/{token}/accept', [ProposalController::class, 'accept']);
 $router->post('/api/v1/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 $router->get('/api/v1/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 $router->post('/api/v1/analytics/track', [AnalyticsController::class, 'track']);
@@ -133,6 +136,9 @@ $router->get('/api/v1/admin/payments', [PaymentController::class, 'adminIndex'])
 $router->delete('/api/v1/admin/payments/{reference}', [PaymentController::class, 'destroy']);
 $router->get('/api/v1/admin/payment-links', [PaymentController::class, 'adminIndexLinks']);
 $router->post('/api/v1/admin/payment-links', [PaymentController::class, 'createLink']);
+$router->get('/api/v1/admin/proposals', [ProposalController::class, 'adminIndex']);
+$router->post('/api/v1/admin/proposals', [ProposalController::class, 'store']);
+$router->get('/api/v1/admin/proposals/quote-requests', [ProposalController::class, 'quoteRequests']);
 $router->get('/api/v1/admin/analytics/summary', [AnalyticsController::class, 'summary']);
 $router->get('/api/v1/admin/appointments', [AppointmentController::class, 'adminIndex']);
 $router->patch('/api/v1/admin/appointments/{id}', [AppointmentController::class, 'updateStatus']);

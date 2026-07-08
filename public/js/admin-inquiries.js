@@ -71,6 +71,7 @@ async function loadInquiries(status = "") {
       <div class="d-flex justify-content-between align-items-center">
         <small class="text-muted-custom">${new Date(i.created_at).toLocaleString()}</small>
         <div class="d-flex gap-2">
+          ${i.type === "project_request" ? `<a class="btn btn-sm btn-outline-primary" href="/admin/proposals.html?inquiry_id=${encodeURIComponent(i.id)}">Create Proposal</a>` : ""}
           <button class="btn btn-sm btn-outline-secondary status-btn" data-id="${i.id}" data-status="read">Mark Read</button>
           <button class="btn btn-sm btn-outline-danger status-btn" data-id="${i.id}" data-status="flagged">Flag</button>
           <button class="btn btn-sm btn-outline-secondary status-btn" data-id="${i.id}" data-status="archived">Archive</button>
