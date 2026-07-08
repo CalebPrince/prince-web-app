@@ -276,6 +276,9 @@ One-time setup on a new host:
     `/usr/local/bin/php /home/<cpanel-user>/database/send_appointment_reminders.php > /dev/null`
 4c. Add a third cron job (once a day) for unpaid milestone reminders:
     `/usr/local/bin/php /home/<cpanel-user>/database/send_milestone_reminders.php > /dev/null`
+4d. Add a fourth cron job (once a day) for stale quote-request alerts (only
+    fires if a Make.com webhook URL is set in Admin -> Settings):
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_stale_lead_alerts.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

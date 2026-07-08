@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS inquiries (
   type TEXT NOT NULL DEFAULT 'contact' CHECK (type IN ('contact', 'project_request')),
   pipeline_stage TEXT NOT NULL DEFAULT 'new'
     CHECK (pipeline_stage IN ('new', 'reviewing', 'proposal_sent', 'won', 'lost')),
+  stale_alert_sent INTEGER NOT NULL DEFAULT 0,
   project_type TEXT,
   budget TEXT,
   timeline TEXT,

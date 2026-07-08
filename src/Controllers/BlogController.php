@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
+use App\Support\MakeWebhook;
 use App\Support\Response;
 use App\Support\Validator;
 
@@ -86,6 +87,15 @@ class BlogController
             (int) ($data['sort_order'] ?? 0),
         ]);
 
+        if (!empty($data['is_published'])) {
+            MakeWebhook::send('content_published', [
+                'type' => 'blog',
+                'title' => $data['title'],
+                'excerpt' => $data['excerpt'],
+                'url' => self::absoluteUrl('/blog-post.html?slug=' . $data['slug']),
+            ]);
+        }
+
         Response::json(['id' => (int) $pdo->lastInsertId()], 201);
     }
 
@@ -101,6 +111,12 @@ class BlogController
         }
 
         $pdo = Database::get();
+        $id = (int) $params['id'];
+
+        $stmt = $pdo->prepare('SELECT is_published FROM blog_posts WHERE id = ?');
+        $stmt->execute([$id]);
+        $wasPublished = (bool) $stmt->fetchColumn();
+
         $stmt = $pdo->prepare(
             "UPDATE blog_posts SET slug=?, title=?, excerpt=?, body=?, category=?, cover_image_path=?,
              is_published=?, sort_order=?, updated_at=datetime('now') WHERE id=?"
@@ -114,10 +130,31 @@ class BlogController
             $data['cover_image_path'],
             !empty($data['is_published']) ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
-            (int) $params['id'],
+            $id,
         ]);
 
+        if (!$wasPublished && !empty($data['is_published'])) {
+            MakeWebhook::send('content_published', [
+                'type' => 'blog',
+                'title' => $data['title'],
+                'excerpt' => $data['excerpt'],
+                'url' => self::absoluteUrl('/blog-post.html?slug=' . $data['slug']),
+            ]);
+        }
+
         Response::json(['status' => 'updated']);
+    }
+
+    private static function absoluteUrl(string $path): string
+    {
+        $host = $_SERVER['HTTP_HOST'] ?? 'princecaleb.dev';
+        $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https' ? 'https' : 'http';
+        if ($host === 'princecaleb.dev' || str_ends_with($host, '.princecaleb.dev')) {
+            $scheme = 'https';
+        }
+
+        return $scheme . '://' . $host . $path;
     }
 
     /** DELETE /api/v1/admin/blog/{id} */

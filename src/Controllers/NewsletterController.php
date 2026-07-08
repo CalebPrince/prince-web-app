@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Database;
+use App\Support\MakeWebhook;
 use App\Support\Response;
 
 class NewsletterController
@@ -38,12 +39,15 @@ class NewsletterController
             if ($existing['status'] === 'unsubscribed') {
                 $pdo->prepare("UPDATE newsletter_subscribers SET status = 'subscribed' WHERE id = ?")
                     ->execute([$existing['id']]);
+                MakeWebhook::send('newsletter_subscribed', ['email' => $email]);
             }
             Response::json(['status' => 'subscribed'], 200);
         }
 
         $pdo->prepare('INSERT INTO newsletter_subscribers (email, unsubscribe_token) VALUES (?, ?)')
             ->execute([$email, bin2hex(random_bytes(16))]);
+
+        MakeWebhook::send('newsletter_subscribed', ['email' => $email]);
 
         Response::json(['status' => 'subscribed'], 201);
     }

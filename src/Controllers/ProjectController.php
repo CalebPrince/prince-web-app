@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
+use App\Support\MakeWebhook;
 use App\Support\Response;
 use App\Support\Validator;
 
@@ -141,6 +142,15 @@ class ProjectController
 
         self::syncTags($pdo, $projectId, $data['tags'] ?? []);
 
+        if (!empty($data['is_published'])) {
+            MakeWebhook::send('content_published', [
+                'type' => 'project',
+                'title' => $data['title'],
+                'summary' => $data['summary'],
+                'url' => self::absoluteUrl('/project.html?slug=' . $data['slug']),
+            ]);
+        }
+
         Response::json(['id' => $projectId], 201);
     }
 
@@ -157,6 +167,11 @@ class ProjectController
         }
 
         $pdo = Database::get();
+
+        $stmt = $pdo->prepare('SELECT is_published FROM projects WHERE id = ?');
+        $stmt->execute([$id]);
+        $wasPublished = (bool) $stmt->fetchColumn();
+
         $stmt = $pdo->prepare(
             "UPDATE projects SET slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
@@ -183,7 +198,28 @@ class ProjectController
 
         self::syncTags($pdo, $id, $data['tags'] ?? []);
 
+        if (!$wasPublished && !empty($data['is_published'])) {
+            MakeWebhook::send('content_published', [
+                'type' => 'project',
+                'title' => $data['title'],
+                'summary' => $data['summary'],
+                'url' => self::absoluteUrl('/project.html?slug=' . $data['slug']),
+            ]);
+        }
+
         Response::json(['status' => 'updated']);
+    }
+
+    private static function absoluteUrl(string $path): string
+    {
+        $host = $_SERVER['HTTP_HOST'] ?? 'princecaleb.dev';
+        $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https' ? 'https' : 'http';
+        if ($host === 'princecaleb.dev' || str_ends_with($host, '.princecaleb.dev')) {
+            $scheme = 'https';
+        }
+
+        return $scheme . '://' . $host . $path;
     }
 
     /** PATCH /api/v1/admin/projects/reorder — body: {order: [id, id, ...]} in new display order */

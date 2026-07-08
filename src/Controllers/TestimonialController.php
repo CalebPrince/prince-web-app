@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Database;
 use App\Support\Mailer;
+use App\Support\MakeWebhook;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -152,8 +153,23 @@ class TestimonialController
             if (!in_array($data['status'], ['approved', 'rejected'], true)) {
                 Response::error('Status must be approved or rejected.', 422);
             }
-            Database::get()->prepare("UPDATE testimonials SET status = ?, updated_at = datetime('now') WHERE id = ?")
+
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('SELECT * FROM testimonials WHERE id = ?');
+            $stmt->execute([$id]);
+            $existing = $stmt->fetch();
+
+            $pdo->prepare("UPDATE testimonials SET status = ?, updated_at = datetime('now') WHERE id = ?")
                 ->execute([$data['status'], $id]);
+
+            if ($existing && $existing['status'] !== 'approved' && $data['status'] === 'approved') {
+                MakeWebhook::send('testimonial_approved', [
+                    'client_name' => $existing['client_name'],
+                    'project_reference' => $existing['project_reference'],
+                    'rating' => (int) $existing['rating'],
+                    'quote' => $existing['quote'],
+                ]);
+            }
         }
         if (array_key_exists('sort_order', $data)) {
             Database::get()->prepare("UPDATE testimonials SET sort_order = ?, updated_at = datetime('now') WHERE id = ?")

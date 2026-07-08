@@ -87,6 +87,11 @@
               <input type="password" class="form-control" id="slack-url" placeholder="https://hooks.slack.com/services/..." autocomplete="off">
             </div>
             <div class="mb-3">
+              <label class="form-label">Make.com webhook URL <span class="text-muted-custom fw-normal">(marketing automation)</span></label>
+              <input type="password" class="form-control" id="makecom-url" placeholder="https://hook.us1.make.com/..." autocomplete="off">
+              <div class="form-text">One webhook URL receives every event (proposal accepted, content published, testimonial approved, newsletter signup, stale lead) with an "event" field — route them with a Router module in your Make.com scenario.</div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Notification email <span class="text-muted-custom fw-normal">(new inquiry alerts — falls back to Social links &rarr; Public email if empty)</span></label>
               <input type="email" class="form-control" id="notification-email" placeholder="you@example.com" autocomplete="off">
               <div class="form-text">Sent via the server's PHP mail() — delivered by the cron job, not instantly.</div>

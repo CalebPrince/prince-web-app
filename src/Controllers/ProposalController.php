@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
 use App\Support\Mailer;
+use App\Support\MakeWebhook;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -387,6 +388,14 @@ class ProposalController
         if ($proposal['inquiry_id']) {
             $pdo->prepare("UPDATE inquiries SET pipeline_stage = 'won' WHERE id = ?")->execute([$proposal['inquiry_id']]);
         }
+
+        MakeWebhook::send('proposal_accepted', [
+            'client_name' => $acceptedByName,
+            'client_email' => $proposal['client_email'],
+            'proposal_title' => $proposal['title'],
+            'total_amount' => $proposal['total_amount'] / 100,
+            'currency' => $proposal['currency'],
+        ]);
 
         Response::json(['status' => 'accepted']);
     }

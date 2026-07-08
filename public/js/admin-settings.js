@@ -90,6 +90,7 @@ async function saveIntegrations(e) {
       openrouter_api_key: document.getElementById("openrouter-key").value.trim(),
       openrouter_model: document.getElementById("openrouter-model").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
+      makecom_webhook_url: document.getElementById("makecom-url").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
@@ -226,6 +227,7 @@ async function testAi() {
     document.getElementById("openrouter-key").value = settings.openrouter_api_key || "";
     document.getElementById("openrouter-model").value = settings.openrouter_model || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
+    document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 

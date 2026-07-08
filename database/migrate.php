@@ -76,6 +76,9 @@ foreach (['project_type', 'budget', 'timeline', 'features', 'attachments'] as $c
 if (!in_array('pipeline_stage', $inquiryColumns, true)) {
     $pdo->exec("ALTER TABLE inquiries ADD COLUMN pipeline_stage TEXT NOT NULL DEFAULT 'new'");
 }
+if (!in_array('stale_alert_sent', $inquiryColumns, true)) {
+    $pdo->exec('ALTER TABLE inquiries ADD COLUMN stale_alert_sent INTEGER NOT NULL DEFAULT 0');
+}
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_inquiries_type ON inquiries (type)');
 
 $appointmentColumns = array_column($pdo->query('PRAGMA table_info(appointments)')->fetchAll(), 'name');
