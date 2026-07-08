@@ -29,10 +29,29 @@ class ProjectController
             $tagsByProject[$row['project_id']][] = ['name' => $row['name'], 'slug' => $row['slug']];
         }
 
+        // Only ever surface a testimonial that's been admin-approved — a
+        // project can point at one that's still pending/rejected, but it
+        // shouldn't render anywhere until approved.
+        $testimonialIds = array_values(array_unique(array_filter(array_column($projects, 'testimonial_id'))));
+        $testimonialsById = [];
+        if ($testimonialIds) {
+            $tPlaceholders = implode(',', array_fill(0, count($testimonialIds), '?'));
+            $tStmt = $pdo->prepare(
+                "SELECT id, client_name, quote, rating FROM testimonials WHERE id IN ($tPlaceholders) AND status = 'approved'"
+            );
+            $tStmt->execute($testimonialIds);
+            foreach ($tStmt->fetchAll() as $row) {
+                $testimonialsById[$row['id']] = $row;
+            }
+        }
+
         foreach ($projects as &$project) {
             $project['tags'] = $tagsByProject[$project['id']] ?? [];
             $project['gallery'] = $project['gallery_json'] ? json_decode($project['gallery_json'], true) : [];
             unset($project['gallery_json']);
+            $project['testimonial'] = $project['testimonial_id'] !== null
+                ? ($testimonialsById[$project['testimonial_id']] ?? null)
+                : null;
         }
         return $projects;
     }
@@ -98,8 +117,8 @@ class ProjectController
 
         $pdo = Database::get();
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['slug'],
@@ -113,7 +132,10 @@ class ProjectController
             self::encodeGallery($data['gallery'] ?? []),
             !empty($data['is_embeddable']) ? 1 : 0,
             !empty($data['is_published']) ? 1 : 0,
+            !empty($data['is_featured']) ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
+            trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
+            !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
         ]);
         $projectId = (int) $pdo->lastInsertId();
 
@@ -137,7 +159,8 @@ class ProjectController
         $pdo = Database::get();
         $stmt = $pdo->prepare(
             "UPDATE projects SET slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
-             cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, sort_order=?, updated_at=datetime('now') WHERE id=?"
+             cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
+             outcome_metrics=?, testimonial_id=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $data['slug'],
@@ -151,7 +174,10 @@ class ProjectController
             self::encodeGallery($data['gallery'] ?? []),
             !empty($data['is_embeddable']) ? 1 : 0,
             !empty($data['is_published']) ? 1 : 0,
+            !empty($data['is_featured']) ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
+            trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
+            !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
             $id,
         ]);
 

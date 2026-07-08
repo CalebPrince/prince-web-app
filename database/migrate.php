@@ -46,6 +46,15 @@ $projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetch
 if (!in_array('is_embeddable', $projectColumns, true)) {
     $pdo->exec('ALTER TABLE projects ADD COLUMN is_embeddable INTEGER NOT NULL DEFAULT 0');
 }
+if (!in_array('is_featured', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0');
+}
+if (!in_array('outcome_metrics', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN outcome_metrics TEXT');
+}
+if (!in_array('testimonial_id', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN testimonial_id INTEGER REFERENCES testimonials(id)');
+}
 
 $webhookColumns = array_column($pdo->query('PRAGMA table_info(webhook_queue)')->fetchAll(), 'name');
 if (!in_array('slack_sent', $webhookColumns, true)) {

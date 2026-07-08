@@ -127,6 +127,15 @@
   const slug = new URLSearchParams(window.location.search).get('slug');
   const container = document.getElementById('project-content');
 
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
   if (!slug) {
     window.location.href = '/projects.html';
     return;
@@ -179,6 +188,16 @@
           <div class="col-lg-8 reveal">
             <h3 class="mb-3">The case study</h3>
             <p class="text-muted-custom" style="white-space: pre-line;">${p.case_study_body || 'Case study details coming soon.'}</p>
+            ${p.outcome_metrics ? `
+              <h3 class="mb-3 mt-4">Results</h3>
+              <p class="text-muted-custom" style="white-space: pre-line;">${p.outcome_metrics}</p>
+            ` : ''}
+            ${p.testimonial ? `
+              <blockquote class="contact-card mt-4 mb-0">
+                <p class="fs-5 mb-3" style="font-style: italic;">&ldquo;${escapeHtml(p.testimonial.quote)}&rdquo;</p>
+                <footer class="text-muted-custom">— ${escapeHtml(p.testimonial.client_name)}${p.testimonial.rating ? ` &middot; ${'★'.repeat(p.testimonial.rating)}` : ''}</footer>
+              </blockquote>
+            ` : ''}
           </div>
         </div>
         <div class="text-center mt-5 pt-4 border-top reveal">

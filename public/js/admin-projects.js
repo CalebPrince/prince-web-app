@@ -2,6 +2,7 @@ let projectModal = null;
 let galleryPaths = [];
 let currentProjects = [];
 let draggedId = null;
+let approvedTestimonials = [];
 
 async function uploadFile(file, isRetry = false) {
   const formData = new FormData();
@@ -55,7 +56,7 @@ function renderProjectsTable(projects) {
   currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
     return;
   }
 
@@ -66,6 +67,7 @@ function renderProjectsTable(projects) {
       <td class="text-capitalize">${p.category.replace("_", " ")}</td>
       <td>${p.tags.map(t => t.name).join(", ")}</td>
       <td><span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span></td>
+      <td>${p.is_featured ? '<span class="status-pill published">&#9733; Featured</span>' : ""}</td>
       <td class="text-end pe-3">
         <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${p.id}">Edit</button>
         <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${p.id}">Delete</button>
@@ -115,12 +117,24 @@ async function loadProjects() {
   renderProjectsTable(projects);
 }
 
+async function loadTestimonialOptions() {
+  const response = await api.get("/api/v1/admin/testimonials");
+  approvedTestimonials = (Array.isArray(response) ? response : []).filter(t => t.status === "approved");
+  const select = document.getElementById("testimonial_id");
+  select.innerHTML = '<option value="">None</option>' + approvedTestimonials.map(t =>
+    `<option value="${t.id}">${escapeHtml(t.client_name)} — "${escapeHtml(t.quote.slice(0, 60))}${t.quote.length > 60 ? "…" : ""}"</option>`
+  ).join("");
+}
+
 function openNewModal() {
   document.getElementById("project-form").reset();
   document.getElementById("project-id").value = "";
   document.getElementById("modal-title").textContent = "New Project";
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
+  document.getElementById("outcome_metrics").value = "";
+  document.getElementById("testimonial_id").value = "";
+  document.getElementById("is_featured").checked = false;
   setCoverPreview(null);
   galleryPaths = [];
   renderGalleryList();
@@ -141,6 +155,9 @@ function openEditModal(project) {
   document.getElementById("tags").value = project.tags.map(t => t.name).join(", ");
   document.getElementById("is_published").checked = !!project.is_published;
   document.getElementById("is_embeddable").checked = !!project.is_embeddable;
+  document.getElementById("is_featured").checked = !!project.is_featured;
+  document.getElementById("outcome_metrics").value = project.outcome_metrics || "";
+  document.getElementById("testimonial_id").value = project.testimonial_id || "";
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
   setCoverPreview(project.cover_image_path);
@@ -166,6 +183,9 @@ async function saveProject() {
     tags: document.getElementById("tags").value.split(",").map(t => t.trim()).filter(Boolean),
     is_published: document.getElementById("is_published").checked,
     is_embeddable: document.getElementById("is_embeddable").checked,
+    is_featured: document.getElementById("is_featured").checked,
+    outcome_metrics: document.getElementById("outcome_metrics").value || null,
+    testimonial_id: document.getElementById("testimonial_id").value || null,
   };
 
   try {
@@ -238,5 +258,5 @@ async function deleteProject(id) {
     e.target.value = "";
   });
 
-  await loadProjects();
+  await Promise.all([loadProjects(), loadTestimonialOptions()]);
 })();

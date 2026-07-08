@@ -164,6 +164,9 @@ function renderGrid(projects) {
             </div>
           </div>
         </a>
+        ${p.is_featured ? `
+          <span class="status-pill published" style="position:absolute;top:12px;left:12px;">&#9733; Featured</span>
+        ` : ''}
         ${p.is_embeddable && p.live_url ? `
           <button type="button" class="btn-brand btn-sm live-demo-card-btn" data-url="${p.live_url}" data-title="${p.title}"
             style="position:absolute;top:12px;right:12px;">▶ Live Demo</button>

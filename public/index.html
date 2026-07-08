@@ -449,7 +449,7 @@
 (async function () {
   try {
     const projects = await api.get('/api/v1/projects');
-    const featured = projects[0];
+    const featured = projects.find(p => p.is_featured) || projects[0];
     const heroBox = document.getElementById('hero-featured');
     if (featured) {
       heroBox.outerHTML = `

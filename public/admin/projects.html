@@ -59,6 +59,7 @@
             <th>Category</th>
             <th>Tags</th>
             <th>Status</th>
+            <th>Featured</th>
             <th class="text-end pe-3">Actions</th>
           </tr>
         </thead>
@@ -94,6 +95,10 @@
             <div class="col-12">
               <label class="form-label">Case study body</label>
               <textarea class="form-control" id="case_study_body" rows="4" placeholder="Detailed case study content."></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Results / outcomes <span class="text-muted-custom fw-normal">(optional metrics — shown as a "Results" section on the case study page)</span></label>
+              <textarea class="form-control" id="outcome_metrics" rows="2" placeholder="e.g. Onboarding time went from weeks to under a day; passed first external audit using the platform's audit log as evidence."></textarea>
             </div>
             <div class="col-md-4">
               <label class="form-label">Category</label>
@@ -135,6 +140,12 @@
               <input type="text" class="form-control" id="tags" placeholder="PHP, React, Mobile">
             </div>
             <div class="col-12">
+              <label class="form-label">Featured testimonial <span class="text-muted-custom fw-normal">(shown as a quote on the case study page — only approved testimonials render publicly)</span></label>
+              <select class="form-select" id="testimonial_id">
+                <option value="">None</option>
+              </select>
+            </div>
+            <div class="col-12">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="is_published">
                 <label class="form-check-label" for="is_published">Published (visible on the public site)</label>
@@ -142,6 +153,10 @@
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="is_embeddable">
                 <label class="form-check-label" for="is_embeddable">Allow embedded "Live Demo" (only for standalone pages that permit iframing)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="is_featured">
+                <label class="form-check-label" for="is_featured">Featured (shown in the homepage spotlight)</label>
               </div>
             </div>
           </div>

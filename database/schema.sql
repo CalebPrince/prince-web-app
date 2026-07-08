@@ -23,7 +23,10 @@ CREATE TABLE IF NOT EXISTS projects (
   gallery_json TEXT,
   is_embeddable INTEGER NOT NULL DEFAULT 0,
   is_published INTEGER NOT NULL DEFAULT 0,
+  is_featured INTEGER NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL DEFAULT 0,
+  outcome_metrics TEXT,
+  testimonial_id INTEGER NULL REFERENCES testimonials(id) ON DELETE SET NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
