@@ -22,8 +22,9 @@ class SettingsController
         'booking_slot_minutes', 'booking_lead_days', 'booking_min_notice_hours', 'booking_timezone',
         'social_draft_enabled', 'social_draft_frequency', 'social_draft_last_run',
         'composio_api_key',
-        'composio_linkedin_auth_config_id', 'composio_linkedin_account_id',
-        'composio_twitter_auth_config_id', 'composio_twitter_account_id',
+        'composio_google_calendar_auth_config_id', 'composio_google_calendar_account_id',
+        'composio_gmail_auth_config_id', 'composio_gmail_account_id',
+        'composio_whatsapp_auth_config_id', 'composio_whatsapp_account_id',
     ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */

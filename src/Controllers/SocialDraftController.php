@@ -7,11 +7,9 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AiText;
-use App\Support\Composio;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
-use App\Support\Settings;
 use App\Support\ShortLink;
 
 /**
@@ -47,7 +45,7 @@ class SocialDraftController
     /** PATCH /api/v1/admin/social-drafts/{id} — body: {content?, short_content?, hashtags?, status?} */
     public static function update(array $params): void
     {
-        $user = AuthMiddleware::requireAuth();
+        AuthMiddleware::requireAuth();
         $id = (int) ($params['id'] ?? 0);
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
@@ -96,67 +94,9 @@ class SocialDraftController
                 'source_type' => $fresh['source_type'],
             ]);
             $pdo->prepare('UPDATE social_post_drafts SET sent_to_makecom = 1 WHERE id = ?')->execute([$id]);
-
-            self::publishViaComposio($pdo, $user, $fresh);
         }
 
         Response::json(['status' => 'updated']);
-    }
-
-    /**
-     * Best-effort auto-publish to any connected Composio toolkit (LinkedIn,
-     * Twitter) when a draft is approved — failures here never block the
-     * approval itself, and Make.com's own event above already fired
-     * regardless, so this is purely additive. A complete no-op when no
-     * toolkit is connected (the common case until Composio is set up).
-     *
-     * published_at/publish_error aren't tracked per-toolkit — fine for the
-     * common case of one connected account at a time, worth revisiting if
-     * the admin ends up running several simultaneously.
-     */
-    private static function publishViaComposio(\PDO $pdo, array $user, array $draft): void
-    {
-        // Exact tool slugs to confirm against a live Composio account — see
-        // Composio::executeTool() docblock for why these are a best guess.
-        $targets = [
-            'linkedin' => ['tool' => 'LINKEDIN_CREATE_LINKED_IN_POST', 'text' => $draft['content']],
-            'twitter' => ['tool' => 'TWITTER_CREATION_OF_A_POST', 'text' => $draft['short_content'] ?: $draft['content']],
-        ];
-
-        $succeeded = [];
-        $errors = [];
-        foreach ($targets as $toolkit => $target) {
-            $accountId = Settings::get("composio_{$toolkit}_account_id");
-            if (empty($accountId)) {
-                continue;
-            }
-
-            $result = Composio::executeTool($target['tool'], $accountId, ['text' => $target['text']]);
-            if ($result !== null) {
-                $succeeded[] = $toolkit;
-            } else {
-                $errors[] = $toolkit;
-            }
-        }
-
-        if (!$succeeded && !$errors) {
-            return; // nothing connected — no-op, Make.com already handled the event
-        }
-
-        $pdo->prepare('UPDATE social_post_drafts SET published_at = ?, publish_error = ? WHERE id = ?')->execute([
-            $succeeded ? gmdate('Y-m-d H:i:s') : null,
-            $errors ? implode(', ', $errors) . ' failed to publish — check the Composio connection in Settings.' : null,
-            $draft['id'],
-        ]);
-
-        ActivityLog::log(
-            $user,
-            $succeeded ? 'published' : 'publish_failed',
-            'social_draft',
-            $draft['id'],
-            null,
-            ['succeeded' => $succeeded, 'failed' => $errors]
-        );
     }
 
     /** DELETE /api/v1/admin/social-drafts/{id} */

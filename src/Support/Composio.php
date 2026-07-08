@@ -8,8 +8,8 @@ namespace App\Support;
  * Thin plain-cURL wrapper around Composio's REST API (no SDK — this app has
  * no Composer/build step, same reasoning as the direct-cURL Gemini/OpenRouter/
  * Paystack integrations). Composio exposes third-party apps (LinkedIn,
- * Twitter, Calendar, Gmail, etc.) as OAuth-authenticated "tools" an app can
- * call on a connected user's behalf — unlike those single-secret-key
+ * Google Calendar, Gmail, WhatsApp, etc.) as OAuth-authenticated "tools" an
+ * app can call on a connected user's behalf — unlike those single-secret-key
  * integrations, every toolkit here needs its own one-time OAuth "connect"
  * flow (see ComposioController) before executeTool()/executeProxy() will
  * work for it.

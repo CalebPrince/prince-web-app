@@ -94,8 +94,9 @@ async function saveIntegrations(e) {
       integration_api_key: document.getElementById("integration-api-key").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
       composio_api_key: document.getElementById("composio-api-key").value.trim(),
-      composio_linkedin_auth_config_id: document.getElementById("composio-linkedin-auth-config-id").value.trim(),
-      composio_twitter_auth_config_id: document.getElementById("composio-twitter-auth-config-id").value.trim(),
+      composio_google_calendar_auth_config_id: document.getElementById("composio-google-calendar-auth-config-id").value.trim(),
+      composio_gmail_auth_config_id: document.getElementById("composio-gmail-auth-config-id").value.trim(),
+      composio_whatsapp_auth_config_id: document.getElementById("composio-whatsapp-auth-config-id").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
     await loadComposioAccounts();
@@ -324,8 +325,9 @@ async function testAi() {
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("composio-api-key").value = settings.composio_api_key || "";
-    document.getElementById("composio-linkedin-auth-config-id").value = settings.composio_linkedin_auth_config_id || "";
-    document.getElementById("composio-twitter-auth-config-id").value = settings.composio_twitter_auth_config_id || "";
+    document.getElementById("composio-google-calendar-auth-config-id").value = settings.composio_google_calendar_auth_config_id || "";
+    document.getElementById("composio-gmail-auth-config-id").value = settings.composio_gmail_auth_config_id || "";
+    document.getElementById("composio-whatsapp-auth-config-id").value = settings.composio_whatsapp_auth_config_id || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 
     document.getElementById("widget-live-chat-enabled").checked = settings.live_chat_enabled !== "0";

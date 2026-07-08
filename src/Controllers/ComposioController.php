@@ -12,16 +12,26 @@ use App\Support\Settings;
 
 /**
  * Admin-only management of Composio "connected accounts" — the one-time
- * OAuth hand-off each toolkit (LinkedIn, Twitter, etc.) needs before
- * Composio::executeTool()/executeProxy() can act on it. New toolkits are
- * added by extending TOOLKITS below; no other code changes needed here.
+ * OAuth hand-off each toolkit (Google Calendar, Gmail, etc.) needs
+ * before Composio::executeTool()/executeProxy() can act on it. New
+ * toolkits are added by extending TOOLKITS below; no other code changes
+ * needed here. Connecting a toolkit here only proves the OAuth link
+ * works — actually wiring a capability to it (e.g. syncing a booking to
+ * Google Calendar) is separate work per toolkit.
+ *
+ * LinkedIn/Twitter are deliberately not here — both gate posting access
+ * behind their own developer-app approval process, which Composio can't
+ * route around (it only manages OAuth once you already have API access).
+ * That publishing need is handled by Make.com's own pre-approved social
+ * connectors instead (see MakeWebhook's social_post_approved event).
  */
 class ComposioController
 {
     /** toolkit slug => human label, shown in the admin Connected Accounts UI */
     private const TOOLKITS = [
-        'linkedin' => 'LinkedIn',
-        'twitter' => 'Twitter / X',
+        'google_calendar' => 'Google Calendar',
+        'gmail' => 'Gmail',
+        'whatsapp' => 'WhatsApp Business',
     ];
 
     /** GET /api/v1/admin/composio/status */

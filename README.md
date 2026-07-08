@@ -354,22 +354,23 @@ storage/
     extra details where relevant (e.g. changed pricing keys).
 33. **Composio connected accounts** (Admin → Settings → Connected Accounts,
     `src/Support/Composio.php`, `ComposioController.php`): lets the app take
-    real actions in third-party apps (LinkedIn, Twitter/X to start) on the
-    admin's behalf, via Composio's OAuth-managed tool-calling API — additive
-    alongside Make.com, not a replacement of its 5 existing automation
-    events. Each toolkit needs an Auth Config ID (created once in the
-    Composio dashboard) pasted into Settings, then a one-time Connect flow
-    that opens Composio's OAuth authorization in a new tab. Once connected,
-    approving a social draft (`SocialDraftController::update()`) also
-    attempts to publish it directly via the connected toolkit — success/
-    failure is recorded on the draft (`published_at`/`publish_error`) and in
-    the Activity Log, but never blocks the approval itself if publishing
-    fails. **Status: foundation built, not yet exercised against a live
-    Composio account** — the exact tool slugs used for publishing
-    (`LINKEDIN_CREATE_LINKED_IN_POST`, `TWITTER_CREATION_OF_A_POST`) are a
-    best guess pending confirmation once real credentials exist; expect to
-    adjust `Composio::executeTool()`'s request/response handling the first
-    time this runs for real.
+    real actions in third-party apps (Google Calendar, Gmail, WhatsApp
+    Business — extendable via `ComposioController::TOOLKITS`) on the admin's
+    behalf, via Composio's OAuth-managed tool-calling API. Each toolkit
+    needs an Auth Config ID (created once in the Composio dashboard) pasted
+    into Settings, then a one-time Connect flow that opens Composio's OAuth
+    authorization in a new tab. LinkedIn/Twitter deliberately aren't here —
+    both gate posting access behind their own developer-app approval
+    process, which Composio can't route around (it only manages OAuth once
+    you already have API access). Social publishing is handled by Make.com
+    instead: the `social_post_approved` event (see item 29) already fires
+    on every approved draft, and a LinkedIn "Create a Post" module added to
+    that Make.com scenario — authorized with a simple click, since Make.com
+    already has its own approved LinkedIn app — publishes it directly, no
+    separate developer account needed. **Status: Calendar/Gmail/WhatsApp
+    connect flow built, not yet exercised against a live Composio
+    account** — no capability is wired to any of them yet, just the OAuth
+    connection itself.
 
 ## Deployment (Namecheap cPanel)
 
