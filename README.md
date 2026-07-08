@@ -46,7 +46,7 @@ public/                  # web root — only this folder is web-exposed
   index.php               # front controller: routes /api/v1/* only
   .htaccess               # Apache rewrite rules for production
   index.html, services.html, projects.html, project.html, contact.html
-  blog.html, blog-post.html, pricing.html, request.html, pay.html
+  blog.html, blog-post.html, pricing.html, request.html, pay.html, payment-success.html
   admin/                  # admin panel (static HTML + JS, JWT-protected API calls)
     payments.html, quote-requests.html, blog.html, inquiries.html, ...
   css/app.css             # public site design system
@@ -119,7 +119,10 @@ storage/
    server-side against Paystack's verify API (never trusted from the
    client-side popup alone), with the webhook endpoint
    (`/api/v1/payments/webhook`, HMAC-SHA512 signature checked) as a backstop
-   if the browser never calls back.
+   if the browser never calls back. Once the browser-side verification
+   returns `success`, both checkout flows redirect to
+   `/payment-success.html`, which shows a confirmation message and the
+   Paystack reference.
 9. **Site widgets** (Live Chat, WhatsApp) are on by default and can be
    switched off independently from Admin → Settings without touching the
    underlying contact details — disabling Live Chat also cancels its
@@ -137,29 +140,33 @@ storage/
     ever changes). The service worker deliberately never caches `/api/*`
     or `/admin/*`, only the static app shell, so nothing stale is ever
     served for content or admin data.
-12. **Project estimation calculator** on `/pricing.html` is pure client-side
+12. **Pricing content** is editable from Admin -> Pricing. Tier names,
+    displayed prices, taglines, feature lists, the public currency, and the
+    Starter checkout amount are stored in the `settings` table and hydrate
+    the static public pages. Admin -> Settings still holds the Paystack keys.
+13. **Project estimation calculator** on `/pricing.html` is pure client-side
     JS (project type + feature checkboxes + timeline → a rounded price
     range) — no backend call, since it's explicitly a rough estimate, not
     a quote. Links out to `/request.html` for an exact number.
-13. **Career timeline** and **GitHub activity feed** on `/about.html` are
+14. **Career timeline** and **GitHub activity feed** on `/about.html` are
     both admin-configurable and hidden until set: the timeline's five
     stages are editable text (Admin → Site Content), and the GitHub feed
     fetches directly from `api.github.com` in the visitor's browser (no
     backend call, no API key needed) once a `github_username` is set.
-14. **Blog code snippets**: post bodies support ` ```lang ` fenced code
+15. **Blog code snippets**: post bodies support ` ```lang ` fenced code
     blocks (plain text otherwise), rendered with highlight.js. Fence
     content is HTML-escaped even though surrounding prose isn't (prose is
     admin-authored and trusted; code often contains `<`/`>`/`&` that must
     render literally).
-15. **Accessibility**: every public page has a skip-to-content link
+16. **Accessibility**: every public page has a skip-to-content link
     (`.skip-link`, visible on keyboard focus) targeting a landmark at the
     start of the page's main content.
-16. **Analytics** (`/admin/analytics.html`) is first-party and deliberately
+17. **Analytics** (`/admin/analytics.html`) is first-party and deliberately
     minimal — `page_views` stores only path, referrer, and timestamp, no
     IP address or cookie/visitor ID, via a tiny fire-and-forget beacon
     (`js/analytics.js`) on every public page (never on `/admin/*`).
     Disclosed in the Privacy Policy.
-17. **Appointment booking** (`/book.html`) uses an internal availability
+18. **Appointment booking** (`/book.html`) uses an internal availability
     model, not an external calendar account — the admin sets bookable
     weekdays/hours/slot length in Settings (same pattern as Live Chat
     hours), and slots are generated on the fly and checked against
@@ -171,18 +178,18 @@ storage/
     cron script (`database/send_appointment_reminders.php`) emails a
     reminder ~24h before each confirmed booking, guarded by a
     `reminder_sent` flag so it only ever sends once per booking.
-18. **Testimonials** are a client-facing review pipeline, separate from the
+19. **Testimonials** are a client-facing review pipeline, separate from the
     hand-authored `testimonial_1/2/3` homepage CMS fields: admin sends a
     request (`/admin/testimonials.html`) which emails a one-time link
     (`/testimonial.html?token=...`), the client submits a quote + star
     rating through that link, and admin approves it before it appears on
     the public `/testimonials.html` page.
-19. **Site-wide search** (`/search.html`, reachable via the 🔍 icon next to
+20. **Site-wide search** (`/search.html`, reachable via the 🔍 icon next to
     the theme toggle on every public page) does simple keyword scoring
     across published projects and blog posts server-side
     (`/api/v1/search?q=`) — no external search service, consistent with
     the rest of the app's zero-dependency approach.
-20. **Two-factor authentication** for the admin login is a hand-rolled RFC
+21. **Two-factor authentication** for the admin login is a hand-rolled RFC
     6238 TOTP implementation (`src/Support/Totp.php`, no dependency —
     verified against the RFC 4226 reference test vectors), compatible with
     Google Authenticator/Authy. Enable/disable from Admin → Settings; once
@@ -191,7 +198,7 @@ storage/
     issued at setup time). A short-lived `pending_2fa` cookie (5 min) links
     the two steps — no full session exists until the second factor checks
     out.
-21. **Marketing Leads** (`/admin/marketing-leads.html`, admin-only — no
+22. **Marketing Leads** (`/admin/marketing-leads.html`, admin-only — no
     public routes at all) is an internal outreach tool: add a target
     business, run a real technical audit of its site (SSL, mobile viewport
     meta tag, title/meta description, response time — genuinely verifiable,
@@ -207,7 +214,7 @@ storage/
     urgency, and unverifiable financial-harm claims; the sign-off and
     contact channels (WhatsApp/phone from Settings, portfolio URL) are
     appended in PHP from real data, never left for the model to guess at.
-22. **OpenRouter fallback** (`src/Support/AiText.php`): every plain
+23. **OpenRouter fallback** (`src/Support/AiText.php`): every plain
     single-shot "prompt in, text out" AI call (pitch drafting, prototype
     generation, the secondary AI assistant) tries Gemini first and, if that
     fails for any reason (quota, outage, bad response), retries once
@@ -269,12 +276,13 @@ One-time setup on a new host:
     `/usr/local/bin/php /home/<cpanel-user>/database/send_appointment_reminders.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
-6. In Admin → Settings → Payments (Paystack), paste in your Paystack public
-   and secret keys (start with the `pk_test_`/`sk_test_` pair), plus the
-   currency and Starter-tier checkout amount. Nothing payment-related is
-   reachable until these are set — `paystack_public_key` gates the checkout
-   button on `/pricing.html`, and `pricing_tier_1_amount` gates the button's
-   visibility. In the Paystack dashboard, add
+6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public
+   and secret keys (start with the `pk_test_`/`sk_test_` pair). Then use
+   Admin -> Pricing for the currency, displayed tier prices/features, and
+   Starter-tier checkout amount. Nothing payment-related is reachable until
+   these are set: `paystack_public_key` gates checkout, and
+   `pricing_tier_1_amount` gates the Starter deposit button's visibility.
+   In the Paystack dashboard, add
    `https://princecaleb.dev/api/v1/payments/webhook` under Settings → API
    Keys & Webhooks so payments still reconcile even if a customer closes the
    tab before the in-browser verify call fires.
