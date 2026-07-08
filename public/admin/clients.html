@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+<title>Clients — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+<link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="d-flex">
+  <div class="admin-sidebar p-3">
+    <div class="brand mb-4 fs-5">Prince Caleb<span class="dot">.</span></div>
+    <nav class="d-flex flex-column gap-1">
+      <a href="/admin/dashboard.html" class="nav-link">Dashboard</a>
+      <a href="/admin/analytics.html" class="nav-link">Analytics</a>
+      <a href="/admin/projects.html" class="nav-link">Projects</a>
+      <a href="/admin/blog.html" class="nav-link">Blog</a>
+      <a href="/admin/newsletter.html" class="nav-link">Newsletter</a>
+      <a href="/admin/inquiries.html" class="nav-link"><span>Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
+      <a href="/admin/quote-requests.html" class="nav-link">Quote Requests</a>
+      <a href="/admin/proposals.html" class="nav-link">Proposals</a>
+      <a href="/admin/clients.html" class="nav-link active">Clients</a>
+      <a href="/admin/appointments.html" class="nav-link">Bookings</a>
+      <a href="/admin/payments.html" class="nav-link">Payments</a>
+      <a href="/admin/pricing.html" class="nav-link">Pricing</a>
+      <a href="/admin/testimonials.html" class="nav-link">Testimonials</a>
+      <a href="/admin/marketing-leads.html" class="nav-link">Marketing Leads</a>
+      <a href="/admin/chats.html" class="nav-link"><span>Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
+      <a href="/admin/tags.html" class="nav-link">Tags</a>
+      <a href="/admin/content.html" class="nav-link">Site Content</a>
+      <a href="/admin/settings.html" class="nav-link">Settings</a>
+      <hr class="sidebar-divider">
+      <a href="/" class="nav-link">&larr; View site</a>
+      <a href="#" class="nav-link" id="logout-link">Log out</a>
+    </nav>
+  </div>
+
+  <div class="flex-grow-1 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="mb-0">Clients</h3>
+        <p class="text-muted-custom mb-0 small">Portal accounts, files, and messages per client.</p>
+      </div>
+      <button class="btn-brand" id="invite-btn">+ Invite Client</button>
+    </div>
+
+    <div class="admin-card p-0">
+      <table class="table mb-0 align-middle">
+        <thead>
+          <tr>
+            <th class="ps-3">Client</th>
+            <th>Portal access</th>
+            <th>Proposals</th>
+            <th>Last activity</th>
+            <th>Status</th>
+            <th class="text-end pe-3"></th>
+          </tr>
+        </thead>
+        <tbody id="clients-tbody"></tbody>
+      </table>
+    </div>
+    <div id="clients-empty" class="text-center text-muted-custom py-5 d-none">No clients yet.</div>
+  </div>
+</div>
+
+<div class="modal fade" id="invite-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Invite Client</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="invite-form">
+          <div class="mb-3">
+            <label class="form-label">Client name</label>
+            <input type="text" class="form-control" id="invite-name" required placeholder="Client full name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Client email</label>
+            <input type="email" class="form-control" id="invite-email" required placeholder="client@example.com">
+          </div>
+          <div id="invite-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100">Send Invite</button>
+        </form>
+        <div id="invite-result" class="d-none mt-3">
+          <label class="form-label">Portal setup link</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="invite-result-url" readonly>
+            <button class="btn btn-outline-secondary" type="button" id="copy-invite-result-btn">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="client-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="client-modal-title">Client</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item"><button class="nav-link active" data-detail-tab="proposals" id="detail-tab-proposals">Proposals</button></li>
+          <li class="nav-item"><button class="nav-link" data-detail-tab="files" id="detail-tab-files">Files</button></li>
+          <li class="nav-item"><button class="nav-link" data-detail-tab="messages" id="detail-tab-messages">Messages</button></li>
+        </ul>
+
+        <div id="detail-panel-proposals"></div>
+
+        <div id="detail-panel-files" class="d-none">
+          <div id="detail-files-list" class="d-flex flex-column gap-2 mb-3"></div>
+          <form id="detail-file-form" class="d-flex gap-2 align-items-end">
+            <div class="flex-grow-1">
+              <label class="form-label small mb-1" for="detail-file-input">Send a file</label>
+              <input type="file" class="form-control" id="detail-file-input" required>
+            </div>
+            <button type="submit" class="btn-brand">Upload</button>
+          </form>
+        </div>
+
+        <div id="detail-panel-messages" class="d-none">
+          <div id="detail-messages-thread" class="d-flex flex-column gap-2 mb-3" style="max-height: 320px; overflow-y: auto;"></div>
+          <form id="detail-message-form" class="d-flex gap-2">
+            <input type="text" class="form-control" id="detail-message-input" placeholder="Reply..." required>
+            <button type="submit" class="btn-brand">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/admin-auth.js"></script>
+<script src="/js/admin-nav-badges.js"></script>
+<script src="/js/admin-clients.js"></script>
+</body>
+</html>

@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS webhook_queue (
 CREATE TABLE IF NOT EXISTS payment_links (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   token TEXT UNIQUE NOT NULL,
+  client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
   client_name TEXT NOT NULL,
   client_email TEXT NOT NULL,
   amount INTEGER NOT NULL,
@@ -155,6 +156,7 @@ CREATE TABLE IF NOT EXISTS proposals (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   token TEXT UNIQUE NOT NULL,
   inquiry_id INTEGER NULL REFERENCES inquiries(id) ON DELETE SET NULL,
+  client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
   client_name TEXT NOT NULL,
   client_email TEXT NOT NULL,
   title TEXT NOT NULL,
@@ -270,3 +272,44 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   sent_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at);
+
+-- Client portal accounts. Rows are provisioned by an admin invite (from a
+-- proposal), never self-signup — password_hash stays NULL until the client
+-- completes /client/setup.html?token=..., mirroring how proposals.token
+-- grants one-time access before an account exists at all.
+CREATE TABLE IF NOT EXISTS clients (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  password_hash TEXT,
+  token_version INTEGER NOT NULL DEFAULT 0,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  invite_token TEXT UNIQUE,
+  invite_expires_at TEXT,
+  reset_token TEXT UNIQUE,
+  reset_expires_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS client_files (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  proposal_id INTEGER NULL REFERENCES proposals(id) ON DELETE SET NULL,
+  uploaded_by TEXT NOT NULL CHECK (uploaded_by IN ('admin', 'client')),
+  file_path TEXT NOT NULL,
+  original_name TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_client_files_client ON client_files (client_id, created_at);
+
+CREATE TABLE IF NOT EXISTS client_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+  sender_type TEXT NOT NULL CHECK (sender_type IN ('admin', 'client')),
+  body TEXT NOT NULL,
+  read_by_admin INTEGER NOT NULL DEFAULT 0,
+  read_by_client INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_client_messages_client ON client_messages (client_id, created_at);

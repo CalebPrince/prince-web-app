@@ -98,6 +98,14 @@ if (!in_array('accepted_ip', $proposalColumns, true)) {
 if (!in_array('accepted_user_agent', $proposalColumns, true)) {
     $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_user_agent TEXT');
 }
+if (!in_array('client_id', $proposalColumns, true)) {
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN client_id INTEGER REFERENCES clients(id)');
+}
+
+$paymentLinkColumns = array_column($pdo->query('PRAGMA table_info(payment_links)')->fetchAll(), 'name');
+if (!in_array('client_id', $paymentLinkColumns, true)) {
+    $pdo->exec('ALTER TABLE payment_links ADD COLUMN client_id INTEGER REFERENCES clients(id)');
+}
 
 // SQLite can't relax a NOT NULL constraint via ALTER TABLE — rebuild the
 // table if website_url is still marked NOT NULL from before leads with no

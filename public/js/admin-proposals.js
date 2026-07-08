@@ -99,6 +99,7 @@ async function loadProposals() {
             <button type="button" class="btn btn-sm btn-outline-secondary edit-proposal-btn" data-id="${p.id}" ${p.status === 'accepted' ? 'disabled' : ''}>Edit</button>
             <button type="button" class="btn btn-sm btn-outline-secondary copy-proposal-btn" data-url="${escapeHtml(url)}">Copy link</button>
             <button type="button" class="btn btn-sm btn-brand send-proposal-btn" data-id="${p.id}">Email</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary invite-portal-btn" data-name="${escapeHtml(p.client_name)}" data-email="${escapeHtml(p.client_email)}">Invite to portal</button>
           </div>
         </td>
       </tr>
@@ -114,6 +115,31 @@ async function loadProposals() {
         setTimeout(() => { btn.textContent = old; }, 2000);
       } catch (_) {
         prompt('Copy this proposal link:', btn.dataset.url);
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.invite-portal-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const resultBox = document.getElementById('proposal-result');
+      const old = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Inviting...';
+      try {
+        const result = await api.post('/api/v1/admin/clients/invite', {
+          name: btn.dataset.name,
+          email: btn.dataset.email,
+        });
+        resultBox.className = 'alert alert-success py-2 small';
+        resultBox.innerHTML = `Portal invite sent. <a href="${escapeHtml(result.url)}" target="_blank" rel="noopener">Open setup link</a>`;
+        resultBox.classList.remove('d-none');
+      } catch (err) {
+        resultBox.className = 'alert alert-danger py-2 small';
+        resultBox.textContent = err.message || 'Could not send portal invite.';
+        resultBox.classList.remove('d-none');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = old;
       }
     });
   });

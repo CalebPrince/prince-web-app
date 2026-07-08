@@ -6,3 +6,5 @@ storage/logs/*
 *.zip
 public/uploads/project-requests/*
 !public/uploads/project-requests/.gitkeep
+public/uploads/client-files/*
+!public/uploads/client-files/.gitkeep
