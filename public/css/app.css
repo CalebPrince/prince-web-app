@@ -43,6 +43,16 @@
 
 * { box-sizing: border-box; }
 
+html, body {
+  /* Safety net: position:fixed elements (chat widget, WhatsApp button) are
+     positioned against the layout viewport, which grows to fit ANY
+     horizontally-overflowing content — on mobile that pushes fixed
+     elements off the visible edge of the screen. Clipping overflow here
+     keeps fixed positioning anchored to what's actually visible even if
+     something else overflows later. */
+  overflow-x: hidden;
+}
+
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   color: var(--ink-soft);
@@ -113,6 +123,14 @@ a:hover { color: var(--accent-strong); }
   position: sticky;
   top: 0;
   z-index: 1000;
+}
+@media (max-width: 767.98px) {
+  /* justify-content-between alone can pack the theme/search/hamburger
+     icon buttons close enough together that a finger tap on one
+     mis-hits its neighbor — force a minimum gap between them. */
+  .site-nav .container {
+    gap: 0.5rem;
+  }
 }
 .brand-logo {
   font-family: "Plus Jakarta Sans", sans-serif;
@@ -559,6 +577,16 @@ pre code.hljs {
   padding: 3rem 0 2rem;
 }
 .site-footer a { color: #cbd5e1; }
+@media (max-width: 575.98px) {
+  /* The nav-link and policy-link rows (d-flex + gap, no wrap utility)
+     are wider than a narrow phone screen and were overflowing off both
+     edges — wrap them instead of letting them run off-screen. */
+  .site-footer .d-flex:not(.flex-column) {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.6rem;
+  }
+}
 .site-footer a:hover { color: #fff; }
 .social-icon-link {
   display: inline-flex;
