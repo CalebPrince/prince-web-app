@@ -81,6 +81,23 @@ if (!in_array('tos_accepted_at', $paymentColumns, true)) {
 if (!in_array('tos_version', $paymentColumns, true)) {
     $pdo->exec('ALTER TABLE payments ADD COLUMN tos_version TEXT');
 }
+if (!in_array('reviewed', $paymentColumns, true)) {
+    $pdo->exec('ALTER TABLE payments ADD COLUMN reviewed INTEGER NOT NULL DEFAULT 0');
+}
+if (!in_array('notes', $paymentColumns, true)) {
+    $pdo->exec('ALTER TABLE payments ADD COLUMN notes TEXT');
+}
+
+$proposalColumns = array_column($pdo->query('PRAGMA table_info(proposals)')->fetchAll(), 'name');
+if (!in_array('accepted_by_name', $proposalColumns, true)) {
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_by_name TEXT');
+}
+if (!in_array('accepted_ip', $proposalColumns, true)) {
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_ip TEXT');
+}
+if (!in_array('accepted_user_agent', $proposalColumns, true)) {
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_user_agent TEXT');
+}
 
 // SQLite can't relax a NOT NULL constraint via ALTER TABLE — rebuild the
 // table if website_url is still marked NOT NULL from before leads with no

@@ -1,4 +1,6 @@
 let linkModal = null;
+let notesModal = null;
+let notesReference = null;
 
 const STATUS_PILL_CLASS = {
   success: 'published', paid: 'published',
@@ -47,7 +49,7 @@ async function loadPayments() {
   const empty = document.getElementById('payments-empty');
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted-custom py-4">No transactions yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted-custom py-4">No transactions yet.</td></tr>';
     empty.classList.add('d-none');
     return;
   }
@@ -61,9 +63,13 @@ async function loadPayments() {
       <td class="small text-muted-custom">${p.source === 'payment_link' ? 'Payment link' : 'Tier checkout'}</td>
       <td>${renderTermsCell(p)}</td>
       <td><span class="status-pill ${STATUS_PILL_CLASS[p.status] || 'read'}">${p.status}</span></td>
+      <td class="text-center">
+        <input type="checkbox" class="form-check-input reviewed-checkbox" data-reference="${escapeHtml(p.reference)}" ${p.reviewed ? 'checked' : ''}>
+      </td>
       <td class="small text-muted-custom">${new Date(p.created_at).toLocaleString()}</td>
       <td class="text-end pe-3">
-        ${p.status === 'pending' ? `<button class="btn btn-sm btn-outline-secondary recheck-btn" data-reference="${escapeHtml(p.reference)}">Recheck</button>` : ''}
+        ${p.status === 'pending' || p.status === 'failed' ? `<button class="btn btn-sm btn-outline-secondary recheck-btn" data-reference="${escapeHtml(p.reference)}">Recheck</button>` : ''}
+        <button class="btn btn-sm btn-outline-secondary notes-btn ms-1" data-reference="${escapeHtml(p.reference)}" data-notes="${escapeHtml(p.notes || '')}">${p.notes ? 'Notes ✓' : 'Add note'}</button>
         <button class="btn btn-sm btn-outline-danger delete-btn ms-1" data-reference="${escapeHtml(p.reference)}">Delete</button>
       </td>
     </tr>
@@ -90,13 +96,37 @@ async function loadPayments() {
       try {
         // Same public verify endpoint the checkout page itself calls after a
         // successful charge -- reused here to re-ask Paystack directly for a
-        // row that's been stuck pending (e.g. the webhook never fired).
+        // row that's been stuck pending or failed (e.g. the webhook never fired).
         await api.post('/api/v1/payments/verify', { reference: btn.dataset.reference });
       } catch (_) {
         // Paystack may legitimately report "not found" for a checkout the
         // customer never finished -- either way, reload to show the result.
       }
       await loadPayments();
+    });
+  });
+
+  tbody.querySelectorAll('.reviewed-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', async () => {
+      checkbox.disabled = true;
+      try {
+        await api.patch(`/api/v1/admin/payments/${encodeURIComponent(checkbox.dataset.reference)}`, {
+          reviewed: checkbox.checked,
+        });
+      } catch (err) {
+        alert(err.message);
+        checkbox.checked = !checkbox.checked;
+      } finally {
+        checkbox.disabled = false;
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.notes-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      notesReference = btn.dataset.reference;
+      document.getElementById('notes-textarea').value = btn.dataset.notes || '';
+      notesModal.show();
     });
   });
 }
@@ -154,6 +184,20 @@ function switchTab(tab) {
   wireLogout();
 
   linkModal = new bootstrap.Modal(document.getElementById('link-modal'));
+  notesModal = new bootstrap.Modal(document.getElementById('notes-modal'));
+  document.getElementById('notes-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!notesReference) return;
+    try {
+      await api.patch(`/api/v1/admin/payments/${encodeURIComponent(notesReference)}`, {
+        notes: document.getElementById('notes-textarea').value,
+      });
+      notesModal.hide();
+      await loadPayments();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
   document.getElementById('new-link-btn').addEventListener('click', () => {
     document.getElementById('link-form').reset();
     document.getElementById('link-form').classList.remove('d-none');

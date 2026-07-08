@@ -281,6 +281,40 @@ class PaymentController
         Response::json(['status' => 'deleted']);
     }
 
+    /** PATCH /api/v1/admin/payments/{reference} — body: {reviewed?, notes?} */
+    public static function update(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $reference = $params['reference'] ?? '';
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT id FROM payments WHERE reference = ?');
+        $stmt->execute([$reference]);
+        if (!$stmt->fetch()) {
+            Response::error('Payment not found.', 404);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $fields = [];
+        $values = [];
+        if (array_key_exists('reviewed', $data)) {
+            $fields[] = 'reviewed = ?';
+            $values[] = !empty($data['reviewed']) ? 1 : 0;
+        }
+        if (array_key_exists('notes', $data)) {
+            $fields[] = 'notes = ?';
+            $values[] = trim((string) $data['notes']) !== '' ? trim((string) $data['notes']) : null;
+        }
+        if (!$fields) {
+            Response::error('Nothing to update.', 422);
+        }
+
+        $values[] = $reference;
+        $pdo->prepare('UPDATE payments SET ' . implode(', ', $fields) . ", updated_at = datetime('now') WHERE reference = ?")
+            ->execute($values);
+
+        Response::json(['status' => 'updated']);
+    }
+
     /** GET /api/v1/admin/payment-links */
     public static function adminIndexLinks(): void
     {

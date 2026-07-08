@@ -144,6 +144,8 @@ CREATE TABLE IF NOT EXISTS payments (
   tos_accepted_at TEXT,
   tos_version TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'success', 'failed')),
+  reviewed INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -164,7 +166,10 @@ CREATE TABLE IF NOT EXISTS proposals (
   status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('draft', 'sent', 'accepted', 'declined')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  accepted_at TEXT
+  accepted_at TEXT,
+  accepted_by_name TEXT,
+  accepted_ip TEXT,
+  accepted_user_agent TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_proposals_status_created ON proposals (status, created_at);
 

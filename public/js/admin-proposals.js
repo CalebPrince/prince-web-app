@@ -88,7 +88,10 @@ async function loadProposals() {
           <div class="small text-muted-custom">${escapeHtml(p.client_email)}</div>
         </td>
         <td>${formatAmount(p.total_amount, p.currency)}</td>
-        <td><span class="status-pill ${STATUS_CLASS[p.status] || 'read'}">${escapeHtml(p.status)}</span></td>
+        <td>
+          <span class="status-pill ${STATUS_CLASS[p.status] || 'read'}">${escapeHtml(p.status)}</span>
+          ${p.status === 'accepted' ? `<div class="small text-muted-custom mt-1">Signed by ${escapeHtml(p.accepted_by_name || p.client_name)}<br>${new Date(p.accepted_at).toLocaleString()}</div>` : ''}
+        </td>
         <td>${p.paid_milestone_count || 0}/${p.milestone_count || 0} paid</td>
         <td class="text-end">
           <div class="d-inline-flex flex-wrap justify-content-end gap-2">

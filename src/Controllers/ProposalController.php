@@ -352,7 +352,7 @@ class ProposalController
         Response::json($proposal);
     }
 
-    /** POST /api/v1/proposals/{token}/accept */
+    /** POST /api/v1/proposals/{token}/accept — body: {accepted_by_name} */
     public static function accept(array $params): void
     {
         $proposal = self::findProposal($params['token'] ?? '');
@@ -362,10 +362,25 @@ class ProposalController
         if ($proposal['status'] === 'declined') {
             Response::error('This proposal is no longer available.', 422);
         }
+        if ($proposal['status'] === 'accepted') {
+            Response::error('This proposal has already been accepted.', 422);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $acceptedByName = trim((string) ($data['accepted_by_name'] ?? ''));
+        if ($acceptedByName === '') {
+            Response::error('Please type your name to confirm acceptance.', 422);
+        }
 
         Database::get()->prepare(
-            "UPDATE proposals SET status = 'accepted', accepted_at = datetime('now'), updated_at = datetime('now') WHERE token = ?"
-        )->execute([$params['token']]);
+            "UPDATE proposals SET status = 'accepted', accepted_at = datetime('now'), updated_at = datetime('now'),
+             accepted_by_name = ?, accepted_ip = ?, accepted_user_agent = ? WHERE token = ?"
+        )->execute([
+            $acceptedByName,
+            $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            $_SERVER['HTTP_USER_AGENT'] ?? null,
+            $params['token'],
+        ]);
 
         Response::json(['status' => 'accepted']);
     }
