@@ -350,7 +350,10 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
   short_content TEXT,
   hashtags TEXT,
   image_url TEXT,
-  ai_provider TEXT CHECK (ai_provider IS NULL OR ai_provider IN ('gemini', 'openrouter', 'claude')),
+  -- 'gemini', or the exact configured openrouter_model string (e.g.
+  -- 'anthropic/claude-haiku-4.5') — not a fixed enum, since the admin can
+  -- point openrouter_model at any model OpenRouter offers.
+  ai_provider TEXT,
   status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'rejected')),
   sent_to_makecom INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),

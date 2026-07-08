@@ -15,11 +15,16 @@ const SOURCE_LABEL = {
   general: 'Original idea',
 };
 
-const PROVIDER_LABEL = {
-  gemini: 'Gemini',
-  openrouter: 'OpenRouter',
-  claude: 'Claude',
-};
+// ai_provider is either 'gemini' or the exact openrouter_model string
+// (e.g. 'anthropic/claude-haiku-4.5') — not a fixed set of values, since
+// the admin can point openrouter_model at any model OpenRouter offers.
+function providerLabel(value) {
+  if (!value) return '';
+  if (value === 'gemini') return 'Gemini';
+  if (value === 'openrouter' || value === 'openrouter/free') return 'OpenRouter';
+  const name = value.includes('/') ? value.split('/').pop() : value;
+  return name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
 
 function renderDraftsTable(drafts) {
   currentDrafts = drafts;
@@ -39,7 +44,7 @@ function renderDraftsTable(drafts) {
       <td class="small text-muted-custom" style="max-width: 420px;">${escapeHtml((d.content || '').slice(0, 140))}${(d.content || '').length > 140 ? '…' : ''}</td>
       <td>
         <span class="status-pill ${STATUS_CLASS[d.status] || 'unread'}">${escapeHtml(d.status)}</span>
-        ${d.ai_provider ? `<div class="small text-muted-custom mt-1">${PROVIDER_LABEL[d.ai_provider] || escapeHtml(d.ai_provider)}</div>` : ''}
+        ${d.ai_provider ? `<div class="small text-muted-custom mt-1">${escapeHtml(providerLabel(d.ai_provider))}</div>` : ''}
       </td>
       <td class="small text-muted-custom">${new Date(d.created_at).toLocaleString()}</td>
       <td class="text-end pe-3">
@@ -88,7 +93,7 @@ function openDraftModal(id) {
 
   document.getElementById('draft-modal-source').textContent = SOURCE_LABEL[draft.source_type] || draft.source_type;
   document.getElementById('draft-modal-provider').textContent = draft.ai_provider
-    ? `Generated with ${PROVIDER_LABEL[draft.ai_provider] || draft.ai_provider}`
+    ? `Generated with ${providerLabel(draft.ai_provider)}`
     : '';
   document.getElementById('draft-content').value = draft.content || '';
   document.getElementById('draft-short-content').value = draft.short_content || '';

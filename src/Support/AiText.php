@@ -49,26 +49,17 @@ class AiText
         if (!empty($openRouterKey)) {
             $text = self::callOpenRouter($openRouterKey, $prompt, $systemInstruction, $timeoutSeconds);
             if ($text !== null) {
-                return ['text' => $text, 'provider' => self::openRouterProviderLabel()];
+                // OpenRouter routes to many underlying model providers behind
+                // one API — reporting the actual configured model (rather
+                // than a generic "openrouter" label) makes it visible in the
+                // admin UI which model actually generated a given draft,
+                // whatever it's set to (Claude, GPT, Llama, etc.).
+                $model = Settings::get('openrouter_model') ?: 'openrouter/free';
+                return ['text' => $text, 'provider' => $model];
             }
         }
 
         return null;
-    }
-
-    /**
-     * OpenRouter routes to many underlying model providers behind one API —
-     * distinguishing Claude here (rather than lumping every fallback under
-     * a generic "openrouter" label) makes it visible in the admin UI which
-     * generations actually used Claude vs. whatever other model is set.
-     */
-    private static function openRouterProviderLabel(): string
-    {
-        $model = Settings::get('openrouter_model') ?: 'openrouter/free';
-        if (stripos($model, 'claude') !== false || stripos($model, 'anthropic') !== false) {
-            return 'claude';
-        }
-        return 'openrouter';
     }
 
     private static function callGemini(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
