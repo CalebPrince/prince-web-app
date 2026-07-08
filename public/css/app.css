@@ -200,6 +200,52 @@ a:hover { color: var(--accent-strong); }
 .hero {
   background: var(--bg-soft);
   padding: 5rem 0 4rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero > .container {
+  position: relative;
+  z-index: 1;
+}
+/* Soft floating gradient blobs, purely decorative — contained by the
+   hero's own overflow:hidden so they can never contribute to page-level
+   horizontal overflow, and disabled entirely under reduced-motion. */
+.hero::before,
+.hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero::before {
+  width: 320px;
+  height: 320px;
+  background: var(--accent);
+  top: -100px;
+  right: -80px;
+  animation: hero-float-1 16s ease-in-out infinite;
+}
+.hero::after {
+  width: 260px;
+  height: 260px;
+  background: var(--accent-strong);
+  bottom: -80px;
+  left: -60px;
+  animation: hero-float-2 20s ease-in-out infinite;
+}
+@keyframes hero-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, 50px) scale(1.08); }
+}
+@keyframes hero-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, -35px) scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero::before, .hero::after { animation: none; }
 }
 .eyebrow {
   text-transform: uppercase;
