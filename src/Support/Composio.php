@@ -39,6 +39,22 @@ class Composio
             return null;
         }
 
+        $response = self::request('POST', self::API_BASE_V31 . '/connected_accounts/link', $apiKey, [
+            'auth_config_id' => $authConfigId,
+            'user_id' => self::adminUserId(),
+        ]);
+
+        if ($response !== null) {
+            $id = $response['connected_account_id'] ?? $response['connectedAccountId'] ?? null;
+            $redirectUrl = $response['redirect_url'] ?? $response['redirectUrl'] ?? null;
+            if ($id !== null || $redirectUrl !== null) {
+                return ['id' => (string) ($id ?? $response['link_token'] ?? ''), 'redirectUrl' => $redirectUrl];
+            }
+            error_log('Composio: auth link succeeded but no connected_account_id/redirect_url in response: ' . json_encode($response));
+        }
+
+        // Fallback for custom auth configs and non-OAuth schemes. Composio's
+        // managed OAuth configs now prefer /connected_accounts/link.
         $response = self::request('POST', self::API_BASE_V31 . '/connected_accounts', $apiKey, [
             'auth_config' => ['id' => $authConfigId],
             'connection' => [],
@@ -57,6 +73,11 @@ class Composio
             ?? $response['connectionData']['redirectUrl'] ?? null;
 
         return ['id' => (string) $id, 'redirectUrl' => $redirectUrl];
+    }
+
+    private static function adminUserId(): string
+    {
+        return Settings::get('composio_user_id') ?: 'prince-web-app-admin';
     }
 
     /** @return string|null e.g. 'ACTIVE', 'INITIATED', 'FAILED' — null if the lookup itself failed */
