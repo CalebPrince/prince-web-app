@@ -1124,6 +1124,15 @@ pre code.hljs {
   100% { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
-/* Lead-capture reveal after an estimate exists */
-.planner-lead { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.6s var(--ease-out), opacity 0.6s var(--ease-out); }
-.planner-lead.open { max-height: 320px; opacity: 1; }
+/* Lead-capture reveal after an estimate exists; progressive contact form
+   works the same way. visibility:hidden keeps the collapsed fields out of
+   the tab order until they're revealed. */
+.planner-lead, .form-progressive {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: max-height 0.6s var(--ease-out), opacity 0.6s var(--ease-out), visibility 0.6s;
+}
+.planner-lead.open { max-height: 320px; opacity: 1; visibility: visible; }
+.form-progressive.open { max-height: 560px; opacity: 1; visibility: visible; }
