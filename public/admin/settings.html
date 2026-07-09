@@ -51,15 +51,18 @@
   </div>
 
   <div class="flex-grow-1 p-4">
-    <div class="mb-4">
-      <h3 class="mb-0">Settings</h3>
-      <p class="text-muted-custom mb-0 small">Manage your admin account.</p>
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="icon-chip" style="background: var(--section-system-soft); color: var(--section-system);"><i class="bi bi-gear"></i></div>
+      <div>
+        <h3 class="mb-0">Settings</h3>
+        <p class="text-muted-custom mb-0 small">Manage your admin account.</p>
+      </div>
     </div>
 
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Login email</h5>
+          <h5 class="mb-1"><i class="bi bi-envelope-at me-2" style="color: var(--section-system);"></i>Login email</h5>
           <p class="text-muted-custom small">The address you use to sign in to this panel.</p>
           <form id="email-form">
             <div class="mb-3">
@@ -74,7 +77,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Integrations</h5>
+          <h5 class="mb-1"><i class="bi bi-plug me-2" style="color: var(--section-system);"></i>Integrations</h5>
           <p class="text-muted-custom small">Keys are stored in the database and take effect immediately — no file editing needed.</p>
           <form id="integrations-form">
             <div class="mb-3">
@@ -202,7 +205,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Social post drafts</h5>
+          <h5 class="mb-1"><i class="bi bi-magic me-2" style="color: var(--section-system);"></i>Social post drafts</h5>
           <p class="text-muted-custom small">Auto-drafts a social media post (see Admin &rarr; Social Drafts) from your latest published content, using the same AI keys configured above. You review and approve each one before it goes anywhere.</p>
           <form id="social-draft-form">
             <div class="form-check mb-3">
@@ -224,7 +227,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Connected accounts <span class="text-muted-custom fw-normal">(Composio)</span></h5>
+          <h5 class="mb-1"><i class="bi bi-link-45deg me-2" style="color: var(--section-system);"></i>Connected accounts <span class="text-muted-custom fw-normal">(Composio)</span></h5>
           <p class="text-muted-custom small">Lets the app take real actions in these apps on your behalf. Each one needs an Auth Config ID from your Composio dashboard first, then Connect walks you through authorizing it.</p>
           <div id="composio-accounts-list"></div>
           <div id="composio-msg" class="alert py-2 small d-none mt-2"></div>
@@ -233,7 +236,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Live Chat availability</h5>
+          <h5 class="mb-1"><i class="bi bi-clock me-2" style="color: var(--section-system);"></i>Live Chat availability</h5>
           <p class="text-muted-custom small">Control the days/hours Live Chat shows as online. Outside these hours (or when disabled below), visitors see the offline message and leave-a-message form instead.</p>
           <form id="hours-form">
             <div class="form-check mb-3">
@@ -274,7 +277,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Booking availability</h5>
+          <h5 class="mb-1"><i class="bi bi-calendar-week me-2" style="color: var(--section-system);"></i>Booking availability</h5>
           <p class="text-muted-custom small">Controls the "Book a call" form on <code>/book.html</code> — no external calendar account needed.</p>
           <form id="booking-form">
             <div class="form-check mb-3">
@@ -329,7 +332,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Payments (Paystack)</h5>
+          <h5 class="mb-1"><i class="bi bi-credit-card-2-front me-2" style="color: var(--section-system);"></i>Payments (Paystack)</h5>
           <p class="text-muted-custom small">Get your keys from the Paystack dashboard (Settings → API Keys &amp; Webhooks). Use test keys first — they start with <code>pk_test_</code> / <code>sk_test_</code>.</p>
           <form id="payments-form">
             <div class="mb-3">
@@ -364,7 +367,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Site widgets</h5>
+          <h5 class="mb-1"><i class="bi bi-grid me-2" style="color: var(--section-system);"></i>Site widgets</h5>
           <p class="text-muted-custom small">Show or hide the floating buttons on every public page — no need to remove the underlying contact details just to hide them temporarily.</p>
           <form id="widgets-form">
             <div class="form-check mb-2">
@@ -383,7 +386,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Maintenance mode</h5>
+          <h5 class="mb-1"><i class="bi bi-cone-striped me-2" style="color: var(--section-system);"></i>Maintenance mode</h5>
           <p class="text-muted-custom small">When enabled, visitors see a "down for maintenance" page (503) on every public page. Admin, API, and uploads stay reachable so you can turn it back off.</p>
           <form id="maintenance-form">
             <div class="form-check mb-3">
@@ -398,7 +401,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Change password</h5>
+          <h5 class="mb-1"><i class="bi bi-key me-2" style="color: var(--section-system);"></i>Change password</h5>
           <p class="text-muted-custom small">All other signed-in devices are logged out when you change it.</p>
           <form id="password-form">
             <div class="mb-3">
@@ -422,7 +425,7 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
-          <h5 class="mb-1">Two-factor authentication</h5>
+          <h5 class="mb-1"><i class="bi bi-shield-lock me-2" style="color: var(--section-system);"></i>Two-factor authentication</h5>
           <p class="text-muted-custom small">Adds a second step at login using an authenticator app (Google Authenticator, Authy, etc.) — protects the account guarding your whole site.</p>
 
           <div id="twofa-disabled-view">
