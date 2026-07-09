@@ -59,6 +59,7 @@
       </div>
     </div>
 
+    <div class="settings-group-label"><i class="bi bi-person-badge"></i>Account & Security</div>
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="admin-card p-4">
@@ -75,6 +76,81 @@
         </div>
       </div>
 
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
+          <h5 class="mb-1"><i class="bi bi-key me-2" style="color: var(--section-system);"></i>Change password</h5>
+          <p class="text-muted-custom small">All other signed-in devices are logged out when you change it.</p>
+          <form id="password-form">
+            <div class="mb-3">
+              <label class="form-label">Current password</label>
+              <input type="password" class="form-control" id="current-password" autocomplete="current-password" required placeholder="Current password">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">New password</label>
+              <input type="password" class="form-control" id="new-password" autocomplete="new-password" minlength="10" required placeholder="New password">
+              <div class="form-text">At least 10 characters.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm new password</label>
+              <input type="password" class="form-control" id="confirm-password" autocomplete="new-password" required placeholder="Confirm new password">
+            </div>
+            <div id="password-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Update Password</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
+          <h5 class="mb-1"><i class="bi bi-shield-lock me-2" style="color: var(--section-system);"></i>Two-factor authentication</h5>
+          <p class="text-muted-custom small">Adds a second step at login using an authenticator app (Google Authenticator, Authy, etc.) — protects the account guarding your whole site.</p>
+
+          <div id="twofa-disabled-view">
+            <span class="status-pill draft mb-3 d-inline-block">Disabled</span>
+            <div>
+              <button type="button" class="btn-brand" id="twofa-start-btn">Set up two-factor authentication</button>
+            </div>
+          </div>
+
+          <div id="twofa-enabled-view" class="d-none">
+            <span class="status-pill published mb-3 d-inline-block">Enabled</span>
+            <form id="twofa-disable-form">
+              <div class="mb-3">
+                <label class="form-label">Current password</label>
+                <input type="password" class="form-control" id="twofa-disable-password" autocomplete="current-password" required placeholder="Current password">
+              </div>
+              <div id="twofa-disable-msg" class="alert py-2 small d-none"></div>
+              <button type="submit" class="btn btn-outline-danger btn-sm">Disable two-factor authentication</button>
+            </form>
+          </div>
+
+          <div id="twofa-setup-view" class="d-none">
+            <p class="small mb-2">1. Add this to your authenticator app (manual entry key):</p>
+            <div class="p-2 mb-3 rounded" style="background: var(--bg-soft); font-family: monospace; word-break: break-all;" id="twofa-secret"></div>
+            <p class="small mb-2">2. Enter the 6-digit code it shows:</p>
+            <form id="twofa-confirm-form">
+              <div class="mb-3">
+                <input type="text" class="form-control" id="twofa-confirm-code" inputmode="numeric" maxlength="6" placeholder="123456" required>
+              </div>
+              <div id="twofa-setup-msg" class="alert py-2 small d-none"></div>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn-brand btn-sm">Enable</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="twofa-cancel-btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="twofa-backup-view" class="d-none">
+            <div class="alert alert-warning py-2 small">Save these backup codes somewhere safe — each works once, and they won't be shown again. Use one if you ever lose access to your authenticator app.</div>
+            <div class="p-2 mb-3 rounded" style="background: var(--bg-soft); font-family: monospace;" id="twofa-backup-codes"></div>
+            <button type="button" class="btn-brand btn-sm" id="twofa-backup-done-btn">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group-label"><i class="bi bi-robot"></i>AI & Automation</div>
+    <div class="row g-4">
       <div class="col-lg-6">
         <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-plug me-2" style="color: var(--section-system);"></i>Integrations</h5>
@@ -205,6 +281,15 @@
 
       <div class="col-lg-6">
         <div class="admin-card p-4">
+          <h5 class="mb-1"><i class="bi bi-link-45deg me-2" style="color: var(--section-system);"></i>Connected accounts <span class="text-muted-custom fw-normal">(Composio)</span></h5>
+          <p class="text-muted-custom small">Lets the app take real actions in these apps on your behalf. Each one needs an Auth Config ID from your Composio dashboard first, then Connect walks you through authorizing it.</p>
+          <div id="composio-accounts-list"></div>
+          <div id="composio-msg" class="alert py-2 small d-none mt-2"></div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-magic me-2" style="color: var(--section-system);"></i>Social post drafts</h5>
           <p class="text-muted-custom small">Auto-drafts a social media post (see Admin &rarr; Social Drafts) from your latest published content, using the same AI keys configured above. You review and approve each one before it goes anywhere.</p>
           <form id="social-draft-form">
@@ -224,16 +309,10 @@
           </form>
         </div>
       </div>
+    </div>
 
-      <div class="col-lg-6">
-        <div class="admin-card p-4">
-          <h5 class="mb-1"><i class="bi bi-link-45deg me-2" style="color: var(--section-system);"></i>Connected accounts <span class="text-muted-custom fw-normal">(Composio)</span></h5>
-          <p class="text-muted-custom small">Lets the app take real actions in these apps on your behalf. Each one needs an Auth Config ID from your Composio dashboard first, then Connect walks you through authorizing it.</p>
-          <div id="composio-accounts-list"></div>
-          <div id="composio-msg" class="alert py-2 small d-none mt-2"></div>
-        </div>
-      </div>
-
+    <div class="settings-group-label"><i class="bi bi-calendar-check"></i>Availability & Payments</div>
+    <div class="row g-4">
       <div class="col-lg-6">
         <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-clock me-2" style="color: var(--section-system);"></i>Live Chat availability</h5>
@@ -364,7 +443,10 @@
           </form>
         </div>
       </div>
+    </div>
 
+    <div class="settings-group-label"><i class="bi bi-sliders"></i>Site Behavior</div>
+    <div class="row g-4">
       <div class="col-lg-6">
         <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-grid me-2" style="color: var(--section-system);"></i>Site widgets</h5>
@@ -396,78 +478,6 @@
             <div id="maintenance-msg" class="alert py-2 small d-none"></div>
             <button type="submit" class="btn-brand">Save</button>
           </form>
-        </div>
-      </div>
-
-      <div class="col-lg-6">
-        <div class="admin-card p-4">
-          <h5 class="mb-1"><i class="bi bi-key me-2" style="color: var(--section-system);"></i>Change password</h5>
-          <p class="text-muted-custom small">All other signed-in devices are logged out when you change it.</p>
-          <form id="password-form">
-            <div class="mb-3">
-              <label class="form-label">Current password</label>
-              <input type="password" class="form-control" id="current-password" autocomplete="current-password" required placeholder="Current password">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">New password</label>
-              <input type="password" class="form-control" id="new-password" autocomplete="new-password" minlength="10" required placeholder="New password">
-              <div class="form-text">At least 10 characters.</div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Confirm new password</label>
-              <input type="password" class="form-control" id="confirm-password" autocomplete="new-password" required placeholder="Confirm new password">
-            </div>
-            <div id="password-msg" class="alert py-2 small d-none"></div>
-            <button type="submit" class="btn-brand">Update Password</button>
-          </form>
-        </div>
-      </div>
-
-      <div class="col-lg-6">
-        <div class="admin-card p-4">
-          <h5 class="mb-1"><i class="bi bi-shield-lock me-2" style="color: var(--section-system);"></i>Two-factor authentication</h5>
-          <p class="text-muted-custom small">Adds a second step at login using an authenticator app (Google Authenticator, Authy, etc.) — protects the account guarding your whole site.</p>
-
-          <div id="twofa-disabled-view">
-            <span class="status-pill draft mb-3 d-inline-block">Disabled</span>
-            <div>
-              <button type="button" class="btn-brand" id="twofa-start-btn">Set up two-factor authentication</button>
-            </div>
-          </div>
-
-          <div id="twofa-enabled-view" class="d-none">
-            <span class="status-pill published mb-3 d-inline-block">Enabled</span>
-            <form id="twofa-disable-form">
-              <div class="mb-3">
-                <label class="form-label">Current password</label>
-                <input type="password" class="form-control" id="twofa-disable-password" autocomplete="current-password" required placeholder="Current password">
-              </div>
-              <div id="twofa-disable-msg" class="alert py-2 small d-none"></div>
-              <button type="submit" class="btn btn-outline-danger btn-sm">Disable two-factor authentication</button>
-            </form>
-          </div>
-
-          <div id="twofa-setup-view" class="d-none">
-            <p class="small mb-2">1. Add this to your authenticator app (manual entry key):</p>
-            <div class="p-2 mb-3 rounded" style="background: var(--bg-soft); font-family: monospace; word-break: break-all;" id="twofa-secret"></div>
-            <p class="small mb-2">2. Enter the 6-digit code it shows:</p>
-            <form id="twofa-confirm-form">
-              <div class="mb-3">
-                <input type="text" class="form-control" id="twofa-confirm-code" inputmode="numeric" maxlength="6" placeholder="123456" required>
-              </div>
-              <div id="twofa-setup-msg" class="alert py-2 small d-none"></div>
-              <div class="d-flex gap-2">
-                <button type="submit" class="btn-brand btn-sm">Enable</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="twofa-cancel-btn">Cancel</button>
-              </div>
-            </form>
-          </div>
-
-          <div id="twofa-backup-view" class="d-none">
-            <div class="alert alert-warning py-2 small">Save these backup codes somewhere safe — each works once, and they won't be shown again. Use one if you ever lose access to your authenticator app.</div>
-            <div class="p-2 mb-3 rounded" style="background: var(--bg-soft); font-family: monospace;" id="twofa-backup-codes"></div>
-            <button type="button" class="btn-brand btn-sm" id="twofa-backup-done-btn">Done</button>
-          </div>
         </div>
       </div>
     </div>
