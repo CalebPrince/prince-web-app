@@ -29,6 +29,11 @@ use App\Support\Settings;
  * only ever come from a real, verifiable API response. Discovery only
  * returns candidates for review; adding them (bulkStore()) is still a
  * separate, explicit admin action, same as every other step here.
+ *
+ * Outreach isn't email-only: a lead with a phone number but no email gets
+ * a call script (draftCallScript()) instead of an email pitch
+ * (draftPitch()) — same real findings underneath (findingsContext()), just
+ * worded for a conversation instead of a message. See pitch_channel.
  */
 class MarketingLeadController
 {
@@ -46,7 +51,7 @@ class MarketingLeadController
         Response::json($rows);
     }
 
-    /** POST /api/v1/admin/marketing-leads — body: {business_name, website_url?, contact_email?} */
+    /** POST /api/v1/admin/marketing-leads — body: {business_name, website_url?, contact_email?, contact_phone?} */
     public static function store(): void
     {
         AuthMiddleware::requireAuth();
@@ -55,6 +60,7 @@ class MarketingLeadController
         $businessName = trim((string) ($data['business_name'] ?? ''));
         $websiteUrl = trim((string) ($data['website_url'] ?? ''));
         $contactEmail = trim((string) ($data['contact_email'] ?? ''));
+        $contactPhone = trim((string) ($data['contact_phone'] ?? ''));
 
         if ($businessName === '' || mb_strlen($businessName) > 255) {
             Response::error('Business name is required.', 422);
@@ -68,10 +74,15 @@ class MarketingLeadController
         if ($contactEmail !== '' && !filter_var($contactEmail, FILTER_VALIDATE_EMAIL)) {
             Response::error('Contact email is not valid.', 422);
         }
+        // Phone formats vary too widely across countries to validate the
+        // shape — just bound the length against garbage/paste errors.
+        if (mb_strlen($contactPhone) > 50) {
+            Response::error('Contact phone is too long.', 422);
+        }
 
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_email) VALUES (?, ?, ?)')
-            ->execute([$businessName, $websiteUrl ?: null, $contactEmail ?: null]);
+        $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_email, contact_phone) VALUES (?, ?, ?, ?)')
+            ->execute([$businessName, $websiteUrl ?: null, $contactEmail ?: null, $contactPhone ?: null]);
 
         Response::json(['id' => (int) $pdo->lastInsertId()], 201);
     }
@@ -152,7 +163,7 @@ class MarketingLeadController
             )
         );
 
-        $stmt = $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url) VALUES (?, ?)');
+        $stmt = $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_phone) VALUES (?, ?, ?)');
         $added = 0;
         foreach ($leads as $lead) {
             $name = trim((string) ($lead['business_name'] ?? ''));
@@ -167,8 +178,16 @@ class MarketingLeadController
             if ($url !== '' && in_array($normalized, $existingUrls, true)) {
                 continue; // already tracked
             }
+            // Serper's Places search already returns a phone number for most
+            // listings — carrying it straight through means a discovered
+            // lead is often immediately ready for phone outreach even when
+            // Google has no website on file for them.
+            $phone = trim((string) ($lead['phone'] ?? ''));
+            if (mb_strlen($phone) > 50) {
+                $phone = '';
+            }
 
-            $stmt->execute([$name, $url ?: null]);
+            $stmt->execute([$name, $url ?: null, $phone ?: null]);
             if ($url !== '') {
                 $existingUrls[] = $normalized;
             }
@@ -178,7 +197,7 @@ class MarketingLeadController
         Response::json(['added' => $added], 201);
     }
 
-    /** PATCH /api/v1/admin/marketing-leads/{id} — body: any of business_name, website_url, contact_email, pitch_subject, pitch_body, notes, status */
+    /** PATCH /api/v1/admin/marketing-leads/{id} — body: any of business_name, website_url, contact_email, contact_phone, pitch_subject, pitch_body, notes, status */
     public static function update(array $params): void
     {
         AuthMiddleware::requireAuth();
@@ -188,7 +207,7 @@ class MarketingLeadController
 
         $fields = [];
         $values = [];
-        foreach (['business_name', 'website_url', 'contact_email', 'pitch_subject', 'pitch_body', 'notes'] as $key) {
+        foreach (['business_name', 'website_url', 'contact_email', 'contact_phone', 'pitch_subject', 'pitch_body', 'notes'] as $key) {
             if (array_key_exists($key, $data)) {
                 $fields[] = "$key = ?";
                 $values[] = trim((string) $data[$key]) !== '' ? trim((string) $data[$key]) : null;
@@ -249,10 +268,18 @@ class MarketingLeadController
         Response::json(['findings' => $findings]);
     }
 
-    /** POST /api/v1/admin/marketing-leads/{id}/generate-pitch — drafts a pitch grounded only in the stored audit findings */
+    /**
+     * POST /api/v1/admin/marketing-leads/{id}/generate-pitch — body: {channel?: 'email'|'phone'}
+     * Drafts outreach grounded only in the stored audit findings. Defaults
+     * to an email pitch when possible (the richer, more professional
+     * channel); auto-switches to a phone call-script when the lead has a
+     * phone number on file but no email to write to. Either can be
+     * requested explicitly via `channel`.
+     */
     public static function generatePitch(array $params): void
     {
         AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $pdo = Database::get();
         $lead = self::findOrFail($pdo, (int) $params['id']);
 
@@ -268,24 +295,45 @@ class MarketingLeadController
             Response::error('No AI provider configured — add a Gemini, OpenRouter, or Groq key in Admin → Settings.', 503);
         }
 
+        $channel = in_array($data['channel'] ?? '', ['email', 'phone'], true)
+            ? $data['channel']
+            : (empty($lead['contact_email']) && !empty($lead['contact_phone']) ? 'phone' : 'email');
+
         $findings = $lead['audit_findings'] ? (json_decode($lead['audit_findings'], true) ?: []) : ['no_website' => true];
+
+        if ($channel === 'phone') {
+            $script = self::draftCallScript($lead['business_name'], $findings);
+            if ($script === null) {
+                Response::error('Call script generation failed — please try again in a moment.', 502);
+            }
+            $pdo->prepare(
+                "UPDATE marketing_leads SET pitch_subject = NULL, pitch_body = ?, pitch_channel = 'phone',
+                 status = 'pitch_ready', updated_at = datetime('now') WHERE id = ?"
+            )->execute([$script, $lead['id']]);
+            Response::json(['channel' => 'phone', 'subject' => null, 'body' => $script]);
+        }
+
         $pitch = self::draftPitch($lead['business_name'], $findings);
         if ($pitch === null) {
             Response::error('Pitch generation failed — please try again in a moment.', 502);
         }
 
         $pdo->prepare(
-            "UPDATE marketing_leads SET pitch_subject = ?, pitch_body = ?, status = 'pitch_ready', updated_at = datetime('now') WHERE id = ?"
+            "UPDATE marketing_leads SET pitch_subject = ?, pitch_body = ?, pitch_channel = 'email',
+             status = 'pitch_ready', updated_at = datetime('now') WHERE id = ?"
         )->execute([$pitch['subject'], $pitch['body'], $lead['id']]);
 
-        Response::json($pitch);
+        Response::json(['channel' => 'email'] + $pitch);
     }
 
     /**
      * POST /api/v1/admin/marketing-leads/{id}/send — records that the admin
-     * sent it. There is no server-side auto-send: the frontend opens a
-     * mailto: draft in the admin's own mail client first, and this endpoint
-     * only fires after they've actually sent it themselves.
+     * followed through on the outreach. There is no server-side auto-send:
+     * for an email pitch, the frontend opens a mailto: draft in the admin's
+     * own mail client first; for a phone script, this just records that the
+     * call was made (tel: links only launch a dialer, they can't confirm a
+     * call happened) — either way, this endpoint only fires after the admin
+     * has actually done it themselves.
      */
     public static function markSent(array $params): void
     {
@@ -293,7 +341,11 @@ class MarketingLeadController
         $pdo = Database::get();
         $lead = self::findOrFail($pdo, (int) $params['id']);
 
-        if (empty($lead['contact_email'])) {
+        if (($lead['pitch_channel'] ?? 'email') === 'phone') {
+            if (empty($lead['contact_phone'])) {
+                Response::error('No contact phone on file for this lead.', 422);
+            }
+        } elseif (empty($lead['contact_email'])) {
             Response::error('No contact email on file for this lead.', 422);
         }
 
@@ -529,24 +581,34 @@ class MarketingLeadController
         return 'The site could not be reached at all' . ($curlError !== '' ? " ({$curlError})" : '.');
     }
 
+    /**
+     * Shared by draftPitch() and draftCallScript() so both channels are
+     * grounded in exactly the same real findings, worded the same
+     * never-invent-a-problem way — one source of truth for what's true
+     * about the lead, not two prompts that could quietly drift apart.
+     */
+    private static function findingsContext(array $findings): string
+    {
+        if (!empty($findings['no_website'])) {
+            return "This business does not appear to have a website at all. Focus on the opportunity of "
+                . "getting a first professional website/online presence — do NOT claim their site has any "
+                . "problems, since there is no existing site to critique.";
+        }
+
+        $issues = $findings['issues'] ?? [];
+        $issuesList = $issues
+            ? implode("\n", array_map(fn($i) => "- {$i['detail']}", $issues))
+            : '(no specific technical issues were found)';
+        return "Only reference these ACTUAL, verified findings from a real technical check of their "
+            . "site — never invent, exaggerate, or imply any other problems:\n{$issuesList}\n\n"
+            . "If no specific issues are listed, do not claim their site has problems — keep this brief and "
+            . "generic instead.";
+    }
+
     /** @return array{subject:string,body:string}|null */
     private static function draftPitch(string $businessName, array $findings): ?array
     {
-        if (!empty($findings['no_website'])) {
-            $context = "This business does not appear to have a website at all. Draft a short, friendly email "
-                . "introducing Prince's web & mobile development services, focused on the opportunity of "
-                . "getting a first professional website/online presence — do NOT claim their site has any "
-                . "problems, since there is no existing site to critique.";
-        } else {
-            $issues = $findings['issues'] ?? [];
-            $issuesList = $issues
-                ? implode("\n", array_map(fn($i) => "- {$i['detail']}", $issues))
-                : '(no specific technical issues were found)';
-            $context = "Only reference these ACTUAL, verified findings from a real technical check of their "
-                . "site — never invent, exaggerate, or imply any other problems:\n{$issuesList}\n\n"
-                . "If no specific issues are listed, do not claim their site has problems — write a brief, "
-                . "generic note introducing Prince's services instead.";
-        }
+        $context = self::findingsContext($findings);
 
         $prompt = "You are drafting the BODY of a short, honest cold outreach email from Prince Caleb, a web & "
             . "mobile developer, to a business called \"{$businessName}\".\n\n{$context}\n\n"
@@ -576,6 +638,38 @@ class MarketingLeadController
             'subject' => (string) $parsed['subject'],
             'body' => (string) $parsed['body'] . "\n\n" . self::signatureBlock(),
         ];
+    }
+
+    /**
+     * Talking points for a cold call, not a script to read verbatim — used
+     * when a lead has a phone number but no email on file. Plain text, no
+     * subject line and no JSON parsing needed (unlike draftPitch()) since
+     * there's no separate subject/body split for a phone call.
+     *
+     * @return string|null
+     */
+    private static function draftCallScript(string $businessName, array $findings): ?string
+    {
+        $context = self::findingsContext($findings);
+
+        $prompt = "You are writing short talking points — not a script to read verbatim — for Prince Caleb, a "
+            . "web & mobile developer, to use on a cold call to a business called \"{$businessName}\".\n\n{$context}\n\n"
+            . "Structure: a natural one-sentence opening introducing himself and why he's calling (tied to "
+            . "what's actually true above), 2-3 short bullet points to guide the conversation (services offered, "
+            . "in general terms — custom websites, mobile apps, booking/ordering systems, automation), and one "
+            . "likely objection with a brief, honest way to respond to it. Never salesy or pushy, no invented "
+            . "statistics, no false urgency, no claims of financial harm or lost business that can't be "
+            . "verified.\n\n"
+            . "Output plain text only — no markdown, no JSON, just the talking points with line breaks between "
+            . "sections.";
+
+        $text = AiText::generate($prompt, null, 20);
+        if ($text === null) {
+            error_log('Marketing lead call script: all configured AI providers (Gemini/OpenRouter/Groq) failed.');
+            return null;
+        }
+
+        return trim(preg_replace('/^```\s*|```\s*$/m', '', $text));
     }
 
     /**

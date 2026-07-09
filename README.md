@@ -250,6 +250,22 @@ storage/
     exactly what this whole tool is built to avoid elsewhere. Needs a Serper
     API key in Admin → Settings → Integrations; each hand-picked lead still
     goes through the normal audit/pitch/review/send pipeline individually.
+
+    Outreach isn't email-only, either: a lead with a `contact_phone` but no
+    `contact_email` gets a call script instead of an email pitch
+    (`generatePitch()` picks the channel — email when possible, phone only
+    when there's no email to write to; either can be forced via `channel`
+    in the request body). A call script is short talking points, not a
+    script to read verbatim, grounded in the exact same real findings as an
+    email pitch (`findingsContext()` is shared by both, so the two channels
+    can't quietly drift in what they claim is true). The Review modal swaps
+    Subject/email fields out for a phone field and relabels the body
+    "Call script"; the send button becomes "Mark as called" and opens a
+    `tel:` link as a convenience (it can't confirm a call actually
+    happened, so `markSent()` still requires the admin's explicit
+    confirmation either way). Serper's Places search already returns phone
+    numbers for most listings, so a niche-discovered lead is often
+    call-ready immediately even with no website on file at all.
 23. **Gemini → OpenRouter → Groq fallback** (`src/Support/AiText.php`): every
     plain single-shot "prompt in, text out" AI call (pitch drafting,
     prototype generation, the secondary AI assistant) tries Gemini first

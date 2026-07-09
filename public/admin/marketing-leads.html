@@ -50,8 +50,9 @@
         <h3 class="mb-0">Marketing Leads</h3>
         <p class="text-muted-custom mb-0 small">
           Audits are a real technical check of the target site (SSL, mobile viewport, title/description, response
-          time) — never fabricated. Pitches are drafted only from those findings. Sending always opens your own
-          mail client for one final review — nothing is auto-sent in bulk.
+          time) — never fabricated. Pitches (or call scripts, for phone-only leads) are drafted only from those
+          findings. Following through always requires an explicit confirmation from you first — nothing is
+          auto-sent or auto-called in bulk.
         </p>
       </div>
       <div class="d-flex gap-2">
@@ -123,8 +124,12 @@
             <input type="url" class="form-control" id="lead-url" placeholder="https://example.com">
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold" for="lead-email">Contact email <span class="text-muted-custom fw-normal">(optional — needed before you can send)</span></label>
+            <label class="form-label fw-semibold" for="lead-email">Contact email <span class="text-muted-custom fw-normal">(optional — enables an email pitch)</span></label>
             <input type="email" class="form-control" id="lead-email" maxlength="255" placeholder="contact@example.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="lead-phone">Contact phone <span class="text-muted-custom fw-normal">(optional — used for a call script if there's no email)</span></label>
+            <input type="tel" class="form-control" id="lead-phone" maxlength="50" placeholder="+233 20 000 0000">
           </div>
           <div id="add-lead-alert" class="alert py-2 small d-none"></div>
         </div>
@@ -148,19 +153,23 @@
         <h6 class="small text-uppercase text-muted-custom">Real findings from the site check</h6>
         <ul id="pitch-findings-list" class="small mb-3"></ul>
 
-        <div class="mb-3">
+        <div class="mb-3" id="pitch-email-field">
           <label class="form-label fw-semibold">Contact email</label>
           <input type="email" class="form-control" id="pitch-contact-email" maxlength="255" placeholder="contact@example.com">
         </div>
-        <div class="mb-3">
+        <div class="mb-3" id="pitch-phone-field">
+          <label class="form-label fw-semibold">Contact phone</label>
+          <input type="tel" class="form-control" id="pitch-contact-phone" maxlength="50" placeholder="+233 20 000 0000">
+        </div>
+        <div class="mb-3" id="pitch-subject-field">
           <label class="form-label fw-semibold">Subject</label>
           <input type="text" class="form-control" id="pitch-subject" maxlength="255" placeholder="Quick improvement ideas for your website">
         </div>
         <div class="mb-3">
-          <label class="form-label fw-semibold">Pitch body</label>
+          <label class="form-label fw-semibold" id="pitch-body-label">Pitch body</label>
           <textarea class="form-control" id="pitch-body" rows="8" placeholder="Write or edit the outreach message here."></textarea>
         </div>
-        <div class="mb-3">
+        <div class="mb-3" id="pitch-preview-field">
           <label class="form-label fw-semibold small text-uppercase text-muted-custom">Preview <span class="text-muted-custom fw-normal text-lowercase">(links are clickable here to sanity-check them — the actual email is still plain text; most mail clients auto-link URLs on their own)</span></label>
           <div id="pitch-preview" class="p-2 rounded small" style="background: var(--bg-soft); white-space: pre-wrap;"></div>
         </div>

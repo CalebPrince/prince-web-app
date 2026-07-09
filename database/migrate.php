@@ -141,6 +141,15 @@ if (!in_array('publish_error', $socialDraftColumns, true)) {
     $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN publish_error TEXT');
 }
 
+$leadColumns = $pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll();
+$leadColumnNames = array_column($leadColumns, 'name');
+if (!in_array('contact_phone', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN contact_phone TEXT');
+}
+if (!in_array('pitch_channel', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN pitch_channel TEXT');
+}
+
 // SQLite can't relax a NOT NULL constraint via ALTER TABLE — rebuild the
 // table if website_url is still marked NOT NULL from before leads with no
 // website were supported.
@@ -154,6 +163,8 @@ foreach ($leadColumns as $col) {
             business_name TEXT NOT NULL,
             website_url TEXT,
             contact_email TEXT,
+            contact_phone TEXT,
+            pitch_channel TEXT CHECK (pitch_channel IS NULL OR pitch_channel IN ('email', 'phone')),
             status TEXT NOT NULL DEFAULT 'pending'
               CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
             audit_findings TEXT,
@@ -165,10 +176,11 @@ foreach ($leadColumns as $col) {
             sent_at TEXT
         )");
         $pdo->exec(
-            'INSERT INTO marketing_leads (id, business_name, website_url, contact_email, status, audit_findings,
-             pitch_subject, pitch_body, notes, created_at, updated_at, sent_at)
-             SELECT id, business_name, website_url, contact_email, status, audit_findings,
-             pitch_subject, pitch_body, notes, created_at, updated_at, sent_at FROM marketing_leads_old'
+            'INSERT INTO marketing_leads (id, business_name, website_url, contact_email, contact_phone,
+             pitch_channel, status, audit_findings, pitch_subject, pitch_body, notes, created_at, updated_at, sent_at)
+             SELECT id, business_name, website_url, contact_email, contact_phone,
+             pitch_channel, status, audit_findings, pitch_subject, pitch_body, notes, created_at, updated_at, sent_at
+             FROM marketing_leads_old'
         );
         $pdo->exec('DROP TABLE marketing_leads_old');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at)');

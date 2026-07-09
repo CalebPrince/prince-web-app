@@ -268,6 +268,11 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   business_name TEXT NOT NULL,
   website_url TEXT,
   contact_email TEXT,
+  contact_phone TEXT,
+  -- Which outreach channel the current pitch_subject/pitch_body were
+  -- drafted for: 'email' (subject + body) or 'phone' (body holds call
+  -- talking points, subject stays NULL). NULL until a pitch is generated.
+  pitch_channel TEXT CHECK (pitch_channel IS NULL OR pitch_channel IN ('email', 'phone')),
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
   audit_findings TEXT,

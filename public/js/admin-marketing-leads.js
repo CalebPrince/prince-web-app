@@ -31,7 +31,12 @@ function actionButtons(lead) {
     buttons.push(`<button class="btn btn-sm btn-outline-secondary audit-btn" data-id="${lead.id}">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`);
   }
   if (!lead.website_url || lead.audit_findings) {
-    buttons.push(`<button class="btn btn-sm btn-outline-secondary pitch-btn" data-id="${lead.id}">${lead.pitch_body ? "Regenerate pitch" : "Generate pitch"}</button>`);
+    // Mirrors the server's own default channel choice in generatePitch():
+    // email when possible, a call script only when there's a phone but no
+    // email on file — so the button label never promises the wrong thing.
+    const phoneOnly = !lead.contact_email && lead.contact_phone;
+    const verb = lead.pitch_body ? "Regenerate" : "Generate";
+    buttons.push(`<button class="btn btn-sm btn-outline-secondary pitch-btn" data-id="${lead.id}">${verb} ${phoneOnly ? "call script" : "pitch"}</button>`);
   }
   if (lead.pitch_body) {
     buttons.push(`<button class="btn btn-sm btn-brand review-btn" data-id="${lead.id}">Review &amp; Send</button>`);
@@ -57,7 +62,9 @@ async function loadLeads() {
     <tr>
       <td class="ps-3">
         <div class="fw-semibold">${escapeHtml(lead.business_name)}</div>
-        ${lead.contact_email ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_email)}</div>` : '<div class="small text-muted-custom">No contact email yet</div>'}
+        ${lead.contact_email ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_email)}</div>` : ''}
+        ${lead.contact_phone ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_phone)}</div>` : ''}
+        ${!lead.contact_email && !lead.contact_phone ? '<div class="small text-muted-custom">No contact info yet</div>' : ''}
       </td>
       <td class="small">${lead.website_url
         ? `<a href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a>`
@@ -127,6 +134,7 @@ function renderDiscoverResults() {
             ${r.already_added ? '<span class="badge bg-secondary ms-2">Already added</span>' : ''}
             <br>
             <span class="small">${r.website_url ? `<a href="${escapeHtml(r.website_url)}" target="_blank" rel="noopener">${escapeHtml(r.website_url)}</a>` : '<span class="text-muted-custom">No website found</span>'}</span>
+            ${r.phone ? `<br><span class="small text-muted-custom">${escapeHtml(r.phone)}</span>` : ''}
             ${r.address ? `<br><span class="small text-muted-custom">${escapeHtml(r.address)}</span>` : ''}
           </span>
         </label>
@@ -185,6 +193,7 @@ document.getElementById("discover-add-btn").addEventListener("click", async () =
   const leads = indices.map(i => ({
     business_name: discoverResults[i].business_name,
     website_url: discoverResults[i].website_url,
+    phone: discoverResults[i].phone,
   }));
   if (!leads.length) return;
 
@@ -225,11 +234,24 @@ function renderPitchPreview() {
 
 function openPitchModal(lead) {
   currentLead = lead;
+  const channel = lead.pitch_channel || "email";
   document.getElementById("pitch-modal-business").textContent = lead.business_name;
   document.getElementById("pitch-contact-email").value = lead.contact_email || "";
+  document.getElementById("pitch-contact-phone").value = lead.contact_phone || "";
   document.getElementById("pitch-subject").value = lead.pitch_subject || "";
   document.getElementById("pitch-body").value = lead.pitch_body || "";
   document.getElementById("pitch-modal-alert").classList.add("d-none");
+
+  // A phone call has no subject line and no clickable-link preview worth
+  // showing — swap those fields out rather than leaving irrelevant empty
+  // inputs in a "pitch" modal that's now really a call-script modal.
+  const isPhone = channel === "phone";
+  document.getElementById("pitch-email-field").classList.toggle("d-none", isPhone);
+  document.getElementById("pitch-phone-field").classList.toggle("d-none", !isPhone);
+  document.getElementById("pitch-subject-field").classList.toggle("d-none", isPhone);
+  document.getElementById("pitch-preview-field").classList.toggle("d-none", isPhone);
+  document.getElementById("pitch-body-label").textContent = isPhone ? "Call script" : "Pitch body";
+  document.getElementById("pitch-approve-send-btn").textContent = isPhone ? "Mark as called" : "Approve & Send";
   renderPitchPreview();
 
   const list = document.getElementById("pitch-findings-list");
@@ -248,6 +270,7 @@ function openPitchModal(lead) {
 async function savePitchEdits() {
   await api.patch(`/api/v1/admin/marketing-leads/${currentLead.id}`, {
     contact_email: document.getElementById("pitch-contact-email").value.trim(),
+    contact_phone: document.getElementById("pitch-contact-phone").value.trim(),
     pitch_subject: document.getElementById("pitch-subject").value.trim(),
     pitch_body: document.getElementById("pitch-body").value.trim(),
   });
@@ -270,6 +293,35 @@ document.getElementById("pitch-save-btn").addEventListener("click", async () => 
 
 document.getElementById("pitch-approve-send-btn").addEventListener("click", async () => {
   const alertBox = document.getElementById("pitch-modal-alert");
+  const isPhone = (currentLead.pitch_channel || "email") === "phone";
+
+  if (isPhone) {
+    const phone = document.getElementById("pitch-contact-phone").value.trim();
+    if (!phone) {
+      alertBox.className = "alert alert-danger py-2 small";
+      alertBox.textContent = "Add a contact phone before marking as called.";
+      alertBox.classList.remove("d-none");
+      return;
+    }
+    try {
+      await savePitchEdits();
+      // tel: only launches whatever dialer app is registered (a desktop
+      // browser usually has none) — it can't confirm a call happened, so
+      // this is just a convenience, not the actual "send" action. Marking
+      // as called always requires the admin to explicitly confirm it below.
+      window.location.href = `tel:${encodeURIComponent(phone)}`;
+      if (!confirm("Mark this lead as called?")) return;
+      await api.post(`/api/v1/admin/marketing-leads/${currentLead.id}/send`, {});
+      pitchModal.hide();
+      await loadLeads();
+    } catch (err) {
+      alertBox.className = "alert alert-danger py-2 small";
+      alertBox.textContent = err.message || "Could not mark as called.";
+      alertBox.classList.remove("d-none");
+    }
+    return;
+  }
+
   const email = document.getElementById("pitch-contact-email").value.trim();
   if (!email) {
     alertBox.className = "alert alert-danger py-2 small";
@@ -309,6 +361,7 @@ document.getElementById("add-lead-form").addEventListener("submit", async (e) =>
       business_name: document.getElementById("lead-name").value,
       website_url: document.getElementById("lead-url").value,
       contact_email: document.getElementById("lead-email").value,
+      contact_phone: document.getElementById("lead-phone").value,
     });
     document.getElementById("add-lead-form").reset();
     bootstrap.Modal.getInstance(document.getElementById("add-lead-modal")).hide();
