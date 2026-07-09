@@ -162,14 +162,105 @@
     }
   }
 
+  function timeAgo(dateStr) {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  }
+
+  function notifItem(href, title, snippet, meta) {
+    return `
+      <a class="notif-item" href="${href}">
+        <div class="notif-item-title">${normalizeText(title)}</div>
+        ${snippet ? `<div class="notif-item-snippet">${normalizeText(snippet)}</div>` : ""}
+        <div class="notif-item-meta">${meta}</div>
+      </a>
+    `;
+  }
+
+  async function loadNotificationDetails() {
+    const body = document.getElementById("notif-dropdown-body");
+    if (!body) return;
+    body.innerHTML = '<div class="notif-dropdown-empty">Loading…</div>';
+
+    try {
+      const [inquiries, chats] = await Promise.all([
+        api.get("/api/v1/admin/inquiries?status=unread"),
+        api.get("/api/v1/admin/chats"),
+      ]);
+
+      const unseenChats = (Array.isArray(chats) ? chats : []).filter(c => !c.admin_seen);
+
+      const inquiryItems = inquiries
+        .slice(0, 5)
+        .map(i => notifItem(
+          i.type === "project_request" ? "/admin/quote-requests.html" : "/admin/inquiries.html",
+          i.name || i.email,
+          i.message,
+          timeAgo(i.created_at)
+        ));
+
+      const chatItems = unseenChats
+        .slice(0, 5)
+        .map(c => notifItem(
+          "/admin/chats.html",
+          c.client_name || c.client_email || `Chat #${c.id}`,
+          "New live chat activity",
+          timeAgo(c.updated_at || c.created_at)
+        ));
+
+      const items = [...inquiryItems, ...chatItems];
+      if (items.length === 0) {
+        body.innerHTML = '<div class="notif-dropdown-empty">You\'re all caught up 🎉</div>';
+        return;
+      }
+      body.innerHTML = items.join("") + `
+        <div class="notif-dropdown-footer">
+          <a href="/admin/inquiries.html" class="small">View inquiries</a>
+          &nbsp;·&nbsp;
+          <a href="/admin/chats.html" class="small">View chat leads</a>
+        </div>
+      `;
+    } catch (_) {
+      body.innerHTML = '<div class="notif-dropdown-empty">Could not load notifications.</div>';
+    }
+  }
+
+  function initNotifBell() {
+    const btn = document.getElementById("notif-bell-btn");
+    const dropdown = document.getElementById("notif-dropdown");
+    if (!btn || !dropdown) return;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const opening = dropdown.classList.contains("d-none");
+      dropdown.classList.toggle("d-none", !opening);
+      if (opening) loadNotificationDetails();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!dropdown.contains(e.target) && e.target !== btn) {
+        dropdown.classList.add("d-none");
+      }
+    });
+  }
+
   async function refreshNavBadges() {
     try {
       const counts = await api.get("/api/v1/admin/notifications");
-      setBadge("nav-badge-inquiries", counts.unread_inquiries || 0);
-      setBadge("nav-badge-chats", counts.unseen_chats || 0);
+      const unread = counts.unread_inquiries || 0;
+      const unseen = counts.unseen_chats || 0;
+      setBadge("nav-badge-inquiries", unread);
+      setBadge("nav-badge-chats", unseen);
+      setBadge("notif-bell-badge", unread + unseen);
     } catch (_) { /* leave badges as-is on failure */ }
   }
 
+  initNotifBell();
   refreshNavBadges();
   setInterval(refreshNavBadges, 60000);
 
