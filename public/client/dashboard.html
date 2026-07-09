@@ -24,6 +24,7 @@
   .status-pill.unread,
   .status-pill.pending { background: #fef3c7; color: #92400e; }
   .status-pill.published { background: #dcfce7; color: #166534; }
+  .status-pill.down { background: #fee2e2; color: #991b1b; }
   .message-bubble { max-width: 80%; padding: 0.6rem 0.9rem; border-radius: 0.75rem; }
   .message-bubble.from-client { background: var(--brand, #4f46e5); color: #fff; align-self: flex-end; }
   .message-bubble.from-admin { background: var(--bg-soft); align-self: flex-start; }
@@ -46,6 +47,8 @@
   <div class="container" style="max-width: 920px;">
     <p class="eyebrow mb-2">Client portal</p>
     <h1 class="display-6 mb-4">Your projects</h1>
+
+    <div id="uptime-wrap"></div>
 
     <div id="proposals-wrap"></div>
 
@@ -105,6 +108,8 @@
       wrap.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(err.message)}</div>`;
       return;
     }
+    renderMonitors(data.monitors || []);
+
     const proposals = data.proposals || [];
     if (!proposals.length) {
       wrap.innerHTML = '<div class="contact-card text-center text-muted-custom py-4">No projects yet.</div>';
@@ -144,6 +149,35 @@
         </div>
       `;
     }).join('');
+  }
+
+  function renderMonitors(monitors) {
+    const wrap = document.getElementById('uptime-wrap');
+    if (!monitors.length) {
+      wrap.innerHTML = '';
+      return;
+    }
+    wrap.innerHTML = `
+      <div class="contact-card mb-4">
+        <h2 class="h5 mb-3">Your site status</h2>
+        <div class="d-flex flex-column gap-2">
+          ${monitors.map(m => {
+            const up = m.last_status === 'up';
+            const unknown = !m.last_status;
+            return `
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 p-3 rounded" style="background: var(--bg-soft);">
+                <div>
+                  <div class="fw-semibold">${escapeHtml(m.name)}</div>
+                  <a href="${escapeHtml(m.url)}" target="_blank" rel="noopener" class="small text-muted-custom">${escapeHtml(m.url)}</a>
+                </div>
+                <div class="text-md-end">
+                  <span class="status-pill ${unknown ? 'pending' : (up ? 'published' : 'down')}">${unknown ? 'checking…' : (up ? '● Online' : '● Down')}</span>
+                  ${m.uptime_30d != null ? `<div class="small text-muted-custom mt-1">${m.uptime_30d}% uptime (30 days)${m.avg_response_ms != null ? ` · ${m.avg_response_ms}ms avg` : ''}</div>` : ''}
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
   }
 
   async function loadFiles() {

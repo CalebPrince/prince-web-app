@@ -49,11 +49,14 @@
       <a href="/admin/marketing-leads.html" class="nav-link"><i class="bi bi-bullseye nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Marketing Leads</span></a>
       <a href="/admin/chats.html" class="nav-link"><i class="bi bi-chat-dots nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
       <a href="/admin/newsletter.html" class="nav-link"><i class="bi bi-envelope nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Newsletter</span></a>
+      <a href="/admin/drip.html" class="nav-link"><i class="bi bi-send nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Drip Emails</span></a>
       <div class="nav-group-label">Bookings & Payments</div>
       <a href="/admin/appointments.html" class="nav-link"><i class="bi bi-calendar-check nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Bookings</span></a>
       <a href="/admin/payments.html" class="nav-link active"><i class="bi bi-credit-card nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Payments</span></a>
+      <a href="/admin/invoices.html" class="nav-link"><i class="bi bi-receipt-cutoff nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Invoices</span></a>
       <a href="/admin/pricing.html" class="nav-link"><i class="bi bi-tag nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Pricing</span></a>
       <div class="nav-group-label">System</div>
+      <a href="/admin/uptime.html" class="nav-link"><i class="bi bi-activity nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Uptime</span></a>
       <a href="/admin/activity-log.html" class="nav-link"><i class="bi bi-clock-history nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Activity Log</span></a>
       <a href="/admin/error-logs.html" class="nav-link"><i class="bi bi-exclamation-triangle nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Error Logs</span></a>
       <a href="/admin/settings.html" class="nav-link"><i class="bi bi-gear nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Settings</span></a>
@@ -121,6 +124,7 @@
     <ul class="nav nav-tabs mb-3">
       <li class="nav-item"><button class="nav-link active" data-tab="transactions" id="tab-transactions">Transactions</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="links" id="tab-links">Payment Links</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="subscriptions" id="tab-subscriptions">Subscriptions</button></li>
     </ul>
 
     <div id="panel-transactions">
@@ -161,6 +165,89 @@
         </table>
       </div>
       <div id="links-empty" class="text-center text-muted-custom py-5 d-none">No payment links yet.</div>
+    </div>
+
+    <div id="panel-subscriptions" class="d-none">
+      <div class="d-flex justify-content-end mb-3">
+        <button class="btn-brand" id="new-subscription-btn">+ New Subscription</button>
+      </div>
+      <div class="admin-card p-0">
+        <table class="table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th class="ps-3">Client</th>
+              <th>Plan</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Next payment</th>
+              <th>Collected</th>
+              <th class="text-end pe-3"></th>
+            </tr>
+          </thead>
+          <tbody id="subscriptions-tbody"></tbody>
+        </table>
+      </div>
+      <p class="small text-muted-custom mt-2">The client activates a subscription by completing its checkout link — until then it shows as pending. Renewals are charged automatically by Paystack and receipts are emailed to the client.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="subscription-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">New Subscription</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="subscription-form">
+          <div class="mb-3">
+            <label class="form-label">Client name</label>
+            <input type="text" class="form-control" id="sub-client-name" required placeholder="Client full name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Client email</label>
+            <input type="email" class="form-control" id="sub-client-email" required placeholder="client@example.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Plan name</label>
+            <input type="text" class="form-control" id="sub-plan-name" required placeholder="e.g. Website maintenance">
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Amount</label>
+              <input type="number" min="0" step="0.01" class="form-control" id="sub-amount" required placeholder="0.00">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Currency</label>
+              <select class="form-select" id="sub-currency">
+                <option value="GHS">GHS</option>
+                <option value="NGN">NGN</option>
+                <option value="USD">USD</option>
+                <option value="ZAR">ZAR</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Billed</label>
+              <select class="form-select" id="sub-interval">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="biannually">Every 6 months</option>
+                <option value="annually">Yearly</option>
+              </select>
+            </div>
+          </div>
+          <div id="subscription-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100">Create Subscription</button>
+        </form>
+        <div id="subscription-result" class="d-none mt-3">
+          <label class="form-label">Checkout link — send this to the client to activate</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="subscription-result-url" readonly>
+            <button class="btn btn-outline-secondary" type="button" id="copy-subscription-result-btn">Copy</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

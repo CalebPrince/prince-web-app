@@ -1,11 +1,13 @@
 let linkModal = null;
 let notesModal = null;
+let subscriptionModal = null;
 let notesReference = null;
 
 const STATUS_PILL_CLASS = {
-  success: 'published', paid: 'published',
+  success: 'published', paid: 'published', active: 'published',
   pending: 'unread',
-  failed: 'flagged', cancelled: 'archived',
+  failed: 'flagged', past_due: 'flagged',
+  cancelled: 'archived',
 };
 
 function formatAmount(subunits, currency) {
@@ -171,11 +173,81 @@ async function loadLinks() {
   });
 }
 
+const INTERVAL_LABEL = {
+  monthly: '/month', quarterly: '/quarter', biannually: '/6 months', annually: '/year',
+};
+
+async function loadSubscriptions() {
+  const response = await api.get('/api/v1/admin/subscriptions');
+  const rows = Array.isArray(response) ? response : [];
+  const tbody = document.getElementById('subscriptions-tbody');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No subscriptions yet. Create one to bill a client on a schedule.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(s => `
+    <tr>
+      <td class="ps-3">${escapeHtml(s.client_name)}<br><span class="small text-muted-custom">${escapeHtml(s.client_email)}</span></td>
+      <td>${escapeHtml(s.plan_name)}</td>
+      <td>${formatAmount(s.amount, s.currency)}<span class="small text-muted-custom">${INTERVAL_LABEL[s.billing_interval] || ''}</span></td>
+      <td><span class="status-pill ${STATUS_PILL_CLASS[s.status] || 'read'}">${escapeHtml(s.status)}</span></td>
+      <td class="small text-muted-custom">${s.next_payment_at ? new Date(s.next_payment_at + 'Z').toLocaleDateString() : '—'}</td>
+      <td class="small">${s.charge_count > 0 ? `${formatAmount(s.charged_total, s.currency)} <span class="text-muted-custom">(${s.charge_count})</span>` : '—'}</td>
+      <td class="text-end pe-3 text-nowrap">
+        ${s.status === 'pending' && s.checkout_url ? `<button class="btn btn-sm btn-outline-secondary copy-checkout-btn" data-url="${escapeHtml(s.checkout_url)}">Copy checkout link</button>` : ''}
+        ${s.status === 'active' || s.status === 'past_due' ? `<button class="btn btn-sm btn-outline-danger cancel-sub-btn ms-1" data-id="${s.id}">Cancel</button>` : ''}
+        ${s.status === 'pending' || s.status === 'cancelled' ? `<button class="btn btn-sm btn-outline-danger delete-sub-btn ms-1" data-id="${s.id}">Delete</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('.copy-checkout-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.url);
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = original; }, 2000);
+      } catch (_) {
+        prompt('Copy this link:', btn.dataset.url);
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.cancel-sub-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Cancel this subscription? Paystack will stop charging the client.')) return;
+      btn.disabled = true;
+      try {
+        await api.post(`/api/v1/admin/subscriptions/${btn.dataset.id}/cancel`, {});
+        await loadSubscriptions();
+      } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.delete-sub-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this subscription record?')) return;
+      try {
+        await api.delete(`/api/v1/admin/subscriptions/${btn.dataset.id}`);
+        await loadSubscriptions();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+}
+
 function switchTab(tab) {
-  document.getElementById('tab-transactions').classList.toggle('active', tab === 'transactions');
-  document.getElementById('tab-links').classList.toggle('active', tab === 'links');
-  document.getElementById('panel-transactions').classList.toggle('d-none', tab !== 'transactions');
-  document.getElementById('panel-links').classList.toggle('d-none', tab !== 'links');
+  ['transactions', 'links', 'subscriptions'].forEach(name => {
+    document.getElementById(`tab-${name}`).classList.toggle('active', tab === name);
+    document.getElementById(`panel-${name}`).classList.toggle('d-none', tab !== name);
+  });
 }
 
 (async function init() {
@@ -208,6 +280,49 @@ function switchTab(tab) {
 
   document.getElementById('tab-transactions').addEventListener('click', () => switchTab('transactions'));
   document.getElementById('tab-links').addEventListener('click', () => switchTab('links'));
+  document.getElementById('tab-subscriptions').addEventListener('click', () => switchTab('subscriptions'));
+
+  subscriptionModal = new bootstrap.Modal(document.getElementById('subscription-modal'));
+  document.getElementById('new-subscription-btn').addEventListener('click', () => {
+    document.getElementById('subscription-form').reset();
+    document.getElementById('subscription-form').classList.remove('d-none');
+    document.getElementById('subscription-result').classList.add('d-none');
+    document.getElementById('subscription-msg').classList.add('d-none');
+    subscriptionModal.show();
+  });
+
+  document.getElementById('subscription-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('subscription-msg');
+    msg.classList.add('d-none');
+    try {
+      const result = await api.post('/api/v1/admin/subscriptions', {
+        client_name: document.getElementById('sub-client-name').value,
+        client_email: document.getElementById('sub-client-email').value,
+        plan_name: document.getElementById('sub-plan-name').value,
+        amount: Number(document.getElementById('sub-amount').value),
+        currency: document.getElementById('sub-currency').value,
+        billing_interval: document.getElementById('sub-interval').value,
+      });
+      document.getElementById('subscription-form').classList.add('d-none');
+      document.getElementById('subscription-result-url').value = result.checkout_url;
+      document.getElementById('subscription-result').classList.remove('d-none');
+      await loadSubscriptions();
+    } catch (err) {
+      msg.className = 'alert alert-danger py-2 small';
+      msg.textContent = err.message;
+      msg.classList.remove('d-none');
+    }
+  });
+
+  document.getElementById('copy-subscription-result-btn').addEventListener('click', async () => {
+    const input = document.getElementById('subscription-result-url');
+    try {
+      await navigator.clipboard.writeText(input.value);
+    } catch (_) {
+      input.select();
+    }
+  });
 
   document.getElementById('link-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -241,5 +356,5 @@ function switchTab(tab) {
     }
   });
 
-  await Promise.all([loadPayments(), loadLinks()]);
+  await Promise.all([loadPayments(), loadLinks(), loadSubscriptions()]);
 })();

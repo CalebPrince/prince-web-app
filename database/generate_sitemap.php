@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 // Regenerates public/sitemap.xml from the static pages plus every published
-// project. Re-run this any time projects are added, removed, or unpublished
-// so the sitemap stays accurate — it is not generated automatically.
+// project, and public/feed.xml (RSS 2.0) from the published blog posts.
+// Re-run this any time projects or posts are added, removed, or unpublished
+// so both stay accurate — they are not generated automatically.
 
 require dirname(__DIR__) . '/src/autoload.php';
 
@@ -61,7 +62,8 @@ foreach ($projects as $project) {
 }
 
 $posts = $pdo->query(
-    "SELECT slug, updated_at FROM blog_posts WHERE is_published = 1 ORDER BY sort_order ASC"
+    "SELECT slug, title, excerpt, category, created_at, updated_at
+     FROM blog_posts WHERE is_published = 1 ORDER BY sort_order ASC"
 )->fetchAll();
 
 foreach ($posts as $post) {
@@ -79,3 +81,50 @@ $xml->endDocument();
 file_put_contents(dirname(__DIR__) . '/public/sitemap.xml', $xml->outputMemory());
 
 echo "Wrote public/sitemap.xml with " . (count($staticPages) + count($projects) + count($posts)) . " URLs.\n";
+
+// --- RSS feed (newest 20 posts, by publish date) ---
+
+$feedPosts = $posts;
+usort($feedPosts, fn(array $a, array $b) => strcmp($b['created_at'], $a['created_at']));
+$feedPosts = array_slice($feedPosts, 0, 20);
+
+$rss = new XMLWriter();
+$rss->openMemory();
+$rss->setIndent(true);
+$rss->startDocument('1.0', 'UTF-8');
+$rss->startElement('rss');
+$rss->writeAttribute('version', '2.0');
+$rss->writeAttribute('xmlns:atom', 'http://www.w3.org/2005/Atom');
+$rss->startElement('channel');
+$rss->writeElement('title', 'Prince Caleb — Blog');
+$rss->writeElement('link', BASE_URL . '/blog.html');
+$rss->writeElement('description', 'Articles on web development, freelancing, and building software in Ghana.');
+$rss->writeElement('language', 'en');
+$rss->writeElement('lastBuildDate', date(DATE_RSS));
+$rss->startElement('atom:link');
+$rss->writeAttribute('href', BASE_URL . '/feed.xml');
+$rss->writeAttribute('rel', 'self');
+$rss->writeAttribute('type', 'application/rss+xml');
+$rss->endElement();
+
+foreach ($feedPosts as $post) {
+    $url = BASE_URL . '/blog-post.html?slug=' . urlencode($post['slug']);
+    $rss->startElement('item');
+    $rss->writeElement('title', $post['title']);
+    $rss->writeElement('link', $url);
+    $rss->writeElement('guid', $url);
+    $rss->writeElement('description', $post['excerpt']);
+    if (!empty($post['category'])) {
+        $rss->writeElement('category', $post['category']);
+    }
+    $rss->writeElement('pubDate', date(DATE_RSS, strtotime($post['created_at'] . ' UTC')));
+    $rss->endElement();
+}
+
+$rss->endElement();
+$rss->endElement();
+$rss->endDocument();
+
+file_put_contents(dirname(__DIR__) . '/public/feed.xml', $rss->outputMemory());
+
+echo 'Wrote public/feed.xml with ' . count($feedPosts) . " posts.\n";

@@ -401,3 +401,143 @@ CREATE TABLE IF NOT EXISTS admin_activity_log (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_admin_activity_log_created ON admin_activity_log (created_at);
+
+-- Client invoices. Amounts live on invoice_items in subunits (pesewas/kobo),
+-- same convention as payments — the invoice total is always derived by
+-- summing its items, never stored. token grants tokened public access to
+-- /invoice.html (like proposals); payment_link_id ties the invoice to a
+-- Paystack payment link so a successful charge flips it to paid and sends
+-- the receipt (see PaymentController::verifyAndRecord).
+CREATE TABLE IF NOT EXISTS invoices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoice_number TEXT UNIQUE NOT NULL,
+  token TEXT UNIQUE NOT NULL,
+  client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
+  client_name TEXT NOT NULL,
+  client_email TEXT NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'paid', 'void')),
+  issue_date TEXT NOT NULL DEFAULT (date('now')),
+  due_date TEXT,
+  notes TEXT,
+  payment_link_id INTEGER NULL REFERENCES payment_links(id) ON DELETE SET NULL,
+  sent_at TEXT,
+  paid_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_invoices_status_created ON invoices (status, created_at);
+
+CREATE TABLE IF NOT EXISTS invoice_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  invoice_id INTEGER NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  quantity REAL NOT NULL DEFAULT 1,
+  unit_amount INTEGER NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON invoice_items (invoice_id, sort_order);
+
+-- Uptime monitoring for client sites, checked by database/check_uptime.php
+-- on a cron. last_status/last_checked_at are denormalized onto the monitor
+-- so list views never scan the checks table; alert_sent guards the
+-- down-alert email the same way reminder_sent does elsewhere (reset on
+-- recovery so the next outage alerts again).
+CREATE TABLE IF NOT EXISTS uptime_monitors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  url TEXT NOT NULL,
+  client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  last_status TEXT CHECK (last_status IS NULL OR last_status IN ('up', 'down')),
+  last_checked_at TEXT,
+  last_status_changed_at TEXT,
+  alert_sent INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS uptime_checks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  monitor_id INTEGER NOT NULL REFERENCES uptime_monitors(id) ON DELETE CASCADE,
+  status TEXT NOT NULL CHECK (status IN ('up', 'down')),
+  http_status INTEGER,
+  response_time_ms INTEGER,
+  checked_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_uptime_checks_monitor ON uptime_checks (monitor_id, checked_at);
+
+-- Recurring billing (e.g. monthly maintenance retainers) via Paystack
+-- subscription plans. The admin creates a row, which creates a Paystack
+-- plan + checkout link; the client authorizing that checkout is what
+-- actually starts the subscription, reported back via webhook events
+-- (subscription.create / charge.success / invoice.payment_failed).
+-- Recurring charges land in subscription_charges rather than payments —
+-- their references are minted by Paystack, not by this app.
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
+  client_name TEXT NOT NULL,
+  client_email TEXT NOT NULL,
+  plan_name TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  billing_interval TEXT NOT NULL DEFAULT 'monthly'
+    CHECK (billing_interval IN ('monthly', 'quarterly', 'biannually', 'annually')),
+  paystack_plan_code TEXT,
+  paystack_subscription_code TEXT,
+  paystack_email_token TEXT,
+  checkout_url TEXT,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'active', 'past_due', 'cancelled')),
+  next_payment_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS subscription_charges (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subscription_id INTEGER NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+  reference TEXT UNIQUE NOT NULL,
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  paid_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_subscription_charges_sub ON subscription_charges (subscription_id, paid_at);
+
+-- Drip email sequence: a single global sequence of steps sent N days after
+-- enrollment by database/send_drip_emails.php. Steps ship inactive by
+-- default so nothing goes out until the admin has reviewed the copy.
+-- {{name}} in subject/body is replaced per-recipient at send time.
+CREATE TABLE IF NOT EXISTS drip_steps (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day_offset INTEGER NOT NULL,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  is_active INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- One enrollment per email address. drip_sends records exactly which steps
+-- an enrollment has received (unique per pair) so a step edited to a new
+-- day_offset can never re-send, and a stopped/unsubscribed enrollment
+-- simply stops matching the cron's query.
+CREATE TABLE IF NOT EXISTS drip_enrollments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'marketing_lead')),
+  lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'stopped')),
+  unsubscribe_token TEXT UNIQUE NOT NULL,
+  enrolled_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_drip_enrollments_status ON drip_enrollments (status, enrolled_at);
+
+CREATE TABLE IF NOT EXISTS drip_sends (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  enrollment_id INTEGER NOT NULL REFERENCES drip_enrollments(id) ON DELETE CASCADE,
+  step_id INTEGER NOT NULL REFERENCES drip_steps(id) ON DELETE CASCADE,
+  sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (enrollment_id, step_id)
+);

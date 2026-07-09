@@ -175,6 +175,10 @@ class PaymentController
             }
         }
 
+        // Subscription lifecycle events (and recurring charge.success, whose
+        // references are Paystack-minted and unknown to verifyAndRecord).
+        SubscriptionController::handleWebhookEvent($event);
+
         Response::json(['status' => 'ok']);
     }
 
@@ -236,6 +240,7 @@ class PaymentController
         if ($verifiedSuccess && $payment['payment_link_id']) {
             $pdo->prepare("UPDATE payment_links SET status = 'paid', paid_at = datetime('now') WHERE id = ? AND status != 'paid'")
                 ->execute([$payment['payment_link_id']]);
+            InvoiceController::settleByPaymentLink($pdo, (int) $payment['payment_link_id']);
         }
 
         if ($verifiedSuccess) {

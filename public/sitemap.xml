@@ -2,97 +2,97 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
  <url>
   <loc>https://princecaleb.dev/</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>weekly</changefreq>
   <priority>1.0</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/about.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/services.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/projects.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.8</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/blog.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.8</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/pricing.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/request.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/book.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/testimonials.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/contact.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.5</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/privacy.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.2</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/cookies.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.2</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/terms.html</loc>
-  <lastmod>2026-07-07</lastmod>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.2</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/project.html?slug=fintech-ledger-dashboard</loc>
-  <lastmod>2026-07-06</lastmod>
+  <lastmod>2026-07-08</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/project.html?slug=headless-wordpress-storefront</loc>
-  <lastmod>2026-07-06</lastmod>
+  <lastmod>2026-07-08</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
   <loc>https://princecaleb.dev/project.html?slug=cross-platform-booking-app</loc>
-  <lastmod>2026-07-06</lastmod>
+  <lastmod>2026-07-08</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
@@ -128,7 +128,13 @@
  </url>
  <url>
   <loc>https://princecaleb.dev/project.html?slug=simply-my-care</loc>
-  <lastmod>2026-07-06</lastmod>
+  <lastmod>2026-07-08</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/project.html?slug=benas-hub</loc>
+  <lastmod>2026-07-09</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>

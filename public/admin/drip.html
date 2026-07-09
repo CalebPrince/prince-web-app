@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
-<title>Proposals - Admin</title>
+<title>Drip Emails — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -44,12 +44,12 @@
       <div class="nav-group-label">Leads & Clients</div>
       <a href="/admin/inquiries.html" class="nav-link"><i class="bi bi-inbox nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
       <a href="/admin/quote-requests.html" class="nav-link"><i class="bi bi-file-earmark-text nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Quote Requests</span></a>
-      <a href="/admin/proposals.html" class="nav-link active"><i class="bi bi-file-earmark-check nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Proposals</span></a>
+      <a href="/admin/proposals.html" class="nav-link"><i class="bi bi-file-earmark-check nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Proposals</span></a>
       <a href="/admin/clients.html" class="nav-link"><i class="bi bi-people nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Clients</span></a>
       <a href="/admin/marketing-leads.html" class="nav-link"><i class="bi bi-bullseye nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Marketing Leads</span></a>
       <a href="/admin/chats.html" class="nav-link"><i class="bi bi-chat-dots nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
       <a href="/admin/newsletter.html" class="nav-link"><i class="bi bi-envelope nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Newsletter</span></a>
-      <a href="/admin/drip.html" class="nav-link"><i class="bi bi-send nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Drip Emails</span></a>
+      <a href="/admin/drip.html" class="nav-link active"><i class="bi bi-send nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Drip Emails</span></a>
       <div class="nav-group-label">Bookings & Payments</div>
       <a href="/admin/appointments.html" class="nav-link"><i class="bi bi-calendar-check nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Bookings</span></a>
       <a href="/admin/payments.html" class="nav-link"><i class="bi bi-credit-card nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Payments</span></a>
@@ -69,107 +69,117 @@
   <div class="flex-grow-1 p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-file-earmark-check"></i></div>
+        <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-send"></i></div>
         <div>
-          <h3 class="mb-0">Proposals</h3>
-          <p class="text-muted-custom mb-0 small">Create proposal links with scope, acceptance, and payment milestones.</p>
+          <h3 class="mb-0">Drip Emails</h3>
+          <p class="mb-0 small text-muted-custom">Automated follow-up sequence. Leads are enrolled when you send a pitch; steps go out N days later.</p>
         </div>
       </div>
-      <button class="btn-brand" id="new-proposal-btn">+ New Proposal</button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" id="enroll-btn">+ Enroll Email</button>
+        <button class="btn-brand" id="new-step-btn">+ Add Step</button>
+      </div>
     </div>
 
-    <div id="proposal-result" class="alert alert-success py-2 small d-none"></div>
-    <div id="proposal-page-error" class="alert alert-danger py-2 small d-none"></div>
-    <div class="admin-card p-0 overflow-hidden">
-      <div class="table-responsive">
-        <table class="table align-middle mb-0">
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item"><button class="nav-link active" id="tab-steps">Sequence Steps</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-enrollments">Enrollments</button></li>
+    </ul>
+
+    <div id="panel-steps">
+      <div class="admin-card p-0">
+        <table class="table mb-0 align-middle">
           <thead>
             <tr>
-              <th>Proposal</th>
-              <th>Client</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Milestones</th>
-              <th class="text-end">Link</th>
+              <th class="ps-3">Sends</th>
+              <th>Subject</th>
+              <th>Active</th>
+              <th>Sent</th>
+              <th class="text-end pe-3"></th>
             </tr>
           </thead>
-          <tbody id="proposals-table-body">
+          <tbody id="steps-tbody"></tbody>
+        </table>
+      </div>
+      <p class="small text-muted-custom mt-2">Use <code>{{name}}</code> in the subject or body to personalize. Steps ship inactive — flip them on once the copy is right. Emails go out via <code>database/send_drip_emails.php</code> on cron (hourly recommended).</p>
+    </div>
+
+    <div id="panel-enrollments" class="d-none">
+      <div class="admin-card p-0">
+        <table class="table mb-0 align-middle">
+          <thead>
             <tr>
-              <td colspan="6" class="text-center text-muted-custom py-4">Loading proposals...</td>
+              <th class="ps-3">Email</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Enrolled</th>
+              <th class="text-end pe-3"></th>
             </tr>
-          </tbody>
+          </thead>
+          <tbody id="enrollments-tbody"></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="proposal-modal" tabindex="-1">
+<div class="modal fade" id="step-modal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="proposal-modal-title">Create Proposal</h5>
+        <h5 class="modal-title" id="step-modal-title">Add Step</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="proposal-form">
-          <div class="mb-3">
-            <label class="form-label">Start from quote request</label>
-            <select class="form-select" id="inquiry-id">
-              <option value="">No linked quote request</option>
-            </select>
-          </div>
-
+        <form id="step-form">
           <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Client name</label>
-              <input type="text" class="form-control" id="client-name" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Client email</label>
-              <input type="email" class="form-control" id="client-email" required>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-3">
-            <div class="col-md-8">
-              <label class="form-label">Proposal title</label>
-              <input type="text" class="form-control" id="proposal-title" required placeholder="Website redesign proposal">
-            </div>
             <div class="col-md-4">
-              <label class="form-label">Currency</label>
-              <select class="form-select" id="proposal-currency">
-                <option value="GHS">GHS</option>
-                <option value="NGN">NGN</option>
-                <option value="USD">USD</option>
-                <option value="ZAR">ZAR</option>
-              </select>
+              <label class="form-label">Send after (days)</label>
+              <input type="number" min="0" class="form-control" id="step-day" required placeholder="e.g. 3">
+            </div>
+            <div class="col-md-8 d-flex align-items-end">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="step-active">
+                <label class="form-check-label" for="step-active">Active (will actually send)</label>
+              </div>
             </div>
           </div>
-
           <div class="mb-3">
-            <label class="form-label">Scope</label>
-            <textarea class="form-control" id="proposal-scope" rows="5" required placeholder="What is included, deliverables, important boundaries..."></textarea>
+            <label class="form-label">Subject</label>
+            <input type="text" class="form-control" id="step-subject" required placeholder="Quick follow-up for {{name}}">
           </div>
-
           <div class="mb-3">
-            <label class="form-label">Timeline</label>
-            <input type="text" class="form-control" id="proposal-timeline" placeholder="e.g. 4-6 weeks after deposit">
+            <label class="form-label">Body <span class="text-muted-custom">(plain text; an unsubscribe link is added automatically)</span></label>
+            <textarea class="form-control" id="step-body" rows="8" required placeholder="Hi {{name}},&#10;&#10;Just following up on my earlier note…"></textarea>
           </div>
+          <div id="step-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100">Save Step</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
+<div class="modal fade" id="enroll-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Enroll an Email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="enroll-form">
           <div class="mb-3">
-            <label class="form-label">Terms</label>
-            <textarea class="form-control" id="proposal-terms" rows="3" placeholder="Payment, revision, and acceptance terms..."></textarea>
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="enroll-email" required placeholder="lead@example.com">
           </div>
-
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <label class="form-label mb-0">Payment milestones</label>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="add-milestone-btn">+ Add milestone</button>
+          <div class="mb-3">
+            <label class="form-label">Name <span class="text-muted-custom">(optional, used for {{name}})</span></label>
+            <input type="text" class="form-control" id="enroll-name" placeholder="Business or contact name">
           </div>
-          <div id="milestones-wrap" class="d-flex flex-column gap-2 mb-3"></div>
-
-          <div id="proposal-msg" class="alert py-2 small d-none"></div>
-          <button type="submit" class="btn-brand w-100" id="proposal-submit-btn">Create Proposal</button>
+          <div id="enroll-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100">Enroll</button>
         </form>
       </div>
     </div>
@@ -181,6 +191,6 @@
 <script src="/js/theme.js"></script>
 <script src="/js/admin-auth.js"></script>
 <script src="/js/admin-nav-badges.js"></script>
-<script src="/js/admin-proposals.js"></script>
+<script src="/js/admin-drip.js"></script>
 </body>
 </html>

@@ -189,4 +189,31 @@ foreach ($leadColumns as $col) {
     }
 }
 
+// Seed a starter drip sequence the first time the table appears — inactive
+// on purpose, so nothing sends until the copy is reviewed and switched on.
+if ((int) $pdo->query('SELECT COUNT(*) FROM drip_steps')->fetchColumn() === 0) {
+    $seedStep = $pdo->prepare('INSERT INTO drip_steps (day_offset, subject, body, is_active) VALUES (?, ?, ?, 0)');
+    $seedStep->execute([
+        3,
+        'Quick follow-up for {{name}}',
+        "Hi {{name}},\n\nI reached out a few days ago about your website and didn't want my note to get buried. "
+            . "If growing your online presence is on your radar this quarter, I'd love to show you a couple of quick wins I spotted.\n\n"
+            . "No pressure either way — happy to answer questions whenever suits you.\n\nBest,\nPrince Caleb\nprincecaleb.dev",
+    ]);
+    $seedStep->execute([
+        8,
+        'A recent project you might find relevant',
+        "Hi {{name}},\n\nIn case it's useful context: I recently rebuilt a local business's website and their enquiries went up noticeably within the first month. "
+            . "You can see that case study (and others) here: https://princecaleb.dev/projects.html\n\n"
+            . "If you'd like a free, no-strings look at what could be improved on your site, just reply to this email.\n\nBest,\nPrince Caleb",
+    ]);
+    $seedStep->execute([
+        16,
+        'Last note from me, {{name}}',
+        "Hi {{name}},\n\nI'll keep this short — this is my last email. If a better website or some automation ever becomes a priority, "
+            . "my door is open: https://princecaleb.dev/contact.html\n\nWishing you and the business all the best,\nPrince Caleb",
+    ]);
+    echo "Seeded 3 drip steps (inactive).\n";
+}
+
 echo "Schema applied.\n";

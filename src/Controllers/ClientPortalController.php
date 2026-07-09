@@ -45,7 +45,22 @@ class ClientPortalController
         }
         unset($proposal);
 
-        Response::json(['proposals' => $proposals]);
+        // Uptime widget: only monitors explicitly assigned to this client.
+        $mStmt = $pdo->prepare(
+            'SELECT id, name, url, last_status, last_checked_at FROM uptime_monitors
+             WHERE client_id = ? AND is_active = 1 ORDER BY created_at ASC'
+        );
+        $mStmt->execute([$client['id']]);
+        $monitors = $mStmt->fetchAll();
+        foreach ($monitors as &$monitor) {
+            $stats = UptimeController::stats($pdo, (int) $monitor['id']);
+            $monitor['uptime_30d'] = $stats['uptime_30d'];
+            $monitor['avg_response_ms'] = $stats['avg_response_ms'];
+            unset($monitor['id']);
+        }
+        unset($monitor);
+
+        Response::json(['proposals' => $proposals, 'monitors' => $monitors]);
     }
 
     /** GET /api/v1/client/files */

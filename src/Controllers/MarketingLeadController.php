@@ -352,6 +352,12 @@ class MarketingLeadController
         $pdo->prepare("UPDATE marketing_leads SET status = 'sent', sent_at = datetime('now'), updated_at = datetime('now') WHERE id = ?")
             ->execute([$lead['id']]);
 
+        // Emailed leads join the follow-up drip sequence automatically (a
+        // no-op if the address is already enrolled or has unsubscribed).
+        if (($lead['pitch_channel'] ?? 'email') !== 'phone' && !empty($lead['contact_email'])) {
+            DripController::enrollEmail($pdo, $lead['contact_email'], $lead['business_name'] ?: null, 'marketing_lead', (int) $lead['id']);
+        }
+
         Response::json(['status' => 'updated']);
     }
 

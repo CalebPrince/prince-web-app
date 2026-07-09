@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/js/error-log.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" type="image/png" href="/icons/icon-32.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+<title>Invoice — Prince Caleb</title>
+<meta name="description" content="View your invoice.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+<style>
+  .invoice-card { border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; background: var(--card-bg, var(--surface, #fff)); }
+  .invoice-table th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted, #6b7280); }
+  .invoice-paid-stamp {
+    display: inline-block; padding: .35rem 1rem; border: 3px solid #16a34a; color: #16a34a;
+    border-radius: 8px; font-weight: 800; font-size: 1.1rem; letter-spacing: .15em;
+    text-transform: uppercase; transform: rotate(-6deg);
+  }
+  @media print {
+    body { background: #fff !important; color: #000 !important; }
+    .site-nav, .invoice-actions, .skip-link { display: none !important; }
+    .section { padding: 0 !important; }
+    .invoice-card { border: none; padding: 0; box-shadow: none !important; background: #fff !important; }
+    .invoice-card, .invoice-card * { color: #000 !important; }
+    .invoice-paid-stamp { color: #16a34a !important; }
+    a { text-decoration: none !important; }
+  }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<nav class="site-nav">
+  <div class="container d-flex align-items-center justify-content-between py-3">
+    <a href="/" class="brand-logo text-decoration-none">Prince Caleb<span class="dot">.</span></a>
+    <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+  </div>
+</nav>
+
+<section class="section" id="main-content">
+  <div class="container" style="max-width: 760px;">
+    <div id="invoice-content">
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
+<script>
+(async function () {
+  const container = document.getElementById('invoice-content');
+  const token = new URLSearchParams(window.location.search).get('token');
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function renderState(title, description) {
+    container.innerHTML = `
+      <div class="contact-card text-center">
+        <h4 class="mb-2">${escapeHtml(title)}</h4>
+        <p class="text-muted-custom mb-0">${escapeHtml(description)}</p>
+      </div>
+    `;
+  }
+
+  function money(subunits, currency) {
+    return `${escapeHtml(currency)} ${(subunits / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  }
+
+  if (!token) {
+    renderState('Missing invoice link', 'This invoice URL is incomplete.');
+    return;
+  }
+
+  let invoice;
+  try {
+    invoice = await api.get(`/api/v1/invoices/${encodeURIComponent(token)}`);
+  } catch (e) {
+    renderState('Invoice not found', 'This link may be incorrect or the invoice is no longer available.');
+    return;
+  }
+
+  const isPaid = invoice.status === 'paid';
+  const isVoid = invoice.status === 'void';
+
+  const itemRows = (invoice.items || []).map(item => {
+    const lineTotal = Math.round(item.quantity * item.unit_amount);
+    const qty = Number(item.quantity) === 1 ? '1' : Number(item.quantity).toLocaleString();
+    return `
+      <tr>
+        <td>${escapeHtml(item.description)}</td>
+        <td class="text-end">${qty}</td>
+        <td class="text-end">${money(item.unit_amount, invoice.currency)}</td>
+        <td class="text-end">${money(lineTotal, invoice.currency)}</td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="invoice-actions d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Download PDF / Print</button>
+      ${invoice.payment_url && !isPaid && !isVoid ? `<a href="${escapeHtml(invoice.payment_url)}" class="btn-brand text-decoration-none">Pay Now — ${money(invoice.total, invoice.currency)}</a>` : ''}
+    </div>
+    <div class="invoice-card">
+      <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+        <div>
+          <div class="brand-logo fs-4">Prince Caleb<span class="dot">.</span></div>
+          <div class="small text-muted-custom">Web &amp; Mobile App Developer<br>princecaleb.dev · prince.caleb@hotmail.com</div>
+        </div>
+        <div class="text-end">
+          <h4 class="mb-1">Invoice ${escapeHtml(invoice.invoice_number)}</h4>
+          ${isPaid ? '<div class="invoice-paid-stamp mt-2">Paid</div>' : ''}
+          ${isVoid ? '<div class="invoice-paid-stamp mt-2" style="border-color:#991b1b;color:#991b1b;">Void</div>' : ''}
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-sm-6">
+          <div class="small text-muted-custom text-uppercase fw-semibold mb-1">Billed to</div>
+          <div>${escapeHtml(invoice.client_name)}</div>
+          <div class="small text-muted-custom">${escapeHtml(invoice.client_email)}</div>
+        </div>
+        <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+          <div class="small"><span class="text-muted-custom">Issue date:</span> ${escapeHtml(invoice.issue_date)}</div>
+          ${invoice.due_date ? `<div class="small"><span class="text-muted-custom">Due date:</span> ${escapeHtml(invoice.due_date)}</div>` : ''}
+          ${isPaid && invoice.paid_at ? `<div class="small"><span class="text-muted-custom">Paid on:</span> ${escapeHtml(String(invoice.paid_at).slice(0, 10))}</div>` : ''}
+        </div>
+      </div>
+
+      <table class="table invoice-table align-middle">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="text-end">Qty</th>
+            <th class="text-end">Unit price</th>
+            <th class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="text-end fw-bold border-0 pt-3">Total</td>
+            <td class="text-end fw-bold border-0 pt-3 fs-5">${money(invoice.total, invoice.currency)}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      ${invoice.notes ? `<div class="small text-muted-custom mt-3"><span class="fw-semibold">Notes:</span> ${escapeHtml(invoice.notes)}</div>` : ''}
+      <div class="small text-muted-custom mt-4">${isPaid ? 'This invoice has been paid in full and serves as your receipt.' : 'Payment can be made securely online via the Pay Now button above.'} Thank you for your business.</div>
+    </div>
+  `;
+})();
+</script>
+<script src="/js/analytics.js"></script>
+<script src="/js/pwa-register.js"></script>
+</body>
+</html>
