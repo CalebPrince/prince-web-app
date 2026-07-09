@@ -11,7 +11,7 @@ function siteCheckBadge(lead) {
   if (!lead.audit_findings) {
     return '<span class="text-muted-custom small">—</span>';
   }
-  if (lead.audit_findings.error) {
+  if (lead.audit_findings.reachable === false) {
     return `<span class="status-pill rejected">Unreachable</span>`;
   }
   const count = (lead.audit_findings.issues || []).length;
@@ -28,7 +28,7 @@ function actionButtons(lead) {
   if (lead.website_url && (lead.status === "pending" || lead.audit_findings)) {
     buttons.push(`<button class="btn btn-sm btn-outline-secondary audit-btn" data-id="${lead.id}">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`);
   }
-  if (!lead.website_url || (lead.audit_findings && !lead.audit_findings.error)) {
+  if (!lead.website_url || lead.audit_findings) {
     buttons.push(`<button class="btn btn-sm btn-outline-secondary pitch-btn" data-id="${lead.id}">${lead.pitch_body ? "Regenerate pitch" : "Generate pitch"}</button>`);
   }
   if (lead.pitch_body) {

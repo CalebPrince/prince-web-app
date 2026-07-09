@@ -204,7 +204,14 @@ class MarketingLeadController
         return $lead;
     }
 
-    /** Blocks anything that isn't a plain public http(s) host — no loopback/private/reserved targets. */
+    /**
+     * Blocks anything that isn't a plain public http(s) host — no
+     * loopback/private/reserved targets (SSRF protection). A domain that
+     * fails to resolve at all is NOT blocked here: there is nothing to
+     * attack via SSRF if nothing resolves, and a non-existent/unregistered
+     * domain is itself a legitimate audit finding — see performAudit(),
+     * which lets the real curl attempt fail naturally and reports why.
+     */
     private static function isSafeUrl(string $url): bool
     {
         $parts = parse_url($url);
@@ -217,7 +224,7 @@ class MarketingLeadController
         }
         $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : gethostbyname($host);
         if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
-            return false; // DNS resolution failed
+            return true; // DNS resolution failed — nothing reachable, so nothing unsafe to reach
         }
         return (bool) filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
     }
@@ -247,8 +254,14 @@ class MarketingLeadController
         $elapsedMs = (int) round((microtime(true) - $start) * 1000);
 
         if ($html === false || $status === 0) {
+            // Kept in the same shape as a normal audit (an 'issues' entry,
+            // not a special dead-end 'error' field) so this still becomes a
+            // real, usable finding — a domain that doesn't even resolve, or
+            // a server that refuses every connection, is one of the
+            // strongest possible pitch angles, not something to discard.
             return [
-                'error' => 'Could not reach the site' . ($curlError !== '' ? ": {$curlError}" : '.'),
+                'reachable' => false,
+                'issues' => [['issue' => 'unreachable', 'detail' => self::describeUnreachable($curlError)]],
                 'checked_at' => date('c'),
             ];
         }
@@ -308,6 +321,7 @@ class MarketingLeadController
         }
 
         return [
+            'reachable' => true,
             'http_status' => $status,
             'final_url' => $finalUrl,
             'uses_https' => str_starts_with($finalUrl, 'https://'),
@@ -317,6 +331,25 @@ class MarketingLeadController
             'issues' => $issues,
             'checked_at' => date('c'),
         ];
+    }
+
+    /** Turns a raw curl error into a specific, plain-English finding — distinguishing "domain doesn't exist" from other failure modes matters for how compelling the pitch angle is. */
+    private static function describeUnreachable(string $curlError): string
+    {
+        $lower = strtolower($curlError);
+        if (str_contains($lower, 'could not resolve host') || str_contains($lower, 'name or service not known')) {
+            return 'This domain does not appear to be registered, or its DNS is not pointing anywhere — there is no website live at this address at all.';
+        }
+        if (str_contains($lower, 'connection refused')) {
+            return 'The server refused the connection — nothing is currently listening on this domain.';
+        }
+        if (str_contains($lower, 'timed out') || str_contains($lower, 'timeout')) {
+            return 'The site took too long to respond and timed out.';
+        }
+        if (str_contains($lower, 'ssl') || str_contains($lower, 'certificate')) {
+            return 'The site has a broken or expired SSL certificate — browsers will show visitors a security warning before they can even see the page.';
+        }
+        return 'The site could not be reached at all' . ($curlError !== '' ? " ({$curlError})" : '.');
     }
 
     /** @return array{subject:string,body:string}|null */
