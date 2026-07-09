@@ -108,7 +108,8 @@ class LiveChatController
         }
 
         if ($reply === null) {
-            $reply = self::keywordFallback($message, $projects);
+            $bookingReply = self::bookingFallback($message, $transcript);
+            $reply = $bookingReply ?? self::keywordFallback($message, $projects);
         }
 
         $transcript[] = ['role' => 'assistant', 'text' => $reply];
@@ -1122,5 +1123,120 @@ class LiveChatController
         }
         return "I'd love to hear more about your project — describe what you're building, "
             . "or use the contact form and I'll get back to you personally.";
+    }
+
+    private static function bookingFallback(string $message, array $transcript): ?string
+    {
+        $context = trim(implode("\n", array_map(
+            fn($turn) => ($turn['role'] ?? '') . ': ' . ($turn['text'] ?? ''),
+            array_slice($transcript, -8)
+        )));
+        $text = trim($context . "\nuser: " . $message);
+
+        $hasBookingIntent = preg_match('/\b(book|booking|call|appointment|schedule|meet|meeting)\b/i', $text)
+            || preg_match('/\b(go ahead|confirm|yes|please do|lock it in|book it|that works)\b/i', $message);
+        if (!$hasBookingIntent) {
+            return null;
+        }
+
+        $details = self::extractBookingDetails($text);
+        if (empty($details['date'])) {
+            return 'Sure - what date would you like to book? You can send it as YYYY-MM-DD, or say tomorrow.';
+        }
+        if (empty($details['time'])) {
+            return "Sure - what time should I check for {$details['date']}? Please send it like 10:00 or 14:30.";
+        }
+
+        $availability = AppointmentController::getAvailableSlots($details['date']);
+        if (!($availability['enabled'] ?? false)) {
+            return 'Booking is not available right now. Please leave your name, email, and message here and Prince will follow up.';
+        }
+        if (isset($availability['error'])) {
+            return $availability['error'];
+        }
+        if (!in_array($details['time'], $availability['slots'] ?? [], true)) {
+            $slots = array_slice($availability['slots'] ?? [], 0, 6);
+            if (!$slots) {
+                return "I don't see any open slots on {$details['date']}. Try another date and I can check it.";
+            }
+            return "That time is not open on {$details['date']}. Available times include: " . implode(', ', $slots) . '.';
+        }
+
+        if (empty($details['name'])) {
+            return 'That slot is open. What name should I put on the booking?';
+        }
+        if (empty($details['email'])) {
+            return 'That slot is open. What email should I use for the confirmation?';
+        }
+
+        $confirmed = preg_match('/\b(go ahead|confirm|yes|please do|lock it in|book it|that works)\b/i', $message);
+        if (!$confirmed) {
+            $friendlyDate = self::friendlyBookingDate($details['date']);
+            return "That slot is open. Just to confirm, should I book {$friendlyDate} at {$details['time']} ({$availability['timezone']}) for {$details['name']}?";
+        }
+
+        $result = AppointmentController::createBooking([
+            'name' => $details['name'],
+            'email' => $details['email'],
+            'phone' => $details['phone'] ?? '',
+            'date' => $details['date'],
+            'time' => $details['time'],
+            'topic' => $details['topic'] ?? 'Call booked from Live Chat',
+        ]);
+        if (!($result['success'] ?? false)) {
+            return $result['error'] ?? 'I could not complete that booking. Please try another slot.';
+        }
+
+        $friendlyDate = self::friendlyBookingDate($details['date']);
+        return "You're all set! I've booked your call with Prince for {$friendlyDate} at {$details['time']} ({$result['timezone']}). You should receive a confirmation email shortly.";
+    }
+
+    private static function extractBookingDetails(string $text): array
+    {
+        $out = [];
+        $tz = Settings::get('booking_timezone') ?: 'Africa/Accra';
+        if (preg_match('/\b(\d{4}-\d{2}-\d{2})\b/', $text, $m)) {
+            $out['date'] = $m[1];
+        } elseif (preg_match('/\btomorrow\b/i', $text)) {
+            $out['date'] = (new \DateTime('tomorrow', new \DateTimeZone($tz)))->format('Y-m-d');
+        } elseif (preg_match('/\btoday\b/i', $text)) {
+            $out['date'] = (new \DateTime('today', new \DateTimeZone($tz)))->format('Y-m-d');
+        }
+
+        $timeText = preg_replace('/\b\d{4}-\d{2}-\d{2}\b/', ' ', $text);
+        if (preg_match('/(?:\bat\b|\bfor\b|\baround\b|time is)\s+([01]?\d|2[0-3])(?::([0-5]\d))?\s*(am|pm)?\b/i', $timeText, $m)
+            || preg_match('/\b([01]?\d|2[0-3]):([0-5]\d)\s*(am|pm)?\b/i', $timeText, $m)) {
+            $hour = (int) $m[1];
+            $minute = isset($m[2]) && $m[2] !== '' ? (int) $m[2] : 0;
+            $ampm = strtolower($m[3] ?? '');
+            if ($ampm === 'pm' && $hour < 12) {
+                $hour += 12;
+            } elseif ($ampm === 'am' && $hour === 12) {
+                $hour = 0;
+            }
+            $out['time'] = sprintf('%02d:%02d', $hour, $minute);
+        }
+
+        if (preg_match('/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i', $text, $m)) {
+            $out['email'] = $m[0];
+        }
+        if (preg_match('/(?:my name is|name is|i am|i\'m)\s+([A-Z][A-Za-z .\'-]{1,80})/i', $text, $m)) {
+            $name = trim(preg_replace('/\s+and\s+my\s+email.*$/i', '', $m[1]));
+            $out['name'] = trim($name, " .\t\n\r\0\x0B");
+        }
+        if (preg_match('/\+?\d[\d\s().-]{7,}\d/', $text, $m)) {
+            $out['phone'] = trim($m[0]);
+        }
+
+        return $out;
+    }
+
+    private static function friendlyBookingDate(string $date): string
+    {
+        try {
+            return (new \DateTime($date))->format('l, F j, Y');
+        } catch (\Throwable) {
+            return $date;
+        }
     }
 }
