@@ -20,8 +20,9 @@ namespace App\Support;
  * Deliberately plain text only — no function/tool calling support, since
  * providers differ enough there (Gemini's functionCall/functionResponse vs.
  * OpenAI-style tools/tool_calls) that a shared abstraction isn't worth it.
- * Live Chat's tool-calling loop (LiveChatController::chatWithGemini) stays
- * Gemini-only for that reason.
+ * Live Chat's tool-calling loop (LiveChatController::chatWithGemini/
+ * chatWithOpenRouter/chatWithGroq) has its own separate three-way fallback
+ * for that reason, rather than reusing this class.
  */
 class AiText
 {

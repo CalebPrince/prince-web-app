@@ -17,8 +17,10 @@ use App\Support\Settings;
  * into the inquiries inbox (and its Slack webhook queue) plus a dedicated
  * chat_sessions record the admin panel lists under "Chat Leads".
  *
- * Prototype generation needs GEMINI_API_KEY; without it the chat still works
- * via AiChatController-style keyword fallback, minus the prototype step.
+ * Both the conversation and prototype generation fall back across Gemini,
+ * OpenRouter, and Groq (whichever keys are configured in Admin -> Settings);
+ * without any of the three, the chat still works via keyword/booking-intent
+ * fallback, minus AI-driven tool calls and the prototype step.
  */
 class LiveChatController
 {
@@ -28,7 +30,8 @@ class LiveChatController
     public static function status(): void
     {
         Response::json([
-            'online' => (!empty(Settings::get('gemini_api_key')) || !empty(Settings::get('openrouter_api_key')))
+            'online' => (!empty(Settings::get('gemini_api_key')) || !empty(Settings::get('openrouter_api_key'))
+                || !empty(Settings::get('groq_api_key')))
                 && self::isWithinScheduledHours(),
             'greeting' => Settings::get('chat_greeting')
                 ?? 'Hi there! 👋 Welcome to our development hub. We build high-performance web and mobile applications designed to scale.',
@@ -42,13 +45,14 @@ class LiveChatController
     /** POST /api/v1/chat/message — body: {token?, message} */
     public static function message(): void
     {
-        // Worst case is a full Gemini failure (2 rounds x 12s) followed by a
-        // full OpenRouter fallback (2 rounds x 30s) = ~84s of curl time alone.
-        // Without this, the host's default max_execution_time (often 30s on
-        // shared hosting) kills the process mid-request with no response at
-        // all, which the browser surfaces as a bare "Failed to fetch" rather
-        // than a clean error.
-        set_time_limit(95);
+        // Worst case is a full Gemini failure (2 rounds x 12s), then a full
+        // OpenRouter failure (2 rounds x 30s), then a full Groq attempt
+        // (2 rounds x 20s) = ~124s of curl time alone. Without this, the
+        // host's default max_execution_time (often 30s on shared hosting)
+        // kills the process mid-request with no response at all, which the
+        // browser surfaces as a bare "Failed to fetch" rather than a clean
+        // error.
+        set_time_limit(135);
 
         $config = self::config();
         RateLimitMiddleware::enforce('ai_chat', $config['ai_rate_limit']);
@@ -72,7 +76,7 @@ class LiveChatController
         $projects = self::projectCatalog($pdo);
         $reply = null;
         $mode = 'fallback';
-        $provider = null; // debug aid: which path actually served this reply — 'gemini', 'openrouter', or null (keyword fallback)
+        $provider = null; // debug aid: which path actually served this reply — 'gemini', 'openrouter', 'groq', or null (keyword fallback)
         $justBecameReady = false;
         $geminiKey = Settings::get('gemini_api_key');
 
@@ -107,6 +111,25 @@ class LiveChatController
             }
         }
 
+        // Gemini and OpenRouter both failed (or neither is configured) —
+        // last AI attempt before keyword fallback. Groq has its own
+        // independent quota/billing, so it's the one leg still standing
+        // when the other two are both out of credit at once.
+        if ($reply === null) {
+            $groqKey = Settings::get('groq_api_key');
+            if (!empty($groqKey)) {
+                $result = self::chatWithGroq($groqKey, $transcript, $projects, $pdo);
+                if ($result !== null) {
+                    $justBecameReady = $justBecameReady || $result['ready'];
+                    if ($result['reply'] !== null) {
+                        $reply = $result['reply'];
+                        $mode = 'ai';
+                        $provider = 'groq';
+                    }
+                }
+            }
+        }
+
         if ($reply === null) {
             $bookingReply = self::bookingFallback($message, $transcript);
             $reply = $bookingReply ?? self::keywordFallback($message, $projects);
@@ -120,10 +143,10 @@ class LiveChatController
             'token' => $session['token'],
             'reply' => $reply,
             'mode' => $mode,
-            // Temporary debug aid for verifying the Gemini->OpenRouter
+            // Temporary debug aid for verifying the Gemini->OpenRouter->Groq
             // fallback actually triggers in production — 'gemini',
-            // 'openrouter', or null (keyword fallback served this reply).
-            // Safe to remove later; not relied on by any UI logic.
+            // 'openrouter', 'groq', or null (keyword fallback served this
+            // reply). Safe to remove later; not relied on by any UI logic.
             'provider' => $provider,
             // The widget shows "Build my prototype" once the AI itself has
             // signaled (via the mark_ready_for_prototype tool) that it has
@@ -493,6 +516,9 @@ class LiveChatController
     // Confirmed live in production: even 18s wasn't enough (same "status=200
     // body=n/a" signature), so this needs real headroom for a free-tier model.
     private const OPENROUTER_CHAT_TIMEOUT_SECONDS = 30;
+    // Groq's own infrastructure is fast, but this still needs headroom for
+    // a cold key/model or a transient slowdown rather than assuming best case.
+    private const GROQ_CHAT_TIMEOUT_SECONDS = 20;
 
     /** Shared by both providers, so Gemini and the OpenRouter fallback can never drift into inconsistent behavior. */
     private static function buildSystemPrompt(array $projects): string
@@ -739,6 +765,105 @@ class LiveChatController
         }
 
         return null;
+    }
+
+    /**
+     * Second fallback, tried only after both Gemini and OpenRouter have
+     * failed: same tool-calling conversation, same OpenAI-style
+     * tools/tool_calls shape as chatWithOpenRouter (Groq's API is
+     * OpenAI-compatible), just a different endpoint/key/model. Kept as its
+     * own method rather than parameterizing chatWithOpenRouter because the
+     * two providers may drift in header/quirk requirements over time, and
+     * this stays a straight copy-and-adjust if that happens.
+     *
+     * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords)
+     */
+    private static function chatWithGroq(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
+    {
+        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects)]];
+        foreach ($transcript as $turn) {
+            $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
+        }
+
+        $tools = self::toolDeclarationsOpenAiFormat();
+        $model = Settings::get('groq_model') ?: 'llama-3.3-70b-versatile';
+        $ready = false;
+
+        for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
+            $payload = ['model' => $model, 'messages' => $messages];
+            if ($round < self::MAX_TOOL_ROUNDS - 1) {
+                $payload['tools'] = $tools;
+            }
+            $result = self::callGroqRaw($apiKey, $payload, self::GROQ_CHAT_TIMEOUT_SECONDS);
+            if ($result === null) {
+                return null;
+            }
+
+            $message = $result['choices'][0]['message'] ?? null;
+            if (!is_array($message)) {
+                error_log('Groq chat: no message in response: ' . json_encode($result));
+                return null;
+            }
+
+            $toolCalls = $message['tool_calls'] ?? null;
+            if (!$toolCalls) {
+                $text = $message['content'] ?? null;
+                return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
+            }
+
+            foreach ($toolCalls as $call) {
+                if (($call['function']['name'] ?? '') === 'mark_ready_for_prototype') {
+                    $ready = true;
+                }
+            }
+
+            $messages[] = $message;
+            foreach ($toolCalls as $call) {
+                $name = $call['function']['name'] ?? '';
+                $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
+                $toolResult = self::runTool($name, $args, $pdo);
+                $messages[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => $call['id'] ?? '',
+                    'content' => json_encode($toolResult),
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    private static function callGroqRaw(string $apiKey, array $payload, int $timeout): ?array
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'Live Chat Groq fallback failed: status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 800) : 'n/a'
+            ));
+            return null;
+        }
+
+        return json_decode($response, true);
     }
 
     private static function callOpenRouterRaw(string $apiKey, array $payload, int $timeout): ?array
