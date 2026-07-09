@@ -17,7 +17,10 @@
 
 <div class="d-flex">
   <div class="admin-sidebar p-3">
-    <div class="brand mb-4 fs-5">Prince Caleb<span class="dot">.</span></div>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div class="brand fs-5">Prince Caleb<span class="dot">.</span></div>
+      <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
         <nav class="d-flex flex-column gap-1">
       <div class="nav-group-label">Overview</div>
       <a href="/admin/dashboard.html" class="nav-link"><i class="bi bi-speedometer2 nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Dashboard</span></a>
@@ -111,6 +114,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
 <script src="/js/admin-auth.js"></script>
 <script src="/js/admin-nav-badges.js"></script>
 <script src="/js/admin-error-logs.js"></script>

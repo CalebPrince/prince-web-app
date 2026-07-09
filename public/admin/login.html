@@ -4,6 +4,7 @@
 <script src="/js/error-log.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
 <title>Admin Login — Prince Caleb</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
@@ -16,7 +17,10 @@
 
 <div class="auth-shell">
   <div class="auth-box">
-    <h3 class="mb-1">Admin Login</h3>
+    <div class="d-flex align-items-center justify-content-between mb-1">
+      <h3 class="mb-0">Admin Login</h3>
+      <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
     <p class="text-muted-custom mb-4 small">Prince Caleb — Portfolio Admin</p>
     <form id="login-form">
       <div class="mb-3">
@@ -49,6 +53,7 @@
 </div>
 
 <script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
 <script>
 let usingBackupCode = false;
 
