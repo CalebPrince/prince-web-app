@@ -555,7 +555,13 @@ class LiveChatController
             . "post worth mentioning — share it naturally, with the link.\n"
             . "- check_availability / book_appointment: use these when they want to talk it through live or "
             . "book a call. Always read the exact date, time, and timezone back to them and get an explicit "
-            . "yes before calling book_appointment — never book without confirmation.\n"
+            . "yes before calling book_appointment — never book without confirmation. When calling "
+            . "book_appointment, copy the `time` value character-for-character from the slot check_availability "
+            . "returned — never convert or re-derive it yourself (e.g. \"4 PM\" is the slot string \"16:00\", "
+            . "not \"04:00\"); a reformatted value won't match and the booking will be wrongly rejected as "
+            . "unavailable. If a booking is rejected, don't assume the slot is genuinely taken — re-run "
+            . "check_availability for that date and confirm you're using one of its exact returned strings "
+            . "before trying again or telling the visitor it's unavailable.\n"
             . "- mark_ready_for_prototype: call this once — and only once — the conversation has covered more "
             . "than just the basics: what it's for, who it's for, AND at least the core workflow (the actual "
             . "steps a user or role goes through) or a couple of specific features/details they care about — "
@@ -971,14 +977,21 @@ class LiveChatController
             [
                 'name' => 'book_appointment',
                 'description' => 'Book a call. Only call this after reading the exact date, time, and '
-                    . 'timezone back to the visitor and getting an explicit yes.',
+                    . 'timezone back to the visitor and getting an explicit yes. IMPORTANT: `time` must be '
+                    . 'copied verbatim from one of the slot strings check_availability returned for that date — '
+                    . 'never re-derive or reformat it yourself. A mismatched value (e.g. converting "4 PM" to '
+                    . '"04:00" instead of "16:00") will not match any real slot and the booking will be '
+                    . 'rejected as unavailable even though the time is actually open.',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [
                         'name' => ['type' => 'STRING'],
                         'email' => ['type' => 'STRING'],
                         'date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
-                        'time' => ['type' => 'STRING', 'description' => 'HH:MM, 24-hour'],
+                        'time' => [
+                            'type' => 'STRING',
+                            'description' => 'HH:MM, 24-hour, copied exactly from a check_availability slot — e.g. "16:00" for 4 PM, never "04:00".',
+                        ],
                         'phone' => ['type' => 'STRING'],
                         'topic' => ['type' => 'STRING'],
                     ],
@@ -1008,11 +1021,28 @@ class LiveChatController
     private static function runTool(string $name, array $args, \PDO $pdo): array
     {
         try {
+            if ($name === 'book_appointment') {
+                $result = AppointmentController::createBooking($args);
+                if (!($result['success'] ?? true)) {
+                    // A booking rejection is easy to blame on "the slot got
+                    // taken" without evidence — logging the exact args the
+                    // AI sent (date/time especially) makes a reformatting
+                    // bug (e.g. "4 PM" sent as 04:00 instead of 16:00)
+                    // immediately visible in Admin -> Error Logs instead of
+                    // an unreproducible one-off.
+                    error_log(sprintf(
+                        'Live Chat book_appointment rejected: reason=%s args=%s',
+                        $result['error'] ?? 'unknown',
+                        json_encode($args)
+                    ));
+                }
+                return $result;
+            }
+
             return match ($name) {
                 'get_site_info' => self::toolGetSiteInfo(),
                 'get_pricing' => self::toolGetPricing(),
                 'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
-                'book_appointment' => AppointmentController::createBooking($args),
                 'search_content' => self::toolSearchContent($pdo, (string) ($args['query'] ?? '')),
                 'mark_ready_for_prototype' => ['acknowledged' => true],
                 default => ['error' => 'Unknown tool.'],
