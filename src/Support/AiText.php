@@ -6,12 +6,16 @@ namespace App\Support;
 
 /**
  * Single-shot "prompt in, text out" generation with automatic fallback:
- * tries Gemini first, and if that fails for any reason (quota, outage, bad
- * response), retries once against OpenRouter using whichever key/model is
- * configured in Settings. Centralized here (rather than duplicated per
- * controller) because this exact retry logic is now needed in three places,
- * and the Gemini call itself has already been the source of several subtle
- * bugs this project has had to debug — one implementation, not three.
+ * tries Gemini first, then OpenRouter, then Groq — each only if a key is
+ * configured — stopping at the first one that returns usable text. A third
+ * provider matters because Gemini and OpenRouter going down (or out of
+ * quota/credit) at the same time isn't hypothetical — it's happened in
+ * production. Groq is the third leg because it has its own independent
+ * quota (no shared billing with either of the other two) and a free tier.
+ * Centralized here (rather than duplicated per controller) because this
+ * exact retry logic is now needed in three places, and the Gemini call
+ * itself has already been the source of several subtle bugs this project
+ * has had to debug — one implementation, not three.
  *
  * Deliberately plain text only — no function/tool calling support, since
  * providers differ enough there (Gemini's functionCall/functionResponse vs.
@@ -21,7 +25,7 @@ namespace App\Support;
  */
 class AiText
 {
-    /** @return string|null null only if Gemini AND OpenRouter (if configured) both failed, or neither is configured */
+    /** @return string|null null only if every configured provider failed, or none is configured */
     public static function generate(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20): ?string
     {
         $result = self::generateWithProvider($prompt, $systemInstruction, $timeoutSeconds);
@@ -31,9 +35,9 @@ class AiText
     /**
      * Same as generate(), but also reports which provider actually produced
      * the text — useful anywhere the caller wants to record/display that
-     * (e.g. a per-item "generated with Gemini/OpenRouter" label).
+     * (e.g. a per-item "generated with Gemini/OpenRouter/Groq" label).
      *
-     * @return array{text:string,provider:'gemini'|'openrouter'}|null
+     * @return array{text:string,provider:string}|null
      */
     public static function generateWithProvider(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20): ?array
     {
@@ -56,6 +60,14 @@ class AiText
                 // whatever it's set to (Claude, GPT, Llama, etc.).
                 $model = Settings::get('openrouter_model') ?: 'openrouter/free';
                 return ['text' => $text, 'provider' => $model];
+            }
+        }
+
+        $groqKey = Settings::get('groq_api_key');
+        if (!empty($groqKey)) {
+            $text = self::callGroq($groqKey, $prompt, $systemInstruction, $timeoutSeconds);
+            if ($text !== null) {
+                return ['text' => $text, 'provider' => 'groq'];
             }
         }
 
@@ -156,6 +168,56 @@ class AiText
         if ($text === null) {
             error_log(sprintf(
                 'AiText: OpenRouter returned 200 but no usable text: finishReason=%s body=%s',
+                $decoded['choices'][0]['finish_reason'] ?? 'none',
+                substr($response, 0, 500)
+            ));
+        }
+        return $text;
+    }
+
+    private static function callGroq(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $messages = [];
+        if ($system !== null) {
+            $messages[] = ['role' => 'system', 'content' => $system];
+        }
+        $messages[] = ['role' => 'user', 'content' => $prompt];
+
+        $model = Settings::get('groq_model') ?: 'llama-3.3-70b-versatile';
+
+        $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages]),
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'AiText: Groq fallback also failed: status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 500) : 'n/a'
+            ));
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        $text = $decoded['choices'][0]['message']['content'] ?? null;
+        if ($text === null) {
+            error_log(sprintf(
+                'AiText: Groq returned 200 but no usable text: finishReason=%s body=%s',
                 $decoded['choices'][0]['finish_reason'] ?? 'none',
                 substr($response, 0, 500)
             ));

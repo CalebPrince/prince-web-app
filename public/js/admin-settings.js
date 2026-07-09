@@ -89,6 +89,8 @@ async function saveIntegrations(e) {
       gemini_api_key: document.getElementById("gemini-key").value.trim(),
       openrouter_api_key: document.getElementById("openrouter-key").value.trim(),
       openrouter_model: document.getElementById("openrouter-model").value.trim(),
+      groq_api_key: document.getElementById("groq-key").value.trim(),
+      groq_model: document.getElementById("groq-model").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
       makecom_webhook_url: document.getElementById("makecom-url").value.trim(),
       integration_api_key: document.getElementById("integration-api-key").value.trim(),
@@ -333,6 +335,8 @@ async function testAi() {
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
     document.getElementById("openrouter-key").value = settings.openrouter_api_key || "";
     document.getElementById("openrouter-model").value = settings.openrouter_model || "";
+    document.getElementById("groq-key").value = settings.groq_api_key || "";
+    document.getElementById("groq-model").value = settings.groq_model || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";

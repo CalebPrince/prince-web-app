@@ -118,7 +118,7 @@ class SocialDraftController
 
         $result = AiText::generateWithProvider($prompt, null, 20);
         if ($result === null) {
-            error_log('Social draft generation: both Gemini and OpenRouter (if configured) failed.');
+            error_log('Social draft generation: all configured AI providers (Gemini/OpenRouter/Groq) failed.');
             return null;
         }
 

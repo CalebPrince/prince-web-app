@@ -155,14 +155,15 @@ class LiveChatController
     /** POST /api/v1/chat/prototype — body: {token} */
     public static function generatePrototype(): void
     {
-        // AiText::generate tries Gemini (45s) then OpenRouter (45s) — up to
-        // 90s of curl time in the worst case. Same reasoning as message().
-        set_time_limit(100);
+        // AiText::generate tries Gemini (45s), then OpenRouter (45s), then
+        // Groq (45s) — up to 135s of curl time in the worst case. Same
+        // reasoning as message().
+        set_time_limit(145);
 
         $config = self::config();
         RateLimitMiddleware::enforce('prototype', 5);
 
-        if (empty(Settings::get('gemini_api_key')) && empty(Settings::get('openrouter_api_key'))) {
+        if (empty(Settings::get('gemini_api_key')) && empty(Settings::get('openrouter_api_key')) && empty(Settings::get('groq_api_key'))) {
             Response::error('Prototype generation is not available right now — please use the contact form.', 503);
         }
 

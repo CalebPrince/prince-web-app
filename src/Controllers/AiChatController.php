@@ -13,7 +13,7 @@ use App\Support\Response;
  * Secondary, opt-in AI assistant: recommends relevant case studies based on what
  * a visitor describes. Never blocks or degrades the primary site — it's rate
  * limited on its own bucket and falls back to simple keyword matching if no
- * AI provider is configured (or if Gemini and OpenRouter both fail), so the
+ * AI provider is configured (or if all configured providers fail), so the
  * feature is fully optional infrastructure.
  */
 class AiChatController

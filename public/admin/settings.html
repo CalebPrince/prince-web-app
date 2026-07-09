@@ -86,6 +86,16 @@
               <div class="form-text">Defaults to openrouter/free (OpenRouter's free-tier router) if left blank.</div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Groq API key <span class="text-muted-custom fw-normal">(second fallback, if Gemini and OpenRouter both fail)</span></label>
+              <input type="password" class="form-control" id="groq-key" placeholder="gsk_..." autocomplete="off">
+              <div class="form-text">Get a free key at console.groq.com — independent quota from Gemini/OpenRouter, so it keeps AI features working if either runs out of credit.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Groq model <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" id="groq-model" placeholder="llama-3.3-70b-versatile" autocomplete="off">
+              <div class="form-text">Defaults to llama-3.3-70b-versatile if left blank.</div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Slack webhook URL <span class="text-muted-custom fw-normal">(inquiry notifications)</span></label>
               <input type="password" class="form-control" id="slack-url" placeholder="https://hooks.slack.com/services/..." autocomplete="off">
             </div>

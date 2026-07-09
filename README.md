@@ -70,8 +70,8 @@ src/
                             (client portal JWT, isolated via a `type` claim —
                             see #27), RateLimitMiddleware
   Support/                 # Database (PDO singleton), Jwt, Settings, Validator,
-                            Response, Mailer, AiText (Gemini/OpenRouter fallback,
-                            can report which provider succeeded), MakeWebhook
+                            Response, Mailer, AiText (Gemini/OpenRouter/Groq
+                            fallback, can report which provider succeeded), MakeWebhook
                             (push + log every automation event), ShortLink
                             (getOrCreate/resolve for the /s/{code} redirector)
   Router.php                # tiny hand-rolled router — no framework dependency
@@ -233,20 +233,24 @@ storage/
     urgency, and unverifiable financial-harm claims; the sign-off and
     contact channels (WhatsApp/phone from Settings, portfolio URL) are
     appended in PHP from real data, never left for the model to guess at.
-23. **OpenRouter fallback** (`src/Support/AiText.php`): every plain
-    single-shot "prompt in, text out" AI call (pitch drafting, prototype
-    generation, the secondary AI assistant) tries Gemini first and, if that
-    fails for any reason (quota, outage, bad response), retries once
-    against OpenRouter using whichever key/model is set in Admin →
-    Settings → Integrations (defaults to `openrouter/free` if no model is
-    given). Centralized in one class rather than duplicated per controller,
-    since the Gemini call itself has already been the source of several
-    subtle bugs this project had to debug.
+23. **Gemini → OpenRouter → Groq fallback** (`src/Support/AiText.php`): every
+    plain single-shot "prompt in, text out" AI call (pitch drafting,
+    prototype generation, the secondary AI assistant) tries Gemini first
+    and, if that fails for any reason (quota, outage, bad response), retries
+    against OpenRouter, then against Groq — using whichever keys/models are
+    set in Admin → Settings → Integrations (OpenRouter defaults to
+    `openrouter/free`, Groq to `llama-3.3-70b-versatile`, if no model is
+    given). The third leg exists because Gemini and OpenRouter running out
+    of quota/credit at the same time isn't hypothetical — it's happened —
+    and Groq has its own independent quota. Centralized in one class rather
+    than duplicated per controller, since the Gemini call itself has already
+    been the source of several subtle bugs this project had to debug.
 
     Live Chat's tool-calling conversation
-    (`LiveChatController::chatWithGemini`/`chatWithOpenRouter`) gets the same
-    fallback, but as a second, independent implementation rather than a
-    shared one: Gemini's `functionCall`/`functionResponse` shape (with a
+    (`LiveChatController::chatWithGemini`/`chatWithOpenRouter`) gets a
+    Gemini/OpenRouter fallback too, but as a second, independent
+    implementation rather than a shared one (not extended to Groq — see
+    below): Gemini's `functionCall`/`functionResponse` shape (with a
     `thoughtSignature` that must round-trip verbatim) and OpenAI-style
     `tools`/`tool_calls` (matched by `tool_call_id`) are different enough
     that there's no safe way to hand off *mid-round* — a failed turn is
@@ -254,7 +258,9 @@ storage/
     implementations share one source of truth for the system prompt
     (`buildSystemPrompt`) and the tool declarations (`toolDeclarations`,
     translated to OpenAI's schema by `toolDeclarationsOpenAiFormat`) so the
-    two providers can't drift into inconsistent behavior.
+    two providers can't drift into inconsistent behavior. If both fail, the
+    conversation still works via keyword-matching fallback, just without the
+    AI-driven tool calls.
 24. **Proposals & payment milestones** (`/admin/proposals.html`): admin turns
     a quote request into a formal proposal — scope, timeline, currency, and
     a list of payment milestones, each auto-generating its own
@@ -321,10 +327,10 @@ storage/
     before approving; approval fires the `social_post_approved` Make.com
     event above — actual publishing to social platforms happens in Make.com
     via its platform connectors, not in this app. Each draft also records
-    which provider (`ai_provider`: `gemini` or `openrouter`) actually
-    generated it, shown in the admin list and review modal — useful for
-    noticing if Gemini's quota is exhausted and everything is quietly
-    falling back to OpenRouter. Blog/case-study links in the drafted text
+    which provider (`ai_provider`: `gemini`, `openrouter`, or `groq`)
+    actually generated it, shown in the admin list and review modal —
+    useful for noticing if Gemini's quota is exhausted and everything is
+    quietly falling back further down the chain. Blog/case-study links in the drafted text
     go through a self-hosted shortener (`src/Support/ShortLink.php`,
     `princecaleb.dev/s/{code}`, public redirect via `ShortLinkController`)
     rather than the full `/blog-post.html?slug=...` URL, since every
@@ -420,11 +426,11 @@ One-time setup on a new host:
    `https://princecaleb.dev/api/v1/payments/webhook` under Settings → API
    Keys & Webhooks so payments still reconcile even if a customer closes the
    tab before the in-browser verify call fires.
-7. Optional integrations, all in Admin -> Settings -> Integrations: a Gemini
-   and/or OpenRouter API key powers Live Chat, Marketing Leads pitch
+7. Optional integrations, all in Admin -> Settings -> Integrations: a Gemini,
+   OpenRouter, and/or Groq API key powers Live Chat, Marketing Leads pitch
    drafting, and AI social post drafts (all degrade gracefully — keyword
    fallback, generic pitch, or a clear "could not generate" error — if
-   neither is configured). A Make.com webhook URL + a generated integration
+   none is configured). A Make.com webhook URL + a generated integration
    API key enable the automation events in #29; nothing breaks if these are
    left blank, the relevant code paths just no-op.
 

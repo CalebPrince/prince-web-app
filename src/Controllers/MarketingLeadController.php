@@ -152,8 +152,8 @@ class MarketingLeadController
             Response::error('Run the audit first — the pitch is only ever based on real findings.', 422);
         }
 
-        if (empty(Settings::get('gemini_api_key')) && empty(Settings::get('openrouter_api_key'))) {
-            Response::error('No AI provider configured — add a Gemini or OpenRouter key in Admin → Settings.', 503);
+        if (empty(Settings::get('gemini_api_key')) && empty(Settings::get('openrouter_api_key')) && empty(Settings::get('groq_api_key'))) {
+            Response::error('No AI provider configured — add a Gemini, OpenRouter, or Groq key in Admin → Settings.', 503);
         }
 
         $findings = $lead['audit_findings'] ? (json_decode($lead['audit_findings'], true) ?: []) : ['no_website' => true];
@@ -322,7 +322,7 @@ class MarketingLeadController
 
         $text = AiText::generate($prompt, null, 20);
         if ($text === null) {
-            error_log('Marketing lead pitch: both Gemini and OpenRouter (if configured) failed.');
+            error_log('Marketing lead pitch: all configured AI providers (Gemini/OpenRouter/Groq) failed.');
             return null;
         }
 
