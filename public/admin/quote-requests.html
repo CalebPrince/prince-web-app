@@ -83,6 +83,20 @@
       </div>
     </div>
 
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <div class="form-check mb-0">
+        <input type="checkbox" class="form-check-input" id="select-all-checkbox">
+        <label class="form-check-label small text-muted-custom" for="select-all-checkbox">Select all</label>
+      </div>
+      <div id="bulk-toolbar" class="d-none align-items-center gap-2 ms-2">
+        <span class="small fw-semibold" id="bulk-count">0 selected</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="bulk-read-btn">Mark Read</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" id="bulk-flag-btn">Flag</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="bulk-archive-btn">Archive</button>
+        <button type="button" class="btn btn-sm btn-link" id="bulk-clear-btn">Clear</button>
+      </div>
+    </div>
+
     <div id="inquiries-list"></div>
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No quote requests yet.</div>
   </div>

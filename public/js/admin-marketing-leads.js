@@ -2,6 +2,26 @@ let currentLead = null;
 let pitchModal = null;
 let discoverModal = null;
 let discoverResults = [];
+const selectedIds = new Set();
+
+function updateBulkToolbar() {
+  const toolbar = document.getElementById("bulk-toolbar");
+  const count = selectedIds.size;
+  toolbar.classList.toggle("d-none", count === 0);
+  toolbar.classList.toggle("d-flex", count > 0);
+  document.getElementById("bulk-count").textContent = `${count} selected`;
+
+  const rowChecks = document.querySelectorAll(".row-checkbox");
+  const selectAll = document.getElementById("select-all-checkbox");
+  if (rowChecks.length === 0) {
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+  } else {
+    const checkedCount = [...rowChecks].filter(cb => cb.checked).length;
+    selectAll.checked = checkedCount === rowChecks.length;
+    selectAll.indeterminate = checkedCount > 0 && checkedCount < rowChecks.length;
+  }
+}
 
 function siteCheckBadge(lead) {
   if (!lead.website_url) {
@@ -51,16 +71,20 @@ async function loadLeads() {
   const tbody = document.getElementById("leads-tbody");
   const empty = document.getElementById("empty-state");
 
+  selectedIds.clear();
+
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
     empty.classList.add("d-none");
+    updateBulkToolbar();
     return;
   }
   empty.classList.add("d-none");
 
   tbody.innerHTML = rows.map(lead => `
     <tr>
-      <td class="ps-3">
+      <td class="ps-3"><input type="checkbox" class="form-check-input row-checkbox" data-id="${lead.id}"></td>
+      <td>
         <div class="fw-semibold">${escapeHtml(lead.business_name)}</div>
         ${lead.contact_email ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_email)}</div>` : ''}
         ${lead.contact_phone ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_phone)}</div>` : ''}
@@ -76,6 +100,17 @@ async function loadLeads() {
       </td>
     </tr>
   `).join("");
+
+  tbody.querySelectorAll(".row-checkbox").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const id = cb.dataset.id;
+      if (cb.checked) selectedIds.add(id);
+      else selectedIds.delete(id);
+      updateBulkToolbar();
+    });
+  });
+
+  updateBulkToolbar();
 
   tbody.querySelectorAll(".audit-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -370,6 +405,39 @@ document.getElementById("add-lead-form").addEventListener("submit", async (e) =>
     alertBox.className = "alert alert-danger py-2 small";
     alertBox.textContent = err.message || "Could not add lead.";
     alertBox.classList.remove("d-none");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById("select-all-checkbox").addEventListener("change", (e) => {
+  document.querySelectorAll(".row-checkbox").forEach(cb => {
+    cb.checked = e.target.checked;
+    if (e.target.checked) selectedIds.add(cb.dataset.id);
+    else selectedIds.delete(cb.dataset.id);
+  });
+  updateBulkToolbar();
+});
+
+document.getElementById("bulk-clear-btn").addEventListener("click", () => {
+  selectedIds.clear();
+  document.querySelectorAll(".row-checkbox").forEach(cb => { cb.checked = false; });
+  updateBulkToolbar();
+});
+
+document.getElementById("bulk-remove-btn").addEventListener("click", async () => {
+  const ids = [...selectedIds];
+  if (ids.length === 0) return;
+  if (!confirm(`Delete ${ids.length} lead${ids.length === 1 ? "" : "s"}?`)) return;
+
+  const btn = document.getElementById("bulk-remove-btn");
+  btn.disabled = true;
+  try {
+    await Promise.all(ids.map(id => api.delete(`/api/v1/admin/marketing-leads/${id}`)));
+    await loadLeads();
+  } catch (err) {
+    alert(err.message || "Could not delete selected leads.");
+    await loadLeads();
   } finally {
     btn.disabled = false;
   }

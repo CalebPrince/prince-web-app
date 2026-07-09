@@ -66,11 +66,18 @@
       <a href="/api/v1/admin/newsletter/export" class="btn btn-sm btn-outline-secondary">Export CSV</a>
     </div>
 
+    <div id="bulk-toolbar" class="d-none align-items-center gap-2 mb-3 p-2 rounded" style="background: var(--section-leads-soft);">
+      <span class="small fw-semibold" id="bulk-count">0 selected</span>
+      <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="bulk-remove-btn">Remove selected</button>
+      <button type="button" class="btn btn-sm btn-link" id="bulk-clear-btn">Clear</button>
+    </div>
+
     <div class="admin-card p-0">
       <table class="table mb-0 align-middle">
         <thead>
           <tr>
-            <th class="ps-3">Email</th>
+            <th style="width:2.25rem" class="ps-3"><input type="checkbox" class="form-check-input" id="select-all-checkbox"></th>
+            <th>Email</th>
             <th>Status</th>
             <th>Subscribed</th>
             <th class="text-end pe-3">Actions</th>

@@ -13,6 +13,37 @@ const STAGE_LABEL = {
   lost: 'Lost',
 };
 
+const selectedIds = new Set();
+
+function updateBulkToolbar() {
+  const toolbar = document.getElementById("bulk-toolbar");
+  const count = selectedIds.size;
+  toolbar.classList.toggle("d-none", count === 0);
+  toolbar.classList.toggle("d-flex", count > 0);
+  document.getElementById("bulk-count").textContent = `${count} selected`;
+
+  const rowChecks = document.querySelectorAll(".row-checkbox");
+  const selectAll = document.getElementById("select-all-checkbox");
+  if (rowChecks.length === 0) {
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+  } else {
+    const checkedCount = [...rowChecks].filter(cb => cb.checked).length;
+    selectAll.checked = checkedCount === rowChecks.length;
+    selectAll.indeterminate = checkedCount > 0 && checkedCount < rowChecks.length;
+  }
+}
+
+async function bulkSetStatus(status) {
+  const ids = [...selectedIds];
+  if (ids.length === 0) return;
+  const verb = { read: "mark", flagged: "flag", archived: "archive" }[status] || "update";
+  if (!confirm(`${verb.charAt(0).toUpperCase() + verb.slice(1)} ${ids.length} item${ids.length === 1 ? "" : "s"} as ${status}?`)) return;
+
+  await Promise.all(ids.map(id => api.patch(`/api/v1/admin/inquiries/${id}`, { status })));
+  await loadInquiries(document.getElementById("status-filter").value);
+}
+
 function notifyBadge(i) {
   const detail = `Slack: ${i.slack_sent ? "sent" : "not sent"} · Email: ${i.email_sent ? "sent" : "not sent"}`;
   if (!i.notify_status) {
@@ -63,9 +94,12 @@ async function loadInquiries(status = "") {
   const list = document.getElementById("inquiries-list");
   const empty = document.getElementById("empty-state");
 
+  selectedIds.clear();
+
   if (inquiries.length === 0) {
     list.innerHTML = "";
     empty.classList.remove("d-none");
+    updateBulkToolbar();
     return;
   }
   empty.classList.add("d-none");
@@ -73,10 +107,13 @@ async function loadInquiries(status = "") {
   list.innerHTML = inquiries.map(i => `
     <div class="admin-card p-3 mb-3" data-id="${i.id}">
       <div class="d-flex justify-content-between align-items-start mb-2">
-        <div>
-          <strong>${escapeHtml(i.name)}</strong>
-          <span class="text-muted-custom small ms-2">${escapeHtml(i.email)}</span>
-          ${i.type === "project_request" ? '<span class="status-pill unread ms-2">Project Request</span>' : ""}
+        <div class="d-flex align-items-start gap-2">
+          <input type="checkbox" class="form-check-input row-checkbox mt-1" data-id="${i.id}">
+          <div>
+            <strong>${escapeHtml(i.name)}</strong>
+            <span class="text-muted-custom small ms-2">${escapeHtml(i.email)}</span>
+            ${i.type === "project_request" ? '<span class="status-pill unread ms-2">Project Request</span>' : ""}
+          </div>
         </div>
         <div class="d-flex gap-2 align-items-center">
           ${notifyBadge(i)}
@@ -116,6 +153,17 @@ async function loadInquiries(status = "") {
       await loadInquiries(document.getElementById("status-filter").value);
     });
   });
+
+  list.querySelectorAll(".row-checkbox").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const id = cb.dataset.id;
+      if (cb.checked) selectedIds.add(id);
+      else selectedIds.delete(id);
+      updateBulkToolbar();
+    });
+  });
+
+  updateBulkToolbar();
 }
 
 (async function init() {
@@ -133,6 +181,25 @@ async function loadInquiries(status = "") {
   if (exportLink && typeof PAGE_TYPE !== "undefined" && PAGE_TYPE) {
     exportLink.href = `/api/v1/admin/inquiries/export?type=${encodeURIComponent(PAGE_TYPE)}`;
   }
+
+  document.getElementById("select-all-checkbox").addEventListener("change", (e) => {
+    document.querySelectorAll(".row-checkbox").forEach(cb => {
+      cb.checked = e.target.checked;
+      if (e.target.checked) selectedIds.add(cb.dataset.id);
+      else selectedIds.delete(cb.dataset.id);
+    });
+    updateBulkToolbar();
+  });
+
+  document.getElementById("bulk-clear-btn").addEventListener("click", () => {
+    selectedIds.clear();
+    document.querySelectorAll(".row-checkbox").forEach(cb => { cb.checked = false; });
+    updateBulkToolbar();
+  });
+
+  document.getElementById("bulk-read-btn").addEventListener("click", () => bulkSetStatus("read"));
+  document.getElementById("bulk-flag-btn").addEventListener("click", () => bulkSetStatus("flagged"));
+  document.getElementById("bulk-archive-btn").addEventListener("click", () => bulkSetStatus("archived"));
 
   await loadInquiries();
 })();
