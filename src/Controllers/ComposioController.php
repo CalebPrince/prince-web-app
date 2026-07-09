@@ -48,6 +48,7 @@ class ComposioController
                 'auth_config_id' => $authConfigId ?: null,
                 'account_id' => $accountId ?: null,
                 'status' => $status, // null: not connected yet, or status lookup failed
+                'last_error' => Settings::get("composio_{$slug}_last_error") ?: null,
             ];
         }
 
@@ -74,10 +75,13 @@ class ComposioController
 
         $result = Composio::createConnectedAccount($authConfigId);
         if ($result === null) {
+            $lastError = Composio::lastError() ?: 'No detailed Composio error was returned.';
+            Settings::set("composio_{$toolkit}_last_error", date('c') . " - Connect failed: " . $lastError);
             Response::error('Could not start the connection — check the API key and Auth Config ID are correct.', 502);
         }
 
         Settings::set("composio_{$toolkit}_account_id", $result['id']);
+        Settings::set("composio_{$toolkit}_last_error", '');
         ActivityLog::log($user, 'connected', 'composio_account', $toolkit, self::TOOLKITS[$toolkit]);
 
         Response::json(['redirect_url' => $result['redirectUrl'], 'account_id' => $result['id']]);
@@ -95,6 +99,7 @@ class ComposioController
         }
 
         Settings::set("composio_{$toolkit}_account_id", '');
+        Settings::set("composio_{$toolkit}_last_error", '');
         ActivityLog::log($user, 'disconnected', 'composio_account', $toolkit, self::TOOLKITS[$toolkit]);
 
         Response::json(['status' => 'disconnected']);

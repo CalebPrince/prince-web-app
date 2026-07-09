@@ -24,6 +24,7 @@ class Composio
 {
     private const API_BASE = 'https://backend.composio.dev/api/v3';
     private const API_BASE_V31 = 'https://backend.composio.dev/api/v3.1';
+    private static ?string $lastError = null;
 
     /**
      * Starts the OAuth connect flow for a toolkit. The caller should send
@@ -34,8 +35,10 @@ class Composio
      */
     public static function createConnectedAccount(string $authConfigId): ?array
     {
+        self::$lastError = null;
         $apiKey = Settings::get('composio_api_key');
         if (empty($apiKey) || $authConfigId === '') {
+            self::$lastError = 'Missing Composio API key or Auth Config ID.';
             return null;
         }
 
@@ -50,7 +53,7 @@ class Composio
             if ($id !== null || $redirectUrl !== null) {
                 return ['id' => (string) ($id ?? $response['link_token'] ?? ''), 'redirectUrl' => $redirectUrl];
             }
-            error_log('Composio: auth link succeeded but no connected_account_id/redirect_url in response: ' . json_encode($response));
+            self::rememberError('Auth link succeeded but no connected_account_id/redirect_url in response: ' . json_encode($response));
         }
 
         // Fallback for custom auth configs and non-OAuth schemes. Composio's
@@ -65,7 +68,7 @@ class Composio
 
         $id = $response['id'] ?? $response['connectedAccountId'] ?? null;
         if ($id === null) {
-            error_log('Composio: createConnectedAccount succeeded but no id in response: ' . json_encode($response));
+            self::rememberError('createConnectedAccount succeeded but no id in response: ' . json_encode($response));
             return null;
         }
 
@@ -105,8 +108,10 @@ class Composio
      */
     public static function executeTool(string $toolSlug, string $connectedAccountId, array $params = []): ?array
     {
+        self::$lastError = null;
         $apiKey = Settings::get('composio_api_key');
         if (empty($apiKey)) {
+            self::$lastError = 'Missing Composio API key.';
             return null;
         }
 
@@ -137,11 +142,11 @@ class Composio
                     continue;
                 }
                 if (isset($response['successful']) && $response['successful'] === false) {
-                    error_log('Composio: tool execution returned unsuccessful: ' . json_encode($response));
+                    self::rememberError('Tool execution returned unsuccessful: ' . json_encode($response));
                     continue;
                 }
                 if (isset($response['error'])) {
-                    error_log('Composio: tool execution returned error: ' . json_encode($response));
+                    self::rememberError('Tool execution returned error: ' . json_encode($response));
                     continue;
                 }
                 return $response;
@@ -149,6 +154,11 @@ class Composio
         }
 
         return null;
+    }
+
+    public static function lastError(): ?string
+    {
+        return self::$lastError;
     }
 
     /**
@@ -211,8 +221,8 @@ class Composio
         // into this JSON response (bit this codebase twice already).
 
         if ($response === false || $status < 200 || $status >= 300) {
-            error_log(sprintf(
-                'Composio: %s %s failed: status=%s curl_error=%s body=%s',
+            self::rememberError(sprintf(
+                '%s %s failed: status=%s curl_error=%s body=%s',
                 $method,
                 $url,
                 $status,
@@ -223,5 +233,11 @@ class Composio
         }
 
         return json_decode($response, true);
+    }
+
+    private static function rememberError(string $message): void
+    {
+        self::$lastError = mb_substr($message, 0, 1800);
+        error_log('Composio: ' . self::$lastError);
     }
 }

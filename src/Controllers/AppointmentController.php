@@ -300,11 +300,17 @@ class AppointmentController
             $payload = array_filter($payload, fn($value) => $value !== null && $value !== '' && $value !== []);
             $result = Composio::executeTool($tool, $accountId, $payload);
             if ($result !== null) {
+                Settings::set("composio_{$toolkit}_last_error", '');
                 return;
             }
         }
 
-        error_log("Composio booking action failed for {$toolkit} using {$tool}");
+        $lastError = Composio::lastError() ?: 'No detailed Composio error was returned.';
+        Settings::set(
+            "composio_{$toolkit}_last_error",
+            date('c') . " - {$toolkit} booking action failed using {$tool}: " . $lastError
+        );
+        error_log("Composio booking action failed for {$toolkit} using {$tool}: {$lastError}");
     }
 
     private static function isList(array $value): bool

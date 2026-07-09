@@ -30,6 +30,8 @@ class SettingsController
         'composio_gmail_booking_tool', 'composio_gmail_booking_to',
         'composio_slack_booking_tool', 'composio_slack_channel',
         'composio_whatsapp_booking_tool', 'composio_whatsapp_booking_to',
+        'composio_google_calendar_last_error', 'composio_gmail_last_error',
+        'composio_slack_last_error', 'composio_whatsapp_last_error',
     ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */

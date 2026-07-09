@@ -219,16 +219,19 @@ async function loadComposioAccounts() {
         : { text: "Not connected", cls: "pending" };
       const canConnect = !!acct.auth_config_id;
       return `
-        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-          <div>
-            <div class="fw-semibold">${escapeHtml(acct.label)}</div>
-            <span class="status-pill ${display.cls}">${escapeHtml(display.text)}</span>
+        <div class="py-2 border-bottom">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">${escapeHtml(acct.label)}</div>
+              <span class="status-pill ${display.cls}">${escapeHtml(display.text)}</span>
+            </div>
+            <div class="d-flex gap-2">
+              ${acct.account_id
+                ? `<button type="button" class="btn btn-sm btn-outline-danger composio-disconnect-btn" data-toolkit="${slug}">Disconnect</button>`
+                : `<button type="button" class="btn btn-sm btn-outline-secondary composio-connect-btn" data-toolkit="${slug}" ${canConnect ? "" : "disabled"} title="${canConnect ? "" : "Add an Auth Config ID above first"}">Connect</button>`}
+            </div>
           </div>
-          <div class="d-flex gap-2">
-            ${acct.account_id
-              ? `<button type="button" class="btn btn-sm btn-outline-danger composio-disconnect-btn" data-toolkit="${slug}">Disconnect</button>`
-              : `<button type="button" class="btn btn-sm btn-outline-secondary composio-connect-btn" data-toolkit="${slug}" ${canConnect ? "" : "disabled"} title="${canConnect ? "" : "Add an Auth Config ID above first"}">Connect</button>`}
-          </div>
+          ${acct.last_error ? `<div class="alert alert-warning py-2 small mt-2 mb-0"><strong>Last booking action error:</strong> ${escapeHtml(acct.last_error)}</div>` : ""}
         </div>
       `;
     }).join("");
@@ -257,6 +260,7 @@ async function connectComposio(toolkit) {
     await loadComposioAccounts();
   } catch (err) {
     showMsg("composio-msg", err.message, false);
+    await loadComposioAccounts();
   }
 }
 
