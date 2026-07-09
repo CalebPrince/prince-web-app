@@ -58,6 +58,27 @@ class AuthController
         return ['access_token' => $accessToken];
     }
 
+    private static function verifyPassword(string $password, string $storedHash): bool
+    {
+        if (strpos($storedHash, 'pbkdf2_sha256$') === 0) {
+            $parts = explode('$', $storedHash, 4);
+            if (count($parts) !== 4) {
+                return false;
+            }
+
+            [, $iterations, $salt, $expected] = $parts;
+            $iterations = (int) $iterations;
+            if ($iterations < 100000 || $salt === '' || $expected === '') {
+                return false;
+            }
+
+            $actual = hash_pbkdf2('sha256', $password, $salt, $iterations, strlen($expected));
+            return hash_equals($expected, $actual);
+        }
+
+        return password_verify($password, $storedHash);
+    }
+
     public static function login(): void
     {
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -69,7 +90,7 @@ class AuthController
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (!$user || !self::verifyPassword($password, (string) $user['password_hash'])) {
             Response::error('Invalid credentials', 401);
         }
 
@@ -240,7 +261,7 @@ class AuthController
         $current = (string) ($data['current_password'] ?? '');
         $new = (string) ($data['new_password'] ?? '');
 
-        if (!password_verify($current, $user['password_hash'])) {
+        if (!self::verifyPassword($current, (string) $user['password_hash'])) {
             Response::error('Current password is incorrect.', 401);
         }
         if (strlen($new) < 10) {
@@ -307,7 +328,7 @@ class AuthController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $password = (string) ($data['password'] ?? '');
 
-        if (!password_verify($password, $user['password_hash'])) {
+        if (!self::verifyPassword($password, (string) $user['password_hash'])) {
             Response::error('Current password is incorrect.', 401);
         }
 
