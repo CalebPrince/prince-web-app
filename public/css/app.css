@@ -544,7 +544,7 @@ pre code.hljs {
   width: 100%;
   aspect-ratio: 1;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--accent-soft), #ffffff);
+  background: linear-gradient(135deg, var(--accent-soft), var(--card-bg));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -575,6 +575,38 @@ pre code.hljs {
   color: var(--ink);
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Selects and check/radio inputs: Bootstrap defaults are white-on-white in
+   the near-black theme — retheme them with the same tokens as .form-control. */
+.form-select {
+  background-color: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+[data-theme="dark"] .form-select {
+  /* Bootstrap's chevron SVG is near-black — swap in a light one */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e8eaed' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+.form-check-input {
+  background-color: transparent;
+  border-color: var(--line-strong);
+}
+.form-check-input:checked {
+  background-color: var(--heading-color);
+  border-color: var(--heading-color);
+}
+[data-theme="dark"] .form-check-input:checked[type="checkbox"] {
+  /* White fill needs a dark checkmark (Bootstrap's default mark is white) */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230b0c0e' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+[data-theme="dark"] .form-check-input:checked[type="radio"] {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%230b0c0e'/%3e%3c/svg%3e");
 }
 
 /* Frontend popup modal theme behavior (pricing checkout + live demo). */
