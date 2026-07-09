@@ -1,4 +1,33 @@
-body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
+:root {
+  /* Section accent colors, built from hues already used by .status-pill
+     below so the new color-coding doesn't introduce clashing new hues —
+     amber/green/cyan/slate all match an existing pill family. Content
+     (violet) is the one genuinely new hue, chosen because nothing else in
+     the existing palette was free to reuse for it. Each has a "-soft"
+     tint for icon-chip backgrounds. */
+  --section-blue: var(--accent, #4f46e5);
+  --section-blue-soft: var(--accent-soft, #eef2ff);
+  --section-content: #7c3aed;
+  --section-content-soft: #ede9fe;
+  --section-leads: #92400e;
+  --section-leads-soft: #fef3c7;
+  --section-money: #166534;
+  --section-money-soft: #dcfce7;
+  --section-comms: #075985;
+  --section-comms-soft: #e0f2fe;
+  --section-system: #475569;
+  --section-system-soft: #f1f5f9;
+}
+[data-theme="dark"] {
+  --section-content-soft: rgba(124, 58, 237, 0.18);
+  --section-leads-soft: rgba(217, 119, 6, 0.18);
+  --section-money-soft: rgba(22, 163, 74, 0.18);
+  --section-comms-soft: rgba(2, 132, 199, 0.18);
+  --section-system-soft: rgba(100, 116, 139, 0.18);
+}
+
+body { background: var(--bg-soft, #f8fafc); font-family: "Inter", system-ui, sans-serif; }
+[data-theme="dark"] body { color: var(--ink-soft); }
 
 .admin-sidebar {
   width: 240px;
@@ -7,19 +36,35 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
   color: #94a3b8;
 }
 .admin-sidebar .brand { color: #fff; font-weight: 800; font-family: "Plus Jakarta Sans", sans-serif; }
-.admin-sidebar .dot { color: #6366f1; }
+.admin-sidebar .dot { color: var(--accent, #6366f1); }
+.admin-sidebar .nav-group-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  padding: 0.9rem 1rem 0.25rem;
+}
+.admin-sidebar .nav-group-label:first-of-type { padding-top: 0.25rem; }
 .admin-sidebar a.nav-link {
   color: #94a3b8;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.65rem;
   text-decoration: none;
   white-space: nowrap;
 }
-.admin-sidebar a.nav-link > span:first-child {
+.admin-sidebar a.nav-link .nav-icon {
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+.admin-sidebar a.nav-link .nav-label {
+  flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -43,17 +88,40 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
 }
+.admin-sidebar a.nav-link.active .nav-icon,
+.admin-sidebar a.nav-link:hover .nav-icon {
+  opacity: 1;
+}
 .admin-sidebar .sidebar-divider {
   border-color: rgba(255, 255, 255, 0.15);
   margin: 0.75rem 0.5rem;
 }
 
 .admin-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--line, #e2e8f0);
   border-radius: 12px;
 }
 
+/* Small tinted icon badge — used on sidebar nav rows (inline, via
+   .nav-icon color above) and on stat cards / page headers (as a standalone
+   rounded chip). Color is set per-instance via the section-* CSS vars. */
+.icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
 .stat-card .stat-label {
   font-size: 0.78rem;
   font-weight: 600;
@@ -65,7 +133,7 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
   font-size: 2rem;
   font-weight: 800;
   font-family: "Plus Jakarta Sans", sans-serif;
-  color: #0f172a;
+  color: var(--ink, #0f172a);
   line-height: 1.2;
 }
 .stat-card .stat-sub {
@@ -106,7 +174,7 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
 .status-pill.pitch_ready { background: #fef3c7; color: #92400e; }
 .status-pill.sent { background: #dcfce7; color: #166534; }
 
-.chat-unseen { border-left: 3px solid #6366f1; }
+.chat-unseen { border-left: 3px solid var(--accent, #6366f1); }
 
 .auth-shell {
   min-height: 100vh;
@@ -116,7 +184,7 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
   background: #0f172a;
 }
 .auth-box {
-  background: #fff;
+  background: var(--card-bg, #fff);
   border-radius: 14px;
   padding: 2.5rem;
   width: 100%;
@@ -189,5 +257,5 @@ body { background: #f8fafc; font-family: "Inter", system-ui, sans-serif; }
   z-index: 10;
 }
 .admin-help-toggle:hover {
-  color: #6366f1;
+  color: var(--accent, #6366f1);
 }
