@@ -98,6 +98,20 @@ $projects = [
         'cover_image_path' => '/uploads/simplymycare-real.jpg',
         'tags' => ['PHP', 'MySQL', 'Bootstrap 5', 'PHPMailer'],
     ],
+    [
+        'slug' => 'benas-hub',
+        'title' => 'Benas Hub',
+        'summary' => 'E-commerce platform for a distributor of organic household and health products in Tema, Ghana, with Paystack checkout and a full admin dashboard.',
+        'case_study_body' =>
+            "Benas Hub distributes organic household and health products across Ghana and ships select items abroad. The business needed a proper online storefront — a browsable product catalog with category filtering and search, customer accounts with order history, and a checkout that takes real payments — instead of coordinating every order manually.\n\n" .
+            "The platform is built on Python Flask with SQLite, with a vanilla JavaScript and Bootstrap frontend. The shopping cart persists client-side in localStorage so browsing stays fast and stateless, and the checkout flow collects shipping details before handing payment off to Paystack. A comprehensive admin dashboard manages products, categories, orders, customers, shipping rates, and site settings.\n\n" .
+            "Payment keys are stored in the database rather than source control, keeping credentials out of the repository. The storefront ships with the full set of legal pages (privacy policy, terms of use, cookie policy, shipping and returns) and a responsive design with mobile hamburger navigation.",
+        'category' => 'custom_solution',
+        'live_url' => null,
+        'repo_url' => 'https://github.com/CalebPrince/benashub',
+        'cover_image_path' => '/uploads/benas-hub.jpeg',
+        'tags' => ['Python', 'Flask', 'JavaScript', 'Bootstrap 5', 'SQLite', 'Paystack'],
+    ],
 ];
 
 function upsertTag(\PDO $pdo, string $name): int
