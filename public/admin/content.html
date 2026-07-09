@@ -52,9 +52,12 @@
 
   <div class="flex-grow-1 p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h3 class="mb-0">Site Content</h3>
-        <p class="text-muted-custom mb-0 small">Edit the public site copy — empty fields keep the built-in text.</p>
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-file-earmark-richtext"></i></div>
+        <div>
+          <h3 class="mb-0">Site Content</h3>
+          <p class="text-muted-custom mb-0 small">Edit the public site copy — empty fields keep the built-in text.</p>
+        </div>
       </div>
       <button class="btn-brand" id="save-all-btn" form="content-form" type="submit">Save All Changes</button>
     </div>
@@ -65,7 +68,7 @@
       <div class="row g-4">
         <div class="col-lg-6">
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Appearance</h5>
+            <h5 class="mb-3"><i class="bi bi-palette me-2" style="color: var(--section-content);"></i>Appearance</h5>
             <div class="mb-0">
               <label class="form-label">Default color mode <span class="text-muted-custom fw-normal">(applies to first-time visitors; they can still toggle it themselves)</span></label>
               <select class="form-select" id="default_theme">
@@ -77,7 +80,7 @@
           </div>
 
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Homepage hero</h5>
+            <h5 class="mb-3"><i class="bi bi-window me-2" style="color: var(--section-content);"></i>Homepage hero</h5>
             <div class="mb-3">
               <label class="form-label">Availability badge <span class="text-muted-custom fw-normal">(empty = hidden)</span></label>
               <input type="text" class="form-control" id="availability_badge" placeholder="Available for new projects">
@@ -101,7 +104,7 @@
           </div>
 
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">About page</h5>
+            <h5 class="mb-3"><i class="bi bi-person-badge me-2" style="color: var(--section-content);"></i>About page</h5>
             <div class="mb-3">
               <label class="form-label">Intro (hero paragraph)</label>
               <textarea class="form-control" id="about_intro" rows="3" placeholder="I'm a web and mobile app developer who…"></textarea>
@@ -113,7 +116,7 @@
           </div>
 
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Career timeline <span class="text-muted-custom fs-6 fw-normal">(About page)</span></h5>
+            <h5 class="mb-3"><i class="bi bi-signpost-2 me-2" style="color: var(--section-content);"></i>Career timeline <span class="text-muted-custom fs-6 fw-normal">(About page)</span></h5>
             <p class="text-muted-custom small">Five click-to-expand stages, in order.</p>
             <div class="row g-2 mb-3">
               <div class="col-4"><input type="text" class="form-control form-control-sm" id="timeline_1_label" placeholder="Stage 1"></div>
@@ -143,7 +146,7 @@
           </div>
 
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Contact page</h5>
+            <h5 class="mb-3"><i class="bi bi-envelope-paper me-2" style="color: var(--section-content);"></i>Contact page</h5>
             <div class="mb-3">
               <label class="form-label">Intro text</label>
               <textarea class="form-control" id="contact_intro" rows="2" placeholder="Tell me a bit about your project and I'll get back to you…"></textarea>
@@ -160,7 +163,7 @@
           </div>
 
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Homepage stats</h5>
+            <h5 class="mb-3"><i class="bi bi-bar-chart me-2" style="color: var(--section-content);"></i>Homepage stats</h5>
             <p class="text-muted-custom small">Value + suffix are combined and animated (e.g. "30" + "+" &rarr; "30+"). Only the fourth stat has a prefix (e.g. "&lt;").</p>
 
             <h6 class="mt-3">Stat 1</h6>
@@ -194,7 +197,7 @@
           </div>
 
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Testimonials <span class="text-muted-custom fs-6 fw-normal">(homepage)</span></h5>
+            <h5 class="mb-3"><i class="bi bi-chat-quote me-2" style="color: var(--section-content);"></i>Testimonials <span class="text-muted-custom fs-6 fw-normal">(homepage)</span></h5>
 
             <h6 class="mt-3">Testimonial 1</h6>
             <textarea class="form-control mb-2" id="testimonial_1_quote" rows="2" placeholder="Quote, no quotation marks needed…"></textarea>
@@ -219,7 +222,7 @@
           </div>
 
           <div class="admin-card p-4">
-            <h5 class="mb-3">Social links <span class="text-muted-custom fs-6 fw-normal">(shown in the footer when set)</span></h5>
+            <h5 class="mb-3"><i class="bi bi-share me-2" style="color: var(--section-content);"></i>Social links <span class="text-muted-custom fs-6 fw-normal">(shown in the footer when set)</span></h5>
             <div class="mb-3">
               <label class="form-label">GitHub URL</label>
               <input type="url" class="form-control" id="social_github" placeholder="https://github.com/CalebPrince">
@@ -249,7 +252,7 @@
 
         <div class="col-lg-6">
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Services</h5>
+            <h5 class="mb-3"><i class="bi bi-briefcase me-2" style="color: var(--section-content);"></i>Services</h5>
             <p class="text-muted-custom small">Title is shared; summary shows on the homepage card, description on the services page.</p>
 
             <h6 class="mt-3">Service 1 ⚙️</h6>
@@ -269,7 +272,7 @@
           </div>
 
           <div class="admin-card p-4">
-            <h5 class="mb-3">Live Chat</h5>
+            <h5 class="mb-3"><i class="bi bi-chat-dots me-2" style="color: var(--section-content);"></i>Live Chat</h5>
             <div class="mb-3">
               <label class="form-label">Greeting <span class="text-muted-custom fw-normal">(first bubble)</span></label>
               <input type="text" class="form-control" id="chat_greeting" placeholder="Hi there! 👋 Welcome.">
