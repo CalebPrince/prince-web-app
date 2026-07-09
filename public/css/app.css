@@ -180,8 +180,10 @@ a:hover { color: var(--accent-strong); }
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Nav search icon (links to /search.html) */
-.nav-search-btn {
+/* Nav search icon (links to /search.html) and admin login icon (links to
+   /admin/login.html) — same treatment, both small icon-only nav buttons. */
+.nav-search-btn,
+.nav-login-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -194,7 +196,8 @@ a:hover { color: var(--accent-strong); }
   padding: 0.4rem 0.6rem;
   text-decoration: none;
 }
-.nav-search-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-search-btn:hover,
+.nav-login-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Hero */
 .hero {
