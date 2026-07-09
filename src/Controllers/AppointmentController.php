@@ -177,7 +177,16 @@ class AppointmentController
 
         // Re-check the slot is still genuinely offered, not just well-formed.
         if (!in_array($time, self::possibleSlots($date, $cfg), true)) {
-            return ['success' => false, 'error' => 'That slot is no longer available.'];
+            // Handing back the current real slots here (rather than making
+            // the caller re-call check_availability, which an LLM caller
+            // can't be relied on to reliably remember to do) is what lets
+            // Live Chat recover in the same turn instead of guessing at
+            // "a bit later" or retrying the same rejected time.
+            return [
+                'success' => false,
+                'error' => 'That slot is no longer available.',
+                'available_slots' => self::getAvailableSlots($date)['slots'] ?? [],
+            ];
         }
 
         $pdo = Database::get();
@@ -189,7 +198,12 @@ class AppointmentController
             $appointmentId = (int) $pdo->lastInsertId();
         } catch (\PDOException $e) {
             // Partial unique index violation — someone else booked it first.
-            return ['success' => false, 'error' => 'That slot was just booked by someone else — please pick another.', 'code' => 409];
+            return [
+                'success' => false,
+                'error' => 'That slot was just booked by someone else — please pick another.',
+                'code' => 409,
+                'available_slots' => self::getAvailableSlots($date)['slots'] ?? [],
+            ];
         }
 
         $notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');

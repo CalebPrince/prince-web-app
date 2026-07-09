@@ -571,16 +571,21 @@ class LiveChatController
             . "- check_availability / book_appointment: use these when they want to talk it through live or "
             . "book a call. Ask for their preferred date and time, their phone number, and a one-sentence "
             . "summary of what they want to discuss, then check real availability before confirming anything "
-            . "— never just accept a time without checking. Always read the exact date, time, and timezone "
-            . "back to them and get an explicit yes before calling book_appointment. When calling "
-            . "book_appointment, copy the `time` value character-for-character from the slot check_availability "
-            . "returned — never convert or re-derive it yourself (e.g. \"4 PM\" is the slot string \"16:00\", "
-            . "not \"04:00\"); a reformatted value won't match and the booking will be wrongly rejected as "
-            . "unavailable. If a booking is rejected, don't assume the slot is genuinely taken — re-run "
-            . "check_availability for that date and confirm you're using one of its exact returned strings "
-            . "before trying again or telling the visitor it's unavailable. Once booked, confirm with "
-            . "something like: \"Great, I have you down for [Date] at [Time]. I've logged your phone number so "
-            . "Caleb can give you a call or send a calendar invite to your email.\"\n"
+            . "— never just accept a time without checking. When you list times from check_availability, list "
+            . "only the exact strings it returned — never add a vague option like \"or perhaps a bit later\" "
+            . "that isn't literally one of those strings; the visitor may pick it and it won't be real. If "
+            . "their reply doesn't clearly match exactly one of the times you listed (e.g. a vague \"go ahead\" "
+            . "after you offered three options), ask them to name the specific one before doing anything else "
+            . "— never guess which one they meant. Always read the exact date, time, and timezone back to "
+            . "them and get an explicit yes before calling book_appointment. When calling book_appointment, "
+            . "copy the `time` value character-for-character from the slot check_availability returned — "
+            . "never convert or re-derive it yourself (e.g. \"4 PM\" is the slot string \"16:00\", not "
+            . "\"04:00\"); a reformatted value won't match and the booking will be wrongly rejected as "
+            . "unavailable. If a booking is rejected, its response includes available_slots — the real, "
+            . "current list for that date. Offer directly from that list (again, verbatim, no guessing); "
+            . "don't retry the same time or invent another one. Once booked, confirm with something like: "
+            . "\"Great, I have you down for [Date] at [Time]. I've logged your phone number so Caleb can give "
+            . "you a call or send a calendar invite to your email.\"\n"
             . "- mark_ready_for_prototype: call this at most once, only for a NEW PROJECT conversation that "
             . "has gone beyond the basics — never for greetings, small talk, general questions, or before a "
             . "real back-and-forth has happened.\n\n"
@@ -614,6 +619,10 @@ class LiveChatController
 
         $tools = [['functionDeclarations' => self::toolDeclarations()]];
         $ready = false;
+        // Set once a book_appointment call actually succeeds — see
+        // bookingConfirmationText() for why a later round's failure can't
+        // just discard this and let the caller retry on another provider.
+        $confirmedBooking = null;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
             $payload = [
@@ -642,6 +651,9 @@ class LiveChatController
                     $result['candidates'][0]['finishReason'] ?? 'none',
                     json_encode($result['promptFeedback'] ?? null)
                 ));
+                if ($confirmedBooking !== null) {
+                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+                }
                 return null;
             }
 
@@ -700,6 +712,9 @@ class LiveChatController
             $responseParts = [];
             foreach ($functionCalls as $call) {
                 $toolResponse = self::runTool($call['name'], $call['args'] ?? [], $pdo);
+                if ($call['name'] === 'book_appointment' && ($toolResponse['success'] ?? false)) {
+                    $confirmedBooking = $toolResponse;
+                }
                 if ($toolResponse === []) {
                     $toolResponse = (object) []; // same empty-object-vs-array fix, for no-data tool results
                 }
@@ -712,6 +727,9 @@ class LiveChatController
             $contents[] = ['role' => 'user', 'parts' => $responseParts];
         }
 
+        if ($confirmedBooking !== null) {
+            return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+        }
         return null;
     }
 
@@ -737,6 +755,8 @@ class LiveChatController
         $tools = self::toolDeclarationsOpenAiFormat();
         $model = Settings::get('openrouter_model') ?: 'openrouter/free';
         $ready = false;
+        // See chatWithGemini's $confirmedBooking for why this matters.
+        $confirmedBooking = null;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
             $payload = ['model' => $model, 'messages' => $messages];
@@ -748,12 +768,18 @@ class LiveChatController
             }
             $result = self::callOpenRouterRaw($apiKey, $payload, self::OPENROUTER_CHAT_TIMEOUT_SECONDS);
             if ($result === null) {
+                if ($confirmedBooking !== null) {
+                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+                }
                 return null;
             }
 
             $message = $result['choices'][0]['message'] ?? null;
             if (!is_array($message)) {
                 error_log('OpenRouter chat: no message in response: ' . json_encode($result));
+                if ($confirmedBooking !== null) {
+                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+                }
                 return null;
             }
 
@@ -778,6 +804,9 @@ class LiveChatController
                 $name = $call['function']['name'] ?? '';
                 $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
                 $toolResult = self::runTool($name, $args, $pdo);
+                if ($name === 'book_appointment' && ($toolResult['success'] ?? false)) {
+                    $confirmedBooking = $toolResult;
+                }
                 $messages[] = [
                     'role' => 'tool',
                     'tool_call_id' => $call['id'] ?? '',
@@ -786,6 +815,9 @@ class LiveChatController
             }
         }
 
+        if ($confirmedBooking !== null) {
+            return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+        }
         return null;
     }
 
@@ -810,6 +842,8 @@ class LiveChatController
         $tools = self::toolDeclarationsOpenAiFormat();
         $model = Settings::get('groq_model') ?: 'llama-3.3-70b-versatile';
         $ready = false;
+        // See chatWithGemini's $confirmedBooking for why this matters.
+        $confirmedBooking = null;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
             $payload = ['model' => $model, 'messages' => $messages];
@@ -818,12 +852,18 @@ class LiveChatController
             }
             $result = self::callGroqRaw($apiKey, $payload, self::GROQ_CHAT_TIMEOUT_SECONDS);
             if ($result === null) {
+                if ($confirmedBooking !== null) {
+                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+                }
                 return null;
             }
 
             $message = $result['choices'][0]['message'] ?? null;
             if (!is_array($message)) {
                 error_log('Groq chat: no message in response: ' . json_encode($result));
+                if ($confirmedBooking !== null) {
+                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+                }
                 return null;
             }
 
@@ -844,6 +884,9 @@ class LiveChatController
                 $name = $call['function']['name'] ?? '';
                 $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
                 $toolResult = self::runTool($name, $args, $pdo);
+                if ($name === 'book_appointment' && ($toolResult['success'] ?? false)) {
+                    $confirmedBooking = $toolResult;
+                }
                 $messages[] = [
                     'role' => 'tool',
                     'tool_call_id' => $call['id'] ?? '',
@@ -852,6 +895,9 @@ class LiveChatController
             }
         }
 
+        if ($confirmedBooking !== null) {
+            return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+        }
         return null;
     }
 
@@ -1477,5 +1523,24 @@ class LiveChatController
         } catch (\Throwable) {
             return $date;
         }
+    }
+
+    /**
+     * Used by chatWithGemini/chatWithOpenRouter/chatWithGroq when a
+     * book_appointment call already succeeded earlier in the same turn but
+     * a later round's raw API call then fails (e.g. quota/credit exhausted
+     * mid-turn) — without this, the caller would see a hard failure, retry
+     * the whole turn on a different provider, and that provider would
+     * re-call book_appointment for the same slot, which is now genuinely
+     * taken by the booking that already succeeded. The visitor would be
+     * told their booking failed when it actually went through. Confirming
+     * directly from the known-successful tool result sidesteps needing any
+     * more AI text generation for it.
+     */
+    private static function bookingConfirmationText(array $booking): string
+    {
+        $friendlyDate = self::friendlyBookingDate((string) ($booking['date'] ?? ''));
+        return "You're all set! I've got you down for {$friendlyDate} at {$booking['time']} ({$booking['timezone']}). "
+            . "You should receive a confirmation email shortly.";
     }
 }
