@@ -24,6 +24,17 @@
   --section-money-soft: rgba(22, 163, 74, 0.18);
   --section-comms-soft: rgba(2, 132, 199, 0.18);
   --section-system-soft: rgba(100, 116, 139, 0.18);
+
+  /* The base (non-soft) section colors above are tuned for light
+     backgrounds — against dark cards they measure ~2:1 contrast, well
+     under WCAG AA's 3:1 minimum for icons/UI graphics. These lighter
+     equivalents (~6.5-11:1 against dark cards) keep the same hue
+     identity while staying readable in dark mode. */
+  --section-content: #a78bfa;
+  --section-leads: #fbbf24;
+  --section-money: #4ade80;
+  --section-comms: #38bdf8;
+  --section-system: #94a3b8;
 }
 
 body { background: var(--bg-soft, #f8fafc); font-family: "Inter", system-ui, sans-serif; }
