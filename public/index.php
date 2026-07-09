@@ -198,6 +198,8 @@ $router->delete('/api/v1/admin/social-drafts/{id}', [SocialDraftController::clas
 $router->get('/api/v1/admin/activity-log', [ActivityLogController::class, 'index']);
 $router->get('/api/v1/admin/activity-log/entity-types', [ActivityLogController::class, 'entityTypes']);
 $router->get('/api/v1/admin/error-logs', [ErrorLogController::class, 'index']);
+$router->post('/api/v1/admin/error-logs/delete-entry', [ErrorLogController::class, 'deleteEntry']);
+$router->post('/api/v1/admin/error-logs/clear', [ErrorLogController::class, 'clear']);
 $router->get('/api/v1/admin/composio/status', [ComposioController::class, 'status']);
 $router->post('/api/v1/admin/composio/connect', [ComposioController::class, 'connect']);
 $router->post('/api/v1/admin/composio/disconnect', [ComposioController::class, 'disconnect']);

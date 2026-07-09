@@ -29,9 +29,10 @@ class ErrorLogController
             if (!$source['readable']) {
                 continue;
             }
-            foreach (self::entriesFromFile($source['path'], $limit) as $entry) {
+            foreach (self::withEntryIds($id, self::entriesFromFile($source['path'], $limit)) as $entry) {
                 $entry['source_id'] = $id;
                 $entry['source_label'] = $source['label'];
+                unset($entry['raw']);
                 if ($severity !== '' && $entry['severity'] !== $severity) {
                     continue;
                 }
@@ -50,6 +51,92 @@ class ErrorLogController
             'entries' => $entries,
             'limit' => $limit,
         ]);
+    }
+
+    /** POST /api/v1/admin/error-logs/delete-entry */
+    public static function deleteEntry(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $sourceId = (string) ($data['source_id'] ?? '');
+        $entryId = (string) ($data['entry_id'] ?? '');
+        $source = self::sourceForId($sourceId);
+
+        if ($source === null) {
+            Response::error('Unknown log source.', 422);
+        }
+        if (!$source['readable'] || !$source['writable']) {
+            Response::error('That log file is not readable and writable by the web server.', 422);
+        }
+        if ($entryId === '') {
+            Response::error('Missing log entry ID.', 422);
+        }
+
+        $entriesNewestFirst = self::withEntryIds($sourceId, array_reverse(self::entriesFromFullFile($source['path'])));
+        $keptNewestFirst = [];
+        $deleted = false;
+
+        foreach ($entriesNewestFirst as $entry) {
+            if (!$deleted && ($entry['entry_id'] ?? '') === $entryId) {
+                $deleted = true;
+                continue;
+            }
+            $keptNewestFirst[] = $entry;
+        }
+
+        if (!$deleted) {
+            Response::error('That log entry was not found. Refresh and try again.', 404);
+        }
+        if (!self::writeEntries($source['path'], array_reverse($keptNewestFirst))) {
+            Response::error('Could not update the log file. Check file permissions.', 500);
+        }
+
+        Response::json(['deleted' => true]);
+    }
+
+    /** POST /api/v1/admin/error-logs/clear */
+    public static function clear(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $sourceId = (string) ($data['source_id'] ?? '');
+        $sources = self::sources();
+        $selected = [];
+
+        if ($sourceId !== '') {
+            if (!isset($sources[$sourceId])) {
+                Response::error('Unknown log source.', 422);
+            }
+            $selected[$sourceId] = $sources[$sourceId];
+        } else {
+            $selected = $sources;
+        }
+
+        $cleared = [];
+        foreach ($selected as $id => $source) {
+            if (!$source['readable'] || !$source['writable']) {
+                continue;
+            }
+            if (file_put_contents($source['path'], '', LOCK_EX) === false) {
+                Response::error('Could not clear ' . $source['label'] . '. Check file permissions.', 500);
+            }
+            $cleared[] = $id;
+        }
+
+        if ($cleared === []) {
+            Response::error('No writable log files were found to clear.', 422);
+        }
+
+        Response::json(['cleared' => $cleared]);
+    }
+
+    /** @return array<string,mixed>|null */
+    private static function sourceForId(string $sourceId): ?array
+    {
+        $sources = self::sources();
+        return $sources[$sourceId] ?? null;
     }
 
     /** @return array<string,array<string,mixed>> */
@@ -85,6 +172,7 @@ class ErrorLogController
                 'path' => $resolved ?? $path,
                 'exists' => $exists,
                 'readable' => $exists && is_readable($resolved),
+                'writable' => $exists && is_writable($resolved),
                 'size' => $exists ? filesize($resolved) : null,
                 'modified_at' => $exists ? date('c', filemtime($resolved)) : null,
             ];
@@ -131,6 +219,23 @@ class ErrorLogController
     private static function entriesFromFile(string $path, int $limit): array
     {
         $lines = self::tailLines($path, min(5000, $limit * 8));
+        return array_slice(array_reverse(self::parseEntries($lines)), 0, $limit);
+    }
+
+    /** @return array<int,array<string,string|null>> */
+    private static function entriesFromFullFile(string $path): array
+    {
+        $contents = file_get_contents($path);
+        if ($contents === false || $contents === '') {
+            return [];
+        }
+
+        return self::parseEntries(preg_split('/\r\n|\r|\n/', rtrim($contents, "\r\n")) ?: []);
+    }
+
+    /** @param array<int,string> $lines @return array<int,array<string,string|null>> */
+    private static function parseEntries(array $lines): array
+    {
         $entries = [];
         $current = null;
 
@@ -143,6 +248,7 @@ class ErrorLogController
                     'timestamp' => self::normalizeTimestamp($m[1]),
                     'severity' => self::severity($m[2]),
                     'message' => $m[2],
+                    'raw' => $line,
                 ];
                 continue;
             }
@@ -152,16 +258,47 @@ class ErrorLogController
                     'timestamp' => null,
                     'severity' => self::severity($line),
                     'message' => $line,
+                    'raw' => $line,
                 ];
             } else {
                 $current['message'] .= "\n" . $line;
+                $current['raw'] .= "\n" . $line;
             }
         }
         if ($current !== null) {
             $entries[] = $current;
         }
 
-        return array_slice(array_reverse($entries), 0, $limit);
+        return $entries;
+    }
+
+    /** @param array<int,array<string,string|null>> $entries @return array<int,array<string,string|null>> */
+    private static function withEntryIds(string $sourceId, array $entries): array
+    {
+        $seen = [];
+        foreach ($entries as &$entry) {
+            $key = (string) ($entry['raw'] ?? $entry['message'] ?? '');
+            $hash = sha1($key);
+            $seen[$hash] = ($seen[$hash] ?? 0) + 1;
+            $entry['entry_id'] = sha1($sourceId . "\n" . $hash . "\n" . $seen[$hash]);
+        }
+        unset($entry);
+
+        return $entries;
+    }
+
+    /** @param array<int,array<string,string|null>> $entries */
+    private static function writeEntries(string $path, array $entries): bool
+    {
+        $content = implode(PHP_EOL, array_map(
+            fn($entry) => rtrim((string) ($entry['raw'] ?? $entry['message'] ?? ''), "\r\n"),
+            $entries
+        ));
+        if ($content !== '') {
+            $content .= PHP_EOL;
+        }
+
+        return file_put_contents($path, $content, LOCK_EX) !== false;
     }
 
     /** @return array<int,string> */
