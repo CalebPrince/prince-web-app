@@ -1139,7 +1139,8 @@ class LiveChatController
             return null;
         }
 
-        $details = self::extractBookingDetails($text);
+        $confirmed = preg_match('/\b(go ahead|confirm|yes|please do|lock it in|book it|that works)\b/i', $message);
+        $details = self::extractBookingDetails($text, $confirmed ? $transcript : [], $confirmed ? $message : $text);
         if (empty($details['date'])) {
             return 'Sure - what date would you like to book? You can send it as YYYY-MM-DD, or say tomorrow.';
         }
@@ -1169,7 +1170,6 @@ class LiveChatController
             return 'That slot is open. What email should I use for the confirmation?';
         }
 
-        $confirmed = preg_match('/\b(go ahead|confirm|yes|please do|lock it in|book it|that works)\b/i', $message);
         if (!$confirmed) {
             $friendlyDate = self::friendlyBookingDate($details['date']);
             return "That slot is open. Just to confirm, should I book {$friendlyDate} at {$details['time']} ({$availability['timezone']}) for {$details['name']}?";
@@ -1191,30 +1191,35 @@ class LiveChatController
         return "You're all set! I've booked your call with Prince for {$friendlyDate} at {$details['time']} ({$result['timezone']}). You should receive a confirmation email shortly.";
     }
 
-    private static function extractBookingDetails(string $text): array
+    private static function extractBookingDetails(string $text, array $confirmationTranscript = [], ?string $timeSource = null): array
     {
         $out = [];
         $tz = Settings::get('booking_timezone') ?: 'Africa/Accra';
-        if (preg_match('/\b(\d{4}-\d{2}-\d{2})\b/', $text, $m)) {
-            $out['date'] = $m[1];
+        if (preg_match_all('/\b(\d{4}-\d{2}-\d{2})\b/', $text, $matches) && !empty($matches[1])) {
+            $out['date'] = end($matches[1]);
         } elseif (preg_match('/\btomorrow\b/i', $text)) {
             $out['date'] = (new \DateTime('tomorrow', new \DateTimeZone($tz)))->format('Y-m-d');
         } elseif (preg_match('/\btoday\b/i', $text)) {
             $out['date'] = (new \DateTime('today', new \DateTimeZone($tz)))->format('Y-m-d');
         }
 
-        $timeText = preg_replace('/\b\d{4}-\d{2}-\d{2}\b/', ' ', $text);
-        if (preg_match('/(?:\bat\b|\bfor\b|\baround\b|time is)\s+([01]?\d|2[0-3])(?::([0-5]\d))?\s*(am|pm)?\b/i', $timeText, $m)
-            || preg_match('/\b([01]?\d|2[0-3]):([0-5]\d)\s*(am|pm)?\b/i', $timeText, $m)) {
-            $hour = (int) $m[1];
-            $minute = isset($m[2]) && $m[2] !== '' ? (int) $m[2] : 0;
-            $ampm = strtolower($m[3] ?? '');
-            if ($ampm === 'pm' && $hour < 12) {
-                $hour += 12;
-            } elseif ($ampm === 'am' && $hour === 12) {
-                $hour = 0;
+        if ($confirmationTranscript) {
+            $offered = self::latestOfferedBookingSlot($confirmationTranscript);
+            if (!empty($offered['time'])) {
+                $out['time'] = $offered['time'];
             }
-            $out['time'] = sprintf('%02d:%02d', $hour, $minute);
+            if (!empty($offered['date'])) {
+                $out['date'] = $offered['date'];
+            }
+        }
+
+        $timeText = preg_replace('/\b\d{4}-\d{2}-\d{2}\b/', ' ', $timeSource ?? $text);
+        if (empty($out['time'])) {
+            if (preg_match_all('/(?:\bat\b|\bfor\b|\baround\b|time is)\s+([01]?\d|2[0-3])(?::([0-5]\d))?\s*(am|pm)?\b/i', $timeText, $matches, PREG_SET_ORDER)
+                || preg_match_all('/\b([01]?\d|2[0-3]):([0-5]\d)\s*(am|pm)?\b/i', $timeText, $matches, PREG_SET_ORDER)) {
+                $m = end($matches);
+                $out['time'] = self::normalizeTimeMatch($m);
+            }
         }
 
         if (preg_match('/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i', $text, $m)) {
@@ -1229,6 +1234,46 @@ class LiveChatController
         }
 
         return $out;
+    }
+
+    private static function latestOfferedBookingSlot(array $transcript): array
+    {
+        foreach (array_reverse($transcript) as $turn) {
+            if (($turn['role'] ?? '') !== 'assistant') {
+                continue;
+            }
+            $text = (string) ($turn['text'] ?? '');
+            if (!preg_match('/\b(would|should|confirm|work|book)\b/i', $text)) {
+                continue;
+            }
+            $slot = [];
+            if (preg_match_all('/\b(\d{4}-\d{2}-\d{2})\b/', $text, $dateMatches) && !empty($dateMatches[1])) {
+                $slot['date'] = end($dateMatches[1]);
+            }
+            if (preg_match_all('/\b([01]?\d|2[0-3])(?::([0-5]\d))?\s*(am|pm)\b/i', $text, $matches, PREG_SET_ORDER)
+                || preg_match_all('/\b([01]?\d|2[0-3]):([0-5]\d)\b/i', $text, $matches, PREG_SET_ORDER)) {
+                $m = end($matches);
+                $slot['time'] = self::normalizeTimeMatch($m);
+            }
+            if (!empty($slot['time'])) {
+                return $slot;
+            }
+        }
+
+        return [];
+    }
+
+    private static function normalizeTimeMatch(array $m): string
+    {
+        $hour = (int) $m[1];
+        $minute = isset($m[2]) && $m[2] !== '' ? (int) $m[2] : 0;
+        $ampm = strtolower($m[3] ?? '');
+        if ($ampm === 'pm' && $hour < 12) {
+            $hour += 12;
+        } elseif ($ampm === 'am' && $hour === 12) {
+            $hour = 0;
+        }
+        return sprintf('%02d:%02d', $hour, $minute);
     }
 
     private static function friendlyBookingDate(string $date): string
