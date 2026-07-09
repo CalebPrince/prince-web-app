@@ -52,9 +52,12 @@
 
   <div class="flex-grow-1 p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h3 class="mb-0">Analytics</h3>
-        <p class="text-muted-custom mb-0 small">First-party page views — no cookies, no IP storage, no third party.</p>
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-chip" style="background: var(--section-blue-soft); color: var(--section-blue);"><i class="bi bi-graph-up"></i></div>
+        <div>
+          <h3 class="mb-0">Analytics</h3>
+          <p class="text-muted-custom mb-0 small">First-party page views — no cookies, no IP storage, no third party.</p>
+        </div>
       </div>
       <select class="form-select form-select-sm" id="days-filter" style="width:auto;">
         <option value="7">Last 7 days</option>
@@ -65,49 +68,64 @@
 
     <div class="row g-3 mb-4">
       <div class="col-md-4">
-        <div class="admin-card p-4">
-          <p class="text-muted-custom small mb-1">TOTAL PAGE VIEWS</p>
-          <div class="fs-2 fw-bold" id="stat-total-views">—</div>
+        <div class="admin-card p-4 d-flex align-items-center gap-3">
+          <div class="icon-chip" style="background: var(--section-blue-soft); color: var(--section-blue);"><i class="bi bi-eye"></i></div>
+          <div>
+            <p class="text-muted-custom small mb-1">TOTAL PAGE VIEWS</p>
+            <div class="fs-2 fw-bold" id="stat-total-views">—</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-xl-3">
-        <div class="admin-card p-3">
-          <div class="text-muted-custom small">Calculator Runs</div>
-          <div class="fs-4 fw-bold" id="funnel-calculator-runs">0</div>
+        <div class="admin-card p-3 d-flex align-items-center gap-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-calculator"></i></div>
+          <div>
+            <div class="text-muted-custom small">Calculator Runs</div>
+            <div class="fs-4 fw-bold" id="funnel-calculator-runs">0</div>
+          </div>
         </div>
       </div>
       <div class="col-sm-6 col-xl-3">
-        <div class="admin-card p-3">
-          <div class="text-muted-custom small">Request Step 3 Reached</div>
-          <div class="fs-4 fw-bold" id="funnel-step3">0</div>
+        <div class="admin-card p-3 d-flex align-items-center gap-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-signpost-split"></i></div>
+          <div>
+            <div class="text-muted-custom small">Request Step 3 Reached</div>
+            <div class="fs-4 fw-bold" id="funnel-step3">0</div>
+          </div>
         </div>
       </div>
       <div class="col-sm-6 col-xl-3">
-        <div class="admin-card p-3">
-          <div class="text-muted-custom small">Successful Requests</div>
-          <div class="fs-4 fw-bold" id="funnel-success">0</div>
+        <div class="admin-card p-3 d-flex align-items-center gap-3">
+          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-check-circle"></i></div>
+          <div>
+            <div class="text-muted-custom small">Successful Requests</div>
+            <div class="fs-4 fw-bold" id="funnel-success">0</div>
+          </div>
         </div>
       </div>
       <div class="col-sm-6 col-xl-3">
-        <div class="admin-card p-3">
-          <div class="text-muted-custom small">Checkout Open Failures</div>
-          <div class="fs-4 fw-bold" id="funnel-checkout-fails">0</div>
+        <div class="admin-card p-3 d-flex align-items-center gap-3">
+          <div class="icon-chip" style="background: #fee2e2; color: #991b1b;"><i class="bi bi-exclamation-circle"></i></div>
+          <div>
+            <div class="text-muted-custom small">Checkout Open Failures</div>
+            <div class="fs-4 fw-bold" id="funnel-checkout-fails">0</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="admin-card p-4 mb-4">
-      <h6 class="mb-3">Views over time</h6>
+      <h6 class="mb-3"><i class="bi bi-graph-up me-2" style="color: var(--section-blue);"></i>Views over time</h6>
       <canvas id="views-chart" height="80"></canvas>
     </div>
 
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="admin-card p-0">
-          <div class="p-3 border-bottom"><h6 class="mb-0">Top pages</h6></div>
+          <div class="p-3 border-bottom"><h6 class="mb-0"><i class="bi bi-file-earmark-text me-2" style="color: var(--section-blue);"></i>Top pages</h6></div>
           <table class="table mb-0 align-middle">
             <thead><tr><th class="ps-3">Path</th><th class="text-end pe-3">Views</th></tr></thead>
             <tbody id="top-pages-tbody"></tbody>
@@ -116,7 +134,7 @@
       </div>
       <div class="col-lg-6">
         <div class="admin-card p-0">
-          <div class="p-3 border-bottom"><h6 class="mb-0">Top funnel events</h6></div>
+          <div class="p-3 border-bottom"><h6 class="mb-0"><i class="bi bi-lightning-charge me-2" style="color: var(--section-leads);"></i>Top funnel events</h6></div>
           <table class="table mb-0 align-middle">
             <thead><tr><th class="ps-3">Event</th><th class="text-end pe-3">Count</th></tr></thead>
             <tbody id="top-events-tbody"></tbody>
@@ -125,7 +143,7 @@
       </div>
       <div class="col-lg-6">
         <div class="admin-card p-0">
-          <div class="p-3 border-bottom"><h6 class="mb-0">Top referrers</h6></div>
+          <div class="p-3 border-bottom"><h6 class="mb-0"><i class="bi bi-share me-2" style="color: var(--section-blue);"></i>Top referrers</h6></div>
           <table class="table mb-0 align-middle">
             <thead><tr><th class="ps-3">Referrer</th><th class="text-end pe-3">Views</th></tr></thead>
             <tbody id="top-referrers-tbody"></tbody>
