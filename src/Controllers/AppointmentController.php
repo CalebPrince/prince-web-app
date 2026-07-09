@@ -204,7 +204,24 @@ class AppointmentController
             )->execute([$name, $email, $phone ?: null, $date, $time, $cfg['slotMinutes'], $topic ?: null]);
             $appointmentId = (int) $pdo->lastInsertId();
         } catch (\PDOException $e) {
-            // Partial unique index violation — someone else booked it first.
+            // Partial unique index violation. Confirmed in production: an
+            // AI caller can end up re-calling this tool for a slot it
+            // already secured (e.g. a plain "thanks" after a confirmed
+            // booking, with no real reason to book again) — if the existing
+            // row for this exact date/time already belongs to the same
+            // email, this is that, not a real conflict with someone else,
+            // and telling the visitor "someone else took it" would be
+            // actively wrong. Treat it as the success it already is.
+            $existing = $pdo->prepare(
+                "SELECT client_email FROM appointments WHERE appointment_date = ? AND appointment_time = ? AND status != 'cancelled' LIMIT 1"
+            );
+            $existing->execute([$date, $time]);
+            $existingEmail = $existing->fetchColumn();
+
+            if ($existingEmail !== false && strcasecmp((string) $existingEmail, $email) === 0) {
+                return ['success' => true, 'date' => $date, 'time' => $time, 'timezone' => $cfg['timezone']];
+            }
+
             return [
                 'success' => false,
                 'error' => 'That slot was just booked by someone else — please pick another.',
