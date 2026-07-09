@@ -1100,6 +1100,10 @@ class LiveChatController
             return 'Hello! 👋 What kind of website or app are you thinking about? Describe it briefly and I\'ll help.';
         }
 
+        if (!self::shouldSearchProjectFallback($message)) {
+            return "I'm here. Tell me what you want to do next: describe a project, ask about services or pricing, or say \"book a call\" and I can check the calendar.";
+        }
+
         $needle = strtolower($message);
         $best = null;
         $bestScore = 0;
@@ -1123,6 +1127,14 @@ class LiveChatController
         }
         return "I'd love to hear more about your project — describe what you're building, "
             . "or use the contact form and I'll get back to you personally.";
+    }
+
+    private static function shouldSearchProjectFallback(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(portfolio|case study|case studies|example|similar|built|build|website|web app|mobile app|app|project|ecommerce|cms|dashboard|booking system|quote|pricing|price|cost|service|services)\b/i',
+            $message
+        );
     }
 
     private static function bookingFallback(string $message, array $transcript): ?string
