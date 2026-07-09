@@ -118,14 +118,17 @@ class Composio
         $payloads = [
             [
                 'user_id' => self::adminUserId(),
+                'entity_id' => self::adminUserId(),
                 'connected_account_id' => $connectedAccountId,
                 'arguments' => $params,
             ],
             [
                 'user_id' => self::adminUserId(),
+                'entity_id' => self::adminUserId(),
                 'arguments' => $params,
             ],
             [
+                'entity_id' => self::adminUserId(),
                 'connected_account_id' => $connectedAccountId,
                 'arguments' => $params,
             ],
