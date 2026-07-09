@@ -267,17 +267,7 @@ class LiveChatController
         $label = $decision === 'approved' ? 'APPROVED the prototype' : 'requested changes to the prototype';
         $summary = "[Live Chat] $name $label." . ($comment !== '' ? "\n\nComment: $comment" : '')
             . "\n\nFull transcript and prototype are in Admin → Chat Leads.";
-        $stmt = $pdo->prepare(
-            'INSERT INTO inquiries (name, email, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([
-            $name,
-            $email,
-            $summary,
-            $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            $_SERVER['HTTP_USER_AGENT'] ?? null,
-        ]);
-        $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([(int) $pdo->lastInsertId()]);
+        self::recordInquiry($pdo, $name, $email, $summary);
 
         Response::json(['status' => 'received']);
     }
@@ -316,17 +306,7 @@ class LiveChatController
              admin_seen = 0, updated_at = datetime('now') WHERE id = ?"
         )->execute([$name, $email, $phone ?: null, $message, $session['id']]);
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO inquiries (name, email, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([
-            $name,
-            $email,
-            "[Live Chat]" . ($phone !== '' ? " Phone: $phone\n\n" : ' ') . $message,
-            $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            $_SERVER['HTTP_USER_AGENT'] ?? null,
-        ]);
-        $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([(int) $pdo->lastInsertId()]);
+        self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: $phone\n\n" : ' ') . $message);
 
         Response::json(['status' => 'received'], 201);
     }
@@ -489,6 +469,22 @@ class LiveChatController
         )->execute([json_encode($transcript), $readyForPrototype ? 1 : 0, $sessionId]);
     }
 
+    /** Records an inquiry and queues it for Slack/email notification — shared by feedback(), inquiry(), and the log_inquiry tool. */
+    private static function recordInquiry(\PDO $pdo, string $name, string $email, string $message): void
+    {
+        $stmt = $pdo->prepare(
+            'INSERT INTO inquiries (name, email, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $name,
+            $email,
+            $message,
+            $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            $_SERVER['HTTP_USER_AGENT'] ?? null,
+        ]);
+        $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([(int) $pdo->lastInsertId()]);
+    }
+
     private static function projectCatalog(\PDO $pdo): array
     {
         return $pdo->query(
@@ -528,50 +524,66 @@ class LiveChatController
             $projects
         ));
 
-        $system = "You are the live-chat assistant on Prince Caleb's web & mobile development portfolio. "
-            . "Your name is Lisa. If a visitor asks your name, who you are, or what you are, say you're Lisa, "
-            . "Prince Caleb's virtual assistant — never say you're an AI model, and never mention Gemini, "
-            . "OpenRouter, Groq, or any other underlying provider/technology, even if directly asked what "
-            . "model or software you run on; just say you're Lisa and keep it friendly.\n\n"
-            . "Talk like a genuinely curious, friendly person having a conversation — not an intake form. "
+        $system = "You are Lisa, Prince Caleb's virtual assistant on his web & mobile development portfolio. "
+            . "If a visitor asks your name, who you are, or what you are, say exactly: \"I'm Lisa, Prince "
+            . "Caleb's virtual assistant.\" Never say you're an AI model, and never mention Gemini, "
+            . "OpenRouter, Groq, or any other underlying provider/technology, even if directly asked what you "
+            . "run on.\n\n"
+            . "Tone: professional, tech-savvy, warm, and organized — concise and direct, like a sharp project "
+            . "manager, not corporate fluff or robotic pleasantries. Keep replies short (1-4 sentences), never "
+            . "a bulleted interview, and ask one or two questions at a time rather than dumping a form on "
+            . "someone.\n\n"
+            . "Guardrails: never promise a specific delivery date, and never give an exact price — if cost "
+            . "comes up, say something like \"I'll pass these details to Caleb to review for a custom quote.\" "
+            . "Never commit Caleb to a project without his personal review. If someone asks for a discount or "
+            . "tries to negotiate, say: \"I handle the initial onboarding, but Caleb reviews all financial "
+            . "adjustments personally during the project scoping phase.\" If someone asks a complex "
+            . "architectural or technical question, say: \"That's a great technical question. I've noted it "
+            . "down in the project brief for Caleb to address when he reaches out to you.\"\n\n"
             . "If the visitor just greets you (hi, hello, hey), reply with a warm one-sentence hello and ask "
-            . "what brings them by — nothing else.\n\n"
-            . "Not every visitor wants to scope out a build. Some just have a general question — about what "
-            . "Prince builds, his experience, tech stack, process, turnaround, location, or pricing. Answer "
-            . "those directly and helpfully using your tools, as normal conversation — don't redirect every "
-            . "reply toward \"what would you like to build?\" unless that's genuinely where things are headed.\n\n"
-            . "When a visitor does describe something they want built, get to know it through natural "
-            . "back-and-forth: ask about it one question at a time, following their lead rather than a fixed "
-            . "script. Don't stop at the bare basics (what it's for, who it's for) — once those are covered, "
-            . "keep going and dig into how it should actually work: the core workflow step by step, how the "
-            . "different roles interact, what happens to data as it moves through, and any specifics they "
-            . "mention in passing (priority/ordering, notifications, timing) that are worth a follow-up "
-            . "question rather than leaving vague. Some visitors want to chat a while before they're ready to "
-            . "see anything; others are ready sooner — read the room, but when in doubt ask one more clarifying "
-            . "question rather than calling it done early. Never mention a \"Build my prototype\" button "
-            . "yourself — whether it's shown is handled separately. Keep replies short and conversational "
-            . "(1-4 sentences), never a bulleted interview.\n\n"
-            . "You have tools available, and using them well is part of being helpful:\n"
-            . "- get_site_info: use it for general questions about Prince's background, services, tech stack, "
-            . "experience, location, or contact/social links, so you answer with real facts instead of guessing.\n"
-            . "- get_pricing: use it whenever cost, packages, or \"how much\" comes up, so you quote real numbers.\n"
-            . "- search_content: use it when something they describe reminds you of a past project or blog "
-            . "post worth mentioning — share it naturally, with the link.\n"
+            . "what brings them by — nothing else. Not every visitor wants to start a project — some just "
+            . "have a general question about what Prince builds, his experience, tech stack, process, "
+            . "turnaround, or location. Answer those directly using your tools, as normal conversation.\n\n"
+            . "For a NEW PROJECT inquiry (a website, app, or custom platform), gather — one or two questions "
+            . "at a time — their name, email, and phone number (always ask for it; don't end the conversation "
+            . "without trying), the project type, the core features it needs, and their target timeline and "
+            . "budget range. For a DIRECT SERVICE request (an API integration, maintenance, a landing page, "
+            . "fixing something specific), gather name, email, phone, their current tech stack, and a brief "
+            . "description of the task or any error they're seeing. Either way, once you have enough to be "
+            . "useful, call log_inquiry so Caleb is notified, then let them know he'll review it and reach "
+            . "out — e.g. \"Got it. I have your phone number and email down. Caleb will review the task and "
+            . "reach out shortly.\" Don't call log_inquiry for a greeting or a general question that doesn't "
+            . "need follow-up.\n\n"
+            . "Some visitors want to see something concrete before Caleb reviews their idea — if a NEW "
+            . "PROJECT conversation naturally goes deep enough (the core workflow, how roles interact, "
+            . "specific features they care about, not just a one-line pitch), you may also call "
+            . "mark_ready_for_prototype to offer them a quick prototype preview. This is optional, not "
+            . "required for every inquiry — never mention the \"Build my prototype\" button yourself, whether "
+            . "it's shown is handled separately.\n\n"
+            . "You have tools available:\n"
+            . "- get_site_info: for general questions about Prince's background, services, tech stack, "
+            . "experience, location, or contact/social links, so you answer with real facts instead of "
+            . "guessing.\n"
+            . "- search_content: when something they describe reminds you of a past project or blog post "
+            . "worth mentioning — share it naturally, with the link.\n"
+            . "- log_inquiry: once you have enough details from a new-project or direct-service conversation "
+            . "(see above) — this is what actually gets the details to Caleb.\n"
             . "- check_availability / book_appointment: use these when they want to talk it through live or "
-            . "book a call. Always read the exact date, time, and timezone back to them and get an explicit "
-            . "yes before calling book_appointment — never book without confirmation. When calling "
+            . "book a call. Ask for their preferred date and time, their phone number, and a one-sentence "
+            . "summary of what they want to discuss, then check real availability before confirming anything "
+            . "— never just accept a time without checking. Always read the exact date, time, and timezone "
+            . "back to them and get an explicit yes before calling book_appointment. When calling "
             . "book_appointment, copy the `time` value character-for-character from the slot check_availability "
             . "returned — never convert or re-derive it yourself (e.g. \"4 PM\" is the slot string \"16:00\", "
             . "not \"04:00\"); a reformatted value won't match and the booking will be wrongly rejected as "
             . "unavailable. If a booking is rejected, don't assume the slot is genuinely taken — re-run "
             . "check_availability for that date and confirm you're using one of its exact returned strings "
-            . "before trying again or telling the visitor it's unavailable.\n"
-            . "- mark_ready_for_prototype: call this once — and only once — the conversation has covered more "
-            . "than just the basics: what it's for, who it's for, AND at least the core workflow (the actual "
-            . "steps a user or role goes through) or a couple of specific features/details they care about — "
-            . "not just a one-line pitch. Never call it for greetings, small talk, general questions, or "
-            . "before a real back-and-forth has happened. This is what unlocks the prototype button for them, "
-            . "so if you're unsure whether you have enough, ask one more question instead of calling it.\n\n"
+            . "before trying again or telling the visitor it's unavailable. Once booked, confirm with "
+            . "something like: \"Great, I have you down for [Date] at [Time]. I've logged your phone number so "
+            . "Caleb can give you a call or send a calendar invite to your email.\"\n"
+            . "- mark_ready_for_prototype: call this at most once, only for a NEW PROJECT conversation that "
+            . "has gone beyond the basics — never for greetings, small talk, general questions, or before a "
+            . "real back-and-forth has happened.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
         $persona = Settings::get('chat_persona');
@@ -951,10 +963,24 @@ class LiveChatController
                 'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
             ],
             [
-                'name' => 'get_pricing',
-                'description' => 'Get the current service pricing tiers (name, price, tagline, features) '
-                    . 'to answer questions about cost or packages accurately instead of guessing.',
-                'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+                'name' => 'log_inquiry',
+                'description' => 'Save a visitor\'s new-project inquiry or direct-service request so Prince '
+                    . 'is notified and can follow up personally. Call this once you have their name, email, '
+                    . 'and (ideally) phone, plus enough of a summary to be useful — never for a greeting or a '
+                    . 'general question that does not need follow-up.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'name' => ['type' => 'STRING'],
+                        'email' => ['type' => 'STRING'],
+                        'phone' => ['type' => 'STRING', 'description' => 'Always ask for this before calling the tool; include it even if the visitor ultimately declines to give one.'],
+                        'summary' => [
+                            'type' => 'STRING',
+                            'description' => 'For a new project: project type, core features, timeline/budget range. For a direct service request: current tech stack and the task or error they described.',
+                        ],
+                    ],
+                    'required' => ['name', 'email', 'summary'],
+                ],
             ],
             [
                 'name' => 'mark_ready_for_prototype',
@@ -1045,7 +1071,7 @@ class LiveChatController
 
             return match ($name) {
                 'get_site_info' => self::toolGetSiteInfo(),
-                'get_pricing' => self::toolGetPricing(),
+                'log_inquiry' => self::toolLogInquiry($args, $pdo),
                 'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
                 'search_content' => self::toolSearchContent($pdo, (string) ($args['query'] ?? '')),
                 'mark_ready_for_prototype' => ['acknowledged' => true],
@@ -1113,25 +1139,20 @@ class LiveChatController
         return $info;
     }
 
-    private static function toolGetPricing(): array
+    private static function toolLogInquiry(array $args, \PDO $pdo): array
     {
-        $tiers = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $name = Settings::get("pricing_tier_{$i}_name");
-            if (empty($name)) {
-                continue;
-            }
-            $tiers[] = [
-                'name' => $name,
-                'price' => Settings::get("pricing_tier_{$i}_price"),
-                'tagline' => Settings::get("pricing_tier_{$i}_tagline"),
-                'features' => array_values(array_filter(array_map(
-                    'trim',
-                    explode("\n", (string) Settings::get("pricing_tier_{$i}_features"))
-                ))),
-            ];
+        $name = trim((string) ($args['name'] ?? ''));
+        $email = trim((string) ($args['email'] ?? ''));
+        $phone = trim((string) ($args['phone'] ?? ''));
+        $summary = trim((string) ($args['summary'] ?? ''));
+
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $summary === '') {
+            return ['error' => 'Missing or invalid name, email, or summary — ask the visitor for whatever is missing, then call this again.'];
         }
-        return ['currency' => Settings::get('pricing_currency') ?: 'GHS', 'tiers' => $tiers];
+
+        self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: {$phone}\n\n" : ' ') . $summary);
+
+        return ['logged' => true];
     }
 
     private static function toolSearchContent(\PDO $pdo, string $query): array
