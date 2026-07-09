@@ -254,6 +254,35 @@ class MarketingLeadController
         }
 
         $issues = [];
+
+        // A broken site is the single most compelling (and most common) real
+        // finding, so it's checked first and listed first. Two separate
+        // failure modes matter here: an outright error status, and — just as
+        // common with WordPress — a fatal error page that the server still
+        // serves with a 200 OK, which the status-code check alone would miss.
+        if ($status >= 400) {
+            $issues[] = ['issue' => 'error_status', 'detail' => "The site returned an HTTP {$status} error instead of loading normally."];
+        }
+        if (trim($html) === '') {
+            $issues[] = ['issue' => 'blank_page', 'detail' => 'The site returned a completely blank page.'];
+        } else {
+            $brokenPageSignatures = [
+                'error establishing a database connection' => 'The site shows a "database connection" error instead of loading — a common sign the host or database is down.',
+                'there has been a critical error on this website' => 'The site shows a WordPress "critical error" message instead of loading normally.',
+                'this site is experiencing technical difficulties' => 'The site shows a "technical difficulties" error instead of loading normally.',
+                'the site is currently unable to handle this request' => 'The site shows a fatal PHP error page instead of loading normally.',
+                'service unavailable' => 'The site shows a "Service Unavailable" error instead of loading normally.',
+                'briefly unavailable for scheduled maintenance' => 'The site is stuck showing a maintenance-mode message.',
+                '<h1>bad gateway</h1>' => 'The site shows a "Bad Gateway" error instead of loading normally.',
+            ];
+            foreach ($brokenPageSignatures as $needle => $detail) {
+                if (stripos($html, $needle) !== false) {
+                    $issues[] = ['issue' => 'error_page_content', 'detail' => $detail];
+                    break; // one is enough — this is a single underlying failure, not several
+                }
+            }
+        }
+
         if (!str_starts_with($finalUrl, 'https://')) {
             $issues[] = ['issue' => 'no_https', 'detail' => 'Site does not load over HTTPS — browsers mark it "Not Secure".'];
         }
