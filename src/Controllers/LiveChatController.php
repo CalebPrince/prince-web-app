@@ -1018,6 +1018,7 @@ class LiveChatController
                 default => ['error' => 'Unknown tool.'],
             };
         } catch (\Throwable $e) {
+            error_log(sprintf('Live Chat tool "%s" threw: %s', $name, $e->getMessage()));
             return ['error' => 'Tool failed to run.'];
         }
     }

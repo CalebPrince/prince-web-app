@@ -45,6 +45,7 @@ use App\Controllers\AuthController;
 use App\Controllers\BlogController;
 use App\Controllers\ClientAuthController;
 use App\Controllers\ClientController;
+use App\Controllers\ClientErrorController;
 use App\Controllers\ClientPortalController;
 use App\Controllers\ComposioController;
 use App\Controllers\DashboardController;
@@ -101,6 +102,7 @@ $router->post('/api/v1/client/messages', [ClientPortalController::class, 'sendMe
 $router->post('/api/v1/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 $router->get('/api/v1/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 $router->post('/api/v1/analytics/track', [AnalyticsController::class, 'track']);
+$router->post('/api/v1/client-error', [ClientErrorController::class, 'log']);
 $router->get('/api/v1/appointments/config', [AppointmentController::class, 'publicConfig']);
 $router->get('/api/v1/appointments/availability', [AppointmentController::class, 'availability']);
 $router->post('/api/v1/appointments/book', [AppointmentController::class, 'book']);

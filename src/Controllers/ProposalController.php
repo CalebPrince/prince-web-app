@@ -202,6 +202,7 @@ class ProposalController
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
+            error_log('ProposalController::store failed: ' . $e->getMessage());
             Response::error('Could not create proposal.', 500);
         }
 
@@ -337,6 +338,7 @@ class ProposalController
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
+            error_log('ProposalController::update failed: ' . $e->getMessage());
             Response::error('Could not update proposal.', 500);
         }
 

@@ -385,6 +385,18 @@ storage/
     authorization in a new tab. Booking actions can be configured per tool
     from the same Settings form. **Status: Calendar/Gmail/Slack/WhatsApp
     connect flow built, not yet exercised against a live Composio account.**
+34. **Client-side error capture** (`ClientErrorController::log()`,
+    `public/js/error-log.js`) — a small script, loaded first thing in
+    `<head>` on every page across the whole site (public and admin alike),
+    that catches uncaught JS errors (`window.onerror`) and unhandled
+    promise rejections and POSTs them to `/api/v1/client-error`, which
+    writes them through the same `error_log()` every PHP error already
+    uses — so a frontend bug (a broken button, a rendering exception in an
+    admin page) shows up in Admin -> Error Logs exactly like a backend one
+    does, instead of being invisible to anyone without devtools open at the
+    time. Deliberately unauthenticated (errors happen for anonymous
+    visitors too) and rate-limited per IP (30/hour) to bound log growth
+    from a page looping on one broken error.
 
 ## Deployment (Namecheap cPanel)
 
