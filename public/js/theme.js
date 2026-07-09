@@ -25,6 +25,11 @@
   if (!localStorage.getItem("theme")) {
     api.get("/api/v1/content")
       .then(content => {
+        // Re-check: the visitor may have already clicked the toggle while
+        // this request was in flight (more likely on a slow mobile
+        // connection, which widens the window) — don't clobber an explicit
+        // choice they made in the meantime.
+        if (localStorage.getItem("theme")) return;
         if (content.default_theme === "light" || content.default_theme === "dark") {
           applyTheme(content.default_theme);
         }
