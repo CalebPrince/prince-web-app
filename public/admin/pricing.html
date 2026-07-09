@@ -52,9 +52,12 @@
 
   <div class="flex-grow-1 p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h3 class="mb-0">Pricing</h3>
-        <p class="text-muted-custom mb-0 small">Edit public pricing tiers, feature lists, currency, and the Starter checkout amount.</p>
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-tag"></i></div>
+        <div>
+          <h3 class="mb-0">Pricing</h3>
+          <p class="text-muted-custom mb-0 small">Edit public pricing tiers, feature lists, currency, and the Starter checkout amount.</p>
+        </div>
       </div>
       <button class="btn-brand" id="save-pricing-btn" form="pricing-form" type="submit">Save Pricing</button>
     </div>
@@ -65,12 +68,12 @@
       <div class="row g-4">
         <div class="col-lg-4">
           <div class="admin-card p-4 mb-4">
-            <h5 class="mb-3">Pricing Page Intro</h5>
+            <h5 class="mb-3"><i class="bi bi-file-text me-2" style="color: var(--section-money);"></i>Pricing Page Intro</h5>
             <textarea class="form-control" id="pricing_intro" rows="6" placeholder="Every project is scoped and quoted individually..."></textarea>
           </div>
 
           <div class="admin-card p-4">
-            <h5 class="mb-3">Currency & Checkout</h5>
+            <h5 class="mb-3"><i class="bi bi-currency-exchange me-2" style="color: var(--section-money);"></i>Currency & Checkout</h5>
             <div class="mb-3">
               <label class="form-label">Currency</label>
               <select class="form-select" id="pricing_currency">

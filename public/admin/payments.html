@@ -53,9 +53,12 @@
 
   <div class="flex-grow-1 p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h3 class="mb-0">Payments</h3>
-        <p class="text-muted-custom mb-0 small">Paystack transactions and payment links.</p>
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-credit-card"></i></div>
+        <div>
+          <h3 class="mb-0">Payments</h3>
+          <p class="text-muted-custom mb-0 small">Paystack transactions and payment links.</p>
+        </div>
       </div>
       <button class="btn-brand" id="new-link-btn">+ Generate Payment Link</button>
     </div>
@@ -63,30 +66,42 @@
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
-          <div class="stat-label">Revenue (successful)</div>
-          <div class="stat-value" id="stat-revenue">–</div>
-          <div class="stat-sub" id="stat-revenue-sub"></div>
+          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-cash-stack"></i></div>
+          <div>
+            <div class="stat-label">Revenue (successful)</div>
+            <div class="stat-value" id="stat-revenue">–</div>
+            <div class="stat-sub" id="stat-revenue-sub"></div>
+          </div>
         </div>
       </div>
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
-          <div class="stat-label">Pending</div>
-          <div class="stat-value" id="stat-pending">–</div>
-          <div class="stat-sub">awaiting confirmation</div>
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-hourglass-split"></i></div>
+          <div>
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="stat-pending">–</div>
+            <div class="stat-sub">awaiting confirmation</div>
+          </div>
         </div>
       </div>
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
-          <div class="stat-label">Failed</div>
-          <div class="stat-value" id="stat-failed">–</div>
-          <div class="stat-sub">did not go through</div>
+          <div class="icon-chip" style="background: #fee2e2; color: #991b1b;"><i class="bi bi-x-circle"></i></div>
+          <div>
+            <div class="stat-label">Failed</div>
+            <div class="stat-value" id="stat-failed">–</div>
+            <div class="stat-sub">did not go through</div>
+          </div>
         </div>
       </div>
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
-          <div class="stat-label">Transactions</div>
-          <div class="stat-value" id="stat-total">–</div>
-          <div class="stat-sub">all time</div>
+          <div class="icon-chip" style="background: var(--section-blue-soft); color: var(--section-blue);"><i class="bi bi-receipt"></i></div>
+          <div>
+            <div class="stat-label">Transactions</div>
+            <div class="stat-value" id="stat-total">–</div>
+            <div class="stat-sub">all time</div>
+          </div>
         </div>
       </div>
     </div>
