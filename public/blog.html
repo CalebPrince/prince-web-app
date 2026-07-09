@@ -70,10 +70,10 @@
   </div>
 </div>
 
-<header class="hero" id="main-content">
+<header class="hero agency-hero" id="main-content">
   <div class="container">
     <p class="eyebrow mb-3 hero-animate hero-animate-1">// Blog</p>
-    <h1 class="display-4 mb-3 hero-animate hero-animate-2">Insights &amp; how-tos.</h1>
+    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Insights &amp; how-tos.</h1>
     <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width: 60ch;">
       Practical guides on custom software, automation, and web/mobile development — filter by topic, or browse everything.
     </p>
@@ -157,9 +157,9 @@ function renderGrid(posts) {
   }
   empty.classList.add('d-none');
   grid.innerHTML = posts.map((p, i) => `
-    <div class="col-md-6 col-lg-4 reveal reveal-delay-${(i % 4) + 1}">
+    <div class="col-md-6 ${i === 0 ? 'col-lg-8' : 'col-lg-4'} reveal reveal-delay-${(i % 4) + 1}">
       <a href="/blog-post.html?slug=${p.slug}" class="text-decoration-none">
-        <div class="project-card">
+        <div class="project-card ${i === 0 ? 'project-card-featured' : ''}">
           <img src="${p.cover_image_path}" alt="${p.title}">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -167,7 +167,8 @@ function renderGrid(posts) {
               <span class="small text-muted-custom">⏱ ${p.reading_time} min read</span>
             </div>
             <h5 class="mb-2">${p.title}</h5>
-            <p class="small text-muted-custom mb-0">${p.excerpt}</p>
+            <p class="small text-muted-custom mb-3">${p.excerpt}</p>
+            <span class="small fw-semibold mt-auto" style="color: var(--heading-color);">Read article →</span>
           </div>
         </div>
       </a>

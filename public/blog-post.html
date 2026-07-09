@@ -206,18 +206,18 @@ function renderBody(body) {
     const shareTitle = encodeURIComponent(p.title);
 
     container.innerHTML = `
-      <header class="hero pb-0">
+      <header class="hero agency-hero pb-0">
         <div class="container">
           <div class="d-flex flex-wrap align-items-center gap-3 mb-3 hero-animate hero-animate-1">
             ${p.category ? `<p class="eyebrow mb-0">${p.category}</p>` : ''}
             <span class="small text-muted-custom">⏱ ${p.reading_time} min read</span>
           </div>
-          <h1 class="display-6 mb-3 hero-animate hero-animate-2">${p.title}</h1>
+          <h1 class="detail-title mb-3 hero-animate hero-animate-2">${p.title}</h1>
           <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width:65ch;">${p.excerpt}</p>
         </div>
       </header>
       <div class="container pb-5">
-        <img src="${p.cover_image_path}" alt="${p.title}" class="w-100 rounded-4 mb-5 reveal" style="aspect-ratio:16/9;object-fit:cover;">
+        <div class="case-media mb-5 reveal"><img src="${p.cover_image_path}" alt="${p.title}"></div>
         <div class="row">
           <div class="col-lg-8 reveal">
             <div class="d-flex flex-wrap gap-2 mb-4">

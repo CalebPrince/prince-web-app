@@ -15,7 +15,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
 <style>
-  .invoice-card { border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem; background: var(--card-bg, var(--surface, #fff)); }
+  .invoice-card { border: 1px solid var(--line); border-radius: 24px; padding: 2.5rem; background: var(--card-bg); }
   .invoice-table th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted, #6b7280); }
   .invoice-paid-stamp {
     display: inline-block; padding: .35rem 1rem; border: 3px solid #16a34a; color: #16a34a;
@@ -112,7 +112,7 @@
 
   container.innerHTML = `
     <div class="invoice-actions d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Download PDF / Print</button>
+      <button type="button" class="btn-brand-outline" onclick="window.print()">Download PDF / Print</button>
       ${invoice.payment_url && !isPaid && !isVoid ? `<a href="${escapeHtml(invoice.payment_url)}" class="btn-brand text-decoration-none">Pay Now — ${money(invoice.total, invoice.currency)}</a>` : ''}
     </div>
     <div class="invoice-card">

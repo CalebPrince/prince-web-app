@@ -67,10 +67,10 @@
   </div>
 </div>
 
-<header class="hero" id="main-content">
+<header class="hero agency-hero" id="main-content">
   <div class="container">
     <p class="eyebrow mb-3 hero-animate hero-animate-1">// Selected deployments</p>
-    <h1 class="display-4 mb-3 hero-animate hero-animate-2">Selected work.</h1>
+    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Selected work.</h1>
     <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width: 60ch;">
       Filter by technology to see relevant case studies, or browse everything.
     </p>
@@ -89,7 +89,7 @@
   </div>
 </section>
 
-<section class="section text-center" style="border-top: 1px solid var(--line);">
+<section class="section text-center agency-cta">
   <div class="container reveal">
     <h2 class="display-6 mb-3">Want results like these?</h2>
     <p class="fs-5 text-muted-custom mb-4">Every build starts with a short discovery call about what you're actually trying to do.</p>
@@ -160,16 +160,17 @@ function renderGrid(projects) {
   }
   empty.classList.add('d-none');
   grid.innerHTML = projects.map((p, i) => `
-    <div class="col-md-6 col-lg-4 reveal reveal-delay-${(i % 4) + 1}">
+    <div class="col-md-6 ${i === 0 ? 'col-lg-8' : 'col-lg-4'} reveal reveal-delay-${(i % 4) + 1}">
       <div class="position-relative">
         <a href="/project.html?slug=${p.slug}" class="text-decoration-none">
-          <div class="project-card">
+          <div class="project-card ${i === 0 ? 'project-card-featured' : ''}">
             <img src="${p.cover_image_path}" alt="${p.title}">
             <div class="card-body">
               <h5 class="mb-2">${p.title}</h5>
               <p class="small text-muted-custom mb-3">${p.summary}</p>
               <div class="mt-auto">
                 ${p.tags.map(t => `<span class="tag-chip">${t.name}</span>`).join('')}
+                <span class="d-block small fw-semibold mt-3" style="color: var(--heading-color);">View case study →</span>
               </div>
             </div>
           </div>

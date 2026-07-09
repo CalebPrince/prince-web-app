@@ -164,22 +164,22 @@
     if (p.repo_url) links.push(`<a href="${p.repo_url}" target="_blank" rel="noopener" class="btn-brand-outline">View repository</a>`);
 
     container.innerHTML = `
-      <header class="hero pb-0">
+      <header class="hero agency-hero pb-0">
         <div class="container">
           <p class="eyebrow mb-3 hero-animate hero-animate-1">${p.category.replace('_', ' ')}</p>
-          <h1 class="display-6 mb-3 hero-animate hero-animate-2">${p.title}</h1>
+          <h1 class="detail-title mb-3 hero-animate hero-animate-2">${p.title}</h1>
           <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width:65ch;">${p.summary}</p>
           <div class="mb-4 hero-animate hero-animate-3">${p.tags.map(t => `<span class="tag-chip">${t.name}</span>`).join('')}</div>
           <div class="d-flex flex-wrap gap-3 mb-4 hero-animate hero-animate-4">${links.join('')}</div>
         </div>
       </header>
       <div class="container pb-5">
-        <img src="${p.cover_image_path}" alt="${p.title}" class="w-100 rounded-4 mb-5 reveal" style="aspect-ratio:16/9;object-fit:cover;">
+        <div class="case-media mb-5 reveal"><img src="${p.cover_image_path}" alt="${p.title}"></div>
         ${p.gallery && p.gallery.length ? `
         <div class="row g-3 mb-5 reveal">
           ${p.gallery.map(src => `
             <div class="col-md-4">
-              <img src="${src}" alt="${p.title} screenshot" class="w-100 rounded-3" style="aspect-ratio:4/3;object-fit:cover;">
+              <div class="case-media"><img src="${src}" alt="${p.title} screenshot"></div>
             </div>
           `).join('')}
         </div>` : ''}

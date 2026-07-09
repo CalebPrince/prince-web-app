@@ -62,13 +62,13 @@
       <div id="ws-preview-frame-wrap" class="d-none h-100 d-flex flex-column">
         <div class="d-flex justify-content-between align-items-center p-2 border-bottom flex-wrap gap-2">
           <div class="btn-group btn-group-sm" role="group" aria-label="Preview width">
-            <button type="button" class="btn btn-outline-secondary active" data-width="desktop" title="Desktop width">🖥️</button>
-            <button type="button" class="btn btn-outline-secondary" data-width="tablet" title="Tablet width">📱</button>
-            <button type="button" class="btn btn-outline-secondary" data-width="mobile" title="Mobile width">📱</button>
+            <button type="button" class="pager-btn active" data-width="desktop" title="Desktop width">Desktop</button>
+            <button type="button" class="pager-btn" data-width="tablet" title="Tablet width">Tablet</button>
+            <button type="button" class="pager-btn" data-width="mobile" title="Mobile width">Mobile</button>
           </div>
           <div class="d-flex gap-2 align-items-center">
             <a href="#" id="ws-fullscreen-link" target="_blank" rel="noopener" class="small">Open full screen ↗</a>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="ws-rebuild-btn">⟳ Rebuild</button>
+            <button type="button" class="pager-btn" id="ws-rebuild-btn">Rebuild</button>
           </div>
         </div>
         <div class="workspace-frame-stage" id="ws-frame-stage">
@@ -76,8 +76,8 @@
         </div>
         <div class="p-2 border-top">
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-success flex-fill" id="ws-approve">✓ I love it</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="ws-changes">Request changes</button>
+            <button type="button" class="btn-brand flex-fill" id="ws-approve">I love it</button>
+            <button type="button" class="btn-brand-outline flex-fill" id="ws-changes">Request changes</button>
           </div>
           <form id="ws-feedback-form" class="d-none mt-2">
             <textarea class="form-control form-control-sm mb-2" id="ws-comment" rows="2" placeholder="Any comments?"></textarea>
