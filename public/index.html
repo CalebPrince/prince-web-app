@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#0b0c0e">
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
@@ -39,9 +39,6 @@
   "sameAs": []
 }
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
 </head>
@@ -64,7 +61,7 @@
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
-    <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
+    <a href="#estimator" class="btn-brand btn-sm d-none d-md-inline-block">Get estimate</a>
   </div>
 </nav>
 
@@ -85,133 +82,31 @@
   </div>
 </div>
 
-<header class="hero" id="main-content">
+<header class="hero" id="main-content" style="padding-top: 9rem; padding-bottom: 6rem;">
   <div class="container">
-    <div class="row align-items-center gx-0 gx-lg-5 gy-5">
-      <div class="col-lg-7">
+    <div class="row">
+      <div class="col-lg-9">
         <span class="availability-pill d-none mb-3 hero-animate hero-animate-1" data-content="availability_badge"></span>
-        <p class="eyebrow mb-3 hero-animate hero-animate-1" data-content="hero_eyebrow">Web &amp; Mobile App Developer</p>
-        <h1 class="display-5 mb-3 hero-animate hero-animate-2" data-content="hero_title">Custom software, built to perform.</h1>
-        <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" data-content="hero_subtitle">
-          I design and engineer full-stack applications, tailored CMS ecosystems, and
-          cross-platform mobile experiences — from scratch, with performance, security,
-          and custom AI integrations built in wherever they genuinely earn their place.
+        <p class="eyebrow mb-3 hero-animate hero-animate-1" data-content="hero_eyebrow">// Web &amp; Mobile App Developer</p>
+        <h1 class="display-2 mb-4 hero-animate hero-animate-2" data-content="hero_title">Engineering high-performance web &amp; mobile applications.</h1>
+        <p class="fs-5 text-muted-custom mb-4 col-lg-10 hero-animate hero-animate-3" data-content="hero_subtitle">
+          Custom software engines, responsive digital interfaces, and cost-optimized
+          cloud pipelines — architected from scratch, without platform bloat or
+          agency overhead.
         </p>
-        <div class="d-flex flex-wrap gap-3 hero-animate hero-animate-4">
-          <a href="/contact.html" class="btn-brand">Start a project →</a>
+        <div class="d-flex flex-wrap align-items-center gap-3 hero-animate hero-animate-4">
+          <a href="#estimator" class="btn-brand">Scope your project</a>
           <a href="/projects.html" class="btn-brand-outline">View my work</a>
-        </div>
-      </div>
-      <div class="col-lg-5">
-        <div class="p-4 rounded-4 hero-animate hero-animate-3" style="background: var(--card-bg); border: 1px solid var(--line); box-shadow: var(--shadow-lg);">
-          <p class="eyebrow mb-3">Featured work</p>
-          <div id="hero-featured" class="skeleton" style="height: 220px;"></div>
+          <a href="/testimonials.html" id="hero-rating" class="rating-pill d-none"></a>
         </div>
       </div>
     </div>
   </div>
 </header>
 
-<section class="py-4 border-bottom" style="border-color: var(--line) !important;">
+<div class="metric-strip">
   <div class="container">
-    <div class="d-flex flex-wrap align-items-center gap-3 justify-content-center" id="tech-badges">
-      <span class="text-muted-custom small fw-semibold me-2">TECH I WORK WITH</span>
-      <span class="tech-badge">PHP</span>
-      <span class="tech-badge">JavaScript</span>
-      <span class="tech-badge">React</span>
-      <span class="tech-badge">React Native</span>
-      <span class="tech-badge">WordPress</span>
-      <span class="tech-badge">MySQL</span>
-      <span class="tech-badge">PostgreSQL</span>
-      <span class="tech-badge">REST APIs</span>
-      <span class="tech-badge">Custom AI Integrations</span>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <p class="eyebrow text-center mb-2">What I build</p>
-    <h2 class="text-center mb-5">Three disciplines. One standard of craft.</h2>
     <div class="row g-4">
-      <div class="col-md-4">
-        <div class="service-card reveal">
-          <div class="service-icon">⚙️</div>
-          <h5 data-content="service_1_title">Custom Solutions Built from Scratch</h5>
-          <p class="text-muted-custom mb-0" data-content="service_1_summary">Full-stack APIs, custom architectures, and performance optimization tailored to exactly how your business works — no bloated templates.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="service-card reveal reveal-delay-1">
-          <div class="service-icon">🧩</div>
-          <h5 data-content="service_2_title">CMS Development &amp; Ecosystems</h5>
-          <p class="text-muted-custom mb-0" data-content="service_2_summary">Tailored WordPress and headless CMS setups built around your specific editorial workflow and business logic.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="service-card reveal reveal-delay-2">
-          <div class="service-icon">📱</div>
-          <h5 data-content="service_3_title">Mobile App Design &amp; Engineering</h5>
-          <p class="text-muted-custom mb-0" data-content="service_3_summary">Cross-platform UI/UX and native workflows that feel fast and familiar on both iOS and Android.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="service-card reveal reveal-delay-3 d-flex flex-column flex-md-row align-items-md-center gap-4 mt-4" style="border: 1px dashed var(--accent);">
-      <div class="service-icon flex-shrink-0">✨</div>
-      <div>
-        <span class="eyebrow d-block mb-1">Also in the toolkit</span>
-        <h5 class="mb-2">Custom AI Integrations</h5>
-        <p class="text-muted-custom mb-0">
-          Chat assistants, content and recommendation tools, and workflow automation —
-          designed and integrated where they genuinely improve the product, never bolted
-          on for its own sake. The "Live Chat" widget on this site is a live example, not a demo.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section" style="background: var(--bg-soft);">
-  <div class="container">
-    <p class="eyebrow text-center mb-2">How I work</p>
-    <h2 class="text-center mb-5">A clear process, from first call to launch.</h2>
-    <div class="row g-4">
-      <div class="col-md-6 col-lg-3">
-        <div class="process-step reveal">
-          <div class="process-step-number">1</div>
-          <h6 class="mb-2">Discovery &amp; Scoping</h6>
-          <p class="text-muted-custom small mb-0">We define the actual problem, success metrics, and constraints before any code gets written.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-3">
-        <div class="process-step reveal reveal-delay-1">
-          <div class="process-step-number">2</div>
-          <h6 class="mb-2">Architecture &amp; Design</h6>
-          <p class="text-muted-custom small mb-0">Database schema, API shape, and UX flows get planned out so the build phase has no surprises.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-3">
-        <div class="process-step reveal reveal-delay-2">
-          <div class="process-step-number">3</div>
-          <h6 class="mb-2">Build &amp; Iterate</h6>
-          <p class="text-muted-custom small mb-0">Shipped in focused increments with regular check-ins, so you're never surprised by the direction.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-3">
-        <div class="process-step reveal reveal-delay-3">
-          <div class="process-step-number">4</div>
-          <h6 class="mb-2">Launch &amp; Support</h6>
-          <p class="text-muted-custom small mb-0">Deployed, monitored, and backed by ongoing support — not abandoned the day it ships.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section section-navy">
-  <div class="container">
-    <div class="row g-4 text-center">
       <div class="col-6 col-md-3">
         <div class="stat-item reveal">
           <div class="stat-value" data-count-to="5" data-count-suffix="+">0</div>
@@ -238,74 +133,197 @@
       </div>
     </div>
   </div>
-</section>
+</div>
 
 <section class="section">
   <div class="container">
-    <div class="row align-items-center gx-0 gx-lg-5 gy-5">
-      <div class="col-lg-6 reveal">
-        <p class="eyebrow mb-2">Recent work</p>
-        <h2 class="mb-3">A portfolio built the same way I build for clients.</h2>
-        <p class="text-muted-custom mb-4">Every project is a deep dive — architecture decisions, trade-offs, and the outcome. Browse the full showcase, filterable by technology.</p>
-        <a href="/projects.html" class="btn-brand">See all projects →</a>
-      </div>
-      <div class="col-lg-6 reveal reveal-delay-1">
-        <div id="home-projects-preview" class="row g-3"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <p class="eyebrow text-center mb-2">From the blog</p>
-    <h2 class="text-center mb-5">Practical guides on custom software &amp; automation.</h2>
-    <div id="home-blog-preview" class="row g-4"></div>
-    <div class="text-center mt-4">
-      <a href="/blog.html" class="btn-brand-outline">Read all articles →</a>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <p class="eyebrow text-center mb-2">Pricing</p>
-    <h2 class="text-center mb-5">Starting points, scoped to your project.</h2>
-    <div class="row g-4 justify-content-center">
-      <div class="col-md-4">
-        <div class="pricing-card service-card reveal">
-          <span class="eyebrow d-block mb-2" data-content="pricing_tier_1_name">Starter</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_1_price">From GHS 6,000</div>
-          <p class="text-muted-custom mb-0 small" data-content="pricing_tier_1_tagline">Landing pages and simple booking or contact tools.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="pricing-card featured service-card reveal reveal-delay-1">
-          <span class="pricing-badge">Most requested</span>
-          <span class="eyebrow d-block mb-2" data-content="pricing_tier_2_name">Growth</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_2_price">From GHS 25,000</div>
-          <p class="text-muted-custom mb-0 small" data-content="pricing_tier_2_tagline">Custom web apps, CMS ecosystems, and dashboards.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="pricing-card service-card reveal reveal-delay-2">
-          <span class="eyebrow d-block mb-2" data-content="pricing_tier_3_name">Custom / Enterprise</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_3_price">Custom quote</div>
-          <p class="text-muted-custom mb-0 small" data-content="pricing_tier_3_tagline">Multi-feature platforms and mobile apps.</p>
-        </div>
-      </div>
-    </div>
-    <div class="text-center mt-4">
-      <a href="/pricing.html" class="btn-brand-outline">See full pricing →</a>
-    </div>
-  </div>
-</section>
-
-<section class="section" style="background: var(--bg-soft);">
-  <div class="container">
-    <p class="eyebrow text-center mb-2">What clients say</p>
-    <h2 class="text-center mb-5">Testimonials</h2>
     <div class="row g-4">
+      <div class="col-md-6 reveal">
+        <div class="service-card">
+          <div class="service-icon mono">01</div>
+          <h3 class="h4 mb-3" data-content="service_1_title">Custom Web Application Engineering</h3>
+          <p class="text-muted-custom mb-0" data-content="service_1_summary">Purpose-built backends paired with lean presentation layers — designed for absolute control, lightning load times, and clean role-based data architectures.</p>
+        </div>
+      </div>
+      <div class="col-md-6 reveal reveal-delay-1">
+        <div class="service-card">
+          <div class="service-icon mono">02</div>
+          <h3 class="h4 mb-3" data-content="service_2_title">CMS Development &amp; Ecosystems</h3>
+          <p class="text-muted-custom mb-0" data-content="service_2_summary">Tailored WordPress and headless CMS setups built around your specific editorial workflow and business logic — never a bloated template.</p>
+        </div>
+      </div>
+      <div class="col-md-6 reveal reveal-delay-2">
+        <div class="service-card">
+          <div class="service-icon mono">03</div>
+          <h3 class="h4 mb-3" data-content="service_3_title">Native &amp; Multi-Platform Mobile Apps</h3>
+          <p class="text-muted-custom mb-0" data-content="service_3_summary">Fluid cross-platform architectures written for flawless device performance — seamless API integration and lightweight offline asset management.</p>
+        </div>
+      </div>
+      <div class="col-md-6 reveal reveal-delay-3">
+        <div class="service-card" style="border-style: dashed;">
+          <div class="service-icon mono">04</div>
+          <h3 class="h4 mb-3">Custom AI Integrations</h3>
+          <p class="text-muted-custom mb-0">Chat assistants, content tools, and workflow automation — integrated where they genuinely improve the product. The live chat on this site is a working example, not a demo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="estimator" class="section">
+  <div class="container reveal">
+    <div class="planner-shell">
+      <div class="row g-5">
+        <div class="col-lg-7">
+          <h2 class="mb-4">Project scope planner</h2>
+
+          <div class="mb-4">
+            <label class="planner-label d-block mb-2">Select platforms</label>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="check-web" checked>
+              <label class="form-check-label" for="check-web">Web platform architecture</label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="check-mobile">
+              <label class="form-check-label" for="check-mobile">Mobile application suite</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="check-cloud">
+              <label class="form-check-label" for="check-cloud">Cloud backend / APIs</label>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="complexity-range" class="planner-label d-block mb-2">Project complexity</label>
+            <input type="range" class="form-range" min="1" max="3" value="1" id="complexity-range">
+            <div class="d-flex justify-content-between text-muted-custom small">
+              <span>MVP prototype</span>
+              <span>Standard build</span>
+              <span>Scale infrastructure</span>
+            </div>
+          </div>
+
+          <div class="planner-lead" id="planner-lead">
+            <form id="planner-lead-form" class="row g-2 pt-3" style="border-top: 1px solid var(--line);">
+              <p class="small text-muted-custom mb-1">Want this estimate in writing? I'll follow up within 48 hours.</p>
+              <div class="col-sm-4"><input type="text" class="form-control" id="lead-name" placeholder="Your name" required></div>
+              <div class="col-sm-4"><input type="email" class="form-control" id="lead-email" placeholder="Email address" required></div>
+              <input type="text" name="website" id="lead-website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true">
+              <div class="col-sm-4"><button type="submit" class="btn-brand w-100" id="lead-submit">Send me this estimate</button></div>
+              <div class="col-12"><p class="small mb-0 d-none" id="lead-status"></p></div>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-lg-5 d-flex align-items-stretch">
+          <div class="planner-result w-100">
+            <div>
+              <span class="planner-label d-block mb-2">Engineering timeline estimate</span>
+              <div class="planner-hours" id="planner-hours">45 hours</div>
+              <p class="text-muted-custom small mt-1">Approximate development lifecycle range</p>
+            </div>
+            <div style="border-top: 1px solid var(--line);" class="pt-3">
+              <div class="planner-phase"><span>Phase 1: Architecture blueprint</span> <strong id="planner-blueprint">1 wk</strong></div>
+              <div class="planner-phase"><span>Phase 2: Alpha environment launch</span> <strong id="planner-launch">2–3 wks</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row mb-4 reveal">
+      <div class="col-lg-7">
+        <span class="eyebrow d-block mb-2">// Selected deployments</span>
+        <h2 class="display-5">Proven builds, real outcomes.</h2>
+      </div>
+    </div>
+
+    <div id="case-rows">
+      <div class="case-row">
+        <div class="row g-5 align-items-center">
+          <div class="col-lg-6"><div class="skeleton" style="height: 220px;"></div></div>
+          <div class="col-lg-5 offset-lg-1"><div class="skeleton" style="height: 220px;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5 reveal">
+      <a href="/projects.html" class="btn-brand-outline">See all projects →</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container reveal">
+    <div class="capability-panel">
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-4">
+          <span class="eyebrow d-block mb-2">// Capability layer</span>
+          <h2 class="h3 mb-3">Modern architectural blueprints</h2>
+          <p class="text-muted-custom small mb-4">Pick a track to inspect the technology layer behind each type of build.</p>
+          <div class="d-flex flex-column gap-2" id="track-selector">
+            <button type="button" class="track-btn active" data-track="web">Web engine track</button>
+            <button type="button" class="track-btn" data-track="mobile">Mobile application track</button>
+            <button type="button" class="track-btn" data-track="cloud">Cloud &amp; APIs track</button>
+          </div>
+        </div>
+        <div class="col-lg-7 offset-lg-1">
+          <div class="track-pane" data-pane="web">
+            <div class="service-card">
+              <h3 class="h5 mb-3">Lean-first delivery</h3>
+              <p class="text-muted-custom mb-4">Purpose-built stacks over massive framework dependencies — fast, ultra-performant interfaces backed by clean PHP and JavaScript cores.</p>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="mono-badge">PHP</span>
+                <span class="mono-badge">JavaScript ES6+</span>
+                <span class="mono-badge">React</span>
+                <span class="mono-badge">CSS Variables</span>
+                <span class="mono-badge">Bootstrap Utilities</span>
+              </div>
+            </div>
+          </div>
+          <div class="track-pane d-none" data-pane="mobile">
+            <div class="service-card">
+              <h3 class="h5 mb-3">Cross-platform native core</h3>
+              <p class="text-muted-custom mb-4">Clean code structures deployed across iOS and Android while using local device hardware efficiently.</p>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="mono-badge">React Native</span>
+                <span class="mono-badge">Native API Integrations</span>
+                <span class="mono-badge">Offline Asset Storage</span>
+                <span class="mono-badge">Push Pipelines</span>
+              </div>
+            </div>
+          </div>
+          <div class="track-pane d-none" data-pane="cloud">
+            <div class="service-card">
+              <h3 class="h5 mb-3">High-performance asynchronous data</h3>
+              <p class="text-muted-custom mb-4">REST API environments engineered to route complex data flows seamlessly — with role-based access control baked in.</p>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="mono-badge">REST APIs</span>
+                <span class="mono-badge">MySQL / PostgreSQL</span>
+                <span class="mono-badge">Role-Based Access Control</span>
+                <span class="mono-badge">Webhooks &amp; Automation</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row mb-4 reveal">
+      <div class="col-lg-7">
+        <span class="eyebrow d-block mb-2">// Client signals</span>
+        <h2 class="display-6">What clients say.</h2>
+      </div>
+    </div>
+    <div class="row g-4" id="testimonial-grid">
       <div class="col-md-4">
         <div class="testimonial-card reveal">
           <p class="testimonial-quote">"Prince took a vague idea and turned it into a real product in weeks, not months. He asked the right questions upfront so we never had to backtrack."</p>
@@ -343,76 +361,20 @@
         </div>
       </div>
     </div>
-    <div class="text-center mt-4">
+    <div class="mt-4 reveal">
       <a href="/testimonials.html" class="btn-brand-outline">Read more reviews →</a>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container" style="max-width: 800px;">
-    <p class="eyebrow text-center mb-2">Questions</p>
-    <h2 class="text-center mb-5">Frequently asked questions</h2>
-    <div class="accordion faq-accordion reveal" id="faq-accordion">
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq-1">
-            What's your typical project timeline?
-          </button>
-        </h2>
-        <div id="faq-1" class="accordion-collapse collapse show" data-bs-parent="#faq-accordion">
-          <div class="accordion-body">Most custom web projects take 3-8 weeks depending on scope; mobile apps typically run 6-12 weeks. You'll get a concrete estimate after the discovery call, not a vague range.</div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-2">
-            Do you work with existing codebases, or only new projects?
-          </button>
-        </h2>
-        <div id="faq-2" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
-          <div class="accordion-body">Both. I regularly take over existing WordPress sites, legacy APIs, and half-finished apps — the first step is always an honest technical audit before committing to a plan.</div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-3">
-            What's your pricing model?
-          </button>
-        </h2>
-        <div id="faq-3" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
-          <div class="accordion-body">Fixed-price for well-scoped projects, time-and-materials for ongoing work or evolving scope. You'll always know the number before work starts, not after.</div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-4">
-            Can you work alongside my existing team or designer?
-          </button>
-        </h2>
-        <div id="faq-4" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
-          <div class="accordion-body">Yes — I'm comfortable slotting into an existing team, working from your designer's Figma files, or collaborating with an in-house developer on a shared codebase.</div>
-        </div>
-      </div>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-5">
-            What happens after launch?
-          </button>
-        </h2>
-        <div id="faq-5" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
-          <div class="accordion-body">Every project includes a post-launch monitoring window, and ongoing support/retainer options are available if you want a direct line for updates, fixes, and new features.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section text-center">
+<section class="section text-center" style="border-top: 1px solid var(--line);">
   <div class="container reveal">
-    <h2 class="mb-3">Have a project in mind?</h2>
+    <h2 class="display-6 mb-3">Have a project in mind?</h2>
     <p class="fs-5 text-muted-custom mb-4">Let's talk about what you're building and how to make it fast, secure, and maintainable.</p>
-    <a href="/contact.html" class="btn-brand">Get in touch →</a>
+    <div class="d-flex flex-wrap gap-3 justify-content-center">
+      <a href="/book.html" class="btn-brand">Book a discovery call</a>
+      <a href="/contact.html" class="btn-brand-outline">Send a message</a>
+    </div>
   </div>
 </section>
 
@@ -447,62 +409,8 @@
 <script src="/js/theme.js"></script>
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
+<script src="/js/home.js"></script>
 <script src="/js/ai-boot.js"></script>
-<script>
-(async function () {
-  try {
-    const projects = await api.get('/api/v1/projects');
-    const featured = projects.find(p => p.is_featured) || projects[0];
-    const heroBox = document.getElementById('hero-featured');
-    if (featured) {
-      heroBox.outerHTML = `
-        <a href="/project.html?slug=${featured.slug}" class="text-decoration-none">
-          <img src="${featured.cover_image_path}" alt="${featured.title}" class="w-100 rounded-3 mb-3" style="aspect-ratio:16/10;object-fit:cover;">
-          <h6 class="mb-1" style="color: var(--ink);">${featured.title}</h6>
-          <p class="small text-muted-custom mb-0">${featured.summary}</p>
-        </a>`;
-    }
-
-    const previewBox = document.getElementById('home-projects-preview');
-    previewBox.innerHTML = projects.slice(0, 4).map(p => `
-      <div class="col-6">
-        <a href="/project.html?slug=${p.slug}" class="text-decoration-none">
-          <img src="${p.cover_image_path}" alt="${p.title}" class="w-100 rounded-3 mb-2" style="aspect-ratio:16/10;object-fit:cover;">
-          <p class="small mb-0" style="color: var(--ink);">${p.title}</p>
-        </a>
-      </div>
-    `).join('');
-  } catch (e) {
-    console.error('Failed to load projects', e);
-  }
-})();
-
-(async function () {
-  try {
-    const posts = await api.get('/api/v1/blog');
-    const previewBox = document.getElementById('home-blog-preview');
-    previewBox.innerHTML = posts.slice(0, 3).map((p, i) => `
-      <div class="col-md-4 reveal reveal-delay-${i + 1}">
-        <a href="/blog-post.html?slug=${p.slug}" class="text-decoration-none">
-          <div class="project-card">
-            <img src="${p.cover_image_path}" alt="${p.title}">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                ${p.category ? `<span class="eyebrow mb-0">${p.category}</span>` : '<span></span>'}
-                <span class="small text-muted-custom">⏱ ${p.reading_time} min read</span>
-              </div>
-              <h5 class="mb-2">${p.title}</h5>
-              <p class="small text-muted-custom mb-0">${p.excerpt}</p>
-            </div>
-          </div>
-        </a>
-      </div>
-    `).join('');
-  } catch (e) {
-    console.error('Failed to load blog posts', e);
-  }
-})();
-</script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
 </body>
