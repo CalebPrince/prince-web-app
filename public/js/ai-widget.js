@@ -283,6 +283,32 @@
     } catch (_) { /* offline defaults */ }
     setStatus(!!status.online);
 
+    // Resume an existing conversation instead of starting over — the
+    // session token survives a page refresh or navigating to a different
+    // page (sessionStorage lasts until the tab/browser closes), but until
+    // now nothing re-fetched the saved transcript, so the widget looked
+    // reset even though the server still had the whole conversation.
+    if (sessionToken) {
+      try {
+        const session = await api.get(`/api/v1/chat/session/${encodeURIComponent(sessionToken)}`);
+        const transcript = session.transcript || [];
+        if (transcript.length) {
+          transcript.forEach((turn) => appendMessage(turn.role === "user" ? "user" : "bot", turn.text));
+          if (status.online) {
+            document.getElementById("ai-widget-form").classList.remove("d-none");
+          } else {
+            showMessageForm();
+          }
+          return;
+        }
+      } catch (_) {
+        // Token expired or the session no longer exists — clear it and fall
+        // through to a fresh start below rather than showing an empty panel.
+        sessionToken = null;
+        sessionStorage.removeItem("chat_token");
+      }
+    }
+
     appendMessage("bot", status.greeting || "Hi there! 👋 Welcome to our development hub. We build high-performance web and mobile applications designed to scale.");
     if (status.online) {
       appendMessage("bot", status.intro || "Pick an option below, or describe the website or app you have in mind and I'll help however I can.");
