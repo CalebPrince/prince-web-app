@@ -399,8 +399,11 @@ storage/
     needs an Auth Config ID (created once in the Composio dashboard) pasted
     into Settings, then a one-time Connect flow that opens Composio's OAuth
     authorization in a new tab. Booking actions can be configured per tool
-    from the same Settings form. **Status: Calendar/Gmail/Slack/WhatsApp
-    connect flow built, not yet exercised against a live Composio account.**
+    from the same Settings form. **Status: Google Calendar + Gmail booking
+    actions confirmed working end-to-end against a live Composio account
+    (2026-07) — a Live Chat booking correctly created a calendar event and
+    sent the Gmail notification. Slack/WhatsApp connect flow built, not yet
+    exercised live.**
 34. **Client-side error capture** (`ClientErrorController::log()`,
     `public/js/error-log.js`) — a small script, loaded first thing in
     `<head>` on every page across the whole site (public and admin alike),
