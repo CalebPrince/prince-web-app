@@ -162,11 +162,18 @@ class AppointmentController
         $time = trim((string) ($data['time'] ?? ''));
         $topic = trim((string) ($data['topic'] ?? ''));
 
-        if ($name === '' || mb_strlen($name) > 255) {
-            return ['success' => false, 'error' => 'A valid name is required.'];
+        // filter_var happily accepts "your@email.com" as a syntactically
+        // valid address — it can't tell a real one from a placeholder an AI
+        // caller fabricated because it didn't actually have the visitor's
+        // real name/email yet but felt pressured to fill a required field
+        // rather than asking first. This is a defense in depth alongside
+        // the system prompt instruction not to do that, not a replacement
+        // for it — it only catches the handful of obvious, common patterns.
+        if ($name === '' || mb_strlen($name) > 255 || self::looksLikePlaceholder($name)) {
+            return ['success' => false, 'error' => 'A real name is required — this looks like a placeholder. Ask the visitor for their actual name before calling this again.'];
         }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ['success' => false, 'error' => 'A valid email is required.'];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || self::looksLikePlaceholder($email)) {
+            return ['success' => false, 'error' => 'A real email is required — this looks like a placeholder. Ask the visitor for their actual email before calling this again.'];
         }
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             return ['success' => false, 'error' => 'Invalid date — use YYYY-MM-DD.'];
@@ -233,6 +240,25 @@ class AppointmentController
         ]);
 
         return ['success' => true, 'date' => $date, 'time' => $time, 'timezone' => $cfg['timezone']];
+    }
+
+    /**
+     * Catches a handful of common literal placeholder values ("Your Name",
+     * "your@email.com", "test@example.com", ...) — confirmed in production:
+     * Live Chat booked a real slot with exactly these because it needed to
+     * fill required name/email fields and never actually had the visitor's
+     * real ones. Deliberately just the obvious, common cases — this can't
+     * catch every possible fabricated value, it's a backstop alongside the
+     * system prompt instruction not to do this, not a substitute for it.
+     */
+    private static function looksLikePlaceholder(string $value): bool
+    {
+        $normalized = strtolower(trim($value));
+        return in_array($normalized, [
+            'your name', 'your email', 'your@email.com', 'name here', 'email here',
+            'example@example.com', 'test@example.com', 'test@test.com', 'n/a', 'na',
+            'none', 'unknown', 'visitor', 'client name', 'customer name', 'full name',
+        ], true);
     }
 
     /** Best-effort Composio fan-out after a confirmed booking. Booking itself never depends on these calls. */
