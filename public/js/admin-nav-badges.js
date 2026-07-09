@@ -235,11 +235,29 @@
     const dropdown = document.getElementById("notif-dropdown");
     if (!btn || !dropdown) return;
 
+    function placeDropdown() {
+      const rect = btn.getBoundingClientRect();
+      const gap = 8;
+      const margin = 12;
+      const width = Math.min(320, Math.max(220, window.innerWidth - margin * 2));
+      const left = Math.min(
+        Math.max(margin, rect.left),
+        window.innerWidth - width - margin
+      );
+
+      dropdown.style.width = `${width}px`;
+      dropdown.style.top = `${Math.round(rect.bottom + gap)}px`;
+      dropdown.style.left = `${Math.round(left)}px`;
+    }
+
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const opening = dropdown.classList.contains("d-none");
       dropdown.classList.toggle("d-none", !opening);
-      if (opening) loadNotificationDetails();
+      if (opening) {
+        placeDropdown();
+        loadNotificationDetails();
+      }
     });
 
     document.addEventListener("click", (e) => {
@@ -247,6 +265,14 @@
         dropdown.classList.add("d-none");
       }
     });
+
+    window.addEventListener("resize", () => {
+      if (!dropdown.classList.contains("d-none")) placeDropdown();
+    });
+
+    window.addEventListener("scroll", () => {
+      if (!dropdown.classList.contains("d-none")) placeDropdown();
+    }, true);
   }
 
   async function refreshNavBadges() {
