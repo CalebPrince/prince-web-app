@@ -110,10 +110,45 @@ class Composio
             return null;
         }
 
-        return self::request('POST', self::API_BASE . '/tools/execute/' . rawurlencode($toolSlug), $apiKey, [
-            'connected_account_id' => $connectedAccountId,
-            'arguments' => $params,
-        ]);
+        $payloads = [
+            [
+                'user_id' => self::adminUserId(),
+                'connected_account_id' => $connectedAccountId,
+                'arguments' => $params,
+            ],
+            [
+                'user_id' => self::adminUserId(),
+                'arguments' => $params,
+            ],
+            [
+                'connected_account_id' => $connectedAccountId,
+                'arguments' => $params,
+            ],
+        ];
+        $urls = [
+            self::API_BASE_V31 . '/tools/execute/' . rawurlencode($toolSlug),
+            self::API_BASE . '/tools/execute/' . rawurlencode($toolSlug),
+        ];
+
+        foreach ($urls as $url) {
+            foreach ($payloads as $payload) {
+                $response = self::request('POST', $url, $apiKey, $payload);
+                if ($response === null) {
+                    continue;
+                }
+                if (isset($response['successful']) && $response['successful'] === false) {
+                    error_log('Composio: tool execution returned unsuccessful: ' . json_encode($response));
+                    continue;
+                }
+                if (isset($response['error'])) {
+                    error_log('Composio: tool execution returned error: ' . json_encode($response));
+                    continue;
+                }
+                return $response;
+            }
+        }
+
+        return null;
     }
 
     /**

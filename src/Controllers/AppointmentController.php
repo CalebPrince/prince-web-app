@@ -233,22 +233,43 @@ class AppointmentController
         $summary = 'New booking: ' . $booking['name'] . ' - ' . $booking['date'] . ' ' . $booking['time'];
         $details = self::bookingMessage($booking);
 
+        $calendarId = Settings::get('composio_google_calendar_id') ?: 'primary';
+        $startIso = $start ? $start->format(\DateTimeInterface::ATOM) : "{$booking['date']}T{$booking['time']}:00";
+        $endIso = $end ? $end->format(\DateTimeInterface::ATOM) : null;
         self::executeBookingAction('google_calendar', [
-            'calendar_id' => Settings::get('composio_google_calendar_id') ?: 'primary',
-            'summary' => 'Call with ' . $booking['name'],
-            'description' => $details,
-            'start' => $start ? $start->format(\DateTimeInterface::ATOM) : "{$booking['date']}T{$booking['time']}:00",
-            'end' => $end ? $end->format(\DateTimeInterface::ATOM) : null,
-            'timezone' => $booking['timezone'],
-            'attendees' => [$booking['email']],
+            [
+                'calendar_id' => $calendarId,
+                'summary' => 'Call with ' . $booking['name'],
+                'description' => $details,
+                'start_datetime' => $startIso,
+                'end_datetime' => $endIso,
+                'timezone' => $booking['timezone'],
+                'attendees' => [['email' => $booking['email']]],
+            ],
+            [
+                'calendar_id' => $calendarId,
+                'title' => 'Call with ' . $booking['name'],
+                'description' => $details,
+                'start' => $startIso,
+                'end' => $endIso,
+                'timezone' => $booking['timezone'],
+                'attendee_emails' => [$booking['email']],
+            ],
         ], 'GOOGLECALENDAR_CREATE_EVENT');
 
         $gmailTo = Settings::get('composio_gmail_booking_to') ?: (Settings::get('notification_email') ?: Settings::get('social_email'));
         if (!empty($gmailTo)) {
             self::executeBookingAction('gmail', [
-                'to' => $gmailTo,
-                'subject' => $summary,
-                'body' => $details,
+                [
+                    'recipient_email' => $gmailTo,
+                    'subject' => $summary,
+                    'body' => $details,
+                ],
+                [
+                    'to' => $gmailTo,
+                    'subject' => $summary,
+                    'message' => $details,
+                ],
             ], 'GMAIL_SEND_EMAIL');
         }
 
@@ -266,7 +287,7 @@ class AppointmentController
         }
     }
 
-    private static function executeBookingAction(string $toolkit, array $payload, string $defaultTool): void
+    private static function executeBookingAction(string $toolkit, array $payloads, string $defaultTool): void
     {
         $accountId = Settings::get("composio_{$toolkit}_account_id");
         $tool = Settings::get("composio_{$toolkit}_booking_tool") ?: $defaultTool;
@@ -274,11 +295,21 @@ class AppointmentController
             return;
         }
 
-        $payload = array_filter($payload, fn($value) => $value !== null && $value !== '' && $value !== []);
-        $result = Composio::executeTool($tool, $accountId, $payload);
-        if ($result === null) {
-            error_log("Composio booking action failed for {$toolkit} using {$tool}");
+        $variants = self::isList($payloads) ? $payloads : [$payloads];
+        foreach ($variants as $payload) {
+            $payload = array_filter($payload, fn($value) => $value !== null && $value !== '' && $value !== []);
+            $result = Composio::executeTool($tool, $accountId, $payload);
+            if ($result !== null) {
+                return;
+            }
         }
+
+        error_log("Composio booking action failed for {$toolkit} using {$tool}");
+    }
+
+    private static function isList(array $value): bool
+    {
+        return $value === [] || array_keys($value) === range(0, count($value) - 1);
     }
 
     private static function bookingDateTime(string $date, string $time, string $timezone): ?\DateTime
