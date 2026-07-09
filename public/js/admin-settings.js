@@ -91,6 +91,7 @@ async function saveIntegrations(e) {
       openrouter_model: document.getElementById("openrouter-model").value.trim(),
       groq_api_key: document.getElementById("groq-key").value.trim(),
       groq_model: document.getElementById("groq-model").value.trim(),
+      serper_api_key: document.getElementById("serper-key").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
       makecom_webhook_url: document.getElementById("makecom-url").value.trim(),
       integration_api_key: document.getElementById("integration-api-key").value.trim(),
@@ -337,6 +338,7 @@ async function testAi() {
     document.getElementById("openrouter-model").value = settings.openrouter_model || "";
     document.getElementById("groq-key").value = settings.groq_api_key || "";
     document.getElementById("groq-model").value = settings.groq_model || "";
+    document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";

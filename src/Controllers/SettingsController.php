@@ -13,7 +13,7 @@ class SettingsController
 {
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
-        'gemini_api_key', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'slack_webhook_url', 'makecom_webhook_url',
+        'gemini_api_key', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'slack_webhook_url', 'makecom_webhook_url',
         'integration_api_key', 'notification_email',
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
         'maintenance_mode',

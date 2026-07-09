@@ -186,6 +186,8 @@ $router->patch('/api/v1/admin/testimonials/{id}', [TestimonialController::class,
 $router->delete('/api/v1/admin/testimonials/{id}', [TestimonialController::class, 'destroy']);
 $router->get('/api/v1/admin/marketing-leads', [MarketingLeadController::class, 'adminIndex']);
 $router->post('/api/v1/admin/marketing-leads', [MarketingLeadController::class, 'store']);
+$router->post('/api/v1/admin/marketing-leads/discover', [MarketingLeadController::class, 'discover']);
+$router->post('/api/v1/admin/marketing-leads/bulk', [MarketingLeadController::class, 'bulkStore']);
 $router->patch('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::class, 'update']);
 $router->delete('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::class, 'destroy']);
 $router->post('/api/v1/admin/marketing-leads/{id}/audit', [MarketingLeadController::class, 'runAudit']);

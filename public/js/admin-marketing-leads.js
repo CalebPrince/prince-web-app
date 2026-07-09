@@ -1,5 +1,7 @@
 let currentLead = null;
 let pitchModal = null;
+let discoverModal = null;
+let discoverResults = [];
 
 function siteCheckBadge(lead) {
   if (!lead.website_url) {
@@ -106,6 +108,111 @@ async function loadLeads() {
     });
   });
 }
+
+function renderDiscoverResults() {
+  const container = document.getElementById("discover-results");
+  if (discoverResults.length === 0) {
+    container.innerHTML = '';
+    updateDiscoverAddButton();
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="list-group">
+      ${discoverResults.map((r, i) => `
+        <label class="list-group-item d-flex gap-2 align-items-start ${r.already_added ? 'text-muted-custom' : ''}">
+          <input type="checkbox" class="form-check-input mt-1 discover-check" data-index="${i}" ${r.already_added ? 'disabled' : ''}>
+          <span class="flex-grow-1">
+            <span class="fw-semibold">${escapeHtml(r.business_name)}</span>
+            ${r.already_added ? '<span class="badge bg-secondary ms-2">Already added</span>' : ''}
+            <br>
+            <span class="small">${r.website_url ? `<a href="${escapeHtml(r.website_url)}" target="_blank" rel="noopener">${escapeHtml(r.website_url)}</a>` : '<span class="text-muted-custom">No website found</span>'}</span>
+            ${r.address ? `<br><span class="small text-muted-custom">${escapeHtml(r.address)}</span>` : ''}
+          </span>
+        </label>
+      `).join("")}
+    </div>
+  `;
+
+  container.querySelectorAll(".discover-check").forEach(cb => {
+    cb.addEventListener("change", updateDiscoverAddButton);
+  });
+  updateDiscoverAddButton();
+}
+
+function updateDiscoverAddButton() {
+  const checked = document.querySelectorAll(".discover-check:checked").length;
+  const btn = document.getElementById("discover-add-btn");
+  btn.textContent = `Add selected (${checked})`;
+  btn.disabled = checked === 0;
+}
+
+document.getElementById("discover-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById("discover-msg");
+  const btn = document.getElementById("discover-submit-btn");
+  msg.classList.add("d-none");
+  discoverResults = [];
+  renderDiscoverResults();
+  btn.disabled = true;
+  btn.textContent = "Searching…";
+
+  try {
+    const response = await api.post("/api/v1/admin/marketing-leads/discover", {
+      query: document.getElementById("discover-query").value.trim(),
+    });
+    discoverResults = response.results || [];
+    renderDiscoverResults();
+    if (discoverResults.length === 0) {
+      msg.className = "alert alert-secondary py-2 small";
+      msg.textContent = "No results found for that search.";
+      msg.classList.remove("d-none");
+    }
+  } catch (err) {
+    msg.className = "alert alert-danger py-2 small";
+    msg.textContent = err.message || "Search failed.";
+    msg.classList.remove("d-none");
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Search";
+});
+
+document.getElementById("discover-add-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("discover-add-btn");
+  const msg = document.getElementById("discover-msg");
+  const indices = [...document.querySelectorAll(".discover-check:checked")].map(cb => Number(cb.dataset.index));
+  const leads = indices.map(i => ({
+    business_name: discoverResults[i].business_name,
+    website_url: discoverResults[i].website_url,
+  }));
+  if (!leads.length) return;
+
+  btn.disabled = true;
+  btn.textContent = "Adding…";
+  try {
+    const response = await api.post("/api/v1/admin/marketing-leads/bulk", { leads });
+    discoverModal.hide();
+    document.getElementById("discover-form").reset();
+    discoverResults = [];
+    renderDiscoverResults();
+    msg.classList.add("d-none");
+    await loadLeads();
+    alert(`Added ${response.added} lead${response.added === 1 ? "" : "s"}.`);
+  } catch (err) {
+    msg.className = "alert alert-danger py-2 small";
+    msg.textContent = err.message || "Could not add leads.";
+    msg.classList.remove("d-none");
+  }
+  updateDiscoverAddButton();
+});
+
+document.getElementById("discover-modal").addEventListener("hidden.bs.modal", () => {
+  document.getElementById("discover-form").reset();
+  document.getElementById("discover-msg").classList.add("d-none");
+  discoverResults = [];
+  renderDiscoverResults();
+});
 
 function renderPitchPreview() {
   const text = document.getElementById("pitch-body").value;
@@ -223,5 +330,6 @@ document.getElementById("pitch-body").addEventListener("input", renderPitchPrevi
   wireLogout();
 
   pitchModal = new bootstrap.Modal(document.getElementById("pitch-modal"));
+  discoverModal = new bootstrap.Modal(document.getElementById("discover-modal"));
   await loadLeads();
 })();

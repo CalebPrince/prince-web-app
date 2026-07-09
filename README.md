@@ -219,20 +219,37 @@ storage/
     out.
 22. **Marketing Leads** (`/admin/marketing-leads.html`, admin-only — no
     public routes at all) is an internal outreach tool: add a target
-    business, run a real technical audit of its site (SSL, mobile viewport
-    meta tag, title/meta description, response time — genuinely verifiable,
-    never fabricated), then draft an AI pitch that only references the
-    actual findings. There is deliberately no bulk-send path — "Approve &
-    Send" opens the admin's own mail client with the draft prefilled
-    (`mailto:`), and the lead is only marked `sent` after that. The audit
-    fetch has an SSRF guard (`MarketingLeadController::isSafeUrl`) blocking
-    loopback/private/reserved IP targets. `website_url` is optional — a
-    business with no site yet is a valid lead too, and skips straight to a
-    generic (not fabricated-findings) pitch instead of an audit. The
-    generated body is instructed to avoid invented statistics, false
-    urgency, and unverifiable financial-harm claims; the sign-off and
-    contact channels (WhatsApp/phone from Settings, portfolio URL) are
-    appended in PHP from real data, never left for the model to guess at.
+    business (one at a time, or via "Find leads by niche" — see below), run
+    a real technical audit of its site (SSL, mobile viewport meta tag,
+    title/meta description, response time, HTTP error status, and common
+    broken-page signatures like a WordPress DB-connection error or an
+    unresolvable domain — genuinely verifiable, never fabricated), then
+    draft an AI pitch that only references the actual findings. There is
+    deliberately no bulk-send path — "Approve & Send" opens the admin's own
+    mail client with the draft prefilled (`mailto:`), and the lead is only
+    marked `sent` after that. The audit fetch has an SSRF guard
+    (`MarketingLeadController::isSafeUrl`) blocking loopback/private/reserved
+    IP targets — a domain that simply fails to resolve is let through,
+    though, since that's not an SSRF risk and is itself a real, useful
+    finding. `website_url` is optional — a business with no site yet is a
+    valid lead too, and skips straight to a generic (not fabricated-findings)
+    pitch instead of an audit. The generated body is instructed to avoid
+    invented statistics, false urgency, and unverifiable financial-harm
+    claims; the sign-off and contact channels (WhatsApp/phone from Settings,
+    portfolio URL) are appended in PHP from real data, never left for the
+    model to guess at.
+
+    "Find leads by niche" (`MarketingLeadController::discover()`) searches
+    for real candidate businesses (e.g. "plumbers in Accra") via Serper's
+    Google Places search API — name, real website if one exists, address,
+    phone, rating — and shows them as a checklist for the admin to hand-pick
+    which to add (`bulkStore()`), flagging ones already tracked by URL so
+    nothing gets double-added. This is deliberately a real search API call,
+    not an AI-generated list: an LLM "finding" businesses for a niche would
+    just be hallucinating plausible-looking fake names/URLs, which is
+    exactly what this whole tool is built to avoid elsewhere. Needs a Serper
+    API key in Admin → Settings → Integrations; each hand-picked lead still
+    goes through the normal audit/pitch/review/send pipeline individually.
 23. **Gemini → OpenRouter → Groq fallback** (`src/Support/AiText.php`): every
     plain single-shot "prompt in, text out" AI call (pitch drafting,
     prototype generation, the secondary AI assistant) tries Gemini first

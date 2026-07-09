@@ -53,7 +53,10 @@
           mail client for one final review — nothing is auto-sent in bulk.
         </p>
       </div>
-      <button type="button" class="btn-brand btn-sm" data-bs-toggle="modal" data-bs-target="#add-lead-modal">+ Add lead</button>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#discover-modal">Find leads by niche</button>
+        <button type="button" class="btn-brand btn-sm" data-bs-toggle="modal" data-bs-target="#add-lead-modal">+ Add lead</button>
+      </div>
     </div>
 
     <div class="admin-card p-0">
@@ -71,6 +74,33 @@
       </table>
     </div>
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No leads yet — add one to get started.</div>
+  </div>
+</div>
+
+<div class="modal fade" id="discover-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Find leads by niche</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted-custom small">
+          Real Google Places search results — nothing here is AI-generated. Type a niche and location,
+          e.g. "plumbers in Accra" or "dentists in Kumasi".
+        </p>
+        <form id="discover-form" class="d-flex gap-2 mb-3">
+          <input type="text" class="form-control" id="discover-query" required maxlength="200" placeholder="e.g. plumbers in Accra">
+          <button type="submit" class="btn-brand" id="discover-submit-btn">Search</button>
+        </form>
+        <div id="discover-msg" class="alert py-2 small d-none"></div>
+        <div id="discover-results"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn-brand" id="discover-add-btn" disabled>Add selected (0)</button>
+      </div>
+    </div>
   </div>
 </div>
 

@@ -19,6 +19,16 @@ use App\Support\Settings;
  * send — there is no bulk-send / auto-blast path, since these are
  * unsolicited contacts and every message should be a deliberate, reviewed
  * decision.
+ *
+ * Leads can also be found by niche (discover(), backed by a real business
+ * search API — Serper's Google Places search, not an AI guess) rather than
+ * added one at a time. This is deliberately kept out of AiText: an AI
+ * "generating" business names/websites for a niche would just be
+ * hallucinating plausible-looking fake ones, which is exactly what every
+ * other part of this tool goes out of its way to avoid — search results
+ * only ever come from a real, verifiable API response. Discovery only
+ * returns candidates for review; adding them (bulkStore()) is still a
+ * separate, explicit admin action, same as every other step here.
  */
 class MarketingLeadController
 {
@@ -64,6 +74,108 @@ class MarketingLeadController
             ->execute([$businessName, $websiteUrl ?: null, $contactEmail ?: null]);
 
         Response::json(['id' => (int) $pdo->lastInsertId()], 201);
+    }
+
+    /**
+     * POST /api/v1/admin/marketing-leads/discover — body: {query} — finds
+     * real candidate businesses for a niche/location (e.g. "plumbers in
+     * Accra") via a real search API. Returns candidates only; nothing is
+     * added to the leads list until bulkStore() is called with a
+     * hand-picked subset.
+     */
+    public static function discover(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $query = trim((string) ($data['query'] ?? ''));
+        if ($query === '' || mb_strlen($query) > 200) {
+            Response::error('Enter a niche and location to search, e.g. "plumbers in Accra".', 422);
+        }
+
+        $apiKey = Settings::get('serper_api_key');
+        if (empty($apiKey)) {
+            Response::error('No search provider configured — add a Serper API key in Admin → Settings.', 503);
+        }
+
+        $results = self::searchBusinesses($apiKey, $query);
+        if ($results === null) {
+            Response::error('Search failed — please try again in a moment.', 502);
+        }
+        if (!$results) {
+            Response::json(['results' => []]);
+        }
+
+        // Flag candidates that are already tracked (by website URL) so the
+        // admin doesn't end up re-adding a lead they've already worked on.
+        $pdo = Database::get();
+        $existingUrls = array_map(
+            fn($u) => rtrim(strtolower((string) $u), '/'),
+            array_column(
+                $pdo->query('SELECT website_url FROM marketing_leads WHERE website_url IS NOT NULL')->fetchAll(),
+                'website_url'
+            )
+        );
+        foreach ($results as &$r) {
+            $r['already_added'] = $r['website_url'] !== null
+                && in_array(rtrim(strtolower($r['website_url']), '/'), $existingUrls, true);
+        }
+        unset($r);
+
+        Response::json(['results' => $results]);
+    }
+
+    /**
+     * POST /api/v1/admin/marketing-leads/bulk — body: {leads:[{business_name, website_url?}]}
+     * Adds a hand-picked batch of discovered candidates in one call. Each
+     * one still goes through the normal pending -> audit -> pitch -> review
+     * -> send pipeline individually — this only replaces the one-at-a-time
+     * "+ Add lead" step, not any of the review gates after it.
+     */
+    public static function bulkStore(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $leads = is_array($data['leads'] ?? null) ? $data['leads'] : [];
+        if (!$leads) {
+            Response::error('No leads to add.', 422);
+        }
+        if (count($leads) > 50) {
+            Response::error('Add up to 50 leads at a time.', 422);
+        }
+
+        $pdo = Database::get();
+        $existingUrls = array_map(
+            fn($u) => rtrim(strtolower((string) $u), '/'),
+            array_column(
+                $pdo->query('SELECT website_url FROM marketing_leads WHERE website_url IS NOT NULL')->fetchAll(),
+                'website_url'
+            )
+        );
+
+        $stmt = $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url) VALUES (?, ?)');
+        $added = 0;
+        foreach ($leads as $lead) {
+            $name = trim((string) ($lead['business_name'] ?? ''));
+            if ($name === '' || mb_strlen($name) > 255) {
+                continue;
+            }
+            $url = trim((string) ($lead['website_url'] ?? ''));
+            if ($url !== '' && (!preg_match('#^https?://#i', $url) || !filter_var($url, FILTER_VALIDATE_URL))) {
+                $url = ''; // drop a malformed URL rather than reject the whole batch over one bad entry
+            }
+            $normalized = rtrim(strtolower($url), '/');
+            if ($url !== '' && in_array($normalized, $existingUrls, true)) {
+                continue; // already tracked
+            }
+
+            $stmt->execute([$name, $url ?: null]);
+            if ($url !== '') {
+                $existingUrls[] = $normalized;
+            }
+            $added++;
+        }
+
+        Response::json(['added' => $added], 201);
     }
 
     /** PATCH /api/v1/admin/marketing-leads/{id} — body: any of business_name, website_url, contact_email, pitch_subject, pitch_body, notes, status */
@@ -192,6 +304,71 @@ class MarketingLeadController
     }
 
     // ---- internals ----------------------------------------------------------
+
+    /**
+     * Real business search via Serper's Google Places search — returns
+     * actual listings (name, real website if Google has one on file,
+     * address, phone, rating), never AI-generated. A business with no
+     * website on Google Places is still returned (website_url null) since
+     * that's a valid lead too, same as manually-added no-website leads.
+     *
+     * @return array<int,array{business_name:string,website_url:?string,address:?string,phone:?string,rating:?float}>|null null only on a hard search failure
+     */
+    private static function searchBusinesses(string $apiKey, string $query): ?array
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $ch = curl_init('https://google.serper.dev/places');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'X-API-KEY: ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode(['q' => $query]),
+            CURLOPT_TIMEOUT => 15,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'Marketing lead discovery: Serper search failed: status=%s curl_error=%s body=%s',
+                $status,
+                $curlError !== '' ? $curlError : 'none',
+                is_string($response) ? substr($response, 0, 500) : 'n/a'
+            ));
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        $places = $decoded['places'] ?? [];
+        if (!is_array($places)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($places as $place) {
+            $name = trim((string) ($place['title'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $website = trim((string) ($place['website'] ?? ''));
+            $out[] = [
+                'business_name' => $name,
+                'website_url' => $website !== '' && preg_match('#^https?://#i', $website) ? $website : null,
+                'address' => $place['address'] ?? null,
+                'phone' => $place['phoneNumber'] ?? null,
+                'rating' => isset($place['rating']) ? (float) $place['rating'] : null,
+            ];
+        }
+
+        return $out;
+    }
 
     private static function findOrFail(\PDO $pdo, int $id): array
     {
