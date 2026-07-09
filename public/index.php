@@ -48,6 +48,7 @@ use App\Controllers\ClientController;
 use App\Controllers\ClientPortalController;
 use App\Controllers\ComposioController;
 use App\Controllers\DashboardController;
+use App\Controllers\ErrorLogController;
 use App\Controllers\InquiryController;
 use App\Controllers\IntegrationController;
 use App\Controllers\LiveChatController;
@@ -196,6 +197,7 @@ $router->patch('/api/v1/admin/social-drafts/{id}', [SocialDraftController::class
 $router->delete('/api/v1/admin/social-drafts/{id}', [SocialDraftController::class, 'destroy']);
 $router->get('/api/v1/admin/activity-log', [ActivityLogController::class, 'index']);
 $router->get('/api/v1/admin/activity-log/entity-types', [ActivityLogController::class, 'entityTypes']);
+$router->get('/api/v1/admin/error-logs', [ErrorLogController::class, 'index']);
 $router->get('/api/v1/admin/composio/status', [ComposioController::class, 'status']);
 $router->post('/api/v1/admin/composio/connect', [ComposioController::class, 'connect']);
 $router->post('/api/v1/admin/composio/disconnect', [ComposioController::class, 'disconnect']);
