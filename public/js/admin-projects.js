@@ -3,6 +3,26 @@ let galleryPaths = [];
 let currentProjects = [];
 let draggedId = null;
 let approvedTestimonials = [];
+let slugEditedManually = false;
+
+function slugify(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
+function updateSlugFromTitle(force = false) {
+  const title = document.getElementById("title");
+  const slug = document.getElementById("slug");
+  if (!title || !slug) return;
+  if (!force && slugEditedManually) return;
+  slug.value = slugify(title.value);
+}
 
 async function uploadFile(file, isRetry = false) {
   const formData = new FormData();
@@ -140,6 +160,7 @@ async function loadTestimonialOptions() {
 function openNewModal() {
   document.getElementById("project-form").reset();
   document.getElementById("project-id").value = "";
+  slugEditedManually = false;
   document.getElementById("modal-title").textContent = "New Project";
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
@@ -153,6 +174,7 @@ function openNewModal() {
 }
 
 function openEditModal(project) {
+  slugEditedManually = true;
   document.getElementById("project-id").value = project.id;
   document.getElementById("title").value = project.title;
   document.getElementById("slug").value = project.slug;
@@ -182,7 +204,7 @@ async function saveProject() {
   const id = document.getElementById("project-id").value;
   const payload = {
     title: document.getElementById("title").value,
-    slug: document.getElementById("slug").value,
+    slug: document.getElementById("slug").value.trim() || slugify(document.getElementById("title").value),
     summary: document.getElementById("summary").value,
     case_study_body: document.getElementById("case_study_body").value,
     category: document.getElementById("category").value,
@@ -232,6 +254,13 @@ async function deleteProject(id) {
   projectModal = new bootstrap.Modal(document.getElementById("project-modal"));
   document.getElementById("new-project-btn").addEventListener("click", openNewModal);
   document.getElementById("save-project-btn").addEventListener("click", saveProject);
+  document.getElementById("title").addEventListener("input", () => updateSlugFromTitle());
+  document.getElementById("slug").addEventListener("input", () => {
+    slugEditedManually = true;
+    const slug = document.getElementById("slug");
+    const cleaned = slugify(slug.value);
+    if (slug.value !== cleaned) slug.value = cleaned;
+  });
 
   document.getElementById("cover-upload-input").addEventListener("change", async (e) => {
     const file = e.target.files[0];

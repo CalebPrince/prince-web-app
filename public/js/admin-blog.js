@@ -1,5 +1,25 @@
 let postModal = null;
 let allPosts = [];
+let slugEditedManually = false;
+
+function slugify(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-");
+}
+
+function updateSlugFromTitle(force = false) {
+  const title = document.getElementById("title");
+  const slug = document.getElementById("slug");
+  if (!title || !slug) return;
+  if (!force && slugEditedManually) return;
+  slug.value = slugify(title.value);
+}
 
 async function uploadFile(file, isRetry = false) {
   const formData = new FormData();
@@ -72,6 +92,7 @@ async function loadPosts() {
 function openNewModal() {
   document.getElementById("post-form").reset();
   document.getElementById("post-id").value = "";
+  slugEditedManually = false;
   document.getElementById("modal-title").textContent = "New Post";
   document.getElementById("cover-upload-msg").textContent = "";
   setCoverPreview(null);
@@ -79,6 +100,7 @@ function openNewModal() {
 }
 
 function openEditModal(post) {
+  slugEditedManually = true;
   document.getElementById("post-id").value = post.id;
   document.getElementById("title").value = post.title;
   document.getElementById("category").value = post.category || "";
@@ -99,7 +121,7 @@ async function savePost() {
   const payload = {
     title: document.getElementById("title").value,
     category: document.getElementById("category").value.trim(),
-    slug: document.getElementById("slug").value,
+    slug: document.getElementById("slug").value.trim() || slugify(document.getElementById("title").value),
     excerpt: document.getElementById("excerpt").value,
     body: document.getElementById("body").value,
     cover_image_path: document.getElementById("cover_image_path").value,
@@ -140,6 +162,13 @@ async function deletePost(id) {
   postModal = new bootstrap.Modal(document.getElementById("post-modal"));
   document.getElementById("new-post-btn").addEventListener("click", openNewModal);
   document.getElementById("save-post-btn").addEventListener("click", savePost);
+  document.getElementById("title").addEventListener("input", () => updateSlugFromTitle());
+  document.getElementById("slug").addEventListener("input", () => {
+    slugEditedManually = true;
+    const slug = document.getElementById("slug");
+    const cleaned = slugify(slug.value);
+    if (slug.value !== cleaned) slug.value = cleaned;
+  });
 
   document.getElementById("cover-upload-input").addEventListener("change", async (e) => {
     const file = e.target.files[0];

@@ -15,6 +15,21 @@ class BlogController
 {
     private const WORDS_PER_MINUTE = 200;
 
+    private static function slugify(string $title): string
+    {
+        $slug = strtolower(trim($title));
+        $slug = preg_replace('/&+/', ' and ', $slug) ?? $slug;
+        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? $slug;
+        $slug = trim($slug, '-');
+        return $slug !== '' ? $slug : 'post';
+    }
+
+    private static function normalizeSlugData(array &$data): void
+    {
+        $slug = trim((string) ($data['slug'] ?? ''));
+        $data['slug'] = $slug !== '' ? self::slugify($slug) : self::slugify((string) ($data['title'] ?? ''));
+    }
+
     private static function readingTime(string $body): int
     {
         return max(1, (int) ceil(str_word_count($body) / self::WORDS_PER_MINUTE));
@@ -68,6 +83,7 @@ class BlogController
     {
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        self::normalizeSlugData($data);
 
         $errors = Validator::validateBlogPost($data);
         if ($errors) {
@@ -115,6 +131,7 @@ class BlogController
     {
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        self::normalizeSlugData($data);
 
         $errors = Validator::validateBlogPost($data);
         if ($errors) {

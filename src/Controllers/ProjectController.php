@@ -13,6 +13,21 @@ use App\Support\Validator;
 
 class ProjectController
 {
+    private static function slugify(string $title): string
+    {
+        $slug = strtolower(trim($title));
+        $slug = preg_replace('/&+/', ' and ', $slug) ?? $slug;
+        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? $slug;
+        $slug = trim($slug, '-');
+        return $slug !== '' ? $slug : 'project';
+    }
+
+    private static function normalizeSlugData(array &$data): void
+    {
+        $slug = trim((string) ($data['slug'] ?? ''));
+        $data['slug'] = $slug !== '' ? self::slugify($slug) : self::slugify((string) ($data['title'] ?? ''));
+    }
+
     private static function attachTags(\PDO $pdo, array $projects): array
     {
         if (!$projects) {
@@ -111,6 +126,7 @@ class ProjectController
     {
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        self::normalizeSlugData($data);
 
         $errors = Validator::validateProject($data);
         if ($errors) {
@@ -160,6 +176,7 @@ class ProjectController
     {
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        self::normalizeSlugData($data);
         $id = (int) $params['id'];
 
         $errors = Validator::validateProject($data);
