@@ -166,6 +166,50 @@
     })();
   }
 
+  // --- Latest archive posts (blog API) --------------------------------------
+  // The API returns posts newest-first, so the top three here are always the
+  // three most recent publishes. The static entries in the HTML stay as the
+  // fallback when the API is unreachable.
+  const archiveList = document.getElementById("archive-latest");
+  if (archiveList) {
+    (async () => {
+      let posts = [];
+      try {
+        posts = await api.get("/api/v1/blog");
+      } catch (_) {
+        return; // static fallback entries stay
+      }
+      if (!posts.length) return;
+
+      const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      const monthYear = iso => {
+        const d = new Date(String(iso || "").replace(" ", "T"));
+        return isNaN(d) ? "" : d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+      };
+
+      archiveList.innerHTML = posts.slice(0, 3).map((p, i) => {
+        const url = `/archive-post.html?slug=${encodeURIComponent(p.slug)}`;
+        const dateLabel = monthYear(p.created_at);
+        return `
+          <article class="archive-entry reveal reveal-on-scroll${i ? ` reveal-delay-${i}` : ""}">
+            <div>
+              <span class="archive-domain">[${esc((p.category || "Technical Archive").toUpperCase())}]</span>
+              ${dateLabel ? `<div class="small text-muted-custom mt-2">${esc(dateLabel)}</div>` : ""}
+            </div>
+            <div>
+              <h3 class="h3 archive-title"><a href="${url}">${esc(p.title)}</a></h3>
+              <p class="archive-meta">${esc(p.excerpt)}</p>
+              <a href="${url}" class="archive-link">Read the breakdown</a>
+            </div>
+            <div class="archive-metric">
+              <strong>${Number(p.reading_time) || 1} min</strong>
+              <span>Technical read</span>
+            </div>
+          </article>`;
+      }).join("");
+    })();
+  }
+
   // --- Live testimonials + hero rating pill --------------------------------
   const grid = document.getElementById("testimonial-grid");
   if (grid) {

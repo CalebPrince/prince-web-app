@@ -24,9 +24,11 @@ class BlogController
     public static function index(): void
     {
         $pdo = Database::get();
+        // Highest sort_order first: new posts get max+1 (see store()), so the
+        // newest post always leads the archive, homepage, and nav dropdown.
         $stmt = $pdo->query(
             'SELECT id, slug, title, excerpt, category, cover_image_path, body, created_at
-             FROM blog_posts WHERE is_published = 1 ORDER BY sort_order ASC'
+             FROM blog_posts WHERE is_published = 1 ORDER BY sort_order DESC, id DESC'
         );
         $posts = $stmt->fetchAll();
         foreach ($posts as &$post) {
@@ -57,7 +59,7 @@ class BlogController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $stmt = $pdo->query('SELECT * FROM blog_posts ORDER BY sort_order ASC');
+        $stmt = $pdo->query('SELECT * FROM blog_posts ORDER BY sort_order DESC, id DESC');
         Response::json($stmt->fetchAll());
     }
 
@@ -73,6 +75,14 @@ class BlogController
         }
 
         $pdo = Database::get();
+
+        // Posts are listed by sort_order DESC (newest first). Unless the admin
+        // sets an explicit position, a new post takes the top spot.
+        $sortOrder = (int) ($data['sort_order'] ?? 0);
+        if ($sortOrder === 0) {
+            $sortOrder = (int) $pdo->query('SELECT COALESCE(MAX(sort_order), 0) FROM blog_posts')->fetchColumn() + 1;
+        }
+
         $stmt = $pdo->prepare(
             'INSERT INTO blog_posts (slug, title, excerpt, body, category, cover_image_path, is_published, sort_order)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
@@ -85,7 +95,7 @@ class BlogController
             trim((string) ($data['category'] ?? '')) ?: null,
             $data['cover_image_path'],
             !empty($data['is_published']) ? 1 : 0,
-            (int) ($data['sort_order'] ?? 0),
+            $sortOrder,
         ]);
 
         if (!empty($data['is_published'])) {

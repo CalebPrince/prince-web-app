@@ -62,7 +62,7 @@ foreach ($projects as $project) {
 }
 
 $posts = $pdo->query(
-    "SELECT slug, title, excerpt, category, created_at, updated_at
+    "SELECT slug, title, excerpt, category, created_at, updated_at, sort_order
      FROM blog_posts WHERE is_published = 1 ORDER BY sort_order ASC"
 )->fetchAll();
 
@@ -85,7 +85,13 @@ echo "Wrote public/sitemap.xml with " . (count($staticPages) + count($projects) 
 // --- RSS feed (newest 20 posts, by publish date) ---
 
 $feedPosts = $posts;
-usort($feedPosts, fn(array $a, array $b) => strcmp($b['created_at'], $a['created_at']));
+// Tiebreak on sort_order (higher = newer) so posts seeded in the same second
+// still come out newest-first, matching the blog API's ordering.
+usort(
+    $feedPosts,
+    fn(array $a, array $b) => strcmp($b['created_at'], $a['created_at'])
+        ?: ((int) $b['sort_order'] <=> (int) $a['sort_order'])
+);
 $feedPosts = array_slice($feedPosts, 0, 20);
 
 $rss = new XMLWriter();

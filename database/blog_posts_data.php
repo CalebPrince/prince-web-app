@@ -970,4 +970,74 @@ The final setup turns the live chat into an action-taking assistant. Visitors ca
 The result is a live chat that does more than talk. It moves work forward.
 TXT,
     ],
+    [
+        'title' => 'How I Used Three LLMs to Power One Live Chat: The Gemini, OpenRouter, and Groq Failover Chain Behind This Site',
+        'slug' => 'three-llms-live-chat-gemini-openrouter-groq',
+        'category_key' => 'ai',
+        'industry_key' => 'technology',
+        'excerpt' => 'The live chat on this website runs on three LLM providers at once — Gemini, OpenRouter, and Groq — not for cleverness, but for uptime. A case study on building a failover chain where a single conversation survives any provider going down.',
+        'body' => <<<'TXT'
+The live chat widget on this website looks like one assistant. Behind it are three separate LLM providers: Google Gemini, OpenRouter, and Groq.
+
+That is not an ensemble trick or an A/B test. It is a failover chain. Gemini answers first. If Gemini fails, the same turn is retried on OpenRouter. If OpenRouter fails too, Groq gets it. And if all three are down, the chat drops to a plain keyword-and-booking-intent fallback so the visitor still gets something useful instead of a spinner.
+
+Why three providers
+
+The honest reason is that two was not enough.
+
+Gemini and OpenRouter going down — or running out of quota or credit — at the same time is not hypothetical. It happened to this site in production. A single provider outage is annoying. Two at once, on a chat widget that qualifies leads and books calls, means the front door of the business is closed and nobody notices until a visitor mentions it.
+
+Groq became the third leg for a specific reason: it has its own independent quota and billing, shared with neither of the other two, plus a genuinely usable free tier. Three providers with three independent failure domains is a very different reliability story from three keys on the same billing account.
+
+What the chat actually does
+
+This is not a plain Q&A bot, which is what makes the failover interesting. The chat is a requirements-gathering assistant with real tools it can call: checking appointment availability, booking a call, logging an inquiry, searching the site's own content, running a quick audit of a visitor's existing website, signaling a human handoff, and marking a conversation as ready for an HTML concept prototype.
+
+So the failover cannot just swap one text API for another. It has to carry a full tool-calling conversation across providers with completely different function-calling formats.
+
+Whole turns, not handoffs
+
+The most important design decision in the chain: when a provider fails, the next one retries the entire turn from scratch. There is no mid-conversation handoff where Gemini calls a tool and OpenRouter finishes the sentence.
+
+That is deliberate. Gemini's function-calling protocol carries provider-specific state (thought signatures) that has no equivalent in OpenAI-style APIs, and OpenAI-style tool_call_id bookkeeping has no equivalent in Gemini's format. Trying to translate a half-finished turn between the two is a bug factory. Either the whole turn runs on one provider, or it runs on the other.
+
+The transcript itself is stored provider-neutrally — plain role-and-text messages in the database. Each turn, whichever provider is up rebuilds its own native conversation format from that neutral history. That is what makes the retry clean: no provider ever inherits another provider's wire format.
+
+One tool schema, two dialects
+
+The tools are declared once, in Gemini's function-declaration format, and mechanically translated to the OpenAI-style tools array that both OpenRouter and Groq expect. One source of truth, so the three providers can never drift into offering different capabilities.
+
+Groq gets its own separate method rather than reusing the OpenRouter code, even though both speak the OpenAI dialect. Providers drift — headers, quirks, error shapes — and a shared abstraction across two independently evolving APIs saves fewer lines than it eventually costs in debugging.
+
+Bounded tool loops
+
+Each turn allows a maximum of two model-to-tool round trips. On the last allowed round, the tools are removed from the request entirely — which forces the model to write an actual text reply with whatever tool results it already has, instead of chaining one more call and running out the clock while a visitor stares at a typing indicator.
+
+Timeouts are tuned per provider: 12 seconds for Gemini, 30 for OpenRouter, 20 for Groq. The worst case — every provider timing out on every round — adds up to roughly two minutes of network time. On shared hosting, where the default PHP execution limit is often 30 seconds, that worst case would kill the process mid-request and the browser would see a bare "Failed to fetch." The request explicitly raises its own time limit so even the worst case ends in a clean, handled response.
+
+The floor under everything
+
+If all three AI providers fail, the chat does not apologize and die. A deterministic fallback takes over: booking-intent detection and keyword matching against the site's actual project catalog. It is obviously not as good as the AI — no tools, no prototype step — but a visitor asking about pricing or booking still gets pointed the right way.
+
+That non-AI floor changes the engineering posture of everything above it. The LLM chain can be aggressive about giving up, because giving up never means a dead widget.
+
+Debugging which leg actually ran
+
+Every chat response includes which provider actually served it: gemini, openrouter, groq, or null for the keyword fallback. That one field made it possible to verify, in production, that the failover genuinely triggers — not just in theory, but visibly, when a provider had a bad afternoon.
+
+The same three-way pattern also exists in a second, simpler form elsewhere in the app: a single-shot text generation helper used for things like drafting social posts. Same provider order, same fallback logic, but deliberately plain text only — no shared tool-calling abstraction, because the providers differ enough there that the abstraction is not worth it. The chat's tool loop and the one-shot helper stay separate on purpose.
+
+Small things that bit me
+
+PHP's json_encode turns an empty associative array into [] instead of {}, and Gemini rejects a tool response shaped like an empty list. Every no-data tool result has to be cast to an object before serialization, or exactly the tool-using turns fail while plain conversation keeps working — which is a miserable thing to debug.
+
+A 200 response with no usable text is the other quiet failure. Safety blocks, empty candidates, truncation — all come back as success with nothing in them. The chain treats "no usable text" the same as an outright failure and logs the finish reason, because otherwise the fallback silently never fires and you cannot tell why.
+
+What I would tell anyone building this
+
+Model choice mattered less than I expected. All three providers, on their default models, hold up a requirements-gathering conversation fine. What actually determines whether the chat feels reliable is the plumbing: independent failure domains, whole-turn retries, bounded loops, honest timeouts, and a deterministic floor.
+
+Treat every LLM provider as something that will eventually be down, slow, out of quota, or confidently empty — because each of them, at some point, was. The three-LLM setup is not about any one model being smart. It is about the conversation never depending on any one of them.
+TXT,
+    ],
 ];

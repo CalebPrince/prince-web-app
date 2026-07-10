@@ -5,166 +5,166 @@
   <link>https://princecaleb.dev/archive.html</link>
   <description>Articles on web development, freelancing, and building software in Ghana.</description>
   <language>en</language>
-  <lastBuildDate>Fri, 10 Jul 2026 13:21:58 +0000</lastBuildDate>
+  <lastBuildDate>Fri, 10 Jul 2026 17:57:27 +0000</lastBuildDate>
   <atom:link href="https://princecaleb.dev/feed.xml" rel="self" type="application/rss+xml"/>
   <item>
-   <title>How to Build an Automated Patient Onboarding System for Clinics in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=automated-patient-onboarding-clinics-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=automated-patient-onboarding-clinics-accra</guid>
-   <description>Front-desk paperwork is still the biggest bottleneck in most Accra clinics — here's what a custom onboarding system actually replaces, and what it doesn't.</description>
-   <category>Automation</category>
+   <title>How I Used Three LLMs to Power One Live Chat: The Gemini, OpenRouter, and Groq Failover Chain Behind This Site</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=three-llms-live-chat-gemini-openrouter-groq</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=three-llms-live-chat-gemini-openrouter-groq</guid>
+   <description>The live chat on this website runs on three LLM providers at once — Gemini, OpenRouter, and Groq — not for cleverness, but for uptime. A case study on building a failover chain where a single conversation survives any provider going down.</description>
+   <category>AI &amp; Chatbots</category>
+   <pubDate>Fri, 10 Jul 2026 17:49:32 +0000</pubDate>
+  </item>
+  <item>
+   <title>How I Connected Three (3) LLM-Powered Live Chat to Gmail, Slack, Google Sheets, and WhatsApp With Composio</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=composio-llm-live-chat-gmail-slack-sheets-whatsapp</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=composio-llm-live-chat-gmail-slack-sheets-whatsapp</guid>
+   <description>A practical case study on turning a website live chat from a simple conversation widget into an action-taking assistant that can qualify leads, book calls, and notify Gmail, Slack, Google Sheets, and WhatsApp through Composio.</description>
+   <category>AI &amp; Chatbots</category>
+   <pubDate>Fri, 10 Jul 2026 17:49:32 +0000</pubDate>
+  </item>
+  <item>
+   <title>AI Booking Assistants for Salons in Accra: Cutting No-Shows With Automation</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-booking-assistants-salons-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-booking-assistants-salons-accra</guid>
+   <description>A no-show costs a stylist a paid hour with nothing to show for it. An AI booking assistant that reminds, confirms, and reschedules cuts that loss without an awkward conversation.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Automating Tenant Onboarding and Lease Renewals for Real Estate Agencies in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=automating-tenant-onboarding-real-estate-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=automating-tenant-onboarding-real-estate-accra</guid>
-   <description>Chasing signatures and re-typing lease terms into three different spreadsheets isn't a real estate problem — it's a plumbing problem, and it's fixable.</description>
-   <category>Automation</category>
+   <title>Using AI to Match Volunteers to Causes: A Guide for NGOs in Ghana</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-match-volunteers-causes-ngos-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-match-volunteers-causes-ngos-ghana</guid>
+   <description>Matching a volunteer's actual skills to where they're needed usually happens by memory. AI matching does it systematically, at a scale memory can't handle.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Custom Inventory Automation for Retail Stores in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=inventory-automation-retail-stores-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=inventory-automation-retail-stores-accra</guid>
-   <description>Stockouts and dead stock usually come down to the same root cause: nobody has a real-time, accurate count. Here's what fixing that actually looks like.</description>
-   <category>Automation</category>
+   <title>AI Chatbots for Microfinance: Answering Loan Questions Instantly</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-microfinance-loan-questions</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-microfinance-loan-questions</guid>
+   <description>Loan applicants calling to ask &quot;am I eligible&quot; or &quot;what documents do I need&quot; can get an instant answer from a chatbot, freeing loan officers for actual underwriting.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Automating Reservations and Order Management for Restaurants in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=automating-reservations-restaurants-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=automating-reservations-restaurants-accra</guid>
-   <description>A restaurant with three delivery apps, a phone line, and a walk-in host stand is running four separate ordering systems that don't talk to each other. Here's how to make them into one.</description>
-   <category>Automation</category>
+   <title>AI-Assisted Document Review for Law Firms in Ghana</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-assisted-document-review-law-firms-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-assisted-document-review-law-firms-ghana</guid>
+   <description>AI document review doesn't replace a lawyer's judgment on a case. It replaces the hours spent manually scanning contracts for the clauses that matter.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Building a Custom Dispatch and Delivery Tracking System for Logistics Companies</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=dispatch-delivery-tracking-system-logistics</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=dispatch-delivery-tracking-system-logistics</guid>
-   <description>Dispatch by phone call works until you have more than a handful of drivers — after that, it's just organized guessing.</description>
-   <category>Automation</category>
+   <title>AI Tutors and Chat Support for Schools and Training Centers in Accra</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-tutors-chat-support-schools-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-tutors-chat-support-schools-accra</guid>
+   <description>An AI tutor doesn't replace a teacher — it answers the question a student is too embarrassed to ask again in class.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Automating Student Enrollment and Fee Tracking for Schools in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=automating-enrollment-fee-tracking-schools-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=automating-enrollment-fee-tracking-schools-ghana</guid>
-   <description>Termly enrollment and fee tracking eats weeks of admin staff time at most schools in Ghana — most of it spent chasing information that should already exist in one place.</description>
-   <category>Automation</category>
+   <title>Using AI to Predict Delivery Delays for Logistics Companies in Ghana</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-predict-delivery-delays-logistics-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-predict-delivery-delays-logistics-ghana</guid>
+   <description>Telling a customer &quot;your delivery might be late&quot; before it happens builds more trust than apologizing after it already is.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>How to Build a Client Intake Automation System for Law Firms in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=client-intake-automation-law-firms-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=client-intake-automation-law-firms-ghana</guid>
-   <description>Conflict checks, engagement letters, and document collection are the same manual steps for every new client — which makes them the easiest thing in a law firm to automate.</description>
-   <category>Automation</category>
+   <title>AI Chatbots for Restaurants: Handling Reservations and FAQs in Accra</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-restaurants-reservations-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-restaurants-reservations-accra</guid>
+   <description>A restaurant's phone rings constantly with the same three questions. An AI chatbot on WhatsApp can answer them while staff focus on the dining room.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Automating Loan Applications for Microfinance Institutions in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=automating-loan-applications-microfinance-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=automating-loan-applications-microfinance-accra</guid>
-   <description>Manual loan processing isn't just slow for microfinance institutions — every extra day of processing is a day a customer might take their business elsewhere.</description>
-   <category>Automation</category>
+   <title>AI-Powered Product Recommendations for Retail Stores in Ghana</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-product-recommendations-retail-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-product-recommendations-retail-ghana</guid>
+   <description>Generic &quot;customers also bought&quot; recommendations barely move sales. Recommendations tuned to actual local buying patterns do more, but need real data to work.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Building a Volunteer and Donor Management System for NGOs in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=volunteer-donor-management-system-ngos-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=volunteer-donor-management-system-ngos-ghana</guid>
-   <description>Most NGOs in Ghana track donors and volunteers the same way they track everything else: a shared spreadsheet that one person understands and everyone else is afraid to touch.</description>
-   <category>Automation</category>
+   <title>Using AI to Qualify Real Estate Leads Before They Reach an Agent</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-qualify-real-estate-leads-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-qualify-real-estate-leads-ghana</guid>
+   <description>Not every inquiry is a serious buyer. AI lead qualification sorts them before an agent spends time on a conversation that was never going anywhere.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Automating Appointment Booking for Salons and Spas in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=automating-appointment-booking-salons-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=automating-appointment-booking-salons-accra</guid>
-   <description>A salon losing bookings to no-shows and double-bookings doesn't need a fancier Instagram page — it needs a real booking system.</description>
-   <category>Automation</category>
+   <title>AI Chat Assistants for Clinics: Answering Patient Questions 24/7 in Accra</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=ai-chat-assistants-clinics-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=ai-chat-assistants-clinics-accra</guid>
+   <description>Patients ask the same handful of questions constantly — hours, services, insurance, directions. An AI assistant answers them at 11pm without waking up a receptionist.</description>
+   <category>AI &amp; Chatbots</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Custom Web Dashboards for Clinics and Health Centers in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-clinics-health-centers-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-clinics-health-centers-accra</guid>
-   <description>A clinic owner running four different registers can't answer &quot;how are we actually doing this month&quot; without a calculator and an afternoon. A dashboard should answer it in one glance.</description>
-   <category>Dashboards</category>
+   <title>Booking Apps for Salons and Spas: What Ghanaian Businesses Should Know</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=booking-apps-salons-spas-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=booking-apps-salons-spas-ghana</guid>
+   <description>Building a booking app is the easy part. Getting clients to actually download one for a single salon is the part most owners underestimate.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Real Estate Dashboards: Tracking Listings, Leads, and Closings in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=real-estate-dashboards-listings-leads-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=real-estate-dashboards-listings-leads-accra</guid>
-   <description>An agency with forty active listings and a pipeline of leads across WhatsApp, phone, and walk-ins has no reliable way to say which listings are actually converting — until the data lives in one place.</description>
-   <category>Dashboards</category>
+   <title>Building a Volunteer Coordination App for NGOs in Ghana</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=volunteer-coordination-app-ngos-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=volunteer-coordination-app-ngos-ghana</guid>
+   <description>Coordinating volunteers through a WhatsApp broadcast list works for one event. It stops working the moment an NGO runs multiple ongoing programs.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Building a Custom Sales Dashboard for Retail Businesses in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=custom-sales-dashboard-retail-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=custom-sales-dashboard-retail-ghana</guid>
-   <description>Knowing your best-selling product isn't the same as knowing your most profitable one — a proper sales dashboard shows both, and most spreadsheets only show the first.</description>
-   <category>Dashboards</category>
+   <title>Mobile Banking Apps for Microfinance Institutions in Accra</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=mobile-banking-apps-microfinance-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=mobile-banking-apps-microfinance-accra</guid>
+   <description>A mobile banking app for an MFI isn't a luxury feature — it's often the difference between a customer staying and one switching to a mobile money wallet instead.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Custom Dashboards for Restaurants: Sales, Inventory, and Staff in One View</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-restaurants-sales-inventory-staff</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-restaurants-sales-inventory-staff</guid>
-   <description>A restaurant owner checking three different apps and a notebook to understand yesterday's performance is spending more time reporting than managing.</description>
-   <category>Dashboards</category>
+   <title>Building a Client Portal App for Law Firms in Ghana</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=client-portal-app-law-firms-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=client-portal-app-law-firms-ghana</guid>
+   <description>Clients calling to ask &quot;any updates on my case&quot; is a symptom — a client portal treats the actual problem, which is a lack of visibility.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Logistics Dashboards: Tracking Fleet Performance and Delivery Times in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=logistics-dashboards-fleet-performance-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=logistics-dashboards-fleet-performance-accra</guid>
-   <description>Fleet performance isn't just &quot;are deliveries on time&quot; — it's fuel cost per delivery, driver utilization, and which routes are quietly losing money.</description>
-   <category>Dashboards</category>
+   <title>Mobile Apps for Schools: Parent Communication and Fee Payments</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=mobile-apps-schools-parent-communication-fees</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=mobile-apps-schools-parent-communication-fees</guid>
+   <description>Parent-teacher communication in most Ghanaian schools happens through a WhatsApp group that becomes unreadable within a week. A dedicated app fixes that without losing the immediacy.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Custom Dashboards for Schools: Attendance, Grades, and Fee Collection</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-schools-attendance-fees</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-schools-attendance-fees</guid>
-   <description>Attendance, grades, and fee status usually live in three unconnected systems at most Ghanaian schools — which means nobody can see a struggling student's full picture in one place.</description>
-   <category>Dashboards</category>
+   <title>Building a Delivery Tracking App for Logistics Companies in Accra</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=delivery-tracking-app-logistics-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=delivery-tracking-app-logistics-accra</guid>
+   <description>Customers don't want a tracking app — they want to know where their package is. Sometimes a link does that better than an app ever could.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Case Management Dashboards for Law Firms in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=case-management-dashboards-law-firms-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=case-management-dashboards-law-firms-ghana</guid>
-   <description>A law firm tracking case deadlines across individual lawyers' calendars is one missed date away from a serious problem — a shared dashboard closes that gap.</description>
-   <category>Dashboards</category>
+   <title>Building a Table Reservation and Loyalty App for Restaurants in Ghana</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=table-reservation-loyalty-app-restaurants-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=table-reservation-loyalty-app-restaurants-ghana</guid>
+   <description>Restaurant apps fail for the same reason most apps fail: nobody has a reason to open them more than once. Reservations and loyalty rewards give people that reason.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
-   <title>Custom Financial Dashboards for Microfinance Institutions in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=custom-financial-dashboards-microfinance-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=custom-financial-dashboards-microfinance-accra</guid>
-   <description>A microfinance institution's loan book health isn't visible in a single spreadsheet — default risk, disbursement trends, and collections all need to be seen together, not separately.</description>
-   <category>Dashboards</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
-  </item>
-  <item>
-   <title>Impact Reporting Dashboards for NGOs Operating in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=impact-reporting-dashboards-ngos-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=impact-reporting-dashboards-ngos-ghana</guid>
-   <description>Funders want to see impact numbers, not just spending numbers — and most NGOs in Ghana can produce the second far more easily than the first.</description>
-   <category>Dashboards</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
-  </item>
-  <item>
-   <title>Custom Dashboards for Salon Chains: Bookings, Revenue, and Staff Performance</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-salon-chains-bookings-revenue</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-salon-chains-bookings-revenue</guid>
-   <description>Owning three salon locations means owning three separate booking books, unless someone builds the dashboard that ties them together.</description>
-   <category>Dashboards</category>
+   <title>Mobile Loyalty Apps for Retail Businesses in Accra</title>
+   <link>https://princecaleb.dev/archive-post.html?slug=mobile-loyalty-apps-retail-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=mobile-loyalty-apps-retail-accra</guid>
+   <description>A loyalty app only works if customers open it more than once — which means the reward has to be worth more than the download.</description>
+   <category>Mobile Apps</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
  </channel>
