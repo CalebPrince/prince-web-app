@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\Database;
 use App\Support\Jwt;
 use App\Support\Response;
+use App\Support\Settings;
 use App\Support\Totp;
 
 class AuthController
@@ -101,6 +102,110 @@ class AuthController
 
         self::issueTokens($user);
         Response::json(['id' => (int) $user['id'], 'email' => $user['email']]);
+    }
+
+    /**
+     * GET /api/v1/auth/google/client-id — public. The OAuth client id is not
+     * a secret (it ships in the markup of every Google sign-in button); the
+     * login page uses this to decide whether to render the button at all.
+     */
+    public static function googleClientId(): void
+    {
+        Response::json(['client_id' => Settings::get('google_client_id')]);
+    }
+
+    /**
+     * POST /api/v1/auth/google — body: {credential} (a Google Identity
+     * Services ID token). Verifies the token against Google, then signs in
+     * only if the Google account's verified email matches an active admin
+     * user. TOTP is intentionally skipped on this path: the token proves a
+     * live Google session (with Google's own 2FA) rather than a stored
+     * password, so it already carries a second factor.
+     */
+    public static function googleLogin(): void
+    {
+        $clientId = Settings::get('google_client_id');
+        if (!$clientId) {
+            Response::error('Google sign-in is not configured.', 404);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $credential = (string) ($data['credential'] ?? '');
+        if ($credential === '' || substr_count($credential, '.') !== 2) {
+            Response::error('Invalid Google credential.', 422);
+        }
+
+        $claims = self::verifyGoogleIdToken($credential, $clientId);
+        if (!$claims) {
+            Response::error('Google sign-in could not be verified — please try again.', 401);
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE lower(email) = ? AND is_active = 1');
+        $stmt->execute([$claims['email']]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            Response::error('This Google account is not authorized for admin access.', 401);
+        }
+
+        self::issueTokens($user);
+        Response::json(['id' => (int) $user['id'], 'email' => $user['email']]);
+    }
+
+    /**
+     * curl when available (production), stream-context fallback otherwise
+     * (some dev setups ship PHP without the curl extension). 200-only.
+     */
+    private static function httpGet(string $url): ?string
+    {
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 8,
+                CURLOPT_CONNECTTIMEOUT => 5,
+            ]);
+            $response = @curl_exec($ch);
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            return ($response !== false && $status === 200) ? (string) $response : null;
+        }
+
+        $context = stream_context_create(['http' => ['timeout' => 8, 'ignore_errors' => true]]);
+        $body = @file_get_contents($url, false, $context);
+        $statusLine = $http_response_header[0] ?? '';
+        if ($body === false || !preg_match('~\s200\b~', $statusLine)) {
+            return null;
+        }
+        return $body;
+    }
+
+    /** @return ?array{email: string} */
+    private static function verifyGoogleIdToken(string $idToken, string $clientId): ?array
+    {
+        // Google's tokeninfo endpoint validates the signature and expiry —
+        // fine at admin-login volume; a local JWKS cache would be overkill.
+        $response = self::httpGet('https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($idToken));
+        if ($response === null) {
+            return null;
+        }
+
+        $claims = json_decode($response, true) ?: [];
+        $issuerOk = in_array($claims['iss'] ?? '', ['accounts.google.com', 'https://accounts.google.com'], true);
+        $email = strtolower(trim((string) ($claims['email'] ?? '')));
+
+        if (
+            !$issuerOk
+            || ($claims['aud'] ?? '') !== $clientId
+            || ($claims['email_verified'] ?? '') !== 'true'
+            || $email === ''
+            || (int) ($claims['exp'] ?? 0) < time()
+        ) {
+            return null;
+        }
+
+        return ['email' => $email];
     }
 
     private static function issuePending2faCookie(array $user): void

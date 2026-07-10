@@ -460,6 +460,21 @@
           </form>
         </div>
       </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card p-4">
+          <h5 class="mb-1"><i class="bi bi-google me-2" style="color: var(--section-system);"></i>Admin sign-in (Google)</h5>
+          <p class="text-muted-custom small">Adds a "Sign in with Google" button to the admin login page. Create an OAuth client in Google Cloud Console (APIs &amp; Services &rarr; Credentials &rarr; Create credentials &rarr; OAuth client ID &rarr; Web application), add this site's URL as an authorized JavaScript origin, and paste the client ID here. Only a Google account whose email matches your admin login email can sign in. Leave empty to disable.</p>
+          <form id="google-signin-form">
+            <div class="mb-3">
+              <label class="form-label">OAuth client ID</label>
+              <input type="text" class="form-control" id="google-client-id" placeholder="1234567890-abc123.apps.googleusercontent.com" autocomplete="off">
+            </div>
+            <div id="google-signin-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Save Google Sign-in</button>
+          </form>
+        </div>
+      </div>
     </div>
 
     <div class="settings-group-label"><i class="bi bi-sliders"></i>Site Behavior</div>

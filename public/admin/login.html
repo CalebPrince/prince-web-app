@@ -35,6 +35,18 @@
       <button type="submit" class="btn-brand w-100">Log in</button>
     </form>
 
+    <!-- Only rendered when a Google OAuth client id is configured in
+         Admin → Settings; hidden again while the 2FA step is showing. -->
+    <div id="google-signin-wrap" class="d-none">
+      <div class="d-flex align-items-center gap-2 my-3" aria-hidden="true">
+        <hr class="flex-grow-1 my-0">
+        <span class="text-muted-custom small">or</span>
+        <hr class="flex-grow-1 my-0">
+      </div>
+      <div id="google-signin-btn" class="d-flex justify-content-center"></div>
+      <div id="google-error" class="alert alert-danger d-none mt-3"></div>
+    </div>
+
     <form id="twofa-form" class="d-none">
       <p class="text-muted-custom small mb-3">Enter the 6-digit code from your authenticator app.</p>
       <div class="mb-3">
@@ -68,6 +80,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     });
     if (res.requires_2fa) {
       document.getElementById('login-form').classList.add('d-none');
+      document.getElementById('google-signin-wrap').classList.add('d-none');
       document.getElementById('twofa-form').classList.remove('d-none');
       return;
     }
@@ -108,6 +121,46 @@ document.getElementById('twofa-form').addEventListener('submit', async (e) => {
     errorBox.classList.remove('d-none');
   }
 });
+
+// Google sign-in — the button only appears when a client id is configured,
+// so the page works unchanged (password only) until then. The GIS script is
+// loaded lazily to keep the login page dependency-free otherwise.
+(async function () {
+  try {
+    const { client_id } = await api.get('/api/v1/auth/google/client-id');
+    if (!client_id) return;
+
+    const gsi = document.createElement('script');
+    gsi.src = 'https://accounts.google.com/gsi/client';
+    gsi.async = true;
+    gsi.onload = () => {
+      google.accounts.id.initialize({
+        client_id,
+        callback: async (response) => {
+          const errorBox = document.getElementById('google-error');
+          errorBox.classList.add('d-none');
+          try {
+            await api.post('/api/v1/auth/google', { credential: response.credential });
+            window.location.href = '/admin/dashboard.html';
+          } catch (err) {
+            errorBox.textContent = err.message;
+            errorBox.classList.remove('d-none');
+          }
+        },
+      });
+      google.accounts.id.renderButton(document.getElementById('google-signin-btn'), {
+        theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'filled_black' : 'outline',
+        size: 'large',
+        text: 'signin_with',
+        width: 320,
+      });
+      document.getElementById('google-signin-wrap').classList.remove('d-none');
+    };
+    document.head.appendChild(gsi);
+  } catch (_) {
+    // Endpoint unavailable — password login still works.
+  }
+})();
 </script>
 </body>
 </html>

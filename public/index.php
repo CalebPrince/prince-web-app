@@ -128,6 +128,8 @@ $router->get('/api/v1/integrations/events', [IntegrationController::class, 'even
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);
+$router->post('/api/v1/auth/google', [AuthController::class, 'googleLogin']);
+$router->get('/api/v1/auth/google/client-id', [AuthController::class, 'googleClientId']);
 $router->post('/api/v1/auth/verify-2fa', [AuthController::class, 'verifyTwoFactor']);
 $router->post('/api/v1/auth/refresh', [AuthController::class, 'refresh']);
 $router->post('/api/v1/auth/logout', [AuthController::class, 'logout']);

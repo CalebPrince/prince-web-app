@@ -195,6 +195,18 @@ async function savePayments(e) {
   }
 }
 
+async function saveGoogleSignin(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      google_client_id: document.getElementById("google-client-id").value.trim(),
+    });
+    showMsg("google-signin-msg", "Saved — the login page picks it up immediately.", true);
+  } catch (err) {
+    showMsg("google-signin-msg", err.message, false);
+  }
+}
+
 async function saveMaintenance(e) {
   e.preventDefault();
   try {
@@ -328,6 +340,7 @@ async function testAi() {
   document.getElementById("hours-form").addEventListener("submit", saveHours);
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
+  document.getElementById("google-signin-form").addEventListener("submit", saveGoogleSignin);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
   document.getElementById("booking-form").addEventListener("submit", saveBooking);
   document.getElementById("social-draft-form").addEventListener("submit", saveSocialDraft);
@@ -361,6 +374,7 @@ async function testAi() {
     document.getElementById("widget-live-chat-enabled").checked = settings.live_chat_enabled !== "0";
     document.getElementById("widget-whatsapp-enabled").checked = settings.whatsapp_button_enabled !== "0";
 
+    document.getElementById("google-client-id").value = settings.google_client_id || "";
     document.getElementById("paystack-public-key").value = settings.paystack_public_key || "";
     document.getElementById("paystack-secret-key").value = settings.paystack_secret_key || "";
     document.getElementById("pricing-currency").value = settings.pricing_currency || "GHS";
