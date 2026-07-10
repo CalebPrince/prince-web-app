@@ -524,26 +524,56 @@ class LiveChatController
             $projects
         ));
 
-        $system = "You are Lisa, Prince Caleb's virtual assistant on his web & mobile development portfolio. "
+        $system = "You are Lisa, Prince Caleb's AI engineering assistant on princecaleb.dev. Prince Caleb is "
+            . "an expert solo web and mobile app developer who builds custom, high-performance applications "
+            . "using clean, vanilla code (PHP, JavaScript, Python) — no bloated frameworks or templates; "
+            . "every application is engineered from scratch for pure performance and longevity. Your goal is "
+            . "to qualify leads, provide real upfront value, and drive bookings. "
             . "If a visitor asks your name, who you are, or what you are, say exactly: \"I'm Lisa, Prince "
             . "Caleb's virtual assistant.\" Never say you're an AI model, and never mention Gemini, "
             . "OpenRouter, Groq, or any other underlying provider/technology, even if directly asked what you "
             . "run on.\n\n"
-            . "Tone: professional, tech-savvy, warm, and organized — concise and direct, like a sharp project "
-            . "manager, not corporate fluff or robotic pleasantries. Keep replies short (1-4 sentences), never "
-            . "a bulleted interview, and ask one or two questions at a time rather than dumping a form on "
-            . "someone.\n\n"
-            . "Guardrails: never promise a specific delivery date, and never give an exact price — if cost "
-            . "comes up, say something like \"I'll pass these details to Caleb to review for a custom quote.\" "
-            . "Never commit Caleb to a project without his personal review. If someone asks for a discount or "
-            . "tries to negotiate, say: \"I handle the initial onboarding, but Caleb reviews all financial "
-            . "adjustments personally during the project scoping phase.\" If someone asks a complex "
-            . "architectural or technical question, say: \"That's a great technical question. I've noted it "
-            . "down in the project brief for Caleb to address when he reaches out to you.\"\n\n"
+            . "Tone: professional, technically precise, and approachable — speak like a pragmatic senior "
+            . "developer, not corporate fluff, robotic pleasantries, or AI clichés. Keep replies short (1-4 "
+            . "sentences), never a bulleted interview, and ask one or two questions at a time rather than "
+            . "dumping a form on someone. Translate technical findings into business impact rather than "
+            . "jargon.\n\n"
+            . "Guardrails: never promise a specific delivery date, and never commit to an exact final price. "
+            . "You MAY share the public starting-price tiers (from get_site_info) and a realistic rough range "
+            . "once you understand the scope — always framed as an estimate that Caleb confirms after "
+            . "reviewing the architecture. Never commit Caleb to a project without his personal review. If "
+            . "someone asks for a discount or tries to negotiate, say: \"I handle the initial onboarding, but "
+            . "Caleb reviews all financial adjustments personally during the project scoping phase.\" You can "
+            . "discuss technology choices and trade-offs confidently at a practical level, but for deep "
+            . "architectural decisions say: \"That's a great technical question. I've noted it down in the "
+            . "project brief for Caleb to address when he reaches out to you.\"\n\n"
             . "If the visitor just greets you (hi, hello, hey), reply with a warm one-sentence hello and ask "
             . "what brings them by — nothing else. Not every visitor wants to start a project — some just "
             . "have a general question about what Prince builds, his experience, tech stack, process, "
             . "turnaround, or location. Answer those directly using your tools, as normal conversation.\n\n"
+            . "WORKFLOW — SITE AUDIT: if the visitor shares a URL to their existing site, immediately let "
+            . "them know you're analyzing it, then call audit_website. Translate the raw results into clear "
+            . "business impact — e.g. \"Your mobile viewport tag is missing, which means mobile visitors are "
+            . "seeing a broken layout and search engines are penalizing your ranking.\" Lead with the two or "
+            . "three findings that cost them the most, then pitch a clean, vanilla rebuild or refactor as the "
+            . "definitive fix and ask if they'd like Caleb to review the site personally. If the tool returns "
+            . "an error, say you couldn't reach the site and ask them to double-check the address — never "
+            . "invent audit results.\n\n"
+            . "WORKFLOW — PROJECT ESTIMATION: when someone wants a quote or pricing, gather the requirements "
+            . "naturally — the core problem they're solving, platform type (web, mobile, both), critical "
+            . "features and integrations, and their deadline. Do not interrogate; one or two questions at a "
+            . "time. Once you have real context, call get_site_info for the current engineering tiers and "
+            . "give a realistic rough range anchored to them, based on solo engineering hours. Then ask: "
+            . "\"Would you like me to submit these specific requirements to Caleb's inbox so he can review "
+            . "your architecture before you talk?\" If yes, gather any missing contact details and call "
+            . "log_inquiry.\n\n"
+            . "WORKFLOW — LIVE HANDOFF: if the visitor is clearly frustrated with the bot, asks for a human "
+            . "repeatedly, or mentions a high-budget or enterprise-scale project, say: \"I'm signaling Caleb "
+            . "right now to see if he's available to take over this terminal live. One second.\" and call "
+            . "signal_handoff with a one-line reason and whatever contact details you have. After it "
+            . "succeeds, tell them Caleb has been pinged with the conversation, and offer to lock in a call "
+            . "via check_availability (or share the WhatsApp link the tool returns) so they have a guaranteed "
+            . "channel either way.\n\n"
             . "For a NEW PROJECT inquiry (a website, app, or custom platform), gather — one or two questions "
             . "at a time — their name, email, and phone number (always ask for it; don't end the conversation "
             . "without trying), the project type, the core features it needs, and their target timeline and "
@@ -562,8 +592,12 @@ class LiveChatController
             . "it's shown is handled separately.\n\n"
             . "You have tools available:\n"
             . "- get_site_info: for general questions about Prince's background, services, tech stack, "
-            . "experience, location, or contact/social links, so you answer with real facts instead of "
-            . "guessing.\n"
+            . "experience, location, contact/social links, and the public engineering tiers (starting "
+            . "prices), so you answer with real facts instead of guessing.\n"
+            . "- audit_website: run a live technical audit of a URL the visitor shared — load time, SSL, "
+            . "mobile viewport, SEO basics, compression. Only for sites the visitor themselves brought up.\n"
+            . "- signal_handoff: ping Caleb immediately with the conversation context when the live-handoff "
+            . "workflow triggers. Use at most once per conversation.\n"
             . "- search_content: when something they describe reminds you of a past project or blog post "
             . "worth mentioning — share it naturally, with the link.\n"
             . "- log_inquiry: once you have enough details from a new-project or direct-service conversation "
@@ -1082,6 +1116,37 @@ class LiveChatController
                 ],
             ],
             [
+                'name' => 'audit_website',
+                'description' => 'Run a live technical audit of a website URL the visitor shared: load '
+                    . 'time, HTTPS/SSL, mobile viewport tag, title/meta description, heading structure, '
+                    . 'image alt coverage, and compression. Returns raw findings for you to translate into '
+                    . 'business impact. Only audit a URL the visitor themselves provided.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'url' => ['type' => 'STRING', 'description' => 'The full URL the visitor shared, e.g. "https://example.com".'],
+                    ],
+                    'required' => ['url'],
+                ],
+            ],
+            [
+                'name' => 'signal_handoff',
+                'description' => 'Immediately notify Caleb that this visitor needs him live — use when the '
+                    . 'visitor is clearly frustrated, repeatedly asks for a human, or mentions a high-budget '
+                    . 'or enterprise-scale project. Include whatever contact details you already have; never '
+                    . 'invent them. Call at most once per conversation.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'reason' => ['type' => 'STRING', 'description' => 'One line on why the handoff triggered, e.g. "enterprise logistics platform, budget $40k+".'],
+                        'name' => ['type' => 'STRING', 'description' => 'Visitor name if they stated one.'],
+                        'email' => ['type' => 'STRING', 'description' => 'Visitor email if they stated one.'],
+                        'phone' => ['type' => 'STRING', 'description' => 'Visitor phone if they stated one.'],
+                    ],
+                    'required' => ['reason'],
+                ],
+            ],
+            [
                 'name' => 'search_content',
                 'description' => 'Search past projects and blog posts for something relevant to what the '
                     . 'visitor described, so you can reference real, specific work instead of speaking in '
@@ -1127,6 +1192,8 @@ class LiveChatController
                 'log_inquiry' => self::toolLogInquiry($args, $pdo),
                 'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
                 'search_content' => self::toolSearchContent($pdo, (string) ($args['query'] ?? '')),
+                'audit_website' => self::toolAuditWebsite((string) ($args['url'] ?? '')),
+                'signal_handoff' => self::toolSignalHandoff($args, $pdo),
                 'mark_ready_for_prototype' => ['acknowledged' => true],
                 default => ['error' => 'Unknown tool.'],
             };
@@ -1189,6 +1256,25 @@ class LiveChatController
             $info['highlights'] = $highlights;
         }
 
+        // Public engineering tiers, so estimation conversations anchor to the
+        // real published starting prices instead of the model guessing.
+        $tiers = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $name = Settings::get("pricing_tier_{$i}_name");
+            $price = Settings::get("pricing_tier_{$i}_price");
+            if (empty($name) || empty($price)) {
+                continue;
+            }
+            $tiers[] = [
+                'tier' => $name,
+                'starting_price' => $price,
+                'covers' => Settings::get("pricing_tier_{$i}_tagline"),
+            ];
+        }
+        if ($tiers) {
+            $info['engineering_tiers'] = $tiers;
+        }
+
         return $info;
     }
 
@@ -1206,6 +1292,159 @@ class LiveChatController
         self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: {$phone}\n\n" : ' ') . $summary);
 
         return ['logged' => true];
+    }
+
+    /**
+     * Live technical audit of a visitor-supplied URL. Fetches the page once
+     * and reports objective facts (timing, SSL, viewport, SEO basics) for the
+     * model to translate into business impact — it never editorializes here.
+     */
+    private static function toolAuditWebsite(string $url): array
+    {
+        $url = trim($url);
+        if ($url !== '' && !preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . $url;
+        }
+
+        $parts = parse_url($url);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if (!filter_var($url, FILTER_VALIDATE_URL) || !in_array(strtolower($parts['scheme'] ?? ''), ['http', 'https'], true) || $host === '') {
+            return ['error' => 'That does not look like a valid website address.'];
+        }
+
+        // SSRF guard: refuse anything that resolves to a private/reserved
+        // address — this tool exists to audit public marketing sites only.
+        $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : gethostbyname($host);
+        if (
+            $host === 'localhost'
+            || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+        ) {
+            return ['error' => 'That address is not publicly reachable, so it cannot be audited.'];
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_ENCODING => '', // advertise gzip/br so compression support is observable
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HEADER => true,
+            CURLOPT_USERAGENT => 'PrinceCalebSiteAudit/1.0 (+https://princecaleb.dev)',
+        ]);
+        $raw = curl_exec($ch);
+        $sslOk = true;
+        if ($raw === false) {
+            $errno = curl_errno($ch);
+            // Retry without cert verification purely to distinguish "broken
+            // SSL" (a reportable finding) from "site unreachable". Numeric
+            // codes because the CURLE_* constants for 51/58/60 aren't defined
+            // in every PHP build: 35=SSL connect, 51=peer verification,
+            // 58=local cert, 60=CA cert problem.
+            if (in_array($errno, [35, 51, 58, 60], true)) {
+                // A verification failure can also mean OUR CA store is broken
+                // (e.g. PHP with no curl.cainfo). Verify a known-good anchor:
+                // if that fails too, report "unknown" rather than falsely
+                // telling the visitor their certificate is invalid.
+                $probe = curl_init('https://www.google.com/generate_204');
+                curl_setopt_array($probe, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_NOBODY => true,
+                    CURLOPT_CONNECTTIMEOUT => 4,
+                    CURLOPT_TIMEOUT => 4,
+                    CURLOPT_SSL_VERIFYPEER => true,
+                ]);
+                curl_exec($probe);
+                $sslOk = curl_errno($probe) === 0 ? false : null;
+                curl_close($probe);
+
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                $raw = curl_exec($ch);
+            }
+            if ($raw === false) {
+                curl_close($ch);
+                return ['error' => 'The site could not be reached (timeout, DNS failure, or connection refused).'];
+            }
+        }
+
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $totalTime = round((float) curl_getinfo($ch, CURLINFO_TOTAL_TIME), 2);
+        $ttfb = round((float) curl_getinfo($ch, CURLINFO_STARTTRANSFER_TIME), 2);
+        $finalUrl = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        curl_close($ch);
+
+        $headers = strtolower(substr($raw, 0, $headerSize));
+        $html = substr($raw, $headerSize);
+        $htmlLower = strtolower($html);
+
+        $imgCount = preg_match_all('/<img\b/i', $html);
+        $imgWithAlt = preg_match_all('/<img\b[^>]*\balt\s*=/i', $html);
+
+        $title = preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $m) ? trim(html_entity_decode($m[1])) : '';
+        $metaDescription = preg_match(
+            '/<meta[^>]+name=["\']description["\'][^>]*content=["\']([^"\']*)["\']|<meta[^>]+content=["\']([^"\']*)["\'][^>]*name=["\']description["\']/i',
+            $html,
+            $m
+        ) ? trim($m[1] !== '' ? $m[1] : ($m[2] ?? '')) : '';
+
+        return [
+            'final_url' => $finalUrl,
+            'http_status' => $status,
+            'uses_https' => str_starts_with(strtolower($finalUrl), 'https://'),
+            'ssl_certificate_valid' => $sslOk,
+            'load_time_seconds' => $totalTime,
+            'time_to_first_byte_seconds' => $ttfb,
+            'page_weight_kb' => (int) round(strlen($html) / 1024),
+            'compression_enabled' => (bool) preg_match('/content-encoding:\s*(gzip|br|deflate|zstd)/', $headers),
+            'mobile_viewport_tag' => str_contains($htmlLower, 'name="viewport"') || str_contains($htmlLower, "name='viewport'"),
+            'title_tag' => $title !== '' ? mb_substr($title, 0, 120) : null,
+            'meta_description' => $metaDescription !== '' ? mb_substr($metaDescription, 0, 200) : null,
+            'h1_count' => preg_match_all('/<h1\b/i', $html),
+            'images_total' => $imgCount,
+            'images_missing_alt' => max(0, $imgCount - $imgWithAlt),
+        ];
+    }
+
+    /**
+     * "Signal Caleb" for a live handoff: files an urgent inquiry, which rides
+     * the existing webhook queue to his Slack/email in near-real-time, and
+     * hands back the WhatsApp link so the model can offer an immediate channel.
+     */
+    private static function toolSignalHandoff(array $args, \PDO $pdo): array
+    {
+        $reason = trim((string) ($args['reason'] ?? ''));
+        if ($reason === '') {
+            return ['error' => 'A one-line reason is required.'];
+        }
+
+        $name = trim((string) ($args['name'] ?? '')) ?: 'Live chat visitor';
+        $email = trim((string) ($args['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $email = 'live-chat@princecaleb.dev';
+        }
+        $phone = trim((string) ($args['phone'] ?? ''));
+
+        self::recordInquiry(
+            $pdo,
+            $name,
+            $email,
+            "[LIVE HANDOFF REQUESTED] 🔴 A visitor in live chat needs you now.\n\n"
+                . "Reason: {$reason}"
+                . ($phone !== '' ? "\nPhone: {$phone}" : '')
+        );
+
+        $result = ['signaled' => true];
+        $whatsapp = Settings::get('social_whatsapp');
+        if (!empty($whatsapp)) {
+            $result['whatsapp_link'] = $whatsapp;
+        }
+        return $result;
     }
 
     private static function toolSearchContent(\PDO $pdo, string $query): array
