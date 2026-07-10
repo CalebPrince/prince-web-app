@@ -1,0 +1,6 @@
+# Vendored libraries live in versioned directories (three-0.180.0/) and never
+# change in place — an upgrade changes the directory name. So unlike the app's
+# own unhashed JS (1 hour, set in the root .htaccess), these can cache hard.
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=2592000, immutable"
+</IfModule>

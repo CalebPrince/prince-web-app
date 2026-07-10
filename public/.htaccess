@@ -74,3 +74,12 @@ ErrorDocument 404 /404.html
   ExpiresByType application/javascript "access plus 1 hour"
   ExpiresByType text/javascript "access plus 1 hour"
 </IfModule>
+
+# Vendored libraries (see /js/vendor/.htaccess) get a long cache instead —
+# they live in versioned directories and never change in place.
+
+# Compress text assets. Matters most for the ~720KB Three.js module pair
+# (~170KB gzipped); harmless no-op if the host already compresses globally.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>

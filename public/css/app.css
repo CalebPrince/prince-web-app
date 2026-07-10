@@ -1943,6 +1943,22 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   opacity: 0.72;
   transform: scale(1.04);
 }
+/* Three.js hero constellation (hero-3d.js). Same layer contract as the video
+   panel: absolute fill at z-index 0, content stays above at z-index 1. */
+.hero-3d-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-out);
+}
+.hero-3d-panel.is-live { opacity: 1; }
+.hero-3d-panel canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 .hero-value-row {
   display: flex;
   justify-content: space-between;
