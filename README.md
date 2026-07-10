@@ -64,15 +64,17 @@ php database/migrate.php
 php database/seed.php [admin-email] [admin-password]
 # defaults: admin@princecaleb.dev / change-me-now-123 — change this in production
 
-# 3. Optional: seed the 52 blog posts + generate their cover art
+# 3. Optional: seed the 52 blog posts + generate their visible SVG covers
 php database/generate_blog_covers.php
 php database/seed_blog_posts.php
 
 # 4. Regenerate the sitemap after adding/publishing content
 php database/generate_sitemap.php
 
-# Social share images (og-image.png + per-post cards) are committed already;
-# only regenerate on a dev machine with Pillow after changing posts/brand art:
+# Social share images are separate from visible blog covers. The committed
+# PNGs under public/uploads/og/blog/ are only for Open Graph/Twitter previews
+# and social draft image URLs. Regenerate them on a dev machine with Pillow
+# after adding/editing seeded posts or changing brand art:
 #   python scripts/generate_og_image.py
 #   python scripts/generate_blog_og_images.py
 
@@ -527,12 +529,15 @@ storage/
     `scripts/generate_blog_og_images.py` pre-generates a raster card per post
     (`public/uploads/og/blog/{slug}.png`, palette-quantized) from the canonical
     `database/blog_posts_data.php`, so the cards match what's seeded to
-    production. Projects use their real raster cover when one exists (with
+    production. These PNG cards are not rendered inside the article UI; they
+    are only for Open Graph/Twitter previews and generated social draft image
+    URLs. Projects use their real raster cover when one exists (with
     server-read dimensions so platforms don't mis-crop), falling back to the
     default otherwise. The two Python generators are dev-machine tools (Pillow);
     their output is committed and deploys as static files, so the server needs
     no Python — re-run them after editing `blog_posts_data.php` or the brand
-    imagery, same cadence as `generate_blog_covers.php`.
+    imagery, same cadence as `generate_blog_covers.php` and
+    `seed_blog_posts.php`.
 
 ## Deployment (Namecheap cPanel)
 
@@ -567,6 +572,10 @@ One-time setup on a new host:
    php database/seed_blog_posts.php        # seeds/updates the 52 blog posts
    php database/generate_sitemap.php
    ```
+   Social preview PNGs (`public/uploads/og/blog/{slug}.png`) are generated on
+   a dev machine with `python scripts/generate_blog_og_images.py`, then
+   committed and deployed as static files; the production server does not need
+   Python/Pillow for them.
 4. Add a cron job (every 5 minutes):
    `/usr/local/bin/php /home/<cpanel-user>/database/process_webhooks.php > /dev/null`
 4b. Add a second cron job (every 30 minutes) for booking reminders:

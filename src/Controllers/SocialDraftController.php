@@ -23,6 +23,11 @@ use App\Support\ShortLink;
  */
 class SocialDraftController
 {
+    private static function blogOgImagePath(string $slug): string
+    {
+        return '/uploads/og/blog/' . $slug . '.png';
+    }
+
     /** GET /api/v1/admin/social-drafts */
     public static function index(): void
     {
@@ -148,7 +153,7 @@ class SocialDraftController
     private static function findSource(\PDO $pdo): ?array
     {
         $stmt = $pdo->query(
-            "SELECT id, slug, title, excerpt, cover_image_path FROM blog_posts
+            "SELECT id, slug, title, excerpt FROM blog_posts
              WHERE is_published = 1
                AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'blog' AND source_id IS NOT NULL)
              ORDER BY created_at DESC LIMIT 1"
@@ -161,7 +166,7 @@ class SocialDraftController
                 'title' => $blog['title'],
                 'summary' => $blog['excerpt'],
                 'url' => ShortLink::getOrCreate(self::absoluteUrl('/archive-post.html?slug=' . $blog['slug'])),
-                'image' => self::absoluteUrl($blog['cover_image_path']),
+                'image' => self::absoluteUrl(self::blogOgImagePath((string) $blog['slug'])),
             ];
         }
 
