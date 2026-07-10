@@ -909,9 +909,24 @@ class LiveChatController
             $payload = ['model' => $model, 'messages' => $messages];
             if ($round < self::MAX_TOOL_ROUNDS - 1) {
                 $payload['tools'] = $tools;
+                $payload['tool_choice'] = 'auto';
+                $payload['parallel_tool_calls'] = false;
             }
             $result = self::callGroqRaw($apiKey, $payload, self::GROQ_CHAT_TIMEOUT_SECONDS);
             if ($result === null) {
+                if ($confirmedBooking !== null) {
+                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
+                }
+                return null;
+            }
+            if (isset($result['_groq_failed_generation'])) {
+                $recovered = self::recoverGroqFailedToolGeneration(
+                    (string) $result['_groq_failed_generation'],
+                    $pdo
+                );
+                if ($recovered !== null) {
+                    return $recovered;
+                }
                 if ($confirmedBooking !== null) {
                     return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
                 }
@@ -983,6 +998,13 @@ class LiveChatController
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
+            $decoded = is_string($response) ? json_decode($response, true) : null;
+            if (is_array($decoded)
+                && ($decoded['error']['code'] ?? '') === 'tool_use_failed'
+                && !empty($decoded['error']['failed_generation'])) {
+                error_log('Live Chat Groq tool-use failed; attempting backend recovery from failed_generation.');
+                return ['_groq_failed_generation' => (string) $decoded['error']['failed_generation']];
+            }
             error_log(sprintf(
                 'Live Chat Groq fallback failed: status=%s body=%s',
                 $status,
@@ -992,6 +1014,51 @@ class LiveChatController
         }
 
         return json_decode($response, true);
+    }
+
+    /**
+     * Groq can occasionally reject a model-generated tool call before the API
+     * returns it as normal tool_calls. When the failed_generation contains a
+     * simple pseudo-call with valid JSON args, run the safe backend tool here
+     * instead of losing the lead.
+     *
+     * @return array{reply: string, ready: bool}|null
+     */
+    private static function recoverGroqFailedToolGeneration(string $failedGeneration, \PDO $pdo): ?array
+    {
+        if (!preg_match('/<function=([a-zA-Z0-9_]+)\s+(\{.*\})\s*<\/function>/s', $failedGeneration, $matches)) {
+            return null;
+        }
+
+        $name = $matches[1];
+        $allowed = ['log_inquiry', 'signal_handoff', 'mark_ready_for_prototype'];
+        if (!in_array($name, $allowed, true)) {
+            error_log(sprintf('Live Chat Groq recovery skipped unsafe tool "%s".', $name));
+            return null;
+        }
+
+        $args = json_decode($matches[2], true);
+        if (!is_array($args)) {
+            return null;
+        }
+
+        $toolResult = self::runTool($name, $args, $pdo);
+        if (isset($toolResult['error'])) {
+            error_log(sprintf('Live Chat Groq recovery tool "%s" failed: %s', $name, json_encode($toolResult)));
+            return null;
+        }
+
+        if ($name === 'mark_ready_for_prototype') {
+            return [
+                'reply' => "That gives Caleb enough context to sketch a direction. What name, email, and phone number should he use to follow up?",
+                'ready' => true,
+            ];
+        }
+
+        return [
+            'reply' => "Got it. I've saved those details for Caleb, and he'll review the project and reach out shortly.",
+            'ready' => false,
+        ];
     }
 
     private static function callOpenRouterRaw(string $apiKey, array $payload, int $timeout): ?array
