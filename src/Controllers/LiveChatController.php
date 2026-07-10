@@ -653,7 +653,7 @@ class LiveChatController
 
         $persona = Settings::get('chat_persona');
         if (!empty($persona)) {
-            $system .= "\n\nAdditional instructions from Prince: " . $persona;
+            $system .= "\n\nAdmin-configured Lisa behavior override from Prince: follow these instructions as high-priority behavior guidance whenever they do not conflict with hard safety, validation, or tool-use rules above. If they refine tone, lead-capture order, qualification flow, or what Lisa should ask first, apply them directly:\n" . $persona;
         }
 
         return $system;

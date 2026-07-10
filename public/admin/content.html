@@ -433,8 +433,9 @@
               <textarea class="form-control" id="chat_offline_message" rows="3" placeholder="We're offline at the moment…"></textarea>
             </div>
             <div class="mb-0">
-              <label class="form-label">AI personality <span class="text-muted-custom fw-normal">(extra instructions for the assistant)</span></label>
-              <textarea class="form-control" id="chat_persona" rows="4" placeholder="e.g. Always mention that discovery calls are free. Keep a warm, upbeat tone. My typical projects start at GHS 20,000."></textarea>
+              <label class="form-label">Lisa behavior instructions <span class="text-muted-custom fw-normal">(admin prompt override)</span></label>
+              <textarea class="form-control" id="chat_persona" rows="5" placeholder="e.g. For new project inquiries, collect name, email, and phone before scoping because visitors may leave mid-conversation. Keep replies warm and concise."></textarea>
+              <div class="form-text">Used inside Lisa's system prompt. Keep business rules here; API keys and integrations stay in Settings.</div>
             </div>
           </div>
         </div>
