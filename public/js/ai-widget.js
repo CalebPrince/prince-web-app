@@ -13,7 +13,7 @@
         </svg>
       </div>
       <div class="flex-grow-1 lh-sm">
-        <strong class="small d-block">Prince's Assistant</strong>
+        <strong class="chat-title d-block">Prince's Assistant</strong>
         <span class="chat-status small"><span class="status-dot" id="chat-status-dot"></span><span id="chat-status-text">Connecting…</span></span>
       </div>
       <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 me-1" id="ai-widget-menu-btn" title="Menu" aria-label="Show menu">☰</button>
