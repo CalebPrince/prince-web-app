@@ -779,3 +779,51 @@ body > .d-flex {
     overflow-x: auto;
   }
 }
+
+/* --- De-blue Bootstrap ---------------------------------------------------
+   Bootstrap's default blue (links, tab links, checked checkboxes/switches)
+   reads off-brand against the monochrome editorial palette — repaint all of
+   it with ink, matching app.css's link treatment. */
+:root {
+  --bs-link-color: var(--accent);
+  --bs-link-hover-color: var(--accent-strong);
+  --bs-link-color-rgb: 23, 24, 28;
+  --bs-link-hover-color-rgb: 0, 0, 0;
+}
+[data-theme="dark"] {
+  --bs-link-color-rgb: 232, 234, 237;
+  --bs-link-hover-color-rgb: 255, 255, 255;
+}
+
+.btn-link {
+  --bs-btn-color: var(--ink);
+  --bs-btn-hover-color: var(--accent-strong);
+  --bs-btn-active-color: var(--accent-strong);
+  text-decoration-color: var(--line-strong);
+}
+
+.nav-tabs {
+  --bs-nav-link-color: var(--muted);
+  --bs-nav-link-hover-color: var(--heading-color);
+  --bs-nav-tabs-border-color: var(--line);
+  --bs-nav-tabs-link-hover-border-color: var(--line) var(--line) var(--line);
+  --bs-nav-tabs-link-active-color: var(--heading-color);
+  --bs-nav-tabs-link-active-bg: var(--card-bg);
+  --bs-nav-tabs-link-active-border-color: var(--line) var(--line) var(--card-bg);
+}
+
+.form-check-input:checked {
+  background-color: var(--heading-color);
+  border-color: var(--heading-color);
+}
+.form-check-input:focus {
+  border-color: var(--line-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+/* Bootstrap swaps in a blue thumb on switch focus — keep it neutral. */
+.form-switch .form-check-input:focus:not(:checked) {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(0, 0, 0, 0.25)'/%3e%3c/svg%3e");
+}
+[data-theme="dark"] .form-switch .form-check-input:not(:checked) {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(255, 255, 255, 0.4)'/%3e%3c/svg%3e");
+}
