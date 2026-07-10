@@ -14,6 +14,38 @@ layout/utilities only — no build step, no bundler.
 
 Live at [princecaleb.dev](https://princecaleb.dev).
 
+## Current look and feel
+
+The public site now positions Prince Caleb as a lean technical partner rather
+than a generic agency portfolio. The homepage is organized around four
+client-facing sections:
+
+1. **Asymmetric Value Hero** - direct positioning around building useful web
+   products "without platform bloat or agency overhead."
+2. **Technical Archive** - the former blog surface has been reframed as
+   engineering deep-dives and case-study notes, with text-first entries,
+   metrics, domains, and clean typography instead of image thumbnails.
+3. **Production Logs Registry** - the former project grid now reads like a
+   development record: text-only project entries, performance badges, stack
+   tags, delivery notes, and outcome metrics.
+4. **Live Demonstration Arena** - the homepage closes with an interactive
+   client-facing section for AI context, booking/scheduling, and immediate
+   project next steps.
+
+Pricing is consistent across the homepage and `/pricing.html`: Starter,
+Growth, and Custom / Enterprise use the same tier names, amounts, summaries,
+and feature lists. The visible navigation no longer links to a generic Blog
+label; archive-style content remains available where the page itself is used.
+
+The admin styling was refreshed to match the public site: restrained
+monochrome surfaces, tighter cards, clearer section grouping, and a more
+technical editorial feel. New homepage content groups are editable from
+Admin -> Site Content, including the value hero panel, homepage pricing copy,
+technical archive entries, production log headings, and live demo arena copy.
+These edits use the existing settings/content API and `settings` table; no
+database schema, migrations, seed data, or stored records were changed for
+this redesign.
+
 ## Setup
 
 Requires PHP 8.1+ with the `pdo_sqlite` extension. No Composer, no Node, no
@@ -121,11 +153,14 @@ storage/
    (with cover image upload), an inquiries inbox (read/flag/archive) split
    into general contact vs. quote requests, a payments section (Paystack
    transaction log + generate-a-payment-link), tag management, site content
-   (all editable homepage/pricing copy), and account settings. Includes contextual SVG tooltips for quick help on forms and cards.
-6. **Blog** (`/blog.html`, `/blog-post.html`) is a normal CRUD resource
-   (`blog_posts` table) with category filtering, pagination (10/page),
-   reading-time estimates, share buttons, and per-post OG/Twitter meta +
-   JSON-LD structured data for SEO.
+   (editable homepage value hero, pricing, technical archive, production log,
+   live demo, and pricing copy), and account settings. Includes contextual SVG tooltips for quick help on forms and cards.
+6. **Technical Archive** (`/blog.html`, `/blog-post.html`) still uses the
+   existing blog CRUD resource (`blog_posts` table), category filtering,
+   pagination (10/page), reading-time estimates, share buttons, and per-post
+   OG/Twitter meta + JSON-LD structured data for SEO. The public presentation
+   is now text-first and case-study-like, with no thumbnail grid on archive
+   or related-entry cards.
 7. **Project requests** (`/request.html`) are a richer, honeypot + rate
    limited alternative to the plain contact form — project type, budget,
    timeline, feature checkboxes, and up to 5 file attachments (validated by
@@ -164,10 +199,11 @@ storage/
     ever changes). The service worker deliberately never caches `/api/*`
     or `/admin/*`, only the static app shell, so nothing stale is ever
     served for content or admin data.
-12. **Pricing content** is editable from Admin -> Pricing. Tier names,
-    displayed prices, taglines, feature lists, the public currency, and the
-    Starter checkout amount are stored in the `settings` table and hydrate
-    the static public pages. Admin -> Settings still holds the Paystack keys.
+12. **Pricing content** is editable from Admin -> Pricing and reused on both
+    the homepage and `/pricing.html`. Tier names, displayed prices, taglines,
+    feature lists, the public currency, and the Starter checkout amount are
+    stored in the `settings` table and hydrate the static public pages. Admin
+    -> Settings still holds the Paystack keys.
 13. **Project estimation calculator** on `/pricing.html` is pure client-side
     JS (project type + feature checkboxes + timeline → a rounded price
     range) — no backend call, since it's explicitly a rough estimate, not
@@ -331,14 +367,16 @@ storage/
     `access_token`) and a distinct `type` claim in the JWT payload, so a
     stolen/replayed client token is rejected by admin routes and vice versa
     even though both share the same signing secret.
-28. **Case study CMS improvements** (`/admin/projects.html`): projects can
+28. **Production Logs / case study CMS improvements** (`/admin/projects.html`): projects can
     now carry a `outcome_metrics` results section, link to one approved
     `testimonials` row (rendered as a quote on the case study page — HTML
     escaped, since a testimonial's quote text originates from a public
     client-submission form, unlike the rest of a project's admin-authored
-    fields), and an `is_featured` flag. The homepage hero previously always
-    showed whichever project had the lowest `sort_order`; it now prefers the
-    explicitly featured one, falling back to the old behavior if none is set.
+    fields), and an `is_featured` flag. Public project surfaces now render as
+    text-only production logs with metrics and stack badges instead of static
+    image boxes. The homepage hero previously always showed whichever project
+    had the lowest `sort_order`; it now prefers the explicitly featured one,
+    falling back to the old behavior if none is set.
 29. **Make.com automation events** (`src/Support/MakeWebhook.php`): a single
     configurable webhook URL (Admin → Settings → Integrations) receives a
     JSON event for proposal acceptance, content publishing, testimonial
