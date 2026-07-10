@@ -39,6 +39,7 @@ class SettingsController
     private const CONTENT_KEYS = [
         'default_theme',
         'hero_eyebrow', 'hero_title', 'hero_subtitle', 'availability_badge',
+        'hero_video_url',
         'hero_value_eyebrow',
         'hero_value_1_label', 'hero_value_1_text',
         'hero_value_2_label', 'hero_value_2_text',

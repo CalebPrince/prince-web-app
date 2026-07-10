@@ -48,6 +48,66 @@
     contactWhatsappRow.classList.remove("d-none");
   }
 
+  function buildHeroVideo(urlValue) {
+    let url;
+    try {
+      url = new URL(urlValue);
+    } catch (_) {
+      return null;
+    }
+    if (!["http:", "https:"].includes(url.protocol)) return null;
+
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    const directVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(url.href);
+
+    if (directVideo) {
+      const video = document.createElement("video");
+      video.src = url.href;
+      video.autoplay = true;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.setAttribute("aria-label", "Homepage hero video");
+      return video;
+    }
+
+    let embedUrl = "";
+    if (host === "youtu.be" && pathParts[0]) {
+      const id = pathParts[0];
+      embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&modestbranding=1&rel=0&playsinline=1`;
+    } else if ((host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") && (url.searchParams.get("v") || pathParts.includes("embed") || pathParts.includes("shorts"))) {
+      const id = url.searchParams.get("v") || pathParts[pathParts.indexOf("embed") + 1] || pathParts[pathParts.indexOf("shorts") + 1];
+      if (id) embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&modestbranding=1&rel=0&playsinline=1`;
+    } else if (host === "vimeo.com" && pathParts[0]) {
+      const id = pathParts[0] === "video" ? pathParts[1] : pathParts[0];
+      if (/^\d+$/.test(id || "")) embedUrl = `https://player.vimeo.com/video/${encodeURIComponent(id)}?autoplay=1&muted=1&loop=1&background=1`;
+    } else {
+      embedUrl = url.href;
+    }
+
+    if (!embedUrl) return null;
+    const iframe = document.createElement("iframe");
+    iframe.src = embedUrl;
+    iframe.title = "Homepage hero video";
+    iframe.loading = "lazy";
+    iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+    iframe.allowFullscreen = true;
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    return iframe;
+  }
+
+  const heroVideo = document.getElementById("hero-video-panel");
+  if (heroVideo && content.hero_video_url) {
+    const media = buildHeroVideo(content.hero_video_url);
+    if (media) {
+      heroVideo.innerHTML = "";
+      heroVideo.appendChild(media);
+      heroVideo.classList.remove("d-none");
+    }
+  }
+
   // Multi-paragraph blocks: blank-line-separated text becomes <p> elements
   document.querySelectorAll("[data-content-paragraphs]").forEach(el => {
     const value = content[el.dataset.contentParagraphs];
