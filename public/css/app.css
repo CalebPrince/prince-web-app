@@ -1005,6 +1005,47 @@ pre code.hljs {
 .contact-card h5 {
   color: var(--heading-color);
 }
+/* Contact channels — phone and email read as display-size direct lines
+   (eyebrow label over a big value with the arrow-nudge idiom) instead of
+   small meta rows. The value anchor carries data-content-href, so label and
+   arrow live outside it: content.js replaces that anchor's full text. */
+.contact-channel {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.contact-channel-label {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.contact-channel-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.contact-channel-value {
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--heading-color);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+  transition: opacity 0.25s var(--ease-out);
+}
+.contact-channel-value:hover {
+  color: var(--heading-color);
+  opacity: 0.65;
+}
+.contact-channel .cta-arrow { color: var(--muted); }
+/* The arrow sits next to the anchor, not inside it, so the nudge triggers
+   from the whole row rather than the a:hover rule used elsewhere. */
+.contact-channel:hover .cta-arrow { transform: translateX(4px); }
 .form-label {
   color: var(--heading-color);
 }
