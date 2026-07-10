@@ -37,6 +37,7 @@
 <link href="/css/app.css" rel="stylesheet">
 </head>
 <body>
+<div class="read-progress" id="read-progress" aria-hidden="true"></div>
 <a href="#post-content" class="skip-link">Skip to main content</a>
 
 <nav class="site-nav">
@@ -233,11 +234,67 @@ function renderBody(body) {
           <h4 class="mb-3">Want something like this built for your business?</h4>
           <a href="/contact.html" class="btn-brand">Let's talk about your project →</a>
         </div>
+        <div id="related-posts"></div>
       </div>
     `;
 
     if (window.hljs) {
       container.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+    }
+
+    // Reading progress hairline — width tracks how far down the page you
+    // are. Capture-phase listener on window hears every scroll on the page
+    // (scroll events don't bubble, so a plain document listener would miss
+    // an element scroller if the page's scroll container ever changes).
+    const progress = document.getElementById('read-progress');
+    if (progress) {
+      const onScroll = () => {
+        const doc = document.scrollingElement || document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        progress.style.transform = `scaleX(${max > 0 ? Math.min(doc.scrollTop / max, 1) : 0})`;
+      };
+      window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+      onScroll();
+    }
+
+    // Related articles: same category first, padded with the most recent
+    // other posts if the category has fewer than three. Best-effort — a
+    // failure here never breaks the article itself.
+    try {
+      const all = await api.get('/api/v1/blog');
+      const others = all.filter((r) => r.slug !== slug);
+      const related = [
+        ...others.filter((r) => r.category && r.category === p.category),
+        ...others.filter((r) => !r.category || r.category !== p.category),
+      ].slice(0, 3);
+      if (related.length) {
+        document.getElementById('related-posts').innerHTML = `
+          <div class="border-top pt-5 mt-5">
+            <p class="eyebrow">// KEEP READING</p>
+            <h3 class="mb-4">Related articles</h3>
+            <div class="row g-4">
+              ${related.map((r, i) => `
+                <div class="col-md-4 reveal reveal-delay-${i + 1}">
+                  <a href="/blog-post.html?slug=${r.slug}" class="text-decoration-none">
+                    <div class="project-card">
+                      <img src="${r.cover_image_path}" alt="${r.title}" loading="lazy" decoding="async">
+                      <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          ${r.category ? `<span class="eyebrow mb-0">${r.category}</span>` : '<span></span>'}
+                          <span class="small text-muted-custom">⏱ ${r.reading_time} min read</span>
+                        </div>
+                        <h5 class="mb-2">${r.title}</h5>
+                        <span class="small fw-semibold" style="color: var(--heading-color);">Read article →</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+      }
+    } catch (_) {
+      /* related posts are optional */
     }
 
     document.getElementById('copy-link-btn')?.addEventListener('click', async (e) => {

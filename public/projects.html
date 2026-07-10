@@ -82,7 +82,12 @@
 
 <section class="section">
   <div class="container">
-    <div id="projects-grid" class="row g-4"></div>
+    <div id="projects-grid" class="row g-4">
+      <div class="col-md-6 col-lg-8"><div class="skeleton skeleton-card"></div></div>
+      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
+      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
+      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
+    </div>
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">
       No projects match this filter yet.
     </div>
@@ -164,7 +169,7 @@ function renderGrid(projects) {
       <div class="position-relative">
         <a href="/project.html?slug=${p.slug}" class="text-decoration-none">
           <div class="project-card ${i === 0 ? 'project-card-featured' : ''}">
-            <img src="${p.cover_image_path}" alt="${p.title}">
+            <img src="${p.cover_image_path}" alt="${p.title}" ${i === 0 ? '' : 'loading="lazy"'} decoding="async">
             <div class="card-body">
               <h5 class="mb-2">${p.title}</h5>
               <p class="small text-muted-custom mb-3">${p.summary}</p>
@@ -234,6 +239,9 @@ function applyFilter(tagSlug) {
     filterBar.querySelector('[data-tag=""]').addEventListener('click', () => applyFilter(''));
   } catch (e) {
     console.error('Failed to load projects', e);
+    // Drop the loading skeletons rather than shimmering forever.
+    document.getElementById('projects-grid').innerHTML = '';
+    document.getElementById('empty-state').classList.remove('d-none');
   }
 })();
 </script>

@@ -87,6 +87,9 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.15;
+  /* Evens out multi-line headline wraps (no one-word orphan lines).
+     Browsers without support just ignore it. */
+  text-wrap: balance;
 }
 /* Bootstrap's display-* utilities default to font-weight 300 — too thin for
    the editorial look. */
@@ -1011,6 +1014,30 @@ pre code.hljs {
 @keyframes skeleton-loading {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
+}
+
+/* Skeleton stand-in for a listing card while the API responds — same
+   footprint as .project-card so the grid doesn't reflow when real
+   content lands. */
+.skeleton-card {
+  height: 320px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+}
+
+/* Reading progress hairline pinned to the top of the viewport on blog
+   posts — width driven by a scroll listener in blog-post.html. */
+.read-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  z-index: 1100;
+  pointer-events: none;
 }
 
 /* ---- Animations ---------------------------------------------------------

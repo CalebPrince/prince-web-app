@@ -28,6 +28,20 @@
   .status-pill.unread,
   .status-pill.pending { background: #fef3c7; color: #92400e; }
   .status-pill.published { background: #dcfce7; color: #166534; }
+  /* Clients print/PDF proposals before signing off — strip the site chrome
+     and interactive controls, force a light document look (same approach
+     as invoice.html). Status pills keep their tint so paid/pending still
+     reads at a glance. */
+  @media print {
+    body { background: #fff !important; color: #000 !important; }
+    .site-nav, .skip-link, #accept-proposal-form, #proposal-msg,
+    .btn-brand, .btn-brand-outline { display: none !important; }
+    .section { padding: 0 !important; }
+    .contact-card { border: none; padding: 0 0 1.5rem; box-shadow: none !important; background: #fff !important; }
+    .contact-card, .contact-card *:not(.status-pill) { color: #000 !important; }
+    .contact-card [style*="background"] { background: #fff !important; border: 1px solid #ddd; }
+    a { text-decoration: none !important; }
+  }
 </style>
 </head>
 <body>
