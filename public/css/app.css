@@ -221,13 +221,24 @@ p a:not([class]), li a:not([class]) { text-decoration: underline; text-underline
 /* Mobile nav drawer */
 .nav-drawer { width: 300px; background: var(--bg); color: var(--ink-soft); }
 .nav-drawer .offcanvas-header { border-bottom: 1px solid var(--line); }
+/* Drawer links read as centered headings — the drawer is a full takeover
+   surface on mobile, so it can afford display-size type. */
+.nav-drawer .offcanvas-body { text-align: center; }
 .nav-drawer .nav-link {
-  padding: 0.85rem 0.25rem;
+  padding: 1rem 0.25rem;
   border-bottom: 1px solid var(--line);
-  font-size: 1.05rem;
-  transition: padding-left 0.2s ease, color 0.2s ease;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--heading-color);
+  transition: color 0.2s ease, opacity 0.2s ease;
 }
-.nav-drawer .nav-link:hover { padding-left: 0.75rem; }
+.nav-drawer .nav-link:hover { opacity: 0.6; }
+.nav-drawer .btn-brand,
+.nav-drawer .btn-brand-outline {
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0.95rem 1.8rem;
+}
 
 /* Theme toggle */
 .theme-toggle {
