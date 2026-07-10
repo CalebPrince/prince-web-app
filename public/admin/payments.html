@@ -130,22 +130,24 @@
 
     <div id="panel-transactions">
       <div class="admin-card p-0">
-        <table class="table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th class="ps-3">Reference</th>
-              <th>Customer</th>
-              <th>Amount</th>
-              <th>Source</th>
-              <th>Terms</th>
-              <th>Status</th>
-              <th class="text-center">Reviewed</th>
-              <th>Date</th>
-              <th class="text-end pe-3"></th>
-            </tr>
-          </thead>
-          <tbody id="payments-tbody"></tbody>
-        </table>
+        <div class="admin-table-scroll">
+          <table class="table mb-0 align-middle payments-table">
+            <thead>
+              <tr>
+                <th class="ps-3">Reference</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Source</th>
+                <th>Terms</th>
+                <th>Status</th>
+                <th class="text-center">Reviewed</th>
+                <th>Date</th>
+                <th class="text-end pe-3"></th>
+              </tr>
+            </thead>
+            <tbody id="payments-tbody"></tbody>
+          </table>
+        </div>
       </div>
       <div id="payments-empty" class="text-center text-muted-custom py-5 d-none">No transactions yet.</div>
     </div>

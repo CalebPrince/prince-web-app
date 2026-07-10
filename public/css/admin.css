@@ -577,6 +577,26 @@ body > .d-flex {
   border-bottom: 0;
 }
 
+.admin-table-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.payments-table {
+  min-width: 1120px;
+}
+
+.payments-table code,
+.payments-table .text-muted-custom,
+.payments-table .btn {
+  white-space: nowrap;
+}
+
+.payments-table td:last-child {
+  min-width: 210px;
+}
+
 .btn,
 .btn-sm,
 .btn-brand,
