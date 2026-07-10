@@ -44,6 +44,15 @@ RewriteCond %{REQUEST_URI} !^/sw\.js$
 RewriteCond %{REQUEST_URI} !^/maintenance\.(html|php)$
 RewriteRule ^ /maintenance.php [L]
 
+# Server-side social share meta: the two dynamic content pages go through
+# og-render.php, which injects per-item og:image/title/description into the
+# real HTML template so crawlers (which don't run JS) preview each blog post
+# and project correctly. Placed after the maintenance block so maintenance
+# mode still wins. Fail-open — og-render.php serves the template unchanged if
+# anything goes wrong, so these pages can't break. QSA keeps ?slug=.
+RewriteRule ^project\.html$ og-render.php?_page=project [L,QSA]
+RewriteRule ^archive-post\.html$ og-render.php?_page=archive [L,QSA]
+
 # Serve real files/directories as-is; route everything else under /api/ through index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

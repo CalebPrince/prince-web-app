@@ -171,7 +171,10 @@ function renderBody(body) {
     const p = await api.get(`/api/v1/blog/${encodeURIComponent(slug)}`);
     const pageTitle = `${p.title} — Prince Caleb`;
     const canonicalUrl = `https://princecaleb.dev/archive-post.html?slug=${encodeURIComponent(slug)}`;
-    const imageUrl = p.cover_image_path.startsWith('http') ? p.cover_image_path : `https://princecaleb.dev${p.cover_image_path}`;
+    // Share/structured-data image is the raster OG card (generate_blog_og_images.py),
+    // not the post's SVG cover — social platforms don't render SVG. This mirrors
+    // what og-render.php injects server-side for crawlers.
+    const imageUrl = `https://princecaleb.dev/uploads/og/blog/${slug}.png`;
     const categoryKeywords = CATEGORY_KEYWORDS[p.category] || 'custom software Ghana';
     const keywords = [p.category, categoryKeywords, 'custom software Accra'].filter(Boolean).join(', ');
     const publishedIso = p.created_at ? p.created_at.replace(' ', 'T') + 'Z' : '';
