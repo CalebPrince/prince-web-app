@@ -6,7 +6,19 @@
 
 (function () {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const noIO = !("IntersectionObserver" in window);
+  const depthSelector = [
+    ".service-card",
+    ".project-card",
+    ".pricing-card",
+    ".testimonial-card",
+    ".case-code-card",
+    ".hero-value-panel",
+    ".planner-shell",
+    ".capability-panel",
+    ".ai-booking-panel",
+  ].join(",");
 
   const revealObserver =
     !prefersReducedMotion && !noIO
@@ -74,12 +86,63 @@
     }
   }
 
+  function addDepthCard(el) {
+    if (prefersReducedMotion || !supportsFinePointer || el.dataset.depthReady === "1") return;
+    if (el.parentElement?.closest(".depth-card")) return;
+    el.dataset.depthReady = "1";
+    el.classList.add("depth-card");
+
+    el.addEventListener("pointermove", (e) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      el.style.setProperty("--tilt-x", `${(-y * 7).toFixed(2)}deg`);
+      el.style.setProperty("--tilt-y", `${(x * 7).toFixed(2)}deg`);
+      el.style.setProperty("--glow-x", `${((x + 0.5) * 100).toFixed(1)}%`);
+      el.style.setProperty("--glow-y", `${((y + 0.5) * 100).toFixed(1)}%`);
+      el.classList.add("is-depth-active");
+    });
+
+    el.addEventListener("pointerleave", () => {
+      el.style.setProperty("--tilt-x", "0deg");
+      el.style.setProperty("--tilt-y", "0deg");
+      el.classList.remove("is-depth-active");
+    });
+  }
+
+  function watchDepth(root) {
+    if (prefersReducedMotion || !supportsFinePointer) return;
+    if (root.matches?.(depthSelector)) addDepthCard(root);
+    root.querySelectorAll(depthSelector).forEach(addDepthCard);
+  }
+
+  function setupHeroDepth() {
+    if (prefersReducedMotion || !supportsFinePointer) return;
+    const hero = document.querySelector(".home-page .agency-hero");
+    if (!hero) return;
+
+    hero.classList.add("hero-depth");
+    hero.addEventListener("pointermove", (e) => {
+      const rect = hero.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+      hero.style.setProperty("--hero-depth-x", x.toFixed(3));
+      hero.style.setProperty("--hero-depth-y", y.toFixed(3));
+    });
+    hero.addEventListener("pointerleave", () => {
+      hero.style.setProperty("--hero-depth-x", "0");
+      hero.style.setProperty("--hero-depth-y", "0");
+    });
+  }
+
   function scan(root) {
     root.querySelectorAll(".reveal, .reveal-on-scroll").forEach(watchReveal);
     root.querySelectorAll("[data-count-to]").forEach(watchCount);
+    watchDepth(root);
   }
 
   scan(document);
+  setupHeroDepth();
 
   new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -87,6 +150,7 @@
         if (node.nodeType !== 1) return;
         if (node.matches?.(".reveal, .reveal-on-scroll")) watchReveal(node);
         if (node.matches?.("[data-count-to]")) watchCount(node);
+        if (node.matches?.(depthSelector)) addDepthCard(node);
         scan(node);
       });
     });
