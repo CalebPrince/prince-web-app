@@ -37,6 +37,11 @@ Growth, and Custom / Enterprise use the same tier names, amounts, summaries,
 and feature lists. The visible navigation no longer links to a generic Blog
 label; archive-style content remains available where the page itself is used.
 
+The hero can carry an optional WebGL depth layer (see #35) behind the copy,
+and UI chrome stays strictly monochrome throughout — e.g. the multi-step
+form progress bar on `/request.html` uses the ink accent, not a stock
+Bootstrap blue.
+
 The admin styling was refreshed to match the public site: restrained
 monochrome surfaces, tighter cards, clearer section grouping, and a more
 technical editorial feel. New homepage content groups are editable from
@@ -59,7 +64,7 @@ php database/migrate.php
 php database/seed.php [admin-email] [admin-password]
 # defaults: admin@princecaleb.dev / change-me-now-123 — change this in production
 
-# 3. Optional: seed the 50 blog posts + generate their cover art
+# 3. Optional: seed the 52 blog posts + generate their cover art
 php database/generate_blog_covers.php
 php database/seed_blog_posts.php
 
@@ -85,7 +90,8 @@ public/                  # web root — only this folder is web-exposed
     payments.html, quote-requests.html, blog.html, inquiries.html, ...
   css/app.css             # public site design system
   css/admin.css           # admin panel styling
-  js/                     # api.js (fetch wrapper), render/page scripts, ai-widget
+  js/                     # api.js (fetch wrapper), render/page scripts, ai-widget,
+                          #   hero-3d.js (WebGL hero) + vendor/ (self-hosted Three.js)
   uploads/                # project covers, blog cover art, project-request attachments
 src/
   Controllers/            # ProjectController, BlogController, TagController,
@@ -115,7 +121,7 @@ database/
   seed.php                  # admin user + sample projects/tags
   seed_real_projects.php     # real project case studies
   blog_posts_data.php, generate_blog_covers.php, seed_blog_posts.php
-                              # the 50 blog posts + their generated SVG cover art
+                              # the 52 blog posts + their generated SVG cover art
   generate_sitemap.php       # regenerates public/sitemap.xml
   process_webhooks.php      # drains webhook_queue → Slack/email (run via cron/Task Scheduler)
   send_appointment_reminders.php  # ~24h-before booking reminder emails (cron)
@@ -160,7 +166,13 @@ storage/
    pagination (10/page), reading-time estimates, share buttons, and per-post
    OG/Twitter meta + JSON-LD structured data for SEO. The public presentation
    is now text-first and case-study-like, with no thumbnail grid on archive
-   or related-entry cards.
+   or related-entry cards. Posts are ordered newest-first everywhere they
+   surface — the archive list, the About mega-menu's featured card, the RSS
+   feed, and the homepage Technical Archive section, which now renders the
+   three most recent posts live from `/api/v1/blog` (the static HTML entries
+   are the API-down fallback). A newly published post automatically takes the
+   top slot: `BlogController` orders by `sort_order DESC`, and a post created
+   from the admin gets `MAX(sort_order)+1` unless an explicit position is set.
 7. **Project requests** (`/request.html`) are a richer, honeypot + rate
    limited alternative to the plain contact form — project type, budget,
    timeline, feature checkboxes, and up to 5 file attachments (validated by
@@ -321,20 +333,28 @@ storage/
     been the source of several subtle bugs this project had to debug.
 
     Live Chat's tool-calling conversation
-    (`LiveChatController::chatWithGemini`/`chatWithOpenRouter`) gets a
-    Gemini/OpenRouter fallback too, but as a second, independent
-    implementation rather than a shared one (not extended to Groq — see
-    below): Gemini's `functionCall`/`functionResponse` shape (with a
-    `thoughtSignature` that must round-trip verbatim) and OpenAI-style
-    `tools`/`tool_calls` (matched by `tool_call_id`) are different enough
-    that there's no safe way to hand off *mid-round* — a failed turn is
-    retried as a whole fresh turn on the other provider instead. Both
-    implementations share one source of truth for the system prompt
-    (`buildSystemPrompt`) and the tool declarations (`toolDeclarations`,
-    translated to OpenAI's schema by `toolDeclarationsOpenAiFormat`) so the
-    two providers can't drift into inconsistent behavior. If both fail, the
-    conversation still works via keyword-matching fallback, just without the
-    AI-driven tool calls.
+    (`LiveChatController::chatWithGemini`/`chatWithOpenRouter`/`chatWithGroq`)
+    gets the full three-way Gemini → OpenRouter → Groq fallback too, but as a
+    second, independent implementation rather than a shared one: Gemini's
+    `functionCall`/`functionResponse` shape (with a `thoughtSignature` that
+    must round-trip verbatim) and the OpenAI-style `tools`/`tool_calls`
+    (matched by `tool_call_id`) that both OpenRouter and Groq speak are
+    different enough that there's no safe way to hand off *mid-round* — a
+    failed turn is retried as a whole fresh turn on the next provider, each
+    rebuilding its own native wire format from a provider-neutral transcript
+    stored as plain role/text. Groq keeps its own method rather than reusing
+    the OpenRouter one even though both speak the OpenAI dialect, since the
+    two can drift in header/quirk requirements over time. All three share one
+    source of truth for the system prompt (`buildSystemPrompt`) and the tool
+    declarations (`toolDeclarations`, translated to OpenAI's schema by
+    `toolDeclarationsOpenAiFormat`) so the providers can't drift into
+    inconsistent behavior. Each turn is bounded to two model↔tool round-trips
+    (tools are dropped on the last round so the model must produce text), with
+    per-provider curl timeouts and a raised `set_time_limit` so the worst-case
+    chain can't be killed mid-request on shared hosting. If all three fail,
+    the conversation still works via keyword/booking-intent fallback, just
+    without the AI-driven tool calls. This whole design is written up in the
+    "How I Used Three LLMs to Power One Live Chat" archive post.
 24. **Proposals & payment milestones** (`/admin/proposals.html`): admin turns
     a quote request into a formal proposal — scope, timeline, currency, and
     a list of payment milestones, each auto-generating its own
@@ -464,6 +484,28 @@ storage/
     time. Deliberately unauthenticated (errors happen for anonymous
     visitors too) and rate-limited per IP (30/hour) to bound log growth
     from a page looping on one broken error.
+35. **WebGL hero constellation** (`public/js/hero-3d.js`, self-hosted Three.js
+    r0.180 in `public/js/vendor/three-0.180.0/`): an optional particle-and-line
+    constellation with a slow wireframe icosahedron drifting behind the
+    homepage headline, tinted with the theme's `--ink` color (it follows the
+    light/dark toggle live via a `MutationObserver` on `data-theme`). It is
+    deliberately gated so the library (~170KB gzipped) never loads where it
+    can't earn its cost: desktop fine-pointer only, `prefers-reduced-motion`
+    respected, WebGL required, and the module is dynamically `import()`-ed on
+    idle (with a timeout, since this page animates continuously and a
+    no-timeout `requestIdleCallback` can be starved forever) rather than in
+    the critical path. The render loop pauses whenever the hero scrolls
+    off-screen (`IntersectionObserver`) or the tab is hidden
+    (`visibilitychange`), and `devicePixelRatio` is capped at 1.75 so high-DPI
+    screens don't multiply GPU cost. It defers to the admin-configured hero
+    background video (`hero_video_url`, Admin → Site Content): if a video is
+    set the scene never mounts, and it tears itself down if the video appears
+    later, so the two background treatments never stack. Three.js is vendored
+    in a *versioned* directory (an upgrade bumps the folder name — the module
+    build internally imports `./three.core.min.js`, so both files ship
+    together) and served with a long `immutable` cache header via
+    `public/js/vendor/.htaccess`, unlike the app's own unhashed 1-hour-cached
+    JS; `.htaccess` also gzips the module pair.
 
 ## Deployment (Namecheap cPanel)
 
@@ -495,7 +537,7 @@ One-time setup on a new host:
    php database/migrate.php
    php database/seed.php <email> <password>
    php database/generate_blog_covers.php   # only needed once, or after editing blog_posts_data.php
-   php database/seed_blog_posts.php        # seeds/updates the 50 blog posts
+   php database/seed_blog_posts.php        # seeds/updates the 52 blog posts
    php database/generate_sitemap.php
    ```
 4. Add a cron job (every 5 minutes):
