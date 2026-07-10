@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\MakeWebhook;
 use App\Support\Response;
@@ -132,7 +133,16 @@ class TestimonialController
 
         $link = "https://princecaleb.dev/testimonial.html?token={$token}";
 
-        Mailer::send(
+        $message = EmailTemplate::render('testimonial_request', [
+            'client_name' => $clientName,
+            'client_email' => $clientEmail,
+            'project_reference' => $projectReference,
+            'project_reference_line' => $projectReference !== '' ? ' on ' . $projectReference : '',
+            'testimonial_url' => $link,
+        ], EmailTemplate::defaults()['testimonial_request']);
+        Mailer::sendHtml($clientEmail, $message['subject'], $message['html'], $message['text']);
+
+        if (false) Mailer::send(
             $clientEmail,
             'Quick favor — mind leaving a review?',
             "Hi {$clientName},\n\nThanks again for working together"

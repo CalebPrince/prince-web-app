@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Composio;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
@@ -231,14 +232,35 @@ class AppointmentController
         }
 
         $notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');
+        $templateVars = self::bookingTemplateVars([
+            'name' => $name,
+            'email' => $email,
+            'phone' => $phone,
+            'date' => $date,
+            'time' => $time,
+            'timezone' => $cfg['timezone'],
+            'topic' => $topic,
+        ]);
         if ($notifyEmail) {
-            Mailer::send(
+            $message = EmailTemplate::render(
+                'booking_internal_notification',
+                $templateVars,
+                EmailTemplate::defaults()['booking_internal_notification']
+            );
+            Mailer::sendHtml($notifyEmail, $message['subject'], $message['html'], $message['text'], $email);
+            if (false) Mailer::send(
                 $notifyEmail,
                 "New booking: {$date} {$time}",
                 "Name: {$name}\nEmail: {$email}\nPhone: " . ($phone ?: '—') . "\nTopic: " . ($topic ?: '—') . "\n\nDate: {$date}\nTime: {$time}"
             );
         }
-        Mailer::send(
+        $message = EmailTemplate::render(
+            'booking_client_confirmation',
+            $templateVars,
+            EmailTemplate::defaults()['booking_client_confirmation']
+        );
+        Mailer::sendHtml($email, $message['subject'], $message['html'], $message['text']);
+        if (false) Mailer::send(
             $email,
             "Your call is booked — {$date} at {$time}",
             "Hi {$name},\n\nYou're booked in for {$date} at {$time} ({$cfg['timezone']}).\n\nIf you need to reschedule or cancel, just reply to this email.\n\n— Prince Caleb"
@@ -287,8 +309,13 @@ class AppointmentController
 
         $start = self::bookingDateTime($booking['date'], $booking['time'], $booking['timezone']);
         $end = $start ? (clone $start)->modify('+' . (int) $booking['duration_minutes'] . ' minutes') : null;
-        $summary = 'New booking: ' . $booking['name'] . ' - ' . $booking['date'] . ' ' . $booking['time'];
-        $details = self::bookingMessage($booking);
+        $message = EmailTemplate::render(
+            'booking_internal_notification',
+            self::bookingTemplateVars($booking),
+            EmailTemplate::defaults()['booking_internal_notification']
+        );
+        $summary = $message['subject'];
+        $details = $message['text'];
 
         $calendarId = Settings::get('composio_google_calendar_id') ?: 'primary';
         $startIso = $start ? $start->format(\DateTimeInterface::ATOM) : "{$booking['date']}T{$booking['time']}:00";
@@ -386,13 +413,27 @@ class AppointmentController
 
     private static function bookingMessage(array $booking): string
     {
-        return "New booking confirmed\n"
-            . "Name: {$booking['name']}\n"
-            . "Email: {$booking['email']}\n"
-            . 'Phone: ' . ($booking['phone'] ?: '-') . "\n"
-            . 'Topic: ' . ($booking['topic'] ?: '-') . "\n"
-            . "Date: {$booking['date']}\n"
-            . "Time: {$booking['time']} ({$booking['timezone']})";
+        return EmailTemplate::render(
+            'booking_internal_notification',
+            self::bookingTemplateVars($booking),
+            EmailTemplate::defaults()['booking_internal_notification']
+        )['text'];
+    }
+
+    /** @return array<string,string> */
+    private static function bookingTemplateVars(array $booking): array
+    {
+        $topic = trim((string) ($booking['topic'] ?? ''));
+        return [
+            'client_name' => (string) ($booking['name'] ?? ''),
+            'client_email' => (string) ($booking['email'] ?? ''),
+            'client_phone' => (string) (($booking['phone'] ?? '') ?: '-'),
+            'topic' => $topic !== '' ? $topic : '-',
+            'topic_line' => $topic !== '' ? 'Topic: ' . $topic : '',
+            'date' => (string) ($booking['date'] ?? ''),
+            'time' => (string) ($booking['time'] ?? ''),
+            'timezone' => (string) ($booking['timezone'] ?? ''),
+        ];
     }
 
     /** GET /api/v1/admin/appointments */

@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Response;
 
@@ -214,8 +215,18 @@ class InvoiceController
         $invoiceUrl = 'https://princecaleb.dev/invoice.html?token=' . $invoice['token'];
         $amount = number_format($invoice['total'] / 100, 2);
         $due = $invoice['due_date'] ? "\nDue date: " . $invoice['due_date'] : '';
+        $message = EmailTemplate::render('invoice_send', [
+            'client_name' => $invoice['client_name'],
+            'invoice_number' => $invoice['invoice_number'],
+            'amount' => $amount,
+            'currency' => $invoice['currency'],
+            'due_date' => $invoice['due_date'] ?? '',
+            'due_line' => $invoice['due_date'] ? 'Due date: ' . $invoice['due_date'] : '',
+            'invoice_url' => $invoiceUrl,
+        ], EmailTemplate::defaults()['invoice_send']);
+        $ok = Mailer::sendHtml($invoice['client_email'], $message['subject'], $message['html'], $message['text']);
 
-        $ok = Mailer::send(
+        if (false) $ok = Mailer::send(
             $invoice['client_email'],
             "Invoice {$invoice['invoice_number']} from Prince Caleb — {$invoice['currency']} {$amount}",
             "Hi {$invoice['client_name']},\n\n"
@@ -286,6 +297,16 @@ class InvoiceController
         $totalStmt->execute([$invoice['id']]);
         $amount = number_format(((int) round((float) $totalStmt->fetchColumn())) / 100, 2);
         $invoiceUrl = 'https://princecaleb.dev/invoice.html?token=' . $invoice['token'];
+        $message = EmailTemplate::render('invoice_receipt', [
+            'client_name' => $invoice['client_name'],
+            'invoice_number' => $invoice['invoice_number'],
+            'amount' => $amount,
+            'currency' => $invoice['currency'],
+            'invoice_url' => $invoiceUrl,
+        ], EmailTemplate::defaults()['invoice_receipt']);
+
+        Mailer::sendHtml($invoice['client_email'], $message['subject'], $message['html'], $message['text']);
+        return;
 
         Mailer::send(
             $invoice['client_email'],

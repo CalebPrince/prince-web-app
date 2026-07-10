@@ -9,6 +9,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Settings;
 
@@ -45,6 +46,16 @@ foreach ($pending as $row) {
         $attachmentLines
     ) : '';
 
+    $notification = EmailTemplate::render('inquiry_internal_notification', [
+        'notification_type' => $isProjectRequest ? 'New project request' : 'New inquiry',
+        'client_name' => $row['name'],
+        'client_email' => $row['email'],
+        'message_body' => $row['message'],
+        'details_text' => $detailLines,
+        'details_html' => $detailLines,
+        'source_label' => $isProjectRequest ? 'project request form' : 'contact form',
+    ], EmailTemplate::defaults()['inquiry_internal_notification']);
+
     if (!$slackDone) {
         $heading = $isProjectRequest ? 'New *project request*' : 'New inquiry';
         $text = sprintf(
@@ -55,6 +66,7 @@ foreach ($pending as $row) {
             $detailLines !== '' ? '>' . str_replace("\n", "\n>", rtrim($detailLines)) . "\n" : '',
             str_replace("\n", "\n>", $row['message'])
         );
+        $text = $notification['text'];
         $ch = curl_init($slackUrl);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
@@ -74,7 +86,13 @@ foreach ($pending as $row) {
         $body = "Name: {$row['name']}\nEmail: {$row['email']}\n\n{$detailLines}{$row['message']}\n\n"
             . "— sent automatically from the princecaleb.dev "
             . ($isProjectRequest ? 'project request form.' : 'contact form.');
-        $emailDone = Mailer::send($notifyEmail, $subject, $body, $row['email']);
+        $emailDone = Mailer::sendHtml(
+            $notifyEmail,
+            $notification['subject'],
+            $notification['html'],
+            $notification['text'],
+            $row['email']
+        );
     }
 
     if ($slackDone && $emailDone) {

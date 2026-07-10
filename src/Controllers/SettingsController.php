@@ -33,6 +33,22 @@ class SettingsController
         'composio_whatsapp_booking_tool', 'composio_whatsapp_booking_to',
         'composio_google_calendar_last_error', 'composio_gmail_last_error',
         'composio_slack_last_error', 'composio_whatsapp_last_error',
+        'email_tpl_payment_success_subject', 'email_tpl_payment_success_html', 'email_tpl_payment_success_text',
+        'email_tpl_invoice_send_subject', 'email_tpl_invoice_send_html', 'email_tpl_invoice_send_text',
+        'email_tpl_invoice_receipt_subject', 'email_tpl_invoice_receipt_html', 'email_tpl_invoice_receipt_text',
+        'email_tpl_subscription_receipt_subject', 'email_tpl_subscription_receipt_html', 'email_tpl_subscription_receipt_text',
+        'email_tpl_proposal_send_subject', 'email_tpl_proposal_send_html', 'email_tpl_proposal_send_text',
+        'email_tpl_booking_client_confirmation_subject', 'email_tpl_booking_client_confirmation_html', 'email_tpl_booking_client_confirmation_text',
+        'email_tpl_booking_internal_notification_subject', 'email_tpl_booking_internal_notification_html', 'email_tpl_booking_internal_notification_text',
+        'email_tpl_appointment_reminder_subject', 'email_tpl_appointment_reminder_html', 'email_tpl_appointment_reminder_text',
+        'email_tpl_client_invite_subject', 'email_tpl_client_invite_html', 'email_tpl_client_invite_text',
+        'email_tpl_client_password_reset_subject', 'email_tpl_client_password_reset_html', 'email_tpl_client_password_reset_text',
+        'email_tpl_client_portal_message_subject', 'email_tpl_client_portal_message_html', 'email_tpl_client_portal_message_text',
+        'email_tpl_project_request_confirmation_subject', 'email_tpl_project_request_confirmation_html', 'email_tpl_project_request_confirmation_text',
+        'email_tpl_testimonial_request_subject', 'email_tpl_testimonial_request_html', 'email_tpl_testimonial_request_text',
+        'email_tpl_milestone_reminder_subject', 'email_tpl_milestone_reminder_html', 'email_tpl_milestone_reminder_text',
+        'email_tpl_inquiry_internal_notification_subject', 'email_tpl_inquiry_internal_notification_html', 'email_tpl_inquiry_internal_notification_text',
+        'email_brand_logo_url', 'email_site_url',
     ];
 
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */
@@ -116,7 +132,8 @@ class SettingsController
                 continue;
             }
             $value = trim((string) $data[$key]);
-            if (mb_strlen($value) > 5000) {
+            $maxLength = str_starts_with($key, 'email_tpl_') ? 20000 : 5000;
+            if (mb_strlen($value) > $maxLength) {
                 Response::error('Value too long.', 422);
             }
             Settings::set($key, $value);

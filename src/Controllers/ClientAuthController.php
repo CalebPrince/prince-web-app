@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\ClientAuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Jwt;
 use App\Support\Mailer;
 use App\Support\Response;
@@ -175,7 +176,13 @@ class ClientAuthController
                 )->execute([$resetToken, $client['id']]);
 
                 $url = self::absoluteUrl('/client/reset-password.html?token=' . $resetToken);
-                Mailer::send(
+                $message = EmailTemplate::render('client_password_reset', [
+                    'client_name' => $client['name'],
+                    'client_email' => $client['email'],
+                    'reset_url' => $url,
+                ], EmailTemplate::defaults()['client_password_reset']);
+                Mailer::sendHtml($client['email'], $message['subject'], $message['html'], $message['text']);
+                if (false) Mailer::send(
                     $client['email'],
                     'Reset your client portal password',
                     "Hi {$client['name']},\n\nUse this link to reset your password:\n\n{$url}\n\n"

@@ -11,6 +11,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 
 const REMINDER_DELAY_DAYS = 3;
@@ -35,7 +36,18 @@ foreach ($candidates as $row) {
     $amount = number_format(((int) $row['amount']) / 100, 2);
     $payUrl = 'https://princecaleb.dev/pay.html?token=' . $row['payment_token'];
 
-    $ok = Mailer::send(
+    $message = EmailTemplate::render('milestone_reminder', [
+        'client_name' => $row['client_name'],
+        'client_email' => $row['client_email'],
+        'milestone_title' => $row['milestone_title'],
+        'proposal_title' => $row['proposal_title'],
+        'amount' => $amount,
+        'currency' => $row['currency'],
+        'payment_url' => $payUrl,
+    ], EmailTemplate::defaults()['milestone_reminder']);
+    $ok = Mailer::sendHtml($row['client_email'], $message['subject'], $message['html'], $message['text']);
+
+    if (false) $ok = Mailer::send(
         $row['client_email'],
         "Reminder: {$row['milestone_title']} payment is still pending",
         "Hi {$row['client_name']},\n\nJust a reminder that the \"{$row['milestone_title']}\" milestone "

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\MakeWebhook;
 use App\Support\Response;
@@ -50,7 +51,15 @@ class ProposalController
         }
 
         $url = self::absoluteUrl('/proposal.html?token=' . $proposal['token']);
-        $sent = Mailer::send(
+        $message = EmailTemplate::render('proposal_send', [
+            'client_name' => $proposal['client_name'],
+            'client_email' => $proposal['client_email'],
+            'proposal_title' => $proposal['title'],
+            'proposal_url' => $url,
+        ], EmailTemplate::defaults()['proposal_send']);
+        $sent = Mailer::sendHtml($proposal['client_email'], $message['subject'], $message['html'], $message['text']);
+
+        if (false) $sent = Mailer::send(
             $proposal['client_email'],
             'Your project proposal is ready',
             "Hi {$proposal['client_name']},\n\n"

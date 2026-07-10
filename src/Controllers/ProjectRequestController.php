@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Validator;
@@ -78,7 +79,18 @@ class ProjectRequestController
         // Best-effort courtesy confirmation to the client — the admin notification
         // above is the reliable, retried path; this one just needs to not crash
         // the request if the mail transport hiccups.
-        Mailer::send(
+        $message = EmailTemplate::render('project_request_confirmation', [
+            'client_name' => trim($data['name']),
+            'client_email' => trim($data['email']),
+            'project_type' => trim($data['project_type']),
+            'budget' => trim($data['budget']),
+            'timeline' => trim($data['timeline']),
+            'features' => $features,
+            'message_body' => trim($data['message']),
+        ], EmailTemplate::defaults()['project_request_confirmation']);
+        Mailer::sendHtml(trim($data['email']), $message['subject'], $message['html'], $message['text']);
+
+        if (false) Mailer::send(
             trim($data['email']),
             "We've received your project request",
             sprintf(

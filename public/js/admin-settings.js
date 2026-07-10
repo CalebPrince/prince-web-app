@@ -4,6 +4,24 @@ function showMsg(id, text, ok) {
   el.textContent = text;
 }
 
+const EMAIL_TEMPLATE_FIELDS = [
+  ["payment_success", "payment-success"],
+  ["invoice_send", "invoice-send"],
+  ["invoice_receipt", "invoice-receipt"],
+  ["subscription_receipt", "subscription-receipt"],
+  ["proposal_send", "proposal-send"],
+  ["booking_client_confirmation", "booking-client-confirmation"],
+  ["booking_internal_notification", "booking-internal-notification"],
+  ["appointment_reminder", "appointment-reminder"],
+  ["client_invite", "client-invite"],
+  ["client_password_reset", "client-password-reset"],
+  ["client_portal_message", "client-portal-message"],
+  ["project_request_confirmation", "project-request-confirmation"],
+  ["testimonial_request", "testimonial-request"],
+  ["milestone_reminder", "milestone-reminder"],
+  ["inquiry_internal_notification", "inquiry-internal-notification"],
+];
+
 async function saveEmail(e) {
   e.preventDefault();
   const email = document.getElementById("email").value.trim();
@@ -195,6 +213,26 @@ async function savePayments(e) {
   }
 }
 
+async function saveEmailTemplates(e) {
+  e.preventDefault();
+  const payload = {
+    email_brand_logo_url: document.getElementById("email-brand-logo-url").value.trim(),
+    email_site_url: document.getElementById("email-site-url").value.trim(),
+  };
+  EMAIL_TEMPLATE_FIELDS.forEach(([key, id]) => {
+    payload[`email_tpl_${key}_subject`] = document.getElementById(`email-tpl-${id}-subject`).value.trim();
+    payload[`email_tpl_${key}_html`] = document.getElementById(`email-tpl-${id}-html`).value.trim();
+    payload[`email_tpl_${key}_text`] = document.getElementById(`email-tpl-${id}-text`).value.trim();
+  });
+
+  try {
+    await api.put("/api/v1/admin/settings", payload);
+    showMsg("email-templates-msg", "Saved. New client emails will use these templates immediately.", true);
+  } catch (err) {
+    showMsg("email-templates-msg", err.message, false);
+  }
+}
+
 async function saveGoogleSignin(e) {
   e.preventDefault();
   try {
@@ -340,6 +378,7 @@ async function testAi() {
   document.getElementById("hours-form").addEventListener("submit", saveHours);
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
+  document.getElementById("email-templates-form").addEventListener("submit", saveEmailTemplates);
   document.getElementById("google-signin-form").addEventListener("submit", saveGoogleSignin);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
   document.getElementById("booking-form").addEventListener("submit", saveBooking);
@@ -379,6 +418,13 @@ async function testAi() {
     document.getElementById("paystack-secret-key").value = settings.paystack_secret_key || "";
     document.getElementById("pricing-currency").value = settings.pricing_currency || "GHS";
     document.getElementById("pricing-tier-1-amount").value = settings.pricing_tier_1_amount || "";
+    document.getElementById("email-brand-logo-url").value = settings.email_brand_logo_url || "";
+    document.getElementById("email-site-url").value = settings.email_site_url || "https://princecaleb.dev";
+    EMAIL_TEMPLATE_FIELDS.forEach(([key, id]) => {
+      document.getElementById(`email-tpl-${id}-subject`).value = settings[`email_tpl_${key}_subject`] || "";
+      document.getElementById(`email-tpl-${id}-html`).value = settings[`email_tpl_${key}_html`] || "";
+      document.getElementById(`email-tpl-${id}-text`).value = settings[`email_tpl_${key}_text`] || "";
+    });
 
     document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
     const days = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);

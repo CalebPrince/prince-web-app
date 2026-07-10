@@ -461,6 +461,179 @@
         </div>
       </div>
 
+      <div class="col-lg-12">
+        <div class="admin-card p-4">
+          <h5 class="mb-1"><i class="bi bi-envelope-paper-heart me-2" style="color: var(--section-system);"></i>Email templates</h5>
+          <p class="text-muted-custom small">Customize the designed client emails. Use placeholders like <code>{{client_name}}</code>, <code>{{amount}}</code>, <code>{{invoice_url}}</code>, and <code>{{proposal_url}}</code>. Empty fields use the built-in template.</p>
+          <form id="email-templates-form">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Email logo URL</label>
+                <input type="url" class="form-control" id="email-brand-logo-url" placeholder="https://princecaleb.dev/icons/icon-192.png" autocomplete="off">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Website URL</label>
+                <input type="url" class="form-control" id="email-site-url" placeholder="https://princecaleb.dev" autocomplete="off">
+              </div>
+            </div>
+            <div class="accordion" id="email-template-accordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-payment-success">Payment success</button></h2>
+                <div id="tpl-payment-success" class="accordion-collapse collapse show" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-payment-success-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-payment-success-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-payment-success-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-invoice-send">Invoice send</button></h2>
+                <div id="tpl-invoice-send" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-invoice-send-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-invoice-send-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-invoice-send-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-invoice-receipt">Invoice receipt</button></h2>
+                <div id="tpl-invoice-receipt" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-invoice-receipt-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-invoice-receipt-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-invoice-receipt-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-subscription-receipt">Subscription receipt</button></h2>
+                <div id="tpl-subscription-receipt" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-subscription-receipt-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-subscription-receipt-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-subscription-receipt-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-proposal-send">Proposal send</button></h2>
+                <div id="tpl-proposal-send" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-proposal-send-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-proposal-send-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-proposal-send-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-booking-client-confirmation">Booking client confirmation</button></h2>
+                <div id="tpl-booking-client-confirmation" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-booking-client-confirmation-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-booking-client-confirmation-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-booking-client-confirmation-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-booking-internal-notification">Booking Gmail/Slack notification</button></h2>
+                <div id="tpl-booking-internal-notification" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-booking-internal-notification-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-booking-internal-notification-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-booking-internal-notification-text" rows="4" placeholder="Plain text / Slack body"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-appointment-reminder">Appointment reminder</button></h2>
+                <div id="tpl-appointment-reminder" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-appointment-reminder-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-appointment-reminder-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-appointment-reminder-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-client-invite">Client portal invite</button></h2>
+                <div id="tpl-client-invite" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-client-invite-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-client-invite-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-client-invite-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-client-password-reset">Client password reset</button></h2>
+                <div id="tpl-client-password-reset" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-client-password-reset-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-client-password-reset-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-client-password-reset-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-client-portal-message">Client portal message</button></h2>
+                <div id="tpl-client-portal-message" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-client-portal-message-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-client-portal-message-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-client-portal-message-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-project-request-confirmation">Project request confirmation</button></h2>
+                <div id="tpl-project-request-confirmation" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-project-request-confirmation-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-project-request-confirmation-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-project-request-confirmation-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-testimonial-request">Testimonial request</button></h2>
+                <div id="tpl-testimonial-request" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-testimonial-request-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-testimonial-request-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-testimonial-request-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-milestone-reminder">Milestone payment reminder</button></h2>
+                <div id="tpl-milestone-reminder" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-milestone-reminder-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-milestone-reminder-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-milestone-reminder-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tpl-inquiry-internal-notification">Inquiry email notification</button></h2>
+                <div id="tpl-inquiry-internal-notification" class="accordion-collapse collapse" data-bs-parent="#email-template-accordion">
+                  <div class="accordion-body">
+                    <input type="text" class="form-control mb-2" id="email-tpl-inquiry-internal-notification-subject" placeholder="Subject">
+                    <textarea class="form-control mb-2" id="email-tpl-inquiry-internal-notification-html" rows="6" placeholder="HTML body"></textarea>
+                    <textarea class="form-control" id="email-tpl-inquiry-internal-notification-text" rows="4" placeholder="Plain text fallback"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="email-templates-msg" class="alert py-2 small d-none mt-3"></div>
+            <button type="submit" class="btn-brand mt-3">Save Email Templates</button>
+          </form>
+        </div>
+      </div>
+
       <div class="col-lg-6">
         <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-google me-2" style="color: var(--section-system);"></i>Admin sign-in (Google)</h5>

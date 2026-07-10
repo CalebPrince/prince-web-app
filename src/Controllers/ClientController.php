@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Response;
 
@@ -108,7 +109,14 @@ class ClientController
             ->execute([$clientId, $email]);
 
         $url = self::absoluteUrl('/client/setup.html?token=' . $inviteToken);
-        $sent = Mailer::send(
+        $message = EmailTemplate::render('client_invite', [
+            'client_name' => $name,
+            'client_email' => $email,
+            'portal_url' => $url,
+        ], EmailTemplate::defaults()['client_invite']);
+        $sent = Mailer::sendHtml($email, $message['subject'], $message['html'], $message['text']);
+
+        if (false) $sent = Mailer::send(
             $email,
             "You're invited to your client portal",
             "Hi {$name},\n\nYou can now track your project status, milestones, files, and messages in one place:\n\n{$url}\n\n"
@@ -267,7 +275,16 @@ class ClientController
             'INSERT INTO client_messages (client_id, sender_type, body, read_by_admin) VALUES (?, ?, ?, 1)'
         )->execute([$clientId, 'admin', $body]);
 
-        Mailer::send(
+        $portalUrl = self::absoluteUrl('/client/dashboard.html');
+        $message = EmailTemplate::render('client_portal_message', [
+            'client_name' => $client['name'],
+            'client_email' => $client['email'],
+            'message_body' => $body,
+            'portal_url' => $portalUrl,
+        ], EmailTemplate::defaults()['client_portal_message']);
+        Mailer::sendHtml($client['email'], $message['subject'], $message['html'], $message['text']);
+
+        if (false) Mailer::send(
             $client['email'],
             'New message from Prince Caleb',
             "Hi {$client['name']},\n\nYou have a new message in your client portal:\n\n{$body}\n\n"

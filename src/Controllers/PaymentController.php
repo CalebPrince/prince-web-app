@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
@@ -268,6 +269,18 @@ class PaymentController
         $amount = number_format(((int) $payment['amount']) / 100, 2);
         $currency = $payment['currency'] ?: 'GHS';
         $bookingUrl = self::absoluteUrl('/book.html');
+
+        $message = EmailTemplate::render('payment_success', [
+            'name' => $name,
+            'description' => $description,
+            'amount' => $amount,
+            'currency' => $currency,
+            'booking_url' => $bookingUrl,
+            'reference' => $payment['reference'] ?? '',
+        ], EmailTemplate::defaults()['payment_success']);
+
+        Mailer::sendHtml($email, $message['subject'], $message['html'], $message['text']);
+        return;
 
         $body = "Hi {$name},\n\n"
             . "Thanks for your payment of {$currency} {$amount} for {$description} — it's been received and confirmed.\n\n"

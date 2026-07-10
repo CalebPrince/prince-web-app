@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
@@ -255,6 +256,16 @@ class SubscriptionController
 
             $amount = number_format(((int) ($data['amount'] ?? $subscription['amount'])) / 100, 2);
             $currency = $data['currency'] ?? $subscription['currency'];
+            $message = EmailTemplate::render('subscription_receipt', [
+                'client_name' => $subscription['client_name'],
+                'plan_name' => $subscription['plan_name'],
+                'amount' => $amount,
+                'currency' => $currency,
+                'reference' => $reference,
+            ], EmailTemplate::defaults()['subscription_receipt']);
+            Mailer::sendHtml($subscription['client_email'], $message['subject'], $message['html'], $message['text']);
+            return;
+
             Mailer::send(
                 $subscription['client_email'],
                 "Receipt: {$subscription['plan_name']} — {$currency} {$amount}",

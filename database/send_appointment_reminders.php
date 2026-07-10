@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Settings;
 
@@ -37,7 +38,19 @@ foreach ($candidates as $appt) {
         continue;
     }
 
-    $ok = Mailer::send(
+    $topic = trim((string) ($appt['topic'] ?? ''));
+    $message = EmailTemplate::render('appointment_reminder', [
+        'client_name' => $appt['client_name'],
+        'client_email' => $appt['client_email'],
+        'date' => $appt['appointment_date'],
+        'time' => $appt['appointment_time'],
+        'timezone' => $timezone,
+        'topic' => $topic,
+        'topic_line' => $topic !== '' ? 'Topic: ' . $topic : '',
+    ], EmailTemplate::defaults()['appointment_reminder']);
+    $ok = Mailer::sendHtml($appt['client_email'], $message['subject'], $message['html'], $message['text']);
+
+    if (false) $ok = Mailer::send(
         $appt['client_email'],
         "Reminder: your call is tomorrow at {$appt['appointment_time']}",
         "Hi {$appt['client_name']},\n\nJust a reminder that your call is scheduled for tomorrow, "
