@@ -60,7 +60,9 @@ function renderProjectsTable(projects) {
     return;
   }
 
-  tbody.innerHTML = projects.map(p => `
+  const renderPage = pageProjects => {
+    currentProjects = pageProjects;
+    tbody.innerHTML = pageProjects.map(p => `
     <tr draggable="true" data-id="${p.id}">
       <td class="ps-3 text-muted-custom" style="cursor:grab;" title="Drag to reorder">&#x2630;</td>
       <td>${p.title}</td>
@@ -75,42 +77,49 @@ function renderProjectsTable(projects) {
         <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${p.id}">Delete</button>
       </td>
     </tr>
-  `).join("");
+    `).join("");
 
-  tbody.querySelectorAll(".edit-btn").forEach(btn => {
-    btn.addEventListener("click", () => openEditModal(projects.find(p => p.id === Number(btn.dataset.id))));
-  });
-  tbody.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.addEventListener("click", () => deleteProject(Number(btn.dataset.id)));
-  });
-
-  tbody.querySelectorAll("tr[draggable]").forEach(row => {
-    row.addEventListener("dragstart", () => {
-      draggedId = Number(row.dataset.id);
-      row.classList.add("opacity-50");
+    tbody.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", () => openEditModal(projects.find(p => p.id === Number(btn.dataset.id))));
     });
-    row.addEventListener("dragend", () => row.classList.remove("opacity-50"));
-    row.addEventListener("dragover", (e) => e.preventDefault());
-    row.addEventListener("drop", async (e) => {
-      e.preventDefault();
-      const targetId = Number(row.dataset.id);
-      if (draggedId === null || draggedId === targetId) return;
-
-      const ids = currentProjects.map(p => p.id);
-      const fromIndex = ids.indexOf(draggedId);
-      const toIndex = ids.indexOf(targetId);
-      ids.splice(fromIndex, 1);
-      ids.splice(toIndex, 0, draggedId);
-
-      renderProjectsTable(ids.map(id => currentProjects.find(p => p.id === id)));
-      try {
-        await api.patch("/api/v1/admin/projects/reorder", { order: ids });
-      } catch (err) {
-        alert(err.message);
-        await loadProjects();
-      }
+    tbody.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", () => deleteProject(Number(btn.dataset.id)));
     });
-  });
+
+    tbody.querySelectorAll("tr[draggable]").forEach(row => {
+      row.addEventListener("dragstart", () => {
+        draggedId = Number(row.dataset.id);
+        row.classList.add("opacity-50");
+      });
+      row.addEventListener("dragend", () => row.classList.remove("opacity-50"));
+      row.addEventListener("dragover", (e) => e.preventDefault());
+      row.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        const targetId = Number(row.dataset.id);
+        if (draggedId === null || draggedId === targetId) return;
+
+        const visibleIds = currentProjects.map(p => p.id);
+        const reorderedPageIds = [...visibleIds];
+        const fromIndex = reorderedPageIds.indexOf(draggedId);
+        const toIndex = reorderedPageIds.indexOf(targetId);
+        reorderedPageIds.splice(fromIndex, 1);
+        reorderedPageIds.splice(toIndex, 0, draggedId);
+        const ids = projects.map(p => p.id);
+        const firstVisibleIndex = ids.indexOf(visibleIds[0]);
+        reorderedPageIds.forEach((id, index) => { ids[firstVisibleIndex + index] = id; });
+
+        renderProjectsTable(ids.map(id => projects.find(p => p.id === id)));
+        try {
+          await api.patch("/api/v1/admin/projects/reorder", { order: ids });
+        } catch (err) {
+          alert(err.message);
+          await loadProjects();
+        }
+      });
+    });
+  };
+
+  AdminPagination.page('projects', projects, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
 }
 
 async function loadProjects() {

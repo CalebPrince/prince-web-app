@@ -35,7 +35,8 @@ async function loadSubscribers() {
   }
   empty.classList.add('d-none');
 
-  tbody.innerHTML = rows.map(s => `
+  const renderPage = pageRows => {
+    tbody.innerHTML = pageRows.map(s => `
     <tr>
       <td class="ps-3"><input type="checkbox" class="form-check-input row-checkbox" data-id="${s.id}"></td>
       <td>${escapeHtml(s.email)}</td>
@@ -45,26 +46,29 @@ async function loadSubscribers() {
         <button class="btn btn-sm btn-outline-danger remove-btn" data-id="${s.id}">Remove</button>
       </td>
     </tr>
-  `).join('');
+    `).join('');
 
-  tbody.querySelectorAll('.remove-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('Remove this subscriber?')) return;
-      await api.delete(`/api/v1/admin/newsletter/${btn.dataset.id}`);
-      await loadSubscribers();
+    tbody.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remove this subscriber?')) return;
+        await api.delete(`/api/v1/admin/newsletter/${btn.dataset.id}`);
+        await loadSubscribers();
+      });
     });
-  });
 
-  tbody.querySelectorAll('.row-checkbox').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const id = cb.dataset.id;
-      if (cb.checked) selectedIds.add(id);
-      else selectedIds.delete(id);
-      updateBulkToolbar();
+    tbody.querySelectorAll('.row-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const id = cb.dataset.id;
+        if (cb.checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        updateBulkToolbar();
+      });
     });
-  });
 
-  updateBulkToolbar();
+    updateBulkToolbar();
+  };
+
+  AdminPagination.page('newsletter-subscribers', rows, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
 }
 
 document.getElementById('select-all-checkbox').addEventListener('change', (e) => {

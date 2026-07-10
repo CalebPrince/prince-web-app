@@ -104,7 +104,8 @@ async function loadInquiries(status = "") {
   }
   empty.classList.add("d-none");
 
-  list.innerHTML = inquiries.map(i => `
+  const renderPage = pageInquiries => {
+    list.innerHTML = pageInquiries.map(i => `
     <div class="admin-card p-3 mb-3" data-id="${i.id}">
       <div class="d-flex justify-content-between align-items-start mb-2">
         <div class="d-flex align-items-start gap-2">
@@ -138,32 +139,35 @@ async function loadInquiries(status = "") {
         </div>
       </div>
     </div>
-  `).join("");
+    `).join("");
 
-  list.querySelectorAll(".status-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      await api.patch(`/api/v1/admin/inquiries/${btn.dataset.id}`, { status: btn.dataset.status });
-      await loadInquiries(document.getElementById("status-filter").value);
+    list.querySelectorAll(".status-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await api.patch(`/api/v1/admin/inquiries/${btn.dataset.id}`, { status: btn.dataset.status });
+        await loadInquiries(document.getElementById("status-filter").value);
+      });
     });
-  });
 
-  list.querySelectorAll(".stage-select").forEach(select => {
-    select.addEventListener("change", async () => {
-      await api.patch(`/api/v1/admin/inquiries/${select.dataset.id}`, { pipeline_stage: select.value });
-      await loadInquiries(document.getElementById("status-filter").value);
+    list.querySelectorAll(".stage-select").forEach(select => {
+      select.addEventListener("change", async () => {
+        await api.patch(`/api/v1/admin/inquiries/${select.dataset.id}`, { pipeline_stage: select.value });
+        await loadInquiries(document.getElementById("status-filter").value);
+      });
     });
-  });
 
-  list.querySelectorAll(".row-checkbox").forEach(cb => {
-    cb.addEventListener("change", () => {
-      const id = cb.dataset.id;
-      if (cb.checked) selectedIds.add(id);
-      else selectedIds.delete(id);
-      updateBulkToolbar();
+    list.querySelectorAll(".row-checkbox").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const id = cb.dataset.id;
+        if (cb.checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        updateBulkToolbar();
+      });
     });
-  });
 
-  updateBulkToolbar();
+    updateBulkToolbar();
+  };
+
+  AdminPagination.page('inquiries', inquiries, renderPage, { anchor: list });
 }
 
 (async function init() {

@@ -15,7 +15,8 @@ async function loadAppointments(status = 'confirmed') {
   }
   empty.classList.add('d-none');
 
-  tbody.innerHTML = filtered.map(a => `
+  const renderPage = pageRows => {
+    tbody.innerHTML = pageRows.map(a => `
     <tr>
       <td class="ps-3">${a.appointment_date} at ${a.appointment_time}</td>
       <td>${escapeHtml(a.client_name)}<br><span class="small text-muted-custom">${escapeHtml(a.client_email)}</span></td>
@@ -28,14 +29,17 @@ async function loadAppointments(status = 'confirmed') {
         ` : ''}
       </td>
     </tr>
-  `).join('');
+    `).join('');
 
-  tbody.querySelectorAll('.status-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      await api.patch(`/api/v1/admin/appointments/${btn.dataset.id}`, { status: btn.dataset.status });
-      await loadAppointments(document.getElementById('status-filter').value);
+    tbody.querySelectorAll('.status-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await api.patch(`/api/v1/admin/appointments/${btn.dataset.id}`, { status: btn.dataset.status });
+        await loadAppointments(document.getElementById('status-filter').value);
+      });
     });
-  });
+  };
+
+  AdminPagination.page('appointments', filtered, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
 }
 
 (async function init() {

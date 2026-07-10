@@ -10,7 +10,7 @@ use App\Support\Response;
 
 class ActivityLogController
 {
-    private const PER_PAGE = 50;
+    private const PER_PAGE = 10;
 
     /** GET /api/v1/admin/activity-log?entity_type=&action=&page= */
     public static function index(): void

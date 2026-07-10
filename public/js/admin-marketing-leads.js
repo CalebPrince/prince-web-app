@@ -81,7 +81,8 @@ async function loadLeads() {
   }
   empty.classList.add("d-none");
 
-  tbody.innerHTML = rows.map(lead => `
+  const renderPage = pageRows => {
+    tbody.innerHTML = pageRows.map(lead => `
     <tr>
       <td class="ps-3"><input type="checkbox" class="form-check-input row-checkbox" data-id="${lead.id}"></td>
       <td>
@@ -99,7 +100,7 @@ async function loadLeads() {
         <div class="d-flex gap-1 justify-content-end flex-wrap">${actionButtons(lead)}</div>
       </td>
     </tr>
-  `).join("");
+    `).join("");
 
   tbody.querySelectorAll(".row-checkbox").forEach(cb => {
     cb.addEventListener("change", () => {
@@ -149,6 +150,9 @@ async function loadLeads() {
       await loadLeads();
     });
   });
+  };
+
+  AdminPagination.page('marketing-leads', rows, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
 }
 
 function renderDiscoverResults() {

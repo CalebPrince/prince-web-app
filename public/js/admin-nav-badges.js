@@ -2,6 +2,82 @@
 // page. Polls periodically so a badge clears soon after the admin reads the
 // section on another tab, without needing a full page reload.
 (function () {
+  const ADMIN_PAGE_SIZE = 10;
+
+  window.AdminPagination = window.AdminPagination || {
+    pageSize: ADMIN_PAGE_SIZE,
+    state: new Map(),
+    page(key, items, renderPage, options = {}) {
+      const rows = Array.isArray(items) ? items : [];
+      const pageSize = Number(options.pageSize) || ADMIN_PAGE_SIZE;
+      const id = key || options.containerId || "default";
+      const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+      const current = Math.min(Math.max(1, this.state.get(id) || 1), totalPages);
+      this.state.set(id, current);
+
+      const start = (current - 1) * pageSize;
+      renderPage(rows.slice(start, start + pageSize), {
+        currentPage: current,
+        pageSize,
+        totalPages,
+        totalItems: rows.length,
+        start,
+      });
+      this.renderControls(id, rows.length, pageSize, renderPage, rows, options);
+    },
+    renderControls(id, totalItems, pageSize, renderPage, rows, options = {}) {
+      const anchor = typeof options.anchor === "string" ? document.querySelector(options.anchor) : options.anchor;
+      if (!anchor) return;
+
+      let container = document.getElementById(`${id}-pagination`);
+      if (!container) {
+        container = document.createElement("div");
+        container.id = `${id}-pagination`;
+        container.className = "admin-pagination d-flex flex-wrap gap-2 justify-content-center align-items-center mt-3";
+        anchor.insertAdjacentElement(options.position || "afterend", container);
+      }
+
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+      if (totalItems <= pageSize) {
+        container.innerHTML = "";
+        return;
+      }
+
+      const current = Math.min(Math.max(1, this.state.get(id) || 1), totalPages);
+      let pages = "";
+      for (let page = 1; page <= totalPages; page++) {
+        pages += `<button type="button" class="pager-btn${page === current ? " active" : ""}" data-page="${page}">${page}</button>`;
+      }
+
+      container.innerHTML = `
+        <button type="button" class="pager-btn" data-page="${current - 1}" ${current === 1 ? "disabled" : ""}>Prev</button>
+        ${pages}
+        <button type="button" class="pager-btn" data-page="${current + 1}" ${current === totalPages ? "disabled" : ""}>Next</button>
+        <span class="small text-muted-custom ms-2">${totalItems} total</span>
+      `;
+
+      container.querySelectorAll("[data-page]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const nextPage = Number(btn.dataset.page);
+          if (!nextPage || nextPage < 1 || nextPage > totalPages) return;
+          this.state.set(id, nextPage);
+          const start = (nextPage - 1) * pageSize;
+          renderPage(rows.slice(start, start + pageSize), {
+            currentPage: nextPage,
+            pageSize,
+            totalPages,
+            totalItems,
+            start,
+          });
+          this.renderControls(id, totalItems, pageSize, renderPage, rows, options);
+        });
+      });
+    },
+    reset(key) {
+      this.state.set(key, 1);
+    },
+  };
+
   function normalizeText(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
   }
@@ -288,7 +364,93 @@
     } catch (_) { /* leave badges as-is on failure */ }
   }
 
+  function paginateDomContainer(container, key, itemSelector, anchor) {
+    if (!container || container.dataset.skipAutoPagination === "true") return;
+    const items = [...container.querySelectorAll(`:scope > ${itemSelector}`)];
+    if (items.length === 0) return;
+    if (items.length === 1 && items[0].querySelector('[colspan]')) return;
+
+    const totalPages = Math.max(1, Math.ceil(items.length / ADMIN_PAGE_SIZE));
+    let current = Math.min(Math.max(1, Number(container.dataset.adminPage || "1")), totalPages);
+    container.dataset.adminPage = String(current);
+
+    items.forEach((item, index) => {
+      item.classList.toggle("d-none", index < (current - 1) * ADMIN_PAGE_SIZE || index >= current * ADMIN_PAGE_SIZE);
+    });
+
+    let pager = document.getElementById(`${key}-auto-pagination`);
+    if (!pager) {
+      pager = document.createElement("div");
+      pager.id = `${key}-auto-pagination`;
+      pager.className = "admin-pagination d-flex flex-wrap gap-2 justify-content-center align-items-center mt-3";
+      anchor.insertAdjacentElement("afterend", pager);
+    }
+
+    if (items.length <= ADMIN_PAGE_SIZE) {
+      if (pager.innerHTML) pager.innerHTML = "";
+      pager.dataset.paginationHtml = "";
+      return;
+    }
+
+    let pages = "";
+    for (let page = 1; page <= totalPages; page++) {
+      pages += `<button type="button" class="pager-btn${page === current ? " active" : ""}" data-page="${page}">${page}</button>`;
+    }
+    const html = `
+      <button type="button" class="pager-btn" data-page="${current - 1}" ${current === 1 ? "disabled" : ""}>Prev</button>
+      ${pages}
+      <button type="button" class="pager-btn" data-page="${current + 1}" ${current === totalPages ? "disabled" : ""}>Next</button>
+      <span class="small text-muted-custom ms-2">${items.length} total</span>
+    `;
+    if (pager.dataset.paginationHtml !== html) {
+      pager.dataset.paginationHtml = html;
+      pager.innerHTML = html;
+    }
+    pager.querySelectorAll("[data-page]").forEach(button => {
+      button.addEventListener("click", () => {
+        const page = Number(button.dataset.page);
+        if (!page || page < 1 || page > totalPages) return;
+        container.dataset.adminPage = String(page);
+        paginateDomContainer(container, key, itemSelector, anchor);
+      });
+    });
+  }
+
+  function applyAutoPagination() {
+    document.querySelectorAll("tbody[id]").forEach(tbody => {
+      const key = tbody.id || `table-${Math.random().toString(36).slice(2)}`;
+      paginateDomContainer(tbody, key, "tr", tbody.closest(".table-responsive") || tbody.closest("table"));
+    });
+
+    ["inquiries-list", "chats-list", "logs-list"].forEach(id => {
+      const list = document.getElementById(id);
+      if (!list) return;
+      paginateDomContainer(list, id, ".admin-card", list);
+    });
+
+    ["recent-inquiries", "draft-projects", "upcoming-appointments", "recent-payments"].forEach(id => {
+      const list = document.getElementById(id);
+      if (!list) return;
+      paginateDomContainer(list, id, "div", list);
+    });
+  }
+
+  function initAutoPagination() {
+    let scheduled = false;
+    const schedule = () => {
+      if (scheduled) return;
+      scheduled = true;
+      window.setTimeout(() => {
+        scheduled = false;
+        applyAutoPagination();
+      }, 0);
+    };
+    schedule();
+    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+  }
+
   initNotifBell();
+  initAutoPagination();
   refreshNavBadges();
   setInterval(refreshNavBadges, 60000);
 
