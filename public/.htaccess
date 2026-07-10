@@ -3,6 +3,19 @@
   Require all denied
 </Files>
 
+# Baseline security headers. HSTS is safe to send unconditionally because
+# .dev is an HSTS-preloaded TLD — the site is HTTPS-only by definition.
+# Deliberately no Content-Security-Policy yet: the pages use inline scripts
+# and load Bootstrap/highlight.js/Paystack from CDNs, so a blanket policy
+# would break checkout — adding one needs careful per-page work.
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
 RewriteEngine On
 
 # Canonical host: always redirect www to the bare domain. Without this, the

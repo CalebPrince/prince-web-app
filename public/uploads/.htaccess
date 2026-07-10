@@ -1,0 +1,12 @@
+# Defense in depth for the uploads tree (covers project-requests/ and
+# client-files/ too, since .htaccess directives inherit downward): uploads
+# are already validated by extension + magic bytes at upload time, but if
+# that were ever bypassed, nothing in here may execute as a script. Deny
+# serves every script-ish extension outright rather than php_flag engine
+# off, which only works under mod_php and 500s under FPM/LiteSpeed.
+<FilesMatch "(?i)\.(php|phar|phtml|php[0-9]|pht|pl|py|cgi|sh|asp|aspx|jsp)$">
+  Require all denied
+</FilesMatch>
+
+# No directory listings, ever.
+Options -Indexes

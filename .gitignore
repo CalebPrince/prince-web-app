@@ -1,5 +1,6 @@
 storage/db/*.sqlite
 storage/db/*.sqlite-*
+storage/backups/*
 storage/logs/*
 .env
 .claude/

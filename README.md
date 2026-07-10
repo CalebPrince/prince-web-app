@@ -90,7 +90,12 @@ database/
   send_milestone_reminders.php    # unpaid proposal milestone nudges (cron)
   send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
+  check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
+  send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
+  backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
+  reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
 storage/
+  backups/                  # dated SQLite snapshots written by backup_db.php (gitignored)
   db/portfolio.sqlite       # SQLite database file (gitignored)
   logs/
 ```
@@ -467,6 +472,17 @@ One-time setup on a new host:
 4e. Add a fifth cron job (once a day) for AI social post drafts (only
     fires if enabled in Admin -> Settings -> Content):
     `/usr/local/bin/php /home/<cpanel-user>/database/generate_social_drafts.php > /dev/null`
+4f. Add a sixth cron job (every 5 minutes) for the uptime monitors
+    (`/admin/uptime.html` shows no data without it):
+    `/usr/local/bin/php /home/<cpanel-user>/database/check_uptime.php > /dev/null`
+4g. Add a seventh cron job (hourly) for drip email sequences (no-op until
+    a sequence is created in `/admin/drip.html`):
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_drip_emails.php > /dev/null`
+4h. Add an eighth cron job (once a day) for database backups — snapshots
+    the SQLite file to `storage/backups/` and keeps the last 14:
+    `/usr/local/bin/php /home/<cpanel-user>/database/backup_db.php > /dev/null`
+    Periodically download a snapshot somewhere off the server too — an
+    on-host backup doesn't survive losing the hosting account itself.
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public
@@ -500,6 +516,11 @@ One-time setup on a new host:
 - Schedule `database/process_webhooks.php` via cron (Linux) or Windows Task
   Scheduler — it's designed to run standalone, decoupled from requests.
 - Change the seeded admin password immediately in any non-local environment.
+- Locked out (forgotten password, lost 2FA device *and* backup codes)? There
+  is deliberately no public forgot-password flow — run
+  `php database/reset_admin_password.php <email> <new-password> [--disable-2fa]`
+  from the server (cPanel Terminal or SSH). It also invalidates every
+  outstanding session.
 - `schema.sql` changes don't apply themselves — after any deploy that
   touches it, re-run `php database/migrate.php` on the server (it's
   idempotent: `CREATE TABLE IF NOT EXISTS` for new tables, guarded

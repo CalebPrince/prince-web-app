@@ -10,8 +10,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Syntax-check every PHP file before anything touches the server — a
+  # push with a parse error must fail here, not take production down.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1' # matches the minimum version the app targets
+      - name: php -l all PHP files
+        run: find src config database public -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
   deploy:
     runs-on: ubuntu-latest
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
