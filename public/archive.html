@@ -185,7 +185,7 @@ function renderLegacyGrid(posts) {
             </div>
             <h5 class="mb-2">${p.title}</h5>
             <p class="small text-muted-custom mb-3">${p.excerpt}</p>
-            <span class="small fw-semibold mt-auto" style="color: var(--heading-color);">Read article →</span>
+            <span class="small fw-semibold mt-auto" style="color: var(--heading-color);">Read article <span class="cta-arrow">→</span></span>
           </div>
         </div>
       </a>
@@ -238,11 +238,11 @@ function renderPagination() {
     bar.innerHTML = '';
     return;
   }
-  let html = `<button class="pager-btn" id="pager-prev" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
+  let html = `<button class="pager-btn" id="pager-prev" ${currentPage === 1 ? 'disabled' : ''}><span class="cta-arrow-back">←</span> Prev</button>`;
   for (let i = 1; i <= totalPages; i++) {
     html += `<button class="pager-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
   }
-  html += `<button class="pager-btn" id="pager-next" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+  html += `<button class="pager-btn" id="pager-next" ${currentPage === totalPages ? 'disabled' : ''}>Next <span class="cta-arrow">→</span></button>`;
   bar.innerHTML = html;
 
   bar.querySelectorAll('[data-page]').forEach(btn => {

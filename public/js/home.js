@@ -156,7 +156,7 @@
                   <h3 class="h2 mb-3"><a href="/project.html?slug=${esc(p.slug)}" style="color: var(--heading-color);">${esc(p.title)}</a></h3>
                   <p class="text-muted-custom">${esc(p.summary)}</p>
                   <div class="d-flex flex-wrap gap-2 mt-3">${tech}</div>
-                  <a href="/project.html?slug=${esc(p.slug)}" class="d-inline-block mt-4 small fw-semibold">View case study →</a>
+                  <a href="/project.html?slug=${esc(p.slug)}" class="d-inline-block mt-4 small fw-semibold">View case study <span class="cta-arrow">→</span></a>
                 </div>
               </div>
               <div class="col-lg-5 ${flip ? "order-2 order-lg-1" : "offset-lg-1"}">${media}</div>

@@ -1615,6 +1615,18 @@ pre code.hljs {
 .production-log-entry:hover .production-link::after {
   transform: translateX(4px);
 }
+/* Same idiom for every other arrow CTA: wrap the literal arrow character in
+   .cta-arrow (forward) or .cta-arrow-back and it nudges in its direction of
+   travel when the surrounding link or button is hovered. */
+.cta-arrow,
+.cta-arrow-back {
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+a:hover .cta-arrow,
+button:not(:disabled):hover .cta-arrow { transform: translateX(4px); }
+a:hover .cta-arrow-back,
+button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
 .production-tech {
   display: flex;
   flex-wrap: wrap;

@@ -114,7 +114,7 @@
     return '<a class="mega-featured" href="' + href + '">'
       + "<strong>" + esc(title) + "</strong>"
       + "<span>" + esc(blurb) + "</span>"
-      + '<span class="mega-cta">' + esc(cta) + " &rarr;</span></a>";
+      + '<span class="mega-cta">' + esc(cta) + ' <span class="cta-arrow">&rarr;</span></span></a>';
   }
 
   /* ---- About ---------------------------------------------------------- */

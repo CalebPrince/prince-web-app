@@ -249,7 +249,7 @@ function renderBody(body) {
         </div>
         <div class="text-center mt-5 pt-4 border-top reveal">
           <h4 class="mb-3">Want something like this built for your business?</h4>
-          <a href="/contact.html" class="btn-brand">Let's talk about your project →</a>
+          <a href="/contact.html" class="btn-brand">Let's talk about your project <span class="cta-arrow">→</span></a>
         </div>
         <div id="related-posts"></div>
       </div>
@@ -301,7 +301,7 @@ function renderBody(body) {
                           <span class="small text-muted-custom">⏱ ${r.reading_time} min read</span>
                         </div>
                         <h5 class="mb-2">${r.title}</h5>
-                        <span class="small fw-semibold" style="color: var(--heading-color);">Read article →</span>
+                        <span class="small fw-semibold" style="color: var(--heading-color);">Read article <span class="cta-arrow">→</span></span>
                       </div>
                     </div>
                   </a>
@@ -329,7 +329,7 @@ function renderBody(body) {
     container.innerHTML = `
       <div class="container py-5 text-center">
         <h1 class="mb-3">Article not found</h1>
-        <a href="/archive.html" class="btn-brand">← Back to the archive</a>
+        <a href="/archive.html" class="btn-brand"><span class="cta-arrow-back">←</span> Back to the archive</a>
       </div>`;
   }
 })();

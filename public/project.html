@@ -165,7 +165,7 @@
     if (p.is_embeddable && p.live_url) {
       links.push(`<button type="button" class="btn-brand" id="live-demo-btn">▶ Live Demo</button>`);
     }
-    if (p.live_url) links.push(`<a href="${p.live_url}" target="_blank" rel="noopener" class="btn-brand-outline">View live site →</a>`);
+    if (p.live_url) links.push(`<a href="${p.live_url}" target="_blank" rel="noopener" class="btn-brand-outline">View live site <span class="cta-arrow">→</span></a>`);
     if (p.repo_url) links.push(`<a href="${p.repo_url}" target="_blank" rel="noopener" class="btn-brand-outline">View repository</a>`);
 
     container.innerHTML = `
@@ -210,7 +210,7 @@
         </div>
         <div class="text-center mt-5 pt-4 border-top reveal">
           <h4 class="mb-3">Want something like this?</h4>
-          <a href="/contact.html?project=${p.id}" class="btn-brand">Let's talk about your project →</a>
+          <a href="/contact.html?project=${p.id}" class="btn-brand">Let's talk about your project <span class="cta-arrow">→</span></a>
         </div>
       </div>
     `;
@@ -231,7 +231,7 @@
     container.innerHTML = `
       <div class="container py-5 text-center">
         <h1 class="mb-3">Project not found</h1>
-        <a href="/projects.html" class="btn-brand">← Back to projects</a>
+        <a href="/projects.html" class="btn-brand"><span class="cta-arrow-back">←</span> Back to projects</a>
       </div>`;
   }
 })();
