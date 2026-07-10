@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/js/error-log.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+<title>Frontend Wording - Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+<link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="d-flex">
+  <div class="admin-sidebar p-3">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div class="brand fs-5">Prince Caleb<span class="dot">.</span></div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="position-relative">
+          <button type="button" class="notif-bell" id="notif-bell-btn" aria-label="Notifications"><i class="bi bi-bell"></i><span id="notif-bell-badge" class="notif-badge d-none"></span></button>
+          <div id="notif-dropdown" class="notif-dropdown d-none">
+            <div class="notif-dropdown-header">Notifications</div>
+            <div id="notif-dropdown-body"></div>
+          </div>
+        </div>
+        <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </div>
+        <nav class="d-flex flex-column gap-1">
+      <div class="nav-group-label">Overview</div>
+      <a href="/admin/dashboard.html" class="nav-link"><i class="bi bi-speedometer2 nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Dashboard</span></a>
+      <a href="/admin/analytics.html" class="nav-link"><i class="bi bi-graph-up nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Analytics</span></a>
+      <div class="nav-group-label">Content</div>
+      <a href="/admin/projects.html" class="nav-link"><i class="bi bi-kanban nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Projects</span></a>
+      <a href="/admin/blog.html" class="nav-link"><i class="bi bi-journal-text nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Blog</span></a>
+      <a href="/admin/testimonials.html" class="nav-link"><i class="bi bi-chat-quote nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Testimonials</span></a>
+      <a href="/admin/social-drafts.html" class="nav-link"><i class="bi bi-megaphone nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Social Drafts</span></a>
+      <a href="/admin/tags.html" class="nav-link"><i class="bi bi-tags nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Tags</span></a>
+      <a href="/admin/content.html" class="nav-link"><i class="bi bi-file-earmark-richtext nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Site Content</span></a>
+      <a href="/admin/frontend-wording.html" class="nav-link active"><i class="bi bi-translate nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Frontend Wording</span></a>
+      <div class="nav-group-label">Leads & Clients</div>
+      <a href="/admin/inquiries.html" class="nav-link"><i class="bi bi-inbox nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
+      <a href="/admin/quote-requests.html" class="nav-link"><i class="bi bi-file-earmark-text nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Quote Requests</span></a>
+      <a href="/admin/proposals.html" class="nav-link"><i class="bi bi-file-earmark-check nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Proposals</span></a>
+      <a href="/admin/clients.html" class="nav-link"><i class="bi bi-people nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Clients</span></a>
+      <a href="/admin/marketing-leads.html" class="nav-link"><i class="bi bi-bullseye nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Marketing Leads</span></a>
+      <a href="/admin/chats.html" class="nav-link"><i class="bi bi-chat-dots nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
+      <a href="/admin/newsletter.html" class="nav-link"><i class="bi bi-envelope nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Newsletter</span></a>
+      <a href="/admin/drip.html" class="nav-link"><i class="bi bi-send nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Drip Emails</span></a>
+      <div class="nav-group-label">Bookings & Payments</div>
+      <a href="/admin/appointments.html" class="nav-link"><i class="bi bi-calendar-check nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Bookings</span></a>
+      <a href="/admin/payments.html" class="nav-link"><i class="bi bi-credit-card nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Payments</span></a>
+      <a href="/admin/invoices.html" class="nav-link"><i class="bi bi-receipt-cutoff nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Invoices</span></a>
+      <a href="/admin/pricing.html" class="nav-link"><i class="bi bi-tag nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Pricing</span></a>
+      <div class="nav-group-label">System</div>
+      <a href="/admin/uptime.html" class="nav-link"><i class="bi bi-activity nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Uptime</span></a>
+      <a href="/admin/activity-log.html" class="nav-link"><i class="bi bi-clock-history nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Activity Log</span></a>
+      <a href="/admin/error-logs.html" class="nav-link"><i class="bi bi-exclamation-triangle nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Error Logs</span></a>
+      <a href="/admin/settings.html" class="nav-link"><i class="bi bi-gear nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Settings</span></a>
+      <hr class="sidebar-divider">
+      <a href="/" class="nav-link"><i class="bi bi-box-arrow-up-right nav-icon"></i><span class="nav-label">View site</span></a>
+      <a href="#" class="nav-link" id="logout-link"><i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Log out</span></a>
+    </nav>
+  </div>
+
+  <main class="flex-grow-1 p-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-translate"></i></div>
+        <div>
+          <h3 class="mb-0">Frontend Wording</h3>
+          <p class="text-muted-custom mb-0 small">A reference guide for the language used across the public site.</p>
+        </div>
+      </div>
+      <a class="btn-brand text-decoration-none" href="/admin/content.html"><i class="bi bi-pencil-square me-1"></i>Edit Copy</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="stat-card h-100">
+          <div class="stat-label">Purpose</div>
+          <div class="stat-value fs-4">Clarity</div>
+          <div class="stat-sub">Keeps the new positioning consistent.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card h-100">
+          <div class="stat-label">Tone</div>
+          <div class="stat-value fs-4">Technical</div>
+          <div class="stat-sub">Confident, lean, and outcome-focused.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card h-100">
+          <div class="stat-label">Scope</div>
+          <div class="stat-value fs-4">Frontend</div>
+          <div class="stat-sub">Explains wording visitors see on public pages.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card p-4 mb-4">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+        <div>
+          <h5 class="mb-1">Homepage Section Language</h5>
+          <p class="text-muted-custom small mb-0">The big labels that shape how visitors understand the site.</p>
+        </div>
+        <span class="badge text-bg-light border">Homepage</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width: 28%;">Wording</th>
+              <th style="width: 22%;">Plain meaning</th>
+              <th>Why it is used</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Asymmetric Value Hero</strong></td>
+              <td>The hero section gives more value than it takes in space.</td>
+              <td>It makes the first screen feel sharper than a standard "I build websites" intro by showing positioning, proof, and next action at once.</td>
+            </tr>
+            <tr>
+              <td><strong>Without platform bloat or agency overhead</strong></td>
+              <td>Custom software without unnecessary systems, retainers, or slow handoffs.</td>
+              <td>It tells serious clients they can get senior technical execution without paying for a large agency process they do not need.</td>
+            </tr>
+            <tr>
+              <td><strong>Technical Archive</strong></td>
+              <td>A library of technical notes, case studies, and engineering decisions.</td>
+              <td>It replaces the generic Blog label with something more credible for buyers who care about technical depth.</td>
+            </tr>
+            <tr>
+              <td><strong>Production Logs Registry</strong></td>
+              <td>A record of shipped work, build notes, stacks, and outcomes.</td>
+              <td>It frames projects as evidence of delivery instead of decorative portfolio thumbnails.</td>
+            </tr>
+            <tr>
+              <td><strong>Live Demonstration Arena</strong></td>
+              <td>A place where the visitor can interact, share context, and move toward a booking.</td>
+              <td>It turns the end of the homepage into an action space instead of another passive section.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-xl-6">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Archive & Case Study Terms</h5>
+          <div class="d-grid gap-3">
+            <div>
+              <h6 class="mb-1">Engineering deep-dives</h6>
+              <p class="text-muted-custom mb-0 small">Longer explanations of how a problem was solved, including tradeoffs, architecture, speed, integrations, or deployment decisions.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Performance metrics</h6>
+              <p class="text-muted-custom mb-0 small">Short proof points such as faster load times, clearer workflows, reduced manual work, better conversion paths, or delivery speed.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Text-driven case studies</h6>
+              <p class="text-muted-custom mb-0 small">Project writeups that lead with context and results instead of relying on screenshots to do the selling.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Archive entry</h6>
+              <p class="text-muted-custom mb-0 small">A single technical note or case-study item in the archive list.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Project & Delivery Terms</h5>
+          <div class="d-grid gap-3">
+            <div>
+              <h6 class="mb-1">Production log</h6>
+              <p class="text-muted-custom mb-0 small">A shipped project described like a build record: what was built, what improved, and what stack supported it.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Performance badges</h6>
+              <p class="text-muted-custom mb-0 small">Compact labels for outcomes, tools, platforms, timelines, or delivery strengths.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Stack badges</h6>
+              <p class="text-muted-custom mb-0 small">Technology labels such as PHP, JavaScript, SQLite, Paystack, AI, WordPress, React, or React Native.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Outcome metrics</h6>
+              <p class="text-muted-custom mb-0 small">Result-focused numbers or claims attached to a project, such as time saved, pages shipped, systems automated, or conversion paths improved.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Demo & Booking Terms</h5>
+          <div class="d-grid gap-3">
+            <div>
+              <h6 class="mb-1">AI context canvas</h6>
+              <p class="text-muted-custom mb-0 small">The interactive space where a visitor can describe their idea and get guided toward useful next steps.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Direct scheduling engine</h6>
+              <p class="text-muted-custom mb-0 small">The booking flow that turns interest into a real appointment without manual back-and-forth.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Response protocol</h6>
+              <p class="text-muted-custom mb-0 small">The contact-page promise for how inquiries are handled, prioritized, and moved into the right next step.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Positioning & Pricing Terms</h5>
+          <div class="d-grid gap-3">
+            <div>
+              <h6 class="mb-1">Lean technical partner</h6>
+              <p class="text-muted-custom mb-0 small">A developer who can think through product, design, backend, frontend, deployment, and integrations without adding a large team process.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Scope matrix</h6>
+              <p class="text-muted-custom mb-0 small">A structured way to compare what each pricing tier includes, so clients can quickly understand the level of engagement.</p>
+            </div>
+            <div>
+              <h6 class="mb-1">Custom / Enterprise</h6>
+              <p class="text-muted-custom mb-0 small">The pricing tier for projects that need deeper discovery, custom integrations, staged delivery, or support beyond the fixed packages.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/admin-auth.js"></script>
+<script src="/js/admin-nav-badges.js"></script>
+</body>
+</html>
