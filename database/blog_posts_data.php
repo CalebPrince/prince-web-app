@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Shared dataset for the 50 hand-written blog posts. Used by both
+// Shared dataset for the 52 hand-written blog posts. Used by both
 // generate_blog_covers.php (cover art) and seed_blog_posts.php (DB rows).
 // Edit here, then re-run both scripts.
 
