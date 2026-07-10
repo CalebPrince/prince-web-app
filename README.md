@@ -80,7 +80,7 @@ public/                  # web root — only this folder is web-exposed
   index.php               # front controller: routes /api/v1/* only
   .htaccess               # Apache rewrite rules for production
   index.html, services.html, projects.html, project.html, contact.html
-  blog.html, blog-post.html, pricing.html, request.html, pay.html, payment-success.html
+  archive.html, archive-post.html, pricing.html, request.html, pay.html, payment-success.html
   admin/                  # admin panel (static HTML + JS, JWT-protected API calls)
     payments.html, quote-requests.html, blog.html, inquiries.html, ...
   css/app.css             # public site design system
@@ -155,7 +155,7 @@ storage/
    transaction log + generate-a-payment-link), tag management, site content
    (editable homepage value hero, pricing, technical archive, production log,
    live demo, and pricing copy), and account settings. Includes contextual SVG tooltips for quick help on forms and cards.
-6. **Technical Archive** (`/blog.html`, `/blog-post.html`) still uses the
+6. **Technical Archive** (`/archive.html`, `/archive-post.html`) still uses the
    existing blog CRUD resource (`blog_posts` table), category filtering,
    pagination (10/page), reading-time estimates, share buttons, and per-post
    OG/Twitter meta + JSON-LD structured data for SEO. The public presentation
@@ -186,7 +186,7 @@ storage/
    switched off independently from Admin → Settings without touching the
    underlying contact details — disabling Live Chat also cancels its
    auto-open popup, not just the button.
-10. **Newsletter** signup lives on `/blog.html` (honeypot + rate-limited,
+10. **Newsletter** signup lives on `/archive.html` (honeypot + rate-limited,
     same pattern as the other public forms). Subscribers land in
     `newsletter_subscribers` and get a one-click unsubscribe link
     (`/api/v1/newsletter/unsubscribe?token=...`) — re-subscribing an
@@ -409,7 +409,7 @@ storage/
     quietly falling back further down the chain. Blog/case-study links in the drafted text
     go through a self-hosted shortener (`src/Support/ShortLink.php`,
     `princecaleb.dev/s/{code}`, public redirect via `ShortLinkController`)
-    rather than the full `/blog-post.html?slug=...` URL, since every
+    rather than the full `/archive-post.html?slug=...` URL, since every
     character counts on the X/Twitter-length version — `getOrCreate()`
     reuses the same code if the same page is ever linked again.
 31. **Automated onboarding email**: `PaymentController::verifyAndRecord()`

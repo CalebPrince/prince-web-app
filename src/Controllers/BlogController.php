@@ -93,7 +93,7 @@ class BlogController
                 'type' => 'blog',
                 'title' => $data['title'],
                 'excerpt' => $data['excerpt'],
-                'url' => self::absoluteUrl('/blog-post.html?slug=' . $data['slug']),
+                'url' => self::absoluteUrl('/archive-post.html?slug=' . $data['slug']),
             ]);
         }
 
@@ -139,7 +139,7 @@ class BlogController
                 'type' => 'blog',
                 'title' => $data['title'],
                 'excerpt' => $data['excerpt'],
-                'url' => self::absoluteUrl('/blog-post.html?slug=' . $data['slug']),
+                'url' => self::absoluteUrl('/archive-post.html?slug=' . $data['slug']),
             ]);
         }
 

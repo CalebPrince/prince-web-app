@@ -160,7 +160,7 @@ class SocialDraftController
                 'id' => (int) $blog['id'],
                 'title' => $blog['title'],
                 'summary' => $blog['excerpt'],
-                'url' => ShortLink::getOrCreate(self::absoluteUrl('/blog-post.html?slug=' . $blog['slug'])),
+                'url' => ShortLink::getOrCreate(self::absoluteUrl('/archive-post.html?slug=' . $blog['slug'])),
                 'image' => self::absoluteUrl($blog['cover_image_path']),
             ];
         }

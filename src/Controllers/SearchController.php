@@ -65,7 +65,7 @@ class SearchController
                     'score' => $s,
                     'type' => 'blog_post',
                     'title' => $b['title'],
-                    'url' => '/blog-post.html?slug=' . urlencode($b['slug']),
+                    'url' => '/archive-post.html?slug=' . urlencode($b['slug']),
                     'snippet' => $b['excerpt'],
                     'image' => $b['cover_image_path'],
                 ];

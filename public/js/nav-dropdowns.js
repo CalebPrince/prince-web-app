@@ -129,7 +129,7 @@
         + link("/about.html#github-feed-section", "GitHub activity"))
       + col("PROOF & ARCHIVE",
           link("/testimonials.html", "Client testimonials")
-        + link("/blog.html", "Technical archive")
+        + link("/archive.html", "Technical archive")
         + link("/search.html", "Search the site"))
       + '<div class="mega-col" data-slot="about-featured"></div>'
       + "</div>";
@@ -139,7 +139,7 @@
       about.panel.querySelector("[data-slot='about-featured']").innerHTML =
         '<p class="mega-label">// FROM THE ARCHIVE</p>'
         + featured(
-            "/blog-post.html?slug=" + encodeURIComponent(post.slug),
+            "/archive-post.html?slug=" + encodeURIComponent(post.slug),
             post.title,
             String(post.excerpt || "").slice(0, 140),
             "Open technical breakdown");

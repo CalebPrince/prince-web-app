@@ -1364,7 +1364,7 @@ pre code.hljs {
 }
 
 /* Reading progress hairline pinned to the top of the viewport on blog
-   posts — width driven by a scroll listener in blog-post.html. */
+   posts — width driven by a scroll listener in archive-post.html. */
 .read-progress {
   position: fixed;
   top: 0;

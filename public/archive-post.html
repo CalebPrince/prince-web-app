@@ -13,13 +13,13 @@
 <meta name="description" id="page-description" content="An article from Prince Caleb on custom software, automation, and web/mobile development.">
 <meta name="keywords" id="page-keywords" content="custom software Ghana, business automation Accra">
 <meta name="robots" content="index, follow">
-<link rel="canonical" id="page-canonical" href="https://princecaleb.dev/blog.html">
-<link rel="alternate" type="application/rss+xml" title="Prince Caleb — Blog" href="https://princecaleb.dev/feed.xml">
+<link rel="canonical" id="page-canonical" href="https://princecaleb.dev/archive.html">
+<link rel="alternate" type="application/rss+xml" title="Prince Caleb — Technical Archive" href="https://princecaleb.dev/feed.xml">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Prince Caleb">
 <meta property="og:title" id="og-title" content="Article — Prince Caleb">
 <meta property="og:description" id="og-description" content="An article from Prince Caleb on custom software, automation, and web/mobile development.">
-<meta property="og:url" id="og-url" content="https://princecaleb.dev/blog.html">
+<meta property="og:url" id="og-url" content="https://princecaleb.dev/archive.html">
 <meta property="og:image" id="og-image" content="https://princecaleb.dev/uploads/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -95,7 +95,7 @@
       <a href="/about.html">About</a>
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
-      <a href="/blog.html">Archive</a>
+      <a href="/archive.html">Archive</a>
       <a href="/pricing.html">Pricing</a>
       <a href="/contact.html">Contact</a>
     </div>
@@ -161,14 +161,14 @@ function renderBody(body) {
   const container = document.getElementById('post-content');
 
   if (!slug) {
-    window.location.href = '/blog.html';
+    window.location.href = '/archive.html';
     return;
   }
 
   try {
     const p = await api.get(`/api/v1/blog/${encodeURIComponent(slug)}`);
     const pageTitle = `${p.title} — Prince Caleb`;
-    const canonicalUrl = `https://princecaleb.dev/blog-post.html?slug=${encodeURIComponent(slug)}`;
+    const canonicalUrl = `https://princecaleb.dev/archive-post.html?slug=${encodeURIComponent(slug)}`;
     const imageUrl = p.cover_image_path.startsWith('http') ? p.cover_image_path : `https://princecaleb.dev${p.cover_image_path}`;
     const categoryKeywords = CATEGORY_KEYWORDS[p.category] || 'custom software Ghana';
     const keywords = [p.category, categoryKeywords, 'custom software Accra'].filter(Boolean).join(', ');
@@ -292,7 +292,7 @@ function renderBody(body) {
             <div class="row g-4">
               ${related.map((r, i) => `
                 <div class="col-md-4 reveal reveal-delay-${i + 1}">
-                  <a href="/blog-post.html?slug=${r.slug}" class="text-decoration-none">
+                  <a href="/archive-post.html?slug=${r.slug}" class="text-decoration-none">
                     <div class="project-card">
                       <div class="case-code-card"><code>archive_record: ${escapeHtml(r.slug)}</code><div class="sub">${escapeHtml(r.category || 'Technical archive')}</div></div>
                       <div class="card-body">
@@ -329,7 +329,7 @@ function renderBody(body) {
     container.innerHTML = `
       <div class="container py-5 text-center">
         <h1 class="mb-3">Article not found</h1>
-        <a href="/blog.html" class="btn-brand">← Back to blog</a>
+        <a href="/archive.html" class="btn-brand">← Back to the archive</a>
       </div>`;
   }
 })();

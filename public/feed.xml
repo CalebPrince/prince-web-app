@@ -1,168 +1,168 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
  <channel>
-  <title>Prince Caleb — Blog</title>
-  <link>https://princecaleb.dev/blog.html</link>
+  <title>Prince Caleb — Technical Archive</title>
+  <link>https://princecaleb.dev/archive.html</link>
   <description>Articles on web development, freelancing, and building software in Ghana.</description>
   <language>en</language>
-  <lastBuildDate>Thu, 09 Jul 2026 20:04:34 +0000</lastBuildDate>
+  <lastBuildDate>Fri, 10 Jul 2026 13:21:58 +0000</lastBuildDate>
   <atom:link href="https://princecaleb.dev/feed.xml" rel="self" type="application/rss+xml"/>
   <item>
    <title>How to Build an Automated Patient Onboarding System for Clinics in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=automated-patient-onboarding-clinics-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=automated-patient-onboarding-clinics-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=automated-patient-onboarding-clinics-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=automated-patient-onboarding-clinics-accra</guid>
    <description>Front-desk paperwork is still the biggest bottleneck in most Accra clinics — here's what a custom onboarding system actually replaces, and what it doesn't.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Automating Tenant Onboarding and Lease Renewals for Real Estate Agencies in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=automating-tenant-onboarding-real-estate-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=automating-tenant-onboarding-real-estate-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=automating-tenant-onboarding-real-estate-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=automating-tenant-onboarding-real-estate-accra</guid>
    <description>Chasing signatures and re-typing lease terms into three different spreadsheets isn't a real estate problem — it's a plumbing problem, and it's fixable.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Custom Inventory Automation for Retail Stores in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=inventory-automation-retail-stores-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=inventory-automation-retail-stores-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=inventory-automation-retail-stores-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=inventory-automation-retail-stores-accra</guid>
    <description>Stockouts and dead stock usually come down to the same root cause: nobody has a real-time, accurate count. Here's what fixing that actually looks like.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Automating Reservations and Order Management for Restaurants in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=automating-reservations-restaurants-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=automating-reservations-restaurants-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=automating-reservations-restaurants-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=automating-reservations-restaurants-accra</guid>
    <description>A restaurant with three delivery apps, a phone line, and a walk-in host stand is running four separate ordering systems that don't talk to each other. Here's how to make them into one.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Building a Custom Dispatch and Delivery Tracking System for Logistics Companies</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=dispatch-delivery-tracking-system-logistics</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=dispatch-delivery-tracking-system-logistics</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=dispatch-delivery-tracking-system-logistics</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=dispatch-delivery-tracking-system-logistics</guid>
    <description>Dispatch by phone call works until you have more than a handful of drivers — after that, it's just organized guessing.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Automating Student Enrollment and Fee Tracking for Schools in Ghana</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=automating-enrollment-fee-tracking-schools-ghana</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=automating-enrollment-fee-tracking-schools-ghana</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=automating-enrollment-fee-tracking-schools-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=automating-enrollment-fee-tracking-schools-ghana</guid>
    <description>Termly enrollment and fee tracking eats weeks of admin staff time at most schools in Ghana — most of it spent chasing information that should already exist in one place.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>How to Build a Client Intake Automation System for Law Firms in Ghana</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=client-intake-automation-law-firms-ghana</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=client-intake-automation-law-firms-ghana</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=client-intake-automation-law-firms-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=client-intake-automation-law-firms-ghana</guid>
    <description>Conflict checks, engagement letters, and document collection are the same manual steps for every new client — which makes them the easiest thing in a law firm to automate.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Automating Loan Applications for Microfinance Institutions in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=automating-loan-applications-microfinance-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=automating-loan-applications-microfinance-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=automating-loan-applications-microfinance-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=automating-loan-applications-microfinance-accra</guid>
    <description>Manual loan processing isn't just slow for microfinance institutions — every extra day of processing is a day a customer might take their business elsewhere.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Building a Volunteer and Donor Management System for NGOs in Ghana</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=volunteer-donor-management-system-ngos-ghana</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=volunteer-donor-management-system-ngos-ghana</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=volunteer-donor-management-system-ngos-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=volunteer-donor-management-system-ngos-ghana</guid>
    <description>Most NGOs in Ghana track donors and volunteers the same way they track everything else: a shared spreadsheet that one person understands and everyone else is afraid to touch.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Automating Appointment Booking for Salons and Spas in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=automating-appointment-booking-salons-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=automating-appointment-booking-salons-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=automating-appointment-booking-salons-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=automating-appointment-booking-salons-accra</guid>
    <description>A salon losing bookings to no-shows and double-bookings doesn't need a fancier Instagram page — it needs a real booking system.</description>
    <category>Automation</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Custom Web Dashboards for Clinics and Health Centers in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-clinics-health-centers-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-clinics-health-centers-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-clinics-health-centers-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-clinics-health-centers-accra</guid>
    <description>A clinic owner running four different registers can't answer &quot;how are we actually doing this month&quot; without a calculator and an afternoon. A dashboard should answer it in one glance.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Real Estate Dashboards: Tracking Listings, Leads, and Closings in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=real-estate-dashboards-listings-leads-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=real-estate-dashboards-listings-leads-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=real-estate-dashboards-listings-leads-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=real-estate-dashboards-listings-leads-accra</guid>
    <description>An agency with forty active listings and a pipeline of leads across WhatsApp, phone, and walk-ins has no reliable way to say which listings are actually converting — until the data lives in one place.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Building a Custom Sales Dashboard for Retail Businesses in Ghana</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=custom-sales-dashboard-retail-ghana</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=custom-sales-dashboard-retail-ghana</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=custom-sales-dashboard-retail-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=custom-sales-dashboard-retail-ghana</guid>
    <description>Knowing your best-selling product isn't the same as knowing your most profitable one — a proper sales dashboard shows both, and most spreadsheets only show the first.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Custom Dashboards for Restaurants: Sales, Inventory, and Staff in One View</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-restaurants-sales-inventory-staff</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-restaurants-sales-inventory-staff</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-restaurants-sales-inventory-staff</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-restaurants-sales-inventory-staff</guid>
    <description>A restaurant owner checking three different apps and a notebook to understand yesterday's performance is spending more time reporting than managing.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Logistics Dashboards: Tracking Fleet Performance and Delivery Times in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=logistics-dashboards-fleet-performance-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=logistics-dashboards-fleet-performance-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=logistics-dashboards-fleet-performance-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=logistics-dashboards-fleet-performance-accra</guid>
    <description>Fleet performance isn't just &quot;are deliveries on time&quot; — it's fuel cost per delivery, driver utilization, and which routes are quietly losing money.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Custom Dashboards for Schools: Attendance, Grades, and Fee Collection</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-schools-attendance-fees</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-schools-attendance-fees</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-schools-attendance-fees</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-schools-attendance-fees</guid>
    <description>Attendance, grades, and fee status usually live in three unconnected systems at most Ghanaian schools — which means nobody can see a struggling student's full picture in one place.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Case Management Dashboards for Law Firms in Ghana</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=case-management-dashboards-law-firms-ghana</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=case-management-dashboards-law-firms-ghana</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=case-management-dashboards-law-firms-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=case-management-dashboards-law-firms-ghana</guid>
    <description>A law firm tracking case deadlines across individual lawyers' calendars is one missed date away from a serious problem — a shared dashboard closes that gap.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Custom Financial Dashboards for Microfinance Institutions in Accra</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=custom-financial-dashboards-microfinance-accra</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=custom-financial-dashboards-microfinance-accra</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=custom-financial-dashboards-microfinance-accra</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=custom-financial-dashboards-microfinance-accra</guid>
    <description>A microfinance institution's loan book health isn't visible in a single spreadsheet — default risk, disbursement trends, and collections all need to be seen together, not separately.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Impact Reporting Dashboards for NGOs Operating in Ghana</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=impact-reporting-dashboards-ngos-ghana</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=impact-reporting-dashboards-ngos-ghana</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=impact-reporting-dashboards-ngos-ghana</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=impact-reporting-dashboards-ngos-ghana</guid>
    <description>Funders want to see impact numbers, not just spending numbers — and most NGOs in Ghana can produce the second far more easily than the first.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
   </item>
   <item>
    <title>Custom Dashboards for Salon Chains: Bookings, Revenue, and Staff Performance</title>
-   <link>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-salon-chains-bookings-revenue</link>
-   <guid>https://princecaleb.dev/blog-post.html?slug=custom-dashboards-salon-chains-bookings-revenue</guid>
+   <link>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-salon-chains-bookings-revenue</link>
+   <guid>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-salon-chains-bookings-revenue</guid>
    <description>Owning three salon locations means owning three separate booking books, unless someone builds the dashboard that ties them together.</description>
    <category>Dashboards</category>
    <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>

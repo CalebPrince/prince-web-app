@@ -21,7 +21,7 @@ $staticPages = [
     ['loc' => '/about.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
     ['loc' => '/services.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
     ['loc' => '/projects.html', 'priority' => '0.8', 'changefreq' => 'weekly'],
-    ['loc' => '/blog.html', 'priority' => '0.8', 'changefreq' => 'weekly'],
+    ['loc' => '/archive.html', 'priority' => '0.8', 'changefreq' => 'weekly'],
     ['loc' => '/pricing.html', 'priority' => '0.7', 'changefreq' => 'monthly'],
     ['loc' => '/request.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
     ['loc' => '/book.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
@@ -68,7 +68,7 @@ $posts = $pdo->query(
 
 foreach ($posts as $post) {
     $xml->startElement('url');
-    $xml->writeElement('loc', BASE_URL . '/blog-post.html?slug=' . urlencode($post['slug']));
+    $xml->writeElement('loc', BASE_URL . '/archive-post.html?slug=' . urlencode($post['slug']));
     $xml->writeElement('lastmod', substr($post['updated_at'], 0, 10));
     $xml->writeElement('changefreq', 'monthly');
     $xml->writeElement('priority', '0.6');
@@ -96,8 +96,8 @@ $rss->startElement('rss');
 $rss->writeAttribute('version', '2.0');
 $rss->writeAttribute('xmlns:atom', 'http://www.w3.org/2005/Atom');
 $rss->startElement('channel');
-$rss->writeElement('title', 'Prince Caleb — Blog');
-$rss->writeElement('link', BASE_URL . '/blog.html');
+$rss->writeElement('title', 'Prince Caleb — Technical Archive');
+$rss->writeElement('link', BASE_URL . '/archive.html');
 $rss->writeElement('description', 'Articles on web development, freelancing, and building software in Ghana.');
 $rss->writeElement('language', 'en');
 $rss->writeElement('lastBuildDate', date(DATE_RSS));
@@ -108,7 +108,7 @@ $rss->writeAttribute('type', 'application/rss+xml');
 $rss->endElement();
 
 foreach ($feedPosts as $post) {
-    $url = BASE_URL . '/blog-post.html?slug=' . urlencode($post['slug']);
+    $url = BASE_URL . '/archive-post.html?slug=' . urlencode($post['slug']);
     $rss->startElement('item');
     $rss->writeElement('title', $post['title']);
     $rss->writeElement('link', $url);
