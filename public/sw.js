@@ -9,13 +9,14 @@
 // while after a push. Only genuinely static binary assets (icons) are
 // cache-first. Bump CACHE_VERSION on any change here to force old caches
 // to be dropped on next activate.
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `princecaleb-shell-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   "/css/app.css",
   "/js/api.js",
   "/js/theme.js",
+  "/js/utility-dock.js",
   "/js/content.js",
   "/js/animations.js",
   "/icons/icon-192.png",

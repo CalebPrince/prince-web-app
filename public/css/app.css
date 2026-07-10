@@ -208,20 +208,56 @@ p a:not([class]), li a:not([class]) { text-decoration: underline; text-underline
   color: var(--ink-soft);
   font-weight: 500;
   padding: 0.5rem 1rem;
+  position: relative;
+  transition: color 0.25s var(--ease-out);
 }
 .site-nav .nav-link.active,
 .site-nav .nav-link:hover { color: var(--accent); }
+/* Hairline underline sweeps in from the left on hover and exits to the
+   right; the current page keeps its underline. */
+.site-nav .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.3rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.35s var(--ease-out);
+}
+.site-nav .nav-link:hover::after,
+.site-nav .nav-link.active::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
 
 .nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--ink);
-  font-size: 1.1rem;
   line-height: 1;
-  padding: 0.4rem 0.65rem;
+  padding: 0.55rem 0.7rem;
 }
 .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
+/* Editorial hamburger: staggered line lengths that sweep to full width on
+   hover, top to bottom. */
+.nav-toggle svg line {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transition: transform 0.35s var(--ease-out);
+}
+.nav-toggle svg line:nth-child(2) { transform: scaleX(0.7); transition-delay: 0.04s; }
+.nav-toggle svg line:nth-child(3) { transform: scaleX(0.4); transition-delay: 0.08s; }
+.nav-toggle:hover svg line:nth-child(2),
+.nav-toggle:focus-visible svg line:nth-child(2),
+.nav-toggle:hover svg line:nth-child(3),
+.nav-toggle:focus-visible svg line:nth-child(3) { transform: scaleX(1); }
 
 /* Mobile nav drawer */
 .nav-drawer { width: 300px; background: var(--bg); color: var(--ink-soft); }
@@ -247,11 +283,13 @@ p a:not([class]), li a:not([class]) { text-decoration: underline; text-underline
 
 /* Theme toggle */
 .theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
-  font-size: 1rem;
   line-height: 1;
   padding: 0.4rem 0.6rem;
   cursor: pointer;
@@ -276,6 +314,75 @@ p a:not([class]), li a:not([class]) { text-decoration: underline; text-underline
 }
 .nav-search-btn:hover,
 .nav-login-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Header controls use inline stroke SVGs that inherit the button color. */
+.theme-toggle svg,
+.nav-search-btn svg,
+.nav-login-btn svg,
+.nav-toggle svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.utility-tab svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+.nav-toggle svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* Utility dock — the theme / search / admin icons live in a drop-down tray
+   opened by a small tab glued to the top edge of the header. */
+.utility-dock {
+  position: relative;
+  /* Hang the tab from the nav's top edge: sit at the top of the flex row,
+     then cancel the container's py-3 so the tab touches the border. */
+  align-self: flex-start;
+  margin-top: -1rem;
+}
+.utility-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  color: var(--ink);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.3rem 1.1rem 0.45rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.utility-tab:hover,
+.utility-dock.open .utility-tab { border-color: var(--accent); color: var(--accent); }
+.utility-tray {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+  z-index: 1001;
+}
+.utility-dock.open .utility-tray {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
 
 /* Hero */
 .hero {
