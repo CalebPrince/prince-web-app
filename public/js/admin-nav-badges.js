@@ -235,6 +235,8 @@
     const dropdown = document.getElementById("notif-dropdown");
     if (!btn || !dropdown) return;
 
+    document.body.appendChild(dropdown);
+
     function placeDropdown() {
       const rect = btn.getBoundingClientRect();
       const gap = 8;
