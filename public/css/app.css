@@ -553,6 +553,56 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
   margin-top: 0.2rem;
 }
 
+/* Splash screen — the brand lockup animates on a black curtain for ~2.5s,
+   then the curtain lifts to reveal the page. Markup sits right after <body>
+   with an inline script that removes it instantly on repeat visits in the
+   same session (and entirely under prefers-reduced-motion), so only the
+   first page you land on plays it. Always black, whatever the theme. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b0c0e;
+  animation: splash-exit 0.7s var(--ease-out) 2.4s forwards;
+}
+@keyframes splash-exit {
+  to { transform: translateY(-100%); visibility: hidden; }
+}
+.splash .brand-logo { font-size: 1.7rem; color: #fff; }
+/* The P mark tumbles in and settles — same mark, bigger stage. */
+.splash .brand-mark {
+  background: #fff;
+  color: #0b0c0e;
+  animation: splash-mark 1.1s var(--ease-out) both;
+}
+@keyframes splash-mark {
+  0% { opacity: 0; transform: scale(0.5) rotate(-24deg); }
+  55% { opacity: 1; transform: scale(1.06) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+/* The wordmark slides out from behind the mark through a clipping mask. */
+.splash .splash-text-mask { display: inline-block; overflow: hidden; }
+.splash .brand-text {
+  display: inline-block;
+  animation: splash-text 0.8s var(--ease-out) 0.55s both;
+}
+@keyframes splash-text {
+  from { transform: translateX(-110%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.splash .dot {
+  color: #fff;
+  display: inline-block;
+  animation: splash-dot 0.45s var(--ease-out) 1.3s both;
+}
+@keyframes splash-dot {
+  from { opacity: 0; transform: translateY(0.4em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Hero */
 .hero {
   background: var(--bg);
