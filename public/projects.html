@@ -151,6 +151,7 @@
 <script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>
 <script src="/js/utility-dock.js"></script>
+<script src="/js/nav-dropdowns.js"></script>
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
@@ -284,7 +285,14 @@ function applyFilter(tagSlug) {
       api.get('/api/v1/tags'),
     ]);
     allProjects = projects;
-    renderGrid(projects);
+    // Deep links from the nav's Projects dropdown (?platform=ecommerce|webapp|
+    // mobile) use the same classifier the dropdown counts with.
+    const platform = new URLSearchParams(location.search).get('platform');
+    if (platform && window.navPlatformOf) {
+      renderGrid(projects.filter(p => navPlatformOf(p) === platform));
+    } else {
+      renderGrid(projects);
+    }
 
     const filterBar = document.getElementById('tag-filters');
     tags.forEach(t => {

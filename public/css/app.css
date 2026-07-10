@@ -60,8 +60,9 @@
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
-/* Anchored sections ("Get estimate" → #estimator) land below the sticky nav */
-section[id], [id="estimator"] { scroll-margin-top: 5rem; }
+/* Anchored targets ("Get estimate" → #estimator, nav dropdown deep links →
+   #track-01, #career-timeline) land below the sticky nav */
+section[id], article[id], [id="estimator"], [id="career-timeline"] { scroll-margin-top: 5rem; }
 
 ::selection {
   background: var(--heading-color);
@@ -74,8 +75,12 @@ html, body {
      horizontally-overflowing content — on mobile that pushes fixed
      elements off the visible edge of the screen. Clipping overflow here
      keeps fixed positioning anchored to what's actually visible even if
-     something else overflows later. */
+     something else overflows later.
+     `clip` (not `hidden`): hidden turns body into a scroll container,
+     which silently disables the nav's position:sticky. Older browsers
+     fall back to hidden and just lose stickiness. */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -406,6 +411,146 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
   visibility: visible;
   transform: translate(-50%, 0);
   transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+/* Nav mega dropdowns — About / Services / Projects open a full-width panel
+   hung from the nav's bottom hairline (springsummer.dk pattern adapted to
+   the editorial system). Desktop only; the mobile drawer stays a flat list.
+   Markup is injected by js/nav-dropdowns.js. */
+.mega-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.mega-caret {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.35s var(--ease-out);
+}
+.mega-trigger.open .mega-caret { transform: rotate(180deg); }
+.mega-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out), visibility 0s linear 0.3s;
+}
+.mega-panel.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+}
+@media (max-width: 767.98px) {
+  .mega-panel { display: none; }
+}
+.mega-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1.1fr;
+  gap: 3rem;
+  padding-top: 2.5rem;
+  padding-bottom: 2.75rem;
+}
+.mega-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 1.1rem;
+}
+.mega-link {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.25s var(--ease-out), padding-left 0.25s var(--ease-out);
+}
+.mega-link:hover {
+  color: var(--heading-color);
+  padding-left: 0.4rem;
+}
+.mega-meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.mega-items {
+  display: flex;
+  flex-direction: column;
+}
+.mega-item {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr auto;
+  gap: 0.9rem;
+  align-items: baseline;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.25s var(--ease-out), padding-left 0.25s var(--ease-out);
+}
+.mega-item:hover {
+  color: var(--heading-color);
+  padding-left: 0.4rem;
+}
+.mega-index {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+.mega-title { font-weight: 600; }
+.mega-tag {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.mega-featured {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.4rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink-soft);
+  transition: border-color 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+}
+.mega-featured:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+  color: var(--ink-soft);
+}
+.mega-featured strong {
+  color: var(--heading-color);
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+.mega-featured span {
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.mega-featured .mega-cta {
+  font-weight: 600;
+  color: var(--heading-color);
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
 }
 
 /* Hero */
