@@ -1,6 +1,10 @@
 const CONTENT_FIELDS = [
   "default_theme",
   "availability_badge", "hero_eyebrow", "hero_title", "hero_subtitle", "tech_badges",
+  "hero_value_eyebrow",
+  "hero_value_1_label", "hero_value_1_text",
+  "hero_value_2_label", "hero_value_2_text",
+  "hero_value_3_label", "hero_value_3_text",
   "service_1_title", "service_1_summary", "service_1_desc",
   "service_2_title", "service_2_summary", "service_2_desc",
   "service_3_title", "service_3_summary", "service_3_desc",
@@ -20,6 +24,16 @@ const CONTENT_FIELDS = [
   "testimonial_1_quote", "testimonial_1_name", "testimonial_1_role",
   "testimonial_2_quote", "testimonial_2_name", "testimonial_2_role",
   "testimonial_3_quote", "testimonial_3_name", "testimonial_3_role",
+  "pricing_tier_1_name", "pricing_tier_1_price", "pricing_tier_1_tagline", "pricing_tier_1_features",
+  "pricing_tier_2_name", "pricing_tier_2_price", "pricing_tier_2_tagline", "pricing_tier_2_features",
+  "pricing_tier_3_name", "pricing_tier_3_price", "pricing_tier_3_tagline", "pricing_tier_3_features",
+  "home_pricing_eyebrow", "home_pricing_title", "home_pricing_note",
+  "archive_eyebrow", "archive_title",
+  "archive_1_domain", "archive_1_meta", "archive_1_title", "archive_1_desc", "archive_1_link", "archive_1_metric", "archive_1_metric_label",
+  "archive_2_domain", "archive_2_meta", "archive_2_title", "archive_2_desc", "archive_2_link", "archive_2_metric", "archive_2_metric_label",
+  "archive_3_domain", "archive_3_meta", "archive_3_title", "archive_3_desc", "archive_3_link", "archive_3_metric", "archive_3_metric_label",
+  "production_eyebrow", "production_title",
+  "live_demo_eyebrow", "live_demo_title", "live_demo_desc", "live_demo_metric_label", "live_demo_metric_text", "live_demo_console_label",
 ];
 
 function showContentMsg(text, ok) {

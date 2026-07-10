@@ -52,7 +52,6 @@
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
       <a href="/projects.html" class="nav-link">Projects</a>
-      <a href="/blog.html" class="nav-link active">Blog</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
@@ -70,7 +69,6 @@
     <a href="/about.html" class="nav-link">About</a>
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
-    <a href="/blog.html" class="nav-link">Blog</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
@@ -92,7 +90,7 @@
       <a href="/about.html">About</a>
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
-      <a href="/blog.html">Blog</a>
+      <a href="/blog.html">Archive</a>
       <a href="/pricing.html">Pricing</a>
       <a href="/contact.html">Contact</a>
     </div>
@@ -218,7 +216,19 @@ function renderBody(body) {
         </div>
       </header>
       <div class="container pb-5">
-        <div class="case-media mb-5 reveal"><img src="${p.cover_image_path}" alt="${p.title}"></div>
+        <div class="archive-list mb-5 reveal reveal-on-scroll">
+          <article class="archive-entry">
+            <div><span class="archive-domain">[${escapeHtml(p.category || 'TECHNICAL NOTE')}]</span></div>
+            <div>
+              <h2 class="h4 archive-title">Technical brief</h2>
+              <p class="archive-meta">${escapeHtml(p.excerpt)}</p>
+            </div>
+            <div class="archive-metric">
+              <strong>${escapeHtml(p.reading_time)} min</strong>
+              <span>Reading time</span>
+            </div>
+          </article>
+        </div>
         <div class="row">
           <div class="col-lg-8 reveal">
             <div class="d-flex flex-wrap gap-2 mb-4">
@@ -277,7 +287,7 @@ function renderBody(body) {
                 <div class="col-md-4 reveal reveal-delay-${i + 1}">
                   <a href="/blog-post.html?slug=${r.slug}" class="text-decoration-none">
                     <div class="project-card">
-                      <img src="${r.cover_image_path}" alt="${r.title}" loading="lazy" decoding="async">
+                      <div class="case-code-card"><code>archive_record: ${escapeHtml(r.slug)}</code><div class="sub">${escapeHtml(r.category || 'Technical archive')}</div></div>
                       <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                           ${r.category ? `<span class="eyebrow mb-0">${r.category}</span>` : '<span></span>'}

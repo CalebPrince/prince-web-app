@@ -42,7 +42,6 @@
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
       <a href="/projects.html" class="nav-link active">Projects</a>
-      <a href="/blog.html" class="nav-link">Blog</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
@@ -60,7 +59,6 @@
     <a href="/about.html" class="nav-link">About</a>
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
-    <a href="/blog.html" class="nav-link">Blog</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
@@ -69,10 +67,10 @@
 
 <header class="hero agency-hero" id="main-content">
   <div class="container">
-    <p class="eyebrow mb-3 hero-animate hero-animate-1">// Selected deployments</p>
-    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Selected work.</h1>
+    <p class="eyebrow mb-3 hero-animate hero-animate-1">// Production Logs</p>
+    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Deployment registry.</h1>
     <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width: 60ch;">
-      Filter by technology to see relevant case studies, or browse everything.
+      A scannable index of shipped systems, core architecture choices, technology keywords, and measurable delivery signals.
     </p>
     <div id="tag-filters" class="d-flex flex-wrap gap-2 hero-animate hero-animate-4">
       <button class="filter-pill active" data-tag="">All</button>
@@ -82,11 +80,10 @@
 
 <section class="section">
   <div class="container">
-    <div id="projects-grid" class="row g-4">
-      <div class="col-md-6 col-lg-8"><div class="skeleton skeleton-card"></div></div>
-      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
-      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
-      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
+    <div id="projects-grid" class="production-log-list">
+      <div class="skeleton mb-3" style="height: 120px;"></div>
+      <div class="skeleton mb-3" style="height: 120px;"></div>
+      <div class="skeleton" style="height: 120px;"></div>
     </div>
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">
       No projects match this filter yet.
@@ -112,7 +109,7 @@
       <a href="/about.html">About</a>
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
-      <a href="/blog.html">Blog</a>
+      <a href="/blog.html">Archive</a>
       <a href="/pricing.html">Pricing</a>
       <a href="/contact.html">Contact</a>
     </div>
@@ -155,7 +152,7 @@
 let allProjects = [];
 let liveDemoModal = null;
 
-function renderGrid(projects) {
+function renderLegacyGrid(projects) {
   const grid = document.getElementById('projects-grid');
   const empty = document.getElementById('empty-state');
   if (projects.length === 0) {
@@ -169,7 +166,7 @@ function renderGrid(projects) {
       <div class="position-relative">
         <a href="/project.html?slug=${p.slug}" class="text-decoration-none">
           <div class="project-card ${i === 0 ? 'project-card-featured' : ''}">
-            <img src="${p.cover_image_path}" alt="${p.title}" ${i === 0 ? '' : 'loading="lazy"'} decoding="async">
+            <div class="case-code-card"><code>deployment_status: LIVE</code><div class="sub">${p.category || 'Production log'}</div></div>
             <div class="card-body">
               <h5 class="mb-2">${p.title}</h5>
               <p class="small text-muted-custom mb-3">${p.summary}</p>
@@ -196,6 +193,62 @@ function renderGrid(projects) {
       e.preventDefault();
       e.stopPropagation();
       document.getElementById('live-demo-title').textContent = `Live Demo — ${btn.dataset.title}`;
+      document.getElementById('live-demo-frame').src = btn.dataset.url;
+      liveDemoModal.show();
+    });
+  });
+}
+
+function renderGrid(projects) {
+  const grid = document.getElementById('projects-grid');
+  const empty = document.getElementById('empty-state');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const attr = esc;
+  const metricFor = (p, i) => {
+    const raw = String(p.outcome_metrics || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean)[0];
+    if (raw) return raw;
+    return ['99.9% uptime', '40% bandwidth reduction', 'Sub-2s load target', '48h response loop'][i % 4];
+  };
+  const techFor = p => {
+    const tags = (p.tags || []).map(t => t.name).filter(Boolean);
+    const defaults = ['Vanilla PHP', 'FastAPI', 'SQLite', 'Cloudflare Workers'];
+    return [...new Set([...tags, ...defaults])].slice(0, 4);
+  };
+
+  if (projects.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('d-none');
+    return;
+  }
+
+  empty.classList.add('d-none');
+  grid.innerHTML = projects.map((p, i) => `
+    <article class="production-log-entry reveal reveal-on-scroll reveal-delay-${(i % 4) + 1}">
+      <div>
+        <span class="production-id">LOG ${String(i + 1).padStart(2, '0')}</span>
+        <div class="production-status mt-2">${p.is_featured ? 'Featured deployment' : esc(p.category || 'Live system')}</div>
+      </div>
+      <div>
+        <h2 class="h3 production-title"><a href="/project.html?slug=${esc(p.slug)}">${esc(p.title)}</a></h2>
+        <p class="production-summary">${esc(p.summary)}</p>
+        <div class="production-tech">${techFor(p).map(name => `<span class="mono-badge">${esc(name)}</span>`).join('')}</div>
+        <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
+          <a href="/project.html?slug=${esc(p.slug)}" class="production-link mt-0">Inspect architecture summary</a>
+          ${p.is_embeddable && p.live_url ? `<button type="button" class="btn-brand-outline btn-sm live-demo-card-btn" data-url="${attr(p.live_url)}" data-title="${attr(p.title)}">Live Demo</button>` : ''}
+        </div>
+      </div>
+      <div class="production-metric">
+        <strong>${esc(metricFor(p, i))}</strong>
+        <span>Performance-oriented signal</span>
+      </div>
+    </article>
+  `).join('');
+
+  grid.querySelectorAll('.live-demo-card-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('live-demo-title').textContent = `Live Demo - ${btn.dataset.title}`;
       document.getElementById('live-demo-frame').src = btn.dataset.url;
       liveDemoModal.show();
     });

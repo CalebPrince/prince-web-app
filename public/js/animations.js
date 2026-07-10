@@ -75,7 +75,7 @@
   }
 
   function scan(root) {
-    root.querySelectorAll(".reveal").forEach(watchReveal);
+    root.querySelectorAll(".reveal, .reveal-on-scroll").forEach(watchReveal);
     root.querySelectorAll("[data-count-to]").forEach(watchCount);
   }
 
@@ -85,7 +85,7 @@
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType !== 1) return;
-        if (node.matches?.(".reveal")) watchReveal(node);
+        if (node.matches?.(".reveal, .reveal-on-scroll")) watchReveal(node);
         if (node.matches?.("[data-count-to]")) watchCount(node);
         scan(node);
       });

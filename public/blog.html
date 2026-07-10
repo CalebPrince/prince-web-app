@@ -45,7 +45,6 @@
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
       <a href="/projects.html" class="nav-link">Projects</a>
-      <a href="/blog.html" class="nav-link active">Blog</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
@@ -63,7 +62,6 @@
     <a href="/about.html" class="nav-link">About</a>
     <a href="/services.html" class="nav-link">Services</a>
     <a href="/projects.html" class="nav-link">Projects</a>
-    <a href="/blog.html" class="nav-link">Blog</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
     <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
@@ -72,8 +70,8 @@
 
 <header class="hero agency-hero" id="main-content">
   <div class="container">
-    <p class="eyebrow mb-3 hero-animate hero-animate-1">// Blog</p>
-    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Insights &amp; how-tos.</h1>
+    <p class="eyebrow mb-3 hero-animate hero-animate-1">// Technical Archive</p>
+    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Case studies for engineered systems.</h1>
     <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width: 60ch;">
       Practical guides on custom software, automation, and web/mobile development — filter by topic, or browse everything.
     </p>
@@ -85,11 +83,10 @@
 
 <section class="section">
   <div class="container">
-    <div id="blog-grid" class="row g-4">
-      <div class="col-md-6 col-lg-8"><div class="skeleton skeleton-card"></div></div>
-      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
-      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
-      <div class="col-md-6 col-lg-4"><div class="skeleton skeleton-card"></div></div>
+    <div id="blog-grid" class="archive-list">
+      <div class="skeleton mb-3" style="height: 120px;"></div>
+      <div class="skeleton mb-3" style="height: 120px;"></div>
+      <div class="skeleton" style="height: 120px;"></div>
     </div>
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">
       No articles match this filter yet.
@@ -121,7 +118,7 @@
       <a href="/about.html">About</a>
       <a href="/services.html">Services</a>
       <a href="/projects.html">Projects</a>
-      <a href="/blog.html">Blog</a>
+      <a href="/blog.html">Archive</a>
       <a href="/pricing.html">Pricing</a>
       <a href="/contact.html">Contact</a>
     </div>
@@ -152,9 +149,17 @@ let allPosts = [];
 let filteredPosts = [];
 let currentPage = 1;
 
-function renderGrid(posts) {
+function renderLegacyGrid(posts) {
   const grid = document.getElementById('blog-grid');
   const empty = document.getElementById('empty-state');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const metricFor = (p, i) => {
+    const category = String(p.category || 'System Architecture').toLowerCase();
+    if (category.includes('ai')) return '1.5s AI routing';
+    if (category.includes('dashboard')) return '40% faster reporting';
+    if (category.includes('automation')) return '60% manual work removed';
+    return ['99.9% uptime', '40% bandwidth reduction', 'Sub-2s page loads'][i % 3];
+  };
   if (posts.length === 0) {
     grid.innerHTML = '';
     empty.classList.remove('d-none');
@@ -165,7 +170,7 @@ function renderGrid(posts) {
     <div class="col-md-6 ${i === 0 ? 'col-lg-8' : 'col-lg-4'} reveal reveal-delay-${(i % 4) + 1}">
       <a href="/blog-post.html?slug=${p.slug}" class="text-decoration-none">
         <div class="project-card ${i === 0 ? 'project-card-featured' : ''}">
-          <img src="${p.cover_image_path}" alt="${p.title}" ${i === 0 ? '' : 'loading="lazy"'} decoding="async">
+          <div class="case-code-card"><code>archive_record: ${esc(p.slug)}</code><div class="sub">${esc(p.category || 'Technical archive')}</div></div>
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
               ${p.category ? `<span class="eyebrow mb-0">${p.category}</span>` : '<span></span>'}
@@ -178,6 +183,44 @@ function renderGrid(posts) {
         </div>
       </a>
     </div>
+  `).join('');
+}
+
+function renderGrid(posts) {
+  const grid = document.getElementById('blog-grid');
+  const empty = document.getElementById('empty-state');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const metricFor = (p, i) => {
+    const category = String(p.category || 'System Architecture').toLowerCase();
+    if (category.includes('ai')) return '1.5s AI routing';
+    if (category.includes('dashboard')) return '40% faster reporting';
+    if (category.includes('automation')) return '60% manual work removed';
+    return ['99.9% uptime', '40% bandwidth reduction', 'Sub-2s page loads'][i % 3];
+  };
+
+  if (posts.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('d-none');
+    return;
+  }
+
+  empty.classList.add('d-none');
+  grid.innerHTML = posts.map((p, i) => `
+    <article class="archive-entry reveal reveal-on-scroll reveal-delay-${(i % 4) + 1}">
+      <div>
+        <span class="archive-domain">[${esc(p.category || 'System Architecture')}]</span>
+        <div class="small text-muted-custom mt-2">${esc(p.reading_time)} min technical read</div>
+      </div>
+      <div>
+        <h2 class="h3 archive-title"><a href="/blog-post.html?slug=${esc(p.slug)}">${esc(p.title)}</a></h2>
+        <p class="archive-meta">${esc(p.excerpt)} Built with lean HTML, CSS variables, Bootstrap utilities, and vanilla JavaScript patterns.</p>
+        <a href="/blog-post.html?slug=${esc(p.slug)}" class="archive-link">Open technical breakdown</a>
+      </div>
+      <div class="archive-metric">
+        <strong>${esc(metricFor(p, i))}</strong>
+        <span>Key validation metric</span>
+      </div>
+    </article>
   `).join('');
 }
 

@@ -30,6 +30,11 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --shadow: 0 2px 16px rgba(10, 11, 13, 0.05);
   --shadow-lg: 0 16px 40px rgba(10, 11, 13, 0.1);
+  --bg-color: var(--bg);
+  --surface-color: var(--card-bg);
+  --text-primary: var(--heading-color);
+  --text-secondary: var(--muted);
+  --border-color: var(--line);
 }
 
 [data-theme="dark"] {
@@ -1088,13 +1093,15 @@ pre code.hljs {
    sensitive visitors just see the final state immediately. */
 
 @media (prefers-reduced-motion: no-preference) {
-  .reveal {
+  .reveal,
+  .reveal-on-scroll {
     opacity: 0;
     transform: translateY(30px);
     transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
     will-change: transform, opacity;
   }
-  .reveal.is-visible {
+  .reveal.is-visible,
+  .reveal-on-scroll.is-visible {
     opacity: 1;
     transform: translateY(0);
   }
@@ -1228,6 +1235,177 @@ pre code.hljs {
 .case-code-card code { display: block; color: var(--heading-color); font-size: 0.85rem; margin-bottom: 0.5rem; }
 .case-code-card .sub { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.78rem; color: var(--muted); }
 
+/* Technical archive + production log surfaces */
+.archive-list,
+.production-log-list {
+  border-top: 1px solid var(--border-color);
+}
+.archive-entry,
+.production-log-entry {
+  display: grid;
+  gap: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem) 0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+.archive-entry {
+  grid-template-columns: minmax(160px, 0.32fr) minmax(0, 1fr) minmax(130px, 0.22fr);
+  align-items: start;
+}
+.production-log-entry {
+  grid-template-columns: minmax(150px, 0.24fr) minmax(0, 1fr) minmax(190px, 0.28fr);
+  align-items: center;
+}
+.archive-entry:hover,
+.production-log-entry:hover {
+  background: color-mix(in srgb, var(--surface-color) 48%, transparent);
+}
+.archive-domain,
+.production-id,
+.production-status {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  color: var(--text-primary);
+}
+.archive-title,
+.production-title {
+  color: var(--text-primary);
+  margin-bottom: 0.65rem;
+}
+.archive-title a,
+.production-title a {
+  color: inherit;
+}
+.archive-meta,
+.production-summary {
+  max-width: 68ch;
+  margin-bottom: 0;
+}
+.archive-metric,
+.production-metric {
+  justify-self: end;
+  min-width: 8rem;
+  border-left: 1px solid var(--border-color);
+  padding-left: 1rem;
+}
+.archive-metric strong,
+.production-metric strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: clamp(1.35rem, 3vw, 2.1rem);
+  line-height: 1;
+}
+.archive-metric span,
+.production-metric span {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  margin-top: 0.45rem;
+}
+.archive-link,
+.production-link {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 1rem;
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.archive-link::after,
+.production-link::after {
+  content: "->";
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  transition: transform 0.15s ease;
+}
+.archive-entry:hover .archive-link::after,
+.production-log-entry:hover .production-link::after {
+  transform: translateX(4px);
+}
+.production-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.production-tech .mono-badge {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.74rem;
+}
+.pricing-matrix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.pricing-matrix-card,
+.ai-booking-panel {
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  border-radius: 16px;
+}
+.pricing-matrix-card {
+  padding: clamp(1.4rem, 3vw, 2rem);
+}
+.pricing-matrix-card.is-featured {
+  border-color: var(--text-primary);
+}
+.pricing-matrix-price {
+  color: var(--text-primary);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1;
+}
+.pricing-matrix-card ul {
+  list-style: none;
+  padding-left: 0;
+}
+.pricing-matrix-card li {
+  padding: 0.38rem 0;
+  color: var(--text-secondary);
+}
+.pricing-matrix-card li::before {
+  content: "/";
+  color: var(--text-primary);
+  margin-right: 0.65rem;
+}
+.ai-booking-panel {
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+.ai-booking-console {
+  min-height: 360px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+}
+.ai-booking-metric {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-color);
+  padding: 1rem;
+}
+@media (max-width: 991.98px) {
+  .archive-entry,
+  .production-log-entry,
+  .pricing-matrix {
+    grid-template-columns: 1fr;
+  }
+  .archive-metric,
+  .production-metric {
+    justify-self: stretch;
+    border-left: 0;
+    border-top: 1px solid var(--border-color);
+    padding-left: 0;
+    padding-top: 1rem;
+  }
+}
+
 /* Capability tracks — vertical tab selector with border-accent states */
 .capability-panel {
   border: 1px solid var(--line);
@@ -1322,6 +1500,51 @@ pre code.hljs {
 }
 .agency-hero .hero-copy {
   max-width: 34rem;
+}
+.hero-value-panel {
+  margin-top: 3rem;
+  max-width: 25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--surface-color);
+  padding: 1.25rem;
+}
+.hero-value-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--border-color);
+}
+.hero-value-row strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+.hero-value-row span {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  text-align: right;
+}
+@media (min-width: 992px) {
+  .home-page .agency-hero > .container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.36fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: end;
+  }
+  .home-page .agency-hero > .container > .availability-pill,
+  .home-page .agency-hero > .container > .eyebrow,
+  .home-page .agency-hero > .container > h1,
+  .home-page .agency-hero > .container > p,
+  .home-page .agency-hero > .container > .d-flex {
+    grid-column: 1;
+  }
+  .home-page .hero-value-panel {
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    align-self: end;
+    margin-top: 0;
+  }
 }
 /* Interior page heroes should read as one deliberate text block. The
    homepage opts into a row layout, so its split composition remains intact. */
