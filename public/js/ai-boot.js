@@ -16,12 +16,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   toggle.addEventListener("click", load, { once: true });
 
-  if (!sessionStorage.getItem("chat_auto_shown")) {
+  // Open the widget on the visitor's cursor leaving the top of the viewport
+  // (classic exit-intent) — but only if it hasn't auto-shown yet this session,
+  // so a fast leaver who bails before the 1.5s timer still sees the greeting,
+  // and it never double-fires with the timed open below.
+  const openOnce = () => {
+    if (sessionStorage.getItem("chat_auto_shown")) return;
+    if (toggle.classList.contains("d-none")) return;
     sessionStorage.setItem("chat_auto_shown", "1");
+    load();
+  };
+
+  document.addEventListener("mouseout", (e) => {
+    if (!e.relatedTarget && e.clientY <= 0) openOnce();
+  });
+
+  if (!sessionStorage.getItem("chat_auto_shown")) {
     // Re-checked at fire time (not now) so content.js has had a chance to
-    // hide the button first if Live Chat has been turned off in Settings.
+    // hide the button first if Live Chat has been turned off in Settings,
+    // and so exit-intent may have already claimed the one auto-open.
     setTimeout(() => {
-      if (!toggle.classList.contains("d-none")) load();
+      if (sessionStorage.getItem("chat_auto_shown")) return;
+      if (toggle.classList.contains("d-none")) return;
+      sessionStorage.setItem("chat_auto_shown", "1");
+      load();
     }, 1500);
   }
 });

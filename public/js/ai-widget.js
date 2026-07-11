@@ -2,9 +2,14 @@
   const toggle = document.getElementById("ai-widget-toggle");
   let sessionToken = sessionStorage.getItem("chat_token") || null;
   let online = false;
+  // Read-aloud every reply automatically when on (visitor-controlled, header
+  // toggle) — remembered for the browser session.
+  let autoSpeak = sessionStorage.getItem("chat_autospeak") === "1";
 
   const panel = document.createElement("div");
   panel.id = "ai-widget-panel";
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-label", "Live chat with Lisa");
   panel.innerHTML = `
     <div class="p-3 border-bottom d-flex align-items-center gap-2">
       <div class="chat-avatar">
@@ -16,10 +21,11 @@
         <strong class="chat-title d-block">Prince's Assistant</strong>
         <span class="chat-status small"><span class="status-dot" id="chat-status-dot"></span><span id="chat-status-text">Connecting…</span></span>
       </div>
+      <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 me-1" id="ai-widget-autospeak" title="Auto read-aloud"></button>
       <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 me-1" id="ai-widget-menu-btn" title="Menu" aria-label="Show menu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <button type="button" class="btn-close" id="ai-widget-close" aria-label="Close"></button>
     </div>
-    <div id="ai-widget-messages"></div>
+    <div id="ai-widget-messages" role="log" aria-live="polite" aria-label="Conversation with Lisa"></div>
     <div id="ai-widget-menu" class="ai-menu"></div>
     <form id="leave-msg-form" class="d-none p-2 border-top">
       <input type="text" class="form-control form-control-sm mb-2" id="lm-name" placeholder="Your name" required>
@@ -30,6 +36,7 @@
     </form>
     <form id="ai-widget-form" class="d-flex gap-2 p-2 border-top">
       <input type="text" class="form-control form-control-sm" id="ai-widget-input" placeholder="e.g. a booking site for my salon" autocomplete="off" required>
+      <button type="button" class="ai-input-mic" id="ai-widget-mic" title="Speak your message" aria-label="Speak your message"></button>
       <button type="submit" class="btn btn-brand btn-sm">Send</button>
     </form>
   `;
@@ -45,6 +52,13 @@
   // lands via resolveBotMessage().
 
   const PLACEHOLDERS = new Set(["Typing…", "One sec…"]);
+  // Speaker = Lisa reading a reply aloud (playback). Muted variant = auto
+  // read-aloud turned off.
+  const SPEAKER_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+  const SPEAKER_MUTE_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+  // Mic = visitor dictating their message (speech-to-text input).
   const MIC_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
 
@@ -163,12 +177,13 @@
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ai-speak-btn";
-    btn.title = "Hear this";
-    btn.setAttribute("aria-label", "Hear this message read aloud");
-    btn.innerHTML = MIC_SVG;
+    btn.title = "Read aloud";
+    btn.setAttribute("aria-label", "Read this message aloud");
+    btn.innerHTML = SPEAKER_SVG;
     btn.addEventListener("click", () => speak(text, btn));
     el.appendChild(document.createTextNode(" "));
     el.appendChild(btn);
+    if (autoSpeak) speak(text, btn);
   }
 
   // Turn a placeholder bubble into a finished reply: real text, mic button, chime.
@@ -526,6 +541,76 @@
     }
     btn.disabled = false;
   });
+
+  // ---- auto read-aloud toggle -------------------------------------------------
+  (function initAutoSpeak() {
+    const btn = document.getElementById("ai-widget-autospeak");
+    if (!btn) return;
+    if (!("speechSynthesis" in window)) { btn.style.display = "none"; return; }
+    const render = () => {
+      btn.innerHTML = autoSpeak ? SPEAKER_SVG : SPEAKER_MUTE_SVG;
+      btn.classList.toggle("on", autoSpeak);
+      btn.title = autoSpeak ? "Auto read-aloud: on" : "Auto read-aloud: off";
+      btn.setAttribute("aria-label", btn.title);
+      btn.setAttribute("aria-pressed", autoSpeak ? "true" : "false");
+    };
+    render();
+    btn.addEventListener("click", () => {
+      autoSpeak = !autoSpeak;
+      sessionStorage.setItem("chat_autospeak", autoSpeak ? "1" : "0");
+      render();
+      if (!autoSpeak && window.speechSynthesis) window.speechSynthesis.cancel();
+    });
+  })();
+
+  // ---- voice input (speech-to-text) ------------------------------------------
+  // Lets a visitor dictate their message. Feature-detected: browsers without
+  // the Web Speech recognition API just don't see the mic button.
+  (function initVoiceInput() {
+    const micBtn = document.getElementById("ai-widget-mic");
+    if (!micBtn) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { micBtn.style.display = "none"; return; }
+    micBtn.innerHTML = MIC_SVG;
+    const input = document.getElementById("ai-widget-input");
+    let rec = null;
+    let listening = false;
+
+    const stop = () => {
+      listening = false;
+      micBtn.classList.remove("listening");
+      micBtn.title = "Speak your message";
+      input.focus();
+    };
+
+    micBtn.addEventListener("click", () => {
+      if (listening) { rec && rec.stop(); return; }
+      rec = new SR();
+      // Match the admin-chosen accent so recognition and playback agree.
+      rec.lang = voiceConfig.accent && voiceConfig.accent !== "auto" ? voiceConfig.accent : "en-US";
+      rec.interimResults = true;
+      rec.continuous = false;
+      // Append to whatever's already typed rather than clobbering it.
+      let finalText = input.value ? input.value.trim() + " " : "";
+      rec.onstart = () => {
+        listening = true;
+        micBtn.classList.add("listening");
+        micBtn.title = "Listening… tap to stop";
+      };
+      rec.onresult = (e) => {
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        input.value = (finalText + interim).replace(/\s{2,}/g, " ").trimStart();
+      };
+      rec.onerror = stop;
+      rec.onend = stop;
+      try { rec.start(); } catch (_) { stop(); }
+    });
+  })();
 
   // ---- shell ------------------------------------------------------------------
 

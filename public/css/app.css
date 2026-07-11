@@ -1296,6 +1296,39 @@ pre code.hljs {
 .ai-speak-btn.speaking { color: var(--accent); animation: ai-speak-pulse 1s ease-in-out infinite; }
 @keyframes ai-speak-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
+/* Auto read-aloud toggle in the chat header */
+#ai-widget-autospeak { color: var(--ink-soft); background: none; border: none; line-height: 1; }
+#ai-widget-autospeak:hover,
+#ai-widget-autospeak.on { color: var(--accent); }
+#ai-widget-autospeak svg { width: 16px; height: 16px; }
+
+/* Voice-input mic in the chat composer (speech-to-text) */
+.ai-input-mic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  border: 1.5px solid var(--line);
+  background: var(--card-bg);
+  color: var(--ink-soft);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.ai-input-mic svg { width: 16px; height: 16px; }
+.ai-input-mic:hover { color: var(--accent); border-color: var(--accent); }
+.ai-input-mic.listening {
+  color: #fff;
+  background: #dc3545;
+  border-color: #dc3545;
+  animation: ai-mic-pulse 1s ease-in-out infinite;
+}
+@keyframes ai-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(220, 53, 69, 0); }
+}
+
 /* Live-chat quick-reply menu */
 .ai-menu { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 1rem 0.75rem; }
 .ai-menu:empty { padding: 0; }
