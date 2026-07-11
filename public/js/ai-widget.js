@@ -171,9 +171,10 @@
     synth.speak(u);
   }
 
-  function decorateBotMessage(el, text) {
-    el.textContent = text;
-    if (!("speechSynthesis" in window)) return;
+  // Build the read-aloud speaker button for a finished reply and return it so
+  // the caller can auto-speak. Null when the browser has no speech synthesis.
+  function addSpeakButton(el, text) {
+    if (!("speechSynthesis" in window)) return null;
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ai-speak-btn";
@@ -183,21 +184,74 @@
     btn.addEventListener("click", () => speak(text, btn));
     el.appendChild(document.createTextNode(" "));
     el.appendChild(btn);
-    if (autoSpeak) speak(text, btn);
+    return btn;
   }
 
-  // Turn a placeholder bubble into a finished reply: real text, mic button, chime.
+  // Instant decoration for boot/menu bubbles (no typewriter).
+  function decorateBotMessage(el, text) {
+    el.textContent = text;
+    const btn = addSpeakButton(el, text);
+    if (btn && autoSpeak) speak(text, btn);
+  }
+
+  // Reveal Lisa's reply word-by-word for a natural, "alive" feel. Honors
+  // prefers-reduced-motion and skips very short strings. NOTE: this animates an
+  // already-received reply — it does not change how long the model takes; the
+  // animated typing indicator (see appendMessage) covers that actual wait.
+  function typewriterReveal(el, text, onDone) {
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const tokens = text.split(/(\s+)/); // words + whitespace, preserved
+    if (reduced || tokens.length <= 3) {
+      el.textContent = text;
+      onDone && onDone();
+      return;
+    }
+    const messages = document.getElementById("ai-widget-messages");
+    const stuckToBottom = () => messages.scrollHeight - messages.scrollTop - messages.clientHeight < 40;
+    el.textContent = "";
+    let i = 0;
+    const step = () => {
+      const stick = stuckToBottom();
+      el.textContent += (tokens[i] || "") + (tokens[i + 1] || "");
+      i += 2;
+      if (stick) el.scrollIntoView({ block: "end" });
+      if (i < tokens.length) {
+        setTimeout(step, 26);
+      } else {
+        el.textContent = text; // guarantee exact final text
+        onDone && onDone();
+      }
+    };
+    step();
+  }
+
+  // Turn the placeholder "typing" bubble into the finished reply: chime,
+  // animated reveal, then the speaker button (and auto read-aloud if enabled).
+  // aria-busy holds the screen-reader announcement until the full text lands,
+  // so the live region announces it once rather than token-by-token.
   function resolveBotMessage(el, text) {
-    decorateBotMessage(el, text);
+    el.classList.remove("ai-typing");
     playTone();
-    el.scrollIntoView({ block: "end" });
+    const messages = document.getElementById("ai-widget-messages");
+    messages.setAttribute("aria-busy", "true");
+    typewriterReveal(el, text, () => {
+      const btn = addSpeakButton(el, text);
+      if (btn && autoSpeak) speak(text, btn);
+      messages.setAttribute("aria-busy", "false");
+      el.scrollIntoView({ block: "end" });
+    });
     return el;
   }
 
   function appendMessage(role, text) {
     const el = document.createElement("div");
     el.className = `ai-msg ${role}`;
-    if (role === "bot" && !PLACEHOLDERS.has(text)) {
+    if (role === "bot" && PLACEHOLDERS.has(text)) {
+      // Animated typing indicator while we wait for the model's reply.
+      el.classList.add("ai-typing");
+      el.innerHTML = '<span class="ai-typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>';
+      el.setAttribute("aria-label", "Lisa is typing");
+    } else if (role === "bot") {
       decorateBotMessage(el, text);
       playTone();
     } else {

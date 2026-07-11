@@ -161,18 +161,28 @@ storage/
    (`ai-widget.js`) only loads the first time a visitor clicks the toggle
    button, and the backend falls back to simple keyword matching against
    your published projects if no `GEMINI_API_KEY` is configured. Each of
-   Lisa's replies plays a short chime and carries a mic button that reads
+   Lisa's replies plays a short chime and carries a speaker button that reads
    that message aloud on demand via the browser's Web Speech API (emoji are
    stripped from the spoken copy so the voice reads words only, and the
-   message that's already talking toggles off on a second tap). The voice is
-   admin-configurable from Site Content → Live Chat — gender
-   (female/male/auto), accent (UK/US/auto English), speaking speed, and pitch,
-   with a live "Preview voice" button. The browser owns the actual voices, so
-   these are preferences the widget matches against whatever the visitor's
-   device offers (delivered in `/api/v1/chat/status`, matched with graceful
-   fallback: accent+gender → gender → accent → any English → device default).
-   Both the chime and read-aloud are progressive enhancements — the chat still
-   works without Web Audio / speech support.
+   message that's already talking toggles off on a second tap). A header
+   toggle switches on **auto read-aloud** (session-remembered) so every reply
+   is spoken hands-free, and the composer has a **voice-input mic** that lets
+   visitors dictate their message (Web Speech recognition, accent-matched to
+   the voice setting). The voice is admin-configurable from Site Content →
+   Live Chat — gender (female/male/auto), accent (UK/US/auto English),
+   speaking speed, and pitch, with a live "Preview voice" button. The browser
+   owns the actual voices, so these are preferences the widget matches against
+   whatever the visitor's device offers (delivered in `/api/v1/chat/status`,
+   matched with graceful fallback: accent+gender → gender → accent → any
+   English → device default). Replies land with an animated typing indicator
+   and then reveal word-by-word (a client-side typewriter — it animates an
+   already-received reply and honors `prefers-reduced-motion`; it does not
+   change how long the model takes). The widget is screen-reader aware
+   (`role=dialog`, the message list is an `aria-live` log, and the typewriter
+   sets `aria-busy` so the reply is announced once), and an exit-intent trigger
+   opens it if a visitor moves to leave before it has auto-shown. Every one of
+   these — chime, read-aloud, voice input, typewriter — is a progressive
+   enhancement; the chat still works without Web Audio / speech support.
 5. **Admin panel** (`/admin/*`) is plain static HTML + JS calling the same
    JWT-protected `/api/v1/admin/*` endpoints — projects CRUD, blog CRUD
    (with cover image upload), an inquiries inbox (read/flag/archive) split
@@ -180,6 +190,14 @@ storage/
    transaction log + generate-a-payment-link), tag management, site content
    (editable homepage value hero, pricing, technical archive, production log,
    live demo, and pricing copy), and account settings. Includes contextual SVG tooltips for quick help on forms and cards.
+   The **Chat Leads** page also shows a lead-gen funnel (`/api/v1/admin/chats/stats`):
+   conversations, leads captured, conversion %, and prototype outcomes; and the
+   **dashboard** folds in a last-24h rate-limit / abuse card (top offending
+   IP/endpoint pairs from the `rate_limits` table). A public
+   **`/api/v1/health`** probe reports DB connectivity, webhook-queue backlog,
+   and which AI providers are configured (503 when the DB is unreachable) for
+   external uptime monitoring. The homepage estimator carries a social-proof
+   testimonial by the lead-capture CTA, revealed only when one is configured.
 6. **Technical Archive** (`/archive.html`, `/archive-post.html`) still uses the
    existing blog CRUD resource (`blog_posts` table), category filtering,
    pagination (10/page), reading-time estimates, share buttons, and per-post
