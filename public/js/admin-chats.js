@@ -74,6 +74,30 @@ async function loadChats() {
   applyFilter();
 }
 
+// Lead-gen funnel over the transcripts already stored — supplementary, so a
+// failure here never blocks the conversation list.
+function statTile(label, value, sub) {
+  return `
+    <div class="col-6 col-md-3">
+      <div class="admin-card p-3 h-100">
+        <div class="h4 mb-0">${value}</div>
+        <div class="small text-muted-custom">${label}</div>
+        ${sub ? `<div class="small text-muted-custom">${sub}</div>` : ""}
+      </div>
+    </div>`;
+}
+
+async function loadStats() {
+  try {
+    const s = await api.get("/api/v1/admin/chats/stats");
+    document.getElementById("chat-stats").innerHTML =
+      statTile("Conversations", s.engaged, `${s.total_sessions} sessions · ${s.last_7_days} this week`) +
+      statTile("Leads captured", s.leads, `${s.lead_conversion_pct}% of conversations`) +
+      statTile("Prototype-ready", s.reached_prototype_ready, `${s.prototypes_built} built`) +
+      statTile("Prototype feedback", `${s.prototypes_approved} ✓ / ${s.prototypes_changes} ✎`, "approved / changes");
+  } catch (_) { /* stats are supplementary — ignore */ }
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -81,4 +105,5 @@ async function loadChats() {
 
   document.getElementById("status-filter").addEventListener("change", applyFilter);
   await loadChats();
+  await loadStats();
 })();

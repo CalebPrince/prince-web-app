@@ -7,9 +7,45 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
 use App\Support\Response;
+use App\Support\Settings;
 
 class DashboardController
 {
+    /**
+     * GET /api/v1/health — lightweight public probe for uptime monitoring.
+     * Reports DB connectivity, webhook-queue backlog, and which AI providers
+     * are configured, without leaking any secret values. Returns 503 if the
+     * database is unreachable so an external monitor can alert on it.
+     */
+    public static function health(): void
+    {
+        $dbOk = false;
+        $queuePending = null;
+        try {
+            $pdo = Database::get();
+            $pdo->query('SELECT 1');
+            $dbOk = true;
+            $queuePending = (int) $pdo->query("SELECT COUNT(*) FROM webhook_queue WHERE status = 'pending'")->fetchColumn();
+        } catch (\Throwable $e) {
+            $dbOk = false;
+        }
+
+        $providers = [
+            'gemini' => !empty(Settings::get('gemini_api_key')),
+            'openrouter' => !empty(Settings::get('openrouter_api_key')),
+            'groq' => !empty(Settings::get('groq_api_key')),
+        ];
+
+        Response::json([
+            'status' => $dbOk ? 'ok' : 'degraded',
+            'database' => $dbOk,
+            'webhook_queue_pending' => $queuePending,
+            'ai_providers' => $providers,
+            'ai_available' => in_array(true, $providers, true),
+            'time' => date('c'),
+        ], $dbOk ? 200 : 503);
+    }
+
     /** GET /api/v1/admin/dashboard — stats + recent activity for the overview page */
     public static function overview(): void
     {

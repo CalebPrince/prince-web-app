@@ -343,6 +343,46 @@ class LiveChatController
         Response::json($rows);
     }
 
+    /**
+     * GET /api/v1/admin/chats/stats — lead-gen analytics over chat_sessions.
+     * Turns the transcripts you already store into a funnel: who engaged, how
+     * many became contactable leads, and how far they got toward a prototype.
+     */
+    public static function chatStats(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        $row = $pdo->query(
+            "SELECT
+                COUNT(*) AS total_sessions,
+                COALESCE(SUM(CASE WHEN transcript_json != '[]' THEN 1 ELSE 0 END), 0) AS engaged,
+                COALESCE(SUM(CASE WHEN client_email IS NOT NULL THEN 1 ELSE 0 END), 0) AS leads,
+                COALESCE(SUM(CASE WHEN ready_for_prototype = 1 THEN 1 ELSE 0 END), 0) AS reached_prototype_ready,
+                COALESCE(SUM(CASE WHEN prototype_status = 'generated' THEN 1 ELSE 0 END), 0) AS prototypes_built,
+                COALESCE(SUM(CASE WHEN prototype_status = 'approved' THEN 1 ELSE 0 END), 0) AS prototypes_approved,
+                COALESCE(SUM(CASE WHEN prototype_status = 'changes_requested' THEN 1 ELSE 0 END), 0) AS prototypes_changes,
+                COALESCE(SUM(CASE WHEN created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END), 0) AS last_7_days
+             FROM chat_sessions"
+        )->fetch();
+
+        $engaged = (int) $row['engaged'];
+        $leads = (int) $row['leads'];
+
+        Response::json([
+            'total_sessions' => (int) $row['total_sessions'],
+            'engaged' => $engaged,
+            'leads' => $leads,
+            // Contactable-lead rate among visitors who actually said something.
+            'lead_conversion_pct' => $engaged > 0 ? round($leads / $engaged * 100, 1) : 0.0,
+            'reached_prototype_ready' => (int) $row['reached_prototype_ready'],
+            'prototypes_built' => (int) $row['prototypes_built'],
+            'prototypes_approved' => (int) $row['prototypes_approved'],
+            'prototypes_changes' => (int) $row['prototypes_changes'],
+            'last_7_days' => (int) $row['last_7_days'],
+        ]);
+    }
+
     /** GET /api/v1/admin/ai-test — admin-only Gemini connectivity diagnostic */
     public static function aiTest(): void
     {
