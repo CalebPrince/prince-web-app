@@ -124,13 +124,26 @@
     }
   }
 
+  // Strip emoji (and their modifiers/joiners) before speaking so the voice
+  // reads the words only — otherwise many TTS engines announce emoji names
+  // aloud ("waving hand", "rocket"). The on-screen message keeps its emoji;
+  // only the spoken copy is cleaned.
+  function stripForSpeech(text) {
+    return text
+      .replace(/[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u{FE0F}\u{200D}]/gu, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
+
   function speak(text, btn) {
     const synth = window.speechSynthesis;
     if (!synth || !text) return;
     // Clicking the mic of a message that's already talking stops it.
     if (speakingBtn === btn) { synth.cancel(); return; }
     synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const spoken = stripForSpeech(text);
+    if (!spoken) return; // nothing but emoji — no words to read
+    const u = new SpeechSynthesisUtterance(spoken);
     u.rate = Math.min(2, Math.max(0.5, Number(voiceConfig.rate) || 1));
     u.pitch = Math.min(2, Math.max(0, Number(voiceConfig.pitch) || 1));
     const voice = pickVoice(synth.getVoices(), voiceConfig);
