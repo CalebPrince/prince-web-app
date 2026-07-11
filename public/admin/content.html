@@ -432,10 +432,44 @@
               <label class="form-label">Offline message</label>
               <textarea class="form-control" id="chat_offline_message" rows="3" placeholder="We're offline at the moment…"></textarea>
             </div>
-            <div class="mb-0">
+            <div class="mb-3">
               <label class="form-label">Lisa behavior instructions <span class="text-muted-custom fw-normal">(admin prompt override)</span></label>
               <textarea class="form-control" id="chat_persona" rows="5" placeholder="e.g. For new project inquiries, collect name, email, and phone before scoping because visitors may leave mid-conversation. Keep replies warm and concise."></textarea>
               <div class="form-text">Used inside Lisa's system prompt. Keep business rules here; API keys and integrations stay in Settings.</div>
+            </div>
+
+            <hr class="my-3">
+            <label class="form-label fw-semibold mb-1"><i class="bi bi-mic me-1"></i>Read-aloud voice</label>
+            <div class="form-text mb-3">How Lisa sounds when a visitor taps the mic to hear a reply. The visitor's device supplies the actual voices, so Lisa uses the closest match to these preferences.</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Voice</label>
+                <select class="form-select" id="chat_voice_gender">
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                  <option value="auto">Auto (device default)</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="chat_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label d-flex justify-content-between">Speaking speed <span class="text-muted-custom fw-normal" id="chat_voice_rate_out">1.0×</span></label>
+                <input type="range" class="form-range" id="chat_voice_rate" min="0.7" max="1.3" step="0.05" value="1">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label d-flex justify-content-between">Tone / pitch <span class="text-muted-custom fw-normal" id="chat_voice_pitch_out">1.0</span></label>
+                <input type="range" class="form-range" id="chat_voice_pitch" min="0.6" max="1.4" step="0.05" value="1">
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="chat_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="chat_voice_preview_note"></span>
             </div>
           </div>
         </div>

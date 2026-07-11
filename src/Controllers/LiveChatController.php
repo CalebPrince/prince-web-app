@@ -39,6 +39,17 @@ class LiveChatController
                 ?? "Pick an option below, or describe the website or app you have in mind and I'll help however I can.",
             'offline_message' => Settings::get('chat_offline_message')
                 ?? "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.",
+            // Read-aloud voice for Lisa's replies. The browser supplies the
+            // actual voices (Web Speech API), so these are preferences the
+            // widget matches against whatever the visitor's device offers:
+            // gender (female/male/auto), accent (en-GB/en-US/auto), and the
+            // delivery — rate (speed) and pitch.
+            'voice' => [
+                'gender' => Settings::get('chat_voice_gender') ?: 'female',
+                'accent' => Settings::get('chat_voice_accent') ?: 'en-GB',
+                'rate' => (float) (Settings::get('chat_voice_rate') ?: 1),
+                'pitch' => (float) (Settings::get('chat_voice_pitch') ?: 1),
+            ],
         ]);
     }
 

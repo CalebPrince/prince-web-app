@@ -17,6 +17,7 @@ const CONTENT_FIELDS = [
   "timeline_4_label", "timeline_4_title", "timeline_4_desc",
   "timeline_5_label", "timeline_5_title", "timeline_5_desc",
   "chat_greeting", "chat_intro", "chat_offline_message", "chat_persona",
+  "chat_voice_gender", "chat_voice_accent", "chat_voice_rate", "chat_voice_pitch",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
   "stat_2_value", "stat_2_suffix", "stat_2_label",
   "stat_3_value", "stat_3_suffix", "stat_3_label",
@@ -47,7 +48,10 @@ async function loadContent() {
   const settings = await api.get("/api/v1/admin/settings");
   CONTENT_FIELDS.forEach(key => {
     const el = document.getElementById(key);
-    if (el) el.value = settings[key] || "";
+    // Fall back to the element's own default (matters for the voice <select>
+    // and range inputs, whose HTML defaults are the intended starting values)
+    // when a setting hasn't been saved yet.
+    if (el) el.value = settings[key] || el.value || "";
   });
 }
 
@@ -70,6 +74,69 @@ async function saveContent(e) {
   btn.disabled = false;
 }
 
+// ---- read-aloud voice preview ---------------------------------------------
+// Mirrors the matching logic in ai-widget.js so the admin hears exactly what a
+// visitor's browser would pick for the current gender + accent selection.
+const V_FEMALE_RE = /(female|zira|susan|hazel|linda|samantha|karen|moira|tessa|fiona|serena|catherine|aria|jenny|sonia|libby|amy|joanna|salli|kimberly|google uk english female)/i;
+const V_MALE_RE = /(\bmale\b|david|mark|george|guy|ryan|thomas|daniel|alex|fred|oliver|james|brian|matthew|arthur|google uk english male)/i;
+
+function pickPreviewVoice(voices, gender, accent) {
+  if (!voices.length) return null;
+  const acc = accent && accent !== "auto" ? accent.toLowerCase() : null;
+  const wantRe = gender === "male" ? V_MALE_RE : gender === "female" ? V_FEMALE_RE : null;
+  const notRe = gender === "male" ? V_FEMALE_RE : gender === "female" ? V_MALE_RE : null;
+  const en = voices.filter((v) => /^en/i.test(v.lang));
+  const byAccent = acc ? en.filter((v) => v.lang.toLowerCase().startsWith(acc)) : en;
+  const tiers = [];
+  if (wantRe) {
+    tiers.push(byAccent.filter((v) => wantRe.test(v.name) && !notRe.test(v.name)));
+    tiers.push(byAccent.filter((v) => wantRe.test(v.name)));
+    tiers.push(en.filter((v) => wantRe.test(v.name) && !notRe.test(v.name)));
+    tiers.push(en.filter((v) => wantRe.test(v.name)));
+  }
+  tiers.push(byAccent, en, voices);
+  for (const tier of tiers) if (tier && tier.length) return tier[0];
+  return null;
+}
+
+function wireVoiceControls() {
+  const rate = document.getElementById("chat_voice_rate");
+  const pitch = document.getElementById("chat_voice_pitch");
+  const rateOut = document.getElementById("chat_voice_rate_out");
+  const pitchOut = document.getElementById("chat_voice_pitch_out");
+  const sync = () => {
+    if (rateOut) rateOut.textContent = Number(rate.value).toFixed(2).replace(/0$/, "") + "×";
+    if (pitchOut) pitchOut.textContent = Number(pitch.value).toFixed(2).replace(/0$/, "");
+  };
+  rate && rate.addEventListener("input", sync);
+  pitch && pitch.addEventListener("input", sync);
+  sync();
+
+  if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
+
+  const btn = document.getElementById("chat_voice_preview");
+  const note = document.getElementById("chat_voice_preview_note");
+  btn && btn.addEventListener("click", () => {
+    if (!("speechSynthesis" in window)) {
+      if (note) note.textContent = "This browser can't preview speech.";
+      return;
+    }
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const gender = document.getElementById("chat_voice_gender").value;
+    const accent = document.getElementById("chat_voice_accent").value;
+    const u = new SpeechSynthesisUtterance(
+      "Hi, I'm Lisa, Prince Caleb's virtual assistant. This is how I'll sound to your visitors."
+    );
+    u.rate = Math.min(2, Math.max(0.5, Number(rate.value) || 1));
+    u.pitch = Math.min(2, Math.max(0, Number(pitch.value) || 1));
+    const voice = pickPreviewVoice(synth.getVoices(), gender, accent);
+    if (voice) { u.voice = voice; if (voice.lang) u.lang = voice.lang; }
+    if (note) note.textContent = voice ? `Using: ${voice.name}` : "Using this device's default voice.";
+    synth.speak(u);
+  });
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -77,4 +144,5 @@ async function saveContent(e) {
 
   document.getElementById("content-form").addEventListener("submit", saveContent);
   await loadContent();
+  wireVoiceControls();
 })();

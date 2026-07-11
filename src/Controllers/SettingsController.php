@@ -69,6 +69,7 @@ class SettingsController
         'contact_intro', 'contact_location', 'contact_phone',
         'social_github', 'social_linkedin', 'social_twitter', 'social_whatsapp', 'social_email',
         'chat_greeting', 'chat_intro', 'chat_offline_message',
+        'chat_voice_gender', 'chat_voice_accent', 'chat_voice_rate', 'chat_voice_pitch',
         'stat_1_value', 'stat_1_suffix', 'stat_1_label',
         'stat_2_value', 'stat_2_suffix', 'stat_2_label',
         'stat_3_value', 'stat_3_suffix', 'stat_3_label',

@@ -70,6 +70,48 @@
     } catch (_) { /* audio unsupported or blocked until a user gesture */ }
   }
 
+  // Admin-configured voice (Site Content → Live Chat), delivered by
+  // /api/v1/chat/status. The browser owns the actual voices, so these are
+  // preferences we match against whatever the visitor's device offers.
+  let voiceConfig = { gender: "female", accent: "en-GB", rate: 1, pitch: 1 };
+  const FEMALE_RE = /(female|zira|susan|hazel|linda|samantha|karen|moira|tessa|fiona|serena|catherine|aria|jenny|sonia|libby|amy|joanna|salli|kimberly|google uk english female)/i;
+  const MALE_RE = /(\bmale\b|david|mark|george|guy|ryan|thomas|daniel|alex|fred|oliver|james|brian|matthew|arthur|google uk english male)/i;
+
+  // Some browsers populate voices asynchronously — nudge them to load early so
+  // the first mic click already has the full list to choose from.
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.addEventListener &&
+      window.speechSynthesis.addEventListener("voiceschanged", () => window.speechSynthesis.getVoices());
+  }
+
+  // Pick the closest match to the admin's gender + accent preference, degrading
+  // gracefully: accent+gender → gender (any accent) → accent (any gender) →
+  // any English → whatever exists. Never returns the *opposite* gender while a
+  // same-gender option is still available.
+  function pickVoice(voices, cfg) {
+    if (!voices.length) return null;
+    const accent = cfg.accent && cfg.accent !== "auto" ? cfg.accent.toLowerCase() : null;
+    const wantRe = cfg.gender === "male" ? MALE_RE : cfg.gender === "female" ? FEMALE_RE : null;
+    const notRe = cfg.gender === "male" ? FEMALE_RE : cfg.gender === "female" ? MALE_RE : null;
+
+    const en = voices.filter((v) => /^en/i.test(v.lang));
+    const byAccent = accent ? en.filter((v) => v.lang.toLowerCase().startsWith(accent)) : en;
+
+    const tiers = [];
+    if (wantRe) {
+      tiers.push(byAccent.filter((v) => wantRe.test(v.name) && !notRe.test(v.name)));
+      tiers.push(byAccent.filter((v) => wantRe.test(v.name)));
+      tiers.push(en.filter((v) => wantRe.test(v.name) && !notRe.test(v.name)));
+      tiers.push(en.filter((v) => wantRe.test(v.name)));
+    }
+    tiers.push(byAccent, en, voices);
+    for (const tier of tiers) {
+      if (tier && tier.length) return tier[0];
+    }
+    return null;
+  }
+
   let speakingBtn = null;
   function setSpeaking(btn, on) {
     if (on) {
@@ -89,13 +131,13 @@
     if (speakingBtn === btn) { synth.cancel(); return; }
     synth.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1;
-    u.pitch = 1.1;
-    const voices = synth.getVoices();
-    const preferred =
-      voices.find((v) => /(zira|samantha|susan|linda|female|google uk english female)/i.test(v.name)) ||
-      voices.find((v) => /^en/i.test(v.lang));
-    if (preferred) u.voice = preferred;
+    u.rate = Math.min(2, Math.max(0.5, Number(voiceConfig.rate) || 1));
+    u.pitch = Math.min(2, Math.max(0, Number(voiceConfig.pitch) || 1));
+    const voice = pickVoice(synth.getVoices(), voiceConfig);
+    if (voice) {
+      u.voice = voice;
+      if (voice.lang) u.lang = voice.lang;
+    }
     u.onstart = () => setSpeaking(btn, true);
     u.onend = () => setSpeaking(btn, false);
     u.onerror = () => setSpeaking(btn, false);
@@ -376,6 +418,7 @@
       status = await api.get("/api/v1/chat/status");
     } catch (_) { /* offline defaults */ }
     setStatus(!!status.online);
+    if (status.voice) voiceConfig = Object.assign({}, voiceConfig, status.voice);
 
     // Resume an existing conversation instead of starting over — the
     // session token survives a page refresh or navigating to a different
