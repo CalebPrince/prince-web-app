@@ -35,10 +35,104 @@
   `;
   document.body.appendChild(panel);
 
+  // ---- voice + notification tone ---------------------------------------------
+  //
+  // Whenever Lisa posts a text reply we play a short chime (Web Audio) and hang
+  // a mic button off the message that reads *that exact text* aloud on demand
+  // (Web Speech API). Both are progressive enhancements — if the browser lacks
+  // the API the chat still works, just without sound. Placeholder bubbles
+  // ("Typing…", "One sec…") are skipped; they're decorated once the real reply
+  // lands via resolveBotMessage().
+
+  const PLACEHOLDERS = new Set(["Typing…", "One sec…"]);
+  const MIC_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
+
+  let audioCtx = null;
+  function playTone() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audioCtx = audioCtx || new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(660, now);
+      osc.frequency.setValueAtTime(880, now + 0.09);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.1, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } catch (_) { /* audio unsupported or blocked until a user gesture */ }
+  }
+
+  let speakingBtn = null;
+  function setSpeaking(btn, on) {
+    if (on) {
+      if (speakingBtn && speakingBtn !== btn) speakingBtn.classList.remove("speaking");
+      speakingBtn = btn;
+      btn.classList.add("speaking");
+    } else {
+      btn.classList.remove("speaking");
+      if (speakingBtn === btn) speakingBtn = null;
+    }
+  }
+
+  function speak(text, btn) {
+    const synth = window.speechSynthesis;
+    if (!synth || !text) return;
+    // Clicking the mic of a message that's already talking stops it.
+    if (speakingBtn === btn) { synth.cancel(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1;
+    u.pitch = 1.1;
+    const voices = synth.getVoices();
+    const preferred =
+      voices.find((v) => /(zira|samantha|susan|linda|female|google uk english female)/i.test(v.name)) ||
+      voices.find((v) => /^en/i.test(v.lang));
+    if (preferred) u.voice = preferred;
+    u.onstart = () => setSpeaking(btn, true);
+    u.onend = () => setSpeaking(btn, false);
+    u.onerror = () => setSpeaking(btn, false);
+    synth.speak(u);
+  }
+
+  function decorateBotMessage(el, text) {
+    el.textContent = text;
+    if (!("speechSynthesis" in window)) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "ai-speak-btn";
+    btn.title = "Hear this";
+    btn.setAttribute("aria-label", "Hear this message read aloud");
+    btn.innerHTML = MIC_SVG;
+    btn.addEventListener("click", () => speak(text, btn));
+    el.appendChild(document.createTextNode(" "));
+    el.appendChild(btn);
+  }
+
+  // Turn a placeholder bubble into a finished reply: real text, mic button, chime.
+  function resolveBotMessage(el, text) {
+    decorateBotMessage(el, text);
+    playTone();
+    el.scrollIntoView({ block: "end" });
+    return el;
+  }
+
   function appendMessage(role, text) {
     const el = document.createElement("div");
     el.className = `ai-msg ${role}`;
-    el.textContent = text;
+    if (role === "bot" && !PLACEHOLDERS.has(text)) {
+      decorateBotMessage(el, text);
+      playTone();
+    } else {
+      el.textContent = text;
+    }
     document.getElementById("ai-widget-messages").appendChild(el);
     el.scrollIntoView({ block: "end" });
     return el;
@@ -237,7 +331,7 @@
       const projects = await api.get("/api/v1/projects");
       const top = projects.slice(0, 3);
       if (top.length) {
-        pending.textContent = "A few things I've built recently:";
+        resolveBotMessage(pending, "A few things I've built recently:");
         top.forEach((p) => {
           const link = document.createElement("a");
           link.href = `/project.html?slug=${encodeURIComponent(p.slug)}`;
@@ -246,10 +340,10 @@
           document.getElementById("ai-widget-messages").appendChild(link);
         });
       } else {
-        pending.textContent = "Take a look at the full portfolio — new work gets added regularly.";
+        resolveBotMessage(pending, "Take a look at the full portfolio — new work gets added regularly.");
       }
     } catch (_) {
-      pending.textContent = "Couldn't load the portfolio right now — take a look at the full page instead.";
+      resolveBotMessage(pending, "Couldn't load the portfolio right now — take a look at the full page instead.");
     }
     renderButtonRow([
       { label: "📄 See all projects →", onClick: () => { window.location.href = "/projects.html"; } },
@@ -329,11 +423,11 @@
       const res = await api.post("/api/v1/chat/message", { message: text, token: sessionToken }, { timeoutMs: 98000 });
       sessionToken = res.token;
       sessionStorage.setItem("chat_token", sessionToken);
-      pending.textContent = res.reply;
+      resolveBotMessage(pending, res.reply);
       // Temporary debug aid — remove once the OpenRouter fallback is confirmed working in production.
       console.log(`[chat debug] mode=${res.mode} provider=${res.provider || "keyword fallback"}`);
     } catch (err) {
-      pending.textContent = err.message || "Sorry, something went wrong. Please leave a message below instead.";
+      resolveBotMessage(pending, err.message || "Sorry, something went wrong. Please leave a message below instead.");
       showMessageForm();
     }
   }

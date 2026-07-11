@@ -1274,6 +1274,28 @@ pre code.hljs {
   padding-left: 0.75rem;
 }
 
+/* Mic button that reads a bot reply aloud (Web Speech API) */
+.ai-speak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin-left: 0.15rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.ai-speak-btn svg { width: 14px; height: 14px; }
+.ai-speak-btn:hover { color: var(--accent); background: var(--line); }
+.ai-speak-btn.speaking { color: var(--accent); animation: ai-speak-pulse 1s ease-in-out infinite; }
+@keyframes ai-speak-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
 /* Live-chat quick-reply menu */
 .ai-menu { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0 1rem 0.75rem; }
 .ai-menu:empty { padding: 0; }
