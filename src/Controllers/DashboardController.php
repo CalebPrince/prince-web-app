@@ -97,6 +97,28 @@ class DashboardController
              FROM payments ORDER BY created_at DESC LIMIT 5'
         )->fetchAll();
 
+        // Abuse signal: the rate_limits table already buckets requests per
+        // IP/endpoint/hour. Surface the last 24h so spikes and repeat
+        // offenders are visible without digging into the DB. Wrapped in a
+        // try/catch so a missing table on an older schema can't break the
+        // whole dashboard.
+        $rateLimit = ['window_hits' => 0, 'distinct_ips' => 0, 'top' => []];
+        try {
+            $rl = $pdo->query(
+                "SELECT COALESCE(SUM(request_count), 0) AS hits, COUNT(DISTINCT ip_address) AS ips
+                 FROM rate_limits WHERE window_start >= datetime('now', '-24 hours')"
+            )->fetch();
+            $rateLimit['window_hits'] = (int) ($rl['hits'] ?? 0);
+            $rateLimit['distinct_ips'] = (int) ($rl['ips'] ?? 0);
+            $rateLimit['top'] = $pdo->query(
+                "SELECT ip_address, endpoint, SUM(request_count) AS hits
+                 FROM rate_limits WHERE window_start >= datetime('now', '-24 hours')
+                 GROUP BY ip_address, endpoint ORDER BY hits DESC LIMIT 5"
+            )->fetchAll();
+        } catch (\Throwable $e) {
+            // older schema without rate_limits — leave the zeroed defaults
+        }
+
         Response::json([
             'projects' => [
                 'total' => (int) $projects['total'],
@@ -111,6 +133,7 @@ class DashboardController
             'tags_in_use' => $tagsInUse,
             'webhooks_pending' => $webhooksPending,
             'new_chat_feedback' => $newChatFeedback,
+            'rate_limit' => $rateLimit,
             'payments' => [
                 'revenue_by_currency' => array_map(
                     fn($r) => ['currency' => $r['currency'], 'total' => (int) $r['total']],

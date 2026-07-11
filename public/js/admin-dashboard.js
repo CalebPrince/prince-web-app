@@ -95,6 +95,24 @@ function renderUpcomingAppointments(appointments) {
   `).join("");
 }
 
+function renderRateLimits(rl) {
+  rl = rl || { window_hits: 0, distinct_ips: 0, top: [] };
+  const top = rl.top || [];
+  document.getElementById("rate-limit-summary").textContent =
+    `${rl.window_hits} request(s) across ${rl.distinct_ips} IP(s)`;
+  document.getElementById("rate-limit-empty").classList.toggle("d-none", top.length > 0);
+
+  document.getElementById("rate-limit-top").innerHTML = top.map(r => `
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+      <div class="me-3 text-truncate">
+        <strong>${escapeHtml(r.ip_address)}</strong>
+        <span class="text-muted-custom small ms-2">${escapeHtml(r.endpoint)}</span>
+      </div>
+      <span class="status-pill ${r.hits >= 20 ? "flagged" : "read"} flex-shrink-0">${r.hits} hits</span>
+    </div>
+  `).join("");
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -109,4 +127,5 @@ function renderUpcomingAppointments(appointments) {
   renderDraftProjects(data.draft_projects);
   renderUpcomingAppointments(data.upcoming_appointments);
   renderRecentPayments(data.recent_payments);
+  renderRateLimits(data.rate_limit);
 })();
