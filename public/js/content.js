@@ -18,6 +18,14 @@
     }
   });
 
+  // Social-proof block by the estimator CTA: only reveal it once a real
+  // testimonial has been bound above, so an unconfigured site shows nothing
+  // rather than a lone opening quote mark.
+  const plannerSocial = document.getElementById("planner-social");
+  if (plannerSocial && content.testimonial_1_quote) {
+    plannerSocial.classList.remove("d-none");
+  }
+
   // Links whose href must stay in sync with the displayed value (phone/email)
   document.querySelectorAll("[data-content-href]").forEach(el => {
     const value = content[el.dataset.contentHref];

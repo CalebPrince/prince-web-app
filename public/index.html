@@ -239,6 +239,18 @@
               <div class="col-12"><p class="small mb-0 d-none" id="lead-status"></p></div>
             </form>
           </div>
+
+          <!-- Social proof beside the estimate CTA — revealed by content.js only
+               when a testimonial is configured, so it never shows an empty quote. -->
+          <div class="planner-social mt-4 d-none" id="planner-social">
+            <div class="d-flex align-items-start gap-2">
+              <span aria-hidden="true" style="font-size:1.75rem;line-height:0.8;color:var(--accent);">&ldquo;</span>
+              <div>
+                <p class="mb-1 small fst-italic" data-content="testimonial_1_quote"></p>
+                <p class="mb-0 small text-muted-custom">&mdash; <strong data-content="testimonial_1_name"></strong><span data-content="testimonial_1_role" class="ms-1"></span></p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="col-lg-5 d-flex align-items-stretch">
