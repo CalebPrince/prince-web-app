@@ -55,7 +55,8 @@
       <div class="utility-tray" id="utility-tray">
         <button type="button" class="theme-toggle" aria-label="Toggle dark mode"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
         <a href="/search.html" class="nav-search-btn" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
-        <a href="/admin/login.html" class="nav-login-btn" aria-label="Admin login"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></a>
+        <a href="/client/login.html" class="nav-login-btn" aria-label="Client portal login" title="Client portal"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <a href="/admin/login.html" class="nav-login-btn" aria-label="Admin login" title="Admin login"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></a>
       </div>
     </div>
     <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
@@ -103,6 +104,15 @@
       <a href="/projects.html" class="btn-brand-outline">View my work</a>
       <a href="/testimonials.html" id="hero-rating" class="rating-pill d-none"></a>
     </div>
+    <div class="hero-proof-line d-flex flex-wrap align-items-center gap-2 gap-sm-3 mt-3 small text-muted-custom hero-animate hero-animate-4">
+      <span><strong style="color: var(--ink);">11+</strong> yrs building software</span>
+      <span aria-hidden="true">&middot;</span>
+      <span><strong style="color: var(--ink);">30+</strong> projects shipped</span>
+      <span aria-hidden="true">&middot;</span>
+      <span><strong style="color: var(--ink);">98%</strong> client satisfaction</span>
+      <span aria-hidden="true">&middot;</span>
+      <a href="#" class="text-decoration-none" onclick="document.getElementById('ai-widget-toggle')?.click(); return false;">&#128172; Ask the live AI assistant</a>
+    </div>
     <div class="hero-side-stack hero-animate hero-animate-4">
       <aside class="hero-value-panel" aria-label="Direct positioning">
         <span class="eyebrow d-block mb-3" data-content="hero_value_eyebrow">Direct positioning</span>
@@ -135,7 +145,7 @@
     <div class="row g-4">
       <div class="col-6 col-md-3">
         <div class="stat-item reveal">
-          <div class="stat-value" data-count-to="5" data-count-suffix="+">0</div>
+          <div class="stat-value" data-count-to="10" data-count-suffix="+">0</div>
           <div class="stat-label">Years building software</div>
         </div>
       </div>
