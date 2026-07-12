@@ -1782,18 +1782,33 @@ class LiveChatController
         )));
         $text = trim($context . "\nuser: " . $message);
 
-        // Intent must come from what the VISITOR said, not the transcript as a
-        // whole — the generic fallback reply itself suggests "book a call", and
-        // scanning assistant turns too would make that suggestion self-fulfilling:
-        // any unrelated next message (e.g. a prototype question) would look like
-        // booking intent just because Lisa's own prior reply mentioned "call".
-        $userContext = trim(implode("\n", array_map(
-            fn($turn) => $turn['text'] ?? '',
-            array_filter(array_slice($transcript, -8), fn($turn) => ($turn['role'] ?? '') === 'user')
-        )));
-        $intentText = trim($userContext . "\n" . $message);
+        // Bare topic words like "book"/"booking"/"call"/"schedule" are common in
+        // completely unrelated messages — e.g. "I need a booking application for
+        // my business" (a project description) or a stray mention of "call" in
+        // an earlier turn. Require an actual scheduling phrase in the CURRENT
+        // message, or that we're already mid booking-flow (the last thing Lisa
+        // asked was one of this function's own date/time/name/email questions)
+        // so a bare "tomorrow" or "3pm" reply still continues it correctly.
+        $lastAssistantText = '';
+        for ($i = count($transcript) - 1; $i >= 0; $i--) {
+            if (($transcript[$i]['role'] ?? '') === 'assistant') {
+                $lastAssistantText = $transcript[$i]['text'] ?? '';
+                break;
+            }
+        }
+        $inBookingFlow = (bool) preg_match(
+            '/what (date|time|name|email)|should i book|not open on|available times include|any open slots/i',
+            $lastAssistantText
+        );
 
-        $hasBookingIntent = preg_match('/\b(book|booking|call|appointment|schedule|meet|meeting)\b/i', $intentText)
+        $bookingPhrase = '/\bbook(?:ing)?\s+(?:a|an|the)?\s*(?:call|appointment|meeting|slot|time)\b'
+            . '|\bschedule\s+(?:a|an|the)?\s*(?:call|appointment|meeting|time)\b'
+            . '|\bset up\s+(?:a|an)?\s*call\b|\b(?:hop|jump|get)\s+on\s+a\s+call\b'
+            . '|\b(?:talk|speak)\s+(?:to|with)\s+(?:prince|caleb|you)\b'
+            . '|\bgive\s+(?:me|us)\s+a\s+call\b|\bcall me\b|\bbook it\b/i';
+
+        $hasBookingIntent = $inBookingFlow
+            || preg_match($bookingPhrase, $message)
             || preg_match('/\b(go ahead|confirm|yes|please do|lock it in|book it|that works)\b/i', $message);
         if (!$hasBookingIntent) {
             return null;
