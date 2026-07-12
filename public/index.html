@@ -105,7 +105,7 @@
       <a href="/testimonials.html" id="hero-rating" class="rating-pill d-none"></a>
     </div>
     <div class="hero-proof-line d-flex flex-wrap align-items-center gap-2 gap-sm-3 mt-3 small text-muted-custom hero-animate hero-animate-4">
-      <span><strong style="color: var(--ink);">11+</strong> yrs building software</span>
+      <span><strong id="hero-years-value" style="color: var(--ink);">12+</strong> yrs building software</span>
       <span aria-hidden="true">&middot;</span>
       <span><strong style="color: var(--ink);">30+</strong> projects shipped</span>
       <span aria-hidden="true">&middot;</span>
@@ -145,7 +145,7 @@
     <div class="row g-4">
       <div class="col-6 col-md-3">
         <div class="stat-item reveal">
-          <div class="stat-value" data-count-to="10" data-count-suffix="+">0</div>
+          <div class="stat-value" id="stat-years-count" data-count-to="12" data-count-suffix="+">0</div>
           <div class="stat-label">Years building software</div>
         </div>
       </div>
@@ -611,5 +611,24 @@
 <script src="/js/ai-boot.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
+<script>
+// Keeps the hero proof-line "years" figure in sync with the metric-strip
+// counter, so it never has to be hand-edited in two places again. Reads the
+// value once on load, then watches for any future change to data-count-to
+// (in case the backend/CMS updates it dynamically after page load).
+(function () {
+  var src = document.getElementById('stat-years-count');
+  var dest = document.getElementById('hero-years-value');
+  if (!src || !dest) return;
+  function sync() {
+    var val = src.getAttribute('data-count-to');
+    var prefix = src.getAttribute('data-count-prefix') || '';
+    var suffix = src.getAttribute('data-count-suffix') || '';
+    if (val) dest.textContent = prefix + val + suffix;
+  }
+  sync();
+  new MutationObserver(sync).observe(src, { attributes: true, attributeFilter: ['data-count-to'] });
+})();
+</script>
 </body>
 </html>
