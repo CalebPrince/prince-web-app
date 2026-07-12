@@ -680,7 +680,10 @@ class LiveChatController
             . "specific features they care about, not just a one-line pitch), you may also call "
             . "mark_ready_for_prototype to offer them a quick prototype preview. This is optional, not "
             . "required for every inquiry — never mention the \"Build my prototype\" button yourself, whether "
-            . "it's shown is handled separately.\n\n"
+            . "it's shown is handled separately. A prototype request is NOT a booking request: calling "
+            . "mark_ready_for_prototype is the complete action — never follow it (or any other prototype/mockup/demo "
+            . "question) by asking for a booking date or time; only ask about scheduling a call when the visitor "
+            . "actually asks to talk it through live or book a call.\n\n"
             . "You have tools available:\n"
             . "- get_site_info: for general questions about Prince's background, services, tech stack, "
             . "experience, location, contact/social links, and the public engineering tiers (starting "
@@ -1766,7 +1769,7 @@ class LiveChatController
     private static function shouldSearchProjectFallback(string $message): bool
     {
         return (bool) preg_match(
-            '/\b(portfolio|case study|case studies|example|similar|built|build|website|web app|mobile app|app|project|ecommerce|cms|dashboard|booking system|quote|pricing|price|cost|service|services)\b/i',
+            '/\b(portfolio|case study|case studies|example|similar|built|build|website|web app|mobile app|app|project|ecommerce|cms|dashboard|booking system|quote|pricing|price|cost|service|services|prototype|mockup|mock-up|demo|mvp)\b/i',
             $message
         );
     }
@@ -1779,7 +1782,18 @@ class LiveChatController
         )));
         $text = trim($context . "\nuser: " . $message);
 
-        $hasBookingIntent = preg_match('/\b(book|booking|call|appointment|schedule|meet|meeting)\b/i', $text)
+        // Intent must come from what the VISITOR said, not the transcript as a
+        // whole — the generic fallback reply itself suggests "book a call", and
+        // scanning assistant turns too would make that suggestion self-fulfilling:
+        // any unrelated next message (e.g. a prototype question) would look like
+        // booking intent just because Lisa's own prior reply mentioned "call".
+        $userContext = trim(implode("\n", array_map(
+            fn($turn) => $turn['text'] ?? '',
+            array_filter(array_slice($transcript, -8), fn($turn) => ($turn['role'] ?? '') === 'user')
+        )));
+        $intentText = trim($userContext . "\n" . $message);
+
+        $hasBookingIntent = preg_match('/\b(book|booking|call|appointment|schedule|meet|meeting)\b/i', $intentText)
             || preg_match('/\b(go ahead|confirm|yes|please do|lock it in|book it|that works)\b/i', $message);
         if (!$hasBookingIntent) {
             return null;
