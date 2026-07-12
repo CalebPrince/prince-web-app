@@ -64,6 +64,40 @@ async function loadContent() {
   document.getElementById("hours-start").value = settings.chat_hours_start || "";
   document.getElementById("hours-end").value = settings.chat_hours_end || "";
   document.getElementById("hours-timezone").value = settings.chat_timezone || "";
+
+  await renderChatLiveStatus(settings);
+}
+
+// Show whether Live Chat is online *right now* and, when it's not, the actual
+// reason — the #1 gotcha is that the chat stays offline until an AI provider
+// key is set, regardless of the schedule. The authoritative online flag comes
+// from the public /chat/status endpoint; the settings we already loaded tell us
+// why it's off (no key vs. outside scheduled hours).
+async function renderChatLiveStatus(settings) {
+  const el = document.getElementById("chat-live-status");
+  if (!el) return;
+  const hasKey = !!(settings.gemini_api_key || settings.openrouter_api_key || settings.groq_api_key);
+
+  let online = false;
+  try { online = !!(await api.get("/api/v1/chat/status")).online; } catch (_) { /* treat as offline */ }
+
+  el.classList.remove("d-none", "alert-success", "alert-warning");
+  if (online) {
+    el.classList.add("alert-success");
+    el.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Live Chat is <strong>online</strong> right now — visitors can chat.';
+    return;
+  }
+
+  let reason;
+  if (!hasKey) {
+    reason = 'no AI provider key is set — add a Gemini, OpenRouter, or Groq key under <a href="/admin/settings.html">Settings → API keys</a>.';
+  } else if (settings.chat_hours_enabled) {
+    reason = "the current day/time is outside the scheduled hours set below.";
+  } else {
+    reason = "the assistant is currently unavailable.";
+  }
+  el.classList.add("alert-warning");
+  el.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Live Chat is <strong>offline</strong> right now — ' + reason;
 }
 
 async function saveContent(e) {
