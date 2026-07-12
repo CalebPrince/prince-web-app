@@ -191,6 +191,23 @@ function wireVoiceControls() {
   });
 }
 
+// Grey out the day/time controls when the "Restrict to specific hours" master
+// toggle is off — otherwise it looks like unticking a day takes the chat
+// offline, when in fact the day/time settings only apply once restriction is on.
+function syncHoursEnabledState() {
+  const enabled = document.getElementById("hours-enabled").checked;
+  document.querySelectorAll(".hours-day, #hours-start, #hours-end, #hours-timezone")
+    .forEach(el => { el.disabled = !enabled; });
+  const note = document.getElementById("hours-disabled-note");
+  if (note) note.classList.toggle("d-none", enabled);
+}
+
+function wireHoursControls() {
+  const toggle = document.getElementById("hours-enabled");
+  if (toggle) toggle.addEventListener("change", syncHoursEnabledState);
+  syncHoursEnabledState();
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -199,4 +216,5 @@ function wireVoiceControls() {
   document.getElementById("content-form").addEventListener("submit", saveContent);
   await loadContent();
   wireVoiceControls();
+  wireHoursControls();
 })();

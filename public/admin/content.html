@@ -481,10 +481,11 @@
             <label class="form-label fw-semibold mb-1"><i class="bi bi-clock me-1"></i>Availability (online hours)</label>
             <div class="form-text mb-3">Control the days and hours Live Chat shows as online. Outside these hours — or when this is off — visitors see the offline message above and the leave-a-message form instead. An AI provider key must also be set under Settings for the chat to come online.</div>
             <div id="chat-live-status" class="alert py-2 px-3 small mb-3 d-none" role="status"></div>
-            <div class="form-check mb-3">
+            <div class="form-check mb-1">
               <input type="checkbox" class="form-check-input" id="hours-enabled">
               <label class="form-check-label" for="hours-enabled">Restrict Live Chat to specific hours</label>
             </div>
+            <div id="hours-disabled-note" class="form-text fst-italic mb-3 d-none">Restriction is off, so the days and times below are ignored — Live Chat is online every day (whenever a provider key is set). Tick this to limit it to specific days and hours.</div>
             <div class="mb-3">
               <label class="form-label d-block">Days online</label>
               <div class="d-flex flex-wrap gap-3">
