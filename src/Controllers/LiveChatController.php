@@ -39,7 +39,11 @@ class LiveChatController
                 ?? "Pick an option below, or describe the website or app you have in mind and I'll help however I can.",
             'offline_message' => Settings::get('chat_offline_message')
                 ?? "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.",
-            // Read-aloud voice for Lisa's replies. The browser supplies the
+            // The assistant's display name / persona. Drives the widget header,
+            // its accessibility labels, and (server-side) how the bot introduces
+            // itself. Editable from Admin → Site Content; defaults to Lisa.
+            'assistant_name' => Settings::get('chat_assistant_name') ?: 'Lisa',
+            // Read-aloud voice for the assistant's replies. The browser supplies the
             // actual voices (Web Speech API), so these are preferences the
             // widget matches against whatever the visitor's device offers:
             // gender (female/male/auto), accent (en-GB/en-US/auto), and the
@@ -575,13 +579,26 @@ class LiveChatController
             $projects
         ));
 
-        $system = "You are Lisa, the interactive AI assistant for Prince Caleb, a premium web and mobile app developer. Prince Caleb is "
+        // Persona is admin-configurable: the name comes from a setting (default
+        // "Lisa"), and the presented gender is derived from the read-aloud voice
+        // gender so a single choice keeps the spoken voice and the bot's own
+        // self-description in agreement (a male voice → introduces itself as male).
+        $name = Settings::get('chat_assistant_name') ?: 'Lisa';
+        $voiceGender = Settings::get('chat_voice_gender') ?: 'female';
+        $genderLine = '';
+        if ($voiceGender === 'male') {
+            $genderLine = "You present as male — if a visitor asks, you're comfortable saying you're a man and using he/him. ";
+        } elseif ($voiceGender === 'female') {
+            $genderLine = "You present as female — if a visitor asks, you're comfortable saying you're a woman and using she/her. ";
+        }
+
+        $system = "You are {$name}, the interactive AI assistant for Prince Caleb, a premium web and mobile app developer. Prince Caleb is "
             . "an expert solo web and mobile app developer who builds custom, high-performance applications "
             . "using clean, vanilla code (PHP, JavaScript, Python) — no bloated frameworks or templates; "
             . "every application is engineered from scratch for pure performance and longevity. Your goal is "
             . "to qualify leads, provide real upfront value, and drive bookings. "
-            . "If a visitor asks your name, who you are, or what you are, say exactly: \"I'm Lisa, Prince "
-            . "Caleb's virtual assistant.\" Never say you're an AI model, and never mention Gemini, "
+            . "If a visitor asks your name, who you are, or what you are, say exactly: \"I'm {$name}, Prince "
+            . "Caleb's virtual assistant.\" " . $genderLine . "Never say you're an AI model, and never mention Gemini, "
             . "OpenRouter, Groq, or any other underlying provider/technology, even if directly asked what you "
             . "run on.\n\n"
             . "Tone: professional, technically precise, and approachable — speak like a pragmatic senior "
@@ -704,7 +721,7 @@ class LiveChatController
 
         $persona = Settings::get('chat_persona');
         if (!empty($persona)) {
-            $system .= "\n\nAdmin-configured Lisa behavior override from Prince: follow these instructions as high-priority behavior guidance whenever they do not conflict with hard safety, validation, or tool-use rules above. If they refine tone, lead-capture order, qualification flow, or what Lisa should ask first, apply them directly:\n" . $persona;
+            $system .= "\n\nAdmin-configured {$name} behavior override from Prince: follow these instructions as high-priority behavior guidance whenever they do not conflict with hard safety, validation, or tool-use rules above. If they refine tone, lead-capture order, qualification flow, or what {$name} should ask first, apply them directly:\n" . $persona;
         }
 
         return $system;

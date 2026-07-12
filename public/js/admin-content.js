@@ -16,6 +16,7 @@ const CONTENT_FIELDS = [
   "timeline_3_label", "timeline_3_title", "timeline_3_desc",
   "timeline_4_label", "timeline_4_title", "timeline_4_desc",
   "timeline_5_label", "timeline_5_title", "timeline_5_desc",
+  "chat_assistant_name",
   "chat_greeting", "chat_intro", "chat_offline_message", "chat_persona",
   "chat_voice_gender", "chat_voice_accent", "chat_voice_rate", "chat_voice_pitch",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
@@ -125,8 +126,10 @@ function wireVoiceControls() {
     synth.cancel();
     const gender = document.getElementById("chat_voice_gender").value;
     const accent = document.getElementById("chat_voice_accent").value;
+    const nameEl = document.getElementById("chat_assistant_name");
+    const assistantName = (nameEl && nameEl.value.trim()) || "Lisa";
     const u = new SpeechSynthesisUtterance(
-      "Hi, I'm Lisa, Prince Caleb's virtual assistant. This is how I'll sound to your visitors."
+      `Hi, I'm ${assistantName}, Prince Caleb's virtual assistant. This is how I'll sound to your visitors.`
     );
     u.rate = Math.min(2, Math.max(0.5, Number(rate.value) || 1));
     u.pitch = Math.min(2, Math.max(0, Number(pitch.value) || 1));

@@ -421,6 +421,11 @@
           <div class="admin-card p-4">
             <h5 class="mb-3"><i class="bi bi-chat-dots me-2" style="color: var(--section-content);"></i>Live Chat</h5>
             <div class="mb-3">
+              <label class="form-label">Assistant name <span class="text-muted-custom fw-normal">(persona)</span></label>
+              <input type="text" class="form-control" id="chat_assistant_name" placeholder="Lisa" maxlength="40">
+              <div class="form-text">Shown in the chat header and used when the assistant introduces itself (“I'm David, Prince Caleb's virtual assistant”). Its gender follows the read-aloud voice below, so pick a Male voice for a male persona.</div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Greeting <span class="text-muted-custom fw-normal">(first bubble)</span></label>
               <input type="text" class="form-control" id="chat_greeting" placeholder="Hi there! 👋 Welcome.">
             </div>
@@ -433,14 +438,14 @@
               <textarea class="form-control" id="chat_offline_message" rows="3" placeholder="We're offline at the moment…"></textarea>
             </div>
             <div class="mb-3">
-              <label class="form-label">Lisa behavior instructions <span class="text-muted-custom fw-normal">(admin prompt override)</span></label>
+              <label class="form-label">Assistant behavior instructions <span class="text-muted-custom fw-normal">(admin prompt override)</span></label>
               <textarea class="form-control" id="chat_persona" rows="5" placeholder="e.g. For new project inquiries, collect name, email, and phone before scoping because visitors may leave mid-conversation. Keep replies warm and concise."></textarea>
-              <div class="form-text">Used inside Lisa's system prompt. Keep business rules here; API keys and integrations stay in Settings.</div>
+              <div class="form-text">Used inside the assistant's system prompt. Keep business rules here; API keys and integrations stay in Settings.</div>
             </div>
 
             <hr class="my-3">
             <label class="form-label fw-semibold mb-1"><i class="bi bi-mic me-1"></i>Read-aloud voice</label>
-            <div class="form-text mb-3">How Lisa sounds when a visitor taps the mic to hear a reply. The visitor's device supplies the actual voices, so Lisa uses the closest match to these preferences.</div>
+            <div class="form-text mb-3">How the assistant sounds when a visitor taps the mic to hear a reply, and which gender it presents as. The visitor's device supplies the actual voices, so the assistant uses the closest match to these preferences.</div>
             <div class="row g-3">
               <div class="col-sm-6">
                 <label class="form-label">Voice</label>

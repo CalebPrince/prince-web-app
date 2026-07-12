@@ -160,8 +160,15 @@ storage/
 4. **AI assistant** is fully optional infrastructure: its JS
    (`ai-widget.js`) only loads the first time a visitor clicks the toggle
    button, and the backend falls back to simple keyword matching against
-   your published projects if no `GEMINI_API_KEY` is configured. Each of
-   Lisa's replies plays a short chime and carries a speaker button that reads
+   your published projects if no `GEMINI_API_KEY` is configured. The
+   assistant's **name and persona are admin-configurable** from Site Content →
+   Live Chat (defaults to *Lisa*): the name drives the widget header, its
+   accessibility labels, and how the bot introduces itself when a visitor asks
+   who they're speaking to (all served from `/api/v1/chat/status` and baked
+   into the server-side system prompt), and the presented gender is derived
+   from the read-aloud voice gender below — so choosing a male name + male
+   voice makes the whole persona male in one step, no redeploy. Each of the
+   assistant's replies plays a short chime and carries a speaker button that reads
    that message aloud on demand via the browser's Web Speech API (emoji are
    stripped from the spoken copy so the voice reads words only, and the
    message that's already talking toggles off on a second tap). A header

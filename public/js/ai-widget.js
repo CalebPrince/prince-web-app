@@ -88,6 +88,10 @@
   // /api/v1/chat/status. The browser owns the actual voices, so these are
   // preferences we match against whatever the visitor's device offers.
   let voiceConfig = { gender: "female", accent: "en-GB", rate: 1, pitch: 1 };
+  // Admin-configured assistant name/persona, also from /api/v1/chat/status.
+  // Drives the header title and the "…is typing" accessibility label so the
+  // widget matches whatever name the bot introduces itself with server-side.
+  let assistantName = "Lisa";
   const FEMALE_RE = /(female|zira|susan|hazel|linda|samantha|karen|moira|tessa|fiona|serena|catherine|aria|jenny|sonia|libby|amy|joanna|salli|kimberly|google uk english female)/i;
   const MALE_RE = /(\bmale\b|david|mark|george|guy|ryan|thomas|daniel|alex|fred|oliver|james|brian|matthew|arthur|google uk english male)/i;
 
@@ -250,7 +254,7 @@
       // Animated typing indicator while we wait for the model's reply.
       el.classList.add("ai-typing");
       el.innerHTML = '<span class="ai-typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>';
-      el.setAttribute("aria-label", "Lisa is typing");
+      el.setAttribute("aria-label", `${assistantName} is typing`);
     } else if (role === "bot") {
       decorateBotMessage(el, text);
       playTone();
@@ -501,6 +505,14 @@
     } catch (_) { /* offline defaults */ }
     setStatus(!!status.online);
     if (status.voice) voiceConfig = Object.assign({}, voiceConfig, status.voice);
+    if (status.assistant_name) {
+      assistantName = status.assistant_name;
+      const titleEl = panel.querySelector(".chat-title");
+      if (titleEl) titleEl.textContent = assistantName;
+      const log = document.getElementById("ai-widget-messages");
+      if (log) log.setAttribute("aria-label", `Conversation with ${assistantName}`);
+      panel.setAttribute("aria-label", `Live chat with ${assistantName}`);
+    }
 
     // Resume an existing conversation instead of starting over — the
     // session token survives a page refresh or navigating to a different
