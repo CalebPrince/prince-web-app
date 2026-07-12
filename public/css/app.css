@@ -2339,7 +2339,10 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
 
 @media (max-width: 575.98px) {
   .hero { padding: 5.5rem 0 4rem; }
-  .display-1 { font-size: clamp(3rem, 17vw, 4.3rem); }
+  /* Keep the hero heading fluid so long single words (e.g. "Engineering",
+     "applications") never exceed narrow viewports and get clipped. */
+  .display-1 { font-size: clamp(2.25rem, 11vw, 3.25rem); }
+  .agency-hero h1 { overflow-wrap: break-word; hyphens: auto; }
   .detail-title {
     font-size: clamp(2.25rem, 11vw, 3rem);
     line-height: 1.08;
