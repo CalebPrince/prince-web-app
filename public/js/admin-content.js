@@ -54,6 +54,16 @@ async function loadContent() {
     // when a setting hasn't been saved yet.
     if (el) el.value = settings[key] || el.value || "";
   });
+
+  // Live Chat availability (schedule) — not simple value fields, so handled
+  // separately from CONTENT_FIELDS. These are admin-only Settings keys, saved
+  // through the same /admin/settings endpoint as the rest of this form.
+  document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
+  const hoursDays = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);
+  document.querySelectorAll(".hours-day").forEach(el => { el.checked = hoursDays.includes(el.value); });
+  document.getElementById("hours-start").value = settings.chat_hours_start || "";
+  document.getElementById("hours-end").value = settings.chat_hours_end || "";
+  document.getElementById("hours-timezone").value = settings.chat_timezone || "";
 }
 
 async function saveContent(e) {
@@ -63,6 +73,13 @@ async function saveContent(e) {
     const el = document.getElementById(key);
     if (el) payload[key] = el.value.trim();
   });
+
+  // Live Chat availability (schedule) — folded into the same save.
+  payload.chat_hours_enabled = document.getElementById("hours-enabled").checked ? "1" : "";
+  payload.chat_hours_days = [...document.querySelectorAll(".hours-day:checked")].map(el => el.value).join(",");
+  payload.chat_hours_start = document.getElementById("hours-start").value;
+  payload.chat_hours_end = document.getElementById("hours-end").value;
+  payload.chat_timezone = document.getElementById("hours-timezone").value.trim();
 
   const btn = document.getElementById("save-all-btn");
   btn.disabled = true;

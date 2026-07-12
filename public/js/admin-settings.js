@@ -135,23 +135,6 @@ async function saveIntegrations(e) {
   }
 }
 
-async function saveHours(e) {
-  e.preventDefault();
-  const days = [...document.querySelectorAll(".hours-day:checked")].map(el => el.value);
-  try {
-    await api.put("/api/v1/admin/settings", {
-      chat_hours_enabled: document.getElementById("hours-enabled").checked ? "1" : "",
-      chat_hours_days: days.join(","),
-      chat_hours_start: document.getElementById("hours-start").value,
-      chat_hours_end: document.getElementById("hours-end").value,
-      chat_timezone: document.getElementById("hours-timezone").value.trim(),
-    });
-    showMsg("hours-msg", "Saved — Live Chat availability updates immediately.", true);
-  } catch (err) {
-    showMsg("hours-msg", err.message, false);
-  }
-}
-
 async function saveSocialDraft(e) {
   e.preventDefault();
   try {
@@ -375,7 +358,6 @@ async function testAi() {
     input.type = "text";
     input.value = key;
   });
-  document.getElementById("hours-form").addEventListener("submit", saveHours);
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
   document.getElementById("email-templates-form").addEventListener("submit", saveEmailTemplates);
@@ -425,13 +407,6 @@ async function testAi() {
       document.getElementById(`email-tpl-${id}-html`).value = settings[`email_tpl_${key}_html`] || "";
       document.getElementById(`email-tpl-${id}-text`).value = settings[`email_tpl_${key}_text`] || "";
     });
-
-    document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
-    const days = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);
-    document.querySelectorAll(".hours-day").forEach(el => { el.checked = days.includes(el.value); });
-    document.getElementById("hours-start").value = settings.chat_hours_start || "";
-    document.getElementById("hours-end").value = settings.chat_hours_end || "";
-    document.getElementById("hours-timezone").value = settings.chat_timezone || "";
 
     document.getElementById("social-draft-enabled").checked = settings.social_draft_enabled === "1";
     document.getElementById("social-draft-frequency").value = settings.social_draft_frequency || "daily";
