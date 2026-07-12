@@ -1316,6 +1316,71 @@ pre code.hljs {
   .ai-typing-dots span { animation: none; }
 }
 
+/* Carbon-style code snippet card in bot replies. Intentionally dark in both
+   site themes — it reads as a code editor surface, like carbon.now.sh. */
+.ai-text { display: block; }
+.ai-text + .ai-code-card, .ai-code-card + .ai-text { margin-top: 0.5rem; }
+.ai-code-card {
+  display: block;
+  margin: 0.6rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1e1e2e;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.ai-code-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #181825;
+}
+.ai-code-dots { display: inline-flex; gap: 6px; }
+.ai-code-dots i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+.ai-code-dots i:nth-child(1) { background: #ff5f56; }
+.ai-code-dots i:nth-child(2) { background: #ffbd2e; }
+.ai-code-dots i:nth-child(3) { background: #27c93f; }
+.ai-code-lang {
+  margin-left: auto;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: #9399b2;
+  letter-spacing: 0.02em;
+}
+.ai-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid #45475a;
+  border-radius: 6px;
+  background: transparent;
+  color: #cdd6f4;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.ai-code-copy:hover { background: #313244; }
+.ai-code-copy.copied { color: #a6e3a1; border-color: #a6e3a1; }
+.ai-code-copy svg { width: 12px; height: 12px; }
+.ai-code-card pre {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  background: #1e1e2e;
+}
+.ai-code-card code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #cdd6f4;
+  white-space: pre;
+}
+.ai-code-card .tok-kw  { color: #cba6f7; }
+.ai-code-card .tok-str { color: #a6e3a1; }
+.ai-code-card .tok-num { color: #fab387; }
+.ai-code-card .tok-com { color: #6c7086; font-style: italic; }
+
 /* Auto read-aloud toggle in the chat header */
 #ai-widget-autospeak { color: var(--ink-soft); background: none; border: none; line-height: 1; }
 #ai-widget-autospeak:hover,

@@ -61,6 +61,9 @@
   // Mic = visitor dictating their message (speech-to-text input).
   const MIC_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
+  // Copy = clipboard button on a Carbon-style code card.
+  const COPY_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 
   let audioCtx = null;
   function playTone() {
@@ -191,11 +194,157 @@
     return btn;
   }
 
+  // ---- Carbon-style code snippet cards --------------------------------------
+  //
+  // When a reply contains a fenced ```code``` block, render it as a Carbon-like
+  // card (window chrome, language tag, copy button, light syntax colors) instead
+  // of leaking raw backticks as plain text. Everything is escaped before it
+  // touches innerHTML — the token highlighter escapes each piece as it emits, so
+  // no bot output is ever interpreted as markup.
+
+  const CODE_FENCE_RE = /```([\w+#.-]*)[ \t]*\n?([\s\S]*?)```/g;
+
+  function parseSegments(text) {
+    const segments = [];
+    let last = 0, m;
+    CODE_FENCE_RE.lastIndex = 0;
+    while ((m = CODE_FENCE_RE.exec(text)) !== null) {
+      if (m.index > last) segments.push({ type: "text", value: text.slice(last, m.index) });
+      segments.push({ type: "code", lang: (m[1] || "").toLowerCase(), value: m[2].replace(/\n+$/, "") });
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) segments.push({ type: "text", value: text.slice(last) });
+    return segments;
+  }
+
+  function hasCode(text) { CODE_FENCE_RE.lastIndex = 0; return CODE_FENCE_RE.test(text); }
+
+  // Reply text with fenced code stripped — reading code aloud is noise, so the
+  // speaker button and auto read-aloud only ever get the prose.
+  function proseOnly(text) {
+    return parseSegments(text)
+      .filter((s) => s.type === "text")
+      .map((s) => s.value)
+      .join(" ")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // Light, dependency-free highlighter. One combined regex tokenizes comments,
+  // strings, numbers, and common keywords (JS/PHP/CSS/Python-ish); each token
+  // and every gap between tokens is HTML-escaped before being wrapped, so the
+  // result is always safe to assign as innerHTML.
+  const HL_RULES = [
+    { cls: "tok-com", src: "//[^\\n]*|/\\*[\\s\\S]*?\\*/|<!--[\\s\\S]*?-->|#[^\\n]*" },
+    { cls: "tok-str", src: "\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'|`(?:\\\\.|[^`\\\\])*`" },
+    { cls: "tok-num", src: "\\b\\d+(?:\\.\\d+)?\\b" },
+    { cls: "tok-kw", src: "\\b(?:const|let|var|function|fn|return|if|else|elif|for|foreach|while|switch|case|break|new|class|extends|implements|public|private|protected|static|echo|print|use|namespace|import|export|from|default|async|await|yield|true|false|null|undefined|None|True|False|def|in|of|as|is|not|and|or|try|catch|except|finally|throw|raise|require|include|this|self|super)\\b" },
+  ];
+  const HL_RE = new RegExp(HL_RULES.map((r) => "(" + r.src + ")").join("|"), "g");
+
+  function highlight(code) {
+    let out = "", last = 0, m;
+    HL_RE.lastIndex = 0;
+    while ((m = HL_RE.exec(code)) !== null) {
+      if (m.index > last) out += escapeHtml(code.slice(last, m.index));
+      let cls = "";
+      for (let g = 1; g <= HL_RULES.length; g++) {
+        if (m[g] !== undefined) { cls = HL_RULES[g - 1].cls; break; }
+      }
+      out += '<span class="' + cls + '">' + escapeHtml(m[0]) + "</span>";
+      last = m.index + m[0].length;
+      if (HL_RE.lastIndex === m.index) HL_RE.lastIndex++; // guard against zero-width matches
+    }
+    out += escapeHtml(code.slice(last));
+    return out;
+  }
+
+  function buildCodeCard(seg) {
+    const card = document.createElement("div");
+    card.className = "ai-code-card";
+
+    const bar = document.createElement("div");
+    bar.className = "ai-code-bar";
+    bar.innerHTML = '<span class="ai-code-dots" aria-hidden="true"><i></i><i></i><i></i></span>';
+
+    const lang = document.createElement("span");
+    lang.className = "ai-code-lang";
+    lang.textContent = seg.lang || "code";
+    bar.appendChild(lang);
+
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "ai-code-copy";
+    copy.innerHTML = COPY_SVG + "<span>Copy</span>";
+    copy.addEventListener("click", () => {
+      const label = copy.querySelector("span");
+      const mark = () => {
+        copy.classList.add("copied");
+        if (label) label.textContent = "Copied";
+        setTimeout(() => { copy.classList.remove("copied"); if (label) label.textContent = "Copy"; }, 1500);
+      };
+      // execCommand fallback for insecure contexts / browsers where the async
+      // Clipboard API is present but rejects (e.g. no permission).
+      const legacyCopy = () => {
+        const ta = document.createElement("textarea");
+        ta.value = seg.value;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try { ok = document.execCommand("copy"); } catch (_) { ok = false; }
+        document.body.removeChild(ta);
+        if (ok) mark();
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(seg.value).then(mark).catch(legacyCopy);
+      } else {
+        legacyCopy();
+      }
+    });
+    bar.appendChild(copy);
+
+    const pre = document.createElement("pre");
+    const codeEl = document.createElement("code");
+    codeEl.innerHTML = highlight(seg.value);
+    pre.appendChild(codeEl);
+
+    card.appendChild(bar);
+    card.appendChild(pre);
+    return card;
+  }
+
+  // Render a reply as ordered prose + code-card segments (used whenever a reply
+  // contains a fenced block; plain replies keep the word-by-word typewriter).
+  function renderStructured(el, text, onDone) {
+    el.textContent = "";
+    parseSegments(text).forEach((seg) => {
+      if (seg.type === "code") {
+        el.appendChild(buildCodeCard(seg));
+      } else {
+        const v = seg.value.replace(/^\n+|\n+$/g, "").trim();
+        if (!v) return;
+        const span = document.createElement("span");
+        span.className = "ai-text";
+        span.textContent = v;
+        el.appendChild(span);
+      }
+    });
+    onDone && onDone();
+  }
+
   // Instant decoration for boot/menu bubbles (no typewriter).
   function decorateBotMessage(el, text) {
-    el.textContent = text;
-    const btn = addSpeakButton(el, text);
-    if (btn && autoSpeak) speak(text, btn);
+    const spoken = hasCode(text) ? proseOnly(text) : text;
+    if (hasCode(text)) renderStructured(el, text);
+    else el.textContent = text;
+    const btn = spoken ? addSpeakButton(el, spoken) : null;
+    if (btn && autoSpeak) speak(spoken, btn);
   }
 
   // Reveal Lisa's reply word-by-word for a natural, "alive" feel. Honors
@@ -238,12 +387,18 @@
     playTone();
     const messages = document.getElementById("ai-widget-messages");
     messages.setAttribute("aria-busy", "true");
-    typewriterReveal(el, text, () => {
-      const btn = addSpeakButton(el, text);
-      if (btn && autoSpeak) speak(text, btn);
+    const finish = () => {
+      // Read-aloud gets prose only (code cards are skipped for speech).
+      const spoken = hasCode(text) ? proseOnly(text) : text;
+      const btn = spoken ? addSpeakButton(el, spoken) : null;
+      if (btn && autoSpeak) speak(spoken, btn);
       messages.setAttribute("aria-busy", "false");
       el.scrollIntoView({ block: "end" });
-    });
+    };
+    // A reply with a code block renders as structured cards immediately; plain
+    // prose keeps the word-by-word typewriter reveal.
+    if (hasCode(text)) renderStructured(el, text, finish);
+    else typewriterReveal(el, text, finish);
     return el;
   }
 

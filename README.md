@@ -184,11 +184,19 @@ storage/
    English → device default). Replies land with an animated typing indicator
    and then reveal word-by-word (a client-side typewriter — it animates an
    already-received reply and honors `prefers-reduced-motion`; it does not
-   change how long the model takes). The widget is screen-reader aware
+   change how long the model takes). When a visitor explicitly asks for a code
+   example, the assistant returns a short fenced ` ```lang ` snippet, and the
+   widget renders it as a **Carbon-style code card** — dark window frame with
+   the three traffic-light dots, a language tag, a copy-to-clipboard button
+   (`navigator.clipboard` with an `execCommand` fallback), and a light,
+   dependency-free syntax highlighter (comments/strings/numbers/keywords). All
+   code is HTML-escaped before it's rendered, so bot output is never treated as
+   markup; read-aloud reads only the prose around the card, not the code. The
+   widget is screen-reader aware
    (`role=dialog`, the message list is an `aria-live` log, and the typewriter
    sets `aria-busy` so the reply is announced once), and an exit-intent trigger
    opens it if a visitor moves to leave before it has auto-shown. Every one of
-   these — chime, read-aloud, voice input, typewriter — is a progressive
+   these — chime, read-aloud, voice input, typewriter, code cards — is a progressive
    enhancement; the chat still works without Web Audio / speech support.
 5. **Admin panel** (`/admin/*`) is plain static HTML + JS calling the same
    JWT-protected `/api/v1/admin/*` endpoints — projects CRUD, blog CRUD
