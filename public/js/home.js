@@ -132,19 +132,15 @@
       }
 
       const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-      const metricFor = (p, i) => {
-        const raw = String(p.outcome_metrics || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean)[0];
-        if (raw) return raw;
-        return ["99.9% uptime", "40% faster delivery", "1.5s response target"][i] || "Live deployment";
-      };
 
       caseRows.innerHTML = picks.map((p, i) => {
         const num = String(i + 1).padStart(2, "0");
         const tag = (p.tags && p.tags[0] && p.tags[0].name) ? p.tags[0].name : "Deployment";
         const badges = (p.tags || []).slice(0, 3).map(t => `<span class="mono-badge">${esc(t.name)}</span>`).join("");
-        const metric = metricFor(p, i);
         const tech = badges || `<span class="mono-badge">Vanilla PHP</span><span class="mono-badge">SQLite</span><span class="mono-badge">Bootstrap 5</span>`;
-        const media = `<a href="/project.html?slug=${esc(p.slug)}" class="text-decoration-none"><div class="case-code-card"><code>metric: ${esc(metric)}</code><div class="sub">${esc(tag)} / architecture summary</div></div></a>`;
+        const media = p.cover_image_path
+          ? `<a href="/project.html?slug=${esc(p.slug)}" class="case-media"><img src="${esc(p.cover_image_path)}" alt="${esc(p.title)}" loading="lazy"></a>`
+          : `<a href="/project.html?slug=${esc(p.slug)}" class="text-decoration-none"><div class="case-code-card"><code>${esc(tag)}</code><div class="sub">architecture summary</div></div></a>`;
         const flip = i % 2 === 1;
 
         return `
