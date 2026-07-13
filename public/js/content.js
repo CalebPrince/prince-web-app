@@ -34,6 +34,14 @@
     el.href = el.dataset.contentHref === "social_email" ? `mailto:${value}` : `tel:${value.replace(/[^\d+]/g, "")}`;
   });
 
+  // Splash screen — on by default, dismissed early if explicitly turned off.
+  // The inline script in <head> shows it immediately (before this fetch can
+  // possibly resolve) so a brief flash is unavoidable when disabling it, but
+  // this cuts the ~3s animation short instead of letting it play out.
+  if (content.splash_screen_enabled === "0") {
+    document.getElementById("splash")?.remove();
+  }
+
   // Live Chat toggle button — on by default, hidden only if explicitly turned off
   const chatToggle = document.getElementById("ai-widget-toggle");
   if (chatToggle && content.live_chat_enabled === "0") {

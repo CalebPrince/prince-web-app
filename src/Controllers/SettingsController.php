@@ -55,6 +55,7 @@ class SettingsController
     /** Site copy editable from Admin → Site Content, served publicly for page hydration. */
     private const CONTENT_KEYS = [
         'default_theme',
+        'splash_screen_enabled',
         'hero_eyebrow', 'hero_title', 'hero_subtitle', 'availability_badge',
         'hero_video_url',
         'hero_value_eyebrow',
