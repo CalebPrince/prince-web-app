@@ -2,6 +2,10 @@
   const toggle = document.getElementById("ai-widget-toggle");
   let sessionToken = sessionStorage.getItem("chat_token") || null;
   let online = false;
+  // Once the AI signals ready_for_prototype, the bubble has no build UI of
+  // its own — it hands off to the full /chat.html workspace instead. Shown
+  // once per session (sticks even if the transcript keeps scrolling).
+  let prototypeOffered = false;
   // Read-aloud every reply automatically when on (visitor-controlled, header
   // toggle) — remembered for the browser session.
   let autoSpeak = sessionStorage.getItem("chat_autospeak") === "1";
@@ -402,6 +406,25 @@
     return el;
   }
 
+  // Hands off to the full prototype workspace (/chat.html) — the bubble has
+  // no inline build/preview UI, so this is the only way a bubble visitor can
+  // actually reach the "Build my prototype" step the AI may have offered.
+  function showPrototypeLink() {
+    if (prototypeOffered || !sessionToken) return;
+    prototypeOffered = true;
+    const wrap = document.createElement("div");
+    wrap.className = "ai-msg bot ai-prototype-cta";
+    const link = document.createElement("a");
+    link.href = `/chat.html?token=${encodeURIComponent(sessionToken)}`;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.className = "btn-brand btn-sm";
+    link.textContent = "⚡ Build my prototype →";
+    wrap.appendChild(link);
+    document.getElementById("ai-widget-messages").appendChild(wrap);
+    wrap.scrollIntoView({ block: "end" });
+  }
+
   function appendMessage(role, text) {
     const el = document.createElement("div");
     el.className = `ai-msg ${role}`;
@@ -680,6 +703,7 @@
         const transcript = session.transcript || [];
         if (transcript.length) {
           transcript.forEach((turn) => appendMessage(turn.role === "user" ? "user" : "bot", turn.text));
+          if (session.can_build) showPrototypeLink();
           if (status.online) {
             document.getElementById("ai-widget-form").classList.remove("d-none");
           } else {
@@ -716,6 +740,7 @@
       sessionToken = res.token;
       sessionStorage.setItem("chat_token", sessionToken);
       resolveBotMessage(pending, res.reply);
+      if (res.can_prototype) showPrototypeLink();
       // Temporary debug aid — remove once the OpenRouter fallback is confirmed working in production.
       console.log(`[chat debug] mode=${res.mode} provider=${res.provider || "keyword fallback"}`);
     } catch (err) {
