@@ -42,6 +42,17 @@
     document.getElementById("splash")?.remove();
   }
 
+  // Global animation style (Admin -> Site Content -> Appearance). Drives the
+  // reveal/hero-entrance/hover CSS in app.css via this attribute — unset (or
+  // an unrecognized value) leaves the hardcoded default (the original
+  // "Slide Up" treatment) in place, same fallback contract as every other
+  // field here. animations.js's own prefers-reduced-motion check still wins
+  // regardless of what's picked.
+  const ANIMATION_STYLES = ["fade", "slide-up", "slide-left", "zoom", "none"];
+  if (ANIMATION_STYLES.includes(content.animation_style)) {
+    document.documentElement.setAttribute("data-animation-style", content.animation_style);
+  }
+
   // Live Chat toggle button — on by default, hidden only if explicitly turned off
   const chatToggle = document.getElementById("ai-widget-toggle");
   if (chatToggle && content.live_chat_enabled === "0") {

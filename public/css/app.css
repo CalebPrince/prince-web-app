@@ -1641,6 +1641,46 @@ pre code.hljs {
   .hero-animate-2 { animation-delay: 0.15s; }
   .hero-animate-3 { animation-delay: 0.25s; }
   .hero-animate-4 { animation-delay: 0.35s; }
+
+  /* Admin-configurable animation style (Site Content -> Appearance ->
+     Animation style), applied via data-animation-style on <html> in
+     content.js. No attribute (or "slide-up") = the untouched default above.
+     Higher specificity than the plain .reveal/.hero-animate rules above, so
+     source order doesn't matter. */
+  html[data-animation-style="fade"] .reveal,
+  html[data-animation-style="fade"] .reveal-on-scroll {
+    transform: none;
+  }
+  html[data-animation-style="slide-left"] .reveal,
+  html[data-animation-style="slide-left"] .reveal-on-scroll {
+    transform: translateX(-40px);
+  }
+  html[data-animation-style="slide-left"] .reveal.is-visible,
+  html[data-animation-style="slide-left"] .reveal-on-scroll.is-visible {
+    transform: translateX(0);
+  }
+  html[data-animation-style="zoom"] .reveal,
+  html[data-animation-style="zoom"] .reveal-on-scroll {
+    transform: scale(0.92);
+  }
+  html[data-animation-style="zoom"] .reveal.is-visible,
+  html[data-animation-style="zoom"] .reveal-on-scroll.is-visible {
+    transform: scale(1);
+  }
+  html[data-animation-style="none"] .reveal,
+  html[data-animation-style="none"] .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  @keyframes hero-fade { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: blur(0); } }
+  @keyframes hero-slide-left { from { opacity: 0; transform: translateX(-32px); filter: blur(3px); } to { opacity: 1; transform: translateX(0); filter: blur(0); } }
+  @keyframes hero-zoom { from { opacity: 0; transform: scale(0.9); filter: blur(3px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+  html[data-animation-style="fade"] .hero-animate { animation-name: hero-fade; }
+  html[data-animation-style="slide-left"] .hero-animate { animation-name: hero-slide-left; }
+  html[data-animation-style="zoom"] .hero-animate { animation-name: hero-zoom; }
+  html[data-animation-style="none"] .hero-animate { opacity: 1; animation: none; }
 }
 
 /* Micro-interactions (kept even under reduced-motion — they're instant state
@@ -1658,6 +1698,41 @@ pre code.hljs {
 
 .process-step-number { transition: transform 0.2s ease; }
 .process-step:hover .process-step-number { transform: scale(1.1); }
+
+/* Hover motion per admin-configured animation style — overrides just the
+   transform on the existing card/button hover rules above (their color,
+   border, and shadow changes stay untouched). No attribute (or "slide-up")
+   keeps the translateY lift already defined above. Not gated behind
+   prefers-reduced-motion, same reasoning as the micro-interactions block
+   above: an instant hover state change, not ambient motion. */
+html[data-animation-style="fade"] .service-card:hover,
+html[data-animation-style="fade"] .project-card:hover,
+html[data-animation-style="fade"] .case-code-card:hover,
+html[data-animation-style="fade"] .btn-brand:hover,
+html[data-animation-style="none"] .service-card:hover,
+html[data-animation-style="none"] .project-card:hover,
+html[data-animation-style="none"] .case-code-card:hover,
+html[data-animation-style="none"] .btn-brand:hover {
+  transform: none;
+}
+html[data-animation-style="slide-left"] .service-card:hover,
+html[data-animation-style="slide-left"] .case-code-card:hover,
+html[data-animation-style="slide-left"] .btn-brand:hover {
+  transform: translateX(4px);
+}
+html[data-animation-style="slide-left"] .project-card:hover {
+  transform: translateX(6px);
+}
+html[data-animation-style="zoom"] .service-card:hover,
+html[data-animation-style="zoom"] .case-code-card:hover {
+  transform: scale(1.025);
+}
+html[data-animation-style="zoom"] .project-card:hover {
+  transform: scale(1.015);
+}
+html[data-animation-style="zoom"] .btn-brand:hover {
+  transform: scale(1.05);
+}
 
 /* ---- Editorial components (homepage redesign) --------------------------- */
 

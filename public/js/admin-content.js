@@ -1,6 +1,7 @@
 const CONTENT_FIELDS = [
   "default_theme",
   "splash_screen_enabled",
+  "animation_style",
   "availability_badge", "hero_eyebrow", "hero_title", "hero_subtitle", "hero_video_url", "tech_badges",
   "hero_value_eyebrow",
   "hero_value_1_label", "hero_value_1_text",

@@ -56,6 +56,7 @@ class SettingsController
     private const CONTENT_KEYS = [
         'default_theme',
         'splash_screen_enabled',
+        'animation_style',
         'hero_eyebrow', 'hero_title', 'hero_subtitle', 'availability_badge',
         'hero_video_url', 'live_demo_video_url',
         'hero_value_eyebrow',
