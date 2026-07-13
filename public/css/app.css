@@ -2083,6 +2083,27 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   opacity: 0.72;
   transform: scale(1.04);
 }
+/* Sharp, in-flow video frame for non-hero showcase clips (about intro, AI demo
+   panel, ...) — unlike .hero-video-panel this isn't a blurred full-bleed
+   background, it's a normal bordered media block sized by its container. */
+.media-video-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  aspect-ratio: 16 / 9;
+  background: var(--bg-color);
+}
+.media-video-frame iframe,
+.media-video-frame video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  object-fit: cover;
+}
 /* Three.js hero constellation (hero-3d.js). Same layer contract as the video
    panel: absolute fill at z-index 0, content stays above at z-index 1. */
 .hero-3d-panel {

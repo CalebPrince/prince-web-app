@@ -57,7 +57,7 @@ class SettingsController
         'default_theme',
         'splash_screen_enabled',
         'hero_eyebrow', 'hero_title', 'hero_subtitle', 'availability_badge',
-        'hero_video_url',
+        'hero_video_url', 'live_demo_video_url',
         'hero_value_eyebrow',
         'hero_value_1_label', 'hero_value_1_text',
         'hero_value_2_label', 'hero_value_2_text',

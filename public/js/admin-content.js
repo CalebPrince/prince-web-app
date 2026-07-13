@@ -37,6 +37,7 @@ const CONTENT_FIELDS = [
   "archive_3_domain", "archive_3_meta", "archive_3_title", "archive_3_desc", "archive_3_link", "archive_3_metric", "archive_3_metric_label",
   "production_eyebrow", "production_title",
   "live_demo_eyebrow", "live_demo_title", "live_demo_desc", "live_demo_metric_label", "live_demo_metric_text", "live_demo_console_label",
+  "live_demo_video_url",
 ];
 
 function showContentMsg(text, ok) {

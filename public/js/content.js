@@ -64,10 +64,17 @@
     contactWhatsappRow.classList.remove("d-none");
   }
 
-  function buildHeroVideo(urlValue) {
+  // Shared by every admin-configurable video slot (hero background, about
+  // intro, AI demo panel, ...): takes a direct .mp4/.webm/.ogg URL or a
+  // YouTube/Vimeo link and returns an autoplaying, muted, looping <video> or
+  // background-mode <iframe> ready to drop into a panel.
+  function buildBackgroundVideo(urlValue, label) {
     let url;
     try {
-      url = new URL(urlValue);
+      // Base of window.location.origin lets a self-hosted upload (e.g.
+      // "/uploads/clip.mp4") resolve correctly alongside full external URLs —
+      // it's ignored when urlValue is already absolute.
+      url = new URL(urlValue, window.location.origin);
     } catch (_) {
       return null;
     }
@@ -85,7 +92,7 @@
       video.loop = true;
       video.playsInline = true;
       video.preload = "metadata";
-      video.setAttribute("aria-label", "Homepage hero video");
+      video.setAttribute("aria-label", label);
       return video;
     }
 
@@ -106,7 +113,7 @@
     if (!embedUrl) return null;
     const iframe = document.createElement("iframe");
     iframe.src = embedUrl;
-    iframe.title = "Homepage hero video";
+    iframe.title = label;
     iframe.loading = "lazy";
     iframe.allow = "autoplay; encrypted-media; picture-in-picture";
     iframe.allowFullscreen = true;
@@ -114,15 +121,19 @@
     return iframe;
   }
 
-  const heroVideo = document.getElementById("hero-video-panel");
-  if (heroVideo && content.hero_video_url) {
-    const media = buildHeroVideo(content.hero_video_url);
+  function wireVideoPanel(elementId, urlValue, label) {
+    const panel = document.getElementById(elementId);
+    if (!panel || !urlValue) return;
+    const media = buildBackgroundVideo(urlValue, label);
     if (media) {
-      heroVideo.innerHTML = "";
-      heroVideo.appendChild(media);
-      heroVideo.classList.remove("d-none");
+      panel.innerHTML = "";
+      panel.appendChild(media);
+      panel.classList.remove("d-none");
     }
   }
+
+  wireVideoPanel("hero-video-panel", content.hero_video_url, "Homepage hero video");
+  wireVideoPanel("ai-demo-video-panel", content.live_demo_video_url, "AI live demo video");
 
   // Multi-paragraph blocks: blank-line-separated text becomes <p> elements
   document.querySelectorAll("[data-content-paragraphs]").forEach(el => {
