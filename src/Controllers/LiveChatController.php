@@ -146,6 +146,18 @@ class LiveChatController
         }
 
         if ($reply === null) {
+            // A visitor mid-conversation degrading to canned keyword replies is easy to
+            // miss (it still looks like a normal reply) — the individual provider
+            // error_log calls above explain *why* each one failed, but nothing said
+            // "and so this turn had no real AI at all" until now. Only worth logging
+            // when a provider was actually configured and attempted (dev environments
+            // with no keys at all fall back on every turn by design).
+            if (!empty($geminiKey) || !empty(Settings::get('openrouter_api_key')) || !empty(Settings::get('groq_api_key'))) {
+                error_log(sprintf(
+                    'Live Chat: all configured AI providers failed this turn — degraded to keyword/booking fallback. message="%s"',
+                    substr($message, 0, 200)
+                ));
+            }
             $bookingReply = self::bookingFallback($message, $transcript);
             $reply = $bookingReply ?? self::keywordFallback($message, $projects);
         }
@@ -679,8 +691,12 @@ class LiveChatController
             . "PROJECT conversation naturally goes deep enough (the core workflow, how roles interact, "
             . "specific features they care about, not just a one-line pitch), you may also call "
             . "mark_ready_for_prototype to offer them a quick prototype preview. This is optional, not "
-            . "required for every inquiry — never mention the \"Build my prototype\" button yourself, whether "
-            . "it's shown is handled separately. A prototype request is NOT a booking request: calling "
+            . "required for every inquiry. If the visitor EXPLICITLY asks to see a design, prototype, mockup, "
+            . "demo, or working example (e.g. \"show me a design\", \"can I see a prototype\", \"design a "
+            . "landing page for it\"), call mark_ready_for_prototype right away regardless of how deep the "
+            . "conversation has gone — a direct request always qualifies, even early on. Never mention the "
+            . "\"Build my prototype\" button yourself, whether it's shown is handled separately. A prototype "
+            . "request is NOT a booking request: calling "
             . "mark_ready_for_prototype is the complete action — never follow it (or any other prototype/mockup/demo "
             . "question) by asking for a booking date or time; only ask about scheduling a call when the visitor "
             . "actually asks to talk it through live or book a call.\n\n"
@@ -723,9 +739,9 @@ class LiveChatController
             . "booking is confirmed, do NOT call book_appointment again for that same request — a plain "
             . "\"thanks\" or other acknowledgment afterward needs a reply, not another booking attempt. Only "
             . "call it again if they explicitly ask to book a different or additional slot.\n"
-            . "- mark_ready_for_prototype: call this at most once, only for a NEW PROJECT conversation that "
-            . "has gone beyond the basics — never for greetings, small talk, general questions, or before a "
-            . "real back-and-forth has happened.\n\n"
+            . "- mark_ready_for_prototype: call this at most once, either once a NEW PROJECT conversation has "
+            . "gone beyond the basics, OR immediately when the visitor explicitly asks to see a design, "
+            . "prototype, mockup, or demo — never for greetings, small talk, or general questions.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
         $persona = Settings::get('chat_persona');
@@ -896,7 +912,13 @@ class LiveChatController
         $confirmedBooking = null;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-            $payload = ['model' => $model, 'messages' => $messages];
+            // Without an explicit cap, OpenRouter prices the request against the
+            // model's full context window (seen live: "requested up to 64000
+            // tokens") regardless of how much text actually comes back — which
+            // can 402 an account that has real credits, just not 64k-tokens'
+            // worth. Chat replies are 1-4 sentences per the system prompt, so
+            // this mirrors Gemini's maxOutputTokens cap below at no real cost.
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 2048];
             // See chatWithGemini — force text on the last round so a model
             // wanting a second sequential tool call can't run out the clock
             // on functionCalls and never produce a reply.
@@ -983,7 +1005,10 @@ class LiveChatController
         $confirmedBooking = null;
 
         for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-            $payload = ['model' => $model, 'messages' => $messages];
+            // See chatWithOpenRouter — same reasoning: cap output tokens to what
+            // a short chat reply actually needs, both to avoid an affordability
+            // rejection and to stop padding the daily token budget unnecessarily.
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 2048];
             if ($round < self::MAX_TOOL_ROUNDS - 1) {
                 $payload['tools'] = $tools;
                 $payload['tool_choice'] = 'auto';
