@@ -57,7 +57,10 @@
           </button>
         </div>
         <div id="brief-error" class="alert alert-danger py-2 small mt-3 d-none"></div>
-        <p id="brief-status" class="text-muted-custom small mt-3 d-none">Building your prototype… (up to a minute)</p>
+        <div id="brief-status" class="brief-loader d-none" role="status" aria-live="polite">
+          <span class="brief-spinner" aria-hidden="true"></span>
+          <span id="brief-status-msg">Building your prototype…</span>
+        </div>
       </form>
       <div class="generator-suggestions">
         <button type="button" class="generator-chip">A portfolio site for a photographer</button>

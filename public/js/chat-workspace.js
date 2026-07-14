@@ -74,6 +74,38 @@
   const briefBtn = document.getElementById("brief-submit");
   const briefError = document.getElementById("brief-error");
   const briefStatus = document.getElementById("brief-status");
+  const briefStatusMsg = document.getElementById("brief-status-msg");
+
+  // Rotating status while the (~1 min) first build runs, so the long wait feels
+  // alive rather than frozen. Cosmetic only — not tied to real build progress.
+  const BUILD_STEPS = [
+    "Understanding your idea…",
+    "Sketching the layout…",
+    "Choosing a color palette…",
+    "Writing the content…",
+    "Styling the components…",
+    "Adding the finishing touches…",
+    "Almost there…",
+  ];
+  let buildStepTimer = null;
+
+  function startBuildStatus() {
+    let i = 0;
+    briefStatusMsg.textContent = BUILD_STEPS[0];
+    briefStatus.classList.remove("d-none");
+    clearInterval(buildStepTimer);
+    buildStepTimer = setInterval(() => {
+      // Hold on the last ("Almost there…") rather than looping back to the start.
+      i = Math.min(i + 1, BUILD_STEPS.length - 1);
+      briefStatusMsg.textContent = BUILD_STEPS[i];
+    }, 4500);
+  }
+
+  function stopBuildStatus() {
+    clearInterval(buildStepTimer);
+    buildStepTimer = null;
+    briefStatus.classList.add("d-none");
+  }
 
   // ---- animated placeholder ---------------------------------------------------
   //
@@ -243,7 +275,7 @@
     briefBtn.disabled = true;
     briefInput.disabled = true;
     briefError.classList.add("d-none");
-    briefStatus.classList.remove("d-none");
+    startBuildStatus();
     try {
       await generate(description);
       clearAttachedFile();
@@ -253,7 +285,7 @@
     } finally {
       briefBtn.disabled = false;
       briefInput.disabled = false;
-      briefStatus.classList.add("d-none");
+      stopBuildStatus();
     }
   });
 
