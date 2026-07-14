@@ -1817,19 +1817,163 @@ pre code.hljs {
 }
 .testimonial-list-card .stars { color: #f59e0b; letter-spacing: 2px; }
 
-/* Live Chat workspace — two-column build-and-preview page (chat.html) */
+/* Prototype generator (chat.html) — Claude-style centered prompt that
+   generates a concept prototype directly, no live chat required first. */
 .workspace-shell { padding: 2rem 0; }
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 1.25rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  height: calc(100vh - 160px);
-  min-height: 560px;
+.generator-hero {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
 }
-.workspace-chat, .workspace-preview {
+.generator-hero .container { max-width: 720px; }
+.generator-input-wrap {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  padding: 1.1rem 1.5rem 3.5rem 1.5rem;
+  text-align: left;
+  transition: border-color 0.2s ease;
+}
+.generator-input-wrap:focus-within { border-color: var(--line-strong); }
+.generator-textarea {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  resize: none;
+  color: var(--ink);
+  font-size: 1.05rem;
+  line-height: 1.5;
+  min-height: 4.5rem;
+  max-height: 40vh;
+}
+.generator-textarea:focus { outline: none; box-shadow: none; }
+
+/* Attached file — shown as a chip above the textarea, not dumped inline as
+   text; its content is combined into the description only at submit time. */
+.generator-attachments { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.generator-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--accent-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.4rem 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  color: var(--ink);
+  max-width: 100%;
+}
+.generator-file-chip svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--ink-soft); }
+.generator-file-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+.generator-file-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.generator-file-chip button:hover { background: var(--line); color: var(--ink); }
+
+.generator-attach,
+.generator-submit {
+  position: absolute;
+  bottom: 0.85rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.generator-attach {
+  left: 1.25rem;
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  color: var(--ink-soft);
+}
+.generator-attach:hover { border-color: var(--accent); color: var(--accent); }
+.generator-attach svg { width: 18px; height: 18px; }
+.generator-submit {
+  right: 1.25rem;
+  border: none;
+  background: var(--heading-color);
+  color: var(--bg);
+}
+.generator-submit svg { width: 20px; height: 20px; }
+.generator-submit:hover:not(:disabled) { transform: scale(1.06); }
+.generator-submit:disabled { opacity: 0.4; cursor: default; transform: none; }
+/* Voice-input mic — sits just left of the send button, mirrors the chat bubble's
+   mic (reuses the ai-mic-pulse listening state). Hidden by JS where the Web
+   Speech API is unavailable. */
+.generator-mic {
+  position: absolute;
+  bottom: 0.85rem;
+  right: calc(1.75rem + 40px);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.generator-mic:hover { border-color: var(--accent); color: var(--accent); }
+.generator-mic svg { width: 18px; height: 18px; }
+.generator-mic.listening {
+  color: #fff;
+  background: #dc3545;
+  border-color: #dc3545;
+  animation: ai-mic-pulse 1s ease-in-out infinite;
+}
+.generator-suggestions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+.generator-chip {
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.generator-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Follow-up refine bar shown above the preview once a prototype exists —
+   same pill-input + circular-send pattern as the live chat composer. */
+.generator-refine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.workspace-preview {
   background: var(--card-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1837,8 +1981,11 @@ pre code.hljs {
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  max-width: 1400px;
+  height: calc(100vh - 160px);
+  min-height: 560px;
+  margin: 0 auto;
 }
-.workspace-messages { flex: 1; overflow-y: auto; padding: 1rem; min-height: 0; }
 .workspace-preview-empty {
   flex: 1;
   display: flex;
@@ -1870,9 +2017,8 @@ pre code.hljs {
 .workspace-frame-stage.width-mobile #ws-prototype-frame { width: 390px; max-width: 100%; }
 
 @media (max-width: 900px) {
-  .workspace-grid { grid-template-columns: 1fr; height: auto; }
-  .workspace-chat { height: 420px; }
-  .workspace-preview { min-height: 480px; }
+  .workspace-preview { height: auto; min-height: 480px; }
+  .generator-input-wrap { padding: 1rem 1.1rem 3.25rem 1.1rem; }
 }
 
 /* Utility */

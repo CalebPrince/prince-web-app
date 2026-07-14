@@ -185,7 +185,7 @@ class LiveChatController
         ]);
     }
 
-    /** GET /api/v1/chat/session/{token} — rehydrates a session for the two-column workspace page */
+    /** GET /api/v1/chat/session/{token} — rehydrates a session for the prototype generator page */
     public static function session(array $params): void
     {
         $pdo = Database::get();
@@ -203,7 +203,13 @@ class LiveChatController
         ]);
     }
 
-    /** POST /api/v1/chat/prototype — body: {token} */
+    /**
+     * POST /api/v1/chat/prototype — body: {description, token?}. One-shot: describe what you want
+     * built and get a concept prototype back immediately, no live chat needed first (chat.html is a
+     * standalone generator page). Pass the token back to add a follow-up description to the same
+     * thread — each one becomes a new turn and the prototype regenerates with the full context —
+     * instead of starting a fresh lead every time.
+     */
     public static function generatePrototype(): void
     {
         // AiText::generate tries Gemini (45s), then OpenRouter (45s), then
@@ -218,12 +224,22 @@ class LiveChatController
             Response::error('Prototype generation is not available right now — please use the contact form.', 503);
         }
 
-        $pdo = Database::get();
-        $session = self::requireSession($pdo, self::tokenFromBody());
-        $transcript = json_decode($session['transcript_json'], true) ?: [];
-        if (count($transcript) < 2) {
-            Response::error('Tell me a bit about your project first.', 422);
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $description = trim((string) ($data['description'] ?? ''));
+        // Higher than a typical chat message cap (see message()'s 1000) because
+        // the generator page lets visitors attach a text/code file, whose
+        // contents get pasted straight into this field.
+        if (mb_strlen($description) < 15 || mb_strlen($description) > 8000) {
+            Response::error('Describe what you want in a bit more detail (15–8000 characters).', 422);
         }
+
+        $pdo = Database::get();
+        $session = self::findOrCreateSession($pdo, $data['token'] ?? null);
+        $transcript = json_decode($session['transcript_json'], true) ?: [];
+        if (count($transcript) >= self::MAX_TRANSCRIPT_MESSAGES) {
+            Response::error('This thread has gone on a while — please start a new one.', 422);
+        }
+        $transcript[] = ['role' => 'user', 'text' => $description];
 
         $html = self::prototypeWithGemini($transcript);
         if ($html === null) {
@@ -231,11 +247,11 @@ class LiveChatController
         }
 
         $pdo->prepare(
-            "UPDATE chat_sessions SET prototype_html = ?, prototype_status = 'generated',
-             updated_at = datetime('now') WHERE id = ?"
-        )->execute([$html, $session['id']]);
+            "UPDATE chat_sessions SET transcript_json = ?, ready_for_prototype = 1, prototype_html = ?,
+             prototype_status = 'generated', updated_at = datetime('now') WHERE id = ?"
+        )->execute([json_encode($transcript), $html, $session['id']]);
 
-        Response::json(['url' => '/api/v1/chat/prototype/' . $session['token']]);
+        Response::json(['token' => $session['token'], 'url' => '/api/v1/chat/prototype/' . $session['token']]);
     }
 
     /** GET /api/v1/chat/prototype/{token} — serves the prototype for the iframe */
@@ -485,12 +501,6 @@ class LiveChatController
     {
         require_once dirname(__DIR__, 2) . '/config/config.php';
         return appConfig();
-    }
-
-    private static function tokenFromBody(): string
-    {
-        $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        return (string) ($data['token'] ?? '');
     }
 
     private static function findOrCreateSession(\PDO $pdo, ?string $token): array
