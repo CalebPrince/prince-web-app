@@ -11,40 +11,41 @@
 </head>
 <body>
 
-<nav class="site-nav">
-  <div class="container d-flex align-items-center justify-content-between py-3">
-    <a href="/" class="brand-logo text-decoration-none">Prince Caleb<span class="dot">.</span></a>
-    <button type="button" class="theme-toggle" aria-label="Toggle dark mode">&#127769;</button>
-  </div>
-</nav>
+<button type="button" class="theme-toggle page-theme-toggle" aria-label="Toggle dark mode"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
 
-<main class="section">
-  <div class="container" style="max-width: 460px;">
-    <div class="contact-card">
-      <p class="eyebrow mb-2">Client portal</p>
-      <h1 class="h3 mb-1">Log in</h1>
-      <p class="text-muted-custom mb-4 small">See your project status, milestones, files, and messages.</p>
-      <form id="login-form">
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="email">Email</label>
-          <input type="email" class="form-control" id="email" required placeholder="you@example.com">
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="password">Password</label>
-          <input type="password" class="form-control" id="password" required placeholder="Your password">
-        </div>
-        <div id="error" class="alert alert-danger py-2 small d-none"></div>
-        <button type="submit" class="btn-brand w-100">Log in</button>
-      </form>
-      <div class="text-center mt-3">
-        <a href="/client/forgot-password.html" class="small text-decoration-none">Forgot your password?</a>
+<div class="auth-shell">
+  <div class="auth-box">
+    <div class="auth-brand"><span class="brand-mark" aria-hidden="true">P</span></div>
+    <p class="auth-eyebrow">// Client portal</p>
+    <h1 class="h3 mb-1">Log in</h1>
+    <p class="auth-subtitle">See your project status, milestones, files, and messages.</p>
+    <form id="login-form">
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="email">Email</label>
+        <input type="email" class="form-control" id="email" required placeholder="you@example.com">
       </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="password">Password</label>
+        <div class="password-field">
+          <input type="password" class="form-control" id="password" required placeholder="Your password">
+          <button type="button" class="password-toggle" data-target="password" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div id="error" class="alert alert-danger py-2 small d-none"></div>
+      <button type="submit" class="btn-brand w-100">Log in</button>
+    </form>
+    <div class="text-center mt-3">
+      <a href="/client/forgot-password.html" class="small text-decoration-none">Forgot your password?</a>
+    </div>
+    <div class="text-center mt-2">
+      <a href="/" class="small text-decoration-none">&larr; Return to website</a>
     </div>
   </div>
-</main>
+</div>
 
 <script src="/js/client-api.js"></script>
 <script src="/js/theme.js"></script>
+<script src="/js/auth-ui.js"></script>
 <script>
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();

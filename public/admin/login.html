@@ -15,57 +15,70 @@
 </head>
 <body>
 
-<div class="auth-shell">
-  <div class="auth-box">
-    <div class="d-flex align-items-center justify-content-between mb-1">
-      <h3 class="mb-0">Admin Login</h3>
-      <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+<button type="button" class="theme-toggle page-theme-toggle" aria-label="Toggle dark mode"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+
+<div class="auth-shell is-split">
+  <div class="auth-split">
+    <div class="auth-brand-panel">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <span class="auth-split-title">Prince Caleb<span class="dot">.</span></span>
+      <p class="auth-split-tagline">// Portfolio Admin — manage projects, proposals, payments, and content from one place.</p>
     </div>
-    <p class="text-muted-custom mb-4 small">Prince Caleb — Portfolio Admin</p>
-    <form id="login-form">
-      <div class="mb-3">
-        <label class="form-label fw-semibold" for="email">Email</label>
-        <input type="email" class="form-control" id="email" required placeholder="you@example.com">
-      </div>
-      <div class="mb-3">
-        <label class="form-label fw-semibold" for="password">Password</label>
-        <input type="password" class="form-control" id="password" required placeholder="Your password">
-      </div>
-      <div id="error" class="alert alert-danger d-none"></div>
-      <button type="submit" class="btn-brand w-100">Log in</button>
-    </form>
+    <div class="auth-form-panel">
+      <div class="auth-box">
+        <p class="auth-eyebrow">// Admin access</p>
+        <h1 class="h3 mb-1">Log in</h1>
+        <p class="auth-subtitle">Prince Caleb — Portfolio Admin</p>
+        <form id="login-form">
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="email">Email</label>
+            <input type="email" class="form-control" id="email" required placeholder="you@example.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="password">Password</label>
+            <div class="password-field">
+              <input type="password" class="form-control" id="password" required placeholder="Your password">
+              <button type="button" class="password-toggle" data-target="password" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <div id="error" class="alert alert-danger d-none"></div>
+          <button type="submit" class="btn-brand w-100">Log in</button>
+        </form>
 
-    <!-- Only rendered when a Google OAuth client id is configured in
-         Admin → Settings; hidden again while the 2FA step is showing. -->
-    <div id="google-signin-wrap" class="d-none">
-      <div class="d-flex align-items-center gap-2 my-3" aria-hidden="true">
-        <hr class="flex-grow-1 my-0">
-        <span class="text-muted-custom small">or</span>
-        <hr class="flex-grow-1 my-0">
-      </div>
-      <div id="google-signin-btn" class="d-flex justify-content-center"></div>
-      <div id="google-error" class="alert alert-danger d-none mt-3"></div>
-    </div>
+        <!-- Only rendered when a Google OAuth client id is configured in
+             Admin → Settings; hidden again while the 2FA step is showing. -->
+        <div id="google-signin-wrap" class="d-none">
+          <div class="d-flex align-items-center gap-2 my-3" aria-hidden="true">
+            <hr class="flex-grow-1 my-0">
+            <span class="text-muted-custom small">or</span>
+            <hr class="flex-grow-1 my-0">
+          </div>
+          <div id="google-signin-btn" class="d-flex justify-content-center"></div>
+          <div id="google-error" class="alert alert-danger d-none mt-3"></div>
+        </div>
 
-    <form id="twofa-form" class="d-none">
-      <p class="text-muted-custom small mb-3">Enter the 6-digit code from your authenticator app.</p>
-      <div class="mb-3">
-        <label class="form-label fw-semibold" for="twofa-code">Code</label>
-        <input type="text" class="form-control" id="twofa-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" autofocus>
-      </div>
-      <div id="twofa-error" class="alert alert-danger d-none"></div>
-      <button type="submit" class="btn-brand w-100">Verify</button>
-      <button type="button" class="btn btn-link btn-sm w-100 mt-1" id="use-backup-link">Use a backup code instead</button>
-    </form>
+        <form id="twofa-form" class="d-none">
+          <p class="text-muted-custom small mb-3">Enter the 6-digit code from your authenticator app.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="twofa-code">Code</label>
+            <input type="text" class="form-control" id="twofa-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" autofocus>
+          </div>
+          <div id="twofa-error" class="alert alert-danger d-none"></div>
+          <button type="submit" class="btn-brand w-100">Verify</button>
+          <button type="button" class="btn btn-link btn-sm w-100 mt-1" id="use-backup-link">Use a backup code instead</button>
+        </form>
 
-    <div class="text-center mt-3">
-      <a href="/" class="small text-decoration-none">&larr; Return to website</a>
+        <div class="text-center mt-3">
+          <a href="/" class="small text-decoration-none">&larr; Return to website</a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>
+<script src="/js/auth-ui.js"></script>
 <script>
 let usingBackupCode = false;
 

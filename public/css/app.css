@@ -1105,6 +1105,122 @@ pre code.hljs {
 .contact-card h5 {
   color: var(--heading-color);
 }
+
+/* Auth pages (admin + client login) — shared here rather than admin.css so
+   the public client-login page (which never loads admin.css) gets the same
+   full-height centered card, brand lockup, and form polish. */
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 2rem 1.25rem;
+}
+.auth-box {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 2.75rem 2.5rem;
+  box-shadow: var(--shadow-lg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .auth-box { animation: auth-box-in 0.5s var(--ease-out); }
+}
+@keyframes auth-box-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Fixed to the viewport (not the card) so it stays put and obvious
+   regardless of which auth layout — single card or split — is on screen. */
+.page-theme-toggle { position: fixed; top: 1.25rem; right: 1.25rem; z-index: 20; }
+.auth-brand { display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+.auth-brand .brand-mark { width: 2.75rem; height: 2.75rem; font-size: 1rem; border-radius: 0.75rem; }
+.auth-eyebrow {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+.auth-box h1,
+.auth-box h3 { text-align: center; color: var(--heading-color); }
+.auth-subtitle { text-align: center; color: var(--ink-soft); font-size: 0.9rem; margin-bottom: 1.75rem; }
+.auth-box .text-center a { color: var(--ink-soft); transition: color 0.2s ease; }
+.auth-box .text-center a:hover { color: var(--accent); }
+
+/* Password field: input plus an eye-toggle button, reading as one control. */
+.password-field { position: relative; }
+.password-field .form-control { padding-right: 2.75rem; }
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.password-toggle:hover { color: var(--accent); }
+.password-toggle svg { width: 18px; height: 18px; display: block; }
+
+/* Split auth layout (admin login): editorial brand panel + form panel,
+   sharing .auth-box for the actual form so both auth pages still get
+   identical card/form styling. */
+.auth-shell.is-split { padding: 0; align-items: stretch; }
+.auth-split { display: flex; width: 100%; min-height: 100vh; }
+/* Always dark regardless of site theme — same convention as .site-footer,
+   a grounded brand identity rather than a panel that flips with the toggle. */
+.auth-brand-panel {
+  flex: 1 1 44%;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  padding: 3rem;
+  text-align: center;
+}
+.auth-brand-panel .brand-mark {
+  width: 4rem;
+  height: 4rem;
+  font-size: 1.4rem;
+  border-radius: 1rem;
+  background: #fff;
+  color: var(--navy);
+}
+.auth-split-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; }
+.auth-split-title .dot { color: inherit; opacity: 0.5; }
+.auth-split-tagline { opacity: 0.65; font-size: 0.9rem; max-width: 22rem; line-height: 1.6; }
+.auth-form-panel {
+  flex: 1 1 56%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+}
+.auth-form-panel .auth-box { box-shadow: none; border: none; }
+@media (max-width: 899.98px) {
+  .auth-split { flex-direction: column; min-height: auto; }
+  .auth-brand-panel { flex: none; padding: 2.5rem 1.5rem; }
+  .auth-form-panel { flex: none; padding: 2rem 1.25rem 3rem; }
+}
+
 /* Contact channels — phone and email read as display-size direct lines
    (eyebrow label over a big value with the arrow-nudge idiom) instead of
    small meta rows. The value anchor carries data-content-href, so label and
