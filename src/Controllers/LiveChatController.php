@@ -12,15 +12,16 @@ use App\Support\Response;
 use App\Support\Settings;
 
 /**
- * Live Chat: a requirements-gathering conversation that can generate an HTML
- * concept prototype for the visitor to approve or comment on. Feedback flows
- * into the inquiries inbox (and its Slack webhook queue) plus a dedicated
- * chat_sessions record the admin panel lists under "Chat Leads".
+ * Live Chat: a requirements-gathering conversation. The AI cannot build or
+ * offer a prototype itself — visitors asking for one are redirected to a
+ * normal inquiry so Caleb follows up and puts it together personally. Leads
+ * flow into the inquiries inbox (and its Slack webhook queue) plus a
+ * dedicated chat_sessions record the admin panel lists under "Chat Leads".
  *
- * Both the conversation and prototype generation fall back across Gemini,
- * OpenRouter, and Groq (whichever keys are configured in Admin -> Settings);
- * without any of the three, the chat still works via keyword/booking-intent
- * fallback, minus AI-driven tool calls and the prototype step.
+ * The conversation falls back across Gemini, OpenRouter, and Groq (whichever
+ * keys are configured in Admin -> Settings); without any of the three, the
+ * chat still works via keyword/booking-intent fallback, minus AI-driven tool
+ * calls.
  */
 class LiveChatController
 {
@@ -175,11 +176,11 @@ class LiveChatController
             // 'openrouter', 'groq', or null (keyword fallback served this
             // reply). Safe to remove later; not relied on by any UI logic.
             'provider' => $provider,
-            // The widget shows "Build my prototype" once the AI itself has
-            // signaled (via the mark_ready_for_prototype tool) that it has
-            // enough real context — not just after N messages, since chit-chat
-            // shouldn't count. This sticks once earned, even if a later turn
-            // has to fall back to keyword mode.
+            // AI-driven prototype building is disabled — the model has no tool
+            // to set ready_for_prototype anymore, so this (and the "Build my
+            // prototype" button it used to gate) stays permanently false.
+            // Visitors asking for a prototype are redirected to Caleb instead
+            // (see the system prompt).
             'can_prototype' => $readyForPrototype,
         ]);
     }
@@ -687,19 +688,14 @@ class LiveChatController
             . "out — e.g. \"Got it. I have your phone number and email down. Caleb will review the task and "
             . "reach out shortly.\" Don't call log_inquiry for a greeting or a general question that doesn't "
             . "need follow-up.\n\n"
-            . "Some visitors want to see something concrete before Caleb reviews their idea — if a NEW "
-            . "PROJECT conversation naturally goes deep enough (the core workflow, how roles interact, "
-            . "specific features they care about, not just a one-line pitch), you may also call "
-            . "mark_ready_for_prototype to offer them a quick prototype preview. This is optional, not "
-            . "required for every inquiry. If the visitor EXPLICITLY asks to see a design, prototype, mockup, "
-            . "demo, or working example (e.g. \"show me a design\", \"can I see a prototype\", \"design a "
-            . "landing page for it\"), call mark_ready_for_prototype right away regardless of how deep the "
-            . "conversation has gone — a direct request always qualifies, even early on. Never mention the "
-            . "\"Build my prototype\" button yourself, whether it's shown is handled separately. A prototype "
-            . "request is NOT a booking request: calling "
-            . "mark_ready_for_prototype is the complete action — never follow it (or any other prototype/mockup/demo "
-            . "question) by asking for a booking date or time; only ask about scheduling a call when the visitor "
-            . "actually asks to talk it through live or book a call.\n\n"
+            . "You cannot build or show a prototype, design, mockup, or demo yourself — that capability is "
+            . "disabled. If a visitor asks to see one (e.g. \"show me a design\", \"can I see a prototype\", "
+            . "\"design a landing page for it\"), tell them plainly that Caleb personally puts prototypes "
+            . "together himself, then treat it exactly like a NEW PROJECT inquiry: gather their name, email, "
+            . "phone, and enough detail about what they want to see, and call log_inquiry so Caleb has it "
+            . "directly. Never claim you're building, generating, or about to show them anything — the honest "
+            . "answer is that Caleb will follow up personally. This is not a booking request either; only ask "
+            . "about scheduling a call when the visitor actually asks to talk it through live or book a call.\n\n"
             . "You have tools available:\n"
             . "- get_site_info: for general questions about Prince's background, services, tech stack, "
             . "experience, location, contact/social links, and the public engineering tiers (starting "
@@ -738,10 +734,7 @@ class LiveChatController
             . "you a call or send a calendar invite to your email.\" Once you've told the visitor their "
             . "booking is confirmed, do NOT call book_appointment again for that same request — a plain "
             . "\"thanks\" or other acknowledgment afterward needs a reply, not another booking attempt. Only "
-            . "call it again if they explicitly ask to book a different or additional slot.\n"
-            . "- mark_ready_for_prototype: call this at most once, either once a NEW PROJECT conversation has "
-            . "gone beyond the basics, OR immediately when the visitor explicitly asks to see a design, "
-            . "prototype, mockup, or demo — never for greetings, small talk, or general questions.\n\n"
+            . "call it again if they explicitly ask to book a different or additional slot.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
         $persona = Settings::get('chat_persona');
@@ -785,10 +778,10 @@ class LiveChatController
             ];
             // On the last allowed round, don't offer tools at all — otherwise
             // a model that wants a second sequential tool call (e.g. search
-            // one thing, then decide to call mark_ready_for_prototype) uses
-            // up every round on functionCalls and never emits final text,
-            // which surfaced as the whole turn silently falling all the way
-            // through to keyword matching. Forcing text here guarantees a
+            // one thing, then decide to call log_inquiry) uses up every round
+            // on functionCalls and never emits final text, which surfaced as
+            // the whole turn silently falling all the way through to keyword
+            // matching. Forcing text here guarantees a
             // real reply using whatever tool results are already in hand.
             if ($round < self::MAX_TOOL_ROUNDS - 1) {
                 $payload['tools'] = $tools;
@@ -831,12 +824,6 @@ class LiveChatController
                     ));
                 }
                 return ['reply' => $text !== '' ? $text : null, 'ready' => $ready];
-            }
-
-            foreach ($functionCalls as $call) {
-                if ($call['name'] === 'mark_ready_for_prototype') {
-                    $ready = true;
-                }
             }
 
             // Echo the model's turn back exactly as received — thinking-enabled
@@ -948,12 +935,6 @@ class LiveChatController
                 return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
             }
 
-            foreach ($toolCalls as $call) {
-                if (($call['function']['name'] ?? '') === 'mark_ready_for_prototype') {
-                    $ready = true;
-                }
-            }
-
             // Echo the assistant's own tool-call turn back verbatim (OpenAI
             // format requires this preceding message to carry the same
             // tool_calls the model just made), then one "tool" message per
@@ -1050,12 +1031,6 @@ class LiveChatController
                 return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
             }
 
-            foreach ($toolCalls as $call) {
-                if (($call['function']['name'] ?? '') === 'mark_ready_for_prototype') {
-                    $ready = true;
-                }
-            }
-
             $messages[] = $message;
             foreach ($toolCalls as $call) {
                 $name = $call['function']['name'] ?? '';
@@ -1133,7 +1108,7 @@ class LiveChatController
         }
 
         $name = $matches[1];
-        $allowed = ['log_inquiry', 'signal_handoff', 'mark_ready_for_prototype'];
+        $allowed = ['log_inquiry', 'signal_handoff'];
         if (!in_array($name, $allowed, true)) {
             error_log(sprintf('Live Chat Groq recovery skipped unsafe tool "%s".', $name));
             return null;
@@ -1148,13 +1123,6 @@ class LiveChatController
         if (isset($toolResult['error'])) {
             error_log(sprintf('Live Chat Groq recovery tool "%s" failed: %s', $name, json_encode($toolResult)));
             return null;
-        }
-
-        if ($name === 'mark_ready_for_prototype') {
-            return [
-                'reply' => "That gives Caleb enough context to sketch a direction. What name, email, and phone number should he use to follow up?",
-                'ready' => true,
-            ];
         }
 
         return [
@@ -1256,16 +1224,6 @@ class LiveChatController
                     ],
                     'required' => ['name', 'email', 'summary'],
                 ],
-            ],
-            [
-                'name' => 'mark_ready_for_prototype',
-                'description' => 'Call once the conversation has gone beyond the basics (what it is, who '
-                    . 'it is for) into the actual workflow — the steps a user or role goes through, or a '
-                    . 'couple of specific features/details they care about. A one-line project pitch alone '
-                    . 'is not enough. This unlocks the "Build my prototype" button for them. Never call this '
-                    . 'for greetings, small talk, general questions, or before a real back-and-forth has '
-                    . 'happened — if unsure, ask one more question first.',
-                'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
             ],
             [
                 'name' => 'check_availability',
@@ -1382,7 +1340,6 @@ class LiveChatController
                 'search_content' => self::toolSearchContent($pdo, (string) ($args['query'] ?? '')),
                 'audit_website' => self::toolAuditWebsite((string) ($args['url'] ?? '')),
                 'signal_handoff' => self::toolSignalHandoff($args, $pdo),
-                'mark_ready_for_prototype' => ['acknowledged' => true],
                 default => ['error' => 'Unknown tool.'],
             };
         } catch (\Throwable $e) {
