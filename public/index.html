@@ -175,35 +175,40 @@
 </div>
 
 <section class="section">
-  <div class="container">
-    <div class="row g-4">
-      <div class="col-md-6 reveal">
-        <div class="service-card">
+  <div class="container reveal">
+    <p class="eyebrow text-center mb-3">// What I build</p>
+    <div class="service-deck">
+      <div class="service-deck-stage" id="service-deck-stage">
+        <div class="deck-card">
           <div class="service-icon mono">01</div>
           <h3 class="h4 mb-3" data-content="service_1_title">Custom Web Application Engineering</h3>
-          <p class="text-muted-custom mb-0" data-content="service_1_summary">Purpose-built backends paired with lean presentation layers — designed for absolute control, lightning load times, and clean role-based data architectures.</p>
+          <p class="text-muted-custom mb-4" data-content="service_1_summary">Purpose-built backends paired with lean presentation layers — designed for absolute control, lightning load times, and clean role-based data architectures.</p>
+          <a href="/services.html#track-01" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
-      </div>
-      <div class="col-md-6 reveal reveal-delay-1">
-        <div class="service-card">
+        <div class="deck-card">
           <div class="service-icon mono">02</div>
           <h3 class="h4 mb-3" data-content="service_2_title">CMS Development &amp; Ecosystems</h3>
-          <p class="text-muted-custom mb-0" data-content="service_2_summary">Tailored WordPress and headless CMS setups built around your specific editorial workflow and business logic — never a bloated template.</p>
+          <p class="text-muted-custom mb-4" data-content="service_2_summary">Tailored WordPress and headless CMS setups built around your specific editorial workflow and business logic — never a bloated template.</p>
+          <a href="/services.html#track-02" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
-      </div>
-      <div class="col-md-6 reveal reveal-delay-2">
-        <div class="service-card">
+        <div class="deck-card">
           <div class="service-icon mono">03</div>
           <h3 class="h4 mb-3" data-content="service_3_title">Native &amp; Multi-Platform Mobile Apps</h3>
-          <p class="text-muted-custom mb-0" data-content="service_3_summary">Fluid cross-platform architectures written for flawless device performance — seamless API integration and lightweight offline asset management.</p>
+          <p class="text-muted-custom mb-4" data-content="service_3_summary">Fluid cross-platform architectures written for flawless device performance — seamless API integration and lightweight offline asset management.</p>
+          <a href="/services.html#track-03" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
-      </div>
-      <div class="col-md-6 reveal reveal-delay-3">
-        <div class="service-card" style="border-style: dashed;">
+        <div class="deck-card">
           <div class="service-icon mono">04</div>
           <h3 class="h4 mb-3">Custom AI Integrations</h3>
-          <p class="text-muted-custom mb-0">Chat assistants, content tools, and workflow automation — integrated where they genuinely improve the product. The live chat on this site is a working example, not a demo.</p>
+          <p class="text-muted-custom mb-4">Chat assistants, content tools, and workflow automation — integrated where they genuinely improve the product. The live chat on this site is a working example, not a demo.</p>
+          <a href="/services.html#track-04" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
+      </div>
+      <div class="service-deck-controls">
+        <button type="button" class="service-deck-next" id="service-deck-next" aria-label="Show next service">
+          Next service
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -665,6 +670,7 @@
 <script src="/js/animations.js"></script>
 <script src="/js/hero-3d.js" defer></script>
 <script src="/js/home.js"></script>
+<script src="/js/service-deck.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
