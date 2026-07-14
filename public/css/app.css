@@ -54,8 +54,47 @@
   --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
-[data-theme="dark"] body { color-scheme: dark; }
-[data-theme="dark"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+/* Midnight — a cooler, deep navy-black alternative to Dark. */
+[data-theme="midnight"] {
+  --ink: #dce6ff;
+  --heading-color: #ffffff;
+  --ink-soft: #9fb0d1;
+  --muted: #7686a8;
+  --bg: #060a14;
+  --bg-soft: #0a0f1c;
+  --card-bg: #0d1526;
+  --nav-bg: rgba(6, 10, 20, 0.82);
+  --line: rgba(150, 180, 255, 0.12);
+  --line-strong: rgba(150, 180, 255, 0.3);
+  --accent: #eef3ff;
+  --accent-strong: #ffffff;
+  --accent-soft: rgba(150, 180, 255, 0.1);
+  --shadow: 0 2px 16px rgba(0, 0, 10, 0.5);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 10, 0.6);
+}
+/* Paper — a warm cream alternative to Light. */
+[data-theme="paper"] {
+  --ink: #2b2620;
+  --heading-color: #1a1611;
+  --ink-soft: #6b6153;
+  --muted: #8c8271;
+  --bg: #f5efe0;
+  --bg-soft: #efe6d3;
+  --card-bg: #fffcf5;
+  --nav-bg: rgba(245, 239, 224, 0.85);
+  --line: rgba(43, 38, 32, 0.12);
+  --line-strong: rgba(43, 38, 32, 0.3);
+  --accent: #1a1611;
+  --accent-strong: #000000;
+  --accent-soft: rgba(43, 38, 32, 0.07);
+  --shadow: 0 2px 16px rgba(60, 50, 30, 0.08);
+  --shadow-lg: 0 16px 40px rgba(60, 50, 30, 0.14);
+}
+[data-theme="dark"] body,
+[data-theme="midnight"] body { color-scheme: dark; }
+[data-theme="paper"] body { color-scheme: light; }
+[data-theme="dark"] .btn-close,
+[data-theme="midnight"] .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
 
 * { box-sizing: border-box; }
 
@@ -129,7 +168,12 @@ select::placeholder,
 [data-theme="dark"] textarea::placeholder,
 [data-theme="dark"] select::placeholder,
 [data-theme="dark"] .form-control::placeholder,
-[data-theme="dark"] .form-select::placeholder {
+[data-theme="dark"] .form-select::placeholder,
+[data-theme="midnight"] input::placeholder,
+[data-theme="midnight"] textarea::placeholder,
+[data-theme="midnight"] select::placeholder,
+[data-theme="midnight"] .form-control::placeholder,
+[data-theme="midnight"] .form-select::placeholder {
   color: #cbd5e1;
 }
 
@@ -424,6 +468,49 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
   cursor: pointer;
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Theme picker popover — theme.js builds one shared instance, appended to
+   <body> and repositioned near whichever .theme-toggle button was clicked
+   (there's normally just one per page, but this keeps it robust either way). */
+.theme-menu {
+  position: fixed;
+  z-index: 2000;
+  min-width: 180px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.4rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.theme-menu.open { display: flex; }
+.theme-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--ink);
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.theme-menu-item:hover { background: var(--accent-soft); }
+.theme-menu-item .theme-menu-label { flex: 1 1 auto; }
+.theme-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.theme-check { width: 15px; height: 15px; flex-shrink: 0; color: var(--accent); visibility: hidden; }
+.theme-menu-item.active .theme-check { visibility: visible; }
 
 /* Nav search icon (links to /search.html) and admin login icon (links to
    /admin/login.html) — same treatment, both small icon-only nav buttons. */
@@ -1076,7 +1163,8 @@ pre code.hljs {
 .faq-accordion .accordion-button:focus { box-shadow: none; border-color: var(--line); }
 .faq-accordion .accordion-button::after { flex-shrink: 0; }
 .faq-accordion .accordion-body { padding: 0 1.5rem 1.25rem; color: var(--muted); }
-[data-theme="dark"] .faq-accordion .accordion-button::after { filter: invert(1) grayscale(100%) brightness(1.8); }
+[data-theme="dark"] .faq-accordion .accordion-button::after,
+[data-theme="midnight"] .faq-accordion .accordion-button::after { filter: invert(1) grayscale(100%) brightness(1.8); }
 
 /* About page */
 .bio-photo {
@@ -1292,7 +1380,8 @@ pre code.hljs {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
-[data-theme="dark"] .form-select {
+[data-theme="dark"] .form-select,
+[data-theme="midnight"] .form-select {
   /* Bootstrap's chevron SVG is near-black — swap in a light one */
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e8eaed' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
@@ -1307,11 +1396,13 @@ pre code.hljs {
 .spinner-border.text-primary {
   color: var(--heading-color) !important;
 }
-[data-theme="dark"] .form-check-input:checked[type="checkbox"] {
+[data-theme="dark"] .form-check-input:checked[type="checkbox"],
+[data-theme="midnight"] .form-check-input:checked[type="checkbox"] {
   /* White fill needs a dark checkmark (Bootstrap's default mark is white) */
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230b0c0e' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
 }
-[data-theme="dark"] .form-check-input:checked[type="radio"] {
+[data-theme="dark"] .form-check-input:checked[type="radio"],
+[data-theme="midnight"] .form-check-input:checked[type="radio"] {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%230b0c0e'/%3e%3c/svg%3e");
 }
 
@@ -1322,28 +1413,37 @@ pre code.hljs {
 }
 
 [data-theme="dark"] #checkout-modal .modal-content,
-[data-theme="dark"] #live-demo-modal .modal-content {
+[data-theme="dark"] #live-demo-modal .modal-content,
+[data-theme="midnight"] #checkout-modal .modal-content,
+[data-theme="midnight"] #live-demo-modal .modal-content {
   background: var(--card-bg);
   border-color: var(--line);
   color: var(--ink);
 }
 
 [data-theme="dark"] #checkout-modal .modal-header,
-[data-theme="dark"] #live-demo-modal .modal-header {
+[data-theme="dark"] #live-demo-modal .modal-header,
+[data-theme="midnight"] #checkout-modal .modal-header,
+[data-theme="midnight"] #live-demo-modal .modal-header {
   border-bottom-color: var(--line);
 }
 
 [data-theme="dark"] #checkout-modal .modal-title,
-[data-theme="dark"] #live-demo-modal .modal-title {
+[data-theme="dark"] #live-demo-modal .modal-title,
+[data-theme="midnight"] #checkout-modal .modal-title,
+[data-theme="midnight"] #live-demo-modal .modal-title {
   color: #fff;
 }
 
-[data-theme="dark"] #checkout-modal .form-label {
+[data-theme="dark"] #checkout-modal .form-label,
+[data-theme="midnight"] #checkout-modal .form-label {
   color: var(--ink-soft);
 }
 
 [data-theme="dark"] #checkout-modal .form-control,
-[data-theme="dark"] #checkout-modal .form-select {
+[data-theme="dark"] #checkout-modal .form-select,
+[data-theme="midnight"] #checkout-modal .form-control,
+[data-theme="midnight"] #checkout-modal .form-select {
   background: var(--bg);
   border-color: var(--line);
   color: var(--ink);
@@ -1353,7 +1453,12 @@ pre code.hljs {
 [data-theme="dark"] #checkout-modal .form-select::placeholder,
 [data-theme="dark"] #checkout-modal input::placeholder,
 [data-theme="dark"] #checkout-modal textarea::placeholder,
-[data-theme="dark"] #checkout-modal select::placeholder {
+[data-theme="dark"] #checkout-modal select::placeholder,
+[data-theme="midnight"] #checkout-modal .form-control::placeholder,
+[data-theme="midnight"] #checkout-modal .form-select::placeholder,
+[data-theme="midnight"] #checkout-modal input::placeholder,
+[data-theme="midnight"] #checkout-modal textarea::placeholder,
+[data-theme="midnight"] #checkout-modal select::placeholder {
   color: #cbd5e1;
 }
 
@@ -3352,10 +3457,12 @@ body.site-search-open { overflow: hidden; }
 .depth-card.is-depth-active::before {
   opacity: 1;
 }
-[data-theme="dark"] .depth-card::before {
+[data-theme="dark"] .depth-card::before,
+[data-theme="midnight"] .depth-card::before {
   background: radial-gradient(circle at var(--glow-x, 50%) var(--glow-y, 50%), rgba(255, 255, 255, 0.12), transparent 42%);
 }
-[data-theme="dark"] .depth-card.is-depth-active {
+[data-theme="dark"] .depth-card.is-depth-active,
+[data-theme="midnight"] .depth-card.is-depth-active {
   box-shadow: 0 24px 62px rgba(0, 0, 0, 0.48);
 }
 .hero-depth {
