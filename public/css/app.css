@@ -1172,56 +1172,103 @@ pre code.hljs {
 }
 .social-icon-link:hover { background: rgba(255, 255, 255, 0.16); transform: translateY(-2px); }
 
-/* AI chat widget — editorial treatment: ink pill with eyebrow-style
-   tracking on the toggle, hairline panel, quote-rule bot messages. */
+/* AI chat widget — editorial treatment: circular ink FAB with a single
+   glyph, hairline panel, quote-rule bot messages. */
 #ai-widget-toggle {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
   z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  padding: 0;
   background: var(--heading-color);
   color: var(--bg);
   border: none;
-  border-radius: 999px;
-  padding: 0.9rem 1.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  border-radius: 50%;
   box-shadow: var(--shadow-lg);
-  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
 }
-#ai-widget-toggle:hover { transform: translateY(-2px); }
+#ai-widget-toggle:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 20px 44px rgba(10, 11, 13, 0.22); }
+#ai-widget-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ai-toggle-icon { width: 26px; height: 26px; }
+@media (prefers-reduced-motion: reduce) {
+  #ai-widget-toggle { transition: none; }
+}
 
-/* WhatsApp floating contact button */
+/* "Unread" badge on the bubble — shown once per session until clicked. Color
+   (not just position) carries the meaning, and the screen-reader-only text
+   next to it says the same thing in words. */
+.ai-toggle-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  border: 2px solid var(--bg);
+  animation: ai-badge-pop 0.4s var(--ease-out), ai-badge-pulse 2.2s ease-in-out 0.4s infinite;
+}
+.ai-toggle-badge.d-none { display: none; }
+@keyframes ai-badge-pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+@keyframes ai-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-toggle-badge { animation: none; }
+}
+
+/* WhatsApp floating contact button — same circular FAB shape as the chat
+   toggle, brand green kept for instant recognition. */
 #whatsapp-float-btn {
   position: fixed;
   bottom: 1.5rem;
   left: 1.5rem;
   z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
   background: #25d366;
   color: #fff;
   border: none;
-  border-radius: 999px;
-  padding: 0.85rem 1.4rem;
-  font-weight: 600;
+  border-radius: 50%;
   box-shadow: var(--shadow-lg);
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: transform 0.15s ease;
+  cursor: pointer;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
 }
-#whatsapp-float-btn:hover { color: #fff; transform: translateY(-2px); }
+#whatsapp-float-btn:hover { color: #fff; transform: translateY(-3px) scale(1.04); box-shadow: 0 20px 44px rgba(10, 11, 13, 0.22); }
+#whatsapp-float-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.whatsapp-icon { width: 28px; height: 28px; }
+@media (prefers-reduced-motion: reduce) {
+  #whatsapp-float-btn { transition: none; }
+}
 #ai-widget-panel {
   position: fixed;
-  bottom: 5.5rem;
+  bottom: 5.75rem;
   right: 1.5rem;
-  width: 340px;
+  width: 360px;
   max-width: calc(100vw - 2rem);
   background: var(--card-bg);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: var(--shadow-lg);
   z-index: 1050;
   display: flex;
@@ -1269,10 +1316,14 @@ pre code.hljs {
   width: fit-content;
 }
 .ai-msg.bot {
-  color: var(--ink-soft);
-  border-left: 2px solid var(--line-strong);
-  padding-left: 0.75rem;
+  color: var(--ink);
+  background: var(--accent-soft);
+  border-radius: 12px 12px 12px 2px;
+  padding: 0.6rem 0.85rem;
+  max-width: 88%;
+  width: fit-content;
 }
+.ai-msg.bot.ai-prototype-cta { background: none; padding: 0; max-width: 100%; }
 
 /* Mic button that reads a bot reply aloud (Web Speech API) */
 .ai-speak-btn {
@@ -1387,6 +1438,30 @@ pre code.hljs {
 #ai-widget-autospeak.on { color: var(--accent); }
 #ai-widget-autospeak svg { width: 16px; height: 16px; }
 
+/* Pill-shaped chat composer input */
+.ai-chat-input { border-radius: 999px !important; padding-left: 1rem; }
+
+/* Circular send button, paired with the pill input */
+.ai-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--heading-color);
+  color: var(--bg);
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.ai-send-btn svg { width: 15px; height: 15px; }
+.ai-send-btn:hover { transform: scale(1.06); }
+.ai-send-btn:active { transform: scale(0.94); }
+.ai-send-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
 /* Voice-input mic in the chat composer (speech-to-text) */
 .ai-input-mic {
   display: inline-flex;
@@ -1394,10 +1469,11 @@ pre code.hljs {
   justify-content: center;
   flex: 0 0 auto;
   width: 34px;
+  height: 34px;
   border: 1.5px solid var(--line);
   background: var(--card-bg);
   color: var(--ink-soft);
-  border-radius: 8px;
+  border-radius: 50%;
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
@@ -1459,9 +1535,9 @@ pre code.hljs {
 
 /* Live-chat header */
 .chat-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   background: var(--heading-color);
   color: var(--bg);
   display: flex;
@@ -1478,7 +1554,17 @@ pre code.hljs {
   background: #94a3b8;
   margin-right: 4px;
 }
-.status-dot.online { background: #22c55e; }
+.status-dot.online {
+  background: #22c55e;
+  animation: status-pulse 2s ease-in-out infinite;
+}
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
+  50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .status-dot.online { animation: none; }
+}
 
 /* Live-chat prototype review */
 #ai-widget-panel { max-height: 80vh; }

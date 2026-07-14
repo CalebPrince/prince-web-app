@@ -1,45 +1,27 @@
 // Tiny, always-loaded bootstrap for the Live Chat widget. The widget JS is
-// loaded on demand — but it auto-opens once per browser session so visitors
-// see the greeting (or the offline message) without having to click.
+// loaded on demand, the first time the visitor actually clicks the bubble —
+// it never pops open on its own. Instead the bubble shows a small "1 unread"
+// badge (dismissed for the rest of the session once clicked) as the hint to
+// come talk to Lisa.
 document.addEventListener("DOMContentLoaded", () => {
   const toggle = document.getElementById("ai-widget-toggle");
   if (!toggle) return;
+
+  const badge = document.getElementById("ai-widget-badge");
+  if (badge && sessionStorage.getItem("chat_badge_seen")) {
+    badge.classList.add("d-none");
+  }
 
   let loaded = false;
   const load = () => {
     if (loaded) return;
     loaded = true;
+    if (badge) badge.classList.add("d-none");
+    sessionStorage.setItem("chat_badge_seen", "1");
     const script = document.createElement("script");
     script.src = "/js/ai-widget.js";
     document.body.appendChild(script);
   };
 
   toggle.addEventListener("click", load, { once: true });
-
-  // Open the widget on the visitor's cursor leaving the top of the viewport
-  // (classic exit-intent) — but only if it hasn't auto-shown yet this session,
-  // so a fast leaver who bails before the 1.5s timer still sees the greeting,
-  // and it never double-fires with the timed open below.
-  const openOnce = () => {
-    if (sessionStorage.getItem("chat_auto_shown")) return;
-    if (toggle.classList.contains("d-none")) return;
-    sessionStorage.setItem("chat_auto_shown", "1");
-    load();
-  };
-
-  document.addEventListener("mouseout", (e) => {
-    if (!e.relatedTarget && e.clientY <= 0) openOnce();
-  });
-
-  if (!sessionStorage.getItem("chat_auto_shown")) {
-    // Re-checked at fire time (not now) so content.js has had a chance to
-    // hide the button first if Live Chat has been turned off in Settings,
-    // and so exit-intent may have already claimed the one auto-open.
-    setTimeout(() => {
-      if (sessionStorage.getItem("chat_auto_shown")) return;
-      if (toggle.classList.contains("d-none")) return;
-      sessionStorage.setItem("chat_auto_shown", "1");
-      load();
-    }, 1500);
-  }
 });

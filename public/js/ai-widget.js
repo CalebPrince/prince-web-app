@@ -38,10 +38,12 @@
       <textarea class="form-control form-control-sm mb-2" id="lm-message" rows="3" placeholder="What can Prince help you with?" required></textarea>
       <button type="submit" class="btn-brand btn-sm w-100" id="lm-submit">Send message</button>
     </form>
-    <form id="ai-widget-form" class="d-flex gap-2 p-2 border-top">
-      <input type="text" class="form-control form-control-sm" id="ai-widget-input" placeholder="e.g. a booking site for my salon" autocomplete="off" required>
+    <form id="ai-widget-form" class="d-flex align-items-center gap-2 p-2 border-top">
+      <input type="text" class="form-control form-control-sm ai-chat-input" id="ai-widget-input" placeholder="e.g. a booking site for my salon" autocomplete="off" required>
       <button type="button" class="ai-input-mic" id="ai-widget-mic" title="Speak your message" aria-label="Speak your message"></button>
-      <button type="submit" class="btn btn-brand btn-sm">Send</button>
+      <button type="submit" class="ai-send-btn" aria-label="Send message" title="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
     </form>
   `;
   document.body.appendChild(panel);
@@ -872,11 +874,13 @@
     renderMenu("main");
   });
 
-  document.getElementById("ai-widget-close").addEventListener("click", () => {
-    panel.style.display = "none";
-  });
-  toggle.addEventListener("click", () => {
-    panel.style.display = panel.style.display === "none" ? "flex" : "none";
-  });
-  panel.style.display = "flex";
+  function setPanelOpen(open) {
+    panel.style.display = open ? "flex" : "none";
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.setAttribute("aria-label", open ? `Close live chat with ${assistantName}` : "Open live chat");
+  }
+
+  document.getElementById("ai-widget-close").addEventListener("click", () => setPanelOpen(false));
+  toggle.addEventListener("click", () => setPanelOpen(panel.style.display === "none"));
+  setPanelOpen(true);
 })();
