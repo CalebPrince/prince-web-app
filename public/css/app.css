@@ -2016,6 +2016,72 @@ pre code.hljs {
 .workspace-frame-stage.width-tablet #ws-prototype-frame { width: 768px; max-width: 100%; }
 .workspace-frame-stage.width-mobile #ws-prototype-frame { width: 390px; max-width: 100%; }
 
+/* Result-view toolbar: device toggle on the left, icon actions on the right */
+.ws-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.ws-toolbar-actions { display: flex; align-items: center; gap: 0.15rem; }
+.ws-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.ws-tool-btn:hover { color: var(--accent); border-color: var(--line); background: var(--accent-soft); }
+.ws-tool-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.ws-tool-btn.copied { color: #1a7f37; border-color: #1a7f37; }
+
+/* Result-view footer: verdict prompt → feedback form → thank-you state */
+.ws-footer {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.ws-verdict-prompt {
+  margin: 0 0 0.65rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ws-feedback-form { margin-top: 0.85rem; }
+.ws-thanks { text-align: center; padding: 0.4rem 0 0.2rem; }
+.ws-thanks-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(26, 127, 55, 0.12);
+  color: #1a7f37;
+  margin-bottom: 0.6rem;
+}
+.ws-thanks-icon svg { width: 22px; height: 22px; }
+.ws-thanks p { font-size: 0.92rem; color: var(--ink); }
+
+@media (max-width: 600px) {
+  .ws-tool-label { display: none; }
+  .ws-tool-btn { padding: 0.45rem; }
+}
+
 @media (max-width: 900px) {
   .workspace-preview { height: auto; min-height: 480px; }
   .generator-input-wrap { padding: 1rem 1.1rem 3.25rem 1.1rem; }

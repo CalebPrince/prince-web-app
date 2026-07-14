@@ -10,16 +10,21 @@
   const resultEl = document.getElementById("generator-result");
   const frame = document.getElementById("ws-prototype-frame");
   const fullscreenLink = document.getElementById("ws-fullscreen-link");
+  const downloadLink = document.getElementById("ws-download-link");
 
   function cacheBusted(url) {
     return url + (url.includes("?") ? "&" : "?") + "t=" + Date.now();
   }
 
+  let currentUrl = null;
+
   function showResult(url) {
+    currentUrl = url;
     heroEl.classList.add("d-none");
     resultEl.classList.remove("d-none");
     frame.src = cacheBusted(url);
     fullscreenLink.href = url;
+    downloadLink.href = url;
   }
 
   function setToken(token) {
@@ -303,51 +308,117 @@
     });
   });
 
-  // ---- approve / request changes ------------------------------------------------
+  // ---- copy shareable link ------------------------------------------------------
 
-  let decision = null;
-  const feedbackForm = document.getElementById("ws-feedback-form");
+  const copyBtn = document.getElementById("ws-copy-link");
+  const copyLabel = copyBtn.querySelector(".ws-tool-label");
+  let copyResetTimer = null;
 
-  document.getElementById("ws-approve").addEventListener("click", () => {
-    decision = "approved";
-    feedbackForm.classList.remove("d-none");
-    document.getElementById("ws-comment").placeholder = "Anything to add? (optional)";
-    document.getElementById("ws-fb-name").focus();
+  copyBtn.addEventListener("click", async () => {
+    if (!currentUrl) return;
+    const absolute = new URL(currentUrl, window.location.origin).href;
+    try {
+      await navigator.clipboard.writeText(absolute);
+    } catch (_) {
+      // Clipboard API can be blocked (insecure context / permissions) — fall
+      // back to a hidden textarea + execCommand so the button still works.
+      const ta = document.createElement("textarea");
+      ta.value = absolute;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (__) {}
+      document.body.removeChild(ta);
+    }
+    copyBtn.classList.add("copied");
+    if (copyLabel) copyLabel.textContent = "Copied!";
+    clearTimeout(copyResetTimer);
+    copyResetTimer = setTimeout(() => {
+      copyBtn.classList.remove("copied");
+      if (copyLabel) copyLabel.textContent = "Copy link";
+    }, 2000);
   });
 
-  document.getElementById("ws-changes").addEventListener("click", () => {
-    decision = "changes_requested";
+  // ---- approve / request changes ------------------------------------------------
+  //
+  // The refine bar above handles live AI iteration; this is the human hand-off —
+  // it notifies Prince (approval or change notes) so he follows up personally.
+
+  let decision = null;
+  const verdict = document.getElementById("ws-verdict");
+  const feedbackForm = document.getElementById("ws-feedback-form");
+  const fbComment = document.getElementById("ws-comment");
+  const fbName = document.getElementById("ws-fb-name");
+  const fbEmail = document.getElementById("ws-fb-email");
+  const fbError = document.getElementById("ws-fb-error");
+  const fbSubmit = document.getElementById("ws-fb-submit");
+  const thanks = document.getElementById("ws-thanks");
+  const thanksMsg = document.getElementById("ws-thanks-msg");
+
+  function openFeedback(kind) {
+    decision = kind;
+    fbError.classList.add("d-none");
     feedbackForm.classList.remove("d-none");
-    document.getElementById("ws-comment").placeholder = "What should be different?";
-    document.getElementById("ws-comment").focus();
+    if (kind === "approved") {
+      fbComment.placeholder = "Anything to add? (optional)";
+      fbName.focus();
+    } else {
+      fbComment.placeholder = "What should be different? (required)";
+      fbComment.focus();
+    }
+  }
+
+  document.getElementById("ws-approve").addEventListener("click", () => openFeedback("approved"));
+  document.getElementById("ws-changes").addEventListener("click", () => openFeedback("changes_requested"));
+
+  document.getElementById("ws-fb-cancel").addEventListener("click", () => {
+    feedbackForm.classList.add("d-none");
+    feedbackForm.reset();
+    fbError.classList.add("d-none");
   });
 
   feedbackForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const submitBtn = document.getElementById("ws-fb-submit");
-    submitBtn.disabled = true;
+    fbError.classList.add("d-none");
+    // Change requests need the actual notes, or Prince has nothing to act on.
+    if (decision === "changes_requested" && !fbComment.value.trim()) {
+      fbError.textContent = "Please tell Prince what you'd like changed.";
+      fbError.classList.remove("d-none");
+      fbComment.focus();
+      return;
+    }
+    fbSubmit.disabled = true;
+    fbSubmit.textContent = "Sending…";
     try {
       await api.post("/api/v1/chat/feedback", {
         token: sessionToken,
         decision,
-        comment: document.getElementById("ws-comment").value.trim(),
-        name: document.getElementById("ws-fb-name").value.trim(),
-        email: document.getElementById("ws-fb-email").value.trim(),
+        comment: fbComment.value.trim(),
+        name: fbName.value.trim(),
+        email: fbEmail.value.trim(),
       });
-      feedbackForm.classList.add("d-none");
-      feedbackForm.reset();
-      refineError.classList.remove("alert-danger", "d-none");
-      refineError.classList.add("alert-success");
-      refineError.textContent = decision === "approved"
-        ? "Thank you! Prince has been notified and will email you shortly. 🎉"
-        : "Got it — your change requests are with Prince. Keep refining above in the meantime.";
+      verdict.classList.add("d-none");
+      thanks.classList.remove("d-none");
+      thanksMsg.textContent = decision === "approved"
+        ? "Thank you! Prince has been notified and will email you shortly."
+        : "Got it — your change notes are with Prince. He'll be in touch by email.";
     } catch (err) {
-      refineError.classList.remove("alert-success");
-      refineError.classList.add("alert-danger");
-      refineError.textContent = err.message || "Could not send your feedback — please try again.";
-      refineError.classList.remove("d-none");
+      fbError.textContent = err.message || "Could not send your feedback — please try again.";
+      fbError.classList.remove("d-none");
     } finally {
-      submitBtn.disabled = false;
+      fbSubmit.disabled = false;
+      fbSubmit.textContent = "Send to Prince";
     }
+  });
+
+  // "Keep refining" from the thank-you state → back to the refine bar up top.
+  document.getElementById("ws-thanks-again").addEventListener("click", () => {
+    thanks.classList.add("d-none");
+    verdict.classList.remove("d-none");
+    feedbackForm.classList.add("d-none");
+    feedbackForm.reset();
+    refineInput.focus();
+    refineInput.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 })();
