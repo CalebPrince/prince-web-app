@@ -82,6 +82,22 @@
   const prefillIdea = params.get("idea");
   if (prefillIdea) briefInput.value = prefillIdea.slice(0, 8000);
 
+  // Grow the textarea with its content (up to the CSS max-height, then it
+  // scrolls) and let Enter submit — Shift+Enter, or an active IME composition,
+  // still inserts a newline, matching the usual chat-composer convention.
+  function autoGrowBrief() {
+    briefInput.style.height = "auto";
+    briefInput.style.height = briefInput.scrollHeight + "px";
+  }
+  briefInput.addEventListener("input", autoGrowBrief);
+  briefInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      briefForm.requestSubmit();
+    }
+  });
+  if (prefillIdea) autoGrowBrief();
+
   // Rotating status while the (~1 min) first build runs, so the long wait feels
   // alive rather than frozen. Cosmetic only — not tied to real build progress.
   const BUILD_STEPS = [
@@ -298,6 +314,7 @@
   document.querySelectorAll(".generator-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       briefInput.value = chip.textContent;
+      autoGrowBrief();
       briefInput.focus();
     });
   });

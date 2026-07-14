@@ -1850,6 +1850,7 @@ pre code.hljs {
   line-height: 1.5;
   min-height: 4.5rem;
   max-height: 40vh;
+  overflow-y: auto;
 }
 .generator-textarea:focus { outline: none; box-shadow: none; }
 
