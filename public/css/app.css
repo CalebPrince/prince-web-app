@@ -272,43 +272,143 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
   color: var(--ink);
   line-height: 1;
   padding: 0.55rem 0.7rem;
+  transition: background-color 0.3s var(--ease-out), border-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
 }
 .nav-toggle:hover { border-color: var(--accent); color: var(--accent); }
 /* Editorial hamburger: staggered line lengths that sweep to full width on
-   hover, top to bottom. */
+   hover (mouse/keyboard only — suppressed once open, see below). */
 .nav-toggle svg line {
   transform-box: fill-box;
-  transform-origin: left center;
-  transition: transform 0.35s var(--ease-out);
+  transform-origin: center;
+  transition: transform 0.4s var(--ease-out), opacity 0.25s var(--ease-out);
 }
-.nav-toggle svg line:nth-child(2) { transform: scaleX(0.7); transition-delay: 0.04s; }
-.nav-toggle svg line:nth-child(3) { transform: scaleX(0.4); transition-delay: 0.08s; }
-.nav-toggle:hover svg line:nth-child(2),
-.nav-toggle:focus-visible svg line:nth-child(2),
-.nav-toggle:hover svg line:nth-child(3),
-.nav-toggle:focus-visible svg line:nth-child(3) { transform: scaleX(1); }
+.nav-toggle:not(.is-open) svg line:nth-child(2) { transform-origin: left center; transform: scaleX(0.7); transition-delay: 0.04s; }
+.nav-toggle:not(.is-open) svg line:nth-child(3) { transform-origin: left center; transform: scaleX(0.4); transition-delay: 0.08s; }
+.nav-toggle:hover:not(.is-open) svg line:nth-child(2),
+.nav-toggle:focus-visible:not(.is-open) svg line:nth-child(2),
+.nav-toggle:hover:not(.is-open) svg line:nth-child(3),
+.nav-toggle:focus-visible:not(.is-open) svg line:nth-child(3) { transform: scaleX(1); }
+/* Open state: the toggle IS the close button while the drawer is open, so
+   the hamburger morphs into an X (same pattern as the live-chat bubble). */
+.nav-toggle.is-open {
+  background: var(--heading-color);
+  border-color: var(--heading-color);
+  color: var(--bg);
+}
+.nav-toggle.is-open svg line:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-toggle.is-open svg line:nth-child(2) { opacity: 0; }
+.nav-toggle.is-open svg line:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+@media (prefers-reduced-motion: reduce) {
+  .nav-toggle svg line { transition: none; }
+}
 
-/* Mobile nav drawer */
-.nav-drawer { width: 300px; background: var(--bg); color: var(--ink-soft); }
-.nav-drawer .offcanvas-header { border-bottom: 1px solid var(--line); }
+/* Mobile nav drawer — editorial takeover surface: numbered index (echoes
+   the desktop mega-menu's .mega-index treatment), eyebrow label, current
+   page highlighted, and a staggered reveal synced to Bootstrap's own
+   .showing/.show lifecycle classes (no extra JS needed to sequence it). */
+.nav-drawer {
+  width: min(340px, 86vw);
+  background: var(--bg);
+  color: var(--ink-soft);
+  transition: transform 0.45s var(--ease-out) !important;
+}
+.nav-drawer .offcanvas-header { border-bottom: 1px solid var(--line); padding: 1.15rem 1.25rem; }
+/* Swap Bootstrap's default glyph for a bordered circle matching the
+   toggle's own icon language, with a hover spin for a bit of delight. */
+.nav-drawer .btn-close {
+  width: 2.15rem;
+  height: 2.15rem;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  opacity: 1;
+  position: relative;
+  /* Cancel the site-wide dark-mode invert() filter meant for Bootstrap's
+     default black-X icon — our own ::before/::after lines already use
+     var(--ink), which is correctly light in dark mode on its own. */
+  filter: none;
+  transition: border-color 0.25s ease, transform 0.4s var(--ease-out);
+}
+.nav-drawer .btn-close::before,
+.nav-drawer .btn-close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 13px;
+  height: 1.5px;
+  background: var(--ink);
+}
+.nav-drawer .btn-close::before { transform: translate(-50%, -50%) rotate(45deg); }
+.nav-drawer .btn-close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.nav-drawer .btn-close:hover { border-color: var(--accent); transform: rotate(90deg); }
 /* Drawer links read as centered headings — the drawer is a full takeover
    surface on mobile, so it can afford display-size type. */
-.nav-drawer .offcanvas-body { text-align: center; }
+.nav-drawer .offcanvas-body { text-align: center; counter-reset: nav-index; padding-top: 0.25rem; }
+.nav-drawer .offcanvas-body::before {
+  content: "// Menu";
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  margin-bottom: 0.75rem;
+}
 .nav-drawer .nav-link {
+  counter-increment: nav-index;
   padding: 1rem 0.25rem;
   border-bottom: 1px solid var(--line);
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--heading-color);
-  transition: color 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.6rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: color 0.2s ease, opacity 0.2s ease, transform 0.45s var(--ease-out);
+}
+.nav-drawer .nav-link::before {
+  content: counter(nav-index, decimal-leading-zero);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--line-strong);
+  transition: color 0.2s ease;
 }
 .nav-drawer .nav-link:hover { opacity: 0.6; }
+.nav-drawer .nav-link.active { color: var(--accent); }
+.nav-drawer .nav-link.active::before { color: var(--accent); }
 .nav-drawer .btn-brand,
 .nav-drawer .btn-brand-outline {
   font-size: 1.25rem;
   font-weight: 700;
   padding: 0.95rem 1.8rem;
+  margin-top: 1.25rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.2s ease, transform 0.45s var(--ease-out);
+  transition-delay: 0.38s;
 }
+.nav-drawer.show .nav-link,
+.nav-drawer.showing .nav-link,
+.nav-drawer.show .btn-brand,
+.nav-drawer.showing .btn-brand { opacity: 1; transform: none; }
+.nav-drawer .nav-link:nth-child(1) { transition-delay: 0.08s; }
+.nav-drawer .nav-link:nth-child(2) { transition-delay: 0.13s; }
+.nav-drawer .nav-link:nth-child(3) { transition-delay: 0.18s; }
+.nav-drawer .nav-link:nth-child(4) { transition-delay: 0.23s; }
+.nav-drawer .nav-link:nth-child(5) { transition-delay: 0.28s; }
+.nav-drawer .nav-link:nth-child(6) { transition-delay: 0.33s; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer,
+  .nav-drawer .nav-link,
+  .nav-drawer .btn-brand,
+  .nav-drawer .btn-brand-outline { transition: none !important; opacity: 1; transform: none; }
+}
+/* Match the nav bar's own glass blur instead of Bootstrap's flat scrim. */
+.offcanvas-backdrop { backdrop-filter: blur(3px); }
 
 /* Theme toggle */
 .theme-toggle {
