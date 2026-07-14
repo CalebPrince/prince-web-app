@@ -2614,6 +2614,64 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   border-radius: 28px;
   padding: 2.5rem;
 }
+
+/* Landing → prototype generator on-ramp (see chat.html) */
+.proto-cta-panel {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: clamp(1.75rem, 4vw, 3rem);
+}
+.proto-cta-points { list-style: none; padding: 0; margin: 0 0 1.75rem; display: flex; flex-direction: column; gap: 0.65rem; }
+.proto-cta-points li { display: flex; align-items: flex-start; gap: 0.6rem; color: var(--ink); font-size: 0.98rem; }
+.proto-cta-points svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--accent); margin-top: 1px; }
+.proto-cta-mock {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lg);
+}
+.proto-cta-mock-label { color: var(--accent); font-size: 0.8rem; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
+.proto-cta-mock-title { color: var(--heading-color); font-size: clamp(1.15rem, 2.5vw, 1.4rem); font-weight: 600; margin-bottom: 1rem; }
+.proto-cta-mock-input {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0.85rem 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.proto-cta-mock-input:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+.proto-cta-mock-placeholder { flex: 1; color: var(--ink-soft); font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-cta-mock-send {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--heading-color);
+  color: var(--bg);
+}
+.proto-cta-mock-send svg { width: 18px; height: 18px; }
+.proto-cta-mock-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.proto-cta-chip {
+  border: 1px solid var(--line);
+  background: var(--card-bg);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.proto-cta-chip:hover { border-color: var(--accent); color: var(--accent); }
 @media (max-width: 575.98px) { .planner-shell { padding: 1.5rem; } }
 .planner-result {
   background: var(--card-bg);

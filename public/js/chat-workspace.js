@@ -76,6 +76,12 @@
   const briefStatus = document.getElementById("brief-status");
   const briefStatusMsg = document.getElementById("brief-status-msg");
 
+  // Prefill from a landing-page hand-off, e.g. a suggestion chip that links to
+  // /chat.html?idea=A+booking+app… — the visitor lands with their idea ready to
+  // send (the typewriter placeholder pauses on its own once the field has text).
+  const prefillIdea = params.get("idea");
+  if (prefillIdea) briefInput.value = prefillIdea.slice(0, 8000);
+
   // Rotating status while the (~1 min) first build runs, so the long wait feels
   // alive rather than frozen. Cosmetic only — not tied to real build progress.
   const BUILD_STEPS = [

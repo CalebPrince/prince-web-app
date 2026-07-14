@@ -96,6 +96,40 @@
     }
   }
 
+  // --- Prototype-generator teaser: animated placeholder --------------------
+  // Types example ideas into the landing mock's fake input, mirroring the
+  // typewriter placeholder on /chat.html so the teaser feels like the real
+  // thing. Purely cosmetic — static first example under reduced motion. The
+  // row height is held by the send button, so the emptying text never jitters.
+  const mockPlaceholder = document.getElementById("proto-cta-placeholder");
+  if (mockPlaceholder) {
+    const EXAMPLES = [
+      "A booking site for my hair salon, with online payments…",
+      "A portfolio site for a photographer, with a gallery…",
+      "An online store for handmade jewelry, with checkout…",
+      "A booking app for a fitness studio, with class schedules…",
+    ];
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      mockPlaceholder.textContent = EXAMPLES[0];
+    } else {
+      let phrase = 0, char = 0, deleting = false;
+      (function tick() {
+        const text = EXAMPLES[phrase];
+        if (!deleting) {
+          char++;
+          mockPlaceholder.textContent = text.slice(0, char);
+          if (char === text.length) { deleting = true; setTimeout(tick, 1800); return; }
+          setTimeout(tick, 45);
+        } else {
+          char--;
+          mockPlaceholder.textContent = text.slice(0, char);
+          if (char === 0) { deleting = false; phrase = (phrase + 1) % EXAMPLES.length; setTimeout(tick, 400); return; }
+          setTimeout(tick, 20);
+        }
+      })();
+    }
+  }
+
   // --- Capability tracks ---------------------------------------------------
   const selector = document.getElementById("track-selector");
   if (selector) {
