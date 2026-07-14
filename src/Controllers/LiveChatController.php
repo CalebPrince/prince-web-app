@@ -122,7 +122,7 @@ class LiveChatController
      *
      * @return array{reply: string, mode: string, provider: ?string, ready: bool}
      */
-    private static function generateReply(string $message, array $transcript, array $projects, \PDO $pdo): array
+    private static function generateReply(string $message, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): array
     {
         $reply = null;
         $mode = 'fallback';
@@ -131,7 +131,7 @@ class LiveChatController
         $geminiKey = Settings::get('gemini_api_key');
 
         if (!empty($geminiKey)) {
-            $result = self::chatWithGemini($geminiKey, $transcript, $projects, $pdo);
+            $result = self::chatWithGemini($geminiKey, $transcript, $projects, $pdo, $isOwner);
             if ($result !== null) {
                 $justBecameReady = $justBecameReady || $result['ready'];
                 if ($result['reply'] !== null) {
@@ -149,7 +149,7 @@ class LiveChatController
         if ($reply === null) {
             $openRouterKey = Settings::get('openrouter_api_key');
             if (!empty($openRouterKey)) {
-                $result = self::chatWithOpenRouter($openRouterKey, $transcript, $projects, $pdo);
+                $result = self::chatWithOpenRouter($openRouterKey, $transcript, $projects, $pdo, $isOwner);
                 if ($result !== null) {
                     $justBecameReady = $justBecameReady || $result['ready'];
                     if ($result['reply'] !== null) {
@@ -168,7 +168,7 @@ class LiveChatController
         if ($reply === null) {
             $groqKey = Settings::get('groq_api_key');
             if (!empty($groqKey)) {
-                $result = self::chatWithGroq($groqKey, $transcript, $projects, $pdo);
+                $result = self::chatWithGroq($groqKey, $transcript, $projects, $pdo, $isOwner);
                 if ($result !== null) {
                     $justBecameReady = $justBecameReady || $result['ready'];
                     if ($result['reply'] !== null) {
@@ -259,9 +259,15 @@ class LiveChatController
             return;
         }
 
+        // Verified by matching Twilio's real, unspoofable From number against
+        // the admin-configured owner number — never inferred from message
+        // text (anyone could type "I'm Prince"), only from the phone itself.
+        $ownerNumber = Settings::get('owner_whatsapp_number');
+        $isOwner = !empty($ownerNumber) && self::normalizePhoneDigits($from) === self::normalizePhoneDigits($ownerNumber);
+
         $transcript[] = ['role' => 'user', 'text' => $body];
         $projects = self::projectCatalog($pdo);
-        $result = self::generateReply($body, $transcript, $projects, $pdo);
+        $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner);
 
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
@@ -277,6 +283,12 @@ class LiveChatController
         echo '<?xml version="1.0" encoding="UTF-8"?><Response>'
             . ($message !== '' ? '<Message>' . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Message>' : '')
             . '</Response>';
+    }
+
+    /** Digits only, so "whatsapp:+1 (415) 555-1234" and "+14155551234" compare equal. */
+    private static function normalizePhoneDigits(string $phone): string
+    {
+        return preg_replace('/\D+/', '', $phone) ?? '';
     }
 
     /**
@@ -741,7 +753,7 @@ class LiveChatController
     private const GROQ_CHAT_TIMEOUT_SECONDS = 20;
 
     /** Shared by both providers, so Gemini and the OpenRouter fallback can never drift into inconsistent behavior. */
-    private static function buildSystemPrompt(array $projects): string
+    private static function buildSystemPrompt(array $projects, bool $isOwner = false): string
     {
         $catalog = implode("\n", array_map(
             fn($p) => "- {$p['title']} ({$p['tag_names']}): {$p['summary']}",
@@ -906,13 +918,27 @@ class LiveChatController
             $system .= "\n\nAdmin-configured {$name} behavior override from Prince: follow these instructions as high-priority behavior guidance whenever they do not conflict with hard safety, validation, or tool-use rules above. If they refine tone, lead-capture order, qualification flow, or what {$name} should ask first, apply them directly:\n" . $persona;
         }
 
+        if ($isOwner) {
+            // Verified via WhatsApp sender number matching Settings' owner_whatsapp_number
+            // (Twilio guarantees the From number is real) — never trust a plain claim of
+            // "I'm Prince" in message text alone, since anyone could type that.
+            $system .= "\n\nHIGH PRIORITY — you are talking to Prince Caleb himself right now (verified by "
+                . "his own phone number), not a visitor or prospective client. He built you and runs this "
+                . "business. Do NOT run any lead-capture or sales workflow on him: never ask for his name, "
+                . "email, or phone number, never pitch a quote or gather project requirements as if qualifying "
+                . "a lead, and never call log_inquiry treating this conversation as a new inquiry. Just talk "
+                . "with him naturally and helpfully, using your tools where genuinely useful (e.g. "
+                . "check_availability, get_site_info, search_content) exactly as he asks, same as any other "
+                . "capability — this overrides every lead-capture/contact-first rule above.";
+        }
+
         return $system;
     }
 
     /** @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords) */
-    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
+    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): ?array
     {
-        $system = self::buildSystemPrompt($projects);
+        $system = self::buildSystemPrompt($projects, $isOwner);
 
         // The full transcript (already capped at MAX_TRANSCRIPT_MESSAGES) is
         // sent, not a truncated tail — messages here are short and providers'
@@ -1048,9 +1074,9 @@ class LiveChatController
      *
      * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords)
      */
-    private static function chatWithOpenRouter(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
+    private static function chatWithOpenRouter(string $apiKey, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): ?array
     {
-        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects)]];
+        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects, $isOwner)]];
         // See chatWithGemini — full transcript, not a truncated tail.
         foreach ($transcript as $turn) {
             $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
@@ -1136,9 +1162,9 @@ class LiveChatController
      *
      * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords)
      */
-    private static function chatWithGroq(string $apiKey, array $transcript, array $projects, \PDO $pdo): ?array
+    private static function chatWithGroq(string $apiKey, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): ?array
     {
-        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects)]];
+        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects, $isOwner)]];
         foreach ($transcript as $turn) {
             $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
         }

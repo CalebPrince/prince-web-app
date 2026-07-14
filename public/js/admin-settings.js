@@ -112,6 +112,7 @@ async function saveIntegrations(e) {
       twilio_auth_token: document.getElementById("twilio-auth-token").value.trim(),
       twilio_account_sid: document.getElementById("twilio-account-sid").value.trim(),
       twilio_whatsapp_number: document.getElementById("twilio-whatsapp-number").value.trim(),
+      owner_whatsapp_number: document.getElementById("owner-whatsapp-number").value.trim(),
       serper_api_key: document.getElementById("serper-key").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
       makecom_webhook_url: document.getElementById("makecom-url").value.trim(),
@@ -378,6 +379,7 @@ async function testAi() {
     document.getElementById("twilio-auth-token").value = settings.twilio_auth_token || "";
     document.getElementById("twilio-account-sid").value = settings.twilio_account_sid || "";
     document.getElementById("twilio-whatsapp-number").value = settings.twilio_whatsapp_number || "";
+    document.getElementById("owner-whatsapp-number").value = settings.owner_whatsapp_number || "";
     document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";

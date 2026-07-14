@@ -217,6 +217,16 @@
               </div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Your WhatsApp number <span class="text-muted-custom fw-normal">(so Lisa recognizes you)</span></label>
+              <input type="text" class="form-control" id="owner-whatsapp-number" placeholder="+14155551234" autocomplete="off">
+              <div class="form-text">
+                Include the country code (e.g. +233 for Ghana) — a local format like "024..." won't match. When you
+                message Lisa from this exact number, she knows it's really you (Twilio verifies the sender, so this
+                can't be spoofed by anyone else) and skips the sales/lead-capture flow entirely — no name/email/phone
+                questions, no quote pitches, just a normal conversation.
+              </div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Serper API key <span class="text-muted-custom fw-normal">(powers "Find leads by niche" on Marketing Leads)</span></label>
               <input type="password" class="form-control" id="serper-key" placeholder="Paste your Serper API key" autocomplete="off">
               <div class="form-text">Get a key at serper.dev — used to search real Google Places results (business name, website, address, phone) for a niche/location you type in, e.g. "plumbers in Accra". Nothing is AI-generated here; results only ever come from the real search API response.</div>
