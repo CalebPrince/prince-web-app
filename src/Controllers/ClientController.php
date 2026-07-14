@@ -71,13 +71,14 @@ class ClientController
         Response::json($client);
     }
 
-    /** POST /api/v1/admin/clients/invite — body: {name, email, proposal_id?} */
+    /** POST /api/v1/admin/clients/invite — body: {name, email, phone?, proposal_id?} */
     public static function invite(): void
     {
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $name = trim((string) ($data['name'] ?? ''));
         $email = trim((string) ($data['email'] ?? ''));
+        $phone = trim((string) ($data['phone'] ?? ''));
 
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             Response::error('A valid client name and email are required.', 422);
@@ -92,14 +93,15 @@ class ClientController
 
         if ($client) {
             $pdo->prepare(
-                "UPDATE clients SET invite_token = ?, invite_expires_at = datetime('now', '+7 days') WHERE id = ?"
-            )->execute([$inviteToken, $client['id']]);
+                "UPDATE clients SET invite_token = ?, invite_expires_at = datetime('now', '+7 days'),
+                 phone = COALESCE(NULLIF(?, ''), phone) WHERE id = ?"
+            )->execute([$inviteToken, $phone, $client['id']]);
             $clientId = (int) $client['id'];
         } else {
             $pdo->prepare(
-                "INSERT INTO clients (email, name, invite_token, invite_expires_at)
-                 VALUES (?, ?, ?, datetime('now', '+7 days'))"
-            )->execute([$email, $name, $inviteToken]);
+                "INSERT INTO clients (email, name, phone, invite_token, invite_expires_at)
+                 VALUES (?, ?, ?, ?, datetime('now', '+7 days'))"
+            )->execute([$email, $name, $phone !== '' ? $phone : null, $inviteToken]);
             $clientId = (int) $pdo->lastInsertId();
         }
 
@@ -126,7 +128,7 @@ class ClientController
         Response::json(['client_id' => $clientId, 'url' => $url, 'email_sent' => $sent], 201);
     }
 
-    /** PATCH /api/v1/admin/clients/{id} — body: {name?, is_active?} */
+    /** PATCH /api/v1/admin/clients/{id} — body: {name?, phone?, is_active?} */
     public static function update(array $params): void
     {
         AuthMiddleware::requireAuth();
@@ -142,6 +144,11 @@ class ClientController
             }
             $fields[] = 'name = ?';
             $values[] = $name;
+        }
+        if (array_key_exists('phone', $data)) {
+            $phone = trim((string) $data['phone']);
+            $fields[] = 'phone = ?';
+            $values[] = $phone !== '' ? $phone : null;
         }
         if (array_key_exists('is_active', $data)) {
             $fields[] = 'is_active = ?';

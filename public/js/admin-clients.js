@@ -20,7 +20,7 @@ async function loadClients() {
 
   tbody.innerHTML = rows.map(c => `
     <tr>
-      <td class="ps-3">${escapeHtml(c.name)}<br><span class="small text-muted-custom">${escapeHtml(c.email)}</span></td>
+      <td class="ps-3">${escapeHtml(c.name)}<br><span class="small text-muted-custom">${escapeHtml(c.email)}${c.phone ? " · " + escapeHtml(c.phone) : ""}</span></td>
       <td><span class="status-pill ${c.has_password ? 'published' : 'unread'}">${c.has_password ? 'Active' : 'Invited'}</span></td>
       <td>${c.proposal_count || 0}</td>
       <td class="small text-muted-custom">${c.last_proposal_at ? new Date(c.last_proposal_at).toLocaleDateString() : '—'}</td>
@@ -103,7 +103,7 @@ function switchDetailTab(tab) {
 async function openClientDetail(id) {
   currentClientId = id;
   const client = await api.get(`/api/v1/admin/clients/${id}`);
-  document.getElementById('client-modal-title').textContent = `${client.name} — ${client.email}`;
+  document.getElementById('client-modal-title').textContent = `${client.name} — ${client.email}${client.phone ? " · " + client.phone : ""}`;
   document.getElementById('detail-panel-proposals').innerHTML = renderProposals(client.proposals || []);
   document.getElementById('detail-files-list').innerHTML = renderFiles(client.files || []);
   renderMessages(client.messages || []);
@@ -135,6 +135,7 @@ async function openClientDetail(id) {
       const result = await api.post('/api/v1/admin/clients/invite', {
         name: document.getElementById('invite-name').value,
         email: document.getElementById('invite-email').value,
+        phone: document.getElementById('invite-phone').value,
       });
       document.getElementById('invite-form').classList.add('d-none');
       document.getElementById('invite-result-url').value = result.url;

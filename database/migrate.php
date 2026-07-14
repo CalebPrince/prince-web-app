@@ -141,6 +141,11 @@ if (!in_array('publish_error', $socialDraftColumns, true)) {
     $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN publish_error TEXT');
 }
 
+$clientColumns = array_column($pdo->query('PRAGMA table_info(clients)')->fetchAll(), 'name');
+if (!in_array('phone', $clientColumns, true)) {
+    $pdo->exec('ALTER TABLE clients ADD COLUMN phone TEXT');
+}
+
 $leadColumns = $pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll();
 $leadColumnNames = array_column($leadColumns, 'name');
 if (!in_array('contact_phone', $leadColumnNames, true)) {
