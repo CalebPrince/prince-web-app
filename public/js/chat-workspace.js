@@ -271,6 +271,7 @@
   const refineBtn = refineForm.querySelector(".ai-send-btn");
   const refineStatus = document.getElementById("refine-status");
   const refineError = document.getElementById("refine-error");
+  const stageOverlay = document.getElementById("ws-stage-overlay");
 
   refineForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -280,6 +281,12 @@
     refineInput.disabled = true;
     refineError.classList.add("d-none");
     refineStatus.classList.remove("d-none");
+    // Reset scroll so the veil sits over the visible area even if the visitor
+    // had scrolled down the old preview (the overlay pins to the stage's
+    // content box, which scrolls with it).
+    frame.parentElement.scrollTop = 0;
+    frame.parentElement.scrollLeft = 0;
+    stageOverlay.classList.add("show");
     try {
       await generate(description);
       refineInput.value = "";
@@ -292,6 +299,7 @@
       refineBtn.disabled = false;
       refineInput.disabled = false;
       refineStatus.classList.add("d-none");
+      stageOverlay.classList.remove("show");
     }
   });
 
@@ -403,6 +411,7 @@
       thanksMsg.textContent = decision === "approved"
         ? "Thank you! Prince has been notified and will email you shortly."
         : "Got it — your change notes are with Prince. He'll be in touch by email.";
+      thanks.focus();
     } catch (err) {
       fbError.textContent = err.message || "Could not send your feedback — please try again.";
       fbError.classList.remove("d-none");

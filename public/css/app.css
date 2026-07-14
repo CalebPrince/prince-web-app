@@ -1995,6 +1995,7 @@ pre code.hljs {
   padding: 2rem;
 }
 .workspace-frame-stage {
+  position: relative;
   flex: 1;
   overflow: auto;
   display: flex;
@@ -2004,6 +2005,34 @@ pre code.hljs {
   padding: 1.5rem;
   min-height: 0;
 }
+/* Loading veil over the preview while a refine regenerates — the old prototype
+   stays underneath but is clearly marked as being rebuilt. */
+.ws-stage-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 1.5rem;
+  text-align: center;
+  z-index: 3;
+  background: color-mix(in srgb, var(--bg-soft) 82%, transparent);
+  backdrop-filter: blur(2px);
+}
+.ws-stage-overlay.show { display: flex; }
+.ws-stage-overlay p { margin: 0; font-size: 0.9rem; color: var(--ink); }
+.ws-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: ws-spin 0.8s linear infinite;
+}
+@keyframes ws-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ws-spinner { animation-duration: 1.6s; } }
 #ws-prototype-frame {
   width: 100%;
   height: 100%;

@@ -73,7 +73,7 @@
       <button type="submit" class="ai-send-btn" aria-label="Regenerate with this change" title="Regenerate">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
-      <span id="refine-status" class="text-muted-custom small d-none">Regenerating…</span>
+      <span id="refine-status" class="text-muted-custom small d-none" role="status" aria-live="polite">Regenerating…</span>
     </form>
     <div id="refine-error" class="alert alert-danger py-1 px-3 small mb-0 d-none"></div>
     <div class="ws-toolbar">
@@ -102,6 +102,10 @@
       </div>
     </div>
     <div class="workspace-frame-stage" id="ws-frame-stage">
+      <div class="ws-stage-overlay" id="ws-stage-overlay" role="status" aria-live="polite">
+        <div class="ws-spinner" aria-hidden="true"></div>
+        <p>Rebuilding your prototype… (up to a minute)</p>
+      </div>
       <iframe id="ws-prototype-frame" title="Concept prototype preview" sandbox=""></iframe>
     </div>
     <div class="ws-footer">
@@ -117,14 +121,14 @@
             <input type="text" class="form-control form-control-sm" id="ws-fb-name" placeholder="Your name" required>
             <input type="email" class="form-control form-control-sm" id="ws-fb-email" placeholder="Your email" required>
           </div>
-          <div id="ws-fb-error" class="text-danger small mb-2 d-none"></div>
+          <div id="ws-fb-error" class="text-danger small mb-2 d-none" role="alert"></div>
           <div class="d-flex gap-2">
             <button type="button" class="btn-brand-outline btn-sm" id="ws-fb-cancel">Cancel</button>
             <button type="submit" class="btn-brand btn-sm flex-fill" id="ws-fb-submit">Send to Prince</button>
           </div>
         </form>
       </div>
-      <div id="ws-thanks" class="ws-thanks d-none">
+      <div id="ws-thanks" class="ws-thanks d-none" role="status" aria-live="polite" tabindex="-1">
         <span class="ws-thanks-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>
         </span>
