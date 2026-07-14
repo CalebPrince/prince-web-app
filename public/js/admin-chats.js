@@ -14,9 +14,11 @@ function statusKey(c) {
 }
 
 function chatCard(c) {
+  const isWhatsapp = c.token.startsWith("whatsapp:");
   const who = c.client_name
     ? `<strong>${escapeHtml(c.client_name)}</strong> <span class="text-muted-custom small ms-1">${escapeHtml(c.client_email || "")}${c.client_phone ? " · " + escapeHtml(c.client_phone) : ""}</span>`
     : `<strong>Anonymous visitor</strong>`;
+  const channelBadge = isWhatsapp ? ' <span class="status-pill" style="background:#dcfce7;color:#166534;">WhatsApp</span>' : "";
 
   const transcript = c.transcript.map(t => `
     <div class="ai-msg ${t.role === "user" ? "user" : "bot"} small mb-1">
@@ -27,7 +29,7 @@ function chatCard(c) {
   return `
     <div class="admin-card p-3 mb-3 ${c.admin_seen ? "" : "chat-unseen"}" data-id="${c.id}">
       <div class="d-flex justify-content-between align-items-start mb-2">
-        <div>${who}${c.admin_seen ? "" : ' <span class="status-pill unread ms-1">new</span>'}</div>
+        <div>${who}${channelBadge}${c.admin_seen ? "" : ' <span class="status-pill unread ms-1">new</span>'}</div>
         <span class="status-pill chat-${statusKey(c)}">${STATUS_LABELS[statusKey(c)]}</span>
       </div>
       ${c.client_comment ? `<div class="alert alert-light border py-2 small mb-2"><strong>Comment:</strong> ${escapeHtml(c.client_comment)}</div>` : ""}

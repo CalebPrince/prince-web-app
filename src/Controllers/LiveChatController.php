@@ -90,6 +90,40 @@ class LiveChatController
         $transcript[] = ['role' => 'user', 'text' => $message];
 
         $projects = self::projectCatalog($pdo);
+        $result = self::generateReply($message, $transcript, $projects, $pdo);
+
+        $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+        $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
+        self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
+
+        Response::json([
+            'token' => $session['token'],
+            'reply' => $result['reply'],
+            'mode' => $result['mode'],
+            // Temporary debug aid for verifying the Gemini->OpenRouter->Groq
+            // fallback actually triggers in production — 'gemini',
+            // 'openrouter', 'groq', or null (keyword fallback served this
+            // reply). Safe to remove later; not relied on by any UI logic.
+            'provider' => $result['provider'],
+            // AI-driven prototype building is disabled — the model has no tool
+            // to set ready_for_prototype anymore, so this (and the "Build my
+            // prototype" button it used to gate) stays permanently false.
+            // Visitors asking for a prototype are redirected to Caleb instead
+            // (see the system prompt).
+            'can_prototype' => $readyForPrototype,
+        ]);
+    }
+
+    /**
+     * Shared by the web widget (message()) and the WhatsApp webhook — runs one
+     * turn against Gemini -> OpenRouter -> Groq -> keyword/booking fallback and
+     * returns the reply plus which path served it. $transcript must already
+     * include the new user turn as its last entry.
+     *
+     * @return array{reply: string, mode: string, provider: ?string, ready: bool}
+     */
+    private static function generateReply(string $message, array $transcript, array $projects, \PDO $pdo): array
+    {
         $reply = null;
         $mode = 'fallback';
         $provider = null; // debug aid: which path actually served this reply — 'gemini', 'openrouter', 'groq', or null (keyword fallback)
@@ -163,26 +197,115 @@ class LiveChatController
             $reply = $bookingReply ?? self::keywordFallback($message, $projects);
         }
 
-        $transcript[] = ['role' => 'assistant', 'text' => $reply];
-        $readyForPrototype = (bool) $session['ready_for_prototype'] || $justBecameReady;
+        return ['reply' => $reply, 'mode' => $mode, 'provider' => $provider, 'ready' => $justBecameReady];
+    }
+
+    /**
+     * POST /api/v1/whatsapp/webhook — Twilio's incoming-message webhook.
+     * Lisa on WhatsApp: same brain as the web widget (generateReply(), same
+     * tools including signal_handoff for a human handoff), just a different
+     * front door. The session is keyed by the visitor's WhatsApp number
+     * itself (e.g. "whatsapp:+14155551234") via findOrCreateSessionByExactToken() —
+     * so a returning number resumes its own thread automatically, same as a
+     * saved browser token does for the web widget. Every WhatsApp thread
+     * also shows up in Admin -> Chat Leads alongside web ones.
+     *
+     * Replies via TwiML in the webhook response itself (Twilio's supported
+     * way to answer an incoming message synchronously) rather than a
+     * separate outbound API call — simpler, and needs only the Auth Token
+     * (for verifying the request really came from Twilio), not the Account
+     * SID or a REST call.
+     */
+    public static function whatsappWebhook(): void
+    {
+        set_time_limit(135);
+
+        $authToken = Settings::get('twilio_auth_token');
+        if (empty($authToken) || !self::verifyTwilioSignature($authToken)) {
+            http_response_code(403);
+            exit;
+        }
+
+        $from = trim((string) ($_POST['From'] ?? '')); // e.g. "whatsapp:+14155551234"
+        $body = trim((string) ($_POST['Body'] ?? ''));
+        $profileName = trim((string) ($_POST['ProfileName'] ?? ''));
+
+        if ($from === '' || $body === '' || mb_strlen($body) > 1000) {
+            self::respondTwiml('');
+            return;
+        }
+
+        // Keyed per WhatsApp number (not IP) — the number itself is already
+        // a stable, hard-to-spoof identity here (Twilio only forwards real
+        // WhatsApp messages, verified above).
+        RateLimitMiddleware::enforce('whatsapp_' . preg_replace('/[^a-zA-Z0-9]/', '', $from), 30);
+
+        $pdo = Database::get();
+        $session = self::findOrCreateSessionByExactToken($pdo, $from);
+        $transcript = json_decode($session['transcript_json'], true) ?: [];
+
+        if (empty($session['client_phone'])) {
+            // Strip the "whatsapp:" prefix for display — Admin -> Chat Leads
+            // builds a tel: link straight from client_phone, which a raw
+            // "whatsapp:+14155551234" would break. The session's actual
+            // token (used for lookups above) keeps the prefixed form.
+            $displayPhone = preg_replace('/^whatsapp:/', '', $from);
+            $pdo->prepare('UPDATE chat_sessions SET client_phone = ?, client_name = ? WHERE id = ?')
+                ->execute([$displayPhone, $profileName !== '' ? $profileName : null, $session['id']]);
+        }
+
+        if (count($transcript) >= self::MAX_TRANSCRIPT_MESSAGES) {
+            self::respondTwiml("This conversation's gotten quite long — I've flagged it for Caleb to pick up directly from here.");
+            return;
+        }
+
+        $transcript[] = ['role' => 'user', 'text' => $body];
+        $projects = self::projectCatalog($pdo);
+        $result = self::generateReply($body, $transcript, $projects, $pdo);
+
+        $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+        $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
         self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
 
-        Response::json([
-            'token' => $session['token'],
-            'reply' => $reply,
-            'mode' => $mode,
-            // Temporary debug aid for verifying the Gemini->OpenRouter->Groq
-            // fallback actually triggers in production — 'gemini',
-            // 'openrouter', 'groq', or null (keyword fallback served this
-            // reply). Safe to remove later; not relied on by any UI logic.
-            'provider' => $provider,
-            // AI-driven prototype building is disabled — the model has no tool
-            // to set ready_for_prototype anymore, so this (and the "Build my
-            // prototype" button it used to gate) stays permanently false.
-            // Visitors asking for a prototype are redirected to Caleb instead
-            // (see the system prompt).
-            'can_prototype' => $readyForPrototype,
-        ]);
+        self::respondTwiml($result['reply']);
+    }
+
+    /** Empty $message sends no reply at all (Twilio just gets an ack) — used when there's nothing worth saying. */
+    private static function respondTwiml(string $message): void
+    {
+        header('Content-Type: text/xml; charset=utf-8');
+        echo '<?xml version="1.0" encoding="UTF-8"?><Response>'
+            . ($message !== '' ? '<Message>' . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Message>' : '')
+            . '</Response>';
+    }
+
+    /**
+     * Verifies the X-Twilio-Signature header per Twilio's documented
+     * algorithm: base64(HMAC-SHA1(authToken, requestUrl . sortedPostParams)).
+     * Rejects the request outright (caller responds 403) if this fails, so
+     * an attacker can't feed arbitrary "incoming WhatsApp messages" into
+     * Lisa's tool-calling pipeline just by POSTing to this URL directly.
+     */
+    private static function verifyTwilioSignature(string $authToken): bool
+    {
+        $signature = $_SERVER['HTTP_X_TWILIO_SIGNATURE'] ?? '';
+        if ($signature === '') {
+            return false;
+        }
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
+        $url = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '');
+
+        $params = $_POST;
+        ksort($params);
+        $data = $url;
+        foreach ($params as $key => $value) {
+            $data .= $key . $value;
+        }
+
+        $expected = base64_encode(hash_hmac('sha1', $data, $authToken, true));
+        return hash_equals($expected, $signature);
     }
 
     /** GET /api/v1/chat/session/{token} — rehydrates a session for the prototype generator page */
@@ -514,6 +637,29 @@ class LiveChatController
             }
         }
         $token = bin2hex(random_bytes(16));
+        $pdo->prepare('INSERT INTO chat_sessions (token) VALUES (?)')->execute([$token]);
+        return [
+            'id' => (int) $pdo->lastInsertId(), 'token' => $token, 'transcript_json' => '[]',
+            'prototype_status' => 'none', 'ready_for_prototype' => 0,
+        ];
+    }
+
+    /**
+     * Like findOrCreateSession(), but for identities that are meaningful on
+     * their own (a WhatsApp number) rather than an arbitrary browser token —
+     * so unlike that one, a miss always creates the row under the exact
+     * $token given, never a fresh random one. That's what makes the same
+     * WhatsApp number resume its own thread on every message.
+     */
+    private static function findOrCreateSessionByExactToken(\PDO $pdo, string $token): array
+    {
+        $stmt = $pdo->prepare('SELECT * FROM chat_sessions WHERE token = ?');
+        $stmt->execute([$token]);
+        $session = $stmt->fetch();
+        if ($session) {
+            return $session;
+        }
+
         $pdo->prepare('INSERT INTO chat_sessions (token) VALUES (?)')->execute([$token]);
         return [
             'id' => (int) $pdo->lastInsertId(), 'token' => $token, 'transcript_json' => '[]',

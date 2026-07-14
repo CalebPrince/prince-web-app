@@ -121,6 +121,7 @@ $router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePro
 $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'viewPrototype']);
 $router->post('/api/v1/chat/feedback', [LiveChatController::class, 'feedback']);
 $router->post('/api/v1/chat/inquiry', [LiveChatController::class, 'inquiry']);
+$router->post('/api/v1/whatsapp/webhook', [LiveChatController::class, 'whatsappWebhook']);
 $router->get('/api/v1/testimonials', [TestimonialController::class, 'publicList']);
 $router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'getByToken']);
 $router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'submit']);

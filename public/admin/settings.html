@@ -199,6 +199,24 @@
               <div class="form-text">Defaults to llama-3.3-70b-versatile if left blank.</div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Twilio Auth Token <span class="text-muted-custom fw-normal">(Lisa on WhatsApp)</span></label>
+              <input type="password" class="form-control" id="twilio-auth-token" placeholder="Paste your Twilio Auth Token" autocomplete="off">
+              <div class="form-text">From your Twilio Console. Verifies that incoming WhatsApp webhook requests really came from Twilio before Lisa replies to them.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Twilio Account SID <span class="text-muted-custom fw-normal">(reference)</span></label>
+              <input type="text" class="form-control" id="twilio-account-sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Twilio WhatsApp number <span class="text-muted-custom fw-normal">(reference)</span></label>
+              <input type="text" class="form-control" id="twilio-whatsapp-number" placeholder="whatsapp:+14155238886" autocomplete="off">
+              <div class="form-text">
+                Set your webhook URL in the Twilio Console (WhatsApp Sender &rarr; "When a message comes in") to
+                <code>https://princecaleb.dev/api/v1/whatsapp/webhook</code>, method POST. Lisa replies using the same
+                brain as the site's live chat, including handing off to you when needed — no separate setup for that.
+              </div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Serper API key <span class="text-muted-custom fw-normal">(powers "Find leads by niche" on Marketing Leads)</span></label>
               <input type="password" class="form-control" id="serper-key" placeholder="Paste your Serper API key" autocomplete="off">
               <div class="form-text">Get a key at serper.dev — used to search real Google Places results (business name, website, address, phone) for a niche/location you type in, e.g. "plumbers in Accra". Nothing is AI-generated here; results only ever come from the real search API response.</div>

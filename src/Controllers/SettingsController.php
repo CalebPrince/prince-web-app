@@ -14,6 +14,7 @@ class SettingsController
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
         'gemini_api_key', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'slack_webhook_url', 'makecom_webhook_url',
+        'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number',
         'integration_api_key', 'notification_email',
         'google_client_id',
         'chat_persona',
