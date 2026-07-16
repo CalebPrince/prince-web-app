@@ -80,11 +80,24 @@ class BeaconController
     {
         $pdo = Database::get();
         $userPrompt = self::buildUserPrompt($platform, $username, $postContent, $postUrl);
+
+        // Tools earn their tokens on draft(), where a human already decided the
+        // post was worth handing over. The cron scores raw search snippets and
+        // rejects ~90% of them, so grounding round-trips get spent mostly on
+        // posts that are about to be thrown away — ~3.3k tokens a call, 20 calls
+        // a run, which is what exhausted every free tier in an afternoon.
+        // maxToolRounds = 1 is how you say "no tools": the engine only attaches
+        // them while $round < $maxToolRounds - 1, so one round sends none and
+        // makes exactly one call.
+        $maxToolRounds = $source === 'cron' ? 1 : 2;
         $result = AiAgentEngine::run(
             self::buildSystemPrompt(),
             self::draftToolDeclarations(),
             fn(string $name, array $args) => self::runTool($name, $args, $pdo),
-            [['role' => 'user', 'text' => $userPrompt]]
+            [['role' => 'user', 'text' => $userPrompt]],
+            null,
+            null,
+            $maxToolRounds
         );
         if ($result['reply'] === null) {
             return null;

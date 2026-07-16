@@ -33,6 +33,13 @@ use App\Support\SlackNotifier;
 // out the cadence; beacon_scan_seen means it resumes where this run stopped.
 const MAX_RESULTS_PER_RUN = 20;
 
+// Every provider being rate-limited or out of credit is a normal Tuesday on
+// free tiers, and when it happens every score fails. Without this, the run
+// grinds through the whole cap anyway — each failure paying Gemini's 12s
+// timeout, then OpenRouter, then Groq — to achieve nothing. A few in a row
+// means the chain is down, not that these particular posts are unscoreable.
+const MAX_CONSECUTIVE_SCORE_FAILURES = 3;
+
 if (Settings::get('beacon_discovery_enabled') !== '1') {
     echo "Beacon discovery is disabled.\n";
     exit;
@@ -120,6 +127,8 @@ $cappedOut = false;
 $searchesRun = 0;
 $searchesFailed = 0;
 $firstSearchError = null;
+$consecutiveScoreFailures = 0;
+$scoringGaveUp = false;
 
 foreach ($keywords as $keyword) {
     // Checked on $scanned, not on $cappedOut: an inner loop that happens to end
@@ -161,25 +170,39 @@ foreach ($keywords as $keyword) {
 
         $draft = BeaconController::generateForPost(detectPlatform($url), 'unknown', $postContent, $url, 'cron');
 
+        // A failed score is not a decision — don't mark it seen. Marking on null
+        // cost real leads: an afternoon of testing exhausted every provider's
+        // free tier, and 14 posts (including small-business owners asking why
+        // their site was slow) were written off as "evaluated" when all that
+        // happened was a 429. Leaving them unmarked means the next run retries
+        // them; the cap and the circuit breaker below bound what that can cost.
+        if ($draft === null) {
+            $consecutiveScoreFailures++;
+            if ($consecutiveScoreFailures >= MAX_CONSECUTIVE_SCORE_FAILURES) {
+                $scoringGaveUp = true;
+                break 2;
+            }
+            continue;
+        }
+        $consecutiveScoreFailures = 0;
+
         // Mark seen only once scoring has actually returned. Marking before the
         // call meant a killed run (Ctrl+C, cron timeout, OOM) permanently
         // skipped every URL it had reached but not yet scored — silently, since
-        // a seen URL is never reconsidered. A returned null still marks: that's
-        // a result we paid to attempt, and retrying it forever would re-bill
-        // both Serper and the AI call on every run.
+        // a seen URL is never reconsidered.
         //
         // Record the decision too, not just the URL: rejections never reach
         // beacon_social_leads, so this is the only trace of why Beacon passed
-        // on something. NULL qualified means the scoring call itself failed.
+        // on something.
         $markSeenStmt->execute([
             $url,
-            $draft === null ? null : (int) $draft['qualified'],
-            $draft === null ? null : (int) $draft['confidence_score'],
-            $draft === null ? null : $draft['reasoning'],
+            (int) $draft['qualified'],
+            (int) $draft['confidence_score'],
+            $draft['reasoning'],
         ]);
         $scanned++;
 
-        if ($draft !== null && $draft['qualified']) {
+        if ($draft['qualified']) {
             $qualified[] = ['url' => $url] + $draft;
         }
     }
@@ -224,17 +247,29 @@ if ($qualified) {
     }
 }
 
-// Only stamp last_run on a sweep that got through everything — see the
-// MAX_RESULTS_PER_RUN note above.
-if (!$cappedOut) {
-    Settings::set('beacon_discovery_last_run', gmdate('Y-m-d H:i:s'));
-}
-
 echo "$scanned new result(s) scanned, " . count($qualified) . " qualified.\n";
+
 // Partial failure still sweeps and still stamps — but say so, rather than
 // letting a quietly broken keyword look like one that found nothing.
 if ($searchesFailed > 0) {
     fwrite(STDERR, "Warning: {$searchesFailed} of {$searchesRun} Serper search(es) failed — {$firstSearchError}\n");
+}
+
+// Same principle as the all-searches-failed case above: a run that couldn't
+// score isn't a run that found nothing, and must not stamp the cadence or
+// exit 0. The digest above still went out for anything scored before the
+// chain gave way.
+if ($scoringGaveUp) {
+    fwrite(STDERR, 'Beacon discovery: gave up after ' . MAX_CONSECUTIVE_SCORE_FAILURES . " consecutive scoring failures — the AI provider chain is down or out of quota.\n");
+    fwrite(STDERR, "The per-provider reason is in the PHP error log (Gemini/OpenRouter/Groq each log their own status). Typically: Gemini 503 high demand, OpenRouter 402 out of credits, Groq 429 daily token limit.\n");
+    fwrite(STDERR, "Unscored URLs were left unmarked and beacon_discovery_last_run unchanged, so the next run retries them once quota returns.\n");
+    exit(1);
+}
+
+// Only stamp last_run on a sweep that got through everything — see the
+// MAX_RESULTS_PER_RUN note above.
+if (!$cappedOut) {
+    Settings::set('beacon_discovery_last_run', gmdate('Y-m-d H:i:s'));
 }
 if ($cappedOut) {
     echo 'Stopped at the ' . MAX_RESULTS_PER_RUN . "-result cap — more left to scan, so the next run continues instead of waiting for the cadence.\n";
