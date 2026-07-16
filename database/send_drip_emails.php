@@ -42,7 +42,12 @@ foreach ($due as $row) {
     }
 }
 
-// Close out enrollments that have received every active step.
+// Close out enrollments that have received every active step — and, for
+// leads opted into Nurturer, both of its AI follow-ups too. Completing on
+// the fixed steps alone would strand those: send_nurturer_emails.php only
+// picks up active enrollments, so anything still due (likely, whenever the
+// last active step's day_offset falls before the sequence 3 offset) would
+// silently never send.
 $completed = $pdo->exec(
     "UPDATE drip_enrollments SET status = 'completed'
      WHERE status = 'active'
@@ -51,6 +56,13 @@ $completed = $pdo->exec(
          SELECT 1 FROM drip_steps s
          WHERE s.is_active = 1
            AND NOT EXISTS (SELECT 1 FROM drip_sends ds WHERE ds.enrollment_id = drip_enrollments.id AND ds.step_id = s.id)
+       )
+       AND (
+         nurturer_enabled = 0
+         OR (
+           SELECT COUNT(*) FROM nurturer_sends ns
+           WHERE ns.enrollment_id = drip_enrollments.id AND ns.sequence_number IN (2, 3)
+         ) = 2
        )"
 );
 
