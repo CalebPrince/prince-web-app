@@ -285,11 +285,27 @@
   });
 
   // ---- sending messages ----
+  // Reuses .ai-typing-dots from app.css — same indicator Lisa's widget shows,
+  // so the agents behave the same way wherever you talk to them (and it already
+  // honours prefers-reduced-motion). The wait is real: a reply is an
+  // AiAgentEngine round-trip, up to two tool rounds, and can fall through
+  // Gemini -> OpenRouter -> Groq.
+  function addTypingBubble() {
+    const bubble = document.createElement("div");
+    bubble.className = "agent-bubble agent";
+    bubble.innerHTML = '<span class="ai-typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>';
+    bubble.setAttribute("aria-label", agentDisplayName() + " is typing");
+    logEl.appendChild(bubble);
+    logEl.scrollTop = logEl.scrollHeight;
+    return bubble;
+  }
+
   async function sendMessage(text) {
     addBubble("user", text);
     transcript.push({ role: "user", text });
     msgEl.classList.add("d-none");
     sendBtn.disabled = true;
+    const typing = addTypingBubble();
 
     try {
       const res = await api.post("/api/v1/admin/agents/" + activeAgent + "/chat", { message: text, transcript });
@@ -301,6 +317,7 @@
       msgEl.textContent = err.message;
       msgEl.classList.remove("d-none");
     } finally {
+      typing.remove();   // in finally: an error must not leave it dotting forever
       sendBtn.disabled = false;
     }
   }
