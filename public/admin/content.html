@@ -540,7 +540,7 @@
 
           <div class="admin-card p-4">
             <h5 class="mb-3"><i class="bi bi-binoculars me-2" style="color: var(--section-content);"></i>Beacon (social lead scout)</h5>
-            <div class="form-text mb-3">Beacon reviews scraped social posts/comments and drafts a reply — it never talks to anyone directly (the reply is signed as Caleb), so the name and voice below are for your own bookkeeping and only lightly flavor its internal framing.</div>
+            <div class="form-text mb-3">Beacon reviews scraped social posts/comments and drafts a reply — the reply itself is signed as Caleb, never spoken aloud. The name lightly flavors its internal framing either way, and the voice below is the real voice you'll hear if you talk to Beacon live in the admin console (<a href="/admin/agent-chat.html">Talk to Agents</a>).</div>
             <div class="row g-3">
               <div class="col-sm-6">
                 <label class="form-label">Assistant name</label>
@@ -554,12 +554,24 @@
                   <option value="male">Male</option>
                 </select>
               </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="beacon_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="beacon_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="beacon_voice_preview_note"></span>
             </div>
           </div>
 
           <div class="admin-card p-4">
             <h5 class="mb-3"><i class="bi bi-envelope-heart me-2" style="color: var(--section-content);"></i>Nurturer (email follow-ups)</h5>
-            <div class="form-text mb-3">Nurturer drafts personalized lead follow-up emails — it never talks to anyone directly (the email is signed as Caleb), so the name and voice below are for your own bookkeeping and only lightly flavor its internal framing.</div>
+            <div class="form-text mb-3">Nurturer drafts personalized lead follow-up emails — the email itself is signed as Caleb, never spoken aloud. The name lightly flavors its internal framing either way, and the voice below is the real voice you'll hear if you talk to Nurturer live in the admin console (<a href="/admin/agent-chat.html">Talk to Agents</a>).</div>
             <div class="row g-3">
               <div class="col-sm-6">
                 <label class="form-label">Assistant name</label>
@@ -573,6 +585,18 @@
                   <option value="male">Male</option>
                 </select>
               </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="nurturer_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="nurturer_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="nurturer_voice_preview_note"></span>
             </div>
           </div>
         </div>

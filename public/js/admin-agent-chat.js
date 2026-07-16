@@ -1,7 +1,7 @@
 (function () {
   const AGENTS = {
-    beacon: { label: "Beacon", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", fallbackName: "Beacon" },
-    nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", fallbackName: "Nurturer" },
+    beacon: { label: "Beacon", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", accentKey: "beacon_voice_accent", fallbackName: "Beacon" },
+    nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Nurturer" },
   };
 
   const logEl = document.getElementById("agent-chat-log");
@@ -22,10 +22,23 @@
   const beaconDiscoverySave = document.getElementById("beacon-discovery-save");
   const beaconSpendCard = document.getElementById("beacon-spend-card");
   const beaconSpendBody = document.getElementById("beacon-spend-body");
+  const faceSlot = document.getElementById("agent-chat-face");
+  const faceNameEl = document.getElementById("agent-chat-face-name");
 
   let activeAgent = "beacon";
   let transcript = []; // [{role: 'user'|'agent', text}]
   let agentSettings = {}; // populated from /api/v1/content
+  let face = null; // current agent's animated avatar (public/js/agent-face.js)
+
+  // Swaps the header avatar for the active agent — recreated rather than
+  // relabeled since each agent has its own icon.
+  function renderFace() {
+    if (!window.AgentFace || !faceSlot) return;
+    faceSlot.innerHTML = "";
+    face = window.AgentFace.create(activeAgent);
+    faceSlot.appendChild(face.el);
+    if (faceNameEl) faceNameEl.textContent = agentDisplayName();
+  }
 
   // ---- voice matching + speech synthesis (adapted from public/js/ai-widget.js) ----
   const FEMALE_RE = /(female|zira|susan|hazel|linda|samantha|karen|moira|tessa|fiona|serena|catherine|aria|jenny|sonia|libby|amy|joanna|salli|kimberly|google uk english female)/i;
@@ -37,19 +50,28 @@
       window.speechSynthesis.addEventListener("voiceschanged", () => window.speechSynthesis.getVoices());
   }
 
-  // No accent/rate/pitch settings for these two agents (unlike Lisa) — match gender only.
-  function pickVoice(voices, gender) {
+  // Match the admin's gender + accent preference, degrading gracefully:
+  // accent+gender -> gender (any accent) -> accent (any gender) -> any
+  // English -> whatever exists. Mirrors public/js/ai-widget.js's pickVoice.
+  // No rate/pitch settings for these two agents (unlike Lisa) — accent +
+  // gender only.
+  function pickVoice(voices, gender, accent) {
     if (!voices.length) return null;
-    const en = voices.filter((v) => /^en/i.test(v.lang));
+    const acc = accent && accent !== "auto" ? accent.toLowerCase() : null;
     const wantRe = gender === "male" ? MALE_RE : gender === "female" ? FEMALE_RE : null;
     const notRe = gender === "male" ? FEMALE_RE : gender === "female" ? MALE_RE : null;
 
+    const en = voices.filter((v) => /^en/i.test(v.lang));
+    const byAccent = acc ? en.filter((v) => v.lang.toLowerCase().startsWith(acc)) : en;
+
     const tiers = [];
     if (wantRe) {
+      tiers.push(byAccent.filter((v) => wantRe.test(v.name) && !notRe.test(v.name)));
+      tiers.push(byAccent.filter((v) => wantRe.test(v.name)));
       tiers.push(en.filter((v) => wantRe.test(v.name) && !notRe.test(v.name)));
       tiers.push(en.filter((v) => wantRe.test(v.name)));
     }
-    tiers.push(en, voices);
+    tiers.push(byAccent, en, voices);
     for (const tier of tiers) {
       if (tier && tier.length) return tier[0];
     }
@@ -73,6 +95,7 @@
       btn.classList.remove("speaking");
       if (speakingBtn === btn) speakingBtn = null;
     }
+    if (face) face.setSpeaking(on);
   }
 
   function speak(text, btn) {
@@ -84,7 +107,8 @@
     if (!spoken) return;
     const u = new SpeechSynthesisUtterance(spoken);
     const gender = (agentSettings[AGENTS[activeAgent].genderKey] || "auto");
-    const voice = pickVoice(synth.getVoices(), gender);
+    const accent = (agentSettings[AGENTS[activeAgent].accentKey] || "auto");
+    const voice = pickVoice(synth.getVoices(), gender, accent);
     if (voice) {
       u.voice = voice;
       if (voice.lang) u.lang = voice.lang;
@@ -297,6 +321,7 @@
     bubble.setAttribute("aria-label", agentDisplayName() + " is typing");
     logEl.appendChild(bubble);
     logEl.scrollTop = logEl.scrollHeight;
+    if (face) face.setThinking(true);
     return bubble;
   }
 
@@ -318,6 +343,7 @@
       msgEl.classList.remove("d-none");
     } finally {
       typing.remove();   // in finally: an error must not leave it dotting forever
+      if (face) face.setThinking(false);
       sendBtn.disabled = false;
     }
   }
@@ -337,6 +363,7 @@
       document.querySelectorAll(".agent-tab").forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
       activeAgent = tab.dataset.agent;
+      renderFace();
       resetConversation();
       updateLeadsPanelVisibility();
       if (activeAgent === "beacon") loadBeaconDiscoverySettings();
@@ -396,6 +423,7 @@
       '<i class="bi bi-binoculars me-1"></i>' + (agentSettings.beacon_assistant_name || "Beacon");
     document.getElementById("tab-nurturer").innerHTML =
       '<i class="bi bi-envelope-heart me-1"></i>' + (agentSettings.nurturer_assistant_name || "Nurturer");
+    renderFace();
     resetConversation();
     updateLeadsPanelVisibility();
     if (activeAgent === "beacon") loadBeaconDiscoverySettings();

@@ -21,8 +21,8 @@ const CONTENT_FIELDS = [
   "chat_assistant_name",
   "chat_greeting", "chat_intro", "chat_offline_message", "chat_persona",
   "chat_voice_gender", "chat_voice_accent", "chat_voice_rate", "chat_voice_pitch",
-  "beacon_assistant_name", "beacon_voice_gender",
-  "nurturer_assistant_name", "nurturer_voice_gender",
+  "beacon_assistant_name", "beacon_voice_gender", "beacon_voice_accent",
+  "nurturer_assistant_name", "nurturer_voice_gender", "nurturer_voice_accent",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
   "stat_2_value", "stat_2_suffix", "stat_2_label",
   "stat_3_value", "stat_3_suffix", "stat_3_label",
@@ -196,6 +196,31 @@ function wireVoiceControls() {
   });
 }
 
+// Beacon/Nurturer preview buttons — same idea as Lisa's above, minus rate/pitch
+// (those two agents don't expose speaking speed/tone, only gender + accent).
+function wireAgentVoicePreview(prefix, fallbackName, sampleLine) {
+  const btn = document.getElementById(prefix + "_voice_preview");
+  const note = document.getElementById(prefix + "_voice_preview_note");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    if (!("speechSynthesis" in window)) {
+      if (note) note.textContent = "This browser can't preview speech.";
+      return;
+    }
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const gender = document.getElementById(prefix + "_voice_gender").value;
+    const accent = document.getElementById(prefix + "_voice_accent").value;
+    const nameEl = document.getElementById(prefix + "_assistant_name");
+    const assistantName = (nameEl && nameEl.value.trim()) || fallbackName;
+    const u = new SpeechSynthesisUtterance(`Hi, I'm ${assistantName}. ${sampleLine}`);
+    const voice = pickPreviewVoice(synth.getVoices(), gender, accent);
+    if (voice) { u.voice = voice; if (voice.lang) u.lang = voice.lang; }
+    if (note) note.textContent = voice ? `Using: ${voice.name}` : "Using this device's default voice.";
+    synth.speak(u);
+  });
+}
+
 // Grey out the day/time controls when the "Restrict to specific hours" master
 // toggle is off — otherwise it looks like unticking a day takes the chat
 // offline, when in fact the day/time settings only apply once restriction is on.
@@ -221,5 +246,7 @@ function wireHoursControls() {
   document.getElementById("content-form").addEventListener("submit", saveContent);
   await loadContent();
   wireVoiceControls();
+  wireAgentVoicePreview("beacon", "Beacon", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("nurturer", "Nurturer", "This is how I'll sound when you talk to me in the admin console.");
   wireHoursControls();
 })();

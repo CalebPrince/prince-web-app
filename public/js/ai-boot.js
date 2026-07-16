@@ -18,9 +18,16 @@ document.addEventListener("DOMContentLoaded", () => {
     loaded = true;
     if (badge) badge.classList.add("d-none");
     sessionStorage.setItem("chat_badge_seen", "1");
-    const script = document.createElement("script");
-    script.src = "/js/ai-widget.js";
-    document.body.appendChild(script);
+    // agent-face.js first (Lisa's header avatar) — ai-widget.js checks for
+    // window.AgentFace at load time, so it must finish before ai-widget.js runs.
+    const face = document.createElement("script");
+    face.src = "/js/agent-face.js";
+    face.onload = () => {
+      const widget = document.createElement("script");
+      widget.src = "/js/ai-widget.js";
+      document.body.appendChild(widget);
+    };
+    document.body.appendChild(face);
   };
 
   toggle.addEventListener("click", load, { once: true });

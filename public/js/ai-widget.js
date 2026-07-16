@@ -9,6 +9,9 @@
   // Read-aloud every reply automatically when on (visitor-controlled, header
   // toggle) — remembered for the browser session.
   let autoSpeak = sessionStorage.getItem("chat_autospeak") === "1";
+  // Header avatar that visibly thinks/speaks (public/js/agent-face.js, loaded
+  // ahead of this file). Null on the rare page that somehow skipped it.
+  let widgetFace = null;
 
   const panel = document.createElement("div");
   panel.id = "ai-widget-panel";
@@ -16,11 +19,7 @@
   panel.setAttribute("aria-label", "Live chat with Lisa");
   panel.innerHTML = `
     <div class="p-3 border-bottom d-flex align-items-center gap-2">
-      <div class="chat-avatar">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
-          <path d="M12 12a4.8 4.8 0 1 0 0-9.6 4.8 4.8 0 0 0 0 9.6zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-        </svg>
-      </div>
+      <div id="ai-widget-face"></div>
       <div class="flex-grow-1 lh-sm">
         <strong class="chat-title d-block">Prince's Assistant</strong>
         <span class="chat-status small"><span class="status-dot" id="chat-status-dot"></span><span id="chat-status-text">Connecting…</span></span>
@@ -47,6 +46,11 @@
     </form>
   `;
   document.body.appendChild(panel);
+
+  if (window.AgentFace) {
+    widgetFace = window.AgentFace.create("lisa");
+    document.getElementById("ai-widget-face").appendChild(widgetFace.el);
+  }
 
   // ---- voice + notification tone ---------------------------------------------
   //
@@ -149,6 +153,7 @@
       btn.classList.remove("speaking");
       if (speakingBtn === btn) speakingBtn = null;
     }
+    if (widgetFace) widgetFace.setSpeaking(on);
   }
 
   // Strip emoji (and their modifiers/joiners) before speaking so the voice
@@ -390,6 +395,7 @@
   // so the live region announces it once rather than token-by-token.
   function resolveBotMessage(el, text) {
     el.classList.remove("ai-typing");
+    if (widgetFace) widgetFace.setThinking(false);
     playTone();
     const messages = document.getElementById("ai-widget-messages");
     messages.setAttribute("aria-busy", "true");
@@ -435,6 +441,7 @@
       el.classList.add("ai-typing");
       el.innerHTML = '<span class="ai-typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>';
       el.setAttribute("aria-label", `${assistantName} is typing`);
+      if (widgetFace) widgetFace.setThinking(true);
     } else if (role === "bot") {
       decorateBotMessage(el, text);
       playTone();

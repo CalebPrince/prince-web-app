@@ -183,8 +183,13 @@ storage/
    owns the actual voices, so these are preferences the widget matches against
    whatever the visitor's device offers (delivered in `/api/v1/chat/status`,
    matched with graceful fallback: accent+gender → gender → accent → any
-   English → device default). Replies land with an animated typing indicator
-   and then reveal word-by-word (a client-side typewriter — it animates an
+   English → device default). The header avatar (`agent-face.js`, shared with
+   the admin agent console below) animates alongside all this — two staggered
+   rings expand outward while a reply is pending, and the avatar breathes
+   gently while it's actually being read aloud — so read-aloud and auto-speak
+   read as a face reacting rather than a static icon; like every other
+   animation on the site it disables under `prefers-reduced-motion`. Replies
+   land with an animated typing indicator and then reveal word-by-word (a client-side typewriter — it animates an
    already-received reply and honors `prefers-reduced-motion`; it does not
    change how long the model takes). When a visitor explicitly asks for a code
    example, the assistant returns a short fenced ` ```lang ` snippet, and the
@@ -591,7 +596,24 @@ storage/
     `SharedAgentTools`) rather than inventing them. Each has two entry points:
     a `draft()` HTTP endpoint for external automation (Bearer-authed on
     `integration_api_key`, like `IntegrationController`) and a `chat()` mode
-    for talking to them directly from the admin page (session-authed).
+    for talking to them directly from the admin page (session-authed) — a
+    live working conversation, not the automated pipeline, so it drops the
+    rigid JSON contract and adds tools of its own: Beacon's chat gets
+    `log_qualified_lead`, so a post judged worth a reply mid-conversation is
+    saved the same way a `qualified: true` draft() result is (`source` on
+    `beacon_social_leads` distinguishes `chat`/`draft`/`cron`); Nurturer's
+    chat gets `find_lead` (look up a real `drip_enrollments`/`marketing_leads`
+    record by name or email — industry, last action, nurturer send history,
+    audit findings, pitch status — so a draft grounds in what's actually on
+    file instead of Caleb retyping it) and `check_availability` (Lisa's real
+    bookable slots, for talking through a Sequence 3 close). The admin console
+    shows the same animated `agent-face.js` avatar Lisa's widget uses (a
+    circular avatar per agent — Beacon a radar/broadcast mark, Nurturer a mail
+    icon) that thinks while a reply is pending and breathes while a reply is
+    being read aloud, and each agent's read-aloud voice is admin-configurable
+    the same way Lisa's is — gender (female/male/auto) and accent (UK/US/auto
+    English) from Site Content, with a live "Preview voice" button; only
+    speaking speed/pitch stay Lisa-only.
     **Beacon** scores a social post as a lead and drafts a reply.
     `database/run_beacon_discovery.php` (cron) is the automated feed: it
     searches the keywords set under Admin -> Talk to Agents -> Beacon via
