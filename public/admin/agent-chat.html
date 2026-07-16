@@ -124,6 +124,17 @@
             <option value="weekly">Weekly</option>
           </select>
         </div>
+        <div class="col-sm-4">
+          <label class="form-label" for="beacon-discovery-recency">Post age</label>
+          <select class="form-select" id="beacon-discovery-recency">
+            <option value="qdr:d">Past 24 hours</option>
+            <option value="qdr:w">Past week</option>
+            <option value="qdr:m">Past month</option>
+            <option value="qdr:y">Past year</option>
+            <option value="any">Any time</option>
+          </select>
+          <div class="form-text">Google ranks old threads highest for evergreen phrases — without this, sweeps return posts from years ago that nobody is hiring from. Tighter is fewer but fresher.</div>
+        </div>
       </div>
       <div class="mt-3">
         <label class="form-label">Search keywords <span class="text-muted-custom fw-normal">(one per line, e.g. <code>site:reddit.com "janky animation" OR "slow website"</code>)</span></label>

@@ -68,6 +68,18 @@ if (!$keywords) {
     exit;
 }
 
+// Google's tbs time filter, passed straight through by Serper. Without it the
+// first real sweep scored Reddit threads from 2015 and a LinkedIn post from
+// 2021: for evergreen phrasing like "my website is slow", what ranks is the
+// old high-karma thread, not this week's. Beacon judged them correctly and
+// they were still worthless — nobody is hiring off a five-year-old post. Also
+// cuts spend, since stale results cost a scoring call to reject.
+// 'any' disables the filter.
+$recency = (string) (Settings::get('beacon_discovery_recency') ?: 'qdr:m');
+if ($recency === 'any') {
+    $recency = '';
+}
+
 $pdo = Database::get();
 $seenStmt = $pdo->prepare('SELECT 1 FROM beacon_scan_seen WHERE url = ?');
 $markSeenStmt = $pdo->prepare(
@@ -90,14 +102,19 @@ function detectPlatform(string $url): string
  *         caller has to tell those apart: treating a failure as "no results"
  *         is what let a 403'd key report a clean, empty sweep.
  */
-function searchWeb(string $apiKey, string $query, ?string &$error = null): ?array
+function searchWeb(string $apiKey, string $query, string $recency = '', ?string &$error = null): ?array
 {
+    $payload = ['q' => $query];
+    if ($recency !== '') {
+        $payload['tbs'] = $recency;
+    }
+
     $ch = curl_init('https://google.serper.dev/search');
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'X-API-KEY: ' . $apiKey],
-        CURLOPT_POSTFIELDS => json_encode(['q' => $query]),
+        CURLOPT_POSTFIELDS => json_encode($payload),
         CURLOPT_TIMEOUT => 15,
     ]);
     $response = curl_exec($ch);
@@ -140,7 +157,7 @@ foreach ($keywords as $keyword) {
     }
 
     $searchError = null;
-    $results = searchWeb($apiKey, $keyword, $searchError);
+    $results = searchWeb($apiKey, $keyword, $recency, $searchError);
     $searchesRun++;
     if ($results === null) {
         $searchesFailed++;

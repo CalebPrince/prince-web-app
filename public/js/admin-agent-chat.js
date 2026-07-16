@@ -16,6 +16,7 @@
   const beaconDiscoveryCard = document.getElementById("beacon-discovery-card");
   const beaconDiscoveryEnabled = document.getElementById("beacon-discovery-enabled");
   const beaconDiscoveryFrequency = document.getElementById("beacon-discovery-frequency");
+  const beaconDiscoveryRecency = document.getElementById("beacon-discovery-recency");
   const beaconDiscoveryKeywords = document.getElementById("beacon-discovery-keywords");
   const beaconDiscoveryMsg = document.getElementById("beacon-discovery-msg");
   const beaconDiscoverySave = document.getElementById("beacon-discovery-save");
@@ -193,6 +194,7 @@
       const settings = await api.get("/api/v1/admin/settings");
       beaconDiscoveryEnabled.checked = settings.beacon_discovery_enabled === "1";
       beaconDiscoveryFrequency.value = settings.beacon_discovery_frequency || "daily";
+      beaconDiscoveryRecency.value = settings.beacon_discovery_recency || "qdr:m";
       beaconDiscoveryKeywords.value = settings.beacon_discovery_keywords || "";
       discoverySettingsLoaded = true;
     } catch (_) {
@@ -207,6 +209,7 @@
       await api.put("/api/v1/admin/settings", {
         beacon_discovery_enabled: beaconDiscoveryEnabled.checked ? "1" : "0",
         beacon_discovery_frequency: beaconDiscoveryFrequency.value,
+        beacon_discovery_recency: beaconDiscoveryRecency.value,
         beacon_discovery_keywords: beaconDiscoveryKeywords.value,
       });
       beaconDiscoveryMsg.className = "alert alert-success py-2 small mt-3";
