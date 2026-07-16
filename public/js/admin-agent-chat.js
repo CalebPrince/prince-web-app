@@ -130,6 +130,13 @@
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
+  // Mirrors beacon_social_leads.source — keep in step with the CHECK in schema.sql.
+  const LEAD_SOURCE_LABEL = {
+    chat: "logged in chat",
+    cron: "found by discovery",
+    draft: "from draft()",
+  };
+
   async function loadBeaconLeads() {
     try {
       const leads = await api.get("/api/v1/admin/beacon-leads");
@@ -138,7 +145,7 @@
       leads.forEach((lead) => {
         const card = document.createElement("div");
         card.className = "border rounded p-3";
-        const sourceBadge = lead.source === "chat" ? "logged in chat" : "from draft()";
+        const sourceBadge = LEAD_SOURCE_LABEL[lead.source] || escapeHtml(lead.source);
         const link = lead.post_url
           ? ' — <a href="' + escapeHtml(lead.post_url) + '" target="_blank" rel="noopener">view post</a>'
           : "";
@@ -148,7 +155,22 @@
           + '<span>' + lead.confidence_score + "% · " + sourceBadge + "</span>"
           + "</div>"
           + '<div class="small mb-2">' + escapeHtml(lead.reasoning) + "</div>"
-          + '<div class="small fst-italic">' + escapeHtml(lead.drafted_reply) + "</div>";
+          + '<div class="small fst-italic mb-2">' + escapeHtml(lead.drafted_reply) + "</div>"
+          + '<button type="button" class="btn btn-sm btn-outline-secondary copy-reply-btn">Copy reply</button>';
+
+        // Copy the raw reply, not the escaped markup above — this is pasted
+        // straight into the platform's own reply box.
+        const copyBtn = card.querySelector(".copy-reply-btn");
+        copyBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(lead.drafted_reply);
+            copyBtn.textContent = "Copied";
+          } catch (_) {
+            copyBtn.textContent = "Copy failed";
+          }
+          setTimeout(() => { copyBtn.textContent = "Copy reply"; }, 2000);
+        });
+
         beaconLeadsList.appendChild(card);
       });
     } catch (_) {
