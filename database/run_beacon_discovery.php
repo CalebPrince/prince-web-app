@@ -25,6 +25,14 @@ use App\Support\Mailer;
 use App\Support\Settings;
 use App\Support\SlackNotifier;
 
+// Each new result costs one AI call (up to ~2 min worst case, if it falls all
+// the way through the Gemini -> OpenRouter -> Groq chain), and they run
+// serially — so without a cap, runtime and spend scale with however many
+// keywords are configured. When the cap bites, last_run is deliberately left
+// alone so the next cron picks the sweep straight back up rather than waiting
+// out the cadence; beacon_scan_seen means it resumes where this run stopped.
+const MAX_RESULTS_PER_RUN = 20;
+
 if (Settings::get('beacon_discovery_enabled') !== '1') {
     echo "Beacon discovery is disabled.\n";
     exit;
@@ -98,8 +106,22 @@ function searchWeb(string $apiKey, string $query): array
 $scanned = 0;
 $qualified = [];
 
+$cappedOut = false;
+
 foreach ($keywords as $keyword) {
+    // Checked on $scanned, not on $cappedOut: an inner loop that happens to end
+    // exactly on the cap leaves $cappedOut false, and searching the next keyword
+    // would spend a Serper call on results this run can't reach anyway.
+    if ($scanned >= MAX_RESULTS_PER_RUN) {
+        $cappedOut = true;
+        break;
+    }
     foreach (searchWeb($apiKey, $keyword) as $result) {
+        if ($scanned >= MAX_RESULTS_PER_RUN) {
+            $cappedOut = true;
+            break;
+        }
+
         $url = trim((string) ($result['link'] ?? ''));
         $snippet = trim((string) ($result['snippet'] ?? ''));
         if ($url === '' || $snippet === '') {
@@ -110,13 +132,21 @@ foreach ($keywords as $keyword) {
         if ($seenStmt->fetch()) {
             continue;
         }
-        $markSeenStmt->execute([$url]);
-        $scanned++;
 
         $title = trim((string) ($result['title'] ?? ''));
         $postContent = $title !== '' ? "{$title}\n\n{$snippet}" : $snippet;
 
         $draft = BeaconController::generateForPost(detectPlatform($url), 'unknown', $postContent, $url, 'cron');
+
+        // Mark seen only once scoring has actually returned. Marking before the
+        // call meant a killed run (Ctrl+C, cron timeout, OOM) permanently
+        // skipped every URL it had reached but not yet scored — silently, since
+        // a seen URL is never reconsidered. A returned null still marks: that's
+        // a result we paid to attempt, and retrying it forever would re-bill
+        // both Serper and the AI call on every run.
+        $markSeenStmt->execute([$url]);
+        $scanned++;
+
         if ($draft !== null && $draft['qualified']) {
             $qualified[] = ['url' => $url] + $draft;
         }
@@ -149,5 +179,13 @@ if ($qualified) {
     }
 }
 
-Settings::set('beacon_discovery_last_run', gmdate('Y-m-d H:i:s'));
+// Only stamp last_run on a sweep that got through everything — see the
+// MAX_RESULTS_PER_RUN note above.
+if (!$cappedOut) {
+    Settings::set('beacon_discovery_last_run', gmdate('Y-m-d H:i:s'));
+}
+
 echo "$scanned new result(s) scanned, " . count($qualified) . " qualified.\n";
+if ($cappedOut) {
+    echo 'Stopped at the ' . MAX_RESULTS_PER_RUN . "-result cap — more left to scan, so the next run continues instead of waiting for the cadence.\n";
+}
