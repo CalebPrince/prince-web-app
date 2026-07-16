@@ -74,7 +74,14 @@ function detectPlatform(string $url): string
     return 'Web';
 }
 
-function searchWeb(string $apiKey, string $query): array
+/**
+ * @param string|null $error Set to a short failure summary when this returns null.
+ * @return array<int,array<string,mixed>>|null null on a failed search — distinct
+ *         from [], which means the search worked and Google had nothing. The
+ *         caller has to tell those apart: treating a failure as "no results"
+ *         is what let a 403'd key report a clean, empty sweep.
+ */
+function searchWeb(string $apiKey, string $query, ?string &$error = null): ?array
 {
     $ch = curl_init('https://google.serper.dev/search');
     curl_setopt_array($ch, [
@@ -90,13 +97,14 @@ function searchWeb(string $apiKey, string $query): array
     curl_close($ch);
 
     if ($response === false || $status !== 200) {
-        error_log(sprintf(
-            'Beacon discovery: Serper search failed: status=%s curl_error=%s body=%s',
+        $error = sprintf(
+            'status=%s curl_error=%s body=%s',
             $status,
             $curlError !== '' ? $curlError : 'none',
-            is_string($response) ? substr($response, 0, 500) : 'n/a'
-        ));
-        return [];
+            is_string($response) ? substr($response, 0, 200) : 'n/a'
+        );
+        error_log('Beacon discovery: Serper search failed: ' . $error);
+        return null;
     }
 
     $decoded = json_decode($response, true);
@@ -107,6 +115,9 @@ $scanned = 0;
 $qualified = [];
 
 $cappedOut = false;
+$searchesRun = 0;
+$searchesFailed = 0;
+$firstSearchError = null;
 
 foreach ($keywords as $keyword) {
     // Checked on $scanned, not on $cappedOut: an inner loop that happens to end
@@ -116,7 +127,17 @@ foreach ($keywords as $keyword) {
         $cappedOut = true;
         break;
     }
-    foreach (searchWeb($apiKey, $keyword) as $result) {
+
+    $searchError = null;
+    $results = searchWeb($apiKey, $keyword, $searchError);
+    $searchesRun++;
+    if ($results === null) {
+        $searchesFailed++;
+        $firstSearchError ??= $searchError;
+        continue;
+    }
+
+    foreach ($results as $result) {
         if ($scanned >= MAX_RESULTS_PER_RUN) {
             $cappedOut = true;
             break;
@@ -153,6 +174,19 @@ foreach ($keywords as $keyword) {
     }
 }
 
+// A sweep where every search failed is not an empty sweep, and must not read
+// like one. Previously a rejected API key logged to error_log (a file, not
+// stdout) and then reported "0 new result(s) scanned, 0 qualified.", stamped
+// last_run and exited 0 — so cron stayed silent and Beacon looked like it was
+// running fine and finding nobody. Leave the cadence alone and exit non-zero
+// so the next run retries and cron actually mails about it.
+if ($searchesRun > 0 && $searchesFailed === $searchesRun) {
+    fwrite(STDERR, "Beacon discovery: all {$searchesRun} Serper search(es) failed — {$firstSearchError}\n");
+    fwrite(STDERR, "Check serper_api_key in Admin -> Settings (a 403 means the key is rejected — note serper.dev and serpapi.com are different services with incompatible keys) and the account's remaining credits.\n");
+    fwrite(STDERR, "Leaving beacon_discovery_last_run unchanged so the next run retries instead of waiting out the cadence.\n");
+    exit(1);
+}
+
 if ($qualified) {
     $lines = array_map(
         fn($q) => "*{$q['confidence_score']}%* — <{$q['url']}|view post>\n>{$q['reasoning']}\n\nDraft reply:\n>" . str_replace("\n", "\n>", $q['drafted_reply']),
@@ -186,6 +220,11 @@ if (!$cappedOut) {
 }
 
 echo "$scanned new result(s) scanned, " . count($qualified) . " qualified.\n";
+// Partial failure still sweeps and still stamps — but say so, rather than
+// letting a quietly broken keyword look like one that found nothing.
+if ($searchesFailed > 0) {
+    fwrite(STDERR, "Warning: {$searchesFailed} of {$searchesRun} Serper search(es) failed — {$firstSearchError}\n");
+}
 if ($cappedOut) {
     echo 'Stopped at the ' . MAX_RESULTS_PER_RUN . "-result cap — more left to scan, so the next run continues instead of waiting for the cadence.\n";
 }
