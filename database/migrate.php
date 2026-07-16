@@ -205,6 +205,16 @@ if (!in_array('last_action', $dripEnrollmentColumns, true)) {
     $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN last_action TEXT');
 }
 
+// Decision columns on an existing beacon_scan_seen (it only recorded the URL
+// when first shipped) — nullable, since rows scanned before this have no
+// decision to backfill.
+$beaconScanColumns = array_column($pdo->query('PRAGMA table_info(beacon_scan_seen)')->fetchAll(), 'name');
+foreach (['qualified' => 'INTEGER', 'confidence_score' => 'INTEGER', 'reasoning' => 'TEXT'] as $col => $type) {
+    if (!in_array($col, $beaconScanColumns, true)) {
+        $pdo->exec("ALTER TABLE beacon_scan_seen ADD COLUMN {$col} {$type}");
+    }
+}
+
 // SQLite can't relax a CHECK constraint via ALTER TABLE — rebuild the table
 // if 'cron' (added for run_beacon_discovery.php) isn't in it yet.
 $beaconLeadsSql = $pdo->query(

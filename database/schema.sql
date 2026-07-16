@@ -307,9 +307,19 @@ CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_lead
 -- URLs run_beacon_discovery.php has already evaluated (qualified or not) —
 -- dedupes so the same search result isn't re-scored (and re-billed, both
 -- Serper and the AI call) on every cron run.
+--
+-- It also records the decision, not just the fact of it: beacon_social_leads
+-- only keeps the leads that qualified, so without this there'd be no record of
+-- what Beacon rejected or why, and no way to tell an over-strict rule from a
+-- keyword that genuinely returns no prospects. qualified is 1/0, or NULL when
+-- the scoring call itself failed (which is why it's nullable, and why the
+-- columns can't be NOT NULL — rows predating this also have no decision).
 CREATE TABLE IF NOT EXISTS beacon_scan_seen (
   url TEXT PRIMARY KEY,
-  scanned_at TEXT NOT NULL DEFAULT (datetime('now'))
+  scanned_at TEXT NOT NULL DEFAULT (datetime('now')),
+  qualified INTEGER,
+  confidence_score INTEGER,
+  reasoning TEXT
 );
 
 -- Client portal accounts. Rows are provisioned by an admin invite (from a

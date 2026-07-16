@@ -63,7 +63,9 @@ if (!$keywords) {
 
 $pdo = Database::get();
 $seenStmt = $pdo->prepare('SELECT 1 FROM beacon_scan_seen WHERE url = ?');
-$markSeenStmt = $pdo->prepare('INSERT OR IGNORE INTO beacon_scan_seen (url) VALUES (?)');
+$markSeenStmt = $pdo->prepare(
+    'INSERT OR IGNORE INTO beacon_scan_seen (url, qualified, confidence_score, reasoning) VALUES (?, ?, ?, ?)'
+);
 
 function detectPlatform(string $url): string
 {
@@ -165,7 +167,16 @@ foreach ($keywords as $keyword) {
         // a seen URL is never reconsidered. A returned null still marks: that's
         // a result we paid to attempt, and retrying it forever would re-bill
         // both Serper and the AI call on every run.
-        $markSeenStmt->execute([$url]);
+        //
+        // Record the decision too, not just the URL: rejections never reach
+        // beacon_social_leads, so this is the only trace of why Beacon passed
+        // on something. NULL qualified means the scoring call itself failed.
+        $markSeenStmt->execute([
+            $url,
+            $draft === null ? null : (int) $draft['qualified'],
+            $draft === null ? null : (int) $draft['confidence_score'],
+            $draft === null ? null : $draft['reasoning'],
+        ]);
         $scanned++;
 
         if ($draft !== null && $draft['qualified']) {
