@@ -96,7 +96,6 @@ class BeaconController
             || !array_key_exists('qualified', $parsed)
             || !is_numeric($parsed['confidence_score'] ?? null)
             || empty($parsed['reasoning'])
-            || empty($parsed['drafted_reply'])
         ) {
             error_log('Beacon generateForPost: could not parse JSON from model output: ' . substr($stripped, 0, 800));
             return null;
@@ -106,6 +105,16 @@ class BeaconController
         // this qualifies via the structured output above, so there's no
         // decision left for a tool to make (and no risk of it "forgetting").
         $qualified = (bool) $parsed['qualified'];
+
+        // drafted_reply is only required when qualified: the prompt asks for an
+        // empty one on a rejection (no point drafting a reply nobody sends), so
+        // demanding it unconditionally would misread every correct rejection as
+        // a parse failure and return null — which run_beacon_discovery.php would
+        // then log as a hard error.
+        if ($qualified && empty($parsed['drafted_reply'])) {
+            error_log('Beacon generateForPost: qualified lead with no drafted_reply: ' . substr($stripped, 0, 800));
+            return null;
+        }
         if ($qualified) {
             $pdo->prepare(
                 'INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
@@ -120,7 +129,7 @@ class BeaconController
             'qualified' => $qualified,
             'confidence_score' => (int) $parsed['confidence_score'],
             'reasoning' => (string) $parsed['reasoning'],
-            'drafted_reply' => (string) $parsed['drafted_reply'],
+            'drafted_reply' => (string) ($parsed['drafted_reply'] ?? ''),
         ];
     }
 
@@ -272,13 +281,27 @@ class BeaconController
             . "- Poster Username: {$username}\n"
             . "- Original Post Title/Content: {$postContent}\n"
             . $urlLine . "\n"
+            . "QUALIFYING THIS POST — the test is buying intent, not topic:\n"
+            . "Qualify it ONLY if the poster themselves needs web/mobile design or development work "
+            . "done, and could plausibly pay someone to do it.\n\n"
+            . "Do NOT qualify, no matter how relevant to web/mobile dev the post is:\n"
+            . "- another developer debugging, discussing tooling, or asking a technical question\n"
+            . "- anyone promoting or offering their own services (i.e. a competitor)\n"
+            . "- someone learning to build it themselves and enjoying that\n"
+            . "- commentary, opinion, listicles, or marketing posts about why websites/apps matter\n"
+            . "- recruiters or listings for a salaried in-house role (a specific project someone "
+            . "wants built is different — that does qualify)\n\n"
+            . "\"It is relevant to web development\" is NOT a reason to qualify — that describes most "
+            . "of the internet. Someone with a problem they want solved is a lead; someone discussing "
+            . "the same problem as a peer is not. Rejecting most posts you see is the expected "
+            . "outcome, not a failure.\n\n"
             . "Provide your output exactly in this JSON format so the backend can easily parse it for "
             . "Discord/Slack:\n\n"
             . "{\n"
-            . "  \"qualified\": true, // set to false ONLY if the post is blatant spam, a bot, or explicitly unrelated to web/mobile dev\n"
-            . "  \"confidence_score\": 85, // 1-100 score of how good of a lead this is\n"
-            . "  \"reasoning\": \"Brief explanation of why this post is a good match.\",\n"
-            . "  \"drafted_reply\": \"[Your drafted reply here. Use line breaks `\\n` naturally. Keep it under 280 characters if the platform is X, or up to 3 short paragraphs if Reddit/LinkedIn.]\"\n"
+            . "  \"qualified\": true, // true ONLY if the poster wants work done and could hire — apply the rule above\n"
+            . "  \"confidence_score\": 85, // 1-100: how strong the buying intent is, NOT how on-topic the post is\n"
+            . "  \"reasoning\": \"Brief explanation of what makes this poster a prospective client — not what makes the post topical.\",\n"
+            . "  \"drafted_reply\": \"[Your drafted reply here. Use line breaks `\\n` naturally. Keep it under 280 characters if the platform is X, or up to 3 short paragraphs if Reddit/LinkedIn. Set this to an empty string if qualified is false — don't draft a reply to a post you're rejecting.]\"\n"
             . "}\n\n"
             . "Return JSON only — no markdown fences, no commentary.";
     }
