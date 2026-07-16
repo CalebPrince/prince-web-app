@@ -23,10 +23,12 @@ use App\Support\SharedAgentTools;
  *
  * Both modes run through AiAgentEngine so Nurturer can ground itself in
  * real facts (get_site_info, search_content — shared with Lisa via
- * SharedAgentTools) instead of guessing. check_availability only goes on
- * chat() — draft()'s single-shot input has no date to check against, so
- * offering that tool there would just invite the model to invent one;
- * checking a real slot only makes sense once Caleb names a date live.
+ * SharedAgentTools) instead of guessing. check_availability and find_lead
+ * only go on chat() — draft()'s single-shot input already carries its lead
+ * data inline and has no date to check against, so offering either tool
+ * there would just invite the model to invent one; find_lead exists so
+ * that in a live conversation, Caleb can just name a lead instead of
+ * retyping what's already sitting in drip_enrollments/marketing_leads.
  */
 class NurturerController
 {
@@ -143,7 +145,29 @@ class NurturerController
 
     private static function chatToolDeclarations(): array
     {
-        return [...self::draftToolDeclarations(), SharedAgentTools::checkAvailabilityToolDeclaration()];
+        return [
+            ...self::draftToolDeclarations(),
+            SharedAgentTools::checkAvailabilityToolDeclaration(),
+            self::findLeadToolDeclaration(),
+        ];
+    }
+
+    private static function findLeadToolDeclaration(): array
+    {
+        return [
+            'name' => 'find_lead',
+            'description' => 'Look up a real lead on file by name or email — searches drip enrollments '
+                . '(industry, last site action, Nurturer send history) and marketing leads (audit findings, '
+                . 'pitch status). Use this whenever Caleb mentions a specific lead, so you draft from what\'s '
+                . 'actually on file instead of asking him to retype details you can just look up.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'query' => ['type' => 'STRING', 'description' => 'A name, email, or business name to search for.'],
+                ],
+                'required' => ['query'],
+            ],
+        ];
     }
 
     private static function runTool(string $name, array $args, \PDO $pdo): array
@@ -152,8 +176,46 @@ class NurturerController
             'get_site_info' => SharedAgentTools::getSiteInfo(),
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
             'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
+            'find_lead' => self::toolFindLead($args, $pdo),
             default => ['error' => 'Unknown tool.'],
         };
+    }
+
+    /** @return array{enrollments: array<int,array<string,mixed>>, marketing_leads: array<int,array<string,mixed>>} */
+    private static function toolFindLead(array $args, \PDO $pdo): array
+    {
+        $query = trim((string) ($args['query'] ?? ''));
+        if ($query === '') {
+            return ['error' => 'A name, email, or business name to search for is required.'];
+        }
+        $like = '%' . $query . '%';
+
+        $stmt = $pdo->prepare(
+            'SELECT id, name, email, status, lead_industry, last_action, nurturer_enabled, enrolled_at '
+            . 'FROM drip_enrollments WHERE name LIKE ? OR email LIKE ? ORDER BY enrolled_at DESC LIMIT 5'
+        );
+        $stmt->execute([$like, $like]);
+        $enrollments = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        foreach ($enrollments as &$enrollment) {
+            $sendsStmt = $pdo->prepare(
+                'SELECT sequence_number, subject_line, sent_at FROM nurturer_sends '
+                . 'WHERE enrollment_id = ? ORDER BY sent_at ASC'
+            );
+            $sendsStmt->execute([$enrollment['id']]);
+            $enrollment['nurturer_sends'] = $sendsStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        }
+        unset($enrollment);
+
+        $leadStmt = $pdo->prepare(
+            'SELECT id, business_name, contact_email, contact_phone, status, audit_findings, '
+            . 'pitch_subject, pitch_body, sent_at FROM marketing_leads '
+            . 'WHERE business_name LIKE ? OR contact_email LIKE ? ORDER BY created_at DESC LIMIT 5'
+        );
+        $leadStmt->execute([$like, $like]);
+        $marketingLeads = $leadStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        return ['enrollments' => $enrollments, 'marketing_leads' => $marketingLeads];
     }
 
     private static function buildSystemPrompt(): string
@@ -221,9 +283,10 @@ class NurturerController
             . "a specific lead, or explain how you work. Speak naturally and conversationally — do not "
             . "output JSON unless he explicitly asks for that exact format.\n\n"
             . "You have tools available: get_site_info and search_content (ground yourself in real facts "
-            . "and real past work rather than guessing), and check_availability — if Caleb names a specific "
+            . "and real past work rather than guessing), check_availability — if Caleb names a specific "
             . "date while thinking through a Sequence 3 close, check the real bookable slots for it instead "
-            . "of guessing what's open.";
+            . "of guessing what's open — and find_lead — whenever Caleb mentions a specific lead by name or "
+            . "email, look them up rather than asking him to repeat details already on file.";
     }
 
     /** No TTS surface here (unlike Lisa) — this only lightly flavors the system prompt's internal framing. */
