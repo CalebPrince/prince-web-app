@@ -135,22 +135,52 @@ class DripController
     }
 
     /** PATCH /api/v1/admin/drip/enrollments/{id} — body: {status: 'active'|'stopped'} */
+    /**
+     * Partial update: send only the fields you're changing. It used to take
+     * status and nothing else, which meant an enrollment created without
+     * Nurturer could never be opted in — and since the automated path creates
+     * every lead that way, that was all of them, short of hand-written SQL.
+     */
     public static function updateEnrollment(array $params): void
     {
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $status = $data['status'] ?? '';
-        if (!in_array($status, ['active', 'stopped'], true)) {
-            Response::error('Status must be active or stopped.', 422);
+
+        $fields = [];
+        $values = [];
+
+        if (array_key_exists('status', $data)) {
+            if (!in_array($data['status'], ['active', 'stopped'], true)) {
+                Response::error('Status must be active or stopped.', 422);
+            }
+            $fields[] = 'status = ?';
+            $values[] = $data['status'];
+        }
+        if (array_key_exists('nurturer_enabled', $data)) {
+            $fields[] = 'nurturer_enabled = ?';
+            $values[] = !empty($data['nurturer_enabled']) ? 1 : 0;
+        }
+        if (array_key_exists('lead_industry', $data)) {
+            $fields[] = 'lead_industry = ?';
+            $values[] = trim((string) $data['lead_industry']) ?: null;
+        }
+        if (array_key_exists('last_action', $data)) {
+            $fields[] = 'last_action = ?';
+            $values[] = trim((string) $data['last_action']) ?: null;
         }
 
+        if (!$fields) {
+            Response::error('Nothing to update — send status, nurturer_enabled, lead_industry or last_action.', 422);
+        }
+
+        $values[] = (int) $params['id'];
         $pdo = Database::get();
-        $stmt = $pdo->prepare('UPDATE drip_enrollments SET status = ? WHERE id = ?');
-        $stmt->execute([$status, (int) $params['id']]);
+        $stmt = $pdo->prepare('UPDATE drip_enrollments SET ' . implode(', ', $fields) . ' WHERE id = ?');
+        $stmt->execute($values);
         if ($stmt->rowCount() === 0) {
             Response::error('Enrollment not found.', 404);
         }
-        Response::json(['status' => $status]);
+        Response::json(['status' => 'updated']);
     }
 
     /** DELETE /api/v1/admin/drip/enrollments/{id} */
@@ -195,12 +225,32 @@ class DripController
      * (whatever its status — someone who unsubscribed must never be
      * silently re-enrolled).
      */
-    public static function enrollEmail(\PDO $pdo, string $email, ?string $name, string $source, ?int $leadId): bool
-    {
+    /**
+     * Nurturer fields are parameters rather than defaults because this is the
+     * automated path (markSent), and it used to set none of them — so every
+     * auto-enrolled lead was stuck at nurturer_enabled = 0 with no industry or
+     * last action, i.e. permanently excluded from Nurturer. The whole outbound
+     * pipeline bypassed it, and only hand-typed enrollments ever got an AI
+     * follow-up.
+     */
+    public static function enrollEmail(
+        \PDO $pdo,
+        string $email,
+        ?string $name,
+        string $source,
+        ?int $leadId,
+        bool $nurturerEnabled = false,
+        ?string $leadIndustry = null,
+        ?string $lastAction = null
+    ): bool {
         $stmt = $pdo->prepare(
-            'INSERT OR IGNORE INTO drip_enrollments (email, name, source, lead_id, unsubscribe_token) VALUES (?, ?, ?, ?, ?)'
+            'INSERT OR IGNORE INTO drip_enrollments (email, name, source, lead_id, unsubscribe_token, nurturer_enabled, lead_industry, last_action)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->execute([strtolower($email), $name, $source, $leadId, bin2hex(random_bytes(16))]);
+        $stmt->execute([
+            strtolower($email), $name, $source, $leadId, bin2hex(random_bytes(16)),
+            $nurturerEnabled ? 1 : 0, $leadIndustry, $lastAction,
+        ]);
         return $stmt->rowCount() > 0;
     }
 

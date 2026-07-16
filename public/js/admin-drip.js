@@ -78,7 +78,7 @@ async function loadEnrollments() {
   const tbody = document.getElementById('enrollments-tbody');
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No enrollments yet. Leads are added automatically when you send a pitch.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No enrollments yet. Leads are added automatically when you send a pitch.</td></tr>';
     return;
   }
 
@@ -88,6 +88,11 @@ async function loadEnrollments() {
       <td class="ps-3">${escapeHtml(e.name || '—')}<br><span class="small text-muted-custom">${escapeHtml(e.email)}</span></td>
       <td class="small text-muted-custom">${e.source === 'marketing_lead' ? 'Marketing lead' : 'Manual'}</td>
       <td><span class="status-pill ${ENROLLMENT_PILL_CLASS[e.status] || 'read'}">${escapeHtml(e.status)}</span></td>
+      <td>
+        <div class="form-check form-switch">
+          <input type="checkbox" class="form-check-input nurturer-toggle" data-id="${e.id}" ${Number(e.nurturer_enabled) ? 'checked' : ''}>
+        </div>
+      </td>
       <td class="small">${e.steps_received}/${totalSteps || '?'} emails${e.last_sent_at ? `<br><span class="text-muted-custom">last: ${new Date(e.last_sent_at + 'Z').toLocaleDateString()}</span>` : ''}</td>
       <td class="small text-muted-custom">${new Date(e.enrolled_at + 'Z').toLocaleDateString()}</td>
       <td class="text-end pe-3 text-nowrap">
@@ -97,6 +102,23 @@ async function loadEnrollments() {
       </td>
     </tr>
   `).join('');
+
+  // Opting a lead in after the fact matters most for the automated path:
+  // markSent enrolls with Nurturer off, so without this the entire outbound
+  // pipeline could never receive an AI follow-up.
+  tbody.querySelectorAll('.nurturer-toggle').forEach(toggle => {
+    toggle.addEventListener('change', async () => {
+      toggle.disabled = true;
+      try {
+        await api.patch(`/api/v1/admin/drip/enrollments/${toggle.dataset.id}`, { nurturer_enabled: toggle.checked });
+      } catch (err) {
+        alert(err.message);
+        toggle.checked = !toggle.checked;
+      } finally {
+        toggle.disabled = false;
+      }
+    });
+  });
 
   tbody.querySelectorAll('.stop-btn').forEach(btn => {
     btn.addEventListener('click', async () => {

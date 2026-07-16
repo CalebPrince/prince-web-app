@@ -354,8 +354,32 @@ class MarketingLeadController
 
         // Emailed leads join the follow-up drip sequence automatically (a
         // no-op if the address is already enrolled or has unsubscribed).
+        //
+        // last_action feeds Nurturer's prompt, and the audit findings are the
+        // best material available for it: a specific, real observation about
+        // *their* site, which is exactly what stops a follow-up reading like a
+        // template. nurturer_enabled stays off — an AI-written email to a real
+        // prospect is Caleb's call per lead, not something marking a pitch as
+        // sent should trigger silently. Toggle it per enrollment on the Drip
+        // page. lead_industry has no column to draw from on marketing_leads, so
+        // it falls back to "general business"; Nurturer still sees the business
+        // name and can infer from that.
         if (($lead['pitch_channel'] ?? 'email') !== 'phone' && !empty($lead['contact_email'])) {
-            DripController::enrollEmail($pdo, $lead['contact_email'], $lead['business_name'] ?: null, 'marketing_lead', (int) $lead['id']);
+            $auditNote = trim((string) ($lead['audit_findings'] ?? ''));
+            $lastAction = 'was sent an outreach pitch about their website'
+                . (!empty($lead['website_url']) ? ' (' . $lead['website_url'] . ')' : '')
+                . ($auditNote !== '' ? '. Issues spotted in the audit: ' . mb_substr($auditNote, 0, 300) : '');
+
+            DripController::enrollEmail(
+                $pdo,
+                $lead['contact_email'],
+                $lead['business_name'] ?: null,
+                'marketing_lead',
+                (int) $lead['id'],
+                false,
+                null,
+                $lastAction
+            );
         }
 
         Response::json(['status' => 'updated']);
