@@ -184,8 +184,11 @@ foreach ($keywords as $keyword) {
 
         $title = trim((string) ($result['title'] ?? ''));
         $postContent = $title !== '' ? "{$title}\n\n{$snippet}" : $snippet;
+        // Serper reports age as human text ("3 years ago"), and not on every
+        // result — Google only dates some.
+        $postAge = trim((string) ($result['date'] ?? '')) ?: null;
 
-        $draft = BeaconController::generateForPost(detectPlatform($url), 'unknown', $postContent, $url, 'cron');
+        $draft = BeaconController::generateForPost(detectPlatform($url), 'unknown', $postContent, $url, 'cron', $postAge);
 
         // A failed score is not a decision — don't mark it seen. Marking on null
         // cost real leads: an afternoon of testing exhausted every provider's

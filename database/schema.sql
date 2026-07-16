@@ -300,6 +300,13 @@ CREATE TABLE IF NOT EXISTS beacon_social_leads (
   reasoning TEXT NOT NULL,
   drafted_reply TEXT NOT NULL,
   source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron')),
+  -- How old the post was when found, as Serper reports it ("3 years ago").
+  -- Human text, not a date: it's for reading, not sorting. NULL for draft()/
+  -- chat() leads, where no search result supplied one. Worth storing because
+  -- age is the difference between a lead and a fossil, and it isn't otherwise
+  -- visible — the first real sweep surfaced Reddit threads from 2015 that read
+  -- perfectly well until you decoded the URL.
+  post_age TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at);

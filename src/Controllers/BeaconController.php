@@ -74,9 +74,10 @@ class BeaconController
      * can't be called directly from a cron) and
      * database/run_beacon_discovery.php.
      *
+     * @param ?string $postAge Serper's human-readable age ("3 years ago"), when the caller has one.
      * @return array{qualified:bool,confidence_score:int,reasoning:string,drafted_reply:string}|null null only on a hard failure
      */
-    public static function generateForPost(string $platform, string $username, string $postContent, ?string $postUrl, string $source): ?array
+    public static function generateForPost(string $platform, string $username, string $postContent, ?string $postUrl, string $source, ?string $postAge = null): ?array
     {
         $pdo = Database::get();
         $userPrompt = self::buildUserPrompt($platform, $username, $postContent, $postUrl);
@@ -130,11 +131,11 @@ class BeaconController
         }
         if ($qualified) {
             $pdo->prepare(
-                'INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
                 $platform, $username, $postContent, $postUrl,
                 (int) $parsed['confidence_score'], (string) $parsed['reasoning'], (string) $parsed['drafted_reply'],
-                $source,
+                $source, $postAge,
             ]);
         }
 

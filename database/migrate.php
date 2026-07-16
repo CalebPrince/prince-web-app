@@ -245,6 +245,14 @@ if ($beaconLeadsSql && !str_contains($beaconLeadsSql, "'cron'")) {
     $pdo->exec('COMMIT');
 }
 
+// Deliberately after the rebuild above, which recreates the table from an
+// explicit column list — adding post_age first would just get dropped on any
+// database still carrying the pre-'cron' CHECK.
+$beaconLeadColumns = array_column($pdo->query('PRAGMA table_info(beacon_social_leads)')->fetchAll(), 'name');
+if (!in_array('post_age', $beaconLeadColumns, true)) {
+    $pdo->exec('ALTER TABLE beacon_social_leads ADD COLUMN post_age TEXT');
+}
+
 // Seed a starter drip sequence the first time the table appears — inactive
 // on purpose, so nothing sends until the copy is reviewed and switched on.
 if ((int) $pdo->query('SELECT COUNT(*) FROM drip_steps')->fetchColumn() === 0) {

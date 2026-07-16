@@ -150,10 +150,15 @@
         const link = lead.post_url
           ? ' — <a href="' + escapeHtml(lead.post_url) + '" target="_blank" rel="noopener">view post</a>'
           : "";
+        // Age is the fastest way to spot a lead that isn't one — an old post
+        // reads exactly like a fresh one otherwise. Not every result carries it.
+        const age = lead.post_age
+          ? ' · <span class="fst-italic">' + escapeHtml(lead.post_age) + "</span>"
+          : "";
         card.innerHTML =
           '<div class="d-flex justify-content-between small text-muted-custom mb-1">'
           + '<span>' + escapeHtml(lead.platform) + " · @" + escapeHtml(lead.username) + link + "</span>"
-          + '<span>' + lead.confidence_score + "% · " + sourceBadge + "</span>"
+          + '<span>' + lead.confidence_score + "% · " + sourceBadge + age + "</span>"
           + "</div>"
           + '<div class="small mb-2">' + escapeHtml(lead.reasoning) + "</div>"
           + '<div class="small fst-italic mb-2">' + escapeHtml(lead.drafted_reply) + "</div>"
