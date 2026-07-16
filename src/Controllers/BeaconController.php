@@ -59,6 +59,25 @@ class BeaconController
             Response::error('post_content must be under ' . self::MAX_POST_CONTENT_LENGTH . ' characters.', 422);
         }
 
+        $result = self::generateForPost($platform, $username, $postContent, $postUrl, 'draft');
+        if ($result === null) {
+            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+        }
+
+        Response::json($result);
+    }
+
+    /**
+     * Core generation: builds the prompt, runs it through AiAgentEngine,
+     * parses the JSON contract, and — when qualified — persists the lead.
+     * Shared by draft() (HTTP, which exits via Response::json() and so
+     * can't be called directly from a cron) and
+     * database/run_beacon_discovery.php.
+     *
+     * @return array{qualified:bool,confidence_score:int,reasoning:string,drafted_reply:string}|null null only on a hard failure
+     */
+    public static function generateForPost(string $platform, string $username, string $postContent, ?string $postUrl, string $source): ?array
+    {
         $pdo = Database::get();
         $userPrompt = self::buildUserPrompt($platform, $username, $postContent, $postUrl);
         $result = AiAgentEngine::run(
@@ -68,7 +87,7 @@ class BeaconController
             [['role' => 'user', 'text' => $userPrompt]]
         );
         if ($result['reply'] === null) {
-            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+            return null;
         }
 
         $stripped = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['reply']));
@@ -79,29 +98,30 @@ class BeaconController
             || empty($parsed['reasoning'])
             || empty($parsed['drafted_reply'])
         ) {
-            error_log('Beacon draft: could not parse JSON from model output: ' . substr($stripped, 0, 800));
-            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+            error_log('Beacon generateForPost: could not parse JSON from model output: ' . substr($stripped, 0, 800));
+            return null;
         }
 
         // Deterministic, not a tool call — the model already told us whether
         // this qualifies via the structured output above, so there's no
         // decision left for a tool to make (and no risk of it "forgetting").
-        if ((bool) $parsed['qualified']) {
+        $qualified = (bool) $parsed['qualified'];
+        if ($qualified) {
             $pdo->prepare(
                 'INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
                 $platform, $username, $postContent, $postUrl,
                 (int) $parsed['confidence_score'], (string) $parsed['reasoning'], (string) $parsed['drafted_reply'],
-                'draft',
+                $source,
             ]);
         }
 
-        Response::json([
-            'qualified' => (bool) $parsed['qualified'],
+        return [
+            'qualified' => $qualified,
             'confidence_score' => (int) $parsed['confidence_score'],
             'reasoning' => (string) $parsed['reasoning'],
             'drafted_reply' => (string) $parsed['drafted_reply'],
-        ]);
+        ];
     }
 
     /**

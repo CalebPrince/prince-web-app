@@ -52,6 +52,24 @@ class NurturerController
             Response::error('lead_name, lead_industry, last_action, and a sequence_number of at least 1 are all required.', 422);
         }
 
+        $result = self::generateFollowUp($leadName, $leadIndustry, $lastAction, $sequenceNumber);
+        if ($result === null) {
+            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+        }
+
+        Response::json($result);
+    }
+
+    /**
+     * Core generation: builds the prompt, runs it through AiAgentEngine, and
+     * parses the JSON contract. Shared by draft() (HTTP, which exits via
+     * Response::json() and so can't be called directly from a cron) and
+     * database/send_nurturer_emails.php.
+     *
+     * @return array{subject_line:string,email_body:string}|null null only on a hard failure
+     */
+    public static function generateFollowUp(string $leadName, string $leadIndustry, string $lastAction, int $sequenceNumber): ?array
+    {
         $pdo = Database::get();
         $userPrompt = self::buildUserPrompt($leadName, $leadIndustry, $lastAction, $sequenceNumber);
         $result = AiAgentEngine::run(
@@ -61,20 +79,20 @@ class NurturerController
             [['role' => 'user', 'text' => $userPrompt]]
         );
         if ($result['reply'] === null) {
-            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+            return null;
         }
 
         $stripped = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['reply']));
         $parsed = json_decode($stripped, true);
         if (!is_array($parsed) || empty($parsed['subject_line']) || empty($parsed['email_body'])) {
-            error_log('Nurturer draft: could not parse JSON from model output: ' . substr($stripped, 0, 800));
-            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+            error_log('Nurturer generateFollowUp: could not parse JSON from model output: ' . substr($stripped, 0, 800));
+            return null;
         }
 
-        Response::json([
+        return [
             'subject_line' => (string) $parsed['subject_line'],
             'email_body' => (string) $parsed['email_body'],
-        ]);
+        ];
     }
 
     /**

@@ -13,6 +13,12 @@
   const beaconLeadsCard = document.getElementById("beacon-leads-card");
   const beaconLeadsList = document.getElementById("beacon-leads-list");
   const beaconLeadsEmpty = document.getElementById("beacon-leads-empty");
+  const beaconDiscoveryCard = document.getElementById("beacon-discovery-card");
+  const beaconDiscoveryEnabled = document.getElementById("beacon-discovery-enabled");
+  const beaconDiscoveryFrequency = document.getElementById("beacon-discovery-frequency");
+  const beaconDiscoveryKeywords = document.getElementById("beacon-discovery-keywords");
+  const beaconDiscoveryMsg = document.getElementById("beacon-discovery-msg");
+  const beaconDiscoverySave = document.getElementById("beacon-discovery-save");
 
   let activeAgent = "beacon";
   let transcript = []; // [{role: 'user'|'agent', text}]
@@ -151,9 +157,47 @@
   }
 
   function updateLeadsPanelVisibility() {
-    beaconLeadsCard.classList.toggle("d-none", activeAgent !== "beacon");
-    if (activeAgent === "beacon") loadBeaconLeads();
+    const isBeacon = activeAgent === "beacon";
+    beaconLeadsCard.classList.toggle("d-none", !isBeacon);
+    beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
+    if (isBeacon) loadBeaconLeads();
   }
+
+  // ---- Beacon's discovery settings (admin-only Settings, not the public content endpoint) ----
+  let discoverySettingsLoaded = false;
+  async function loadBeaconDiscoverySettings() {
+    if (discoverySettingsLoaded) return;
+    try {
+      const settings = await api.get("/api/v1/admin/settings");
+      beaconDiscoveryEnabled.checked = settings.beacon_discovery_enabled === "1";
+      beaconDiscoveryFrequency.value = settings.beacon_discovery_frequency || "daily";
+      beaconDiscoveryKeywords.value = settings.beacon_discovery_keywords || "";
+      discoverySettingsLoaded = true;
+    } catch (_) {
+      // Quiet failure — admin can still retype and save.
+    }
+  }
+
+  beaconDiscoverySave.addEventListener("click", async () => {
+    beaconDiscoveryMsg.classList.add("d-none");
+    beaconDiscoverySave.disabled = true;
+    try {
+      await api.put("/api/v1/admin/settings", {
+        beacon_discovery_enabled: beaconDiscoveryEnabled.checked ? "1" : "0",
+        beacon_discovery_frequency: beaconDiscoveryFrequency.value,
+        beacon_discovery_keywords: beaconDiscoveryKeywords.value,
+      });
+      beaconDiscoveryMsg.className = "alert alert-success py-2 small mt-3";
+      beaconDiscoveryMsg.textContent = "Saved.";
+      beaconDiscoveryMsg.classList.remove("d-none");
+    } catch (err) {
+      beaconDiscoveryMsg.className = "alert alert-danger py-2 small mt-3";
+      beaconDiscoveryMsg.textContent = err.message;
+      beaconDiscoveryMsg.classList.remove("d-none");
+    } finally {
+      beaconDiscoverySave.disabled = false;
+    }
+  });
 
   // ---- sending messages ----
   async function sendMessage(text) {
@@ -193,6 +237,7 @@
       activeAgent = tab.dataset.agent;
       resetConversation();
       updateLeadsPanelVisibility();
+      if (activeAgent === "beacon") loadBeaconDiscoverySettings();
     });
   });
 
@@ -251,5 +296,6 @@
       '<i class="bi bi-envelope-heart me-1"></i>' + (agentSettings.nurturer_assistant_name || "Nurturer");
     resetConversation();
     updateLeadsPanelVisibility();
+    if (activeAgent === "beacon") loadBeaconDiscoverySettings();
   })();
 })();

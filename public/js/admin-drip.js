@@ -133,6 +133,26 @@ async function loadEnrollments() {
   });
 }
 
+async function loadNurturerSends() {
+  const response = await api.get('/api/v1/admin/drip/nurturer-sends');
+  const rows = Array.isArray(response) ? response : [];
+  const tbody = document.getElementById('ai-sends-tbody');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted-custom py-4">No AI-personalized emails sent yet.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(s => `
+    <tr>
+      <td class="ps-3">${escapeHtml(s.name || '—')}<br><span class="small text-muted-custom">${escapeHtml(s.email)}</span></td>
+      <td class="small text-muted-custom">Sequence ${s.sequence_number}</td>
+      <td>${escapeHtml(s.subject_line)}<br><span class="small text-muted-custom">${escapeHtml(s.email_body.slice(0, 90))}${s.email_body.length > 90 ? '…' : ''}</span></td>
+      <td class="small text-muted-custom">${new Date(s.sent_at + 'Z').toLocaleString()}</td>
+    </tr>
+  `).join('');
+}
+
 function openStepModal(step = null) {
   editingStepId = step ? step.id : null;
   document.getElementById('step-form').reset();
@@ -150,8 +170,11 @@ function openStepModal(step = null) {
 function switchTab(tab) {
   document.getElementById('tab-steps').classList.toggle('active', tab === 'steps');
   document.getElementById('tab-enrollments').classList.toggle('active', tab === 'enrollments');
+  document.getElementById('tab-ai-sends').classList.toggle('active', tab === 'ai-sends');
   document.getElementById('panel-steps').classList.toggle('d-none', tab !== 'steps');
   document.getElementById('panel-enrollments').classList.toggle('d-none', tab !== 'enrollments');
+  document.getElementById('panel-ai-sends').classList.toggle('d-none', tab !== 'ai-sends');
+  if (tab === 'ai-sends') loadNurturerSends();
 }
 
 (async function init() {
@@ -164,6 +187,7 @@ function switchTab(tab) {
 
   document.getElementById('tab-steps').addEventListener('click', () => switchTab('steps'));
   document.getElementById('tab-enrollments').addEventListener('click', () => switchTab('enrollments'));
+  document.getElementById('tab-ai-sends').addEventListener('click', () => switchTab('ai-sends'));
   document.getElementById('new-step-btn').addEventListener('click', () => openStepModal());
   document.getElementById('enroll-btn').addEventListener('click', () => {
     document.getElementById('enroll-form').reset();
@@ -204,6 +228,9 @@ function switchTab(tab) {
       await api.post('/api/v1/admin/drip/enrollments', {
         email: document.getElementById('enroll-email').value,
         name: document.getElementById('enroll-name').value,
+        nurturer_enabled: document.getElementById('enroll-nurturer-enabled').checked,
+        lead_industry: document.getElementById('enroll-lead-industry').value,
+        last_action: document.getElementById('enroll-last-action').value,
       });
       enrollModal.hide();
       switchTab('enrollments');

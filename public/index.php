@@ -232,6 +232,7 @@ $router->get('/api/v1/admin/drip/enrollments', [DripController::class, 'enrollme
 $router->post('/api/v1/admin/drip/enrollments', [DripController::class, 'enroll']);
 $router->patch('/api/v1/admin/drip/enrollments/{id}', [DripController::class, 'updateEnrollment']);
 $router->delete('/api/v1/admin/drip/enrollments/{id}', [DripController::class, 'destroyEnrollment']);
+$router->get('/api/v1/admin/drip/nurturer-sends', [DripController::class, 'nurturerSends']);
 $router->get('/api/v1/admin/social-drafts', [SocialDraftController::class, 'index']);
 $router->post('/api/v1/admin/social-drafts/generate', [SocialDraftController::class, 'generate']);
 $router->patch('/api/v1/admin/social-drafts/{id}', [SocialDraftController::class, 'update']);

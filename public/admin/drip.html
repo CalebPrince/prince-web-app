@@ -86,6 +86,7 @@
     <ul class="nav nav-tabs mb-3">
       <li class="nav-item"><button class="nav-link active" id="tab-steps">Sequence Steps</button></li>
       <li class="nav-item"><button class="nav-link" id="tab-enrollments">Enrollments</button></li>
+      <li class="nav-item"><button class="nav-link" id="tab-ai-sends">AI Sends</button></li>
     </ul>
 
     <div id="panel-steps">
@@ -120,6 +121,23 @@
             </tr>
           </thead>
           <tbody id="enrollments-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="panel-ai-sends" class="d-none">
+      <p class="small text-muted-custom">Emails Nurturer actually generated and sent — sequence 2/3 follow-ups for leads with "AI-personalize via Nurturer" enabled, sent via <code>database/send_nurturer_emails.php</code> on cron. This is separate from the fixed-template steps above.</p>
+      <div class="admin-card p-0">
+        <table class="table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th class="ps-3">Lead</th>
+              <th>Sequence</th>
+              <th>Subject</th>
+              <th>Sent</th>
+            </tr>
+          </thead>
+          <tbody id="ai-sends-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -179,6 +197,19 @@
           <div class="mb-3">
             <label class="form-label">Name <span class="text-muted-custom">(optional, used for {{name}})</span></label>
             <input type="text" class="form-control" id="enroll-name" placeholder="Business or contact name">
+          </div>
+          <hr class="my-3">
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="enroll-nurturer-enabled">
+            <label class="form-check-label" for="enroll-nurturer-enabled">AI-personalize via Nurturer <span class="text-muted-custom fw-normal">(sequence 2/3, alongside the fixed steps above)</span></label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Lead industry <span class="text-muted-custom">(optional — improves Nurturer's personalization)</span></label>
+            <input type="text" class="form-control" id="enroll-lead-industry" placeholder="e.g. E-commerce, SaaS, Real Estate">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Last action <span class="text-muted-custom">(optional — what they did before being enrolled)</span></label>
+            <input type="text" class="form-control" id="enroll-last-action" placeholder="e.g. Requested a quote via the contact form">
           </div>
           <div id="enroll-msg" class="alert py-2 small d-none"></div>
           <button type="submit" class="btn-brand w-100">Enroll</button>

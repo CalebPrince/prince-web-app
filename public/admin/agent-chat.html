@@ -106,6 +106,33 @@
       </form>
     </div>
 
+    <div class="admin-card p-4 mt-4 d-none" id="beacon-discovery-card">
+      <h5 class="mb-3"><i class="bi bi-search me-2"></i>Discovery settings</h5>
+      <div class="form-text mb-3">Runs on a cron (<code>database/run_beacon_discovery.php</code>): searches the keywords below via Serper, runs new results through Beacon, and sends you a digest (Slack and/or email, whichever is configured under Settings) of anything qualified — Beacon can't post back to Reddit/X/LinkedIn itself, so this is a digest for you to act on, not an auto-reply. Serper only returns a short snippet per result, not the full post, so treat qualified results as a lead worth opening, not a final verdict.</div>
+      <div class="row g-3 align-items-end">
+        <div class="col-sm-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="beacon-discovery-enabled">
+            <label class="form-check-label" for="beacon-discovery-enabled">Enabled</label>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <label class="form-label">Frequency</label>
+          <select class="form-select" id="beacon-discovery-frequency">
+            <option value="hourly">Hourly</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="form-label">Search keywords <span class="text-muted-custom fw-normal">(one per line, e.g. <code>site:reddit.com "janky animation" OR "slow website"</code>)</span></label>
+        <textarea class="form-control" id="beacon-discovery-keywords" rows="4"></textarea>
+      </div>
+      <div id="beacon-discovery-msg" class="alert py-2 small d-none mt-3"></div>
+      <button type="button" class="btn-brand mt-3" id="beacon-discovery-save">Save discovery settings</button>
+    </div>
+
     <div class="admin-card p-4 mt-4 d-none" id="beacon-leads-card">
       <h5 class="mb-3"><i class="bi bi-bullseye me-2"></i>Recent qualified leads</h5>
       <div id="beacon-leads-empty" class="text-muted-custom small d-none">No qualified leads logged yet — they'll show up here once Beacon saves one from draft() or you log one mid-chat.</div>

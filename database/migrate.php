@@ -194,6 +194,47 @@ foreach ($leadColumns as $col) {
     }
 }
 
+$dripEnrollmentColumns = array_column($pdo->query('PRAGMA table_info(drip_enrollments)')->fetchAll(), 'name');
+if (!in_array('nurturer_enabled', $dripEnrollmentColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN nurturer_enabled INTEGER NOT NULL DEFAULT 0');
+}
+if (!in_array('lead_industry', $dripEnrollmentColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN lead_industry TEXT');
+}
+if (!in_array('last_action', $dripEnrollmentColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN last_action TEXT');
+}
+
+// SQLite can't relax a CHECK constraint via ALTER TABLE — rebuild the table
+// if 'cron' (added for run_beacon_discovery.php) isn't in it yet.
+$beaconLeadsSql = $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'beacon_social_leads'"
+)->fetchColumn();
+if ($beaconLeadsSql && !str_contains($beaconLeadsSql, "'cron'")) {
+    $pdo->exec('BEGIN TRANSACTION');
+    $pdo->exec('ALTER TABLE beacon_social_leads RENAME TO beacon_social_leads_old');
+    $pdo->exec("CREATE TABLE beacon_social_leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        platform TEXT NOT NULL,
+        username TEXT NOT NULL,
+        post_content TEXT NOT NULL,
+        post_url TEXT,
+        confidence_score INTEGER NOT NULL,
+        reasoning TEXT NOT NULL,
+        drafted_reply TEXT NOT NULL,
+        source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron')),
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )");
+    $pdo->exec(
+        'INSERT INTO beacon_social_leads (id, platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, created_at)
+         SELECT id, platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, created_at
+         FROM beacon_social_leads_old'
+    );
+    $pdo->exec('DROP TABLE beacon_social_leads_old');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at)');
+    $pdo->exec('COMMIT');
+}
+
 // Seed a starter drip sequence the first time the table appears — inactive
 // on purpose, so nothing sends until the copy is reviewed and switched on.
 if ((int) $pdo->query('SELECT COUNT(*) FROM drip_steps')->fetchColumn() === 0) {

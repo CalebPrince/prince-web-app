@@ -103,21 +103,31 @@ class DripController
         Response::json($rows);
     }
 
-    /** POST /api/v1/admin/drip/enrollments — body: {email, name?} */
+    /** POST /api/v1/admin/drip/enrollments — body: {email, name?, lead_industry?, last_action?, nurturer_enabled?} */
     public static function enroll(): void
     {
         $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $email = trim((string) ($data['email'] ?? ''));
         $name = trim((string) ($data['name'] ?? '')) ?: null;
+        $leadIndustry = trim((string) ($data['lead_industry'] ?? '')) ?: null;
+        $lastAction = trim((string) ($data['last_action'] ?? '')) ?: null;
+        $nurturerEnabled = !empty($data['nurturer_enabled']);
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             Response::error('A valid email is required.', 422);
         }
 
-        $created = self::enrollEmail(Database::get(), $email, $name, 'manual', null);
+        $pdo = Database::get();
+        $created = self::enrollEmail($pdo, $email, $name, 'manual', null);
         if (!$created) {
             Response::error('That email is already enrolled.', 422);
+        }
+
+        if ($nurturerEnabled || $leadIndustry !== null || $lastAction !== null) {
+            $pdo->prepare(
+                'UPDATE drip_enrollments SET nurturer_enabled = ?, lead_industry = ?, last_action = ? WHERE email = ?'
+            )->execute([$nurturerEnabled ? 1 : 0, $leadIndustry, $lastAction, strtolower($email)]);
         }
 
         ActivityLog::log($user, 'enrolled', 'drip_enrollment', $email, $name ?: $email);
@@ -149,6 +159,20 @@ class DripController
         AuthMiddleware::requireAuth();
         Database::get()->prepare('DELETE FROM drip_enrollments WHERE id = ?')->execute([(int) $params['id']]);
         Response::json(['status' => 'deleted']);
+    }
+
+    /** GET /api/v1/admin/drip/nurturer-sends — AI-personalized sends, for the "AI Sends" tab. */
+    public static function nurturerSends(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $rows = $pdo->query(
+            'SELECT ns.*, e.email, e.name
+             FROM nurturer_sends ns
+             JOIN drip_enrollments e ON e.id = ns.enrollment_id
+             ORDER BY ns.sent_at DESC LIMIT 100'
+        )->fetchAll();
+        Response::json($rows);
     }
 
     /** GET /api/v1/drip/unsubscribe?token=... — public, linked from every drip email */

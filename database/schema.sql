@@ -287,7 +287,8 @@ CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status
 
 -- Social posts/comments Beacon has judged worth a reply. source distinguishes
 -- leads the automated draft() pipeline logged deterministically (qualified
--- === true in its JSON output) from ones logged via the log_qualified_lead
+-- === true in its JSON output), ones found by the scheduled discovery cron
+-- (run_beacon_discovery.php), and ones logged via the log_qualified_lead
 -- tool during a direct chat() conversation.
 CREATE TABLE IF NOT EXISTS beacon_social_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -298,10 +299,18 @@ CREATE TABLE IF NOT EXISTS beacon_social_leads (
   confidence_score INTEGER NOT NULL,
   reasoning TEXT NOT NULL,
   drafted_reply TEXT NOT NULL,
-  source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat')),
+  source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at);
+
+-- URLs run_beacon_discovery.php has already evaluated (qualified or not) —
+-- dedupes so the same search result isn't re-scored (and re-billed, both
+-- Serper and the AI call) on every cron run.
+CREATE TABLE IF NOT EXISTS beacon_scan_seen (
+  url TEXT PRIMARY KEY,
+  scanned_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
 -- Client portal accounts. Rows are provisioned by an admin invite (from a
 -- proposal), never self-signup — password_hash stays NULL until the client
@@ -549,7 +558,14 @@ CREATE TABLE IF NOT EXISTS drip_enrollments (
   lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'stopped')),
   unsubscribe_token TEXT UNIQUE NOT NULL,
-  enrolled_at TEXT NOT NULL DEFAULT (datetime('now'))
+  enrolled_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- Opt-in per enrollment: when set, send_nurturer_emails.php also sends
+  -- this lead the AI-personalized sequence 2/3 follow-ups (see
+  -- nurturer_sends below), alongside whatever fixed drip_steps it gets.
+  -- lead_industry/last_action feed straight into Nurturer's prompt inputs.
+  nurturer_enabled INTEGER NOT NULL DEFAULT 0,
+  lead_industry TEXT,
+  last_action TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_drip_enrollments_status ON drip_enrollments (status, enrolled_at);
 
@@ -559,4 +575,19 @@ CREATE TABLE IF NOT EXISTS drip_sends (
   step_id INTEGER NOT NULL REFERENCES drip_steps(id) ON DELETE CASCADE,
   sent_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (enrollment_id, step_id)
+);
+
+-- Nurturer's AI-generated sends, kept separate from drip_sends (which only
+-- stores a step_id reference back to a fixed template — wrong shape for
+-- content that's unique per send). Only ever sequence_number 2 or 3 — that's
+-- all Nurturer's own prompt defines; sequence 1 stays whatever fixed
+-- drip_steps step (if any) the enrollment also receives.
+CREATE TABLE IF NOT EXISTS nurturer_sends (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  enrollment_id INTEGER NOT NULL REFERENCES drip_enrollments(id) ON DELETE CASCADE,
+  sequence_number INTEGER NOT NULL,
+  subject_line TEXT NOT NULL,
+  email_body TEXT NOT NULL,
+  sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (enrollment_id, sequence_number)
 );
