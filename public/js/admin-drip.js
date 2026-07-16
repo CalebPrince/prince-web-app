@@ -153,6 +153,23 @@ async function loadNurturerSends() {
   `).join('');
 }
 
+// Defaults mirror send_nurturer_emails.php's fallbacks — keep the two in
+// sync, since a never-saved setting reads as empty here but falls back there.
+const NURTURER_DEFAULT_OFFSETS = { 2: 5, 3: 12 };
+
+let timingSettingsLoaded = false;
+async function loadNurturerTiming() {
+  if (timingSettingsLoaded) return;
+  try {
+    const settings = await api.get('/api/v1/admin/settings');
+    document.getElementById('nurturer-offset-2').value = settings.nurturer_sequence_2_day_offset || NURTURER_DEFAULT_OFFSETS[2];
+    document.getElementById('nurturer-offset-3').value = settings.nurturer_sequence_3_day_offset || NURTURER_DEFAULT_OFFSETS[3];
+    timingSettingsLoaded = true;
+  } catch (_) {
+    // Quiet failure — admin can still type offsets and save.
+  }
+}
+
 function openStepModal(step = null) {
   editingStepId = step ? step.id : null;
   document.getElementById('step-form').reset();
@@ -174,7 +191,10 @@ function switchTab(tab) {
   document.getElementById('panel-steps').classList.toggle('d-none', tab !== 'steps');
   document.getElementById('panel-enrollments').classList.toggle('d-none', tab !== 'enrollments');
   document.getElementById('panel-ai-sends').classList.toggle('d-none', tab !== 'ai-sends');
-  if (tab === 'ai-sends') loadNurturerSends();
+  if (tab === 'ai-sends') {
+    loadNurturerSends();
+    loadNurturerTiming();
+  }
 }
 
 (async function init() {
@@ -217,6 +237,28 @@ function switchTab(tab) {
       msg.className = 'alert alert-danger py-2 small';
       msg.textContent = err.message;
       msg.classList.remove('d-none');
+    }
+  });
+
+  document.getElementById('nurturer-timing-save').addEventListener('click', async () => {
+    const msg = document.getElementById('nurturer-timing-msg');
+    const btn = document.getElementById('nurturer-timing-save');
+    msg.classList.add('d-none');
+    btn.disabled = true;
+    try {
+      await api.put('/api/v1/admin/settings', {
+        nurturer_sequence_2_day_offset: document.getElementById('nurturer-offset-2').value,
+        nurturer_sequence_3_day_offset: document.getElementById('nurturer-offset-3').value,
+      });
+      msg.className = 'alert alert-success py-2 small mt-3';
+      msg.textContent = 'Saved.';
+      msg.classList.remove('d-none');
+    } catch (err) {
+      msg.className = 'alert alert-danger py-2 small mt-3';
+      msg.textContent = err.message;
+      msg.classList.remove('d-none');
+    } finally {
+      btn.disabled = false;
     }
   });
 

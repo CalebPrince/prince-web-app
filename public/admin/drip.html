@@ -127,6 +127,30 @@
 
     <div id="panel-ai-sends" class="d-none">
       <p class="small text-muted-custom">Emails Nurturer actually generated and sent — sequence 2/3 follow-ups for leads with "AI-personalize via Nurturer" enabled, sent via <code>database/send_nurturer_emails.php</code> on cron. This is separate from the fixed-template steps above.</p>
+
+      <div class="admin-card p-4 mb-4">
+        <h6 class="mb-1">Send timing</h6>
+        <p class="small text-muted-custom">Days after enrolment each AI follow-up goes out. Sequence 1 isn't listed — that's always whichever fixed step above the lead receives, never AI-written. Pick days that don't collide with your active steps, or an opted-in lead gets two emails in one day.</p>
+        <div class="row g-3">
+          <div class="col-sm-4">
+            <label class="form-label" for="nurturer-offset-2">Sequence 2 (value / case study)</label>
+            <div class="input-group">
+              <input type="number" min="0" class="form-control" id="nurturer-offset-2">
+              <span class="input-group-text">days</span>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label" for="nurturer-offset-3">Sequence 3 (the close)</label>
+            <div class="input-group">
+              <input type="number" min="0" class="form-control" id="nurturer-offset-3">
+              <span class="input-group-text">days</span>
+            </div>
+          </div>
+        </div>
+        <div id="nurturer-timing-msg" class="alert py-2 small d-none mt-3"></div>
+        <button type="button" class="btn-brand mt-3" id="nurturer-timing-save">Save send timing</button>
+      </div>
+
       <div class="admin-card p-0">
         <table class="table mb-0 align-middle">
           <thead>

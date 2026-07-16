@@ -20,8 +20,13 @@ use App\Support\Settings;
 
 $pdo = Database::get();
 
-$sequence2Offset = (int) (Settings::get('nurturer_sequence_2_day_offset') ?: 3);
-$sequence3Offset = (int) (Settings::get('nurturer_sequence_3_day_offset') ?: 7);
+// Defaults interleave with the seeded drip steps (days 3/8/16) rather than
+// landing on top of them — at the old 3/7 an opted-in lead got the seeded
+// step 1 and this sequence 2 on the same day. Admin-tunable under Drip ->
+// AI Sends -> Send timing; keep NURTURER_DEFAULT_OFFSETS in admin-drip.js
+// in step with these fallbacks.
+$sequence2Offset = (int) (Settings::get('nurturer_sequence_2_day_offset') ?: 5);
+$sequence3Offset = (int) (Settings::get('nurturer_sequence_3_day_offset') ?: 12);
 
 $stmt = $pdo->prepare(
     "SELECT e.id AS enrollment_id, e.email, e.name, e.unsubscribe_token, e.lead_industry, e.last_action
