@@ -157,7 +157,8 @@
           + "</div>"
           + '<div class="small mb-2">' + escapeHtml(lead.reasoning) + "</div>"
           + '<div class="small fst-italic mb-2">' + escapeHtml(lead.drafted_reply) + "</div>"
-          + '<button type="button" class="btn btn-sm btn-outline-secondary copy-reply-btn">Copy reply</button>';
+          + '<button type="button" class="btn btn-sm btn-outline-secondary copy-reply-btn">Copy reply</button>'
+          + '<button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-lead-btn">Delete</button>';
 
         // Copy the raw reply, not the escaped markup above — this is pasted
         // straight into the platform's own reply box.
@@ -170,6 +171,20 @@
             copyBtn.textContent = "Copy failed";
           }
           setTimeout(() => { copyBtn.textContent = "Copy reply"; }, 2000);
+        });
+
+        const deleteBtn = card.querySelector(".delete-lead-btn");
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Delete this lead? The post won't be scored again, so it won't come back.")) return;
+          deleteBtn.disabled = true;
+          try {
+            await api.delete("/api/v1/admin/beacon-leads/" + lead.id);
+            card.remove();
+            beaconLeadsEmpty.classList.toggle("d-none", beaconLeadsList.children.length > 0);
+          } catch (err) {
+            alert(err.message);
+            deleteBtn.disabled = false;
+          }
         });
 
         beaconLeadsList.appendChild(card);

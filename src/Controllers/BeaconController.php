@@ -192,6 +192,18 @@ class BeaconController
         Response::json($pdo->query('SELECT * FROM beacon_social_leads ORDER BY created_at DESC LIMIT 50')->fetchAll());
     }
 
+    /**
+     * DELETE /api/v1/admin/beacon-leads/{id} — dismiss a lead Caleb has dealt
+     * with or doesn't want. Only drops the lead row; beacon_scan_seen still
+     * holds the URL, so a dismissed lead can't resurface on the next sweep.
+     */
+    public static function destroyLead(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        Database::get()->prepare('DELETE FROM beacon_social_leads WHERE id = ?')->execute([(int) $params['id']]);
+        Response::json(['status' => 'deleted']);
+    }
+
     private static function draftToolDeclarations(): array
     {
         return [
