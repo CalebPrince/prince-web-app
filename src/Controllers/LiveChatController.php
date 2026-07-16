@@ -6,10 +6,12 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\AiAgentEngine;
 use App\Support\AiText;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
+use App\Support\SharedAgentTools;
 
 /**
  * Live Chat: a requirements-gathering conversation. The AI cannot build or
@@ -124,80 +126,54 @@ class LiveChatController
      */
     private static function generateReply(string $message, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): array
     {
-        $reply = null;
-        $mode = 'fallback';
-        $provider = null; // debug aid: which path actually served this reply — 'gemini', 'openrouter', 'groq', or null (keyword fallback)
-        $justBecameReady = false;
-        $geminiKey = Settings::get('gemini_api_key');
-
-        if (!empty($geminiKey)) {
-            $result = self::chatWithGemini($geminiKey, $transcript, $projects, $pdo, $isOwner);
-            if ($result !== null) {
-                $justBecameReady = $justBecameReady || $result['ready'];
-                if ($result['reply'] !== null) {
-                    $reply = $result['reply'];
-                    $mode = 'ai';
-                    $provider = 'gemini';
-                }
+        // book_appointment's success is tracked here (rather than inside the
+        // engine, which knows nothing about Lisa's tools) so that if a
+        // provider confirms a booking but then fails before producing final
+        // text, $onExhaustedFallback below can still hand the visitor a real
+        // confirmation instead of losing it to a retry on another provider
+        // that would re-attempt — and likely reject — the same slot.
+        $confirmedBooking = null;
+        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking) {
+            $result = self::runTool($name, $args, $pdo);
+            if ($name === 'book_appointment' && ($result['success'] ?? false)) {
+                $confirmedBooking = $result;
             }
-        }
+            return $result;
+        };
+        $onExhaustedFallback = function () use (&$confirmedBooking) {
+            return $confirmedBooking !== null
+                ? ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => false]
+                : null;
+        };
+        $onGroqFailedGeneration = fn (string $failedGeneration) => self::recoverGroqFailedToolGeneration($failedGeneration, $pdo);
 
-        // Gemini failed outright, or produced no usable reply text — retry
-        // the whole turn against OpenRouter before falling back to keyword
-        // matching. This is a fresh, independent turn on the other
-        // provider, not a mid-conversation handoff (see chatWithOpenRouter).
-        if ($reply === null) {
-            $openRouterKey = Settings::get('openrouter_api_key');
-            if (!empty($openRouterKey)) {
-                $result = self::chatWithOpenRouter($openRouterKey, $transcript, $projects, $pdo, $isOwner);
-                if ($result !== null) {
-                    $justBecameReady = $justBecameReady || $result['ready'];
-                    if ($result['reply'] !== null) {
-                        $reply = $result['reply'];
-                        $mode = 'ai';
-                        $provider = 'openrouter';
-                    }
-                }
-            }
-        }
+        $result = AiAgentEngine::run(
+            self::buildSystemPrompt($projects, $isOwner),
+            self::toolDeclarations(),
+            $toolExecutor,
+            $transcript,
+            $onExhaustedFallback,
+            $onGroqFailedGeneration
+        );
 
-        // Gemini and OpenRouter both failed (or neither is configured) —
-        // last AI attempt before keyword fallback. Groq has its own
-        // independent quota/billing, so it's the one leg still standing
-        // when the other two are both out of credit at once.
-        if ($reply === null) {
-            $groqKey = Settings::get('groq_api_key');
-            if (!empty($groqKey)) {
-                $result = self::chatWithGroq($groqKey, $transcript, $projects, $pdo, $isOwner);
-                if ($result !== null) {
-                    $justBecameReady = $justBecameReady || $result['ready'];
-                    if ($result['reply'] !== null) {
-                        $reply = $result['reply'];
-                        $mode = 'ai';
-                        $provider = 'groq';
-                    }
-                }
-            }
-        }
-
-        if ($reply === null) {
+        if ($result['reply'] === null) {
             // A visitor mid-conversation degrading to canned keyword replies is easy to
-            // miss (it still looks like a normal reply) — the individual provider
-            // error_log calls above explain *why* each one failed, but nothing said
-            // "and so this turn had no real AI at all" until now. Only worth logging
-            // when a provider was actually configured and attempted (dev environments
-            // with no keys at all fall back on every turn by design).
-            if (!empty($geminiKey) || !empty(Settings::get('openrouter_api_key')) || !empty(Settings::get('groq_api_key'))) {
+            // miss (it still looks like a normal reply) — the engine's own provider
+            // error_log calls explain *why* each one failed, but nothing said "and so
+            // this turn had no real AI at all" until now. Only worth logging when a
+            // provider was actually configured and attempted (dev environments with no
+            // keys at all fall back on every turn by design).
+            if (!empty(Settings::get('gemini_api_key')) || !empty(Settings::get('openrouter_api_key')) || !empty(Settings::get('groq_api_key'))) {
                 error_log(sprintf(
                     'Live Chat: all configured AI providers failed this turn — degraded to keyword/booking fallback. message="%s"',
                     substr($message, 0, 200)
                 ));
             }
             $bookingReply = self::bookingFallback($message, $transcript);
-            $reply = $bookingReply ?? self::keywordFallback($message, $projects);
+            $result['reply'] = $bookingReply ?? self::keywordFallback($message, $projects);
         }
 
-        return ['reply' => $reply, 'mode' => $mode, 'provider' => $provider, 'ready' => $justBecameReady];
+        return $result;
     }
 
     /**
@@ -733,25 +709,6 @@ class LiveChatController
         )->fetchAll();
     }
 
-    /**
-     * Max Gemini <-> tool round-trips per visitor message. Each round is a full
-     * sequential model call, so this directly caps worst-case reply latency —
-     * kept low (2 rounds x 12s = 24s worst case) so the chat can't hang the
-     * visitor for a minute-plus waiting on a chain of tool calls.
-     */
-    private const MAX_TOOL_ROUNDS = 2;
-    private const GEMINI_CHAT_TIMEOUT_SECONDS = 12;
-    // Free-tier OpenRouter models are often slower than Gemini — reusing
-    // Gemini's 12s budget here was cutting the fallback off mid-response
-    // (curl reports the 200 status from the headers it did receive, but
-    // returns false because the body never finished downloading in time).
-    // Confirmed live in production: even 18s wasn't enough (same "status=200
-    // body=n/a" signature), so this needs real headroom for a free-tier model.
-    private const OPENROUTER_CHAT_TIMEOUT_SECONDS = 30;
-    // Groq's own infrastructure is fast, but this still needs headroom for
-    // a cold key/model or a transient slowdown rather than assuming best case.
-    private const GROQ_CHAT_TIMEOUT_SECONDS = 20;
-
     /** Shared by both providers, so Gemini and the OpenRouter fallback can never drift into inconsistent behavior. */
     private static function buildSystemPrompt(array $projects, bool $isOwner = false): string
     {
@@ -935,354 +892,6 @@ class LiveChatController
         return $system;
     }
 
-    /** @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords) */
-    private static function chatWithGemini(string $apiKey, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): ?array
-    {
-        $system = self::buildSystemPrompt($projects, $isOwner);
-
-        // The full transcript (already capped at MAX_TRANSCRIPT_MESSAGES) is
-        // sent, not a truncated tail — messages here are short and providers'
-        // context windows are enormous, so there's no real cost reason to
-        // trim, and a visitor's early project description is exactly what
-        // the model needs to still see turns later in a longer conversation.
-        $contents = [];
-        foreach ($transcript as $turn) {
-            $contents[] = [
-                'role' => $turn['role'] === 'user' ? 'user' : 'model',
-                'parts' => [['text' => $turn['text']]],
-            ];
-        }
-
-        $tools = [['functionDeclarations' => self::toolDeclarations()]];
-        $ready = false;
-        // Set once a book_appointment call actually succeeds — see
-        // bookingConfirmationText() for why a later round's failure can't
-        // just discard this and let the caller retry on another provider.
-        $confirmedBooking = null;
-
-        for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-            $payload = [
-                'system_instruction' => ['parts' => [['text' => $system]]],
-                'contents' => $contents,
-                'generationConfig' => ['maxOutputTokens' => 2048],
-            ];
-            // On the last allowed round, don't offer tools at all — otherwise
-            // a model that wants a second sequential tool call (e.g. search
-            // one thing, then decide to call log_inquiry) uses up every round
-            // on functionCalls and never emits final text, which surfaced as
-            // the whole turn silently falling all the way through to keyword
-            // matching. Forcing text here guarantees a
-            // real reply using whatever tool results are already in hand.
-            if ($round < self::MAX_TOOL_ROUNDS - 1) {
-                $payload['tools'] = $tools;
-            }
-            $body = json_encode($payload);
-
-            $result = self::callGeminiRaw($apiKey, $body, self::GEMINI_CHAT_TIMEOUT_SECONDS);
-            $parts = $result['candidates'][0]['content']['parts'] ?? null;
-            if (!is_array($parts)) {
-                error_log(sprintf(
-                    'Gemini chat returned no usable content (round %d): finishReason=%s promptFeedback=%s',
-                    $round,
-                    $result['candidates'][0]['finishReason'] ?? 'none',
-                    json_encode($result['promptFeedback'] ?? null)
-                ));
-                if ($confirmedBooking !== null) {
-                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-                }
-                return null;
-            }
-
-            $functionCalls = [];
-            $text = '';
-            foreach ($parts as $part) {
-                if (isset($part['functionCall']['name'])) {
-                    $functionCalls[] = $part['functionCall'];
-                }
-                if (isset($part['text'])) {
-                    $text .= $part['text'];
-                }
-            }
-
-            if (!$functionCalls) {
-                if ($text === '') {
-                    error_log(sprintf(
-                        'Gemini chat returned parts with no text/functionCall (round %d): finishReason=%s parts=%s',
-                        $round,
-                        $result['candidates'][0]['finishReason'] ?? 'none',
-                        json_encode($parts)
-                    ));
-                }
-                return ['reply' => $text !== '' ? $text : null, 'ready' => $ready];
-            }
-
-            // Echo the model's turn back exactly as received — thinking-enabled
-            // models attach an opaque thoughtSignature alongside each
-            // functionCall part that must be round-tripped verbatim, or the
-            // model can't correctly process the tool result on the next turn.
-            // Reconstructing a stripped-down {functionCall} part here (as an
-            // earlier version of this code did) silently breaks every
-            // tool-using turn while plain text turns keep working fine.
-            //
-            // Also: json_decode(..., true) turns Gemini's empty `{}` (e.g. a
-            // no-arg tool's args) into a PHP `[]`, which json_encode then
-            // re-serializes as a JSON *array*, not the object Gemini sent —
-            // it rejects that on the next call. Restore `{}` before echoing.
-            $echoParts = $parts;
-            foreach ($echoParts as &$p) {
-                if (($p['functionCall']['args'] ?? null) === []) {
-                    $p['functionCall']['args'] = (object) [];
-                }
-            }
-            unset($p);
-            $contents[] = ['role' => 'model', 'parts' => $echoParts];
-
-            // One functionResponse part per call, in the same order (required
-            // for parallel/multi function calls in a single turn).
-            $responseParts = [];
-            foreach ($functionCalls as $call) {
-                $toolResponse = self::runTool($call['name'], $call['args'] ?? [], $pdo);
-                if ($call['name'] === 'book_appointment' && ($toolResponse['success'] ?? false)) {
-                    $confirmedBooking = $toolResponse;
-                }
-                if ($toolResponse === []) {
-                    $toolResponse = (object) []; // same empty-object-vs-array fix, for no-data tool results
-                }
-                $responsePart = ['functionResponse' => ['name' => $call['name'], 'response' => $toolResponse]];
-                if (isset($call['id'])) {
-                    $responsePart['functionResponse']['id'] = $call['id'];
-                }
-                $responseParts[] = $responsePart;
-            }
-            $contents[] = ['role' => 'user', 'parts' => $responseParts];
-        }
-
-        if ($confirmedBooking !== null) {
-            return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-        }
-        return null;
-    }
-
-    /**
-     * Fallback for when Gemini fails entirely (quota, outage, bad response):
-     * runs the same tool-calling conversation against OpenRouter instead,
-     * using OpenAI-style tools/tool_calls. This is a whole separate,
-     * self-contained turn (not a mid-conversation provider swap) — Gemini's
-     * thoughtSignature and OpenAI's tool_call_id have no equivalent in the
-     * other format, so there's no safe way to hand off partway through a
-     * round; either the whole turn runs on one provider or the other.
-     *
-     * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords)
-     */
-    private static function chatWithOpenRouter(string $apiKey, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): ?array
-    {
-        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects, $isOwner)]];
-        // See chatWithGemini — full transcript, not a truncated tail.
-        foreach ($transcript as $turn) {
-            $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
-        }
-
-        $tools = self::toolDeclarationsOpenAiFormat();
-        $model = Settings::get('openrouter_model') ?: 'openrouter/free';
-        $ready = false;
-        // See chatWithGemini's $confirmedBooking for why this matters.
-        $confirmedBooking = null;
-
-        for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-            // Without an explicit cap, OpenRouter prices the request against the
-            // model's full context window (seen live: "requested up to 64000
-            // tokens") regardless of how much text actually comes back — which
-            // can 402 an account that has real credits, just not 64k-tokens'
-            // worth. Chat replies are 1-4 sentences per the system prompt, so
-            // this mirrors Gemini's maxOutputTokens cap below at no real cost.
-            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 2048];
-            // See chatWithGemini — force text on the last round so a model
-            // wanting a second sequential tool call can't run out the clock
-            // on functionCalls and never produce a reply.
-            if ($round < self::MAX_TOOL_ROUNDS - 1) {
-                $payload['tools'] = $tools;
-            }
-            $result = self::callOpenRouterRaw($apiKey, $payload, self::OPENROUTER_CHAT_TIMEOUT_SECONDS);
-            if ($result === null) {
-                if ($confirmedBooking !== null) {
-                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-                }
-                return null;
-            }
-
-            $message = $result['choices'][0]['message'] ?? null;
-            if (!is_array($message)) {
-                error_log('OpenRouter chat: no message in response: ' . json_encode($result));
-                if ($confirmedBooking !== null) {
-                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-                }
-                return null;
-            }
-
-            $toolCalls = $message['tool_calls'] ?? null;
-            if (!$toolCalls) {
-                $text = $message['content'] ?? null;
-                return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
-            }
-
-            // Echo the assistant's own tool-call turn back verbatim (OpenAI
-            // format requires this preceding message to carry the same
-            // tool_calls the model just made), then one "tool" message per
-            // call carrying that tool's result, matched by tool_call_id.
-            $messages[] = $message;
-            foreach ($toolCalls as $call) {
-                $name = $call['function']['name'] ?? '';
-                $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
-                $toolResult = self::runTool($name, $args, $pdo);
-                if ($name === 'book_appointment' && ($toolResult['success'] ?? false)) {
-                    $confirmedBooking = $toolResult;
-                }
-                $messages[] = [
-                    'role' => 'tool',
-                    'tool_call_id' => $call['id'] ?? '',
-                    'content' => json_encode($toolResult),
-                ];
-            }
-        }
-
-        if ($confirmedBooking !== null) {
-            return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-        }
-        return null;
-    }
-
-    /**
-     * Second fallback, tried only after both Gemini and OpenRouter have
-     * failed: same tool-calling conversation, same OpenAI-style
-     * tools/tool_calls shape as chatWithOpenRouter (Groq's API is
-     * OpenAI-compatible), just a different endpoint/key/model. Kept as its
-     * own method rather than parameterizing chatWithOpenRouter because the
-     * two providers may drift in header/quirk requirements over time, and
-     * this stays a straight copy-and-adjust if that happens.
-     *
-     * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords)
-     */
-    private static function chatWithGroq(string $apiKey, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): ?array
-    {
-        $messages = [['role' => 'system', 'content' => self::buildSystemPrompt($projects, $isOwner)]];
-        foreach ($transcript as $turn) {
-            $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
-        }
-
-        $tools = self::toolDeclarationsOpenAiFormat();
-        $model = Settings::get('groq_model') ?: 'llama-3.3-70b-versatile';
-        $ready = false;
-        // See chatWithGemini's $confirmedBooking for why this matters.
-        $confirmedBooking = null;
-
-        for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-            // See chatWithOpenRouter — same reasoning: cap output tokens to what
-            // a short chat reply actually needs, both to avoid an affordability
-            // rejection and to stop padding the daily token budget unnecessarily.
-            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 2048];
-            if ($round < self::MAX_TOOL_ROUNDS - 1) {
-                $payload['tools'] = $tools;
-                $payload['tool_choice'] = 'auto';
-                $payload['parallel_tool_calls'] = false;
-            }
-            $result = self::callGroqRaw($apiKey, $payload, self::GROQ_CHAT_TIMEOUT_SECONDS);
-            if ($result === null) {
-                if ($confirmedBooking !== null) {
-                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-                }
-                return null;
-            }
-            if (isset($result['_groq_failed_generation'])) {
-                $recovered = self::recoverGroqFailedToolGeneration(
-                    (string) $result['_groq_failed_generation'],
-                    $pdo
-                );
-                if ($recovered !== null) {
-                    return $recovered;
-                }
-                if ($confirmedBooking !== null) {
-                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-                }
-                return null;
-            }
-
-            $message = $result['choices'][0]['message'] ?? null;
-            if (!is_array($message)) {
-                error_log('Groq chat: no message in response: ' . json_encode($result));
-                if ($confirmedBooking !== null) {
-                    return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-                }
-                return null;
-            }
-
-            $toolCalls = $message['tool_calls'] ?? null;
-            if (!$toolCalls) {
-                $text = $message['content'] ?? null;
-                return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
-            }
-
-            $messages[] = $message;
-            foreach ($toolCalls as $call) {
-                $name = $call['function']['name'] ?? '';
-                $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
-                $toolResult = self::runTool($name, $args, $pdo);
-                if ($name === 'book_appointment' && ($toolResult['success'] ?? false)) {
-                    $confirmedBooking = $toolResult;
-                }
-                $messages[] = [
-                    'role' => 'tool',
-                    'tool_call_id' => $call['id'] ?? '',
-                    'content' => json_encode($toolResult),
-                ];
-            }
-        }
-
-        if ($confirmedBooking !== null) {
-            return ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => $ready];
-        }
-        return null;
-    }
-
-    private static function callGroqRaw(string $apiKey, array $payload, int $timeout): ?array
-    {
-        if (!function_exists('curl_init')) {
-            return null;
-        }
-
-        $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-            ],
-            CURLOPT_POSTFIELDS => json_encode($payload),
-            CURLOPT_TIMEOUT => $timeout,
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($response === false || $status !== 200) {
-            $decoded = is_string($response) ? json_decode($response, true) : null;
-            if (is_array($decoded)
-                && ($decoded['error']['code'] ?? '') === 'tool_use_failed'
-                && !empty($decoded['error']['failed_generation'])) {
-                error_log('Live Chat Groq tool-use failed; attempting backend recovery from failed_generation.');
-                return ['_groq_failed_generation' => (string) $decoded['error']['failed_generation']];
-            }
-            error_log(sprintf(
-                'Live Chat Groq fallback failed: status=%s body=%s',
-                $status,
-                is_string($response) ? substr($response, 0, 800) : 'n/a'
-            ));
-            return null;
-        }
-
-        return json_decode($response, true);
-    }
-
     /**
      * Groq can occasionally reject a model-generated tool call before the API
      * returns it as normal tool_calls. When the failed_generation contains a
@@ -1321,80 +930,11 @@ class LiveChatController
         ];
     }
 
-    private static function callOpenRouterRaw(string $apiKey, array $payload, int $timeout): ?array
-    {
-        if (!function_exists('curl_init')) {
-            return null;
-        }
-
-        $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-                'HTTP-Referer: https://princecaleb.dev',
-                'X-Title: Prince Caleb Portfolio',
-            ],
-            CURLOPT_POSTFIELDS => json_encode($payload),
-            CURLOPT_TIMEOUT => $timeout,
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($response === false || $status !== 200) {
-            error_log(sprintf(
-                'Live Chat OpenRouter fallback failed: status=%s body=%s',
-                $status,
-                is_string($response) ? substr($response, 0, 800) : 'n/a'
-            ));
-            return null;
-        }
-
-        return json_decode($response, true);
-    }
-
-    /** Translates the Gemini-format tool declarations to OpenAI-style tools/functions — one source of truth for both. */
-    private static function toolDeclarationsOpenAiFormat(): array
-    {
-        $tools = [];
-        foreach (self::toolDeclarations() as $decl) {
-            $params = $decl['parameters'];
-            $params['type'] = strtolower($params['type']);
-            if (isset($params['properties']) && is_array($params['properties'])) {
-                foreach ($params['properties'] as &$prop) {
-                    if (isset($prop['type'])) {
-                        $prop['type'] = strtolower($prop['type']);
-                    }
-                }
-                unset($prop);
-            }
-            $tools[] = [
-                'type' => 'function',
-                'function' => [
-                    'name' => $decl['name'],
-                    'description' => $decl['description'],
-                    'parameters' => $params,
-                ],
-            ];
-        }
-        return $tools;
-    }
-
     /** @return array<int,array<string,mixed>> Gemini function declarations for the chat tools. */
     private static function toolDeclarations(): array
     {
         return [
-            [
-                'name' => 'get_site_info',
-                'description' => 'Get background info about Prince — bio, services offered, tech stack, '
-                    . 'experience highlights, location, and contact/social links. Use this for general '
-                    . 'questions that are not about scoping a specific project, e.g. "what do you build", '
-                    . '"where are you based", "do you work with WordPress", "how experienced are you".',
-                'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
-            ],
+            SharedAgentTools::siteInfoToolDeclaration(),
             [
                 'name' => 'log_inquiry',
                 'description' => 'Save a visitor\'s new-project inquiry or direct-service request so Prince '
@@ -1415,18 +955,7 @@ class LiveChatController
                     'required' => ['name', 'email', 'summary'],
                 ],
             ],
-            [
-                'name' => 'check_availability',
-                'description' => 'Check real bookable call slots for a given date, so you can offer the '
-                    . 'visitor an actual time instead of guessing.',
-                'parameters' => [
-                    'type' => 'OBJECT',
-                    'properties' => [
-                        'date' => ['type' => 'STRING', 'description' => 'Date in YYYY-MM-DD format.'],
-                    ],
-                    'required' => ['date'],
-                ],
-            ],
+            SharedAgentTools::checkAvailabilityToolDeclaration(),
             [
                 'name' => 'book_appointment',
                 'description' => 'Book a call. Only call this after reading the exact date, time, and '
@@ -1482,22 +1011,7 @@ class LiveChatController
                     'required' => ['reason'],
                 ],
             ],
-            [
-                'name' => 'search_content',
-                'description' => 'Search past projects and blog posts for something relevant to what the '
-                    . 'visitor described, so you can reference real, specific work instead of speaking in '
-                    . 'generalities.',
-                'parameters' => [
-                    'type' => 'OBJECT',
-                    'properties' => [
-                        'query' => [
-                            'type' => 'STRING',
-                            'description' => 'A few keywords, e.g. "restaurant ordering app" or "SEO blog".',
-                        ],
-                    ],
-                    'required' => ['query'],
-                ],
-            ],
+            SharedAgentTools::searchContentToolDeclaration(),
         ];
     }
 
@@ -1524,10 +1038,10 @@ class LiveChatController
             }
 
             return match ($name) {
-                'get_site_info' => self::toolGetSiteInfo(),
+                'get_site_info' => SharedAgentTools::getSiteInfo(),
                 'log_inquiry' => self::toolLogInquiry($args, $pdo),
                 'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
-                'search_content' => self::toolSearchContent($pdo, (string) ($args['query'] ?? '')),
+                'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
                 'audit_website' => self::toolAuditWebsite((string) ($args['url'] ?? '')),
                 'signal_handoff' => self::toolSignalHandoff($args, $pdo),
                 default => ['error' => 'Unknown tool.'],
@@ -1536,81 +1050,6 @@ class LiveChatController
             error_log(sprintf('Live Chat tool "%s" threw: %s', $name, $e->getMessage()));
             return ['error' => 'Tool failed to run.'];
         }
-    }
-
-    private static function toolGetSiteInfo(): array
-    {
-        $fields = [
-            'about_bio' => 'bio',
-            'about_intro' => 'intro',
-            'availability_badge' => 'current_availability',
-            'tech_badges' => 'tech_stack',
-            'contact_location' => 'location',
-            'social_email' => 'email',
-            'social_github' => 'github',
-            'social_linkedin' => 'linkedin',
-            'social_whatsapp' => 'whatsapp',
-        ];
-        $info = [];
-        foreach ($fields as $settingKey => $outKey) {
-            $value = Settings::get($settingKey);
-            if (!empty($value)) {
-                $info[$outKey] = $value;
-            }
-        }
-
-        $services = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $title = Settings::get("service_{$i}_title");
-            if (empty($title)) {
-                continue;
-            }
-            $services[] = [
-                'title' => $title,
-                'summary' => Settings::get("service_{$i}_summary"),
-                'description' => Settings::get("service_{$i}_desc"),
-            ];
-        }
-        if ($services) {
-            $info['services'] = $services;
-        }
-
-        $highlights = [];
-        for ($i = 1; $i <= 4; $i++) {
-            $label = Settings::get("stat_{$i}_label");
-            $value = Settings::get("stat_{$i}_value");
-            if (empty($label) || empty($value)) {
-                continue;
-            }
-            $highlights[] = trim(
-                (Settings::get("stat_{$i}_prefix") ?? '') . $value . (Settings::get("stat_{$i}_suffix") ?? '')
-                . ' ' . $label
-            );
-        }
-        if ($highlights) {
-            $info['highlights'] = $highlights;
-        }
-
-        // Public engineering tiers, so estimation conversations anchor to the
-        // real published starting prices instead of the model guessing.
-        $tiers = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $name = Settings::get("pricing_tier_{$i}_name");
-            $price = Settings::get("pricing_tier_{$i}_price");
-            if (empty($name) || empty($price)) {
-                continue;
-            }
-            $tiers[] = [
-                'tier' => $name,
-                'starting_price' => $price,
-                'covers' => Settings::get("pricing_tier_{$i}_tagline"),
-            ];
-        }
-        if ($tiers) {
-            $info['engineering_tiers'] = $tiers;
-        }
-
-        return $info;
     }
 
     private static function toolLogInquiry(array $args, \PDO $pdo): array
@@ -1782,61 +1221,6 @@ class LiveChatController
         return $result;
     }
 
-    private static function toolSearchContent(\PDO $pdo, string $query): array
-    {
-        $words = array_filter(
-            preg_split('/\W+/', strtolower(trim($query))) ?: [],
-            fn($w) => strlen($w) > 2
-        );
-        if (!$words) {
-            return ['results' => []];
-        }
-
-        $score = function (string $haystack) use ($words): int {
-            $haystack = strtolower($haystack);
-            $n = 0;
-            foreach ($words as $w) {
-                if (str_contains($haystack, $w)) {
-                    $n++;
-                }
-            }
-            return $n;
-        };
-
-        $results = [];
-        foreach ($pdo->query('SELECT title, slug, summary, case_study_body FROM projects WHERE is_published = 1') as $p) {
-            $s = $score($p['title'] . ' ' . $p['summary'] . ' ' . ($p['case_study_body'] ?? ''));
-            if ($s > 0) {
-                $results[] = [
-                    'score' => $s,
-                    'type' => 'project',
-                    'title' => $p['title'],
-                    'url' => '/project.html?slug=' . urlencode($p['slug']),
-                    'snippet' => $p['summary'],
-                ];
-            }
-        }
-        foreach ($pdo->query('SELECT title, slug, excerpt FROM blog_posts WHERE is_published = 1') as $b) {
-            $s = $score($b['title'] . ' ' . $b['excerpt']);
-            if ($s > 0) {
-                $results[] = [
-                    'score' => $s,
-                    'type' => 'blog_post',
-                    'title' => $b['title'],
-                    'url' => '/archive-post.html?slug=' . urlencode($b['slug']),
-                    'snippet' => $b['excerpt'],
-                ];
-            }
-        }
-
-        usort($results, fn($a, $b) => $b['score'] <=> $a['score']);
-        $top = array_slice($results, 0, 3);
-        foreach ($top as &$t) {
-            unset($t['score']);
-        }
-        return ['results' => $top];
-    }
-
     private static function prototypeWithGemini(array $transcript): ?string
     {
         $conversation = implode("\n", array_map(
@@ -1865,41 +1249,6 @@ class LiveChatController
         $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|\S+)/i', '', $html);
 
         return trim($html) !== '' ? $html : null;
-    }
-
-    /** @return array<string,mixed> Decoded Gemini response, or [] on any transport/HTTP failure. */
-    private static function callGeminiRaw(string $apiKey, string $body, int $timeout): array
-    {
-        if (!function_exists('curl_init')) {
-            return []; // no curl on this host — callers fall back gracefully
-        }
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_TIMEOUT => $timeout,
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false || $status !== 200) {
-            // Silent failures here are indistinguishable from "model declined to
-            // answer" without this — log enough to diagnose a bad request shape
-            // (e.g. a malformed tool-response turn) versus a real outage.
-            error_log(sprintf(
-                'Gemini API call failed: status=%s curl_error=%s body=%s',
-                $status,
-                $curlError !== '' ? $curlError : 'none',
-                $response !== false ? substr($response, 0, 800) : 'n/a'
-            ));
-            return [];
-        }
-        return json_decode($response, true) ?? [];
     }
 
     private static function keywordFallback(string $message, array $projects): string
@@ -2133,16 +1482,16 @@ class LiveChatController
     }
 
     /**
-     * Used by chatWithGemini/chatWithOpenRouter/chatWithGroq when a
-     * book_appointment call already succeeded earlier in the same turn but
-     * a later round's raw API call then fails (e.g. quota/credit exhausted
-     * mid-turn) — without this, the caller would see a hard failure, retry
-     * the whole turn on a different provider, and that provider would
-     * re-call book_appointment for the same slot, which is now genuinely
-     * taken by the booking that already succeeded. The visitor would be
-     * told their booking failed when it actually went through. Confirming
-     * directly from the known-successful tool result sidesteps needing any
-     * more AI text generation for it.
+     * Called from generateReply()'s $onExhaustedFallback closure (passed into
+     * AiAgentEngine::run()) when a book_appointment call already succeeded
+     * earlier in the same turn but a later round's raw API call then fails
+     * (e.g. quota/credit exhausted mid-turn) — without this, the engine would
+     * report a hard failure, the caller would retry the whole turn on a
+     * different provider, and that provider would re-call book_appointment
+     * for the same slot, which is now genuinely taken by the booking that
+     * already succeeded. The visitor would be told their booking failed when
+     * it actually went through. Confirming directly from the known-successful
+     * tool result sidesteps needing any more AI text generation for it.
      */
     private static function bookingConfirmationText(array $booking): string
     {

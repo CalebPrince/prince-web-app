@@ -42,6 +42,7 @@ use App\Controllers\AiChatController;
 use App\Controllers\AnalyticsController;
 use App\Controllers\AppointmentController;
 use App\Controllers\AuthController;
+use App\Controllers\BeaconController;
 use App\Controllers\BlogController;
 use App\Controllers\ClientAuthController;
 use App\Controllers\ClientController;
@@ -57,6 +58,7 @@ use App\Controllers\InvoiceController;
 use App\Controllers\LiveChatController;
 use App\Controllers\MarketingLeadController;
 use App\Controllers\NewsletterController;
+use App\Controllers\NurturerController;
 use App\Controllers\PaymentController;
 use App\Controllers\ProposalController;
 use App\Controllers\ProjectController;
@@ -127,6 +129,8 @@ $router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'get
 $router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'submit']);
 $router->get('/api/v1/search', [SearchController::class, 'search']);
 $router->get('/api/v1/integrations/events', [IntegrationController::class, 'events']);
+$router->post('/api/v1/agents/beacon/draft', [BeaconController::class, 'draft']);
+$router->post('/api/v1/agents/nurturer/draft', [NurturerController::class, 'draft']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);
@@ -217,6 +221,9 @@ $router->delete('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::
 $router->post('/api/v1/admin/marketing-leads/{id}/audit', [MarketingLeadController::class, 'runAudit']);
 $router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLeadController::class, 'generatePitch']);
 $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);
+$router->post('/api/v1/admin/agents/beacon/chat', [BeaconController::class, 'chat']);
+$router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
+$router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->get('/api/v1/admin/drip/steps', [DripController::class, 'steps']);
 $router->post('/api/v1/admin/drip/steps', [DripController::class, 'storeStep']);
 $router->put('/api/v1/admin/drip/steps/{id}', [DripController::class, 'updateStep']);

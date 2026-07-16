@@ -73,6 +73,8 @@ class SettingsController
         'social_github', 'social_linkedin', 'social_twitter', 'social_whatsapp', 'social_email',
         'chat_greeting', 'chat_intro', 'chat_offline_message', 'chat_assistant_name',
         'chat_voice_gender', 'chat_voice_accent', 'chat_voice_rate', 'chat_voice_pitch',
+        'beacon_assistant_name', 'beacon_voice_gender',
+        'nurturer_assistant_name', 'nurturer_voice_gender',
         'stat_1_value', 'stat_1_suffix', 'stat_1_label',
         'stat_2_value', 'stat_2_suffix', 'stat_2_label',
         'stat_3_value', 'stat_3_suffix', 'stat_3_label',

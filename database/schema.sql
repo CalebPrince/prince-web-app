@@ -285,6 +285,24 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
 );
 CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at);
 
+-- Social posts/comments Beacon has judged worth a reply. source distinguishes
+-- leads the automated draft() pipeline logged deterministically (qualified
+-- === true in its JSON output) from ones logged via the log_qualified_lead
+-- tool during a direct chat() conversation.
+CREATE TABLE IF NOT EXISTS beacon_social_leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  platform TEXT NOT NULL,
+  username TEXT NOT NULL,
+  post_content TEXT NOT NULL,
+  post_url TEXT,
+  confidence_score INTEGER NOT NULL,
+  reasoning TEXT NOT NULL,
+  drafted_reply TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at);
+
 -- Client portal accounts. Rows are provisioned by an admin invite (from a
 -- proposal), never self-signup — password_hash stays NULL until the client
 -- completes /client/setup.html?token=..., mirroring how proposals.token
