@@ -1936,30 +1936,112 @@ pre code.hljs {
   .status-dot.online { animation: none; }
 }
 
-/* Agent "face" avatar (public/js/agent-face.js) — a circular avatar that
-   visibly thinks (radar rings) and speaks (a breathing pulse), so talking to
-   Lisa/Beacon/Nurturer reads as a conversation rather than a text box. The
-   core is the same 40px circle .chat-avatar used to be, just built to carry
-   motion. Used in Lisa's widget header and the admin "Talk to Agents" console. */
+/* Agent "face" avatar (public/js/agent-face.js) — a gradient orb with drawn
+   eyes + a mouth that actually flaps while the agent talks (plus an idle
+   blink) and radar rings while a reply is pending, so talking to
+   Lisa/Beacon/Nurturer reads as a face, not a text box. Colors match
+   Caleb's original AgentAvatar mockup. Used in Lisa's widget header and the
+   admin "Talk to Agents" console. */
 .agent-face { position: relative; display: inline-flex; flex-shrink: 0; }
 .agent-face-core {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--heading-color);
-  color: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
   z-index: 1;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
   transition: transform 0.2s ease;
 }
-.agent-face-core svg { width: 20px; height: 20px; }
 .agent-face--sm .agent-face-core { width: 32px; height: 32px; }
-.agent-face--sm .agent-face-core svg { width: 16px; height: 16px; }
 .agent-face--lg .agent-face-core { width: 56px; height: 56px; }
-.agent-face--lg .agent-face-core svg { width: 26px; height: 26px; }
+
+/* Eyes: two dots that blink every few seconds on their own timer, so the
+   face reads as alive even before it starts thinking or talking. */
+.agent-face-eyes {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+.agent-face-eye {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+  animation: agent-face-blink 4.5s ease-in-out infinite;
+}
+.agent-face-eye:nth-child(2) { animation-delay: 0.08s; }
+@keyframes agent-face-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.15); }
+}
+.agent-face--sm .agent-face-eyes { gap: 5px; }
+.agent-face--sm .agent-face-eye { width: 4px; height: 4px; }
+.agent-face--lg .agent-face-eyes { gap: 8px; }
+.agent-face--lg .agent-face-eye { width: 7px; height: 7px; }
+
+/* Mouth: a flat pill at rest; flaps open/closed while is-speaking is set
+   (tied to the same speechSynthesis start/end events that drive the
+   speaker-button UI), which is what actually reads as "talking". */
+.agent-face-mouth {
+  position: absolute;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2.5px;
+  border-radius: 999px;
+  background: #fff;
+  z-index: 2;
+  transition: height 0.1s ease, border-radius 0.1s ease;
+}
+.agent-face--sm .agent-face-mouth { width: 13px; height: 2px; }
+.agent-face--lg .agent-face-mouth { width: 22px; height: 3.5px; }
+.agent-face.is-speaking .agent-face-mouth { animation: agent-face-talk 0.35s ease-in-out infinite; }
+@keyframes agent-face-talk {
+  0%, 100% { height: 2.5px; border-radius: 999px; }
+  35% { height: 8px; border-radius: 50%; }
+  65% { height: 5px; border-radius: 999px; }
+}
+
+/* Glossy top-light sheen over the gradient, and a small "active" dot —
+   both purely decorative, matching the reference mockup's glass + status dot. */
+.agent-face-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%);
+  pointer-events: none;
+}
+.agent-face-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4ade80;
+  border: 2px solid var(--bg);
+  z-index: 2;
+}
+.agent-face--sm .agent-face-dot { width: 7px; height: 7px; }
+.agent-face--lg .agent-face-dot { width: 12px; height: 12px; border-width: 2.5px; }
+
+/* Per-agent gradient + glow — matches the original AgentAvatar mockup. */
+.agent-face--lisa .agent-face-core { background: linear-gradient(135deg, #14b8a6, #34d399 55%, #67e8f9); box-shadow: 0 0 15px rgba(20, 184, 166, 0.4); }
+.agent-face--lisa .agent-face-ring { border-color: #34d399; }
+.agent-face--beacon .agent-face-core { background: linear-gradient(135deg, #312e81, #7c3aed 55%, #d946ef); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
+.agent-face--beacon .agent-face-ring { border-color: #d946ef; }
+.agent-face--nurturer .agent-face-core { background: linear-gradient(135deg, #d97706, #f97316 55%, #fb7185); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
+.agent-face--nurturer .agent-face-ring { border-color: #f97316; }
 
 /* Thinking: two staggered rings expanding outward like a radar sweep. */
 .agent-face-ring {
@@ -1977,16 +2059,19 @@ pre code.hljs {
   100% { transform: scale(1.6); opacity: 0; }
 }
 
-/* Speaking: the avatar itself breathes in time with the read-aloud voice. */
-.agent-face.is-speaking .agent-face-core { animation: agent-face-breathe 0.9s ease-in-out infinite; }
+/* Speaking: a subtle whole-face breathe underneath the mouth flap above —
+   the mouth is the primary "talking" cue, this just adds a little life. */
+.agent-face.is-speaking .agent-face-core { animation: agent-face-breathe 1.4s ease-in-out infinite; }
 @keyframes agent-face-breathe {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.04); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .agent-face.is-thinking .agent-face-ring { animation: none; opacity: 0.35; }
   .agent-face.is-speaking .agent-face-core { animation: none; }
+  .agent-face.is-speaking .agent-face-mouth { animation: none; height: 5px; border-radius: 999px; }
+  .agent-face-eye { animation: none; }
 }
 
 /* Live-chat prototype review */
