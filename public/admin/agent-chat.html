@@ -144,6 +144,12 @@
       <button type="button" class="btn-brand mt-3" id="beacon-discovery-save">Save discovery settings</button>
     </div>
 
+    <div class="admin-card p-4 mt-4 d-none" id="beacon-spend-card">
+      <h5 class="mb-1"><i class="bi bi-cash-coin me-2"></i>What discovery is costing</h5>
+      <p class="small text-muted-custom mb-3">Serper bills 1 credit per search; every new result costs an AI call. Failed scores cost a call too and buy nothing — if that number is climbing, a provider is rate-limiting you.</p>
+      <div id="beacon-spend-body" class="small text-muted-custom">Loading…</div>
+    </div>
+
     <div class="admin-card p-4 mt-4 d-none" id="beacon-leads-card">
       <h5 class="mb-3"><i class="bi bi-bullseye me-2"></i>Recent qualified leads</h5>
       <div id="beacon-leads-empty" class="text-muted-custom small d-none">No qualified leads logged yet — they'll show up here once Beacon saves one from draft() or you log one mid-chat.</div>

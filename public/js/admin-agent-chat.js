@@ -20,6 +20,8 @@
   const beaconDiscoveryKeywords = document.getElementById("beacon-discovery-keywords");
   const beaconDiscoveryMsg = document.getElementById("beacon-discovery-msg");
   const beaconDiscoverySave = document.getElementById("beacon-discovery-save");
+  const beaconSpendCard = document.getElementById("beacon-spend-card");
+  const beaconSpendBody = document.getElementById("beacon-spend-body");
 
   let activeAgent = "beacon";
   let transcript = []; // [{role: 'user'|'agent', text}]
@@ -199,11 +201,49 @@
     }
   }
 
+  const RUN_OUTCOME_LABEL = {
+    ok: "completed",
+    capped: "hit the cap",
+    search_failed: "search failed",
+    scoring_gave_up: "providers down",
+  };
+
+  async function loadBeaconSpend() {
+    try {
+      const s = await api.get("/api/v1/admin/beacon-spend");
+      const line = (label, w) =>
+        "<div><strong>" + label + ":</strong> " + w.runs + " run(s) · "
+        + w.searches + " Serper credit(s) · "
+        + (w.scored + w.score_failures) + " AI call(s)"
+        + (w.score_failures ? " (" + w.score_failures + " failed)" : "")
+        + " · " + w.qualified + " qualified</div>";
+
+      const runs = s.recent_runs.length
+        ? '<table class="table table-sm mb-0 mt-3"><thead><tr><th class="ps-0">Run</th><th>Searches</th><th>Scored</th><th>Qualified</th><th>Outcome</th></tr></thead><tbody>'
+          + s.recent_runs.map(r =>
+            "<tr><td class='ps-0'>" + new Date(r.ran_at + "Z").toLocaleString() + "</td>"
+            + "<td>" + r.searches_run + "</td>"
+            + "<td>" + r.results_scanned + (r.score_failures ? " <span class='text-danger'>+" + r.score_failures + " failed</span>" : "") + "</td>"
+            + "<td>" + r.qualified + "</td>"
+            + "<td>" + (RUN_OUTCOME_LABEL[r.outcome] || escapeHtml(r.outcome)) + "</td></tr>").join("")
+          + "</tbody></table>"
+        : "<div class='mt-2'>No runs recorded yet — the cron logs one each time it searches.</div>";
+
+      beaconSpendBody.innerHTML = line("Last 7 days", s.last_7_days) + line("Last 30 days", s.last_30_days) + runs;
+    } catch (_) {
+      beaconSpendBody.textContent = "Couldn't load spend figures.";
+    }
+  }
+
   function updateLeadsPanelVisibility() {
     const isBeacon = activeAgent === "beacon";
     beaconLeadsCard.classList.toggle("d-none", !isBeacon);
     beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
-    if (isBeacon) loadBeaconLeads();
+    beaconSpendCard.classList.toggle("d-none", !isBeacon);
+    if (isBeacon) {
+      loadBeaconLeads();
+      loadBeaconSpend();
+    }
   }
 
   // ---- Beacon's discovery settings (admin-only Settings, not the public content endpoint) ----

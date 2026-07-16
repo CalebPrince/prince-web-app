@@ -329,6 +329,27 @@ CREATE TABLE IF NOT EXISTS beacon_scan_seen (
   reasoning TEXT
 );
 
+-- One row per run_beacon_discovery.php execution that got as far as searching
+-- (the disabled/not-due/no-key exits log nothing — they cost nothing). Beacon's
+-- spend is otherwise invisible: Serper bills a credit per search and every new
+-- result costs an AI call, but neither was recorded, so "what is this costing
+-- me?" meant cross-reading two provider dashboards and guessing which calls
+-- were Beacon's. searches_run IS the Serper credit count; results_scanned is
+-- the AI call count (score_failures cost calls too, and are counted separately
+-- because they bought nothing).
+CREATE TABLE IF NOT EXISTS beacon_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ran_at TEXT NOT NULL DEFAULT (datetime('now')),
+  searches_run INTEGER NOT NULL DEFAULT 0,
+  searches_failed INTEGER NOT NULL DEFAULT 0,
+  results_scanned INTEGER NOT NULL DEFAULT 0,
+  qualified INTEGER NOT NULL DEFAULT 0,
+  score_failures INTEGER NOT NULL DEFAULT 0,
+  outcome TEXT NOT NULL DEFAULT 'ok'
+    CHECK (outcome IN ('ok', 'capped', 'search_failed', 'scoring_gave_up'))
+);
+CREATE INDEX IF NOT EXISTS idx_beacon_runs_ran ON beacon_runs (ran_at);
+
 -- Client portal accounts. Rows are provisioned by an admin invite (from a
 -- proposal), never self-signup — password_hash stays NULL until the client
 -- completes /client/setup.html?token=..., mirroring how proposals.token

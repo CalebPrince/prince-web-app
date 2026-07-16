@@ -194,6 +194,41 @@ class BeaconController
     }
 
     /**
+     * GET /api/v1/admin/beacon-spend — what discovery has cost, from beacon_runs.
+     * searches_run is literally the Serper credit count (1 credit per search);
+     * results_scanned + score_failures is the AI call count, split because
+     * failures bought nothing. Windowed at 7/30 days because that's the shape
+     * of the providers' own billing questions.
+     */
+    public static function adminSpend(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        $window = static function (string $since) use ($pdo): array {
+            $row = $pdo->query(
+                "SELECT COUNT(*) AS runs,
+                        COALESCE(SUM(searches_run), 0) AS searches,
+                        COALESCE(SUM(searches_failed), 0) AS searches_failed,
+                        COALESCE(SUM(results_scanned), 0) AS scored,
+                        COALESCE(SUM(qualified), 0) AS qualified,
+                        COALESCE(SUM(score_failures), 0) AS score_failures
+                 FROM beacon_runs WHERE ran_at >= datetime('now', '{$since}')"
+            )->fetch(\PDO::FETCH_ASSOC);
+            return array_map('intval', $row);
+        };
+
+        Response::json([
+            'last_7_days' => $window('-7 days'),
+            'last_30_days' => $window('-30 days'),
+            'recent_runs' => $pdo->query(
+                'SELECT ran_at, searches_run, results_scanned, qualified, score_failures, outcome
+                 FROM beacon_runs ORDER BY ran_at DESC LIMIT 10'
+            )->fetchAll(),
+        ]);
+    }
+
+    /**
      * DELETE /api/v1/admin/beacon-leads/{id} — dismiss a lead Caleb has dealt
      * with or doesn't want. Only drops the lead row; beacon_scan_seen still
      * holds the URL, so a dismissed lead can't resurface on the next sweep.

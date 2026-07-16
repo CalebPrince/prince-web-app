@@ -145,6 +145,7 @@ $searchesRun = 0;
 $searchesFailed = 0;
 $firstSearchError = null;
 $consecutiveScoreFailures = 0;
+$scoreFailuresTotal = 0;   // consecutive resets on success; this doesn't — it's the spend figure
 $scoringGaveUp = false;
 
 foreach ($keywords as $keyword) {
@@ -198,6 +199,7 @@ foreach ($keywords as $keyword) {
         // them; the cap and the circuit breaker below bound what that can cost.
         if ($draft === null) {
             $consecutiveScoreFailures++;
+            $scoreFailuresTotal++;
             if ($consecutiveScoreFailures >= MAX_CONSECUTIVE_SCORE_FAILURES) {
                 $scoringGaveUp = true;
                 break 2;
@@ -228,6 +230,17 @@ foreach ($keywords as $keyword) {
     }
 }
 
+// Log every run that got as far as searching, failures included — a run that
+// burned 6 Serper credits and 3 AI calls before the provider chain gave way
+// still cost money, and that's exactly the run you'd want to see when the bill
+// looks wrong.
+$recordRun = function (string $outcome) use ($pdo, &$searchesRun, &$searchesFailed, &$scanned, &$qualified, &$scoreFailuresTotal): void {
+    $pdo->prepare(
+        'INSERT INTO beacon_runs (searches_run, searches_failed, results_scanned, qualified, score_failures, outcome)
+         VALUES (?, ?, ?, ?, ?, ?)'
+    )->execute([$searchesRun, $searchesFailed, $scanned, count($qualified), $scoreFailuresTotal, $outcome]);
+};
+
 // A sweep where every search failed is not an empty sweep, and must not read
 // like one. Previously a rejected API key logged to error_log (a file, not
 // stdout) and then reported "0 new result(s) scanned, 0 qualified.", stamped
@@ -235,6 +248,7 @@ foreach ($keywords as $keyword) {
 // running fine and finding nobody. Leave the cadence alone and exit non-zero
 // so the next run retries and cron actually mails about it.
 if ($searchesRun > 0 && $searchesFailed === $searchesRun) {
+    $recordRun('search_failed');
     fwrite(STDERR, "Beacon discovery: all {$searchesRun} Serper search(es) failed — {$firstSearchError}\n");
     fwrite(STDERR, "Check serper_api_key in Admin -> Settings (a 403 means the key is rejected — note serper.dev and serpapi.com are different services with incompatible keys) and the account's remaining credits.\n");
     fwrite(STDERR, "Leaving beacon_discovery_last_run unchanged so the next run retries instead of waiting out the cadence.\n");
@@ -280,11 +294,14 @@ if ($searchesFailed > 0) {
 // exit 0. The digest above still went out for anything scored before the
 // chain gave way.
 if ($scoringGaveUp) {
+    $recordRun('scoring_gave_up');
     fwrite(STDERR, 'Beacon discovery: gave up after ' . MAX_CONSECUTIVE_SCORE_FAILURES . " consecutive scoring failures — the AI provider chain is down or out of quota.\n");
     fwrite(STDERR, "The per-provider reason is in the PHP error log (Gemini/OpenRouter/Groq each log their own status). Typically: Gemini 503 high demand, OpenRouter 402 out of credits, Groq 429 daily token limit.\n");
     fwrite(STDERR, "Unscored URLs were left unmarked and beacon_discovery_last_run unchanged, so the next run retries them once quota returns.\n");
     exit(1);
 }
+
+$recordRun($cappedOut ? 'capped' : 'ok');
 
 // Only stamp last_run on a sweep that got through everything — see the
 // MAX_RESULTS_PER_RUN note above.
