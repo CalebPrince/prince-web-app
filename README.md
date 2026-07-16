@@ -137,6 +137,8 @@ database/
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
   check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
+  send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
+  run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
 storage/
@@ -583,6 +585,37 @@ storage/
     no Python — re-run them after editing `blog_posts_data.php` or the brand
     imagery, same cadence as `generate_blog_covers.php` and
     `seed_blog_posts.php`.
+37. **Beacon & Nurturer growth agents** (`/admin/agent-chat.html`): two AI
+    agents that run through `AiAgentEngine`, so both ground themselves in real
+    facts via `get_site_info`/`search_content` (shared with Lisa through
+    `SharedAgentTools`) rather than inventing them. Each has two entry points:
+    a `draft()` HTTP endpoint for external automation (Bearer-authed on
+    `integration_api_key`, like `IntegrationController`) and a `chat()` mode
+    for talking to them directly from the admin page (session-authed).
+    **Beacon** scores a social post as a lead and drafts a reply.
+    `database/run_beacon_discovery.php` (cron) is the automated feed: it
+    searches the keywords set under Admin -> Talk to Agents -> Beacon via
+    Serper, runs new results through Beacon, and digests qualified ones to
+    Slack/`notification_email`. `beacon_scan_seen` dedupes by URL so a repeat
+    search result isn't re-scored and re-billed each run. It can't post
+    replies back — each platform needs its own developer API and OAuth app,
+    deliberately not built — so the digest is something to act on by hand, and
+    since Serper returns a search snippet rather than the full post, Beacon
+    judges on less context than a real scrape would give it.
+    **Nurturer** writes personalized follow-up emails from a lead's industry
+    and last action, both captured per-enrollment in `/admin/drip.html`.
+    `database/send_nurturer_emails.php` (cron) sends them to enrollments with
+    `nurturer_enabled`, on the day offsets under Drip -> AI Sends -> Send
+    timing. It only ever writes sequences 2 and 3 — sequence 1 stays whichever
+    fixed `drip_steps` template the lead also gets, since the first touch is
+    the one you least want improvised. Sends are recorded in `nurturer_sends`
+    (not `drip_sends`, which only references a fixed template — wrong shape
+    for per-send unique content), UNIQUE per (enrollment, sequence) so
+    overlapping runs can't double-send. `send_drip_emails.php` won't complete
+    an enrollment while a Nurturer send is still outstanding; completing on
+    the fixed steps alone would strand it, as only active enrollments are
+    picked up. Pick offsets that don't collide with your active step days, or
+    an opted-in lead gets two emails in one day.
 
 ## Deployment (Namecheap cPanel)
 
@@ -639,7 +672,18 @@ One-time setup on a new host:
 4g. Add a seventh cron job (hourly) for drip email sequences (no-op until
     a sequence is created in `/admin/drip.html`):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_drip_emails.php > /dev/null`
-4h. Add an eighth cron job (once a day) for database backups — snapshots
+4h. Add an eighth cron job (hourly) for Nurturer's AI-written sequence 2/3
+    follow-ups (no-op until a lead is enrolled with "AI-personalize via
+    Nurturer" ticked in `/admin/drip.html`):
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_nurturer_emails.php > /dev/null`
+4i. Add a ninth cron job (hourly) for Beacon's social lead discovery (no-op
+    until enabled, with keywords, under Admin -> Talk to Agents -> Beacon).
+    Hourly is deliberate even for a daily/weekly cadence: the script checks
+    the configured frequency itself, so a less frequent cron would cap the
+    setting rather than honour it. Also needs `serper_api_key` in
+    Admin -> Settings:
+    `/usr/local/bin/php /home/<cpanel-user>/database/run_beacon_discovery.php > /dev/null`
+4j. Add a tenth cron job (once a day) for database backups — snapshots
     the SQLite file to `storage/backups/` and keeps the last 14:
     `/usr/local/bin/php /home/<cpanel-user>/database/backup_db.php > /dev/null`
     Periodically download a snapshot somewhere off the server too — an
