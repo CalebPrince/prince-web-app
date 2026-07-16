@@ -537,6 +537,44 @@
               </div>
             </div>
           </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-binoculars me-2" style="color: var(--section-content);"></i>Beacon (social lead scout)</h5>
+            <div class="form-text mb-3">Beacon reviews scraped social posts/comments and drafts a reply — it never talks to anyone directly (the reply is signed as Caleb), so the name and voice below are for your own bookkeeping and only lightly flavor its internal framing.</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="beacon_assistant_name" placeholder="Beacon" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="beacon_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-envelope-heart me-2" style="color: var(--section-content);"></i>Nurturer (email follow-ups)</h5>
+            <div class="form-text mb-3">Nurturer drafts personalized lead follow-up emails — it never talks to anyone directly (the email is signed as Caleb), so the name and voice below are for your own bookkeeping and only lightly flavor its internal framing.</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="nurturer_assistant_name" placeholder="Nurturer" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="nurturer_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </form>
