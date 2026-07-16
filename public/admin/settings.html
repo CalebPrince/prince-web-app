@@ -180,6 +180,11 @@
               <div class="form-text">Get a free key at aistudio.google.com — leave empty to fall back to .env.</div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Gemini model <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" id="gemini-model" placeholder="gemini-2.5-flash" autocomplete="off">
+              <div class="form-text">Defaults to gemini-2.5-flash if left blank. Avoid the <code>-latest</code> aliases: they track Google's newest model, which is the most contended, and return "503 high demand" under load. Pin a specific model instead.</div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">OpenRouter API key <span class="text-muted-custom fw-normal">(fallback if Gemini errors — pitches, prototypes, AI assistant only, not the Live Chat conversation itself)</span></label>
               <input type="password" class="form-control" id="openrouter-key" placeholder="sk-or-..." autocomplete="off">
               <div class="form-text">Get a key at openrouter.ai — optional, only used when Gemini fails (e.g. quota exhausted).</div>

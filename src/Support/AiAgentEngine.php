@@ -416,7 +416,16 @@ class AiAgentEngine
         if (!function_exists('curl_init')) {
             return []; // no curl on this host — callers fall back gracefully
         }
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
+        // Pinned, and configurable like openrouter_model/groq_model — this was
+        // hardcoded to gemini-flash-latest, a rolling alias that tracks Google's
+        // newest Flash and therefore the most contended one. It returned a steady
+        // stream of "503 This model is currently experiencing high demand", which
+        // no amount of credit fixes: 503 is Google's capacity, not your quota
+        // (that's 429) or your billing (403). A pinned mature model has settled
+        // capacity, and Beacon/Lisa only need snippet-level judgement anyway.
+        $model = Settings::get('gemini_model') ?: 'gemini-2.5-flash';
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
+            . rawurlencode($model) . ':generateContent?key=' . $apiKey;
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,

@@ -105,6 +105,7 @@ async function saveIntegrations(e) {
   try {
     await api.put("/api/v1/admin/settings", {
       gemini_api_key: document.getElementById("gemini-key").value.trim(),
+      gemini_model: document.getElementById("gemini-model").value.trim(),
       openrouter_api_key: document.getElementById("openrouter-key").value.trim(),
       openrouter_model: document.getElementById("openrouter-model").value.trim(),
       groq_api_key: document.getElementById("groq-key").value.trim(),
@@ -372,6 +373,7 @@ async function testAi() {
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
+    document.getElementById("gemini-model").value = settings.gemini_model || "";
     document.getElementById("openrouter-key").value = settings.openrouter_api_key || "";
     document.getElementById("openrouter-model").value = settings.openrouter_model || "";
     document.getElementById("groq-key").value = settings.groq_api_key || "";
