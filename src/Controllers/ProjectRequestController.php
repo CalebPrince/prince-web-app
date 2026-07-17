@@ -120,7 +120,11 @@ class ProjectRequestController
             throw new \RuntimeException('You can attach at most ' . self::MAX_FILES . ' files.');
         }
 
-        $destDir = dirname(__DIR__, 2) . '/public/uploads/project-requests';
+        // DOCUMENT_ROOT, not '../../public' — production deploys public/'s
+        // contents into public_html/, so a literal "public/" folder next to
+        // src/ sits outside the web root and would 404 forever.
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+        $destDir = $docRoot . '/uploads/project-requests';
         if (!is_dir($destDir)) {
             mkdir($destDir, 0755, true);
         }

@@ -78,7 +78,11 @@ class Router
             return;
         }
 
-        $notFoundPage = dirname(__DIR__) . '/public/404.html';
+        // DOCUMENT_ROOT, not '../public' — production deploys public/'s
+        // contents into public_html/, so a literal "public/" folder next to
+        // src/ doesn't exist there.
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__) . '/public');
+        $notFoundPage = $docRoot . '/404.html';
         if (is_file($notFoundPage)) {
             readfile($notFoundPage);
         } else {

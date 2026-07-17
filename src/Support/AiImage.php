@@ -48,7 +48,14 @@ class AiImage
             return null;
         }
 
-        $dir = dirname(__DIR__, 2) . '/public/uploads';
+        // DOCUMENT_ROOT, not a hardcoded '../../public', because production
+        // deploys public/'s contents into public_html/ (see README's deploy
+        // layout) — a file written under a literal "public/" folder next to
+        // src/ would sit outside the web root and 404 forever. DOCUMENT_ROOT
+        // is the one thing that's correct in both environments (see the same
+        // pattern in SettingsController::adminUpdate()'s maintenance marker).
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+        $dir = $docRoot . '/uploads';
         if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
             error_log('AiImage: uploads directory is missing and could not be created.');
             return null;

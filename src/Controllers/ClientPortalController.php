@@ -97,7 +97,11 @@ class ClientPortalController
             Response::error('That file is not valid for its type.', 422);
         }
 
-        $destDir = dirname(__DIR__, 2) . '/public/uploads/client-files/' . $client['id'];
+        // DOCUMENT_ROOT, not '../../public' — production deploys public/'s
+        // contents into public_html/, so a literal "public/" folder next to
+        // src/ sits outside the web root and would 404 forever.
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+        $destDir = $docRoot . '/uploads/client-files/' . $client['id'];
         if (!is_dir($destDir)) {
             mkdir($destDir, 0755, true);
         }

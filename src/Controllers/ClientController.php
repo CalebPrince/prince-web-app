@@ -200,7 +200,11 @@ class ClientController
             Response::error('That file is not valid for its type.', 422);
         }
 
-        $destDir = dirname(__DIR__, 2) . '/public/uploads/client-files/' . $clientId;
+        // DOCUMENT_ROOT, not '../../public' — production deploys public/'s
+        // contents into public_html/, so a literal "public/" folder next to
+        // src/ sits outside the web root and would 404 forever.
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+        $destDir = $docRoot . '/uploads/client-files/' . $clientId;
         if (!is_dir($destDir)) {
             mkdir($destDir, 0755, true);
         }
@@ -234,7 +238,8 @@ class ClientController
             Response::error('File not found.', 404);
         }
 
-        $absolutePath = dirname(__DIR__, 2) . '/public' . $file['file_path'];
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+        $absolutePath = $docRoot . $file['file_path'];
         if (is_file($absolutePath)) {
             unlink($absolutePath);
         }

@@ -251,7 +251,10 @@ class ContentAgentController
         if ($webPath === '' || $webPath[0] !== '/') {
             return null;
         }
-        $fsPath = dirname(__DIR__, 2) . '/public' . $webPath;
+        // DOCUMENT_ROOT, not '../../public' — see the matching note in
+        // AiImage::generateFlyer().
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+        $fsPath = $docRoot . $webPath;
         return is_file($fsPath) ? $fsPath : null;
     }
 

@@ -49,7 +49,11 @@ class UploadController
         }
 
         $filename = bin2hex(random_bytes(10)) . '.' . $ext;
-        $destination = dirname(__DIR__, 2) . '/public/uploads/' . $filename;
+        // DOCUMENT_ROOT, not '../../public' — production deploys public/'s
+        // contents into public_html/, so a literal "public/" folder next to
+        // src/ sits outside the web root and would 404 forever.
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? (dirname(__DIR__, 2) . '/public');
+        $destination = $docRoot . '/uploads/' . $filename;
 
         if (!move_uploaded_file($file['tmp_name'], $destination)) {
             Response::error('Could not save the uploaded file.', 500);
