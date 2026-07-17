@@ -27,6 +27,7 @@ async function loadAppointments(status = 'confirmed') {
           <button class="btn btn-sm btn-outline-secondary status-btn" data-id="${a.id}" data-status="completed">Mark Completed</button>
           <button class="btn btn-sm btn-outline-danger status-btn" data-id="${a.id}" data-status="cancelled">Cancel</button>
         ` : ''}
+        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${a.id}" title="Delete permanently">Delete</button>
       </td>
     </tr>
     `).join('');
@@ -34,6 +35,14 @@ async function loadAppointments(status = 'confirmed') {
     tbody.querySelectorAll('.status-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         await api.patch(`/api/v1/admin/appointments/${btn.dataset.id}`, { status: btn.dataset.status });
+        await loadAppointments(document.getElementById('status-filter').value);
+      });
+    });
+
+    tbody.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm("Delete this booking permanently? This can't be undone.")) return;
+        await api.delete(`/api/v1/admin/appointments/${btn.dataset.id}`);
         await loadAppointments(document.getElementById('status-filter').value);
       });
     });

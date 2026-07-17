@@ -136,6 +136,7 @@ async function loadInquiries(status = "") {
           <button class="btn btn-sm btn-outline-secondary status-btn" data-id="${i.id}" data-status="read">Mark Read</button>
           <button class="btn btn-sm btn-outline-danger status-btn" data-id="${i.id}" data-status="flagged">Flag</button>
           <button class="btn btn-sm btn-outline-secondary status-btn" data-id="${i.id}" data-status="archived">Archive</button>
+          <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${i.id}" title="Delete permanently">Delete</button>
         </div>
       </div>
     </div>
@@ -144,6 +145,14 @@ async function loadInquiries(status = "") {
     list.querySelectorAll(".status-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         await api.patch(`/api/v1/admin/inquiries/${btn.dataset.id}`, { status: btn.dataset.status });
+        await loadInquiries(document.getElementById("status-filter").value);
+      });
+    });
+
+    list.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Delete this permanently? This can't be undone.")) return;
+        await api.delete(`/api/v1/admin/inquiries/${btn.dataset.id}`);
         await loadInquiries(document.getElementById("status-filter").value);
       });
     });

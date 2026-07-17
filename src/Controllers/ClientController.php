@@ -169,6 +169,30 @@ class ClientController
         Response::json(['status' => 'updated']);
     }
 
+    /**
+     * DELETE /api/v1/admin/clients/{id} — also removes the portal account's
+     * files and messages (ON DELETE CASCADE), and detaches (not deletes) any
+     * proposals/payment links that referenced this client (ON DELETE SET
+     * NULL) — those stay on file, just no longer linked to a portal account.
+     */
+    public static function destroy(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT name FROM clients WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+        if ($name === false) {
+            Response::error('Client not found.', 404);
+        }
+
+        $pdo->prepare('DELETE FROM clients WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'client', $id, $name ?: null);
+        Response::json(['status' => 'deleted']);
+    }
+
     /** POST /api/v1/admin/clients/{id}/files — multipart form field "file" */
     public static function uploadFile(array $params): void
     {

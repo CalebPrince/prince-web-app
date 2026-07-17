@@ -103,11 +103,24 @@ async function loadProposals() {
             <button type="button" class="btn btn-sm btn-outline-secondary copy-proposal-btn" data-url="${escapeHtml(url)}">Copy link</button>
             <button type="button" class="btn btn-sm btn-brand send-proposal-btn" data-id="${p.id}">Email</button>
             <button type="button" class="btn btn-sm btn-outline-secondary invite-portal-btn" data-name="${escapeHtml(p.client_name)}" data-email="${escapeHtml(p.client_email)}">Invite to portal</button>
+            <button type="button" class="btn btn-sm btn-outline-danger delete-proposal-btn" data-id="${p.id}" title="Delete permanently">Delete</button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
+
+  tbody.querySelectorAll('.delete-proposal-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm("Delete this proposal permanently? This can't be undone.")) return;
+      try {
+        await api.delete(`/api/v1/admin/proposals/${btn.dataset.id}`);
+        await loadProposals();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
 
   tbody.querySelectorAll('.copy-proposal-btn').forEach(btn => {
     btn.addEventListener('click', async () => {

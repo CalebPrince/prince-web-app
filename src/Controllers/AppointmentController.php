@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Composio;
 use App\Support\Database;
 use App\Support\EmailTemplate;
@@ -458,5 +459,24 @@ class AppointmentController
         Database::get()->prepare('UPDATE appointments SET status = ? WHERE id = ?')
             ->execute([$status, (int) $params['id']]);
         Response::json(['status' => 'updated']);
+    }
+
+    /** DELETE /api/v1/admin/appointments/{id} */
+    public static function destroy(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT client_name FROM appointments WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+        if ($name === false) {
+            Response::error('Booking not found.', 404);
+        }
+
+        $pdo->prepare('DELETE FROM appointments WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'appointment', $id, $name ?: null);
+        Response::json(['status' => 'deleted']);
     }
 }

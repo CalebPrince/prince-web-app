@@ -165,4 +165,23 @@ class InquiryController
 
         Response::json(['status' => 'updated']);
     }
+
+    /** DELETE /api/v1/admin/inquiries/{id} — covers both contact messages and project requests. */
+    public static function destroy(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT name FROM inquiries WHERE id = ?');
+        $stmt->execute([$id]);
+        $name = $stmt->fetchColumn();
+        if ($name === false) {
+            Response::error('Inquiry not found.', 404);
+        }
+
+        $pdo->prepare('DELETE FROM inquiries WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'inquiry', $id, $name ?: null);
+        Response::json(['status' => 'deleted']);
+    }
 }

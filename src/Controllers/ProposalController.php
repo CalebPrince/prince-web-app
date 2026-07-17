@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
@@ -14,6 +15,30 @@ use App\Support\Settings;
 
 class ProposalController
 {
+    /**
+     * DELETE /api/v1/admin/proposals/{id} — also removes its milestones
+     * (ON DELETE CASCADE). The payment_links a milestone generated, and any
+     * real payments.rows they were paid through, are untouched — a deleted
+     * proposal removes the scope/terms document, never the payment ledger.
+     */
+    public static function destroy(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT title FROM proposals WHERE id = ?');
+        $stmt->execute([$id]);
+        $title = $stmt->fetchColumn();
+        if ($title === false) {
+            Response::error('Proposal not found.', 404);
+        }
+
+        $pdo->prepare('DELETE FROM proposals WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'proposal', $id, $title ?: null);
+        Response::json(['status' => 'deleted']);
+    }
+
     /** GET /api/v1/admin/proposals */
     public static function adminIndex(): void
     {

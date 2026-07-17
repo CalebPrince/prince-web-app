@@ -44,6 +44,7 @@ function chatCard(c) {
           ${c.client_email ? `<a class="btn btn-sm btn-outline-secondary" href="mailto:${escapeHtml(c.client_email)}">Reply by email</a>` : ""}
           ${c.client_phone ? `<a class="btn btn-sm btn-outline-secondary" href="tel:${escapeHtml(c.client_phone)}">Call</a>` : ""}
           ${c.admin_seen ? "" : `<button class="btn btn-sm btn-brand seen-btn" data-id="${c.id}">Mark seen</button>`}
+          <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${c.id}" title="Delete permanently">Delete</button>
         </div>
       </div>
     </div>
@@ -66,6 +67,14 @@ function applyFilter() {
   list.querySelectorAll(".seen-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       await api.patch(`/api/v1/admin/chats/${btn.dataset.id}`, { admin_seen: true });
+      await loadChats();
+    });
+  });
+
+  list.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Delete this conversation permanently? This can't be undone.")) return;
+      await api.delete(`/api/v1/admin/chats/${btn.dataset.id}`);
       await loadChats();
     });
   });

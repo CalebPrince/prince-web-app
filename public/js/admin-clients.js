@@ -28,12 +28,25 @@ async function loadClients() {
       <td class="text-end pe-3">
         <button class="btn btn-sm btn-outline-secondary view-client-btn" data-id="${c.id}">View</button>
         <button class="btn btn-sm btn-outline-secondary toggle-active-btn ms-1" data-id="${c.id}" data-active="${c.is_active}">${c.is_active ? 'Deactivate' : 'Reactivate'}</button>
+        <button class="btn btn-sm btn-outline-danger delete-client-btn ms-1" data-id="${c.id}" title="Delete permanently">Delete</button>
       </td>
     </tr>
   `).join('');
 
   tbody.querySelectorAll('.view-client-btn').forEach(btn => {
     btn.addEventListener('click', () => openClientDetail(btn.dataset.id));
+  });
+
+  tbody.querySelectorAll('.delete-client-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm("Delete this client permanently? This removes their portal account, files, and messages. This can't be undone.")) return;
+      try {
+        await api.delete(`/api/v1/admin/clients/${btn.dataset.id}`);
+        await loadClients();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
   });
 
   tbody.querySelectorAll('.toggle-active-btn').forEach(btn => {

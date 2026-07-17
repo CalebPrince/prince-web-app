@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Support\ActivityLog;
 use App\Support\AiAgentEngine;
 use App\Support\AiText;
 use App\Support\Database;
@@ -619,6 +620,25 @@ class LiveChatController
         $pdo->prepare("UPDATE chat_sessions SET admin_seen = 1 WHERE id = ?")
             ->execute([(int) $params['id']]);
         Response::json(['status' => 'updated']);
+    }
+
+    /** DELETE /api/v1/admin/chats/{id} */
+    public static function destroy(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT COALESCE(client_name, client_email, token) FROM chat_sessions WHERE id = ?');
+        $stmt->execute([$id]);
+        $label = $stmt->fetchColumn();
+        if ($label === false) {
+            Response::error('Conversation not found.', 404);
+        }
+
+        $pdo->prepare('DELETE FROM chat_sessions WHERE id = ?')->execute([$id]);
+        ActivityLog::log($user, 'deleted', 'chat_session', $id, $label ?: null);
+        Response::json(['status' => 'deleted']);
     }
 
     // ---- internals ----------------------------------------------------------
