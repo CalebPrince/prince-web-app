@@ -30,6 +30,9 @@
   const proposalAwaitingCard = document.getElementById("proposal-awaiting-card");
   const proposalAwaitingList = document.getElementById("proposal-awaiting-list");
   const proposalAwaitingEmpty = document.getElementById("proposal-awaiting-empty");
+  const lisaChatsCard = document.getElementById("lisa-chats-card");
+  const lisaChatsList = document.getElementById("lisa-chats-list");
+  const lisaChatsEmpty = document.getElementById("lisa-chats-empty");
   const faceSlot = document.getElementById("agent-chat-face");
   const faceNameEl = document.getElementById("agent-chat-face-name");
 
@@ -370,15 +373,62 @@
     }
   }
 
+  // ---- Lisa's "Recent visitor conversations" panel ----
+  // Reuses the same GET /api/v1/admin/chats the Chat Leads page already calls
+  // — no dedicated backend route, just the most recent handful rendered here
+  // (mirrors how the Proposal panel reuses /admin/proposals).
+  const LISA_CHATS_LIMIT = 6;
+
+  async function loadLisaChats() {
+    try {
+      const sessions = await api.get("/api/v1/admin/chats");
+      const recent = (sessions || []).slice(0, LISA_CHATS_LIMIT);
+      lisaChatsList.innerHTML = "";
+      lisaChatsEmpty.classList.toggle("d-none", recent.length > 0);
+
+      recent.forEach((s) => {
+        const card = document.createElement("div");
+        card.className = "border rounded p-3";
+
+        const isLead = !!(s.client_email || s.client_name || s.client_phone);
+        const who = escapeHtml(s.client_name || s.client_email || "Anonymous visitor");
+        const badge = isLead
+          ? '<span class="text-success">Contact captured</span>'
+          : '<span class="text-muted-custom">Engaged</span>';
+
+        // Last thing said in the thread — the fastest read on where it stands.
+        const transcript = Array.isArray(s.transcript) ? s.transcript : [];
+        const last = transcript.length ? transcript[transcript.length - 1] : null;
+        const snippetText = last ? (last.role === "user" ? "Visitor: " : "Lisa: ") + last.text : "No messages yet.";
+        const snippet = snippetText.length > 160 ? snippetText.slice(0, 157) + "…" : snippetText;
+
+        const when = s.updated_at ? new Date(s.updated_at + "Z").toLocaleString() : "";
+
+        card.innerHTML =
+          '<div class="d-flex justify-content-between small text-muted-custom mb-1">'
+          + "<span>" + who + (s.client_email ? " · " + escapeHtml(s.client_email) : "") + "</span>"
+          + "<span>" + badge + "</span>"
+          + "</div>"
+          + '<div class="small mb-1">' + escapeHtml(snippet) + "</div>"
+          + '<div class="small text-muted-custom">' + escapeHtml(when) + "</div>";
+        lisaChatsList.appendChild(card);
+      });
+    } catch (_) {
+      // Quiet failure — this panel is a convenience, not the primary flow.
+    }
+  }
+
   function updateLeadsPanelVisibility() {
     const isBeacon = activeAgent === "beacon";
     const isNurturer = activeAgent === "nurturer";
     const isProposal = activeAgent === "proposal";
+    const isLisa = activeAgent === "lisa";
     beaconLeadsCard.classList.toggle("d-none", !isBeacon);
     beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
     beaconSpendCard.classList.toggle("d-none", !isBeacon);
     nurturerLeadsCard.classList.toggle("d-none", !isNurturer);
     proposalAwaitingCard.classList.toggle("d-none", !isProposal);
+    lisaChatsCard.classList.toggle("d-none", !isLisa);
     if (isBeacon) {
       loadBeaconLeads();
       loadBeaconSpend();
@@ -388,6 +438,9 @@
     }
     if (isProposal) {
       loadProposalsAwaitingDecision();
+    }
+    if (isLisa) {
+      loadLisaChats();
     }
   }
 
