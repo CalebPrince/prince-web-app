@@ -49,6 +49,7 @@ use App\Controllers\ClientController;
 use App\Controllers\ClientErrorController;
 use App\Controllers\ClientPortalController;
 use App\Controllers\ComposioController;
+use App\Controllers\ContactsController;
 use App\Controllers\DashboardController;
 use App\Controllers\DripController;
 use App\Controllers\ErrorLogController;
@@ -198,6 +199,8 @@ $router->get('/api/v1/admin/proposals/quote-requests', [ProposalController::clas
 $router->post('/api/v1/admin/proposals/generate', [ProposalAgentController::class, 'generate']);
 $router->get('/api/v1/admin/proposals/{id}', [ProposalController::class, 'adminShow']);
 $router->put('/api/v1/admin/proposals/{id}', [ProposalController::class, 'update']);
+$router->get('/api/v1/admin/contacts', [ContactsController::class, 'index']);
+$router->get('/api/v1/admin/contacts/{email}', [ContactsController::class, 'show']);
 $router->get('/api/v1/admin/clients', [ClientController::class, 'index']);
 $router->post('/api/v1/admin/clients/invite', [ClientController::class, 'invite']);
 $router->get('/api/v1/admin/clients/{id}', [ClientController::class, 'show']);
