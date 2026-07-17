@@ -77,10 +77,17 @@ class AiImage
         // The model can't be forced to an exact pixel size, but naming the
         // orientation + closest standard aspect ratio steers it close before
         // the GD cover-crop makes it exact — without this it often returns a
-        // square for a request that needed a tall story graphic.
+        // square for a request that needed a tall story graphic. Even so, its
+        // actual ratio rarely matches ours exactly, so coverCropToPng() always
+        // trims some of one axis — the explicit safe-margin instruction below
+        // is what keeps that trim from slicing through headline text.
         $ratioHint = self::aspectRatioHint($width, $height);
         $fullPrompt = $prompt . "\n\nFormat: a polished, on-brand social media graphic in "
-            . $ratioHint . ". Compose it so nothing important is cut off near the edges.";
+            . $ratioHint . ". IMPORTANT: this image will be automatically center-cropped afterward to an "
+            . "exact final size, which trims some of the outer edge on at least one side. Keep all text and "
+            . "essential visual elements within the center 80% of the frame — leave a generous, uncluttered "
+            . "margin on all four sides (top, bottom, left, right) and never let a headline run so large or so "
+            . "close to an edge that a modest crop could cut off any letters.";
 
         // Nano Banana accepts multiple image parts in one request (image-to-image
         // composition, not just text-to-image) — attaching the real logo file
