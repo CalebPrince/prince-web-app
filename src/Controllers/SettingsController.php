@@ -72,7 +72,7 @@ class SettingsController
         'service_3_title', 'service_3_summary', 'service_3_desc',
         'about_intro', 'about_bio',
         'contact_intro', 'contact_location', 'contact_phone',
-        'social_github', 'social_linkedin', 'social_twitter', 'social_whatsapp', 'social_email',
+        'social_github', 'social_linkedin', 'social_twitter', 'social_whatsapp', 'social_upwork', 'social_fiverr', 'social_email',
         'chat_greeting', 'chat_intro', 'chat_offline_message', 'chat_assistant_name',
         'chat_voice_gender', 'chat_voice_accent', 'chat_voice_rate', 'chat_voice_pitch',
         'beacon_assistant_name', 'beacon_voice_gender', 'beacon_voice_accent',

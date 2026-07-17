@@ -11,7 +11,7 @@ const CONTENT_FIELDS = [
   "service_2_title", "service_2_summary", "service_2_desc",
   "service_3_title", "service_3_summary", "service_3_desc",
   "about_intro", "about_bio", "contact_intro", "contact_location", "contact_phone",
-  "social_github", "social_linkedin", "social_twitter", "social_whatsapp", "social_email",
+  "social_github", "social_linkedin", "social_twitter", "social_whatsapp", "social_upwork", "social_fiverr", "social_email",
   "github_username",
   "timeline_1_label", "timeline_1_title", "timeline_1_desc",
   "timeline_2_label", "timeline_2_title", "timeline_2_desc",
