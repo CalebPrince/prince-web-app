@@ -9,6 +9,7 @@ use App\Middleware\RateLimitMiddleware;
 use App\Support\AiAgentEngine;
 use App\Support\AiText;
 use App\Support\Database;
+use App\Support\Jwt;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -92,7 +93,7 @@ class LiveChatController
         $transcript[] = ['role' => 'user', 'text' => $message];
 
         $projects = self::projectCatalog($pdo);
-        $result = self::generateReply($message, $transcript, $projects, $pdo);
+        $result = self::generateReply($message, $transcript, $projects, $pdo, self::isOwnerSession());
 
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
@@ -612,6 +613,39 @@ class LiveChatController
     {
         require_once dirname(__DIR__, 2) . '/config/config.php';
         return appConfig();
+    }
+
+    /**
+     * Is this browser tab logged into /admin right now? Caleb testing the
+     * public widget from his own browser used to get the full lead-capture
+     * treatment — name/email/phone requests, quote pitches — same as any
+     * stranger, because the web widget had no equivalent of WhatsApp's phone
+     * number match for "this is the owner". The admin session cookie is
+     * site-wide (path=/, set by AuthController::issueTokens) and just as hard
+     * to fake as a phone number, so it doubles as that signal here. Mirrors
+     * AuthMiddleware::requireAuth() but never errors — an absent or invalid
+     * cookie just means "ordinary visitor", which is the overwhelmingly
+     * common case for this endpoint.
+     */
+    private static function isOwnerSession(): bool
+    {
+        $token = $_COOKIE['access_token'] ?? null;
+        if (!$token) {
+            return false;
+        }
+
+        $config = self::config();
+        $payload = Jwt::decode($token, $config['jwt_secret']);
+        if (!$payload || ($payload['type'] ?? null) !== 'access') {
+            return false;
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT token_version FROM users WHERE id = ? AND is_active = 1');
+        $stmt->execute([$payload['sub']]);
+        $user = $stmt->fetch();
+
+        return $user && (int) $user['token_version'] === (int) $payload['tv'];
     }
 
     private static function findOrCreateSession(\PDO $pdo, ?string $token): array
