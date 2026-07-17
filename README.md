@@ -110,6 +110,7 @@ src/
                             TestimonialController, NewsletterController,
                             AppointmentController, SettingsController,
                             AuthController, AiChatController, LiveChatController,
+                            ContentAgentController, ContentStudioController,
                             and more
   Middleware/              # AuthMiddleware (admin JWT), ClientAuthMiddleware
                             (client portal JWT, isolated via a `type` claim —
@@ -118,7 +119,9 @@ src/
                             Response, Mailer, AiText (Gemini/OpenRouter/Groq
                             fallback, can report which provider succeeded), MakeWebhook
                             (push + log every automation event), ShortLink
-                            (getOrCreate/resolve for the /s/{code} redirector)
+                            (getOrCreate/resolve for the /s/{code} redirector),
+                            AiImage (Gemini "Nano Banana" image generation for
+                            Canvas's flyers, GD cover-crop to an exact size)
   Router.php                # tiny hand-rolled router — no framework dependency
   autoload.php               # minimal PSR-4-style autoloader for the App\ namespace
 config/config.php         # env-based settings, memoized via appConfig()
@@ -593,7 +596,16 @@ storage/
 37. **Beacon, Nurturer & Ledger growth agents** (`/admin/agent-chat.html`):
     three AI agents that run through `AiAgentEngine`, so all three ground
     themselves in real facts via `get_site_info`/`search_content` (shared with
-    Lisa through `SharedAgentTools`) rather than inventing them. Beacon and
+    Lisa through `SharedAgentTools`) rather than inventing them. The same
+    console also reaches **Lisa** herself, via `LiveChatController::adminChat()`
+    — her exact public-widget brain, but run in owner mode so she drops the
+    lead-capture/sales script (no asking for name/email, no quote pitch) while
+    keeping her useful tools (`check_availability`, `get_site_info`,
+    `search_content`, `audit_website`); her tab shows a **Recent visitor
+    conversations** panel (reusing `GET /api/v1/admin/chats`, the same data as
+    the Chat Leads page) for context while talking to her. A fifth agent,
+    **Canvas**, handles content creation and is documented separately below
+    (#38). Beacon and
     Nurturer each have two entry points: a `draft()` HTTP endpoint for
     external automation (Bearer-authed on `integration_api_key`, like
     `IntegrationController`) and a `chat()` mode for talking to them directly
@@ -670,6 +682,37 @@ storage/
     `inquiries`/`proposals`/`proposal_milestones` columns, and its assistant
     name/voice/accent settings ride the same generic `settings` key-value
     store every other admin-configurable setting already uses.
+38. **Canvas & Content Studio** (`/admin/agent-chat.html` "Content" tab,
+    `/admin/content-studio.html`): a content-creation agent, also running
+    through `AiAgentEngine` and grounded via the shared `get_site_info`/
+    `search_content` tools, but with no automated cron side — it exists only
+    as a live `chat()` in the "Talk to Agents" console
+    (`ContentAgentController`). Unlike the pipeline agents it can stage real,
+    reviewable output via three tools: `create_flyer` generates an actual
+    social graphic with Gemini's image model ("Nano Banana",
+    `src/Support/AiImage.php`) at a real platform size (square 1080×1080,
+    portrait 1080×1350, story 1080×1920, or landscape 1200×630) — the model
+    returns whatever aspect ratio it likes, so the result is always
+    center-cropped with GD to the exact requested pixel size and normalized to
+    PNG; `save_social_draft` and `save_blog_draft` write a caption or full post
+    to a new `content_studio_items` table. Nothing it makes goes live: blog
+    drafts land `is_published = 0`, and every item starts `status = 'draft'`.
+    The Content Studio admin page lists everything Canvas has made, lets
+    Caleb correct the copy/notes inline (PATCH) or delete an item, or
+    **promote** a reviewed item into the real pipeline — a blog item becomes
+    an actual (still unpublished) `blog_posts` row reachable from the
+    existing Blog page, and a social/flyer item becomes a
+    `social_post_drafts` row (`ai_provider = 'content-agent'`) reachable from
+    the existing Social Drafts page; the studio item is then marked `used`.
+    A flyer generated without a caption yet is recorded standalone and gets
+    folded into the same row in place if a caption naming that image arrives
+    later, so Caleb never ends up with a duplicate bare-image row plus a
+    separate captioned one. Canvas's assistant name/voice settings (default
+    name "Canvas") ride the same generic `settings` store every other agent
+    persona uses. The "Talk to Agents" console's Content tab also shows a
+    **Recent content drafts** panel (reusing `GET /api/v1/admin/content-studio`)
+    as a quick glance while chatting, linking out to the full Content Studio
+    page for anything more.
 
 ## Deployment (Namecheap cPanel)
 
