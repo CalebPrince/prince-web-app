@@ -690,14 +690,16 @@ storage/
     (`ContentAgentController`). Unlike the pipeline agents it can stage real,
     reviewable output via four tools: `get_brand_info`
     (`SharedAgentTools::getBrandInfo()`) returns the real primary/accent
-    colors, font, a style note, and which logo file to use against a dark vs.
-    light background — sourced from `Settings` (`brand_primary_color`,
-    `brand_accent_color`, `brand_font`, `brand_style_note`,
-    `brand_logo_dark_url`, `brand_logo_light_url`, editable from Site Content
-    → Brand) and defaulting to the site's actual monochrome editorial system
-    and the two logo files committed at `public/uploads/brand/logo-{dark,
-    light}.png` when unset, so Canvas is grounded even before an admin ever
-    opens Settings; `create_flyer` generates an actual social graphic with
+    colors, font, a style note, and the two real logo files — named for the
+    mark's own color, not the background it goes on: a dark-colored mark for
+    white/light backgrounds, a white-colored mark for black/dark backgrounds
+    — sourced from `Settings` (`brand_primary_color`, `brand_accent_color`,
+    `brand_font`, `brand_style_note`, `brand_logo_dark_url`,
+    `brand_logo_white_url`, editable from Site Content → Brand) and
+    defaulting to the site's actual monochrome editorial system and the two
+    logo files committed at `public/uploads/brand/logo-{dark,white}.png` when
+    unset, so Canvas is grounded even before an admin ever opens Settings;
+    `create_flyer` generates an actual social graphic with
     Gemini's image model ("Nano Banana", `src/Support/AiImage.php`) at a real
     platform size (square 1080×1080, portrait 1080×1350, story 1080×1920, or
     landscape 1200×630) — every call is grounded in `get_brand_info`'s colors/

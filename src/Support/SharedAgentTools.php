@@ -94,11 +94,12 @@ class SharedAgentTools
 
     /**
      * @return array<string,string> Visual brand facts for Canvas's flyer/graphic
-     * generation — colors, font, a style note, and which real logo file to use
-     * against a dark vs. light background. Defaults match the site's actual
-     * monochrome editorial design system (public/css/app.css) and the two logo
-     * files committed under public/uploads/brand/, so this works even before
-     * an admin ever opens Settings to override anything.
+     * generation — colors, font, a style note, and the two real logo files
+     * (named for the mark's own color, not the background it goes on).
+     * Defaults match the site's actual monochrome editorial design system
+     * (public/css/app.css) and the two logo files committed under
+     * public/uploads/brand/, so this works even before an admin ever opens
+     * Settings to override anything.
      */
     public static function getBrandInfo(): array
     {
@@ -109,8 +110,10 @@ class SharedAgentTools
             'style_note' => Settings::get('brand_style_note')
                 ?: 'Monochrome, dark editorial style — near-black or near-white surfaces only, no bright or '
                     . 'saturated colors, generous whitespace, restrained typography.',
-            'logo_for_dark_background' => Settings::get('brand_logo_dark_url') ?: '/uploads/brand/logo-dark.png',
-            'logo_for_light_background' => Settings::get('brand_logo_light_url') ?: '/uploads/brand/logo-light.png',
+            // The dark-colored mark reads on white/light backgrounds; the
+            // white-colored mark reads on black/dark backgrounds.
+            'logo_dark' => Settings::get('brand_logo_dark_url') ?: '/uploads/brand/logo-dark.png',
+            'logo_white' => Settings::get('brand_logo_white_url') ?: '/uploads/brand/logo-white.png',
         ];
     }
 
@@ -206,9 +209,9 @@ class SharedAgentTools
         return [
             'name' => 'get_brand_info',
             'description' => 'Get Prince Caleb\'s real visual brand facts — primary/accent colors, font style, '
-                . 'a style note, and which logo file to use for a dark vs. light flyer background. Call this '
-                . 'before generating any flyer or graphic so the result matches the actual brand instead of '
-                . 'guessing at colors or inventing a logo.',
+                . 'a style note, and the two real logo files (a dark-colored mark for white/light backgrounds, '
+                . 'a white-colored mark for black/dark backgrounds). Call this before generating any flyer or '
+                . 'graphic so the result matches the actual brand instead of guessing at colors or inventing a logo.',
             'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
         ];
     }

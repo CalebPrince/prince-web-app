@@ -213,8 +213,10 @@ class ContentAgentController
         // Ground every flyer in the real brand — colors/font/style plus the
         // actual logo file for the matching background — rather than relying
         // on the model having called get_brand_info itself first.
+        // A dark flyer background needs the white-colored logo mark to read;
+        // a light background needs the dark-colored mark.
         $brand = SharedAgentTools::getBrandInfo();
-        $logoUrl = $background === 'light' ? $brand['logo_for_light_background'] : $brand['logo_for_dark_background'];
+        $logoUrl = $background === 'light' ? $brand['logo_dark'] : $brand['logo_white'];
         $logoPath = self::webPathToFsPath($logoUrl);
         $groundedDescription = $description . "\n\nBrand: primary color {$brand['primary_color']}, accent color "
             . "{$brand['accent_color']}, typography style {$brand['font']}. {$brand['style_note']}";

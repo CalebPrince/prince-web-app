@@ -642,7 +642,7 @@
 
           <div class="admin-card p-4">
             <h5 class="mb-3"><i class="bi bi-brush me-2" style="color: var(--section-content);"></i>Brand</h5>
-            <div class="form-text mb-3">The real visual facts Canvas grounds its flyers/graphics in instead of guessing — colors, font, a style note, and the actual logo file for a dark vs. a light background. Leave any field blank to keep the site's own monochrome editorial defaults and the two logo files already committed under <code>public/uploads/brand/</code>.</div>
+            <div class="form-text mb-3">The real visual facts Canvas grounds its flyers/graphics in instead of guessing — colors, font, a style note, and the two real logo files (named for the mark's own color, not the background). Leave any field blank to keep the site's own monochrome editorial defaults and the two logo files already committed under <code>public/uploads/brand/</code>.</div>
             <div class="row g-3">
               <div class="col-sm-6">
                 <label class="form-label">Primary color</label>
@@ -661,22 +661,22 @@
                 <textarea class="form-control" id="brand_style_note" rows="2" placeholder="Monochrome, dark editorial style — near-black or near-white surfaces only, no bright colors, generous whitespace."></textarea>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Logo for dark backgrounds</label>
+                <label class="form-label">Logo (dark) <span class="text-muted-custom fw-normal">— for white/light backgrounds</span></label>
                 <div class="d-flex align-items-center gap-2 mb-2">
-                  <img id="brand-logo-dark-preview" class="d-none" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:8px;border:1px solid var(--line); background:#17181c;">
+                  <img id="brand-logo-dark-preview" class="d-none" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:8px;border:1px solid var(--line); background:#f5f5f5;">
                   <input type="text" class="form-control" id="brand_logo_dark_url" placeholder="/uploads/brand/logo-dark.png">
                 </div>
                 <input type="file" class="form-control form-control-sm" id="brand-logo-dark-upload-input" accept=".jpg,.jpeg,.png,.gif,.webp,.svg">
                 <div id="brand-logo-dark-upload-msg" class="small text-muted-custom mt-1"></div>
               </div>
               <div class="col-md-6">
-                <label class="form-label">Logo for light backgrounds</label>
+                <label class="form-label">Logo (white) <span class="text-muted-custom fw-normal">— for black/dark backgrounds</span></label>
                 <div class="d-flex align-items-center gap-2 mb-2">
-                  <img id="brand-logo-light-preview" class="d-none" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:8px;border:1px solid var(--line); background:#f5f5f5;">
-                  <input type="text" class="form-control" id="brand_logo_light_url" placeholder="/uploads/brand/logo-light.png">
+                  <img id="brand-logo-white-preview" class="d-none" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:8px;border:1px solid var(--line); background:#17181c;">
+                  <input type="text" class="form-control" id="brand_logo_white_url" placeholder="/uploads/brand/logo-white.png">
                 </div>
-                <input type="file" class="form-control form-control-sm" id="brand-logo-light-upload-input" accept=".jpg,.jpeg,.png,.gif,.webp,.svg">
-                <div id="brand-logo-light-upload-msg" class="small text-muted-custom mt-1"></div>
+                <input type="file" class="form-control form-control-sm" id="brand-logo-white-upload-input" accept=".jpg,.jpeg,.png,.gif,.webp,.svg">
+                <div id="brand-logo-white-upload-msg" class="small text-muted-custom mt-1"></div>
               </div>
             </div>
           </div>

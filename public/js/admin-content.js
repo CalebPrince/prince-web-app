@@ -26,7 +26,7 @@ const CONTENT_FIELDS = [
   "proposal_assistant_name", "proposal_voice_gender", "proposal_voice_accent",
   "content_assistant_name", "content_voice_gender", "content_voice_accent",
   "brand_primary_color", "brand_accent_color", "brand_font", "brand_style_note",
-  "brand_logo_dark_url", "brand_logo_light_url",
+  "brand_logo_dark_url", "brand_logo_white_url",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
   "stat_2_value", "stat_2_suffix", "stat_2_label",
   "stat_3_value", "stat_3_suffix", "stat_3_label",
@@ -78,7 +78,7 @@ async function loadContent() {
   // SharedAgentTools::getBrandInfo() falls back to server-side) so the admin
   // sees the real logo even before ever saving anything on this page.
   setBrandLogoPreview("dark", settings.brand_logo_dark_url || "/uploads/brand/logo-dark.png");
-  setBrandLogoPreview("light", settings.brand_logo_light_url || "/uploads/brand/logo-light.png");
+  setBrandLogoPreview("white", settings.brand_logo_white_url || "/uploads/brand/logo-white.png");
 
   await renderChatLiveStatus(settings);
 }
@@ -311,6 +311,6 @@ function wireHoursControls() {
   wireAgentVoicePreview("proposal", "Ledger", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("content", "Canvas", "This is how I'll sound when you talk to me in the admin console.");
   wireBrandLogoUpload("dark");
-  wireBrandLogoUpload("light");
+  wireBrandLogoUpload("white");
   wireHoursControls();
 })();
