@@ -13,7 +13,7 @@ class SettingsController
 {
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
-        'gemini_api_key', 'gemini_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'slack_webhook_url', 'makecom_webhook_url',
+        'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'slack_webhook_url', 'makecom_webhook_url',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'owner_whatsapp_number',
         'integration_api_key', 'notification_email',
         'google_client_id',
@@ -78,6 +78,7 @@ class SettingsController
         'beacon_assistant_name', 'beacon_voice_gender', 'beacon_voice_accent',
         'nurturer_assistant_name', 'nurturer_voice_gender', 'nurturer_voice_accent',
         'proposal_assistant_name', 'proposal_voice_gender', 'proposal_voice_accent',
+        'content_assistant_name', 'content_voice_gender', 'content_voice_accent',
         'stat_1_value', 'stat_1_suffix', 'stat_1_label',
         'stat_2_value', 'stat_2_suffix', 'stat_2_label',
         'stat_3_value', 'stat_3_suffix', 'stat_3_label',

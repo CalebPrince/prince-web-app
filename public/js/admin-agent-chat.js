@@ -4,6 +4,7 @@
     beacon: { label: "Beacon", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", accentKey: "beacon_voice_accent", fallbackName: "Beacon" },
     nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Nurturer" },
     proposal: { label: "Proposal", nameKey: "proposal_assistant_name", genderKey: "proposal_voice_gender", accentKey: "proposal_voice_accent", fallbackName: "Ledger" },
+    content: { label: "Content", nameKey: "content_assistant_name", genderKey: "content_voice_gender", accentKey: "content_voice_accent", fallbackName: "Canvas" },
   };
 
   const logEl = document.getElementById("agent-chat-log");
@@ -33,6 +34,9 @@
   const lisaChatsCard = document.getElementById("lisa-chats-card");
   const lisaChatsList = document.getElementById("lisa-chats-list");
   const lisaChatsEmpty = document.getElementById("lisa-chats-empty");
+  const contentDraftsCard = document.getElementById("content-drafts-card");
+  const contentDraftsList = document.getElementById("content-drafts-list");
+  const contentDraftsEmpty = document.getElementById("content-drafts-empty");
   const faceSlot = document.getElementById("agent-chat-face");
   const faceNameEl = document.getElementById("agent-chat-face-name");
 
@@ -155,6 +159,50 @@
     logEl.appendChild(bubble);
     logEl.scrollTop = logEl.scrollHeight;
     return bubble;
+  }
+
+  // Flyers the content agent generates this turn come back on res.images
+  // (the chat endpoint surfaces them separately from the text reply). Rendered
+  // as thumbnails with a "full size" link so Caleb can open/download the real
+  // file. Ephemeral: they aren't stored in the transcript, but the saved draft
+  // (and the file in /uploads) persists, so nothing is lost on reload.
+  function addImages(images) {
+    if (!Array.isArray(images) || !images.length) return;
+    const wrap = document.createElement("div");
+    wrap.className = "agent-bubble agent";
+    const grid = document.createElement("div");
+    grid.className = "agent-bubble-images";
+    images.forEach((img) => {
+      if (!img || !img.url) return;
+      const fig = document.createElement("div");
+      fig.className = "agent-bubble-image";
+      const a = document.createElement("a");
+      a.href = img.url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      const im = document.createElement("img");
+      im.src = img.url;
+      im.alt = img.label || "Generated flyer";
+      im.loading = "lazy";
+      a.appendChild(im);
+      const cap = document.createElement("div");
+      cap.className = "caption";
+      const label = document.createElement("span");
+      label.textContent = img.label || "Flyer";
+      const open = document.createElement("a");
+      open.href = img.url;
+      open.target = "_blank";
+      open.rel = "noopener";
+      open.textContent = "Full size";
+      cap.appendChild(label);
+      cap.appendChild(open);
+      fig.appendChild(a);
+      fig.appendChild(cap);
+      grid.appendChild(fig);
+    });
+    wrap.appendChild(grid);
+    logEl.appendChild(wrap);
+    logEl.scrollTop = logEl.scrollHeight;
   }
 
   // ---- conversation persistence (localStorage, per agent) ----
@@ -418,17 +466,85 @@
     }
   }
 
+  // ---- Content agent's "Recent content drafts" panel ----
+  // Reuses the existing admin list endpoints the Social Drafts and Blog pages
+  // already call, merged and trimmed to the most recent few client-side — same
+  // no-new-route approach as the Lisa and Proposal panels.
+  const CONTENT_DRAFTS_LIMIT = 6;
+
+  async function loadContentDrafts() {
+    try {
+      const [social, blog] = await Promise.all([
+        api.get("/api/v1/admin/social-drafts").catch(() => []),
+        api.get("/api/v1/admin/blog").catch(() => []),
+      ]);
+
+      const items = [];
+      (social || []).forEach((d) => items.push({ kind: "social", created: d.created_at, data: d }));
+      // Only drafts the agent could have staged are interesting here — the Blog
+      // page owns the full published archive — so surface unpublished posts.
+      (blog || []).filter((p) => !Number(p.is_published)).forEach((p) => items.push({ kind: "blog", created: p.created_at, data: p }));
+
+      items.sort((a, b) => new Date((b.created || "") + "Z") - new Date((a.created || "") + "Z"));
+      const recent = items.slice(0, CONTENT_DRAFTS_LIMIT);
+
+      contentDraftsList.innerHTML = "";
+      contentDraftsEmpty.classList.toggle("d-none", recent.length > 0);
+
+      recent.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "border rounded p-3 d-flex gap-3";
+        const when = item.created ? new Date(item.created + "Z").toLocaleString() : "";
+
+        let badge;
+        let title;
+        let snippet;
+        let imageUrl;
+        if (item.kind === "social") {
+          const d = item.data;
+          badge = '<span class="text-muted-custom">Social · ' + escapeHtml(d.status || "draft") + "</span>";
+          title = "Social post";
+          snippet = String(d.content || "");
+          imageUrl = d.image_url || "";
+        } else {
+          const p = item.data;
+          badge = '<span class="text-warning">Blog · unpublished</span>';
+          title = String(p.title || "Untitled");
+          snippet = String(p.excerpt || "");
+          imageUrl = p.cover_image_path || "";
+        }
+        if (snippet.length > 140) snippet = snippet.slice(0, 137) + "…";
+
+        const thumb = imageUrl
+          ? '<img src="' + escapeHtml(imageUrl) + '" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:.4rem;flex-shrink:0;">'
+          : "";
+        card.innerHTML =
+          thumb
+          + '<div class="flex-grow-1">'
+          + '<div class="d-flex justify-content-between small text-muted-custom mb-1"><span>' + escapeHtml(title) + "</span>" + badge + "</div>"
+          + '<div class="small mb-1">' + escapeHtml(snippet) + "</div>"
+          + '<div class="small text-muted-custom">' + escapeHtml(when) + "</div>"
+          + "</div>";
+        contentDraftsList.appendChild(card);
+      });
+    } catch (_) {
+      // Quiet failure — this panel is a convenience, not the primary flow.
+    }
+  }
+
   function updateLeadsPanelVisibility() {
     const isBeacon = activeAgent === "beacon";
     const isNurturer = activeAgent === "nurturer";
     const isProposal = activeAgent === "proposal";
     const isLisa = activeAgent === "lisa";
+    const isContent = activeAgent === "content";
     beaconLeadsCard.classList.toggle("d-none", !isBeacon);
     beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
     beaconSpendCard.classList.toggle("d-none", !isBeacon);
     nurturerLeadsCard.classList.toggle("d-none", !isNurturer);
     proposalAwaitingCard.classList.toggle("d-none", !isProposal);
     lisaChatsCard.classList.toggle("d-none", !isLisa);
+    contentDraftsCard.classList.toggle("d-none", !isContent);
     if (isBeacon) {
       loadBeaconLeads();
       loadBeaconSpend();
@@ -441,6 +557,9 @@
     }
     if (isLisa) {
       loadLisaChats();
+    }
+    if (isContent) {
+      loadContentDrafts();
     }
   }
 
@@ -510,8 +629,11 @@
     try {
       const res = await api.post("/api/v1/admin/agents/" + activeAgent + "/chat", { message: text, transcript });
       addBubble("agent", res.reply);
+      if (res.images) addImages(res.images);
       transcript.push({ role: "agent", text: res.reply });
       saveTranscript();
+      // A saved draft or flyer may have just landed — refresh the panel.
+      if (activeAgent === "content") loadContentDrafts();
       // A reply may have logged a new lead via the log_qualified_lead tool.
       if (activeAgent === "beacon") loadBeaconLeads();
     } catch (err) {
@@ -603,6 +725,8 @@
       '<i class="bi bi-envelope-heart me-1"></i>' + (agentSettings.nurturer_assistant_name || "Nurturer");
     document.getElementById("tab-proposal").innerHTML =
       '<i class="bi bi-file-earmark-check me-1"></i>' + (agentSettings.proposal_assistant_name || "Ledger");
+    document.getElementById("tab-content").innerHTML =
+      '<i class="bi bi-palette me-1"></i>' + (agentSettings.content_assistant_name || "Canvas");
     renderFace();
     resetConversation();
     updateLeadsPanelVisibility();

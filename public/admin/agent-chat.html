@@ -23,6 +23,11 @@
   .agent-bubble .speak-btn:hover, .agent-bubble .speak-btn.speaking { opacity: 1; }
   .mic-btn { border: 1px solid var(--border-color, rgba(127,127,127,.25)); background: transparent; border-radius: .5rem; padding: .4rem .6rem; }
   .mic-btn.listening { background: #dc3545; color: #fff; border-color: #dc3545; }
+  .agent-bubble-images { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+  .agent-bubble-image { max-width: 220px; }
+  .agent-bubble-image img { width: 100%; height: auto; border-radius: .5rem; border: 1px solid var(--border-color, rgba(127,127,127,.25)); display: block; }
+  .agent-bubble-image .caption { font-size: .72rem; opacity: .7; margin-top: .2rem; display: flex; justify-content: space-between; gap: .5rem; }
+  .agent-bubble-image .caption a { color: inherit; }
 </style>
 </head>
 <body>
@@ -86,7 +91,7 @@
         <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-mic"></i></div>
         <div>
           <h3 class="mb-0">Talk to Agents</h3>
-          <p class="text-muted-custom mb-0 small">Chat or speak directly with Lisa, Beacon, Nurturer, or Ledger — a live working conversation, separate from their automated pipelines.</p>
+          <p class="text-muted-custom mb-0 small">Chat or speak directly with Lisa, Beacon, Nurturer, Ledger, or Canvas — a live working conversation. Canvas can also draft blog/social posts and generate flyers for you.</p>
         </div>
       </div>
     </div>
@@ -96,6 +101,7 @@
       <button type="button" class="agent-tab" id="tab-beacon" data-agent="beacon"><i class="bi bi-binoculars me-1"></i>Beacon</button>
       <button type="button" class="agent-tab" id="tab-nurturer" data-agent="nurturer"><i class="bi bi-envelope-heart me-1"></i>Nurturer</button>
       <button type="button" class="agent-tab" id="tab-proposal" data-agent="proposal"><i class="bi bi-file-earmark-check me-1"></i>Proposal</button>
+      <button type="button" class="agent-tab" id="tab-content" data-agent="content"><i class="bi bi-palette me-1"></i>Content</button>
     </div>
 
     <div class="admin-card p-4">
@@ -177,6 +183,13 @@
       <div class="form-text mb-3">The latest live-chat sessions Lisa has fielded on the public site — the same threads on the <a href="/admin/chats.html">Chat Leads page</a>, surfaced here so you can see what she's been handling while you talk to her. A green badge means she captured contact details.</div>
       <div id="lisa-chats-empty" class="text-muted-custom small d-none">No visitor conversations yet — they'll show up here once someone chats with Lisa on the site.</div>
       <div id="lisa-chats-list" class="d-flex flex-column gap-3"></div>
+    </div>
+
+    <div class="admin-card p-4 mt-4 d-none" id="content-drafts-card">
+      <h5 class="mb-3"><i class="bi bi-collection me-2"></i>Recent content drafts</h5>
+      <div class="form-text mb-3">The latest drafts staged here — social posts land on the <a href="/admin/social-drafts.html">Social Drafts page</a> and blog posts as unpublished drafts on the <a href="/admin/blog.html">Blog page</a>. Nothing is published until you review and publish it yourself.</div>
+      <div id="content-drafts-empty" class="text-muted-custom small d-none">No drafts yet — ask Canvas to write a post or make a flyer and it'll show up here.</div>
+      <div id="content-drafts-list" class="d-flex flex-column gap-3"></div>
     </div>
 
     <div class="admin-card p-4 mt-4 d-none" id="proposal-awaiting-card">
