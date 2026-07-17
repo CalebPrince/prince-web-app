@@ -221,7 +221,13 @@ class ContentAgentController
         $groundedDescription = $description . "\n\nBrand: primary color {$brand['primary_color']}, accent color "
             . "{$brand['accent_color']}, typography style {$brand['font']}. {$brand['style_note']}";
 
-        $image = AiImage::generateFlyer($groundedDescription, $spec['width'], $spec['height'], 60, $logoPath);
+        // Real surface color (public/css/app.css theme --bg), not the ink/text
+        // colors above — used only to pad AiImage::fitToPng()'s letterbox on
+        // an aspect-ratio mismatch too large to safely crop, so that padding
+        // blends into a matching solid background instead of standing out.
+        $surfaceColor = $background === 'light' ? '#fbfbfa' : '#0b0c0e';
+
+        $image = AiImage::generateFlyer($groundedDescription, $spec['width'], $spec['height'], 60, $logoPath, $surfaceColor);
         if ($image === null) {
             return ['error' => 'Image generation failed — the image provider may be unconfigured or unreachable. Tell Caleb you couldn\'t create the flyer right now.'];
         }

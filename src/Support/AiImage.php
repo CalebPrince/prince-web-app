@@ -19,6 +19,14 @@ namespace App\Support;
  */
 class AiImage
 {
+    // Above this, cover-cropping to the exact target size would trim more
+    // than this fraction off the overflowing axis — enough to plausibly
+    // slice through a headline near that edge (seen live even after asking
+    // the model for a safe margin, since composition instructions aren't
+    // reliably followed). Below it, a full-bleed cover-crop looks better
+    // than padding for a mismatch this small, and is safe to trim.
+    private const MAX_SAFE_CROP_FRACTION = 0.12;
+
     /**
      * Generate a flyer/graphic and save it under public/uploads, returning its
      * web path. Returns null on any failure (no key, provider error, safety
@@ -29,9 +37,15 @@ class AiImage
      * actual logo file instead of inventing a mark from a text description —
      * see callGemini(). It's read straight off disk, never re-encoded here.
      *
+     * $backgroundColor (hex) fills any padding fitToPng() needs when the
+     * model's actual output ratio is too far off the target to safely
+     * cover-crop — pass whichever surface color the flyer's own background
+     * is meant to be so the padding blends in rather than reading as an
+     * error bar.
+     *
      * @return array{url:string,width:int,height:int}|null
      */
-    public static function generateFlyer(string $prompt, int $width, int $height, int $timeout = 60, ?string $logoPath = null): ?array
+    public static function generateFlyer(string $prompt, int $width, int $height, int $timeout = 60, ?string $logoPath = null, string $backgroundColor = '#0b0c0e'): ?array
     {
         $apiKey = Settings::get('gemini_api_key');
         if (empty($apiKey) || !function_exists('curl_init') || !function_exists('imagecreatefromstring')) {
@@ -43,7 +57,7 @@ class AiImage
             return null;
         }
 
-        $png = self::coverCropToPng($bytes, $width, $height);
+        $png = self::fitToPng($bytes, $width, $height, $backgroundColor);
         if ($png === null) {
             return null;
         }
@@ -174,11 +188,17 @@ class AiImage
     }
 
     /**
-     * Scale the source to fully cover the target box, center-crop the overflow,
-     * and re-encode as PNG at exactly {tw}x{th}. Returns null if the bytes
-     * aren't a decodable raster image.
+     * Fit the source into exactly {tw}x{th} and re-encode as PNG. When the
+     * model's actual aspect ratio is close enough to the target, this covers
+     * the frame edge-to-edge and center-crops the small overflow (the common
+     * case — aspectRatioHint already steers Gemini close). When it isn't
+     * close, cropping that much risks slicing through a headline near the
+     * overflowing edge, so this switches to a contain-fit instead — the
+     * whole image visible, nothing cropped — and pads the leftover margin
+     * with $backgroundColor. Returns null if the bytes aren't a decodable
+     * raster image.
      */
-    private static function coverCropToPng(string $bytes, int $tw, int $th): ?string
+    private static function fitToPng(string $bytes, int $tw, int $th, string $backgroundColor): ?string
     {
         $src = @imagecreatefromstring($bytes);
         if ($src === false) {
@@ -191,13 +211,24 @@ class AiImage
             return null;
         }
 
-        $scale = max($tw / $sw, $th / $sh);
-        $rw = (int) ceil($sw * $scale);
-        $rh = (int) ceil($sh * $scale);
-        $dx = (int) (($tw - $rw) / 2);
-        $dy = (int) (($th - $rh) / 2);
+        $coverScale = max($tw / $sw, $th / $sh);
+        $coverW = $sw * $coverScale;
+        $coverH = $sh * $coverScale;
+        // How much a cover-crop would have to trim off whichever axis
+        // overflows, as a fraction of that axis — small enough here means
+        // safe to crop; otherwise fall back to an uncropped contain-fit.
+        $cropFraction = max(($coverW - $tw) / $tw, ($coverH - $th) / $th);
+        $scale = $cropFraction <= self::MAX_SAFE_CROP_FRACTION ? $coverScale : min($tw / $sw, $th / $sh);
+
+        $rw = (int) round($sw * $scale);
+        $rh = (int) round($sh * $scale);
+        $dx = (int) round(($tw - $rw) / 2);
+        $dy = (int) round(($th - $rh) / 2);
 
         $dst = imagecreatetruecolor($tw, $th);
+        [$r, $g, $b] = self::hexToRgb($backgroundColor);
+        $bg = imagecolorallocate($dst, $r, $g, $b);
+        imagefill($dst, 0, 0, $bg);
         imagecopyresampled($dst, $src, $dx, $dy, 0, 0, $rw, $rh, $sw, $sh);
 
         ob_start();
@@ -208,5 +239,18 @@ class AiImage
         imagedestroy($dst);
 
         return $png !== false && $png !== '' ? $png : null;
+    }
+
+    /** @return array{0:int,1:int,2:int} RGB, falling back to near-black on anything unparseable. */
+    private static function hexToRgb(string $hex): array
+    {
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) === 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if (!preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
+            return [11, 12, 14];
+        }
+        return [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
     }
 }
