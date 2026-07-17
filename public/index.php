@@ -226,6 +226,7 @@ $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
 $router->get('/api/v1/admin/beacon-spend', [BeaconController::class, 'adminSpend']);
+$router->get('/api/v1/admin/nurturer-new-leads', [NurturerController::class, 'adminNewLeads']);
 $router->get('/api/v1/admin/drip/steps', [DripController::class, 'steps']);
 $router->post('/api/v1/admin/drip/steps', [DripController::class, 'storeStep']);
 $router->put('/api/v1/admin/drip/steps/{id}', [DripController::class, 'updateStep']);

@@ -135,6 +135,18 @@ class NurturerController
         Response::json(['reply' => $result['reply']]);
     }
 
+    /**
+     * GET /api/v1/admin/nurturer-new-leads — same data list_new_leads hands
+     * Jason mid-chat, exposed directly so the "Talk to Agents" page can show
+     * it as a standing panel (mirrors Beacon's /admin/beacon-leads) instead
+     * of only surfacing when Caleb happens to ask her.
+     */
+    public static function adminNewLeads(): void
+    {
+        AuthMiddleware::requireAuth();
+        Response::json(self::toolListNewLeads(Database::get()));
+    }
+
     private static function draftToolDeclarations(): array
     {
         return [

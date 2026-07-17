@@ -22,6 +22,9 @@
   const beaconDiscoverySave = document.getElementById("beacon-discovery-save");
   const beaconSpendCard = document.getElementById("beacon-spend-card");
   const beaconSpendBody = document.getElementById("beacon-spend-body");
+  const nurturerLeadsCard = document.getElementById("nurturer-leads-card");
+  const nurturerLeadsList = document.getElementById("nurturer-leads-list");
+  const nurturerLeadsEmpty = document.getElementById("nurturer-leads-empty");
   const faceSlot = document.getElementById("agent-chat-face");
   const faceNameEl = document.getElementById("agent-chat-face-name");
 
@@ -259,14 +262,60 @@
     }
   }
 
+  // ---- Nurturer's "New & unfollowed-up leads" panel ----
+  async function loadNurturerNewLeads() {
+    try {
+      const data = await api.get("/api/v1/admin/nurturer-new-leads");
+      nurturerLeadsList.innerHTML = "";
+
+      const ready = data.awaiting_send || [];
+      const readyIds = new Set(ready.map((e) => e.id));
+      // Auto-enrolled but never opted into AI follow-up — the exact leads
+      // that used to pile up invisibly (nurturer_enabled defaults off).
+      const needsOptIn = (data.recent_enrollments || []).filter(
+        (e) => !e.nurturer_enabled && !readyIds.has(e.id)
+      );
+
+      nurturerLeadsEmpty.classList.toggle("d-none", ready.length + needsOptIn.length > 0);
+
+      const renderRow = (lead, badge, badgeClass) => {
+        const card = document.createElement("div");
+        card.className = "border rounded p-3";
+        const who = escapeHtml(lead.name || lead.email);
+        const industry = lead.lead_industry ? " · " + escapeHtml(lead.lead_industry) : "";
+        const lastAction = lead.last_action
+          ? '<div class="small mb-1">' + escapeHtml(lead.last_action) + "</div>"
+          : "";
+        card.innerHTML =
+          '<div class="d-flex justify-content-between small text-muted-custom mb-1">'
+          + '<span>' + who + " · " + escapeHtml(lead.email) + industry + "</span>"
+          + '<span class="' + badgeClass + '">' + badge + "</span>"
+          + "</div>"
+          + lastAction
+          + '<div class="small text-muted-custom">Enrolled ' + new Date(lead.enrolled_at + "Z").toLocaleDateString() + "</div>";
+        nurturerLeadsList.appendChild(card);
+      };
+
+      ready.forEach((lead) => renderRow(lead, "Ready for follow-up", "text-success"));
+      needsOptIn.forEach((lead) => renderRow(lead, "Needs opt-in on Drip", "text-warning"));
+    } catch (_) {
+      // Quiet failure — this panel is a convenience, not the primary flow.
+    }
+  }
+
   function updateLeadsPanelVisibility() {
     const isBeacon = activeAgent === "beacon";
+    const isNurturer = activeAgent === "nurturer";
     beaconLeadsCard.classList.toggle("d-none", !isBeacon);
     beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
     beaconSpendCard.classList.toggle("d-none", !isBeacon);
+    nurturerLeadsCard.classList.toggle("d-none", !isNurturer);
     if (isBeacon) {
       loadBeaconLeads();
       loadBeaconSpend();
+    }
+    if (isNurturer) {
+      loadNurturerNewLeads();
     }
   }
 
