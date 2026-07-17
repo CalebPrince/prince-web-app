@@ -55,6 +55,72 @@ class ContactsController
         ]);
     }
 
+    /**
+     * GET /api/v1/admin/contacts/pipeline-summary — revenue and pipeline
+     * totals computed live from proposals/payments. Read-only, no new
+     * tables, same principle as the rest of this controller.
+     */
+    public static function pipelineSummary(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $currency = Settings::get('pricing_currency') ?: 'GHS';
+
+        // Open pipeline value: sent-but-undecided proposals — the one place
+        // a real number exists per opportunity. inquiries.budget is
+        // free-text ("~$5k", "flexible"), not something safe to sum.
+        $openPipeline = (int) $pdo->query(
+            "SELECT COALESCE(SUM(total_amount), 0) FROM proposals WHERE status = 'sent'"
+        )->fetchColumn();
+
+        $accepted = (int) $pdo->query("SELECT COUNT(*) FROM proposals WHERE status = 'accepted'")->fetchColumn();
+        $declined = (int) $pdo->query("SELECT COUNT(*) FROM proposals WHERE status = 'declined'")->fetchColumn();
+        $decided = $accepted + $declined;
+        $winRate = $decided > 0 ? round($accepted / $decided, 4) : null;
+
+        $revenueAllTime = (int) $pdo->query(
+            "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success'"
+        )->fetchColumn();
+        $revenueThisMonth = (int) $pdo->query(
+            "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success' "
+            . "AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')"
+        )->fetchColumn();
+
+        // Last 12 calendar months, oldest first, zero-filled for any month
+        // with no revenue so the chart doesn't silently skip a quiet month.
+        $byMonthRaw = [];
+        foreach ($pdo->query(
+            "SELECT strftime('%Y-%m', created_at) AS month, SUM(amount) AS amount FROM payments "
+            . "WHERE status = 'success' AND created_at >= datetime('now', '-12 months') GROUP BY month"
+        ) as $r) {
+            $byMonthRaw[$r['month']] = (int) $r['amount'];
+        }
+        $revenueByMonth = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $month = date('Y-m', strtotime("-{$i} months"));
+            $revenueByMonth[] = ['month' => $month, 'amount' => $byMonthRaw[$month] ?? 0];
+        }
+
+        $bySourceRaw = $pdo->query(
+            "SELECT source, SUM(amount) AS amount FROM payments WHERE status = 'success' GROUP BY source"
+        )->fetchAll(\PDO::FETCH_KEY_PAIR);
+
+        Response::json([
+            'currency' => $currency,
+            'open_pipeline_value' => $openPipeline,
+            'win_rate' => $winRate,
+            'proposals_accepted' => $accepted,
+            'proposals_declined' => $declined,
+            'revenue_this_month' => $revenueThisMonth,
+            'revenue_all_time' => $revenueAllTime,
+            'revenue_by_month' => $revenueByMonth,
+            'revenue_by_source' => [
+                ['source' => 'tier_checkout', 'label' => 'Starter tier checkout', 'amount' => (int) ($bySourceRaw['tier_checkout'] ?? 0)],
+                ['source' => 'payment_link', 'label' => 'Custom-quoted (payment links)', 'amount' => (int) ($bySourceRaw['payment_link'] ?? 0)],
+            ],
+        ]);
+    }
+
     private static function normalizeEmail(string $email): string
     {
         return strtolower(trim(rawurldecode($email)));

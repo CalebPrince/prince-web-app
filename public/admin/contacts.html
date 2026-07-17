@@ -90,6 +90,50 @@
       </div>
     </div>
 
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-lg-3">
+        <div class="admin-card p-3">
+          <div class="small text-muted-custom">Open pipeline value</div>
+          <div class="h4 mb-0" id="stat-pipeline-value">—</div>
+          <div class="small text-muted-custom">Sent proposals, not yet decided</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="admin-card p-3">
+          <div class="small text-muted-custom">Win rate</div>
+          <div class="h4 mb-0" id="stat-win-rate">—</div>
+          <div class="small text-muted-custom" id="stat-win-rate-detail">—</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="admin-card p-3">
+          <div class="small text-muted-custom">Revenue this month</div>
+          <div class="h4 mb-0" id="stat-revenue-month">—</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="admin-card p-3">
+          <div class="small text-muted-custom">Revenue, all time</div>
+          <div class="h4 mb-0" id="stat-revenue-total">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-lg-8">
+        <div class="admin-card p-3">
+          <div class="small text-muted-custom mb-2">Revenue by month (last 12 months)</div>
+          <canvas id="revenue-chart" height="90"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="admin-card p-3">
+          <div class="small text-muted-custom mb-2">Revenue by source</div>
+          <div id="revenue-by-source"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="admin-card p-3 mb-3">
       <input type="text" class="form-control" id="contacts-search" placeholder="Search by name or email…">
     </div>
@@ -140,6 +184,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>
 <script src="/js/admin-auth.js"></script>

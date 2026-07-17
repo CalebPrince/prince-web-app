@@ -37,6 +37,62 @@ function formatWhen(at) {
   return new Date(at.replace(" ", "T") + "Z").toLocaleString();
 }
 
+let revenueChart = null;
+
+function monthLabel(ym) {
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: "short", year: "2-digit" });
+}
+
+async function loadPipelineSummary() {
+  let data;
+  try {
+    data = await api.get("/api/v1/admin/contacts/pipeline-summary");
+  } catch (err) {
+    return; // Stats are a bonus on top of the list — a failure here shouldn't block the page.
+  }
+
+  document.getElementById("stat-pipeline-value").textContent = formatMoney(data.open_pipeline_value, data.currency);
+  document.getElementById("stat-revenue-month").textContent = formatMoney(data.revenue_this_month, data.currency);
+  document.getElementById("stat-revenue-total").textContent = formatMoney(data.revenue_all_time, data.currency);
+
+  if (data.win_rate === null) {
+    document.getElementById("stat-win-rate").textContent = "—";
+    document.getElementById("stat-win-rate-detail").textContent = "No decided proposals yet";
+  } else {
+    document.getElementById("stat-win-rate").textContent = Math.round(data.win_rate * 100) + "%";
+    document.getElementById("stat-win-rate-detail").textContent =
+      data.proposals_accepted + " accepted · " + data.proposals_declined + " declined";
+  }
+
+  const labels = data.revenue_by_month.map((m) => monthLabel(m.month));
+  const amounts = data.revenue_by_month.map((m) => Number(m.amount) / 100);
+  const ctx = document.getElementById("revenue-chart").getContext("2d");
+  if (revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{ label: "Revenue (" + data.currency + ")", data: amounts, backgroundColor: "rgba(79, 70, 229, 0.6)" }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } },
+    },
+  });
+
+  const total = data.revenue_by_source.reduce((sum, s) => sum + s.amount, 0);
+  const bySourceEl = document.getElementById("revenue-by-source");
+  bySourceEl.innerHTML = data.revenue_by_source.map((s) => {
+    const pct = total > 0 ? Math.round((s.amount / total) * 100) : 0;
+    return `<div class="mb-2">` +
+      `<div class="d-flex justify-content-between small mb-1"><span>${escapeHtml(s.label)}</span><span>${formatMoney(s.amount, data.currency)}</span></div>` +
+      `<div class="progress" style="height: 6px;"><div class="progress-bar" role="progressbar" style="width: ${pct}%"></div></div>` +
+      `</div>`;
+  }).join("") || '<div class="text-muted-custom small">No revenue yet.</div>';
+}
+
 function renderList(contacts) {
   const tbody = document.getElementById("contacts-list");
   const empty = document.getElementById("contacts-empty");
@@ -187,4 +243,5 @@ async function loadContacts() {
   wireLogout();
   document.getElementById("contacts-search").addEventListener("input", applyFilter);
   await loadContacts();
+  await loadPipelineSummary();
 })();
