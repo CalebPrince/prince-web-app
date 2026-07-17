@@ -5,15 +5,42 @@
 
 # Baseline security headers. HSTS is safe to send unconditionally because
 # .dev is an HSTS-preloaded TLD — the site is HTTPS-only by definition.
-# Deliberately no Content-Security-Policy yet: the pages use inline scripts
-# and load Bootstrap/highlight.js/Paystack from CDNs, so a blanket policy
-# would break checkout — adding one needs careful per-page work.
 <IfModule mod_headers.c>
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+  # Content-Security-Policy — shipped in Report-Only mode first (logs
+  # violations to the browser console, blocks nothing) since this covers
+  # real revenue paths (Paystack checkout) that need verifying against
+  # actual traffic before enforcing. Once a browsing pass through the live
+  # site shows no console CSP violations, flip the header name below from
+  # Content-Security-Policy-Report-Only to Content-Security-Policy — the
+  # policy value itself does not need to change.
+  #
+  # 'unsafe-inline' on script-src/style-src is a deliberate concession, not
+  # an oversight: every page carries at least a small inline theme-detection
+  # script (and ~20 pages have larger inline logic), and this is a
+  # zero-build static-HTML site with no per-request templating to inject a
+  # nonce into — a hash-based policy would need updating by hand on every
+  # inline-script edit across dozens of files, which fails silently and
+  # quietly breaks the page the moment someone forgets. The origin
+  # allow-list still blocks the more common real-world attack (loading a
+  # malicious script/exfiltrating data to an attacker-controlled domain),
+  # just not an inline-script injection via some other vulnerability.
+  #
+  # Origins: cdn.jsdelivr.net (Bootstrap, Bootstrap Icons, Chart.js),
+  # cdnjs.cloudflare.com (highlight.js), js.paystack.co + api.paystack.co +
+  # standard.paystack.co + checkout.paystack.com (Paystack SDK/checkout),
+  # accounts.google.com (admin Google Sign-In), fonts.googleapis.com +
+  # fonts.gstatic.com (Google Fonts, admin only), api.github.com (About
+  # page's live GitHub activity feed, browser-side fetch), youtube-nocookie
+  # .com + player.vimeo.com (admin-configured hero/demo video embeds — see
+  # public/js/content.js; only these two providers are documented as
+  # supported, matching README's "YouTube, Vimeo, or direct .mp4/.webm").
+  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.paystack.co https://accounts.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; media-src 'self'; connect-src 'self' https://api.github.com https://accounts.google.com https://api.paystack.co https://standard.paystack.co; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://accounts.google.com https://checkout.paystack.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
 </IfModule>
 
 RewriteEngine On
