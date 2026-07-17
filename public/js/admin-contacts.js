@@ -73,9 +73,13 @@ async function openContact(c) {
   document.getElementById("contact-modal-meta").textContent = c.email + (c.phone ? " · " + c.phone : "");
   const loading = document.getElementById("contact-modal-loading");
   const wrap = document.getElementById("contact-modal-timeline");
+  const actions = document.getElementById("contact-modal-actions");
+  const actionMsg = document.getElementById("contact-modal-action-msg");
   loading.classList.remove("d-none");
   wrap.classList.add("d-none");
   wrap.innerHTML = "";
+  actions.classList.add("d-none");
+  actionMsg.classList.add("d-none");
 
   if (!contactModal) contactModal = new bootstrap.Modal(document.getElementById("contact-modal"));
   contactModal.show();
@@ -83,11 +87,67 @@ async function openContact(c) {
   try {
     const res = await api.get("/api/v1/admin/contacts/" + encodeURIComponent(c.email));
     renderTimeline(res.timeline);
+    wireQuickActions(c, res.timeline);
     loading.classList.add("d-none");
     wrap.classList.remove("d-none");
+    actions.classList.remove("d-none");
   } catch (err) {
     loading.textContent = err.message;
   }
+}
+
+// Quick actions: the point is to act on a contact without leaving this
+// modal to hunt down the right page first. Starting a proposal is the one
+// exception — proposals need real scope/milestone input a click can't
+// supply, so this just deep-links into the Proposals page with as much
+// prefilled as possible (a linked inquiry if one exists, otherwise just
+// name/email) rather than trying to replicate that form here.
+function wireQuickActions(c, timeline) {
+  const msgEl = document.getElementById("contact-modal-action-msg");
+  const showActionMsg = (text, ok) => {
+    msgEl.className = "alert py-2 small " + (ok ? "alert-success" : "alert-danger");
+    msgEl.textContent = text;
+    msgEl.classList.remove("d-none");
+  };
+
+  document.getElementById("qa-proposal-btn").onclick = () => {
+    const inquiry = timeline.find((item) => item.type === "inquiry");
+    const params = new URLSearchParams();
+    if (inquiry && inquiry.data && inquiry.data.id) {
+      params.set("inquiry_id", inquiry.data.id);
+    } else {
+      params.set("client_name", c.name || "");
+      params.set("client_email", c.email);
+    }
+    window.open("/admin/proposals.html?" + params.toString(), "_blank");
+  };
+
+  document.getElementById("qa-invite-btn").onclick = async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      const res = await api.post("/api/v1/admin/clients/invite", { name: c.name || c.email, email: c.email });
+      showActionMsg(
+        res.email_sent ? "Portal invite sent to " + c.email + "." : "Portal invite created, but the email could not be confirmed as delivered.",
+        true
+      );
+    } catch (err) {
+      showActionMsg(err.message, false);
+    }
+    btn.disabled = false;
+  };
+
+  document.getElementById("qa-drip-btn").onclick = async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      await api.post("/api/v1/admin/drip/enrollments", { email: c.email, name: c.name || "" });
+      showActionMsg("Enrolled " + c.email + " in the drip sequence.", true);
+    } catch (err) {
+      showActionMsg(err.message, false);
+    }
+    btn.disabled = false;
+  };
 }
 
 function renderTimeline(items) {

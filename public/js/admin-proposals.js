@@ -372,11 +372,22 @@ function showProposalListError(message) {
   } catch (err) {
     showProposalListError(`Could not load proposals: ${err.message}`);
   }
-  const inquiryId = new URLSearchParams(window.location.search).get('inquiry_id');
+  // Deep-linked from elsewhere (e.g. a Contact's Quick Actions): either a
+  // real quote request to prefill from, or — when a contact has no linked
+  // inquiry — just their name/email so the form still opens ready to go.
+  const qs = new URLSearchParams(window.location.search);
+  const inquiryId = qs.get('inquiry_id');
+  const clientName = qs.get('client_name');
+  const clientEmail = qs.get('client_email');
   if (inquiryId) {
     resetProposalForm();
     document.getElementById('inquiry-id').value = inquiryId;
     prefillFromQuote(inquiryId);
+    proposalModal.show();
+  } else if (clientName || clientEmail) {
+    resetProposalForm();
+    document.getElementById('client-name').value = clientName || '';
+    document.getElementById('client-email').value = clientEmail || '';
     proposalModal.show();
   }
 })();

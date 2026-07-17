@@ -25,7 +25,12 @@ class Mailer
             $headers[] = 'Reply-To: ' . $replyTo;
         }
 
-        return mail($to, $subject, $body, implode("\r\n", $headers));
+        // @-suppressed: mail() raises a PHP Warning (not just a false return)
+        // when it can't reach a mail server at all — printed straight into
+        // whatever's mid-render, which corrupts a JSON API response with
+        // leaked HTML before the caller ever sees the boolean result. The
+        // false return still propagates untouched for real error handling.
+        return @mail($to, $subject, $body, implode("\r\n", $headers));
     }
 
     public static function sendHtml(string $to, string $subject, string $html, string $text, ?string $replyTo = null): bool
@@ -53,6 +58,8 @@ class Mailer
             . $html . "\r\n\r\n"
             . "--{$boundary}--";
 
-        return mail($to, $subject, $body, implode("\r\n", $headers));
+        // See send()'s matching comment — @-suppressed so a mail-server
+        // failure can't leak a raw PHP Warning into a JSON API response.
+        return @mail($to, $subject, $body, implode("\r\n", $headers));
     }
 }
