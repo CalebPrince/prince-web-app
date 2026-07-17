@@ -285,7 +285,10 @@ class AiAgentEngine
             // can 402 an account that has real credits, just not 64k-tokens'
             // worth. Chat replies are short per the system prompt, so this
             // mirrors Gemini's maxOutputTokens cap above at no real cost.
-            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 2048];
+            // Kept well under 2048 (also seen live: a 402 for lacking the last
+            // ~80 tokens of that budget on a low/near-zero balance) since a
+            // real chat reply never needs anywhere close to it.
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 1024];
             // See chatWithGemini — force text on the last round so a model
             // wanting a second sequential tool call can't run out the clock
             // on functionCalls and never produce a reply.
