@@ -23,6 +23,8 @@
   .agent-bubble .speak-btn:hover, .agent-bubble .speak-btn.speaking { opacity: 1; }
   .mic-btn { border: 1px solid var(--border-color, rgba(127,127,127,.25)); background: transparent; border-radius: .5rem; padding: .4rem .6rem; }
   .mic-btn.listening { background: #dc3545; color: #fff; border-color: #dc3545; }
+  #agent-autospeak-btn { opacity: .6; }
+  #agent-autospeak-btn.on { opacity: 1; color: var(--section-content); }
   .agent-bubble-images { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
   .agent-bubble-image { max-width: 220px; }
   .agent-bubble-image img { width: 100%; height: auto; border-radius: .5rem; border: 1px solid var(--border-color, rgba(127,127,127,.25)); display: block; }
@@ -108,10 +110,11 @@
     <div class="admin-card p-4">
       <div class="d-flex align-items-center gap-3 mb-3">
         <div id="agent-chat-face"></div>
-        <div class="lh-sm">
+        <div class="lh-sm flex-grow-1">
           <strong id="agent-chat-face-name" class="d-block"></strong>
           <span class="small text-muted-custom">Live conversation</span>
         </div>
+        <button type="button" class="btn btn-sm btn-link text-decoration-none" id="agent-autospeak-btn" title="Auto read-aloud" style="display:none;"><i class="bi bi-volume-mute"></i></button>
       </div>
       <div id="agent-chat-log" class="agent-chat-log mb-3"></div>
       <div id="agent-chat-msg" class="alert alert-danger py-2 small d-none"></div>

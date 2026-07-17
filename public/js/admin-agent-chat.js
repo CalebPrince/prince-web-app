@@ -13,6 +13,7 @@
   const inputEl = document.getElementById("agent-chat-input");
   const sendBtn = document.getElementById("agent-chat-send");
   const micBtn = document.getElementById("agent-mic-btn");
+  const autoSpeakBtn = document.getElementById("agent-autospeak-btn");
   const beaconLeadsCard = document.getElementById("beacon-leads-card");
   const beaconLeadsList = document.getElementById("beacon-leads-list");
   const beaconLeadsEmpty = document.getElementById("beacon-leads-empty");
@@ -44,6 +45,11 @@
   let transcript = []; // [{role: 'user'|'agent', text}]
   let agentSettings = {}; // populated from /api/v1/content
   let face = null; // current agent's animated avatar (public/js/agent-face.js)
+  // Read every agent reply aloud automatically as soon as it lands (mirrors
+  // the header toggle in public/js/ai-widget.js) — one shared preference
+  // across every agent tab in this console, remembered for the browser
+  // session only, same as the public widget's chat_autospeak.
+  let autoSpeak = sessionStorage.getItem("agent_chat_autospeak") === "1";
 
   // Swaps the header avatar for the active agent — recreated rather than
   // relabeled since each agent has its own icon.
@@ -132,6 +138,29 @@
     u.onend = () => setSpeaking(btn, false);
     u.onerror = () => setSpeaking(btn, false);
     synth.speak(u);
+  }
+
+  // ---- auto read-aloud toggle (mirrors public/js/ai-widget.js's header toggle) ----
+  function renderAutoSpeakButton() {
+    if (!autoSpeakBtn) return;
+    autoSpeakBtn.innerHTML = autoSpeak ? '<i class="bi bi-volume-up-fill"></i>' : '<i class="bi bi-volume-mute"></i>';
+    autoSpeakBtn.classList.toggle("on", autoSpeak);
+    autoSpeakBtn.title = autoSpeak ? "Auto read-aloud: on" : "Auto read-aloud: off";
+    autoSpeakBtn.setAttribute("aria-label", autoSpeakBtn.title);
+    autoSpeakBtn.setAttribute("aria-pressed", autoSpeak ? "true" : "false");
+  }
+
+  if (autoSpeakBtn) {
+    if ("speechSynthesis" in window) {
+      autoSpeakBtn.style.display = "";
+      renderAutoSpeakButton();
+      autoSpeakBtn.addEventListener("click", () => {
+        autoSpeak = !autoSpeak;
+        sessionStorage.setItem("agent_chat_autospeak", autoSpeak ? "1" : "0");
+        renderAutoSpeakButton();
+        if (!autoSpeak && window.speechSynthesis) window.speechSynthesis.cancel();
+      });
+    }
   }
 
   // ---- chat log rendering ----
@@ -603,7 +632,11 @@
 
     try {
       const res = await api.post("/api/v1/admin/agents/" + activeAgent + "/chat", { message: text, transcript });
-      addBubble("agent", res.reply);
+      const bubble = addBubble("agent", res.reply);
+      if (autoSpeak) {
+        const btn = bubble.querySelector(".speak-btn");
+        if (btn) speak(res.reply, btn);
+      }
       if (res.images) addImages(res.images);
       transcript.push({ role: "agent", text: res.reply });
       saveTranscript();
