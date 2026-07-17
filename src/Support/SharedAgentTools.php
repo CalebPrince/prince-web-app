@@ -23,7 +23,8 @@ class SharedAgentTools
      * themselves. Every place this runs (chat bubbles, drafted emails,
      * proposal text, blog/social drafts) displays plain text, not rendered
      * Markdown, so a literal "**" or a "- " at a line start would otherwise
-     * show up exactly as typed instead of doing anything.
+     * show up exactly as typed instead of doing anything. Also normalizes
+     * away the em/en dash, a distinctly "AI-written" tic in plain prose.
      */
     public static function stripMarkdown(string $text): string
     {
@@ -56,6 +57,19 @@ class SharedAgentTools
         $text = preg_replace('/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/s', '$1', $text);
         // Any leftover stray markers the pairs above didn't catch.
         $text = str_replace(['**', '__'], '', $text);
+        // Em dash / en dash used as a clause separator -> comma (with normal
+        // spacing), so the sentence still reads naturally instead of running
+        // two words together or leaving a bare "-" mid-sentence. The /u
+        // modifier is required here — without it PCRE treats the multi-byte
+        // UTF-8 dash as separate bytes and can match (and replace) it more
+        // than once.
+        $text = preg_replace('/[ \t]*[—–][ \t]*/u', ', ', $text);
+        // A comma the dash-replacement just introduced right before other
+        // punctuation (e.g. "word, ." or "word, ,") reads as a typo.
+        $text = preg_replace('/,\s*([.,!?;:])/', '$1', $text);
+        // Same, for a dash that landed at the very end of the text with
+        // nothing after it to justify a trailing comma.
+        $text = preg_replace('/,[ \t]*$/', '', $text);
         // List-marker stripping can leave doubled-up blank lines behind.
         return preg_replace('/\n{3,}/', "\n\n", (string) $text);
     }
