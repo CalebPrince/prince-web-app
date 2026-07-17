@@ -590,15 +590,18 @@ storage/
     no Python — re-run them after editing `blog_posts_data.php` or the brand
     imagery, same cadence as `generate_blog_covers.php` and
     `seed_blog_posts.php`.
-37. **Beacon & Nurturer growth agents** (`/admin/agent-chat.html`): two AI
-    agents that run through `AiAgentEngine`, so both ground themselves in real
-    facts via `get_site_info`/`search_content` (shared with Lisa through
-    `SharedAgentTools`) rather than inventing them. Each has two entry points:
-    a `draft()` HTTP endpoint for external automation (Bearer-authed on
-    `integration_api_key`, like `IntegrationController`) and a `chat()` mode
-    for talking to them directly from the admin page (session-authed) — a
-    live working conversation, not the automated pipeline, so it drops the
-    rigid JSON contract and adds tools of its own: Beacon's chat gets
+37. **Beacon, Nurturer & Ledger growth agents** (`/admin/agent-chat.html`):
+    three AI agents that run through `AiAgentEngine`, so all three ground
+    themselves in real facts via `get_site_info`/`search_content` (shared with
+    Lisa through `SharedAgentTools`) rather than inventing them. Beacon and
+    Nurturer each have two entry points: a `draft()` HTTP endpoint for
+    external automation (Bearer-authed on `integration_api_key`, like
+    `IntegrationController`) and a `chat()` mode for talking to them directly
+    from the admin page (session-authed). Ledger skips the Bearer-authed
+    `draft()` entirely — a proposal always starts from an admin action, never
+    external automation — in favor of an admin-session-authed `generate()`
+    plus the same `chat()` pattern. Every `chat()` drops the rigid JSON
+    contract in favor of tools of its own: Beacon's chat gets
     `log_qualified_lead`, so a post judged worth a reply mid-conversation is
     saved the same way a `qualified: true` draft() result is (`source` on
     `beacon_social_leads` distinguishes `chat`/`draft`/`cron`); Nurturer's
@@ -606,10 +609,19 @@ storage/
     record by name or email — industry, last action, nurturer send history,
     audit findings, pitch status — so a draft grounds in what's actually on
     file instead of Caleb retyping it) and `check_availability` (Lisa's real
-    bookable slots, for talking through a Sequence 3 close). The admin console
-    shows the same animated `agent-face.js` avatar Lisa's widget uses (a
-    circular avatar per agent — Beacon a radar/broadcast mark, Nurturer a mail
-    icon) that thinks while a reply is pending and breathes while a reply is
+    bookable slots, for talking through a Sequence 3 close); Ledger's chat
+    gets `find_inquiry` (a real `project_request` by name/email),
+    `find_proposal` (an existing proposal's status and payment progress), and
+    `draft_proposal` (a read-only wrapper around the same generation logic
+    `generate()` uses, for narrating numbers mid-conversation). Ledger's
+    controller has no write path anywhere — every tool and both entry points
+    only read or return JSON, deliberately stricter than Beacon's
+    `log_qualified_lead` (which does write, once Caleb confirms), since a
+    proposal commits to real payment terms a client may pay against. The
+    admin console shows the same animated `agent-face.js` avatar Lisa's
+    widget uses (a circular avatar per agent — Beacon a radar/broadcast mark,
+    Nurturer a mail icon, Ledger a file/contract mark on its own navy-blue-gold
+    gradient) that thinks while a reply is pending and talks while a reply is
     being read aloud, and each agent's read-aloud voice is admin-configurable
     the same way Lisa's is — gender (female/male/auto) and accent (UK/US/auto
     English) from Site Content, with a live "Preview voice" button; only
@@ -638,6 +650,26 @@ storage/
     the fixed steps alone would strand it, as only active enrollments are
     picked up. Pick offsets that don't collide with your active step days, or
     an opted-in lead gets two emails in one day.
+    **Ledger** drafts a project proposal — scope, timeline, terms, and a
+    payment milestone breakdown — from a real `project_request` inquiry
+    and/or a short brief typed on the fly, in the exact shape
+    `ProposalController::store()`/`update()` already expect as input
+    (milestone amounts are decimals, not subunits, so the AI output needs no
+    translation layer). It grounds every number in `get_site_info`'s
+    `engineering_tiers` (the real published pricing tiers) rather than
+    inventing one, falling back to the inquiry's own stated budget if tiers
+    aren't set, and says so plainly in a `grounding_note` before Caleb touches
+    anything. `/admin/proposals.html` gets a **Draft with AI** button next to
+    "Start from quote request" that calls `POST /api/v1/admin/proposals/generate`
+    and fills the existing form — Caleb still has to review and click
+    Create/Save; nothing is ever created or sent automatically. The chat tab
+    additionally shows a "Proposals awaiting a decision" panel (sent, not yet
+    accepted or declined), reusing the existing `GET /api/v1/admin/proposals`
+    with a client-side status filter rather than a dedicated endpoint. No
+    schema changes were needed for any of this — Ledger only reads existing
+    `inquiries`/`proposals`/`proposal_milestones` columns, and its assistant
+    name/voice/accent settings ride the same generic `settings` key-value
+    store every other admin-configurable setting already uses.
 
 ## Deployment (Namecheap cPanel)
 
