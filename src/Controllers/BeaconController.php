@@ -250,7 +250,23 @@ class BeaconController
 
     private static function chatToolDeclarations(): array
     {
-        return [...self::draftToolDeclarations(), self::logQualifiedLeadToolDeclaration()];
+        return [
+            ...self::draftToolDeclarations(),
+            self::logQualifiedLeadToolDeclaration(),
+            self::getDiscoverySettingsToolDeclaration(),
+        ];
+    }
+
+    private static function getDiscoverySettingsToolDeclaration(): array
+    {
+        return [
+            'name' => 'get_discovery_settings',
+            'description' => 'Get the real, currently-configured discovery settings — whether discovery is '
+                . 'enabled, how often it runs, how recent a post must be, and the actual search keywords. Use '
+                . 'this whenever Caleb asks what you\'re searching for or how discovery is configured, rather '
+                . 'than guessing.',
+            'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+        ];
     }
 
     private static function logQualifiedLeadToolDeclaration(): array
@@ -282,8 +298,21 @@ class BeaconController
             'get_site_info' => SharedAgentTools::getSiteInfo(),
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
             'log_qualified_lead' => self::toolLogQualifiedLead($args, $pdo),
+            'get_discovery_settings' => self::toolGetDiscoverySettings(),
             default => ['error' => 'Unknown tool.'],
         };
+    }
+
+    /** @return array<string,mixed> The real discovery cron config — never guessed. */
+    private static function toolGetDiscoverySettings(): array
+    {
+        $keywords = array_filter(array_map('trim', explode("\n", (string) Settings::get('beacon_discovery_keywords'))));
+        return [
+            'enabled' => Settings::get('beacon_discovery_enabled') === '1',
+            'frequency' => Settings::get('beacon_discovery_frequency') ?: 'daily',
+            'post_recency' => Settings::get('beacon_discovery_recency') ?: 'qdr:m',
+            'keywords' => array_values($keywords),
+        ];
     }
 
     private static function toolLogQualifiedLead(array $args, \PDO $pdo): array
@@ -380,17 +409,24 @@ class BeaconController
 
         return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a highly skilled solo Web "
             . "Designer and Mobile App Developer who runs the portfolio site princecaleb.dev.{$genderLine} "
-            . "You normally review scraped social media posts/comments and draft low-friction, value-first "
-            . "replies that establish Caleb's technical expertise (never generic agency lines, never spammy).\n\n"
+            . "Your job has two stages, and you own both: a scheduled discovery run searches the web for "
+            . "social posts matching Caleb's configured keywords (Reddit, X, LinkedIn — via Serper), and "
+            . "every result that turns up gets scored and drafted by you, deciding whether it's a genuine "
+            . "lead and writing a low-friction, value-first reply that establishes Caleb's technical expertise "
+            . "(never generic agency lines, never spammy). Discovery is real search infrastructure, not "
+            . "something you reason about in the abstract — if Caleb asks what you're searching for, how "
+            . "often, or whether it's even on, use get_discovery_settings and answer with the real numbers "
+            . "instead of describing it vaguely.\n\n"
             . "Right now you're talking directly with Caleb himself — this is a live working conversation, "
-            . "not the automated pipeline. Help him brainstorm, test how you'd respond to a hypothetical "
-            . "post, refine a draft reply, or explain how you work. Speak naturally and conversationally — "
+            . "not the automated pipeline. Help him brainstorm, tune his discovery keywords, test how you'd "
+            . "respond to a hypothetical post, or refine a draft reply. Speak naturally and conversationally — "
             . "do not output JSON unless he explicitly asks for that exact format. Keep the same tonal "
             . "target as always: knowledgeable, conversational, subtly witty, never corporate.\n\n"
-            . "You have tools available: get_site_info and search_content (same as always — ground yourself "
-            . "in real facts and real past work rather than guessing), and log_qualified_lead — call it once "
-            . "you and Caleb agree a real post discussed here is worth saving for follow-up. Never call it "
-            . "for a hypothetical example he's just testing you with.";
+            . "You have tools available: get_site_info and search_content (ground yourself in real facts "
+            . "and real past work rather than guessing), get_discovery_settings (the real, currently-"
+            . "configured keywords/frequency/recency — use it rather than guessing what you search for), "
+            . "and log_qualified_lead — call it once you and Caleb agree a real post discussed here is worth "
+            . "saving for follow-up. Never call it for a hypothetical example he's just testing you with.";
     }
 
     /** No TTS surface here (unlike Lisa) — this only lightly flavors the system prompt's internal framing. */

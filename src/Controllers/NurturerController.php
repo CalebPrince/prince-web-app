@@ -149,6 +149,20 @@ class NurturerController
             ...self::draftToolDeclarations(),
             SharedAgentTools::checkAvailabilityToolDeclaration(),
             self::findLeadToolDeclaration(),
+            self::listNewLeadsToolDeclaration(),
+        ];
+    }
+
+    private static function listNewLeadsToolDeclaration(): array
+    {
+        return [
+            'name' => 'list_new_leads',
+            'description' => 'See the most recently enrolled leads, including ones the outbound pipeline '
+                . 'auto-enrolled the moment Caleb marked a pitch as sent — those land with nurturer_enabled '
+                . 'off until he opts them in, so they\'re easy to miss. Call this proactively at the start of '
+                . 'a conversation or whenever Caleb asks if there\'s anything new, rather than waiting for him '
+                . 'to name a lead first.',
+            'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
         ];
     }
 
@@ -177,8 +191,32 @@ class NurturerController
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
             'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
             'find_lead' => self::toolFindLead($args, $pdo),
+            'list_new_leads' => self::toolListNewLeads($pdo),
             default => ['error' => 'Unknown tool.'],
         };
+    }
+
+    /** @return array{recent_enrollments: array<int,array<string,mixed>>, awaiting_send: array<int,array<string,mixed>>} */
+    private static function toolListNewLeads(\PDO $pdo): array
+    {
+        $recentStmt = $pdo->query(
+            'SELECT id, name, email, status, lead_industry, last_action, nurturer_enabled, source, enrolled_at '
+            . 'FROM drip_enrollments ORDER BY enrolled_at DESC LIMIT 10'
+        );
+        $recent = $recentStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        // Opted in and genuinely due — active, nurturer_enabled, and no send
+        // yet — the ones worth actually flagging as "ready for a follow-up".
+        $awaitingStmt = $pdo->query(
+            'SELECT e.id, e.name, e.email, e.lead_industry, e.last_action, e.enrolled_at '
+            . 'FROM drip_enrollments e '
+            . 'WHERE e.status = \'active\' AND e.nurturer_enabled = 1 '
+            . 'AND NOT EXISTS (SELECT 1 FROM nurturer_sends s WHERE s.enrollment_id = e.id) '
+            . 'ORDER BY e.enrolled_at DESC LIMIT 10'
+        );
+        $awaiting = $awaitingStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        return ['recent_enrollments' => $recent, 'awaiting_send' => $awaiting];
     }
 
     /** @return array{enrollments: array<int,array<string,mixed>>, marketing_leads: array<int,array<string,mixed>>} */
@@ -278,6 +316,15 @@ class NurturerController
             . "Mobile App Developer (princecaleb.dev).{$genderLine} You normally draft hyper-targeted "
             . "follow-up emails for leads based on their profile, industry, and site interactions — direct, "
             . "empathetic, focused on UI/UX and performance, never corporate jargon.\n\n"
+            . "Leads reach you two ways, and both are real database rows you can see for yourself, not things "
+            . "Caleb has to describe to you: someone gets enrolled by hand on the Drip page, or — far more "
+            . "often — the outbound pipeline auto-enrolls them the instant Caleb marks a marketing pitch as "
+            . "sent, carrying over their industry and a real last_action built from the site audit. "
+            . "Auto-enrolled leads land with you turned off (nurturer_enabled = 0) until Caleb opts each one "
+            . "in on the Drip page — that's a deliberate per-lead decision, not a bug, but it also means new "
+            . "leads pile up invisibly if nobody checks. That's your job to check, not his to announce: call "
+            . "list_new_leads at the start of a conversation, or any time he asks if there's anything new, "
+            . "instead of waiting to be told a name.\n\n"
             . "Right now you're talking directly with Caleb himself — this is a live working conversation, "
             . "not the automated pipeline. Help him brainstorm a sequence, iterate on a draft, think through "
             . "a specific lead, or explain how you work. Speak naturally and conversationally — do not "
@@ -285,8 +332,9 @@ class NurturerController
             . "You have tools available: get_site_info and search_content (ground yourself in real facts "
             . "and real past work rather than guessing), check_availability — if Caleb names a specific "
             . "date while thinking through a Sequence 3 close, check the real bookable slots for it instead "
-            . "of guessing what's open — and find_lead — whenever Caleb mentions a specific lead by name or "
-            . "email, look them up rather than asking him to repeat details already on file.";
+            . "of guessing what's open — find_lead — whenever Caleb mentions a specific lead by name or "
+            . "email, look them up rather than asking him to repeat details already on file — and "
+            . "list_new_leads, described above, for surfacing what's arrived on its own.";
     }
 
     /** No TTS surface here (unlike Lisa) — this only lightly flavors the system prompt's internal framing. */
