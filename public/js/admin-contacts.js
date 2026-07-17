@@ -49,7 +49,18 @@ async function loadPipelineSummary() {
   try {
     data = await api.get("/api/v1/admin/contacts/pipeline-summary");
   } catch (err) {
-    return; // Stats are a bonus on top of the list — a failure here shouldn't block the page.
+    // A failure here shouldn't block the rest of the page (the contact list
+    // still works fine without it) — but it also shouldn't be invisible.
+    // Silently leaving every stat card blank with no clue why cost real
+    // debugging time once already; a quiet console.error is enough for that
+    // without needing a whole alert box for what's a secondary feature.
+    console.error("Pipeline summary failed to load:", err.message);
+    document.getElementById("stat-pipeline-value").textContent = "—";
+    document.getElementById("stat-win-rate").textContent = "—";
+    document.getElementById("stat-win-rate-detail").textContent = "Could not load: " + err.message;
+    document.getElementById("stat-revenue-month").textContent = "—";
+    document.getElementById("stat-revenue-total").textContent = "—";
+    return;
   }
 
   document.getElementById("stat-pipeline-value").textContent = formatMoney(data.open_pipeline_value, data.currency);
