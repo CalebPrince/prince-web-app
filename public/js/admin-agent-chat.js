@@ -149,10 +149,45 @@
     return bubble;
   }
 
+  // ---- conversation persistence (localStorage, per agent) ----
+  // The chat itself is stateless server-side — each turn replays the full
+  // transcript the browser sends (see NurturerController::chat()) — which
+  // used to mean a reload wiped everything, since nothing kept that
+  // transcript around between page loads. Stored per agent so switching
+  // tabs (or reloading) picks the right conversation back up.
+  const TRANSCRIPT_STORAGE_KEY = "talk_to_agents_transcripts";
+
+  function loadStoredTranscripts() {
+    try {
+      return JSON.parse(localStorage.getItem(TRANSCRIPT_STORAGE_KEY)) || {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveTranscript() {
+    try {
+      const all = loadStoredTranscripts();
+      // Mirrors the server's own MAX_CHAT_TRANSCRIPT_TURNS cap, so a
+      // long-lived conversation doesn't grow the stored payload forever.
+      all[activeAgent] = transcript.slice(-30);
+      localStorage.setItem(TRANSCRIPT_STORAGE_KEY, JSON.stringify(all));
+    } catch (_) {
+      // Storage full or unavailable (private browsing, quota) — the
+      // conversation just won't survive a reload; nothing to recover from.
+    }
+  }
+
   function resetConversation() {
     transcript = [];
     logEl.innerHTML = "";
     addBubble("agent", "Hey, it's " + agentDisplayName() + ". What do you want to talk through?");
+
+    const stored = loadStoredTranscripts()[activeAgent];
+    if (stored && stored.length) {
+      transcript = stored;
+      stored.forEach((turn) => addBubble(turn.role === "user" ? "user" : "agent", turn.text));
+    }
   }
 
   // ---- Beacon's "Recent qualified leads" panel ----
@@ -377,6 +412,7 @@
   async function sendMessage(text) {
     addBubble("user", text);
     transcript.push({ role: "user", text });
+    saveTranscript();
     msgEl.classList.add("d-none");
     sendBtn.disabled = true;
     const typing = addTypingBubble();
@@ -385,6 +421,7 @@
       const res = await api.post("/api/v1/admin/agents/" + activeAgent + "/chat", { message: text, transcript });
       addBubble("agent", res.reply);
       transcript.push({ role: "agent", text: res.reply });
+      saveTranscript();
       // A reply may have logged a new lead via the log_qualified_lead tool.
       if (activeAgent === "beacon") loadBeaconLeads();
     } catch (err) {
