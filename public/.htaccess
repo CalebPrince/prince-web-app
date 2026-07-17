@@ -12,13 +12,10 @@
   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 
-  # Content-Security-Policy — shipped in Report-Only mode first (logs
-  # violations to the browser console, blocks nothing) since this covers
-  # real revenue paths (Paystack checkout) that need verifying against
-  # actual traffic before enforcing. Once a browsing pass through the live
-  # site shows no console CSP violations, flip the header name below from
-  # Content-Security-Policy-Report-Only to Content-Security-Policy — the
-  # policy value itself does not need to change.
+  # Content-Security-Policy — ran in Report-Only mode first (violations
+  # logged to the console, nothing blocked) specifically to verify real
+  # traffic through checkout before enforcing; a live browsing pass came
+  # back clean, so this now actually enforces.
   #
   # 'unsafe-inline' on script-src/style-src is a deliberate concession, not
   # an oversight: every page carries at least a small inline theme-detection
@@ -40,7 +37,7 @@
   # .com + player.vimeo.com (admin-configured hero/demo video embeds — see
   # public/js/content.js; only these two providers are documented as
   # supported, matching README's "YouTube, Vimeo, or direct .mp4/.webm").
-  Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.paystack.co https://accounts.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; media-src 'self'; connect-src 'self' https://api.github.com https://accounts.google.com https://api.paystack.co https://standard.paystack.co; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://accounts.google.com https://checkout.paystack.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.paystack.co https://accounts.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; media-src 'self'; connect-src 'self' https://api.github.com https://accounts.google.com https://api.paystack.co https://standard.paystack.co; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://accounts.google.com https://checkout.paystack.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
 </IfModule>
 
 RewriteEngine On
