@@ -229,6 +229,7 @@ $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adm
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
 $router->get('/api/v1/admin/content-studio', [ContentStudioController::class, 'index']);
 $router->patch('/api/v1/admin/content-studio/{id}', [ContentStudioController::class, 'update']);
+$router->post('/api/v1/admin/content-studio/{id}/promote', [ContentStudioController::class, 'promote']);
 $router->delete('/api/v1/admin/content-studio/{id}', [ContentStudioController::class, 'destroy']);
 $router->post('/api/v1/admin/agents/beacon/chat', [BeaconController::class, 'chat']);
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);

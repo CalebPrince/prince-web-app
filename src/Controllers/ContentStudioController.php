@@ -90,6 +90,94 @@ class ContentStudioController
         Response::json(['deleted' => true]);
     }
 
+    /**
+     * POST /api/v1/admin/content-studio/{id}/promote — push a reviewed item
+     * into the real publishing pipeline: a social/flyer item becomes a
+     * social_post_drafts row, a blog item becomes an UNPUBLISHED blog_posts
+     * row. The studio item is marked 'used' so it's clear it's been sent on.
+     * Still nothing goes public — the destination is a draft either way.
+     */
+    public static function promote(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+        $pdo = Database::get();
+
+        $stmt = $pdo->prepare('SELECT * FROM content_studio_items WHERE id = ?');
+        $stmt->execute([$id]);
+        $item = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$item) {
+            Response::error('Item not found.', 404);
+        }
+
+        if ($item['kind'] === 'blog') {
+            $title = trim((string) $item['title']);
+            $excerpt = trim((string) $item['excerpt']);
+            $body = trim((string) $item['body']);
+            if ($title === '' || $excerpt === '' || $body === '') {
+                Response::error('This blog draft needs a title, excerpt, and body before it can be sent to the Blog.', 422);
+            }
+            // blog_posts.cover_image_path is NOT NULL — fall back to the site
+            // share image when the draft has no cover of its own.
+            $cover = trim((string) ($item['image_url'] ?? ''));
+            if ($cover === '') {
+                $cover = '/uploads/og-image.png';
+            }
+            $slug = self::uniqueSlug($title, $pdo);
+            $ins = $pdo->prepare(
+                'INSERT INTO blog_posts (slug, title, excerpt, body, cover_image_path, is_published) '
+                . 'VALUES (?, ?, ?, ?, ?, 0)'
+            );
+            $ins->execute([$slug, $title, $excerpt, $body, $cover]);
+            $target = 'blog';
+            $newId = (int) $pdo->lastInsertId();
+        } else {
+            // social or flyer — needs a caption (body) to become a real post.
+            $content = trim((string) ($item['body'] ?? ''));
+            if ($content === '') {
+                Response::error('Add a caption to this item before sending it to Social Drafts.', 422);
+            }
+            $ins = $pdo->prepare(
+                "INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, image_url, ai_provider, status) "
+                . "VALUES ('general', NULL, ?, ?, ?, ?, 'content-agent', 'draft')"
+            );
+            $ins->execute([
+                $content,
+                ($item['excerpt'] ?? '') !== '' ? $item['excerpt'] : null,
+                ($item['hashtags'] ?? '') !== '' ? $item['hashtags'] : null,
+                ($item['image_url'] ?? '') !== '' ? $item['image_url'] : null,
+            ]);
+            $target = 'social';
+            $newId = (int) $pdo->lastInsertId();
+        }
+
+        $upd = $pdo->prepare("UPDATE content_studio_items SET status = 'used', updated_at = datetime('now') WHERE id = ?");
+        $upd->execute([$id]);
+
+        Response::json(['promoted' => true, 'target' => $target, 'id' => $newId]);
+    }
+
+    /** Slugify a blog title and guarantee uniqueness against existing blog_posts. */
+    private static function uniqueSlug(string $title, \PDO $pdo): string
+    {
+        $base = strtolower(trim((string) preg_replace('/[^a-z0-9]+/i', '-', $title), '-'));
+        if ($base === '') {
+            $base = 'post';
+        }
+        $base = substr($base, 0, 80);
+
+        $slug = $base;
+        $check = $pdo->prepare('SELECT 1 FROM blog_posts WHERE slug = ?');
+        for ($i = 0; $i < 20; $i++) {
+            $check->execute([$slug]);
+            if ($check->fetchColumn() === false) {
+                return $slug;
+            }
+            $slug = $base . '-' . bin2hex(random_bytes(2));
+        }
+        return $base . '-' . bin2hex(random_bytes(4));
+    }
+
     // ---- write side, called by the Content agent's tools ----
 
     /** Record a generated flyer image (no caption yet). @return int new row id */

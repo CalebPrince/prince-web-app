@@ -157,6 +157,18 @@ function buildCard(item) {
   save.innerHTML = '<i class="bi bi-check2 me-1"></i>Save';
   footer.appendChild(save);
 
+  // Push the reviewed item into the real pipeline: blog -> unpublished blog
+  // post, everything else -> a social draft. Saves current edits first so the
+  // corrected copy is what goes downstream.
+  const send = document.createElement("button");
+  send.type = "button";
+  send.className = "btn btn-outline-primary btn-sm";
+  const isBlog = item.kind === "blog";
+  send.innerHTML = isBlog
+    ? '<i class="bi bi-journal-arrow-up me-1"></i>Send to Blog'
+    : '<i class="bi bi-megaphone me-1"></i>Send to Social Drafts';
+  footer.appendChild(send);
+
   const del = document.createElement("button");
   del.type = "button";
   del.className = "btn btn-outline-danger btn-sm ms-auto";
@@ -176,6 +188,29 @@ function buildCard(item) {
     } catch (err) {
       studioMsg(err.message, false);
     }
+    save.disabled = false;
+  });
+
+  send.addEventListener("click", async () => {
+    send.disabled = true;
+    save.disabled = true;
+    try {
+      // Save current edits first so the corrected copy is what gets promoted.
+      const payload = { status: status.value };
+      Object.keys(inputs).forEach((f) => { payload[f] = inputs[f].value.trim(); });
+      await api.patch("/api/v1/admin/content-studio/" + item.id, payload);
+
+      const res = await api.post("/api/v1/admin/content-studio/" + item.id + "/promote", {});
+      item.status = "used";
+      status.value = "used";
+      const where = res.target === "blog"
+        ? "the Blog as an unpublished draft"
+        : "Social Drafts";
+      studioMsg("Sent to " + where + ". It's marked ‘used’ here.", true);
+    } catch (err) {
+      studioMsg(err.message, false);
+    }
+    send.disabled = false;
     save.disabled = false;
   });
 
