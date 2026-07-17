@@ -25,6 +25,8 @@ const CONTENT_FIELDS = [
   "nurturer_assistant_name", "nurturer_voice_gender", "nurturer_voice_accent",
   "proposal_assistant_name", "proposal_voice_gender", "proposal_voice_accent",
   "content_assistant_name", "content_voice_gender", "content_voice_accent",
+  "brand_primary_color", "brand_accent_color", "brand_font", "brand_style_note",
+  "brand_logo_dark_url", "brand_logo_light_url",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
   "stat_2_value", "stat_2_suffix", "stat_2_label",
   "stat_3_value", "stat_3_suffix", "stat_3_label",
@@ -72,7 +74,63 @@ async function loadContent() {
   document.getElementById("hours-end").value = settings.chat_hours_end || "";
   document.getElementById("hours-timezone").value = settings.chat_timezone || "";
 
+  // Brand logo previews — fall back to the committed defaults (same paths
+  // SharedAgentTools::getBrandInfo() falls back to server-side) so the admin
+  // sees the real logo even before ever saving anything on this page.
+  setBrandLogoPreview("dark", settings.brand_logo_dark_url || "/uploads/brand/logo-dark.png");
+  setBrandLogoPreview("light", settings.brand_logo_light_url || "/uploads/brand/logo-light.png");
+
   await renderChatLiveStatus(settings);
+}
+
+function setBrandLogoPreview(variant, path) {
+  const img = document.getElementById(`brand-logo-${variant}-preview`);
+  if (!img) return;
+  if (path) {
+    img.src = path;
+    img.classList.remove("d-none");
+  } else {
+    img.classList.add("d-none");
+  }
+}
+
+// Mirrors uploadFile() in admin-blog.js — this page has no shared JS include
+// for it, and every other admin page keeps its upload helper local too.
+async function uploadBrandFile(file, isRetry = false) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/v1/admin/uploads", {
+    method: "POST",
+    credentials: "same-origin",
+    body: formData,
+  });
+  if (res.status === 401 && !isRetry) {
+    const refreshed = await fetch("/api/v1/auth/refresh", { method: "POST", credentials: "same-origin" });
+    if (refreshed.ok) return uploadBrandFile(file, true);
+  }
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error((body && body.error) || "Upload failed.");
+  return body.path;
+}
+
+function wireBrandLogoUpload(variant) {
+  const input = document.getElementById(`brand-logo-${variant}-upload-input`);
+  const msg = document.getElementById(`brand-logo-${variant}-upload-msg`);
+  const urlField = document.getElementById(`brand_logo_${variant}_url`);
+  if (!input) return;
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+    msg.textContent = "Uploading...";
+    try {
+      const path = await uploadBrandFile(file);
+      urlField.value = path;
+      setBrandLogoPreview(variant, path);
+      msg.textContent = "Uploaded — click Save changes to keep it.";
+    } catch (err) {
+      msg.textContent = err.message;
+    }
+  });
 }
 
 // Show whether Live Chat is online *right now* and, when it's not, the actual
@@ -252,5 +310,7 @@ function wireHoursControls() {
   wireAgentVoicePreview("nurturer", "Nurturer", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("proposal", "Ledger", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("content", "Canvas", "This is how I'll sound when you talk to me in the admin console.");
+  wireBrandLogoUpload("dark");
+  wireBrandLogoUpload("light");
   wireHoursControls();
 })();

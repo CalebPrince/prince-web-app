@@ -100,6 +100,7 @@ class ContentAgentController
         return [
             SharedAgentTools::siteInfoToolDeclaration(),
             SharedAgentTools::searchContentToolDeclaration(),
+            SharedAgentTools::brandInfoToolDeclaration(),
             self::createFlyerToolDeclaration(),
             self::saveSocialDraftToolDeclaration(),
             self::saveBlogDraftToolDeclaration(),
@@ -111,11 +112,13 @@ class ContentAgentController
         return [
             'name' => 'create_flyer',
             'description' => 'Generate a flyer / social graphic as an actual image, sized for a real social '
-                . 'platform. Write a vivid, self-contained visual description (subject, style, mood, colours, '
-                . 'and the exact headline/short text to render on it) — the image model only sees this '
-                . 'description, not the conversation. Ground the look in Caleb\'s brand (call get_site_info '
-                . 'first if unsure). The image is saved and shown to Caleb automatically; to attach it to a '
-                . 'post, pass its returned url as image_url on save_social_draft.',
+                . 'platform. Write a vivid, self-contained visual description (subject, style, mood, and the '
+                . 'exact headline/short text to render on it) — the image model only sees this description, '
+                . 'not the conversation. Real brand colors, font, and Caleb\'s actual logo file are grounded '
+                . 'in automatically (call get_brand_info first if you want to reference the exact hex colors '
+                . 'or style note yourself, e.g. to describe a color in the prompt). The image is saved and '
+                . 'shown to Caleb automatically; to attach it to a post, pass its returned url as image_url on '
+                . 'save_social_draft.',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
@@ -123,6 +126,11 @@ class ContentAgentController
                     'size' => [
                         'type' => 'STRING',
                         'description' => 'One of: square (1080×1080 feed post), portrait (1080×1350 feed post), story (1080×1920 story/reel), landscape (1200×630 link/banner).',
+                    ],
+                    'background' => [
+                        'type' => 'STRING',
+                        'description' => 'Whether the flyer\'s background reads as dark or light overall — '
+                            . 'picks the matching real logo variant so it stays legible. One of: dark (default), light.',
                     ],
                 ],
                 'required' => ['description', 'size'],
@@ -176,6 +184,7 @@ class ContentAgentController
         return match ($name) {
             'get_site_info' => SharedAgentTools::getSiteInfo(),
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+            'get_brand_info' => SharedAgentTools::getBrandInfo(),
             'create_flyer' => self::toolCreateFlyer($args, $pdo),
             'save_social_draft' => self::toolSaveSocialDraft($args, $pdo),
             'save_blog_draft' => self::toolSaveBlogDraft($args, $pdo),
@@ -187,6 +196,10 @@ class ContentAgentController
     {
         $description = trim((string) ($args['description'] ?? ''));
         $size = strtolower(trim((string) ($args['size'] ?? '')));
+        $background = strtolower(trim((string) ($args['background'] ?? 'dark')));
+        if (!in_array($background, ['dark', 'light'], true)) {
+            $background = 'dark';
+        }
 
         if ($description === '') {
             return ['error' => 'A visual description is required to generate a flyer.'];
@@ -196,7 +209,17 @@ class ContentAgentController
         }
 
         $spec = self::FLYER_SIZES[$size];
-        $image = AiImage::generateFlyer($description, $spec['width'], $spec['height']);
+
+        // Ground every flyer in the real brand — colors/font/style plus the
+        // actual logo file for the matching background — rather than relying
+        // on the model having called get_brand_info itself first.
+        $brand = SharedAgentTools::getBrandInfo();
+        $logoUrl = $background === 'light' ? $brand['logo_for_light_background'] : $brand['logo_for_dark_background'];
+        $logoPath = self::webPathToFsPath($logoUrl);
+        $groundedDescription = $description . "\n\nBrand: primary color {$brand['primary_color']}, accent color "
+            . "{$brand['accent_color']}, typography style {$brand['font']}. {$brand['style_note']}";
+
+        $image = AiImage::generateFlyer($groundedDescription, $spec['width'], $spec['height'], 60, $logoPath);
         if ($image === null) {
             return ['error' => 'Image generation failed — the image provider may be unconfigured or unreachable. Tell Caleb you couldn\'t create the flyer right now.'];
         }
@@ -212,6 +235,22 @@ class ContentAgentController
             'height' => $image['height'],
             'note' => 'The flyer has been generated, shown to Caleb, and saved to the Content Studio. Pass this url as image_url on save_social_draft to attach a caption to it.',
         ];
+    }
+
+    /**
+     * Resolve a site-relative web path (e.g. "/uploads/brand/logo-dark.png",
+     * the shape every brand_logo_*_url setting is expected to hold) to a real
+     * filesystem path under public/. Returns null for anything that isn't a
+     * local site-relative path (e.g. a full external URL) or doesn't exist —
+     * AiImage treats a null logo path as "no logo to attach", never an error.
+     */
+    private static function webPathToFsPath(string $webPath): ?string
+    {
+        if ($webPath === '' || $webPath[0] !== '/') {
+            return null;
+        }
+        $fsPath = dirname(__DIR__, 2) . '/public' . $webPath;
+        return is_file($fsPath) ? $fsPath : null;
     }
 
     private static function toolSaveSocialDraft(array $args, \PDO $pdo): array
@@ -269,8 +308,10 @@ class ContentAgentController
             . "chat when Caleb wants something saved:\n"
             . "- create_flyer: generate an actual flyer/graphic image at a real social size (square, portrait, "
             . "story, or landscape). Write a vivid, self-contained visual prompt including the exact text to "
-            . "render on it; the image model can't see the conversation. The result is shown to Caleb "
-            . "automatically.\n"
+            . "render on it; the image model can't see the conversation. Real brand colors, font, and Caleb's "
+            . "actual logo are grounded in automatically for you (see get_brand_info if you want the exact hex "
+            . "values to reference explicitly), and the matching logo variant is attached based on whether the "
+            . "background reads dark or light. The result is shown to Caleb automatically.\n"
             . "- save_social_draft: save a caption as a draft (attach a flyer via image_url from create_flyer).\n"
             . "- save_blog_draft: save a full blog post as an UNPUBLISHED draft.\n\n"
             . "Nothing you save is published — everything you create (captions, flyers, and blog drafts) lands "

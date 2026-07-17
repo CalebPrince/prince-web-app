@@ -24,16 +24,21 @@ class AiImage
      * web path. Returns null on any failure (no key, provider error, safety
      * block, un-decodable bytes) — the caller surfaces that to the agent.
      *
+     * $logoPath, if given (a real filesystem path), is sent alongside the text
+     * prompt as a second reference image so the model can draw from Caleb's
+     * actual logo file instead of inventing a mark from a text description —
+     * see callGemini(). It's read straight off disk, never re-encoded here.
+     *
      * @return array{url:string,width:int,height:int}|null
      */
-    public static function generateFlyer(string $prompt, int $width, int $height, int $timeout = 60): ?array
+    public static function generateFlyer(string $prompt, int $width, int $height, int $timeout = 60, ?string $logoPath = null): ?array
     {
         $apiKey = Settings::get('gemini_api_key');
         if (empty($apiKey) || !function_exists('curl_init') || !function_exists('imagecreatefromstring')) {
             return null;
         }
 
-        $bytes = self::callGemini((string) $apiKey, $prompt, $width, $height, $timeout);
+        $bytes = self::callGemini((string) $apiKey, $prompt, $width, $height, $timeout, $logoPath);
         if ($bytes === null) {
             return null;
         }
@@ -58,7 +63,7 @@ class AiImage
     }
 
     /** @return string|null raw image bytes the model returned, or null on failure */
-    private static function callGemini(string $apiKey, string $prompt, int $width, int $height, int $timeout): ?string
+    private static function callGemini(string $apiKey, string $prompt, int $width, int $height, int $timeout, ?string $logoPath = null): ?string
     {
         $model = Settings::get('gemini_image_model') ?: 'gemini-2.5-flash-image';
 
@@ -70,7 +75,24 @@ class AiImage
         $fullPrompt = $prompt . "\n\nFormat: a polished, on-brand social media graphic in "
             . $ratioHint . ". Compose it so nothing important is cut off near the edges.";
 
-        $payload = ['contents' => [['role' => 'user', 'parts' => [['text' => $fullPrompt]]]]];
+        // Nano Banana accepts multiple image parts in one request (image-to-image
+        // composition, not just text-to-image) — attaching the real logo file
+        // as a reference image lets it draw from the actual mark instead of
+        // inventing one from a text description. It still won't reproduce it
+        // pixel-perfect, so this is "faithful reference" not exact compositing.
+        $parts = [];
+        $logoBytes = ($logoPath !== null) ? @file_get_contents($logoPath) : false;
+        if ($logoBytes !== false && $logoBytes !== '') {
+            $imageInfo = @getimagesizefromstring($logoBytes);
+            $mimeType = $imageInfo['mime'] ?? 'image/png';
+            $parts[] = ['inlineData' => ['mimeType' => $mimeType, 'data' => base64_encode($logoBytes)]];
+            $fullPrompt .= "\n\nThe attached image is Caleb's real logo (the rounded-square \"P\" mark and "
+                . "wordmark). Recreate it faithfully as a small, natural accent somewhere in the composition — "
+                . "do not distort, recolor, or reinterpret it into a different mark.";
+        }
+        $parts[] = ['text' => $fullPrompt];
+
+        $payload = ['contents' => [['role' => 'user', 'parts' => $parts]]];
 
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
             . rawurlencode($model) . ':generateContent?key=' . $apiKey;

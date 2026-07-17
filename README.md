@@ -688,14 +688,30 @@ storage/
     `search_content` tools, but with no automated cron side — it exists only
     as a live `chat()` in the "Talk to Agents" console
     (`ContentAgentController`). Unlike the pipeline agents it can stage real,
-    reviewable output via three tools: `create_flyer` generates an actual
-    social graphic with Gemini's image model ("Nano Banana",
-    `src/Support/AiImage.php`) at a real platform size (square 1080×1080,
-    portrait 1080×1350, story 1080×1920, or landscape 1200×630) — the model
-    returns whatever aspect ratio it likes, so the result is always
-    center-cropped with GD to the exact requested pixel size and normalized to
-    PNG; `save_social_draft` and `save_blog_draft` write a caption or full post
-    to a new `content_studio_items` table. Nothing it makes goes live: blog
+    reviewable output via four tools: `get_brand_info`
+    (`SharedAgentTools::getBrandInfo()`) returns the real primary/accent
+    colors, font, a style note, and which logo file to use against a dark vs.
+    light background — sourced from `Settings` (`brand_primary_color`,
+    `brand_accent_color`, `brand_font`, `brand_style_note`,
+    `brand_logo_dark_url`, `brand_logo_light_url`, editable from Site Content
+    → Brand) and defaulting to the site's actual monochrome editorial system
+    and the two logo files committed at `public/uploads/brand/logo-{dark,
+    light}.png` when unset, so Canvas is grounded even before an admin ever
+    opens Settings; `create_flyer` generates an actual social graphic with
+    Gemini's image model ("Nano Banana", `src/Support/AiImage.php`) at a real
+    platform size (square 1080×1080, portrait 1080×1350, story 1080×1920, or
+    landscape 1200×630) — every call is grounded in `get_brand_info`'s colors/
+    font/style automatically (not left to the model remembering to ask), and
+    the matching real logo file is attached to the Gemini request as a second
+    reference image (a `background: dark|light` param on the tool picks which
+    variant), so the model works from Caleb's actual logo rather than
+    inventing a mark from a text description — it still won't reproduce it
+    pixel-perfect, so this is a faithful reference, not exact compositing. The
+    model also returns whatever aspect ratio it likes regardless of the
+    reference, so the result is always center-cropped with GD to the exact
+    requested pixel size and normalized to PNG; `save_social_draft` and
+    `save_blog_draft` write a caption or full post to a new
+    `content_studio_items` table. Nothing it makes goes live: blog
     drafts land `is_published = 0`, and every item starts `status = 'draft'`.
     The Content Studio admin page lists everything Canvas has made, lets
     Caleb correct the copy/notes inline (PATCH) or delete an item, or
