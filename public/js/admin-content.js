@@ -24,6 +24,7 @@ const CONTENT_FIELDS = [
   "beacon_assistant_name", "beacon_voice_gender", "beacon_voice_accent",
   "nurturer_assistant_name", "nurturer_voice_gender", "nurturer_voice_accent",
   "proposal_assistant_name", "proposal_voice_gender", "proposal_voice_accent",
+  "content_assistant_name", "content_voice_gender", "content_voice_accent",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
   "stat_2_value", "stat_2_suffix", "stat_2_label",
   "stat_3_value", "stat_3_suffix", "stat_3_label",
@@ -250,5 +251,6 @@ function wireHoursControls() {
   wireAgentVoicePreview("beacon", "Beacon", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("nurturer", "Nurturer", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("proposal", "Ledger", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("content", "Canvas", "This is how I'll sound when you talk to me in the admin console.");
   wireHoursControls();
 })();
