@@ -2,6 +2,7 @@
   const AGENTS = {
     beacon: { label: "Beacon", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", accentKey: "beacon_voice_accent", fallbackName: "Beacon" },
     nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Nurturer" },
+    proposal: { label: "Proposal", nameKey: "proposal_assistant_name", genderKey: "proposal_voice_gender", accentKey: "proposal_voice_accent", fallbackName: "Ledger" },
   };
 
   const logEl = document.getElementById("agent-chat-log");
@@ -25,6 +26,9 @@
   const nurturerLeadsCard = document.getElementById("nurturer-leads-card");
   const nurturerLeadsList = document.getElementById("nurturer-leads-list");
   const nurturerLeadsEmpty = document.getElementById("nurturer-leads-empty");
+  const proposalAwaitingCard = document.getElementById("proposal-awaiting-card");
+  const proposalAwaitingList = document.getElementById("proposal-awaiting-list");
+  const proposalAwaitingEmpty = document.getElementById("proposal-awaiting-empty");
   const faceSlot = document.getElementById("agent-chat-face");
   const faceNameEl = document.getElementById("agent-chat-face-name");
 
@@ -338,19 +342,51 @@
     }
   }
 
+  // ---- Ledger's "Proposals awaiting a decision" panel ----
+  // Reuses the same GET /api/v1/admin/proposals the Proposals page already
+  // calls — no dedicated backend route, just a client-side status filter.
+  async function loadProposalsAwaitingDecision() {
+    try {
+      const proposals = await api.get("/api/v1/admin/proposals");
+      const awaiting = (proposals || []).filter((p) => p.status === "sent");
+      proposalAwaitingList.innerHTML = "";
+      proposalAwaitingEmpty.classList.toggle("d-none", awaiting.length > 0);
+
+      awaiting.forEach((p) => {
+        const card = document.createElement("div");
+        card.className = "border rounded p-3";
+        const amount = (Number(p.total_amount || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 });
+        card.innerHTML =
+          '<div class="d-flex justify-content-between small text-muted-custom mb-1">'
+          + '<span>' + escapeHtml(p.client_name) + " · " + escapeHtml(p.title) + "</span>"
+          + '<span>' + escapeHtml(p.currency) + " " + amount + "</span>"
+          + "</div>"
+          + '<div class="small text-muted-custom">Sent ' + new Date(p.created_at + "Z").toLocaleDateString() + "</div>";
+        proposalAwaitingList.appendChild(card);
+      });
+    } catch (_) {
+      // Quiet failure — this panel is a convenience, not the primary flow.
+    }
+  }
+
   function updateLeadsPanelVisibility() {
     const isBeacon = activeAgent === "beacon";
     const isNurturer = activeAgent === "nurturer";
+    const isProposal = activeAgent === "proposal";
     beaconLeadsCard.classList.toggle("d-none", !isBeacon);
     beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
     beaconSpendCard.classList.toggle("d-none", !isBeacon);
     nurturerLeadsCard.classList.toggle("d-none", !isNurturer);
+    proposalAwaitingCard.classList.toggle("d-none", !isProposal);
     if (isBeacon) {
       loadBeaconLeads();
       loadBeaconSpend();
     }
     if (isNurturer) {
       loadNurturerNewLeads();
+    }
+    if (isProposal) {
+      loadProposalsAwaitingDecision();
     }
   }
 
@@ -509,6 +545,8 @@
       '<i class="bi bi-binoculars me-1"></i>' + (agentSettings.beacon_assistant_name || "Beacon");
     document.getElementById("tab-nurturer").innerHTML =
       '<i class="bi bi-envelope-heart me-1"></i>' + (agentSettings.nurturer_assistant_name || "Nurturer");
+    document.getElementById("tab-proposal").innerHTML =
+      '<i class="bi bi-file-earmark-check me-1"></i>' + (agentSettings.proposal_assistant_name || "Ledger");
     renderFace();
     resetConversation();
     updateLeadsPanelVisibility();

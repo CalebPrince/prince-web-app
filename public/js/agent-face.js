@@ -1,17 +1,17 @@
-// Shared "face" avatar for the AI agents (Lisa, Beacon, Nurturer) — a small
-// gradient orb with drawn eyes + a mouth that actually flaps while the agent
-// talks (plus an idle blink), so a conversation reads as talking with a face
-// rather than typing into a box. Colors match the original AgentAvatar
-// mockup Caleb designed; the face itself replaces that mockup's static
-// emoji with something that visibly speaks. Plain global — this project has
-// no bundler, everything under /js is a script tag — used by ai-widget.js
-// (Lisa's widget header) and admin-agent-chat.js (the Beacon/Nurturer admin
-// console).
+// Shared "face" avatar for the AI agents (Lisa, Beacon, Nurturer, Proposal) —
+// a small gradient orb with drawn eyes + a mouth that actually flaps while
+// the agent talks (plus an idle blink), so a conversation reads as talking
+// with a face rather than typing into a box. Colors match the original
+// AgentAvatar mockup Caleb designed; the face itself replaces that mockup's
+// static emoji with something that visibly speaks. Plain global — this
+// project has no bundler, everything under /js is a script tag — used by
+// ai-widget.js (Lisa's widget header) and admin-agent-chat.js (the
+// Beacon/Nurturer/Proposal admin console).
 (function () {
-  const AGENT_KEYS = ["lisa", "beacon", "nurturer"];
+  const AGENT_KEYS = ["lisa", "beacon", "nurturer", "proposal"];
 
   /**
-   * @param {'lisa'|'beacon'|'nurturer'} agentKey
+   * @param {'lisa'|'beacon'|'nurturer'|'proposal'} agentKey
    * @param {'sm'|'md'|'lg'} [size]
    * @returns {{el: HTMLElement, setThinking: (on: boolean) => void, setSpeaking: (on: boolean) => void}}
    */

@@ -51,6 +51,9 @@ function resetProposalForm() {
   document.getElementById('inquiry-id').disabled = false;
   document.getElementById('proposal-terms').value = defaultTerms();
   document.getElementById('proposal-msg').classList.add('d-none');
+  document.getElementById('draft-with-ai-brief').value = '';
+  document.getElementById('draft-with-ai-brief').classList.add('d-none');
+  document.getElementById('draft-with-ai-note').classList.add('d-none');
   const wrap = document.getElementById('milestones-wrap');
   wrap.innerHTML = '';
   wrap.appendChild(milestoneRow('50% deposit', '', 'Due before kickoff'));
@@ -180,6 +183,8 @@ async function openEditProposal(id) {
     document.getElementById('proposal-form').reset();
     document.getElementById('proposal-modal-title').textContent = 'Edit Proposal';
     document.getElementById('proposal-submit-btn').textContent = 'Save Changes';
+    document.getElementById('draft-with-ai-brief').classList.add('d-none');
+    document.getElementById('draft-with-ai-note').classList.add('d-none');
     document.getElementById('inquiry-id').value = proposal.inquiry_id || '';
     document.getElementById('inquiry-id').disabled = true;
     document.getElementById('client-name').value = proposal.client_name || '';
@@ -219,6 +224,66 @@ function prefillFromQuote(id) {
     q.features ? `Requested features: ${q.features}` : '',
     q.budget ? `Requested budget: ${q.budget}` : '',
   ].filter(Boolean).join('\n\n');
+}
+
+const GROUNDING_LABEL = {
+  engineering_tiers: 'Grounded in a real published pricing tier.',
+  inquiry_budget: "Grounded in the client's own stated budget.",
+  none: 'No real pricing data to ground this in — these are placeholder numbers.',
+};
+
+async function draftWithAi() {
+  const note = document.getElementById('draft-with-ai-note');
+  note.classList.add('d-none');
+
+  const inquiryId = document.getElementById('inquiry-id').value;
+  const brief = document.getElementById('draft-with-ai-brief').value.trim();
+  if (!inquiryId && !brief) {
+    note.className = 'alert alert-danger py-2 small mt-2';
+    note.textContent = 'Pick a quote request above, or describe the project in the box first.';
+    note.classList.remove('d-none');
+    return;
+  }
+
+  const btn = document.getElementById('draft-with-ai-btn');
+  const originalLabel = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Drafting…';
+
+  try {
+    const draft = await api.post('/api/v1/admin/proposals/generate', {
+      inquiry_id: inquiryId || undefined,
+      brief: brief || undefined,
+    });
+
+    if (draft.client_name) document.getElementById('client-name').value = draft.client_name;
+    if (draft.client_email) document.getElementById('client-email').value = draft.client_email;
+    document.getElementById('proposal-title').value = draft.title || '';
+    document.getElementById('proposal-currency').value = draft.currency || 'GHS';
+    document.getElementById('proposal-scope').value = draft.scope || '';
+    document.getElementById('proposal-timeline').value = draft.timeline || '';
+    document.getElementById('proposal-terms').value = draft.terms || defaultTerms();
+
+    const wrap = document.getElementById('milestones-wrap');
+    wrap.innerHTML = '';
+    (draft.milestones || []).forEach(m => {
+      wrap.appendChild(milestoneRow(m.title || '', m.amount || '', m.due_note || ''));
+    });
+    if (!wrap.children.length) {
+      wrap.appendChild(milestoneRow());
+    }
+
+    note.className = 'alert alert-info py-2 small mt-2';
+    note.textContent = (GROUNDING_LABEL[draft.grounding_source] || '') + (draft.grounding_note ? ' ' + draft.grounding_note : '');
+    note.classList.remove('d-none');
+  } catch (err) {
+    note.className = 'alert alert-danger py-2 small mt-2';
+    note.textContent = err.message || 'Could not generate a draft.';
+    note.classList.remove('d-none');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalLabel;
+  }
 }
 
 function collectMilestones() {
@@ -290,6 +355,11 @@ function showProposalListError(message) {
   });
   document.getElementById('inquiry-id').addEventListener('change', e => prefillFromQuote(e.target.value));
   document.getElementById('proposal-form').addEventListener('submit', createProposal);
+  document.getElementById('draft-with-ai-btn').addEventListener('click', draftWithAi);
+  document.getElementById('draft-with-ai-brief-toggle').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('draft-with-ai-brief').classList.toggle('d-none');
+  });
 
   try {
     await loadQuoteRequests();

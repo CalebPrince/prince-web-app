@@ -60,6 +60,7 @@ use App\Controllers\MarketingLeadController;
 use App\Controllers\NewsletterController;
 use App\Controllers\NurturerController;
 use App\Controllers\PaymentController;
+use App\Controllers\ProposalAgentController;
 use App\Controllers\ProposalController;
 use App\Controllers\ProjectController;
 use App\Controllers\ProjectRequestController;
@@ -192,6 +193,7 @@ $router->get('/api/v1/admin/proposals', [ProposalController::class, 'adminIndex'
 $router->post('/api/v1/admin/proposals', [ProposalController::class, 'store']);
 $router->post('/api/v1/admin/proposals/{id}/send', [ProposalController::class, 'send']);
 $router->get('/api/v1/admin/proposals/quote-requests', [ProposalController::class, 'quoteRequests']);
+$router->post('/api/v1/admin/proposals/generate', [ProposalAgentController::class, 'generate']);
 $router->get('/api/v1/admin/proposals/{id}', [ProposalController::class, 'adminShow']);
 $router->put('/api/v1/admin/proposals/{id}', [ProposalController::class, 'update']);
 $router->get('/api/v1/admin/clients', [ClientController::class, 'index']);
@@ -223,6 +225,7 @@ $router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLea
 $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);
 $router->post('/api/v1/admin/agents/beacon/chat', [BeaconController::class, 'chat']);
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
+$router->post('/api/v1/admin/agents/proposal/chat', [ProposalAgentController::class, 'chat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
 $router->get('/api/v1/admin/beacon-spend', [BeaconController::class, 'adminSpend']);

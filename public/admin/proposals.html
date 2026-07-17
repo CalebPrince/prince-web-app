@@ -117,9 +117,17 @@
         <form id="proposal-form">
           <div class="mb-3">
             <label class="form-label">Start from quote request</label>
-            <select class="form-select" id="inquiry-id">
-              <option value="">No linked quote request</option>
-            </select>
+            <div class="d-flex gap-2">
+              <select class="form-select" id="inquiry-id">
+                <option value="">No linked quote request</option>
+              </select>
+              <button type="button" class="btn btn-outline-secondary text-nowrap" id="draft-with-ai-btn"><i class="bi bi-file-earmark-check me-1"></i>Draft with AI</button>
+            </div>
+            <div class="form-text">
+              <a href="#" id="draft-with-ai-brief-toggle">No linked quote request? Describe it instead</a>
+            </div>
+            <textarea class="form-control mt-2 d-none" id="draft-with-ai-brief" rows="2" placeholder="e.g. Salon booking site, wants online payments and staff calendars, budget around GHS 8,000"></textarea>
+            <div id="draft-with-ai-note" class="alert alert-info py-2 small d-none mt-2"></div>
           </div>
 
           <div class="row g-3 mb-3">
