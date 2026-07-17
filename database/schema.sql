@@ -437,6 +437,27 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
 );
 CREATE INDEX IF NOT EXISTS idx_social_post_drafts_status ON social_post_drafts (status, created_at);
 
+-- Output staged by the Content agent ("Canvas") in the Talk to Agents console:
+-- captions, generated flyer images, and blog drafts, kept in their own review
+-- space (the Content Studio admin page) separate from the social_post_drafts /
+-- blog_posts publishing pipelines so Caleb can review, download, and correct
+-- them before anything is used. Nothing here is published; it's a workbench.
+CREATE TABLE IF NOT EXISTS content_studio_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL DEFAULT 'social' CHECK (kind IN ('social', 'flyer', 'blog')),
+  title TEXT,
+  body TEXT,
+  excerpt TEXT,
+  hashtags TEXT,
+  image_url TEXT,
+  image_size TEXT,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'used')),
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_content_studio_created ON content_studio_items (created_at);
+
 -- Self-hosted URL shortener, mainly so AI-drafted social posts can link back
 -- to a blog post/case study without burning half of X/Twitter's character
 -- budget on a long querystring URL. One row per distinct target_url —

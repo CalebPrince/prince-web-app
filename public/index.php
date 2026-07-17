@@ -61,6 +61,7 @@ use App\Controllers\NewsletterController;
 use App\Controllers\NurturerController;
 use App\Controllers\PaymentController;
 use App\Controllers\ContentAgentController;
+use App\Controllers\ContentStudioController;
 use App\Controllers\ProposalAgentController;
 use App\Controllers\ProposalController;
 use App\Controllers\ProjectController;
@@ -226,6 +227,9 @@ $router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLea
 $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
+$router->get('/api/v1/admin/content-studio', [ContentStudioController::class, 'index']);
+$router->patch('/api/v1/admin/content-studio/{id}', [ContentStudioController::class, 'update']);
+$router->delete('/api/v1/admin/content-studio/{id}', [ContentStudioController::class, 'destroy']);
 $router->post('/api/v1/admin/agents/beacon/chat', [BeaconController::class, 'chat']);
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
 $router->post('/api/v1/admin/agents/proposal/chat', [ProposalAgentController::class, 'chat']);

@@ -467,26 +467,16 @@
   }
 
   // ---- Content agent's "Recent content drafts" panel ----
-  // Reuses the existing admin list endpoints the Social Drafts and Blog pages
-  // already call, merged and trimmed to the most recent few client-side — same
-  // no-new-route approach as the Lisa and Proposal panels.
+  // Reads the Content Studio table (what Canvas stages) directly, trimmed to
+  // the most recent few — the full review/edit/download surface is the
+  // Content Studio page this links to.
   const CONTENT_DRAFTS_LIMIT = 6;
+  const CONTENT_KIND_LABEL = { social: "Social post", flyer: "Flyer", blog: "Blog draft" };
 
   async function loadContentDrafts() {
     try {
-      const [social, blog] = await Promise.all([
-        api.get("/api/v1/admin/social-drafts").catch(() => []),
-        api.get("/api/v1/admin/blog").catch(() => []),
-      ]);
-
-      const items = [];
-      (social || []).forEach((d) => items.push({ kind: "social", created: d.created_at, data: d }));
-      // Only drafts the agent could have staged are interesting here — the Blog
-      // page owns the full published archive — so surface unpublished posts.
-      (blog || []).filter((p) => !Number(p.is_published)).forEach((p) => items.push({ kind: "blog", created: p.created_at, data: p }));
-
-      items.sort((a, b) => new Date((b.created || "") + "Z") - new Date((a.created || "") + "Z"));
-      const recent = items.slice(0, CONTENT_DRAFTS_LIMIT);
+      const all = await api.get("/api/v1/admin/content-studio");
+      const recent = (all || []).slice(0, CONTENT_DRAFTS_LIMIT);
 
       contentDraftsList.innerHTML = "";
       contentDraftsEmpty.classList.toggle("d-none", recent.length > 0);
@@ -494,29 +484,14 @@
       recent.forEach((item) => {
         const card = document.createElement("div");
         card.className = "border rounded p-3 d-flex gap-3";
-        const when = item.created ? new Date(item.created + "Z").toLocaleString() : "";
-
-        let badge;
-        let title;
-        let snippet;
-        let imageUrl;
-        if (item.kind === "social") {
-          const d = item.data;
-          badge = '<span class="text-muted-custom">Social · ' + escapeHtml(d.status || "draft") + "</span>";
-          title = "Social post";
-          snippet = String(d.content || "");
-          imageUrl = d.image_url || "";
-        } else {
-          const p = item.data;
-          badge = '<span class="text-warning">Blog · unpublished</span>';
-          title = String(p.title || "Untitled");
-          snippet = String(p.excerpt || "");
-          imageUrl = p.cover_image_path || "";
-        }
+        const when = item.created_at ? new Date(item.created_at + "Z").toLocaleString() : "";
+        const badge = '<span class="text-muted-custom">' + escapeHtml(CONTENT_KIND_LABEL[item.kind] || item.kind) + " · " + escapeHtml(item.status || "draft") + "</span>";
+        const title = String(item.title || CONTENT_KIND_LABEL[item.kind] || "Draft");
+        let snippet = String(item.body || item.excerpt || "");
         if (snippet.length > 140) snippet = snippet.slice(0, 137) + "…";
 
-        const thumb = imageUrl
-          ? '<img src="' + escapeHtml(imageUrl) + '" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:.4rem;flex-shrink:0;">'
+        const thumb = item.image_url
+          ? '<img src="' + escapeHtml(item.image_url) + '" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:.4rem;flex-shrink:0;">'
           : "";
         card.innerHTML =
           thumb

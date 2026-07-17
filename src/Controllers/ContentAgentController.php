@@ -134,9 +134,10 @@ class ContentAgentController
     {
         return [
             'name' => 'save_social_draft',
-            'description' => 'Save a social media post as a draft for Caleb to review on the Social Drafts '
-                . 'page. Nothing is published — it lands with status "draft". Call this once the caption is '
-                . 'ready; attach a flyer by passing its url from create_flyer as image_url.',
+            'description' => 'Save a social media post as a draft for Caleb to review, correct, and download on '
+                . 'the Content Studio page. Nothing is published — it lands with status "draft". Call this once '
+                . 'the caption is ready; attach a flyer by passing its url from create_flyer as image_url and it '
+                . 'will be kept together with that image as one item.',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
@@ -154,16 +155,15 @@ class ContentAgentController
     {
         return [
             'name' => 'save_blog_draft',
-            'description' => 'Save a blog post as an UNPUBLISHED draft for Caleb to review, edit, and publish '
-                . 'himself on the Blog page. Never implies it is live. Provide a real title, a one-to-two '
-                . 'sentence excerpt, and the full body (Markdown/HTML as the blog editor expects).',
+            'description' => 'Save a blog post as a draft for Caleb to review and correct on the Content Studio '
+                . 'page. Never implies it is live or published. Provide a real title, a one-to-two sentence '
+                . 'excerpt, and the full body (Markdown/HTML as the blog editor expects).',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
                     'title' => ['type' => 'STRING'],
                     'excerpt' => ['type' => 'STRING', 'description' => 'Short summary shown in listings and previews.'],
                     'body' => ['type' => 'STRING', 'description' => 'The full article body.'],
-                    'category' => ['type' => 'STRING', 'description' => 'Optional category label.'],
                     'cover_image_url' => ['type' => 'STRING', 'description' => 'Optional cover image path, e.g. a url returned by create_flyer (landscape works best).'],
                 ],
                 'required' => ['title', 'excerpt', 'body'],
@@ -176,14 +176,14 @@ class ContentAgentController
         return match ($name) {
             'get_site_info' => SharedAgentTools::getSiteInfo(),
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
-            'create_flyer' => self::toolCreateFlyer($args),
+            'create_flyer' => self::toolCreateFlyer($args, $pdo),
             'save_social_draft' => self::toolSaveSocialDraft($args, $pdo),
             'save_blog_draft' => self::toolSaveBlogDraft($args, $pdo),
             default => ['error' => 'Unknown tool.'],
         };
     }
 
-    private static function toolCreateFlyer(array $args): array
+    private static function toolCreateFlyer(array $args, \PDO $pdo): array
     {
         $description = trim((string) ($args['description'] ?? ''));
         $size = strtolower(trim((string) ($args['size'] ?? '')));
@@ -201,12 +201,16 @@ class ContentAgentController
             return ['error' => 'Image generation failed — the image provider may be unconfigured or unreachable. Tell Caleb you couldn\'t create the flyer right now.'];
         }
 
+        // Persist it to the Content Studio immediately so every generated image
+        // is reviewable/downloadable even if no caption is saved for it.
+        ContentStudioController::recordFlyer($pdo, $image['url'], $spec['label'], $description);
+
         return [
             'url' => $image['url'],
             'label' => $spec['label'],
             'width' => $image['width'],
             'height' => $image['height'],
-            'note' => 'The flyer has been generated and shown to Caleb. Pass this url as image_url on save_social_draft to attach it to a post.',
+            'note' => 'The flyer has been generated, shown to Caleb, and saved to the Content Studio. Pass this url as image_url on save_social_draft to attach a caption to it.',
         ];
     }
 
@@ -220,18 +224,15 @@ class ContentAgentController
         $hashtags = trim((string) ($args['hashtags'] ?? ''));
         $imageUrl = trim((string) ($args['image_url'] ?? ''));
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, image_url, ai_provider, status) '
-            . "VALUES ('general', NULL, ?, ?, ?, ?, 'content-agent', 'draft')"
-        );
-        $stmt->execute([
+        $id = ContentStudioController::recordSocial(
+            $pdo,
             $content,
             $shortContent !== '' ? $shortContent : null,
             $hashtags !== '' ? $hashtags : null,
-            $imageUrl !== '' ? $imageUrl : null,
-        ]);
+            $imageUrl !== '' ? $imageUrl : null
+        );
 
-        return ['saved' => true, 'id' => (int) $pdo->lastInsertId(), 'note' => 'Saved as a draft on the Social Drafts page for Caleb to review.'];
+        return ['saved' => true, 'id' => $id, 'note' => 'Saved to the Content Studio page for Caleb to review, correct, and download.'];
     }
 
     private static function toolSaveBlogDraft(array $args, \PDO $pdo): array
@@ -242,53 +243,11 @@ class ContentAgentController
         if ($title === '' || $excerpt === '' || $body === '') {
             return ['error' => 'title, excerpt, and body are all required to save a blog draft.'];
         }
-        $category = trim((string) ($args['category'] ?? ''));
         $cover = trim((string) ($args['cover_image_url'] ?? ''));
-        // blog_posts.cover_image_path is NOT NULL; fall back to the site's
-        // default share image so a text-only draft still saves. Caleb can swap
-        // it on the Blog page before publishing.
-        if ($cover === '') {
-            $cover = '/uploads/og-image.png';
-        }
 
-        $slug = self::uniqueSlug($title, $pdo);
+        $id = ContentStudioController::recordBlog($pdo, $title, $excerpt, $body, $cover !== '' ? $cover : null);
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO blog_posts (slug, title, excerpt, body, category, cover_image_path, is_published) '
-            . 'VALUES (?, ?, ?, ?, ?, ?, 0)'
-        );
-        $stmt->execute([
-            $slug,
-            $title,
-            $excerpt,
-            $body,
-            $category !== '' ? $category : null,
-            $cover,
-        ]);
-
-        return ['saved' => true, 'id' => (int) $pdo->lastInsertId(), 'slug' => $slug, 'note' => 'Saved as an UNPUBLISHED draft on the Blog page for Caleb to review and publish.'];
-    }
-
-    /** Slugify the title and guarantee uniqueness against existing blog_posts. */
-    private static function uniqueSlug(string $title, \PDO $pdo): string
-    {
-        $base = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $title), '-'));
-        if ($base === '') {
-            $base = 'post';
-        }
-        $base = substr($base, 0, 80);
-
-        $slug = $base;
-        $check = $pdo->prepare('SELECT 1 FROM blog_posts WHERE slug = ?');
-        for ($i = 0; $i < 20; $i++) {
-            $check->execute([$slug]);
-            if ($check->fetchColumn() === false) {
-                return $slug;
-            }
-            $slug = $base . '-' . bin2hex(random_bytes(2));
-        }
-        // Extremely unlikely; fall back to a guaranteed-unique suffix.
-        return $base . '-' . bin2hex(random_bytes(4));
+        return ['saved' => true, 'id' => $id, 'note' => 'Saved as a blog draft on the Content Studio page for Caleb to review and correct.'];
     }
 
     private static function buildChatSystemPrompt(): string
@@ -314,12 +273,12 @@ class ContentAgentController
             . "automatically.\n"
             . "- save_social_draft: save a caption as a draft (attach a flyer via image_url from create_flyer).\n"
             . "- save_blog_draft: save a full blog post as an UNPUBLISHED draft.\n\n"
-            . "Nothing you save is published — blog drafts stay unpublished and social drafts stay in draft "
-            . "status for Caleb to review, edit, and publish himself. Be honest about that: never claim "
-            . "something is live or posted. When you save or generate something, tell him plainly what you "
-            . "made and where to find it (the Blog page or the Social Drafts page). Ask a clarifying question "
-            . "or two when the brief is thin, but don't interrogate — lean toward drafting something concrete "
-            . "he can react to.";
+            . "Nothing you save is published — everything you create (captions, flyers, and blog drafts) lands "
+            . "in the Content Studio for Caleb to review, correct, and download before he uses it. Be honest "
+            . "about that: never claim something is live or posted. When you save or generate something, tell "
+            . "him plainly what you made and that it's waiting on the Content Studio page. Ask a clarifying "
+            . "question or two when the brief is thin, but don't interrogate — lean toward drafting something "
+            . "concrete he can react to.";
     }
 
     /** Lightly flavors the studio persona's framing; never surfaced in the content itself. */
