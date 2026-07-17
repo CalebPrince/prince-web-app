@@ -118,6 +118,46 @@ class LiveChatController
     }
 
     /**
+     * POST /api/v1/admin/agents/lisa/chat — body: {message, transcript: [{role,text}, ...]}.
+     * The same Lisa the public widget and WhatsApp use (generateReply(), same
+     * brain, same tools), but reachable from the admin "Talk to Agents"
+     * console so Caleb can hold a live working conversation with her.
+     *
+     * Runs in owner mode ($isOwner = true) — exactly like the WhatsApp
+     * owner-number path — so she drops the lead-capture/sales workflow: no
+     * asking for name/email/phone, no quote pitch, no log_inquiry treating
+     * this as a new lead. Tools stay available where genuinely useful
+     * (check_availability, get_site_info, search_content, audit_website).
+     * Stateless: the transcript lives in the browser and is replayed each
+     * turn, matching the other admin agents (see NurturerController::chat()).
+     */
+    public static function adminChat(): void
+    {
+        AuthMiddleware::requireAuth();
+        // Same worst-case provider-fallback budget as the public widget's
+        // message() — a reply can fall through Gemini -> OpenRouter -> Groq.
+        set_time_limit(135);
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $message = trim((string) ($data['message'] ?? ''));
+        $transcript = is_array($data['transcript'] ?? null) ? $data['transcript'] : [];
+
+        if ($message === '' || mb_strlen($message) > 1000) {
+            Response::error('A message under 1000 characters is required.', 422);
+        }
+        if (count($transcript) > self::MAX_TRANSCRIPT_MESSAGES) {
+            $transcript = array_slice($transcript, -self::MAX_TRANSCRIPT_MESSAGES);
+        }
+        $transcript[] = ['role' => 'user', 'text' => $message];
+
+        $pdo = Database::get();
+        $projects = self::projectCatalog($pdo);
+        $result = self::generateReply($message, $transcript, $projects, $pdo, true);
+
+        Response::json(['reply' => $result['reply']]);
+    }
+
+    /**
      * Shared by the web widget (message()) and the WhatsApp webhook — runs one
      * turn against Gemini -> OpenRouter -> Groq -> keyword/booking fallback and
      * returns the reply plus which path served it. $transcript must already

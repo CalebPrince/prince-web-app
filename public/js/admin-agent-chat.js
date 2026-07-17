@@ -1,5 +1,6 @@
 (function () {
   const AGENTS = {
+    lisa: { label: "Lisa", nameKey: "chat_assistant_name", genderKey: "chat_voice_gender", accentKey: "chat_voice_accent", fallbackName: "Lisa" },
     beacon: { label: "Beacon", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", accentKey: "beacon_voice_accent", fallbackName: "Beacon" },
     nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Nurturer" },
     proposal: { label: "Proposal", nameKey: "proposal_assistant_name", genderKey: "proposal_voice_gender", accentKey: "proposal_voice_accent", fallbackName: "Ledger" },
@@ -32,7 +33,7 @@
   const faceSlot = document.getElementById("agent-chat-face");
   const faceNameEl = document.getElementById("agent-chat-face-name");
 
-  let activeAgent = "beacon";
+  let activeAgent = "lisa";
   let transcript = []; // [{role: 'user'|'agent', text}]
   let agentSettings = {}; // populated from /api/v1/content
   let face = null; // current agent's animated avatar (public/js/agent-face.js)
@@ -541,6 +542,8 @@
     } catch (_) {
       agentSettings = {};
     }
+    document.getElementById("tab-lisa").innerHTML =
+      '<i class="bi bi-headset me-1"></i>' + (agentSettings.chat_assistant_name || "Lisa");
     document.getElementById("tab-beacon").innerHTML =
       '<i class="bi bi-binoculars me-1"></i>' + (agentSettings.beacon_assistant_name || "Beacon");
     document.getElementById("tab-nurturer").innerHTML =

@@ -223,6 +223,7 @@ $router->delete('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::
 $router->post('/api/v1/admin/marketing-leads/{id}/audit', [MarketingLeadController::class, 'runAudit']);
 $router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLeadController::class, 'generatePitch']);
 $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);
+$router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/beacon/chat', [BeaconController::class, 'chat']);
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
 $router->post('/api/v1/admin/agents/proposal/chat', [ProposalAgentController::class, 'chat']);
