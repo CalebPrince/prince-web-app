@@ -135,9 +135,9 @@ class ProposalAgentController
                 continue;
             }
             $milestones[] = [
-                'title' => $title,
+                'title' => SharedAgentTools::stripMarkdown($title),
                 'amount' => $amount,
-                'due_note' => trim((string) ($milestone['due_note'] ?? '')),
+                'due_note' => SharedAgentTools::stripMarkdown(trim((string) ($milestone['due_note'] ?? ''))),
             ];
         }
         if (!$milestones) {
@@ -148,14 +148,14 @@ class ProposalAgentController
         return [
             'client_name' => (string) ($parsed['client_name'] ?? ''),
             'client_email' => (string) ($parsed['client_email'] ?? ''),
-            'title' => (string) $parsed['title'],
-            'scope' => (string) $parsed['scope'],
-            'timeline' => (string) ($parsed['timeline'] ?? ''),
-            'terms' => (string) ($parsed['terms'] ?? ''),
+            'title' => SharedAgentTools::stripMarkdown((string) $parsed['title']),
+            'scope' => SharedAgentTools::stripMarkdown((string) $parsed['scope']),
+            'timeline' => SharedAgentTools::stripMarkdown((string) ($parsed['timeline'] ?? '')),
+            'terms' => SharedAgentTools::stripMarkdown((string) ($parsed['terms'] ?? '')),
             'currency' => $currency,
             'milestones' => $milestones,
             'grounding_source' => (string) ($parsed['grounding_source'] ?? 'none'),
-            'grounding_note' => (string) ($parsed['grounding_note'] ?? ''),
+            'grounding_note' => SharedAgentTools::stripMarkdown((string) ($parsed['grounding_note'] ?? '')),
         ];
     }
 
@@ -192,7 +192,7 @@ class ProposalAgentController
             Response::error('Could not generate a reply — check that an AI provider is configured and reachable.', 502);
         }
 
-        Response::json(['reply' => $result['reply']]);
+        Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
     }
 
     private static function generateToolDeclarations(): array

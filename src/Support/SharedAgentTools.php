@@ -16,6 +16,50 @@ namespace App\Support;
  */
 class SharedAgentTools
 {
+    /**
+     * Strip common Markdown formatting *markers* an agent sometimes reaches
+     * for (bold/italic asterisks, bullet dashes, "1." list numbering,
+     * headings) from a reply, email, or draft field — never the words
+     * themselves. Every place this runs (chat bubbles, drafted emails,
+     * proposal text, blog/social drafts) displays plain text, not rendered
+     * Markdown, so a literal "**" or a "- " at a line start would otherwise
+     * show up exactly as typed instead of doing anything.
+     */
+    public static function stripMarkdown(string $text): string
+    {
+        return trim(self::stripMarkdownMarkers($text));
+    }
+
+    /**
+     * Same transformations as stripMarkdown() but without trimming leading/
+     * trailing whitespace. Used when a caller reassembles text from several
+     * segments (e.g. ContentAgentController's fence-aware blog-body variant,
+     * which runs this on the prose around ```code``` blocks and leaves the
+     * fences untouched) — trimming each segment individually would eat the
+     * blank line/newline that separated it from its neighbor, running prose
+     * straight into the next segment with no line break.
+     */
+    public static function stripMarkdownMarkers(string $text): string
+    {
+        // Horizontal rules on their own line: ---, ***, ___.
+        $text = preg_replace('/^[ \t]*([-*_])\1{2,}[ \t]*$/m', '', $text);
+        // Headings: "## Title" -> "Title".
+        $text = preg_replace('/^[ \t]*#{1,6}[ \t]+/m', '', $text);
+        // Bullet list markers: "- item" / "* item" / "+ item" -> "item".
+        $text = preg_replace('/^[ \t]*[-*+][ \t]+/m', '', $text);
+        // Numbered list markers: "1. item" / "2) item" -> "item".
+        $text = preg_replace('/^[ \t]*\d+[.)][ \t]+/m', '', $text);
+        // Bold/italic emphasis: **text**, __text__, *text*, _text_ -> text.
+        $text = preg_replace('/\*\*(.+?)\*\*/s', '$1', $text);
+        $text = preg_replace('/__(.+?)__/s', '$1', $text);
+        $text = preg_replace('/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/s', '$1', $text);
+        $text = preg_replace('/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/s', '$1', $text);
+        // Any leftover stray markers the pairs above didn't catch.
+        $text = str_replace(['**', '__'], '', $text);
+        // List-marker stripping can leave doubled-up blank lines behind.
+        return preg_replace('/\n{3,}/', "\n\n", (string) $text);
+    }
+
     /** @return array<string,mixed> Background facts about Prince, sourced from Settings — never guessed. */
     public static function getSiteInfo(): array
     {

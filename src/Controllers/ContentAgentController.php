@@ -92,7 +92,7 @@ class ContentAgentController
             Response::error('Could not generate a reply — check that an AI provider is configured and reachable.', 502);
         }
 
-        Response::json(['reply' => $result['reply'], 'images' => $generatedImages]);
+        Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply']), 'images' => $generatedImages]);
     }
 
     private static function chatToolDeclarations(): array
@@ -270,8 +270,9 @@ class ContentAgentController
         if ($content === '') {
             return ['error' => 'content is required to save a social draft.'];
         }
-        $shortContent = trim((string) ($args['short_content'] ?? ''));
-        $hashtags = trim((string) ($args['hashtags'] ?? ''));
+        $content = SharedAgentTools::stripMarkdown($content);
+        $shortContent = SharedAgentTools::stripMarkdown(trim((string) ($args['short_content'] ?? '')));
+        $hashtags = SharedAgentTools::stripMarkdown(trim((string) ($args['hashtags'] ?? '')));
         $imageUrl = trim((string) ($args['image_url'] ?? ''));
 
         $id = ContentStudioController::recordSocial(
@@ -293,11 +294,37 @@ class ContentAgentController
         if ($title === '' || $excerpt === '' || $body === '') {
             return ['error' => 'title, excerpt, and body are all required to save a blog draft.'];
         }
+        $title = SharedAgentTools::stripMarkdown($title);
+        $excerpt = SharedAgentTools::stripMarkdown($excerpt);
+        // Blog bodies legitimately use ```lang fenced code blocks (rendered
+        // with highlight.js — see BlogController/README); stripping list and
+        // emphasis markers inside those would corrupt real code, so those
+        // fences are left completely untouched.
+        $body = self::stripMarkdownKeepingCodeFences($body);
         $cover = trim((string) ($args['cover_image_url'] ?? ''));
 
         $id = ContentStudioController::recordBlog($pdo, $title, $excerpt, $body, $cover !== '' ? $cover : null);
 
         return ['saved' => true, 'id' => $id, 'note' => 'Saved as a blog draft on the Content Studio page for Caleb to review and correct.'];
+    }
+
+    /**
+     * Like SharedAgentTools::stripMarkdown(), but leaves ```fenced code```
+     * blocks completely untouched. Uses stripMarkdownMarkers() (no trim) on
+     * each non-code segment and only trims the final joined string — trimming
+     * every segment individually would eat the blank line/newline that
+     * separates a code fence from its surrounding prose, running them
+     * together with no line break.
+     */
+    private static function stripMarkdownKeepingCodeFences(string $text): string
+    {
+        $parts = preg_split('/(```.*?```)/s', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+        foreach ($parts as $i => $part) {
+            if (!str_starts_with($part, '```')) {
+                $parts[$i] = SharedAgentTools::stripMarkdownMarkers($part);
+            }
+        }
+        return trim(implode('', $parts));
     }
 
     private static function buildChatSystemPrompt(): string

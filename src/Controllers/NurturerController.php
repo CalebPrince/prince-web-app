@@ -92,8 +92,8 @@ class NurturerController
         }
 
         return [
-            'subject_line' => (string) $parsed['subject_line'],
-            'email_body' => (string) $parsed['email_body'],
+            'subject_line' => SharedAgentTools::stripMarkdown((string) $parsed['subject_line']),
+            'email_body' => SharedAgentTools::stripMarkdown((string) $parsed['email_body']),
         ];
     }
 
@@ -132,7 +132,7 @@ class NurturerController
             Response::error('Could not generate a reply — check that an AI provider is configured and reachable.', 502);
         }
 
-        Response::json(['reply' => $result['reply']]);
+        Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
     }
 
     /**

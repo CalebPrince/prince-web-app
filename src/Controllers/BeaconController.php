@@ -129,12 +129,13 @@ class BeaconController
             error_log('Beacon generateForPost: qualified lead with no drafted_reply: ' . substr($stripped, 0, 800));
             return null;
         }
+        $draftedReply = SharedAgentTools::stripMarkdown((string) ($parsed['drafted_reply'] ?? ''));
         if ($qualified) {
             $pdo->prepare(
                 'INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
                 $platform, $username, $postContent, $postUrl,
-                (int) $parsed['confidence_score'], (string) $parsed['reasoning'], (string) $parsed['drafted_reply'],
+                (int) $parsed['confidence_score'], (string) $parsed['reasoning'], $draftedReply,
                 $source, $postAge,
             ]);
         }
@@ -143,7 +144,7 @@ class BeaconController
             'qualified' => $qualified,
             'confidence_score' => (int) $parsed['confidence_score'],
             'reasoning' => (string) $parsed['reasoning'],
-            'drafted_reply' => (string) ($parsed['drafted_reply'] ?? ''),
+            'drafted_reply' => $draftedReply,
         ];
     }
 
@@ -182,7 +183,7 @@ class BeaconController
             Response::error('Could not generate a reply — check that an AI provider is configured and reachable.', 502);
         }
 
-        Response::json(['reply' => $result['reply']]);
+        Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
     }
 
     /** GET /api/v1/admin/beacon-leads — latest qualified leads, from either draft() or chat(). */
