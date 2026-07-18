@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\RateLimitMiddleware;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
@@ -75,6 +76,12 @@ class ProjectRequestController
         $inquiryId = (int) $pdo->lastInsertId();
 
         $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([$inquiryId]);
+
+        Automations::fire('quote_requested', trim($data['email']), [
+            'name' => trim($data['name']) ?: null,
+            'lead_industry' => trim((string) ($data['project_type'] ?? '')) ?: null,
+            'last_action' => 'Submitted a detailed project request',
+        ], $pdo);
 
         // Best-effort courtesy confirmation to the client — the admin notification
         // above is the reliable, retried path; this one just needs to not crash

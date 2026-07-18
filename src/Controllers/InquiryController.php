@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Validator;
@@ -49,6 +50,11 @@ class InquiryController
         $inquiryId = (int) $pdo->lastInsertId();
 
         $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([$inquiryId]);
+
+        Automations::fire('inquiry_created', trim($data['email']), [
+            'name' => trim($data['name']) ?: null,
+            'last_action' => 'Sent a message through the contact form',
+        ], $pdo);
 
         Response::json(['status' => 'received'], 201);
     }

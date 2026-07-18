@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
@@ -41,6 +42,9 @@ class NewsletterController
                 $pdo->prepare("UPDATE newsletter_subscribers SET status = 'subscribed' WHERE id = ?")
                     ->execute([$existing['id']]);
                 MakeWebhook::send('newsletter_subscribed', ['email' => $email]);
+                Automations::fire('newsletter_subscribed', $email, [
+                    'last_action' => 'Re-subscribed to the newsletter',
+                ], $pdo);
             }
             Response::json(['status' => 'subscribed'], 200);
         }
@@ -49,6 +53,10 @@ class NewsletterController
             ->execute([$email, bin2hex(random_bytes(16))]);
 
         MakeWebhook::send('newsletter_subscribed', ['email' => $email]);
+
+        Automations::fire('newsletter_subscribed', $email, [
+            'last_action' => 'Subscribed to the newsletter',
+        ], $pdo);
 
         Response::json(['status' => 'subscribed'], 201);
     }

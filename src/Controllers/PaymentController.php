@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
@@ -246,6 +247,13 @@ class PaymentController
 
         if ($verifiedSuccess) {
             self::sendOnboardingEmail($payment);
+            // Same genuine pending -> success transition the onboarding email
+            // rides on (guarded upstream), so a paid client is enrolled exactly
+            // once into any active payment_received automation.
+            Automations::fire('payment_received', (string) ($payment['email'] ?? ''), [
+                'name' => trim((string) ($payment['customer_name'] ?? '')) ?: null,
+                'last_action' => 'Completed a payment',
+            ], $pdo);
         }
 
         return $newStatus;

@@ -31,6 +31,7 @@ $sequence3Offset = (int) (Settings::get('nurturer_sequence_3_day_offset') ?: 12)
 $stmt = $pdo->prepare(
     "SELECT e.id AS enrollment_id, e.email, e.name, e.unsubscribe_token, e.lead_industry, e.last_action
      FROM drip_enrollments e
+     JOIN automations a ON a.id = e.automation_id AND a.is_active = 1
      WHERE e.status = 'active'
        AND e.nurturer_enabled = 1
        AND datetime(e.enrolled_at, '+' || ? || ' days') <= datetime('now')

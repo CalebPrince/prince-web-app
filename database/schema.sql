@@ -591,12 +591,35 @@ CREATE TABLE IF NOT EXISTS subscription_charges (
 );
 CREATE INDEX IF NOT EXISTS idx_subscription_charges_sub ON subscription_charges (subscription_id, paid_at);
 
--- Drip email sequence: a single global sequence of steps sent N days after
--- enrollment by database/send_drip_emails.php. Steps ship inactive by
--- default so nothing goes out until the admin has reviewed the copy.
--- {{name}} in subject/body is replaced per-recipient at send time.
+-- Email automations: each is a named sequence with its own trigger event.
+-- A contact is auto-enrolled into every ACTIVE automation whose trigger
+-- fires (see App\Support\Automations::fire), or enrolled by hand from the
+-- admin. is_active is the master switch: it gates both trigger enrollment
+-- and whether the automation's steps send at all, so a half-written
+-- automation can sit here doing nothing until the copy is reviewed and
+-- switched on. Automation #1 is the original cold-lead outreach sequence,
+-- seeded active so existing behaviour is preserved on upgrade.
+CREATE TABLE IF NOT EXISTS automations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  description TEXT,
+  trigger_event TEXT NOT NULL DEFAULT 'manual' CHECK (trigger_event IN (
+    'manual', 'marketing_pitch_sent', 'inquiry_created', 'quote_requested',
+    'proposal_sent', 'payment_received', 'appointment_booked',
+    'project_completed', 'newsletter_subscribed', 'chat_lead_captured'
+  )),
+  is_active INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Steps belong to one automation and go out N days after enrollment, sent by
+-- database/send_drip_emails.php. Steps ship inactive by default so nothing
+-- goes out until the admin has reviewed the copy. {{name}} in subject/body
+-- is replaced per-recipient at send time.
 CREATE TABLE IF NOT EXISTS drip_steps (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  automation_id INTEGER NOT NULL DEFAULT 1 REFERENCES automations(id) ON DELETE CASCADE,
   day_offset INTEGER NOT NULL,
   subject TEXT NOT NULL,
   body TEXT NOT NULL,
@@ -604,16 +627,22 @@ CREATE TABLE IF NOT EXISTS drip_steps (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- NB: the automation_id indexes for drip_steps/drip_enrollments live in
+-- migrate.php, not here. migrate.php execs this whole file first, before the
+-- ALTER blocks add automation_id to a pre-existing database — so an index on
+-- automation_id in this file would reference a column that doesn't exist yet.
 
--- One enrollment per email address. drip_sends records exactly which steps
--- an enrollment has received (unique per pair) so a step edited to a new
--- day_offset can never re-send, and a stopped/unsubscribed enrollment
--- simply stops matching the cron's query.
+-- One enrollment per (automation, email): the same contact can run through
+-- several automations at once, but only once through each. drip_sends
+-- records exactly which steps an enrollment has received (unique per pair)
+-- so a step edited to a new day_offset can never re-send, and a
+-- stopped/unsubscribed enrollment simply stops matching the cron's query.
 CREATE TABLE IF NOT EXISTS drip_enrollments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT UNIQUE NOT NULL,
+  automation_id INTEGER NOT NULL DEFAULT 1 REFERENCES automations(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
   name TEXT,
-  source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'marketing_lead')),
+  source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'marketing_lead', 'trigger')),
   lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'stopped')),
   unsubscribe_token TEXT UNIQUE NOT NULL,
@@ -624,9 +653,11 @@ CREATE TABLE IF NOT EXISTS drip_enrollments (
   -- lead_industry/last_action feed straight into Nurturer's prompt inputs.
   nurturer_enabled INTEGER NOT NULL DEFAULT 0,
   lead_industry TEXT,
-  last_action TEXT
+  last_action TEXT,
+  UNIQUE (automation_id, email)
 );
 CREATE INDEX IF NOT EXISTS idx_drip_enrollments_status ON drip_enrollments (status, enrolled_at);
+-- idx_drip_enrollments_automation lives in migrate.php (see note above drip_steps).
 
 CREATE TABLE IF NOT EXISTS drip_sends (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
-<title>Drip Emails — Admin</title>
+<title>Automations — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -52,7 +52,7 @@
       <a href="/admin/marketing-leads.html" class="nav-link"><i class="bi bi-bullseye nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Marketing Leads</span></a>
       <a href="/admin/chats.html" class="nav-link"><i class="bi bi-chat-dots nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Chat Leads</span><span id="nav-badge-chats" class="notif-badge d-none"></span></a>
       <a href="/admin/newsletter.html" class="nav-link"><i class="bi bi-envelope nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Newsletter</span></a>
-      <a href="/admin/drip.html" class="nav-link active"><i class="bi bi-send nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Drip Emails</span></a>
+      <a href="/admin/drip.html" class="nav-link active"><i class="bi bi-diagram-3 nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Automations</span></a>
       <a href="/admin/agent-chat.html" class="nav-link"><i class="bi bi-mic nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Talk to Agents</span></a>
       <div class="nav-group-label">Bookings & Payments</div>
       <a href="/admin/appointments.html" class="nav-link"><i class="bi bi-calendar-check nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Bookings</span></a>
@@ -71,106 +71,173 @@
   </div>
 
   <div class="flex-grow-1 p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-send"></i></div>
-        <div>
-          <h3 class="mb-0">Drip Emails</h3>
-          <p class="mb-0 small text-muted-custom">Automated follow-up sequence. Leads are enrolled when you send a pitch; steps go out N days later.</p>
-        </div>
-      </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary" id="enroll-btn">+ Enroll Email</button>
-        <button class="btn-brand" id="new-step-btn">+ Add Step</button>
-      </div>
-    </div>
 
-    <ul class="nav nav-tabs mb-3">
-      <li class="nav-item"><button class="nav-link active" id="tab-steps">Sequence Steps</button></li>
-      <li class="nav-item"><button class="nav-link" id="tab-enrollments">Enrollments</button></li>
-      <li class="nav-item"><button class="nav-link" id="tab-ai-sends">AI Sends</button></li>
-    </ul>
-
-    <div id="panel-steps">
-      <div class="admin-card p-0">
-        <table class="table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th class="ps-3">Sends</th>
-              <th>Subject</th>
-              <th>Active</th>
-              <th>Sent</th>
-              <th class="text-end pe-3"></th>
-            </tr>
-          </thead>
-          <tbody id="steps-tbody"></tbody>
-        </table>
-      </div>
-      <p class="small text-muted-custom mt-2">Use <code>{{name}}</code> in the subject or body to personalize. Steps ship inactive — flip them on once the copy is right. Emails go out via <code>database/send_drip_emails.php</code> on cron (hourly recommended).</p>
-    </div>
-
-    <div id="panel-enrollments" class="d-none">
-      <div class="admin-card p-0">
-        <table class="table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th class="ps-3">Email</th>
-              <th>Source</th>
-              <th>Status</th>
-              <th title="Send Nurturer's AI-written sequence 2/3 follow-ups to this lead">AI</th>
-              <th>Progress</th>
-              <th>Enrolled</th>
-              <th class="text-end pe-3"></th>
-            </tr>
-          </thead>
-          <tbody id="enrollments-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="panel-ai-sends" class="d-none">
-      <p class="small text-muted-custom">Emails Nurturer actually generated and sent — sequence 2/3 follow-ups for leads with "AI-personalize via Nurturer" enabled, sent via <code>database/send_nurturer_emails.php</code> on cron. This is separate from the fixed-template steps above.</p>
-
-      <div class="admin-card p-4 mb-4">
-        <h6 class="mb-1">Send timing</h6>
-        <p class="small text-muted-custom">Days after enrolment each AI follow-up goes out. Sequence 1 isn't listed — that's always whichever fixed step above the lead receives, never AI-written. Pick days that don't collide with your active steps, or an opted-in lead gets two emails in one day.</p>
-        <div class="row g-3">
-          <div class="col-sm-4">
-            <label class="form-label" for="nurturer-offset-2">Sequence 2 (value / case study)</label>
-            <div class="input-group">
-              <input type="number" min="0" class="form-control" id="nurturer-offset-2">
-              <span class="input-group-text">days</span>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <label class="form-label" for="nurturer-offset-3">Sequence 3 (the close)</label>
-            <div class="input-group">
-              <input type="number" min="0" class="form-control" id="nurturer-offset-3">
-              <span class="input-group-text">days</span>
-            </div>
+    <!-- ===================== LIST VIEW ===================== -->
+    <div id="automations-view">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-diagram-3"></i></div>
+          <div>
+            <h3 class="mb-0">Automations</h3>
+            <p class="mb-0 small text-muted-custom">Named email sequences that enrol contacts automatically when a lifecycle event fires. Each ships paused until you switch it on.</p>
           </div>
         </div>
-        <div id="nurturer-timing-msg" class="alert py-2 small d-none mt-3"></div>
-        <button type="button" class="btn-brand mt-3" id="nurturer-timing-save">Save send timing</button>
+        <button class="btn-brand" id="new-automation-btn">+ New Automation</button>
       </div>
 
-      <div class="admin-card p-0">
-        <table class="table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th class="ps-3">Lead</th>
-              <th>Sequence</th>
-              <th>Subject</th>
-              <th>Sent</th>
-            </tr>
-          </thead>
-          <tbody id="ai-sends-tbody"></tbody>
-        </table>
+      <div id="automations-list" class="row g-3"></div>
+      <div id="automations-empty" class="text-muted-custom small d-none py-5 text-center">No automations yet. Create the first one to start enrolling contacts.</div>
+    </div>
+
+    <!-- ===================== DETAIL VIEW ===================== -->
+    <div id="detail-view" class="d-none">
+      <button class="btn btn-link px-0 mb-2 text-decoration-none" id="back-btn"><i class="bi bi-arrow-left me-1"></i>All automations</button>
+
+      <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-diagram-3"></i></div>
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h3 class="mb-0" id="detail-name">Automation</h3>
+              <span class="badge" id="detail-trigger-badge"></span>
+              <div class="form-check form-switch mb-0 ms-1" title="Master switch — enrolment and sending both stop when off">
+                <input type="checkbox" class="form-check-input" id="detail-active-toggle">
+                <label class="form-check-label small text-muted-custom" for="detail-active-toggle" id="detail-active-label">Active</label>
+              </div>
+            </div>
+            <p class="mb-0 small text-muted-custom" id="detail-description"></p>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary" id="edit-automation-btn">Edit</button>
+          <button class="btn btn-outline-secondary" id="enroll-btn">+ Enrol Email</button>
+          <button class="btn-brand" id="new-step-btn">+ Add Step</button>
+        </div>
+      </div>
+
+      <ul class="nav nav-tabs mb-3">
+        <li class="nav-item"><button class="nav-link active" id="tab-steps">Sequence Steps</button></li>
+        <li class="nav-item"><button class="nav-link" id="tab-enrollments">Enrolments</button></li>
+        <li class="nav-item"><button class="nav-link" id="tab-ai-sends">AI Sends</button></li>
+      </ul>
+
+      <div id="panel-steps">
+        <div class="admin-card p-0">
+          <table class="table mb-0 align-middle">
+            <thead>
+              <tr>
+                <th class="ps-3">Sends</th>
+                <th>Subject</th>
+                <th>Active</th>
+                <th>Sent</th>
+                <th class="text-end pe-3"></th>
+              </tr>
+            </thead>
+            <tbody id="steps-tbody"></tbody>
+          </table>
+        </div>
+        <p class="small text-muted-custom mt-2">Use <code>{{name}}</code> in the subject or body to personalize. Steps ship inactive — flip them on once the copy is right. Emails go out via <code>database/send_drip_emails.php</code> on cron (hourly recommended), only while this automation is switched on.</p>
+      </div>
+
+      <div id="panel-enrollments" class="d-none">
+        <div class="admin-card p-0">
+          <table class="table mb-0 align-middle">
+            <thead>
+              <tr>
+                <th class="ps-3">Email</th>
+                <th>Source</th>
+                <th>Status</th>
+                <th title="Send Nurturer's AI-written sequence 2/3 follow-ups to this lead">AI</th>
+                <th>Progress</th>
+                <th>Enrolled</th>
+                <th class="text-end pe-3"></th>
+              </tr>
+            </thead>
+            <tbody id="enrollments-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="panel-ai-sends" class="d-none">
+        <p class="small text-muted-custom">Emails Nurturer actually generated and sent — sequence 2/3 follow-ups for enrolled leads with "AI-personalize via Nurturer" enabled, sent via <code>database/send_nurturer_emails.php</code> on cron. This is separate from the fixed-template steps above, and the list spans every automation.</p>
+
+        <div class="admin-card p-4 mb-4">
+          <h6 class="mb-1">Send timing</h6>
+          <p class="small text-muted-custom">Days after enrolment each AI follow-up goes out. Sequence 1 isn't listed — that's always whichever fixed step above the lead receives, never AI-written. Pick days that don't collide with your active steps, or an opted-in lead gets two emails in one day.</p>
+          <div class="row g-3">
+            <div class="col-sm-4">
+              <label class="form-label" for="nurturer-offset-2">Sequence 2 (value / case study)</label>
+              <div class="input-group">
+                <input type="number" min="0" class="form-control" id="nurturer-offset-2">
+                <span class="input-group-text">days</span>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label" for="nurturer-offset-3">Sequence 3 (the close)</label>
+              <div class="input-group">
+                <input type="number" min="0" class="form-control" id="nurturer-offset-3">
+                <span class="input-group-text">days</span>
+              </div>
+            </div>
+          </div>
+          <div id="nurturer-timing-msg" class="alert py-2 small d-none mt-3"></div>
+          <button type="button" class="btn-brand mt-3" id="nurturer-timing-save">Save send timing</button>
+        </div>
+
+        <div class="admin-card p-0">
+          <table class="table mb-0 align-middle">
+            <thead>
+              <tr>
+                <th class="ps-3">Lead</th>
+                <th>Sequence</th>
+                <th>Subject</th>
+                <th>Sent</th>
+              </tr>
+            </thead>
+            <tbody id="ai-sends-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Automation create/edit modal -->
+<div class="modal fade" id="automation-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="automation-modal-title">New Automation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="automation-form">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="automation-name" required placeholder="e.g. New inquiry welcome">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Trigger</label>
+            <select class="form-select" id="automation-trigger" required></select>
+            <div class="form-text" id="automation-trigger-help"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description <span class="text-muted-custom">(optional)</span></label>
+            <textarea class="form-control" id="automation-description" rows="2" placeholder="What this sequence is for."></textarea>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="automation-active">
+            <label class="form-check-label" for="automation-active">Active <span class="text-muted-custom fw-normal">(enrols and sends — leave off until the steps are ready)</span></label>
+          </div>
+          <div id="automation-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100">Save Automation</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step modal -->
 <div class="modal fade" id="step-modal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -208,14 +275,16 @@
   </div>
 </div>
 
+<!-- Enrol modal -->
 <div class="modal fade" id="enroll-modal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Enroll an Email</h5>
+        <h5 class="modal-title">Enrol an Email</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <p class="small text-muted-custom">Adds this contact to <strong id="enroll-automation-name">this automation</strong>.</p>
         <form id="enroll-form">
           <div class="mb-3">
             <label class="form-label">Email</label>
@@ -228,7 +297,7 @@
           <hr class="my-3">
           <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" id="enroll-nurturer-enabled">
-            <label class="form-check-label" for="enroll-nurturer-enabled">AI-personalize via Nurturer <span class="text-muted-custom fw-normal">(sequence 2/3, alongside the fixed steps above)</span></label>
+            <label class="form-check-label" for="enroll-nurturer-enabled">AI-personalize via Nurturer <span class="text-muted-custom fw-normal">(sequence 2/3, alongside the fixed steps)</span></label>
           </div>
           <div class="mb-3">
             <label class="form-label">Lead industry <span class="text-muted-custom">(optional — improves Nurturer's personalization)</span></label>
@@ -239,7 +308,7 @@
             <input type="text" class="form-control" id="enroll-last-action" placeholder="e.g. Requested a quote via the contact form">
           </div>
           <div id="enroll-msg" class="alert py-2 small d-none"></div>
-          <button type="submit" class="btn-brand w-100">Enroll</button>
+          <button type="submit" class="btn-brand w-100">Enrol</button>
         </form>
       </div>
     </div>

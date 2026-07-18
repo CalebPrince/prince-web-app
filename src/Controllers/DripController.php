@@ -18,31 +18,42 @@ use App\Support\Response;
  */
 class DripController
 {
-    /** GET /api/v1/admin/drip/steps */
+    /** GET /api/v1/admin/drip/steps?automation_id=N — omit the filter for every automation's steps. */
     public static function steps(): void
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $rows = $pdo->query(
-            'SELECT s.*, (SELECT COUNT(*) FROM drip_sends ds WHERE ds.step_id = s.id) AS sent_count
-             FROM drip_steps s ORDER BY s.day_offset ASC, s.id ASC'
-        )->fetchAll();
-        Response::json($rows);
+
+        $automationId = isset($_GET['automation_id']) ? (int) $_GET['automation_id'] : null;
+        $where = $automationId !== null ? 'WHERE s.automation_id = ?' : '';
+        $stmt = $pdo->prepare(
+            "SELECT s.*, (SELECT COUNT(*) FROM drip_sends ds WHERE ds.step_id = s.id) AS sent_count
+             FROM drip_steps s {$where} ORDER BY s.automation_id ASC, s.day_offset ASC, s.id ASC"
+        );
+        $stmt->execute($automationId !== null ? [$automationId] : []);
+        Response::json($stmt->fetchAll());
     }
 
-    /** POST /api/v1/admin/drip/steps — body: {day_offset, subject, body, is_active?} */
+    /** POST /api/v1/admin/drip/steps — body: {automation_id, day_offset, subject, body, is_active?} */
     public static function storeStep(): void
     {
         $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         [$fields, $errors] = self::validateStep($data);
+
+        $pdo = Database::get();
+        $automationId = (int) ($data['automation_id'] ?? 0);
+        $exists = $pdo->prepare('SELECT 1 FROM automations WHERE id = ?');
+        $exists->execute([$automationId]);
+        if (!$exists->fetchColumn()) {
+            $errors[] = 'A valid automation_id is required.';
+        }
         if ($errors) {
             Response::json(['errors' => $errors], 422);
         }
 
-        $pdo = Database::get();
-        $pdo->prepare('INSERT INTO drip_steps (day_offset, subject, body, is_active) VALUES (?, ?, ?, ?)')
-            ->execute([$fields['day_offset'], $fields['subject'], $fields['body'], $fields['is_active']]);
+        $pdo->prepare('INSERT INTO drip_steps (automation_id, day_offset, subject, body, is_active) VALUES (?, ?, ?, ?, ?)')
+            ->execute([$automationId, $fields['day_offset'], $fields['subject'], $fields['body'], $fields['is_active']]);
 
         ActivityLog::log($user, 'created', 'drip_step', (string) $pdo->lastInsertId(), $fields['subject']);
         Response::json(['status' => 'created'], 201);
@@ -89,25 +100,32 @@ class DripController
         Response::json(['status' => 'deleted']);
     }
 
-    /** GET /api/v1/admin/drip/enrollments */
+    /** GET /api/v1/admin/drip/enrollments?automation_id=N — omit the filter for every automation's enrollments. */
     public static function enrollments(): void
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $rows = $pdo->query(
-            'SELECT e.*,
+
+        $automationId = isset($_GET['automation_id']) ? (int) $_GET['automation_id'] : null;
+        $where = $automationId !== null ? 'WHERE e.automation_id = ?' : '';
+        $stmt = $pdo->prepare(
+            "SELECT e.*, a.name AS automation_name,
                     (SELECT COUNT(*) FROM drip_sends ds WHERE ds.enrollment_id = e.id) AS steps_received,
                     (SELECT MAX(ds.sent_at) FROM drip_sends ds WHERE ds.enrollment_id = e.id) AS last_sent_at
-             FROM drip_enrollments e ORDER BY e.enrolled_at DESC'
-        )->fetchAll();
-        Response::json($rows);
+             FROM drip_enrollments e
+             JOIN automations a ON a.id = e.automation_id
+             {$where} ORDER BY e.enrolled_at DESC"
+        );
+        $stmt->execute($automationId !== null ? [$automationId] : []);
+        Response::json($stmt->fetchAll());
     }
 
-    /** POST /api/v1/admin/drip/enrollments — body: {email, name?, lead_industry?, last_action?, nurturer_enabled?} */
+    /** POST /api/v1/admin/drip/enrollments — body: {automation_id?, email, name?, lead_industry?, last_action?, nurturer_enabled?} */
     public static function enroll(): void
     {
         $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $automationId = (int) ($data['automation_id'] ?? 1);
         $email = trim((string) ($data['email'] ?? ''));
         $name = trim((string) ($data['name'] ?? '')) ?: null;
         $leadIndustry = trim((string) ($data['lead_industry'] ?? '')) ?: null;
@@ -119,15 +137,15 @@ class DripController
         }
 
         $pdo = Database::get();
-        $created = self::enrollEmail($pdo, $email, $name, 'manual', null);
-        if (!$created) {
-            Response::error('That email is already enrolled.', 422);
+        $exists = $pdo->prepare('SELECT 1 FROM automations WHERE id = ?');
+        $exists->execute([$automationId]);
+        if (!$exists->fetchColumn()) {
+            Response::error('A valid automation_id is required.', 422);
         }
 
-        if ($nurturerEnabled || $leadIndustry !== null || $lastAction !== null) {
-            $pdo->prepare(
-                'UPDATE drip_enrollments SET nurturer_enabled = ?, lead_industry = ?, last_action = ? WHERE email = ?'
-            )->execute([$nurturerEnabled ? 1 : 0, $leadIndustry, $lastAction, strtolower($email)]);
+        $created = self::enrollEmail($pdo, $automationId, $email, $name, 'manual', null, $nurturerEnabled, $leadIndustry, $lastAction);
+        if (!$created) {
+            Response::error('That email is already enrolled in this automation.', 422);
         }
 
         ActivityLog::log($user, 'enrolled', 'drip_enrollment', $email, $name ?: $email);
@@ -210,8 +228,19 @@ class DripController
     {
         $token = trim((string) ($_GET['token'] ?? ''));
         if ($token !== '') {
-            Database::get()->prepare("UPDATE drip_enrollments SET status = 'stopped' WHERE unsubscribe_token = ?")
-                ->execute([$token]);
+            // One unsubscribe click stops this person everywhere, not just the
+            // one automation the link came from — a contact can now be enrolled
+            // in several at once, and "no longer interested" means all of them.
+            // Look up the email behind the token, then stop every enrollment for
+            // it (their other automations each have their own token, so a
+            // token-only update would leave those quietly still sending).
+            $pdo = Database::get();
+            $stmt = $pdo->prepare('SELECT email FROM drip_enrollments WHERE unsubscribe_token = ?');
+            $stmt->execute([$token]);
+            $email = $stmt->fetchColumn();
+            if ($email !== false) {
+                $pdo->prepare("UPDATE drip_enrollments SET status = 'stopped' WHERE email = ?")->execute([$email]);
+            }
         }
 
         // Same landing page the newsletter uses — the message fits both.
@@ -235,6 +264,7 @@ class DripController
      */
     public static function enrollEmail(
         \PDO $pdo,
+        int $automationId,
         string $email,
         ?string $name,
         string $source,
@@ -244,11 +274,11 @@ class DripController
         ?string $lastAction = null
     ): bool {
         $stmt = $pdo->prepare(
-            'INSERT OR IGNORE INTO drip_enrollments (email, name, source, lead_id, unsubscribe_token, nurturer_enabled, lead_industry, last_action)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT OR IGNORE INTO drip_enrollments (automation_id, email, name, source, lead_id, unsubscribe_token, nurturer_enabled, lead_industry, last_action)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
-            strtolower($email), $name, $source, $leadId, bin2hex(random_bytes(16)),
+            $automationId, strtolower($email), $name, $source, $leadId, bin2hex(random_bytes(16)),
             $nurturerEnabled ? 1 : 0, $leadIndustry, $lastAction,
         ]);
         return $stmt->rowCount() > 0;

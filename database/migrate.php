@@ -342,6 +342,123 @@ if (!in_array('last_action', $dripEnrollmentColumns, true)) {
     $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN last_action TEXT');
 }
 
+// --- Email automations -------------------------------------------------------
+// Generalise the single global drip into named, trigger-driven automations.
+// Automation #1 is the original cold-lead outreach sequence; every existing
+// step and enrollment belongs to it, so nothing already in flight changes
+// behaviour. Seeded active (unlike the trigger automations added later, which
+// ship inactive) precisely to preserve the old always-on marketing follow-up.
+if ((int) $pdo->query('SELECT COUNT(*) FROM automations')->fetchColumn() === 0) {
+    $pdo->prepare(
+        "INSERT INTO automations (id, name, description, trigger_event, is_active)
+         VALUES (1, ?, ?, 'marketing_pitch_sent', 1)"
+    )->execute([
+        'Cold-lead outreach follow-up',
+        'The original outreach sequence. A contact is enrolled when you mark a marketing pitch as sent, or by hand.',
+    ]);
+}
+
+// Seed a starter (inactive) automation for each remaining lifecycle trigger so
+// the whole CRM funnel is visible and one edit away from live. Gated by a
+// settings flag rather than an existence check per trigger, so an automation
+// the admin deliberately deletes doesn't get resurrected on the next deploy.
+if ($pdo->query("SELECT value FROM settings WHERE name = 'automations_defaults_seeded'")->fetchColumn() === false) {
+    $defaults = [
+        ['inquiry_created', 'New inquiry welcome', 'Greets anyone who sends a message through the contact form.'],
+        ['quote_requested', 'Quote request follow-up', 'Follows up with people who submit a detailed project request.'],
+        ['proposal_sent', 'Proposal nudge', 'Gentle reminders after a proposal goes out but is not yet accepted.'],
+        ['payment_received', 'Client onboarding', 'Welcomes and onboards a client once their payment succeeds.'],
+        ['appointment_booked', 'Booking prep', 'Preps a lead for their upcoming call after they book.'],
+        ['project_completed', 'Review request', 'Asks for a testimonial after a session or engagement wraps.'],
+        ['newsletter_subscribed', 'Newsletter nurture', 'Introduces new newsletter subscribers to your work.'],
+        ['chat_lead_captured', 'Chat lead follow-up', 'Follows up with leads who left their details in the live chat.'],
+    ];
+    $insAuto = $pdo->prepare('INSERT INTO automations (name, description, trigger_event, is_active) VALUES (?, ?, ?, 0)');
+    foreach ($defaults as [$trigger, $name, $description]) {
+        $insAuto->execute([$name, $description, $trigger]);
+    }
+    $pdo->prepare("INSERT INTO settings (name, value) VALUES ('automations_defaults_seeded', '1')")->execute();
+    echo 'Seeded ' . count($defaults) . " starter automations (inactive).\n";
+}
+
+// Steps gain an automation_id (existing rows -> #1), then the table is rebuilt
+// to attach the FK + ON DELETE CASCADE. The column is added WITHOUT the
+// REFERENCES clause because SQLite forbids ALTER ADD COLUMN with both a foreign
+// key and a non-NULL default; the rebuild below carries the real FK in.
+$dripStepColumns = array_column($pdo->query('PRAGMA table_info(drip_steps)')->fetchAll(), 'name');
+if (!in_array('automation_id', $dripStepColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_steps ADD COLUMN automation_id INTEGER NOT NULL DEFAULT 1');
+}
+$dripStepSql = $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'drip_steps'"
+)->fetchColumn();
+if ($dripStepSql && !str_contains($dripStepSql, 'REFERENCES automations')) {
+    rebuildTable(
+        $pdo,
+        'drip_steps',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            automation_id INTEGER NOT NULL DEFAULT 1 REFERENCES automations(id) ON DELETE CASCADE,
+            day_offset INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, automation_id, day_offset, subject, body, is_active, created_at, updated_at'
+    );
+}
+
+// Enrollments gain automation_id first (constant DEFAULT 1 backfills every
+// existing row; no REFERENCES here for the same reason as drip_steps above),
+// THEN the table is rebuilt to attach the FK, swap the old single-column
+// UNIQUE(email) for UNIQUE(automation_id, email), and widen the source CHECK
+// to accept trigger-driven enrollments. Adding the column before the rebuild
+// lets the rebuild's INSERT ... SELECT carry automation_id across like any other.
+$dripEnrollmentColumns = array_column($pdo->query('PRAGMA table_info(drip_enrollments)')->fetchAll(), 'name');
+if (!in_array('automation_id', $dripEnrollmentColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN automation_id INTEGER NOT NULL DEFAULT 1');
+}
+$dripEnrollmentSql = $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'drip_enrollments'"
+)->fetchColumn();
+if ($dripEnrollmentSql && !str_contains($dripEnrollmentSql, 'UNIQUE (automation_id, email)')) {
+    rebuildTable(
+        $pdo,
+        'drip_enrollments',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            automation_id INTEGER NOT NULL DEFAULT 1 REFERENCES automations(id) ON DELETE CASCADE,
+            email TEXT NOT NULL,
+            name TEXT,
+            source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'marketing_lead', 'trigger')),
+            lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
+            status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'stopped')),
+            unsubscribe_token TEXT UNIQUE NOT NULL,
+            enrolled_at TEXT NOT NULL DEFAULT (datetime('now')),
+            nurturer_enabled INTEGER NOT NULL DEFAULT 0,
+            lead_industry TEXT,
+            last_action TEXT,
+            UNIQUE (automation_id, email)
+        )",
+        'id, automation_id, email, name, source, lead_id, status, unsubscribe_token, enrolled_at,
+         nurturer_enabled, lead_industry, last_action',
+        [
+            'CREATE INDEX IF NOT EXISTS idx_drip_enrollments_status ON drip_enrollments (status, enrolled_at)',
+            'CREATE INDEX IF NOT EXISTS idx_drip_enrollments_automation ON drip_enrollments (automation_id, status)',
+        ]
+    );
+}
+
+// The automation_id indexes are created here (not in schema.sql, which runs
+// before the columns exist on an upgrade) and unconditionally (not inside the
+// ADD COLUMN / rebuild guards, which are skipped on a fresh install where the
+// columns already came from schema.sql). CREATE INDEX IF NOT EXISTS makes both
+// paths idempotent.
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_drip_steps_automation ON drip_steps (automation_id, day_offset)');
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_drip_enrollments_automation ON drip_enrollments (automation_id, status)');
+
 // Decision columns on an existing beacon_scan_seen (it only recorded the URL
 // when first shipped) — nullable, since rows scanned before this have no
 // decision to backfill.

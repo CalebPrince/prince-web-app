@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
@@ -98,6 +99,11 @@ class ProposalController
         if (!$sent) {
             Response::error('Could not send the proposal email. Please copy the link and send it manually.', 500);
         }
+
+        Automations::fire('proposal_sent', (string) $proposal['client_email'], [
+            'name' => $proposal['client_name'] ?: null,
+            'last_action' => 'Was sent the "' . $proposal['title'] . '" proposal',
+        ]);
 
         Response::json(['status' => 'sent', 'url' => $url]);
     }

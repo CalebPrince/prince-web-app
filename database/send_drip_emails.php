@@ -17,10 +17,16 @@ use App\Support\Mailer;
 
 $pdo = Database::get();
 
+// Each enrollment only receives the steps of its OWN automation, and only
+// while that automation is switched on (a.is_active) — pausing an automation
+// halts every sequence in flight, the master-switch behaviour the admin UI
+// promises. drip_sends stays UNIQUE per (enrollment, step), so a lead in
+// several automations at once still can't be double-sent the same step.
 $due = $pdo->query(
     "SELECT e.id AS enrollment_id, e.email, e.name, e.unsubscribe_token, s.id AS step_id, s.subject, s.body
      FROM drip_enrollments e
-     JOIN drip_steps s ON s.is_active = 1
+     JOIN automations a ON a.id = e.automation_id AND a.is_active = 1
+     JOIN drip_steps s ON s.automation_id = e.automation_id AND s.is_active = 1
      WHERE e.status = 'active'
        AND datetime(e.enrolled_at, '+' || s.day_offset || ' days') <= datetime('now')
        AND NOT EXISTS (SELECT 1 FROM drip_sends ds WHERE ds.enrollment_id = e.id AND ds.step_id = s.id)
@@ -51,10 +57,11 @@ foreach ($due as $row) {
 $completed = $pdo->exec(
     "UPDATE drip_enrollments SET status = 'completed'
      WHERE status = 'active'
-       AND (SELECT COUNT(*) FROM drip_steps WHERE is_active = 1) > 0
+       AND (SELECT is_active FROM automations WHERE id = drip_enrollments.automation_id) = 1
+       AND (SELECT COUNT(*) FROM drip_steps WHERE is_active = 1 AND automation_id = drip_enrollments.automation_id) > 0
        AND NOT EXISTS (
          SELECT 1 FROM drip_steps s
-         WHERE s.is_active = 1
+         WHERE s.is_active = 1 AND s.automation_id = drip_enrollments.automation_id
            AND NOT EXISTS (SELECT 1 FROM drip_sends ds WHERE ds.enrollment_id = drip_enrollments.id AND ds.step_id = s.id)
        )
        AND (

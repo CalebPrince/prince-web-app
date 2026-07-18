@@ -9,6 +9,7 @@ use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AiAgentEngine;
 use App\Support\AiText;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\Jwt;
 use App\Support\Response;
@@ -801,6 +802,11 @@ class LiveChatController
             $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
         $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([(int) $pdo->lastInsertId()]);
+
+        Automations::fire('chat_lead_captured', $email, [
+            'name' => $name ?: null,
+            'last_action' => 'Left contact details in the live chat',
+        ], $pdo);
     }
 
     private static function projectCatalog(\PDO $pdo): array

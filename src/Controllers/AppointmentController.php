@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
+use App\Support\Automations;
 use App\Support\Composio;
 use App\Support\Database;
 use App\Support\EmailTemplate;
@@ -205,6 +206,11 @@ class AppointmentController
                  VALUES (?, ?, ?, ?, ?, ?, ?)'
             )->execute([$name, $email, $phone ?: null, $date, $time, $cfg['slotMinutes'], $topic ?: null]);
             $appointmentId = (int) $pdo->lastInsertId();
+
+            Automations::fire('appointment_booked', (string) $email, [
+                'name' => $name ?: null,
+                'last_action' => 'Booked a call for ' . $date . ' at ' . $time,
+            ], $pdo);
         } catch (\PDOException $e) {
             // Partial unique index violation. Confirmed in production: an
             // AI caller can end up re-calling this tool for a slot it
@@ -456,8 +462,25 @@ class AppointmentController
         if (!in_array($status, ['confirmed', 'cancelled', 'completed'], true)) {
             Response::error('Invalid status.', 422);
         }
-        Database::get()->prepare('UPDATE appointments SET status = ? WHERE id = ?')
+        $pdo = Database::get();
+        $pdo->prepare('UPDATE appointments SET status = ? WHERE id = ?')
             ->execute([$status, (int) $params['id']]);
+
+        // A completed booking is the app's clearest "engagement wrapped" signal
+        // for a solo studio — the natural moment to fire a review-request /
+        // next-steps sequence. Re-marking completed is harmless: fire() ignores
+        // an already-existing enrollment.
+        if ($status === 'completed') {
+            $appt = $pdo->prepare('SELECT client_email, client_name FROM appointments WHERE id = ?');
+            $appt->execute([(int) $params['id']]);
+            if ($row = $appt->fetch()) {
+                Automations::fire('project_completed', (string) $row['client_email'], [
+                    'name' => $row['client_name'] ?: null,
+                    'last_action' => 'Completed a booked session',
+                ], $pdo);
+            }
+        }
+
         Response::json(['status' => 'updated']);
     }
 

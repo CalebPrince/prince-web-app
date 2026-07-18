@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AiText;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
@@ -352,34 +353,32 @@ class MarketingLeadController
         $pdo->prepare("UPDATE marketing_leads SET status = 'sent', sent_at = datetime('now'), updated_at = datetime('now') WHERE id = ?")
             ->execute([$lead['id']]);
 
-        // Emailed leads join the follow-up drip sequence automatically (a
-        // no-op if the address is already enrolled or has unsubscribed).
+        // Emailed leads fire the 'marketing_pitch_sent' trigger, which enrolls
+        // them into every active automation listening for it — the seeded
+        // cold-outreach follow-up by default (a no-op if the address is already
+        // enrolled there or has unsubscribed).
         //
         // last_action feeds Nurturer's prompt, and the audit findings are the
         // best material available for it: a specific, real observation about
         // *their* site, which is exactly what stops a follow-up reading like a
         // template. nurturer_enabled stays off — an AI-written email to a real
         // prospect is Caleb's call per lead, not something marking a pitch as
-        // sent should trigger silently. Toggle it per enrollment on the Drip
-        // page. lead_industry has no column to draw from on marketing_leads, so
-        // it falls back to "general business"; Nurturer still sees the business
-        // name and can infer from that.
+        // sent should trigger silently. Toggle it per enrollment on the
+        // Automations page. lead_industry has no column to draw from on
+        // marketing_leads, so it falls back to "general business"; Nurturer
+        // still sees the business name and can infer from that.
         if (($lead['pitch_channel'] ?? 'email') !== 'phone' && !empty($lead['contact_email'])) {
             $auditNote = trim((string) ($lead['audit_findings'] ?? ''));
             $lastAction = 'was sent an outreach pitch about their website'
                 . (!empty($lead['website_url']) ? ' (' . $lead['website_url'] . ')' : '')
                 . ($auditNote !== '' ? '. Issues spotted in the audit: ' . mb_substr($auditNote, 0, 300) : '');
 
-            DripController::enrollEmail(
-                $pdo,
-                $lead['contact_email'],
-                $lead['business_name'] ?: null,
-                'marketing_lead',
-                (int) $lead['id'],
-                false,
-                null,
-                $lastAction
-            );
+            Automations::fire('marketing_pitch_sent', $lead['contact_email'], [
+                'name' => $lead['business_name'] ?: null,
+                'source' => 'marketing_lead',
+                'lead_id' => (int) $lead['id'],
+                'last_action' => $lastAction,
+            ], $pdo);
         }
 
         Response::json(['status' => 'updated']);
