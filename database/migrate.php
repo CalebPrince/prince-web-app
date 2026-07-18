@@ -381,6 +381,220 @@ if ($pdo->query("SELECT value FROM settings WHERE name = 'automations_defaults_s
     echo 'Seeded ' . count($defaults) . " starter automations (inactive).\n";
 }
 
+// Starter step copy for the seeded automations. Runs once (settings flag), and
+// skips any automation that already has steps, so it never duplicates or
+// overwrites hand-edited copy. Steps ship inactive AND their automations ship
+// paused — this only saves the typing; nothing sends until both are switched
+// on. Automations are found by trigger_event, not id, since ids differ between
+// environments. {{name}} personalizes per recipient; the unsubscribe line is
+// appended at send time, so it isn't included here.
+if ($pdo->query("SELECT value FROM settings WHERE name = 'automation_steps_seeded'")->fetchColumn() === false) {
+    $stepSets = [
+        'inquiry_created' => [
+            [0, 'Got your message, {{name}}', "Hi {{name}},
+
+Thanks for reaching out through the site — your message landed and I've got it.
+
+I read every inquiry myself, so you'll hear back from me personally, usually within a day. If it's time-sensitive, just reply here and say so.
+
+In the meantime, some recent work is here if you want a feel for how I build: https://princecaleb.dev/projects.html
+
+Talk soon,
+Prince Caleb
+princecaleb.dev"],
+            [4, 'Still happy to help, {{name}}', "Hi {{name}},
+
+Circling back in case my earlier note got buried — no worries if the timing's shifted.
+
+If a better website, a mobile app, or some automation is still on your mind, I'd be glad to take a look and point out a couple of quick wins, no strings attached.
+
+Just reply and tell me a bit about what you're after.
+
+Best,
+Prince Caleb"],
+        ],
+        'quote_requested' => [
+            [0, 'Your project request is in, {{name}}', "Hi {{name}},
+
+Thanks for the detail on your project — that's exactly what I need to give you a realistic quote instead of a vague one.
+
+Here's what happens next: I'll review everything you sent, and if I need any clarification I'll ask before quoting. You'll get a clear scope, timeline, and price — no surprises.
+
+If anything's changed or you'd like to add context, just reply.
+
+Best,
+Prince Caleb
+princecaleb.dev"],
+            [3, 'A quick idea for {{name}}', "Hi {{name}},
+
+While your request is fresh, one thing worth saying: the projects that go smoothest are the ones where we nail the core user journey first — the two or three things your visitors actually need to do — and make those feel fast and effortless.
+
+If it'd help to talk it through before committing to anything, I keep a few slots open for short, zero-pressure calls: https://princecaleb.dev/contact.html
+
+Best,
+Prince Caleb"],
+        ],
+        'proposal_sent' => [
+            [3, 'Any questions on the proposal, {{name}}?', "Hi {{name}},
+
+Just checking the proposal reached you okay. Take your time with it — I'd rather you feel confident than rushed.
+
+If anything in the scope, timeline, or milestones needs adjusting, reply and tell me. Proposals are a starting point, not a take-it-or-leave-it.
+
+Best,
+Prince Caleb
+princecaleb.dev"],
+            [7, 'Happy to walk you through it', "Hi {{name}},
+
+No pressure at all — I know these decisions take a beat.
+
+If it's easier to talk than to read, I'm glad to hop on a quick call and walk through the proposal, answer questions, or tweak the scope live. Just reply with a couple of times that suit you.
+
+Either way, I'm here when you're ready.
+
+Best,
+Prince Caleb"],
+        ],
+        'payment_received' => [
+            [0, "We're on, {{name}} — thank you", "Hi {{name}},
+
+Payment received, and I'm genuinely glad to be working with you.
+
+Here's what happens next: I'll get the project set up on my end and come back shortly with the first milestone and exactly what I need from you to hit the ground running.
+
+If you have brand assets, examples of sites you love, or must-have details already, feel free to send them my way now — it'll speed things up.
+
+Excited to build this,
+Prince Caleb
+princecaleb.dev"],
+            [2, "How we'll work together", "Hi {{name}},
+
+Quick note on how I run projects so you always know where things stand:
+
+- You'll see progress in real, working previews — not just status updates.
+- I'll flag decisions early rather than surprise you late.
+- Questions are always welcome; a quick reply from you keeps momentum.
+
+If there's a particular way you like to communicate or a deadline driving this, tell me now and I'll plan around it.
+
+Best,
+Prince Caleb"],
+        ],
+        'appointment_booked' => [
+            [0, 'Looking forward to our call, {{name}}', "Hi {{name}},
+
+Your call is booked — looking forward to it.
+
+To make the most of our time, it helps if you come with: what you're trying to achieve, anything that's frustrating you about your current setup, and a rough sense of timeline or budget if you have one. Don't worry if it's still fuzzy — that's what the call is for.
+
+If something comes up and you need to move it, just reply and we'll sort it.
+
+Talk soon,
+Prince Caleb
+princecaleb.dev"],
+        ],
+        'project_completed' => [
+            [1, 'Thank you, {{name}}', "Hi {{name}},
+
+Thanks for your time — I really enjoyed working through this with you.
+
+If you found it valuable, would you be open to sharing a sentence or two about your experience? A short, honest word means a lot to a solo studio like mine and helps the next person decide with confidence.
+
+Just reply to this email — no form to fill in.
+
+Grateful either way,
+Prince Caleb
+princecaleb.dev"],
+            [6, 'No rush, {{name}}', "Hi {{name}},
+
+Following up gently on my last note — I know inboxes are busy.
+
+If you have a moment, even one line about what stood out would be genuinely appreciated. And if there's anything that could have been better, I'd rather hear that too.
+
+Thanks again,
+Prince Caleb"],
+        ],
+        'newsletter_subscribed' => [
+            [0, 'Welcome aboard, {{name}}', "Hi {{name}},
+
+Thanks for subscribing — glad to have you.
+
+I keep this simple: occasional notes on building faster, better-looking, higher-performing websites and apps, plus the odd behind-the-scenes look at real projects. No spam, no daily barrage.
+
+If you want to see the kind of work it's grounded in, start here: https://princecaleb.dev/projects.html
+
+Best,
+Prince Caleb
+princecaleb.dev"],
+            [5, 'The thing most sites get wrong', "Hi {{name}},
+
+One idea worth your two minutes: most sites lose people not because they're ugly, but because they're slow or confusing in the first few seconds.
+
+Fast load, an obvious next step, and interactions that feel smooth do more for conversions than a redesign of the parts nobody scrolls to.
+
+If you ever want a quick, free gut-check on yours, just reply — happy to point out a couple of things.
+
+Best,
+Prince Caleb"],
+            [12, 'If you ever need a hand', "Hi {{name}},
+
+I'll keep this one short.
+
+If a better website, a mobile app, or some automation moves up your priority list, I'd love to help — and even if not, I hope these notes are useful on their own.
+
+My door's open: https://princecaleb.dev/contact.html
+
+Best,
+Prince Caleb"],
+        ],
+        'chat_lead_captured' => [
+            [0, 'Good chatting, {{name}}', "Hi {{name}},
+
+Thanks for stopping by the chat and leaving your details — good to connect.
+
+I wanted to follow up properly so nothing gets lost: if you tell me a little more about what you're building or fixing, I can come back with something genuinely useful rather than generic.
+
+Just reply here whenever suits you.
+
+Best,
+Prince Caleb
+princecaleb.dev"],
+            [3, 'Still thinking it over, {{name}}?', "Hi {{name}},
+
+No pressure at all — just checking in.
+
+If you'd like, we can jump on a short, zero-pressure call and I'll give you my honest take on the best next step, whether or not we end up working together.
+
+Reply with a couple of times and I'll make it work.
+
+Best,
+Prince Caleb"],
+        ],
+    ];
+
+    $lookup = $pdo->prepare('SELECT id FROM automations WHERE trigger_event = ? ORDER BY id ASC LIMIT 1');
+    $hasSteps = $pdo->prepare('SELECT COUNT(*) FROM drip_steps WHERE automation_id = ?');
+    $insStep = $pdo->prepare('INSERT INTO drip_steps (automation_id, day_offset, subject, body, is_active) VALUES (?, ?, ?, ?, 0)');
+    $seededSteps = 0;
+    foreach ($stepSets as $trigger => $steps) {
+        $lookup->execute([$trigger]);
+        $automationId = $lookup->fetchColumn();
+        if ($automationId === false) {
+            continue; // automation for this trigger was deleted — leave it be
+        }
+        $hasSteps->execute([$automationId]);
+        if ((int) $hasSteps->fetchColumn() > 0) {
+            continue; // already has hand-added steps — don't touch it
+        }
+        foreach ($steps as [$dayOffset, $subject, $body]) {
+            $insStep->execute([$automationId, $dayOffset, $subject, $body]);
+            $seededSteps++;
+        }
+    }
+    $pdo->prepare("INSERT INTO settings (name, value) VALUES ('automation_steps_seeded', '1')")->execute();
+    echo "Seeded {$seededSteps} automation steps (inactive).\n";
+}
+
 // Steps gain an automation_id (existing rows -> #1), then the table is rebuilt
 // to attach the FK + ON DELETE CASCADE. The column is added WITHOUT the
 // REFERENCES clause because SQLite forbids ALTER ADD COLUMN with both a foreign
