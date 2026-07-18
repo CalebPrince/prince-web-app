@@ -83,6 +83,7 @@
             email: document.getElementById("lead-email").value.trim(),
             message,
             website: document.getElementById("lead-website").value, // honeypot
+            attribution: window.getLeadAttribution ? window.getLeadAttribution() : {},
           });
           form.innerHTML = '<p class="mb-0" style="color: var(--heading-color); font-weight: 500;">Estimate on its way — I\'ll follow up within 48 hours. ✓</p>';
         } catch (err) {

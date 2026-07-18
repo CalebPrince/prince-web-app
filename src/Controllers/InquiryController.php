@@ -9,6 +9,7 @@ use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Automations;
 use App\Support\Database;
+use App\Support\LeadAttribution;
 use App\Support\Response;
 use App\Support\Validator;
 
@@ -48,6 +49,7 @@ class InquiryController
             $_SERVER['HTTP_USER_AGENT'] ?? null,
         ]);
         $inquiryId = (int) $pdo->lastInsertId();
+        LeadAttribution::capture($pdo, 'inquiry', $inquiryId, $data['attribution'] ?? null);
 
         $pdo->prepare('INSERT INTO webhook_queue (inquiry_id) VALUES (?)')->execute([$inquiryId]);
 

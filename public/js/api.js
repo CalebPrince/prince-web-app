@@ -71,3 +71,24 @@ const api = {
     return this.request(path, { method: "DELETE" });
   },
 };
+
+// Remember the first page and campaign that brought a visitor into this tab.
+// It stays in session storage and is sent only when they choose to make contact.
+(function captureFirstTouch() {
+  const key = "pc_lead_attribution";
+  try {
+    if (!sessionStorage.getItem(key)) {
+      const params = new URLSearchParams(location.search);
+      sessionStorage.setItem(key, JSON.stringify({
+        landing_path: location.pathname + location.search,
+        referrer: document.referrer || "",
+        utm_source: params.get("utm_source") || "", utm_medium: params.get("utm_medium") || "",
+        utm_campaign: params.get("utm_campaign") || "", utm_content: params.get("utm_content") || "",
+        utm_term: params.get("utm_term") || "",
+      }));
+    }
+  } catch (_) {}
+  window.getLeadAttribution = function () {
+    try { return JSON.parse(sessionStorage.getItem(key) || "{}"); } catch (_) { return {}; }
+  };
+})();

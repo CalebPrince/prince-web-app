@@ -254,11 +254,13 @@ document.getElementById('contact-form').addEventListener('submit', async (e) => 
       message: document.getElementById('message').value,
       website: document.getElementById('website').value,
       source_project_id: sourceProjectId ? Number(sourceProjectId) : null,
+      attribution: window.getLeadAttribution ? window.getLeadAttribution() : {},
     });
-    document.getElementById('contact-form').reset();
-    alertBox.className = 'alert alert-success';
-    alertBox.textContent = "Thanks — I'll be in touch soon.";
-    alertBox.classList.remove('d-none');
+    document.getElementById('contact-form').innerHTML = `<div class="handoff-success" role="status">
+      <span class="handoff-check" aria-hidden="true">✓</span><p class="eyebrow mb-2">Message received</p>
+      <h3 class="mb-2">Thanks — I have what I need.</h3><p class="text-muted-custom">Here’s what happens from here:</p>
+      <ol class="handoff-steps"><li><strong>I review your brief</strong><span>I’ll read the context and identify any open questions.</span></li><li><strong>You get a personal reply</strong><span>I’ll respond by email with next steps or a useful recommendation.</span></li><li><strong>We decide the best route</strong><span>If it looks like a fit, we’ll arrange a call and shape the scope together.</span></li></ol>
+    </div>`;
   } catch (err) {
     alertBox.className = 'alert alert-danger';
     alertBox.textContent = err.message || 'Something went wrong. Please try again.';

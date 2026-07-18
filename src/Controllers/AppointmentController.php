@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Support\LeadAttribution;
+
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
@@ -206,6 +208,7 @@ class AppointmentController
                  VALUES (?, ?, ?, ?, ?, ?, ?)'
             )->execute([$name, $email, $phone ?: null, $date, $time, $cfg['slotMinutes'], $topic ?: null]);
             $appointmentId = (int) $pdo->lastInsertId();
+            LeadAttribution::capture($pdo, 'booking', $appointmentId, $data['attribution'] ?? null);
 
             Automations::fire('appointment_booked', (string) $email, [
                 'name' => $name ?: null,

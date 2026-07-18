@@ -781,6 +781,7 @@
         email: document.getElementById("lm-email").value.trim(),
         phone: document.getElementById("lm-phone").value.trim(),
         message: document.getElementById("lm-message").value.trim(),
+        attribution: window.getLeadAttribution ? window.getLeadAttribution() : {},
       });
       const email = document.getElementById("lm-email").value.trim();
       document.getElementById("leave-msg-form").reset();

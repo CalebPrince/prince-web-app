@@ -273,11 +273,13 @@
         time: selectedTime,
         topic: document.getElementById('booking-topic').value,
         website: document.getElementById('booking-website').value,
+        attribution: window.getLeadAttribution ? window.getLeadAttribution() : {},
       });
       document.getElementById('booking-form-wrap').innerHTML = `
-        <div class="text-center">
-          <h5 class="mb-2">✓ You're booked in</h5>
-          <p class="text-muted-custom mb-0">${dateInput.value} at ${selectedTime} — a confirmation email is on its way.</p>
+        <div class="handoff-success">
+          <span class="handoff-check" aria-hidden="true">✓</span><p class="eyebrow mb-2">Call confirmed</p>
+          <h3 class="mb-2">You're booked in.</h3><p class="text-muted-custom">${dateInput.value} at ${selectedTime} — a confirmation email is on its way.</p>
+          <ol class="handoff-steps"><li><strong>I review your brief</strong><span>Your topic and context help me prepare before we meet.</span></li><li><strong>We use the call to clarify</strong><span>We’ll cover goals, constraints, timing, and fit.</span></li><li><strong>You get a considered next step</strong><span>If a project makes sense, I’ll prepare a proposal for your review.</span></li></ol>
         </div>`;
     } catch (err) {
       msg.className = 'alert alert-danger py-2 small';

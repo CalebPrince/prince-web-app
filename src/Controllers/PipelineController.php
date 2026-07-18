@@ -48,6 +48,13 @@ class PipelineController
         foreach ($pdo->query('SELECT id, lead_key, stage, manual_stage, updated_at FROM pipeline_leads')->fetchAll() as $row) {
             $stored[$row['lead_key']] = $row;
         }
+        $attribution = [];
+        $hasAttribution = $pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='lead_attribution'")->fetchColumn();
+        if ($hasAttribution) {
+            foreach ($pdo->query('SELECT source_type, source_id, landing_path, referrer, utm_source, utm_medium, utm_campaign, utm_content, utm_term FROM lead_attribution')->fetchAll() as $row) {
+                $attribution[$row['source_type'] . ':' . $row['source_id']] = array_diff_key($row, ['source_type' => true, 'source_id' => true]);
+            }
+        }
         $out = [];
         foreach ($leads as $key => $lead) {
             $record = $stored[$key] ?? null;
@@ -56,6 +63,11 @@ class PipelineController
             $lead['id'] = (int) $record['id'];
             $lead['stage'] = $record['stage'];
             $lead['manual_stage'] = (bool) $record['manual_stage'];
+            $lead['attribution'] = null;
+            foreach ($lead['sources'] as $source) {
+                $sourceKey = $source['type'] . ':' . $source['id'];
+                if (isset($attribution[$sourceKey])) { $lead['attribution'] = $attribution[$sourceKey]; break; }
+            }
             $out[] = $lead;
         }
         usort($out, fn($a, $b) => strcmp($b['latest_at'], $a['latest_at']));

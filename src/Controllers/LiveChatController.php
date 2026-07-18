@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Support\LeadAttribution;
+
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
@@ -504,6 +506,8 @@ class LiveChatController
             "UPDATE chat_sessions SET client_name = ?, client_email = ?, client_phone = ?, client_comment = ?,
              admin_seen = 0, updated_at = datetime('now') WHERE id = ?"
         )->execute([$name, $email, $phone ?: null, $message, $session['id']]);
+
+        LeadAttribution::capture($pdo, 'chat', (int) $session['id'], $data['attribution'] ?? null);
 
         self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: $phone\n\n" : ' ') . $message);
 

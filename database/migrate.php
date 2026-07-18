@@ -881,4 +881,22 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_pipeline_leads_stage ON pipeline_leads (stage, updated_at)');
 
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS lead_attribution (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        source_type TEXT NOT NULL CHECK (source_type IN ('inquiry', 'booking', 'chat')),
+        source_id INTEGER NOT NULL,
+        landing_path TEXT,
+        referrer TEXT,
+        utm_source TEXT,
+        utm_medium TEXT,
+        utm_campaign TEXT,
+        utm_content TEXT,
+        utm_term TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE (source_type, source_id)
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_lead_attribution_source ON lead_attribution (source_type, source_id)');
+
 echo "Schema applied.\n";

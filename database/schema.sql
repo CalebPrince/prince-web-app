@@ -781,3 +781,21 @@ CREATE TABLE IF NOT EXISTS nurturer_sends (
   sent_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (enrollment_id, sequence_number)
 );
+
+-- First-touch context supplied by the visitor's browser. Kept separate from
+-- CRM records so the same shape can serve contact forms, bookings and chat.
+CREATE TABLE IF NOT EXISTS lead_attribution (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_type TEXT NOT NULL CHECK (source_type IN ('inquiry', 'booking', 'chat')),
+  source_id INTEGER NOT NULL,
+  landing_path TEXT,
+  referrer TEXT,
+  utm_source TEXT,
+  utm_medium TEXT,
+  utm_campaign TEXT,
+  utm_content TEXT,
+  utm_term TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (source_type, source_id)
+);
+CREATE INDEX IF NOT EXISTS idx_lead_attribution_source ON lead_attribution (source_type, source_id);

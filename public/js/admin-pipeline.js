@@ -12,6 +12,13 @@ let pipelineSource = '';
 function pipelineEsc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function pipelineInitials(name) { return String(name || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase(); }
 function pipelineMoney(lead) { return lead.value ? `${pipelineEsc(lead.currency)} ${(Number(lead.value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : ''; }
+function pipelineAttribution(lead) {
+  const a = lead.attribution || {}; let label = '';
+  if (a.utm_source) label = [a.utm_source, a.utm_campaign].filter(Boolean).join(' · ');
+  else if (a.referrer) { try { label = `From ${new URL(a.referrer).hostname.replace(/^www\./, '')}`; } catch (_) { label = 'Referred visit'; } }
+  else if (a.landing_path) label = `Landed on ${a.landing_path.split('?')[0]}`;
+  return label ? `<div class="pipeline-attribution"><i class="bi bi-signpost-split"></i>${pipelineEsc(label)}</div>` : '';
+}
 function pipelineVisible() {
   const q = pipelineQuery.toLowerCase();
   return pipelineLeads.filter(lead => (!pipelineSource || lead.sources.some(s => s.type === pipelineSource)) && (!q || [lead.name, lead.email, lead.phone, lead.summary].some(v => String(v || '').toLowerCase().includes(q))));
@@ -21,6 +28,7 @@ function pipelineCard(lead) {
   return `<article class="pipeline-card" draggable="true" data-id="${lead.id}" tabindex="0">
     <div class="pipeline-card-top"><span class="pipeline-card-avatar" style="--pipeline-hue:${(lead.id * 43) % 360}deg">${pipelineEsc(pipelineInitials(lead.name))}</span><div><h5>${pipelineEsc(lead.name)}</h5><div class="pipeline-card-contact">${pipelineEsc(lead.email || lead.phone || 'No contact detail')}</div></div>${lead.manual_stage ? '<i class="bi bi-hand-index-thumb pipeline-manual" title="Stage set manually"></i>' : ''}</div>
     <p>${pipelineEsc(lead.summary || 'No activity summary')}</p>
+    ${pipelineAttribution(lead)}
     <div class="pipeline-card-sources">${sources.map(s => `<a href="${pipelineEsc(s.url)}" title="Open ${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type] || s.type)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type] || s.type)}</a>`).join('')}</div>
     <label class="pipeline-stage-picker"><span>Stage</span><select data-stage-picker="${lead.id}">${pipelineStages.map(stage => `<option value="${stage}" ${lead.stage === stage ? 'selected' : ''}>${PIPELINE_STAGE_META[stage].label}</option>`).join('')}</select></label>
     <footer><time>${new Date(lead.latest_at).toLocaleDateString(undefined, { month:'short', day:'numeric' })}</time>${pipelineMoney(lead) ? `<strong>${pipelineMoney(lead)}</strong>` : ''}</footer>
