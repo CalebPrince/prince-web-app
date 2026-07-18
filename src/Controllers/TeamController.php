@@ -53,6 +53,11 @@ class TeamController
                         UNION
                         SELECT lower(email) AS email FROM inquiries
                         WHERE message LIKE '[Live Chat]%' AND email != ''
+                        UNION
+                        SELECT lower(de.email) AS email
+                        FROM drip_enrollments de
+                        JOIN automations a ON a.id=de.automation_id
+                        WHERE a.trigger_event='chat_lead_captured' AND de.email != ''
                     )"
                 )->fetchColumn(),
                 'stat_label' => 'leads captured',
