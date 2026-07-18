@@ -79,6 +79,7 @@ use App\Controllers\ShortLinkController;
 use App\Controllers\SocialDraftController;
 use App\Controllers\SubscriptionController;
 use App\Controllers\TagController;
+use App\Controllers\TaskController;
 use App\Controllers\TestimonialController;
 use App\Controllers\UploadController;
 use App\Controllers\UptimeController;
@@ -154,6 +155,10 @@ $router->get('/api/v1/auth/me', [AuthController::class, 'me']);
 
 // Admin
 $router->get('/api/v1/admin/dashboard', [DashboardController::class, 'overview']);
+$router->get('/api/v1/admin/tasks', [TaskController::class, 'index']);
+$router->post('/api/v1/admin/tasks', [TaskController::class, 'store']);
+$router->put('/api/v1/admin/tasks/{id}', [TaskController::class, 'update']);
+$router->delete('/api/v1/admin/tasks/{id}', [TaskController::class, 'destroy']);
 $router->get('/api/v1/admin/notifications', [DashboardController::class, 'notifications']);
 $router->patch('/api/v1/admin/notifications/read-all', [DashboardController::class, 'readAllNotifications']);
 $router->patch('/api/v1/admin/notifications/{key}', [DashboardController::class, 'readNotification']);

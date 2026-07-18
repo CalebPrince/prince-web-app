@@ -30,6 +30,20 @@
     dashboard.insertAdjacentElement('afterend', link);
   }
   injectNotificationsNav();
+  function injectTasksNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/tasks.html"]')) return;
+    const notifications = nav.querySelector('a[href="/admin/notifications.html"]');
+    const dashboard = nav.querySelector('a[href="/admin/dashboard.html"]');
+    const anchor = notifications || dashboard;
+    if (!anchor) return;
+    const link = document.createElement('a');
+    link.href = '/admin/tasks.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/tasks.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-check2-square nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Tasks</span><span id="nav-badge-tasks" class="notif-badge d-none"></span>';
+    anchor.insertAdjacentElement('afterend', link);
+  }
+  injectTasksNav();
 
   function initAdminSearch() {
     const controls = document.querySelector('.admin-sidebar .brand')?.parentElement?.querySelector(':scope > .d-flex:last-child');
@@ -243,6 +257,7 @@
       const unseen = counts.unseen_chats || 0;
       setBadge("nav-badge-inquiries", unread);
       setBadge("nav-badge-chats", unseen);
+      setBadge("nav-badge-tasks", counts.open_tasks || 0);
       const total = Number(counts.total ?? (unread + unseen));
       setBadge("notif-bell-badge", total);
       setBadge("nav-badge-notifications", total);

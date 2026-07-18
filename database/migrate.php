@@ -904,4 +904,21 @@ $pdo->exec(
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_lead_attribution_source ON lead_attribution (source_type, source_id)');
 $pdo->exec("CREATE TABLE IF NOT EXISTS notification_reads (notification_key TEXT PRIMARY KEY, read_at TEXT NOT NULL DEFAULT (datetime('now')))");
 
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS admin_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        notes TEXT,
+        priority TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+        status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'completed')),
+        due_at TEXT,
+        assignee TEXT,
+        related_url TEXT,
+        completed_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_admin_tasks_status_due ON admin_tasks (status, due_at)');
+
 echo "Schema applied.\n";

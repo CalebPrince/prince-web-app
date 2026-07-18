@@ -38,6 +38,25 @@
 }
 
 body { background: var(--bg-soft, #f8fafc); font-family: "Inter", system-ui, sans-serif; }
+[data-task-priority="urgent"] { --task-accent: #dc2626; }
+[data-task-priority="high"] { --task-accent: #d97706; }
+[data-task-priority="normal"] { --task-accent: var(--section-blue); }
+[data-task-priority="low"] { --task-accent: #64748b; }
+.tasks-page { max-width: 1180px; margin: 0 auto; }
+.tasks-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.tasks-summary .admin-card strong { display: block; font: 800 1.7rem/1 "Plus Jakarta Sans", sans-serif; margin-top: .5rem; }
+.tasks-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) 180px; gap: .75rem; }
+.task-row { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .9rem; align-items: start; padding: 1rem; border-bottom: 1px solid var(--line); }
+.task-row:last-child { border-bottom: 0; }
+.task-row::before { content: ""; position: absolute; left: 0; top: .8rem; bottom: .8rem; width: 3px; border-radius: 4px; background: var(--task-accent); }
+.task-check { width: 1.25rem; height: 1.25rem; margin-top: .15rem; accent-color: var(--section-blue); }
+.task-title { color: var(--heading-color); font-weight: 700; }
+.task-row.is-completed .task-title { text-decoration: line-through; color: var(--muted); }
+.task-notes { color: var(--ink-soft); font-size: .86rem; margin: .25rem 0 .5rem; white-space: pre-wrap; }
+.task-meta { display: flex; flex-wrap: wrap; gap: .4rem .8rem; color: var(--muted); font-size: .75rem; }
+.task-meta .is-overdue { color: #dc2626; font-weight: 700; }
+.task-priority { color: var(--task-accent); font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+@media (max-width: 767.98px) { .tasks-summary { grid-template-columns: 1fr; } .tasks-toolbar { grid-template-columns: 1fr; } .task-row { grid-template-columns: auto minmax(0, 1fr); } .task-actions { grid-column: 2; } }
 [data-theme="dark"] body { color: var(--ink-soft); }
 
 .admin-sidebar {

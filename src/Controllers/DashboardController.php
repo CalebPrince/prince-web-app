@@ -164,11 +164,13 @@ class DashboardController
             "SELECT COUNT(*) FROM chat_sessions
              WHERE admin_seen = 0 AND (transcript_json != '[]' OR client_email IS NOT NULL)"
         )->fetchColumn();
+        $openTasks = (int) $pdo->query("SELECT COUNT(*) FROM admin_tasks WHERE status='open'")->fetchColumn();
 
         $items = self::notificationItems($pdo);
         Response::json([
             'unread_inquiries' => $unreadInquiries,
             'unseen_chats' => $unseenChats,
+            'open_tasks' => $openTasks,
             'total' => count($items),
             'items' => $items,
         ]);
@@ -225,6 +227,8 @@ class DashboardController
             $identity = str_starts_with($r['lead_key'], 'email:') ? substr($r['lead_key'], 6) : 'pipeline lead #'.$r['id'];
             $add('follow_up:'.$r['id'], 'Follow-up', 'Follow up with '.$identity, $r['next_action'] ?: 'This lead is due for a follow-up.', '/admin/pipeline.html?open='.$r['id'], $r['follow_up_at'], 'warning');
         }
+        foreach ($pdo->query("SELECT id,title,notes,priority,due_at FROM admin_tasks WHERE status='open' AND due_at IS NOT NULL AND datetime(due_at)<=datetime('now')") as $r)
+            $add('task:'.$r['id'], 'Task', $r['title'], $r['notes'] ?: 'This task is due.', '/admin/tasks.html', $r['due_at'], $r['priority']==='urgent'?'danger':'warning');
         usort($items, static fn($a,$b) => strcmp($b['date'], $a['date']));
         return array_slice($items, 0, 100);
     }
