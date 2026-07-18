@@ -894,6 +894,14 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
    vanilla JS (public/js/service-deck.js), and adapted to the site's
    numbered-service, no-photography editorial style instead of the
    original's product screenshots. */
+.service-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.service-columns .deck-card { position: relative; left: auto; bottom: auto; display: flex; flex-direction: column; width: auto; min-height: 100%; padding: 2rem; border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none; transform: none; opacity: 1; transition: background-color .2s ease, transform .2s var(--ease-out); }
+.service-columns .deck-card:hover { z-index: 1; background: var(--bg-soft); transform: translateY(-3px); }
+.service-columns .deck-card h3 { max-width: 18ch; }
+.service-columns .deck-cta { margin-top: auto; }
+@media (max-width: 991.98px) { .service-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 575.98px) { .service-columns { grid-template-columns: 1fr; } .service-columns .deck-card { padding: 1.5rem; } }
+
 .service-deck { max-width: 640px; margin: 0 auto; }
 .service-deck-stage {
   position: relative;
