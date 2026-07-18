@@ -43,6 +43,15 @@
     input.addEventListener('input',()=>{clearTimeout(timer);const q=input.value.trim();if(q.length<2){results.innerHTML='<div class="admin-search-empty">Type at least two characters to search the CRM.</div>';return;}results.innerHTML='<div class="admin-search-empty">Searching…</div>';timer=setTimeout(async()=>{try{const data=await api.get(`/api/v1/admin/search?q=${encodeURIComponent(q)}`);results.innerHTML=(data.results||[]).map(r=>`<a class="admin-search-result" href="${esc(r.href)}"><span class="admin-search-type">${esc(r.type)}</span><span><strong>${esc(r.title)}</strong><small>${esc(r.detail)}</small></span><i class="bi bi-arrow-up-right"></i></a>`).join('')||'<div class="admin-search-empty">No matching CRM records.</div>';}catch(err){results.innerHTML=`<div class="admin-search-empty">${esc(err.message||'Search is unavailable.')}</div>`;}},220);});
   }
   initAdminSearch();
+  function initMobileAdminNav() {
+    const sidebar=document.querySelector('.admin-sidebar'); if(!sidebar||document.getElementById('admin-mobile-menu'))return;
+    const button=document.createElement('button');button.type='button';button.id='admin-mobile-menu';button.className='admin-mobile-menu';button.setAttribute('aria-label','Open admin navigation');button.setAttribute('aria-expanded','false');button.innerHTML='<i class="bi bi-list"></i><span>Menu</span>';
+    const backdrop=document.createElement('div');backdrop.className='admin-mobile-backdrop';document.body.append(button,backdrop);
+    const close=()=>{sidebar.classList.remove('mobile-open');backdrop.classList.remove('open');button.setAttribute('aria-expanded','false');button.innerHTML='<i class="bi bi-list"></i><span>Menu</span>';document.body.classList.remove('admin-nav-open');};
+    const open=()=>{sidebar.classList.add('mobile-open');backdrop.classList.add('open');button.setAttribute('aria-expanded','true');button.innerHTML='<i class="bi bi-x-lg"></i><span>Close</span>';document.body.classList.add('admin-nav-open');};
+    button.addEventListener('click',()=>sidebar.classList.contains('mobile-open')?close():open());backdrop.addEventListener('click',close);sidebar.querySelectorAll('a.nav-link').forEach(link=>link.addEventListener('click',()=>{if(matchMedia('(max-width: 991.98px)').matches)close();}));document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sidebar.classList.contains('mobile-open'))close();});matchMedia('(min-width: 992px)').addEventListener?.('change',e=>{if(e.matches)close();});
+  }
+  initMobileAdminNav();
 
   window.AdminPagination = window.AdminPagination || {
     pageSize: ADMIN_PAGE_SIZE,
