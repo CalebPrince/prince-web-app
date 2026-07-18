@@ -829,6 +829,25 @@ storage/
     enabled and active; Beacon shows "Scouting"/"Paused" from the discovery
     toggle). Agent display names stay admin-configurable via the same
     `settings` keys the rest of the app already uses.
+41. **Unified sales pipeline** (`/admin/pipeline.html`,
+    `PipelineController`): an admin-only Kanban board that gathers every real
+    lead source into one journey: contact inquiries, project requests,
+    Marketing Leads, Beacon social leads, captured live chats, discovery
+    bookings, proposals, and client accounts. Records sharing a valid email
+    are merged into one card rather than showing the same person once per
+    table; source badges link back to the original admin pages. The inferred
+    stages are **New → Researching → Contacted → Discovery → Proposal → Won**
+    (with **Lost** kept alongside), based on the furthest truthful source event
+    already stored. Search, source filtering, active/discovery/proposal counts,
+    and proposal value are calculated from the loaded records. Cards support
+    drag-and-drop plus a per-card stage selector for touch and keyboard users.
+    A manual move is stored in `pipeline_leads` and remains authoritative;
+    otherwise the controller keeps the stage synchronized with the underlying
+    source records. The Pipeline navigation link is injected by the shared
+    `admin-nav-badges.js`, so it appears consistently across existing admin
+    pages without copying another static sidebar row into every HTML file.
+    Deployments adding this page must run `php database/migrate.php` once to
+    create `pipeline_leads`; no cron is required.
 
 ## Deployment (Namecheap cPanel)
 
