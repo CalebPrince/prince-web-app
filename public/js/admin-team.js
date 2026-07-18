@@ -65,6 +65,7 @@ function renderAgents(agents) {
           <div>
             <span class="fw-semibold fs-5">${Number(a.stat_value).toLocaleString()}</span>
             <span class="small text-muted-custom ms-1">${esc(a.stat_label)}</span>
+            ${a.secondary_stat_value != null ? `<div class="small text-muted-custom">${Number(a.secondary_stat_value).toLocaleString()} ${esc(a.secondary_stat_label)}</div>` : ''}
           </div>
           <a href="${esc(a.manage_url)}" class="btn btn-sm btn-outline-secondary">${esc(a.manage_label)} &rarr;</a>
         </div>

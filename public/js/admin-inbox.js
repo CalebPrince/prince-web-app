@@ -58,6 +58,6 @@ async function openInboxItem(key) {
     const data = await api.get('/api/v1/admin/inbox'); inboxItems = data.items || [];
     document.getElementById('inbox-search').addEventListener('input', event => { inboxQuery = event.target.value.trim(); renderInbox(); });
     document.querySelectorAll('#inbox-filters button').forEach(button => button.addEventListener('click', () => { document.querySelector('#inbox-filters .active')?.classList.remove('active'); button.classList.add('active'); inboxSource = button.dataset.source; renderInbox(); }));
-    renderInbox(); let requested = new URLSearchParams(location.search).get('open'); if (requested && !inboxItems.some(item => item.key === requested) && requested.startsWith('inquiry:')) requested = requested.replace('inquiry:', 'quote:'); if (requested) openInboxItem(requested);
+    renderInbox(); const params = new URLSearchParams(location.search); const requestedSource = params.get('source'); if (requestedSource && document.querySelector(`#inbox-filters button[data-source="${CSS.escape(requestedSource)}"]`)) document.querySelector(`#inbox-filters button[data-source="${CSS.escape(requestedSource)}"]`).click(); let requested = params.get('open'); if (requested && !inboxItems.some(item => item.key === requested) && requested.startsWith('inquiry:')) requested = requested.replace('inquiry:', 'quote:'); if (requested) openInboxItem(requested);
   } catch (err) { document.getElementById('inbox-list').innerHTML = `<div class="alert alert-danger m-3">${inboxEsc(err.message || 'Could not load the inbox.')}</div>`; }
 })();

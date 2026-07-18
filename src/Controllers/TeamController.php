@@ -43,10 +43,17 @@ class TeamController
                 'icon' => 'bi-headset',
                 'status' => 'active',
                 'status_label' => 'Live on site',
-                'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM appointments')->fetchColumn(),
-                'stat_label' => 'calls booked',
-                'manage_url' => '/admin/chats.html',
-                'manage_label' => 'Chat leads',
+                // A captured contact and a completed booking are different
+                // outcomes. Lead details land on chat_sessions first; only a
+                // visitor who finishes scheduling creates an appointment.
+                'stat_value' => (int) $pdo->query(
+                    "SELECT COUNT(*) FROM chat_sessions WHERE client_email IS NOT NULL AND client_email != ''"
+                )->fetchColumn(),
+                'stat_label' => 'leads captured',
+                'secondary_stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM appointments')->fetchColumn(),
+                'secondary_stat_label' => 'calls booked',
+                'manage_url' => '/admin/inbox.html?source=chat',
+                'manage_label' => 'Open inbox',
             ],
             [
                 'key' => 'nurturer',
