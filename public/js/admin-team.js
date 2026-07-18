@@ -13,6 +13,7 @@ const STATUS_COLOR = {
   active: '#10b981',
   standby: '#f59e0b',
   ondemand: '#0ea5e9',
+  building: '#3b82f6',
   paused: '#9ca3af',
 };
 
@@ -23,6 +24,7 @@ const AGENT_ACCENT = {
   beacon: 'var(--section-blue)',
   proposal: 'var(--section-money)',
   content: 'var(--section-content)',
+  arch: 'var(--section-blue)',
 };
 
 function renderOwner(owner) {

@@ -807,3 +807,25 @@ CREATE TABLE IF NOT EXISTS notification_reads (
   notification_key TEXT PRIMARY KEY,
   read_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Websites the "Arch" agent has generated for clients through the guided
+-- builder (see src/Agents/Arch.php). Each row is one delivered site living
+-- on disk under public/generated-sites/{slug}/, served statically at
+-- /generated-sites/{slug}/. brief_json is the full structured brief Arch
+-- gathered in the chat; admin_password_hash is only set when the client opted
+-- into the CMS admin panel (a per-site password, never the portfolio's own).
+-- The Team page's "sites built" headline stat is just COUNT(*) over this.
+CREATE TABLE IF NOT EXISTS generated_sites (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug TEXT UNIQUE NOT NULL,
+  business_name TEXT NOT NULL,
+  business_type TEXT,
+  client_name TEXT,
+  client_email TEXT,
+  brief_json TEXT NOT NULL,
+  has_cms INTEGER NOT NULL DEFAULT 0,
+  admin_password_hash TEXT,
+  provider TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_generated_sites_created ON generated_sites (created_at);
