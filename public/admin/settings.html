@@ -461,6 +461,43 @@
 
       <div class="col-lg-12">
         <div class="admin-card p-4">
+          <div class="d-flex align-items-start gap-3 mb-3">
+            <div class="icon-chip flex-shrink-0" style="background: var(--section-system-soft); color: var(--section-system);"><i class="bi bi-send-check"></i></div>
+            <div>
+              <h5 class="mb-1">Email delivery</h5>
+              <p class="text-muted-custom small mb-0">Send automated email through Gmail instead of the hosting server. Use a Google App Password, never your normal Gmail password.</p>
+            </div>
+          </div>
+          <form id="smtp-form">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label" for="smtp-gmail-address">Gmail address</label>
+                <input type="email" class="form-control" id="smtp-gmail-address" placeholder="youraccount@gmail.com" autocomplete="username">
+                <div class="form-text">The Google account used to authenticate with Gmail SMTP.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="smtp-app-password">Google App Password</label>
+                <input type="password" class="form-control" id="smtp-app-password" placeholder="16-character app password" autocomplete="new-password">
+                <div class="form-text">Create this under Google Account &rarr; Security &rarr; App passwords.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="mail-from-address">No-reply address</label>
+                <input type="email" class="form-control" id="mail-from-address" placeholder="no-reply@princecaleb.dev" autocomplete="off">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="mail-from-name">Sender name</label>
+                <input type="text" class="form-control" id="mail-from-name" placeholder="Prince Caleb" autocomplete="off">
+              </div>
+            </div>
+            <div class="alert alert-info py-2 small mt-3 mb-3"><i class="bi bi-info-circle me-1"></i> Add the no-reply address as a verified <strong>Send mail as</strong> address in Gmail. Without that verification, Gmail may replace it with the Gmail address.</div>
+            <div id="smtp-msg" class="alert py-2 small d-none"></div>
+            <button type="submit" class="btn-brand">Save email delivery</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-12">
+        <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-envelope-paper-heart me-2" style="color: var(--section-system);"></i>Email templates</h5>
           <p class="text-muted-custom small">Customize the designed client emails. Use placeholders like <code>{{client_name}}</code>, <code>{{amount}}</code>, <code>{{invoice_url}}</code>, and <code>{{proposal_url}}</code>. Empty fields use the built-in template.</p>
           <form id="email-templates-form">

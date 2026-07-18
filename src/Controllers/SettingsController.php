@@ -16,6 +16,7 @@ class SettingsController
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'slack_webhook_url', 'makecom_webhook_url',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'owner_whatsapp_number',
         'integration_api_key', 'notification_email',
+        'smtp_gmail_address', 'smtp_app_password', 'mail_from', 'mail_from_name',
         'google_client_id',
         'chat_persona',
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
@@ -147,6 +148,13 @@ class SettingsController
                 continue;
             }
             $value = trim((string) $data[$key]);
+            if (in_array($key, ['smtp_gmail_address', 'mail_from'], true)
+                && $value !== '' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                Response::error('Enter a valid email address.', 422);
+            }
+            if ($key === 'mail_from_name' && preg_match('/[\r\n]/', $value)) {
+                Response::error('Sender name cannot contain line breaks.', 422);
+            }
             $maxLength = str_starts_with($key, 'email_tpl_') ? 20000 : 5000;
             if (mb_strlen($value) > $maxLength) {
                 Response::error('Value too long.', 422);

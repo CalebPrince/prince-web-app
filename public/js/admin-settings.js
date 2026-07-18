@@ -221,6 +221,21 @@ async function saveEmailTemplates(e) {
   }
 }
 
+async function saveSmtp(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      smtp_gmail_address: document.getElementById("smtp-gmail-address").value.trim(),
+      smtp_app_password: document.getElementById("smtp-app-password").value.replace(/\s+/g, ""),
+      mail_from: document.getElementById("mail-from-address").value.trim(),
+      mail_from_name: document.getElementById("mail-from-name").value.trim(),
+    });
+    showMsg("smtp-msg", "Saved. New emails will use Gmail SMTP immediately.", true);
+  } catch (err) {
+    showMsg("smtp-msg", err.message, false);
+  }
+}
+
 async function saveGoogleSignin(e) {
   e.preventDefault();
   try {
@@ -366,6 +381,7 @@ async function testAi() {
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
   document.getElementById("email-templates-form").addEventListener("submit", saveEmailTemplates);
+  document.getElementById("smtp-form").addEventListener("submit", saveSmtp);
   document.getElementById("google-signin-form").addEventListener("submit", saveGoogleSignin);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
   document.getElementById("booking-form").addEventListener("submit", saveBooking);
@@ -387,6 +403,10 @@ async function testAi() {
     document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
+    document.getElementById("smtp-gmail-address").value = settings.smtp_gmail_address || "";
+    document.getElementById("smtp-app-password").value = settings.smtp_app_password || "";
+    document.getElementById("mail-from-address").value = settings.mail_from || "no-reply@princecaleb.dev";
+    document.getElementById("mail-from-name").value = settings.mail_from_name || "Prince Caleb";
     document.getElementById("composio-api-key").value = settings.composio_api_key || "";
     document.getElementById("composio-google-calendar-auth-config-id").value = settings.composio_google_calendar_auth_config_id || "";
     document.getElementById("composio-gmail-auth-config-id").value = settings.composio_gmail_auth_config_id || "";
