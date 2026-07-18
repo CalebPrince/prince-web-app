@@ -36,13 +36,14 @@ function pipelineVisible() {
 }
 function pipelineCard(lead) {
   const sources = [...new Map(lead.sources.map(s => [s.type, s])).values()];
-  return `<article class="pipeline-card" draggable="true" data-id="${lead.id}" tabindex="0">
+  const followUpDue = lead.follow_up_at && new Date(lead.follow_up_at).getTime() <= Date.now() && !['won','lost'].includes(lead.stage);
+  return `<article class="pipeline-card ${followUpDue?'pipeline-card-follow-up':''}" draggable="true" data-id="${lead.id}" tabindex="0">
     <div class="pipeline-card-top"><span class="pipeline-card-avatar" style="--pipeline-hue:${(lead.id * 43) % 360}deg">${pipelineEsc(pipelineInitials(lead.name))}</span><div><h5>${pipelineEsc(lead.name)}</h5><div class="pipeline-card-contact">${pipelineEsc(lead.email || lead.phone || 'No contact detail')}</div></div>${lead.manual_stage ? '<i class="bi bi-hand-index-thumb pipeline-manual" title="Stage set manually"></i>' : ''}</div>
     <p>${pipelineEsc(lead.summary || 'No activity summary')}</p>
     ${pipelineAttribution(lead)}
     <div class="pipeline-card-sources">${sources.map(s => `<a href="${pipelineEsc(s.url)}" title="Open ${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type] || s.type)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type] || s.type)}</a>`).join('')}</div>
     <label class="pipeline-stage-picker"><span>Stage</span><select data-stage-picker="${lead.id}">${pipelineStages.map(stage => `<option value="${stage}" ${lead.stage === stage ? 'selected' : ''}>${PIPELINE_STAGE_META[stage].label}</option>`).join('')}</select></label>
-    <footer><time>${new Date(lead.latest_at).toLocaleDateString(undefined, { month:'short', day:'numeric' })}</time>${pipelineMoney(lead) ? `<strong>${pipelineMoney(lead)}</strong>` : ''}</footer>
+    ${followUpDue?'<div class="pipeline-follow-up-due"><i class="bi bi-alarm"></i>Follow-up due</div>':''}<footer><time>${new Date(lead.latest_at).toLocaleDateString(undefined, { month:'short', day:'numeric' })}</time>${pipelineMoney(lead) ? `<strong>${pipelineMoney(lead)}</strong>` : ''}</footer>
   </article>`;
 }
 function renderPipeline() {
@@ -81,6 +82,6 @@ async function movePipelineLead(id, stage) {
     document.getElementById('pipeline-source-filter').insertAdjacentHTML('beforeend', sourceTypes.map(s => `<option value="${pipelineEsc(s)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s] || s)}</option>`).join(''));
     document.getElementById('pipeline-search').addEventListener('input', e => { pipelineQuery = e.target.value.trim(); renderPipeline(); });
     document.getElementById('pipeline-source-filter').addEventListener('change', e => { pipelineSource = e.target.value; renderPipeline(); });
-    document.getElementById('pipeline-drawer-backdrop').addEventListener('click',closePipelineDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closePipelineDrawer();});renderPipeline();
+    document.getElementById('pipeline-drawer-backdrop').addEventListener('click',closePipelineDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closePipelineDrawer();});renderPipeline();const requestedId=Number(new URLSearchParams(location.search).get('open'));if(requestedId)openPipelineDrawer(requestedId);
   } catch(err) { const box=document.getElementById('pipeline-error'); box.textContent=err.message || 'Could not load the pipeline.'; box.classList.remove('d-none'); }
 })();

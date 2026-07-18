@@ -98,6 +98,7 @@ class PipelineController
         $stmt = $pdo->prepare('UPDATE pipeline_leads SET '.implode(', ', $fields).' WHERE id=?');
         $stmt->execute($values);
         if ($stmt->rowCount() === 0) Response::error('Pipeline lead not found.', 404);
+        if (array_key_exists('follow_up_at', $data)) $pdo->prepare("DELETE FROM notification_reads WHERE notification_key=?")->execute(['follow_up:'.$id]);
         ActivityLog::log($user, 'pipeline_lead_updated', 'pipeline_lead', $id, null, array_intersect_key($data, array_flip(['stage','next_action','follow_up_at'])));
         Response::json(['status' => 'updated']);
     }

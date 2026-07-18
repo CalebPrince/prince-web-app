@@ -221,6 +221,10 @@ class DashboardController
             $add('invoice:'.$r['id'], 'Invoice', 'Invoice '.$r['invoice_number'].' is overdue', $r['client_name'].' · due '.$r['due_date'], '/admin/invoices.html', $r['updated_at'], 'warning');
         foreach ($pdo->query("SELECT id,name,url,last_status_changed_at,created_at FROM uptime_monitors WHERE is_active=1 AND last_status='down'") as $r)
             $add('uptime:'.$r['id'], 'Uptime', $r['name'].' is down', $r['url'], '/admin/uptime.html', $r['last_status_changed_at'] ?: $r['created_at'], 'danger');
+        foreach ($pdo->query("SELECT id,lead_key,next_action,follow_up_at FROM pipeline_leads WHERE follow_up_at IS NOT NULL AND datetime(follow_up_at)<=datetime('now') AND stage NOT IN ('won','lost')") as $r) {
+            $identity = str_starts_with($r['lead_key'], 'email:') ? substr($r['lead_key'], 6) : 'pipeline lead #'.$r['id'];
+            $add('follow_up:'.$r['id'], 'Follow-up', 'Follow up with '.$identity, $r['next_action'] ?: 'This lead is due for a follow-up.', '/admin/pipeline.html?open='.$r['id'], $r['follow_up_at'], 'warning');
+        }
         usort($items, static fn($a,$b) => strcmp($b['date'], $a['date']));
         return array_slice($items, 0, 100);
     }
