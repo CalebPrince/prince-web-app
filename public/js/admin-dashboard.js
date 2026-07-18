@@ -113,6 +113,17 @@ function renderRateLimits(rl) {
   `).join("");
 }
 
+const ATTENTION_ICONS = { Inquiry:'bi-inbox', Chat:'bi-chat-dots', Booking:'bi-calendar-check', Payment:'bi-credit-card', Proposal:'bi-file-earmark-check', Invoice:'bi-receipt', Uptime:'bi-activity', 'Follow-up':'bi-alarm' };
+function renderAttention(items) {
+  const priority = { danger: 0, warning: 1, info: 2, success: 3 };
+  const rows = [...(items || [])].sort((a,b)=>(priority[a.level]??2)-(priority[b.level]??2)).slice(0,6);
+  const shell = document.getElementById('dashboard-attention');
+  shell.classList.toggle('d-none', rows.length === 0);
+  const list = document.getElementById('dashboard-attention-list');
+  list.innerHTML = rows.map(item => `<a class="dashboard-attention-item attention-${escapeHtml(item.level)}" href="${escapeHtml(item.href)}" data-notification-key="${escapeHtml(item.key)}"><span class="dashboard-attention-icon"><i class="bi ${ATTENTION_ICONS[item.type]||'bi-bell'}"></i></span><span class="dashboard-attention-copy"><small>${escapeHtml(item.type)}</small><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></span><i class="bi bi-chevron-right"></i></a>`).join('');
+  list.querySelectorAll('[data-notification-key]').forEach(link=>link.addEventListener('click',async event=>{event.preventDefault();try{await api.patch(`/api/v1/admin/notifications/${encodeURIComponent(link.dataset.notificationKey)}`,{});}catch(_){}location.href=link.href;}));
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -121,11 +132,12 @@ function renderRateLimits(rl) {
   document.getElementById("welcome-line").textContent =
     `Signed in as ${user.email} — here's how your portfolio is doing.`;
 
-  const data = await api.get("/api/v1/admin/dashboard");
+  const [data, notifications] = await Promise.all([api.get("/api/v1/admin/dashboard"), api.get("/api/v1/admin/notifications")]);
   renderStats(data);
   renderRecentInquiries(data.recent_inquiries);
   renderDraftProjects(data.draft_projects);
   renderUpcomingAppointments(data.upcoming_appointments);
   renderRecentPayments(data.recent_payments);
   renderRateLimits(data.rate_limit);
+  renderAttention(notifications.items);
 })();
