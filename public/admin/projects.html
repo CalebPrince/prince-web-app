@@ -216,15 +216,20 @@
               <label class="form-label">Overall progress <span class="text-muted-custom fw-normal" id="progress-percent-label">0%</span></label>
               <input type="range" class="form-range" id="progress_percent" min="0" max="100" step="5" value="0">
             </div>
-            <div class="col-12"><div class="project-ops-divider"><span>Delivery operations</span><small>Private schedule and AI ownership.</small></div></div>
+            <div class="col-12"><div class="project-ops-divider"><span>Delivery operations</span><small>You own delivery; an AI agent can support a defined part of the work.</small></div></div>
+            <div class="col-md-6">
+              <label class="form-label">Project owner</label>
+              <div class="project-owner-field"><i class="bi bi-person-check"></i><div><strong id="project-owner-name">Prince Caleb</strong><span>Accountable for delivery and client decisions</span></div></div>
+            </div>
             <div class="col-md-6">
               <label class="form-label" for="deadline">Project deadline</label>
               <input class="form-control" id="deadline" type="date">
             </div>
             <div class="col-md-6">
-              <label class="form-label" for="assigned_agent_key">Assigned AI agent</label>
-              <select class="form-select" id="assigned_agent_key"><option value="">Unassigned</option></select>
+              <label class="form-label" for="assigned_agent_key">Supporting AI agent</label>
+              <select class="form-select" id="assigned_agent_key"><option value="">No supporting agent</option></select>
             </div>
+            <div class="col-md-6"><div class="project-agent-responsibility" id="project-agent-responsibility"><span>Select an agent to define its project responsibility.</span></div></div>
             <div class="col-12">
               <div class="d-flex justify-content-between align-items-center mb-2"><label class="form-label mb-0">Milestones</label><button class="btn btn-sm btn-outline-secondary" id="add-project-milestone" type="button"><i class="bi bi-plus-lg me-1"></i>Add milestone</button></div>
               <div id="project-milestones-list" class="project-milestones-editor"></div>

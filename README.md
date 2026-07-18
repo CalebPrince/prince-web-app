@@ -811,16 +811,21 @@ storage/
     form), joined back through `proposal_milestones` to whichever payment it
     funded; a payment with no linked proposal (e.g. Starter-tier direct
     checkout) lands in "Uncategorized" rather than being dropped or
-    misattributed. Gross margin and utilization are shown as flat,
-    explicitly-badged **estimates** (`is_estimate` in the API response) since
-    the app has no cost/expense or hours/time-tracking data anywhere to
-    compute them for real — every other figure on the page is a genuine
-    query, never a placeholder. A six-month revenue+margin chart and a
-    client-side CSV export (built from the already-loaded report, no extra
-    endpoint) round it out.
+    misattributed. Gross margin and utilization remain flat,
+    explicitly-badged **estimates** (`is_estimate` in the API response)
+    because this business-wide report does not yet roll project-level costs
+    and hours into the selected reporting period. Individual projects do
+    have real cost and hours tracking (see #42). Every other figure is a
+    genuine query, never a placeholder. A six-month revenue+margin chart and
+    client-side CSV export round it out. Reports also include a configurable
+    monthly revenue target: successful Paystack payments are collected
+    revenue, accepted proposals are deals won this month, and open proposals
+    plus identity-deduplicated marketing/manual leads form a weighted
+    forecast. Target settings use the existing key/value `settings` table and
+    need no migration.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
-    read-only roster of the studio — Caleb himself plus the six AI agents
-    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas) — each card showing its
+    read-only roster of the studio — Caleb himself plus the seven AI agents
+    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas, Arch) — each card showing its
     real role, a live headline stat pulled from its own table (e.g. Ledger
     shows proposals drafted, Canvas shows drafts created from
     `content_studio_items`, Dossier shows leads researched via
@@ -848,6 +853,24 @@ storage/
     pages without copying another static sidebar row into every HTML file.
     Deployments adding this page must run `php database/migrate.php` once to
     create `pipeline_leads`; no cron is required.
+42. **Project business and delivery management** (`/admin/projects.html`,
+    `ProjectController`): projects can be linked to client portal accounts,
+    and each client record has a Projects tab showing its linked work,
+    delivery status, progress, value, profit/margin, hours, and a direct edit
+    link. Private project finances track agreed project value, estimated cost,
+    actual cost, hours worked, currency, calculated profit, cost variance, and
+    margin. The portfolio ledger groups totals by currency so unlike
+    currencies are never combined. Delivery operations add a project
+    deadline, ordered milestone checklist with optional due dates/completion
+    timestamps, and automatic project/milestone overdue indicators. Prince
+    Caleb remains the accountable owner of every project; one optional AI
+    agent can be named as the supporting specialist, and the form derives its
+    responsibility from the existing Team role and description. Assignment
+    records responsibility and capacity only; it does not autonomously start
+    agent work. Finance, schedule, milestones, and assignment are admin-only
+    and are removed from public project API responses. Deployments must run
+    `php database/migrate.php` to add the project finance/operations columns
+    and create `project_milestones`; no cron is required.
 
 ## Deployment (Namecheap cPanel)
 

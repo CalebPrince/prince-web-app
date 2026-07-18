@@ -7,6 +7,7 @@ let projectClients = [];
 let slugEditedManually = false;
 let projectMilestones = [];
 let projectAgents = {};
+let projectOwnerName = "Prince Caleb";
 
 const DELIVERY_STATUS_LABEL = {
   on_track: "On track",
@@ -80,6 +81,14 @@ function renderMilestoneEditor() {
     row.querySelector(".milestone-date").addEventListener("change", event => { projectMilestones[index].due_date = event.target.value; });
     row.querySelector(".project-milestone-remove").addEventListener("click", () => { projectMilestones.splice(index, 1); renderMilestoneEditor(); });
   });
+}
+
+function updateAgentResponsibility() {
+  const key = document.getElementById("assigned_agent_key").value;
+  const agent = projectAgents[key];
+  document.getElementById("project-agent-responsibility").innerHTML = agent
+    ? `<span>${escapeHtml(agent.name)}'s responsibility</span><strong>${escapeHtml(agent.role)}</strong><small>${escapeHtml(agent.description)}</small>`
+    : '<span>Select an agent to define its project responsibility.</span>';
 }
 
 function renderStatusCounts(projects) {
@@ -185,7 +194,7 @@ function renderProjectsTable(projects) {
       </td>
       <td class="project-operation-cell">
         <strong class="${p.is_overdue || Number(p.overdue_milestones) ? "overdue" : ""}">${p.is_overdue ? "Overdue · " : ""}${formatProjectDate(p.deadline)}</strong>
-        <span>${escapeHtml(projectAgents[p.assigned_agent_key] || p.assigned_agent_key || "Unassigned")} · ${(p.milestones || []).filter(m => Number(m.is_completed)).length}/${(p.milestones || []).length} milestones${Number(p.overdue_milestones) ? ` · ${p.overdue_milestones} late` : ""}</span>
+        <span>${escapeHtml(projectOwnerName)}${p.assigned_agent_key ? ` + ${escapeHtml(projectAgents[p.assigned_agent_key]?.name || p.assigned_agent_key)}` : ""} · ${(p.milestones || []).filter(m => Number(m.is_completed)).length}/${(p.milestones || []).length} milestones${Number(p.overdue_milestones) ? ` · ${p.overdue_milestones} late` : ""}</span>
       </td>
       <td class="project-finance-cell">
         <strong class="${Number(p.profit || 0) < 0 ? "negative" : ""}">${projectMoney(p.profit, p.finance_currency)}</strong>
@@ -279,8 +288,10 @@ async function loadClientOptions() {
 async function loadAgentOptions() {
   const response = await api.get('/api/v1/admin/team');
   const agents = Array.isArray(response.agents) ? response.agents : [];
-  projectAgents = Object.fromEntries(agents.map(agent => [agent.key, agent.name]));
-  document.getElementById('assigned_agent_key').innerHTML = '<option value="">Unassigned</option>' + agents.map(agent =>
+  projectOwnerName = response.owner?.name || "Prince Caleb";
+  document.getElementById("project-owner-name").textContent = projectOwnerName;
+  projectAgents = Object.fromEntries(agents.map(agent => [agent.key, agent]));
+  document.getElementById('assigned_agent_key').innerHTML = '<option value="">No supporting agent</option>' + agents.map(agent =>
     `<option value="${escapeHtml(agent.key)}">${escapeHtml(agent.name)} — ${escapeHtml(agent.role)}</option>`
   ).join('');
 }
@@ -301,6 +312,7 @@ function openNewModal() {
   document.getElementById("progress-percent-label").textContent = "0%";
   document.getElementById("deadline").value = "";
   document.getElementById("assigned_agent_key").value = "";
+  updateAgentResponsibility();
   projectMilestones = [];
   renderMilestoneEditor();
   document.getElementById("finance_currency").value = "GHS";
@@ -336,6 +348,7 @@ function openEditModal(project) {
   document.getElementById("progress-percent-label").textContent = `${project.progress_percent || 0}%`;
   document.getElementById("deadline").value = project.deadline || "";
   document.getElementById("assigned_agent_key").value = project.assigned_agent_key || "";
+  updateAgentResponsibility();
   projectMilestones = (project.milestones || []).map(milestone => ({ id: Number(milestone.id), title: milestone.title, due_date: milestone.due_date || "", is_completed: !!Number(milestone.is_completed) }));
   renderMilestoneEditor();
   document.getElementById("finance_currency").value = project.finance_currency || "GHS";
@@ -428,6 +441,7 @@ async function deleteProject(id) {
   document.getElementById("progress_percent").addEventListener("input", (e) => {
     document.getElementById("progress-percent-label").textContent = `${e.target.value}%`;
   });
+  document.getElementById("assigned_agent_key").addEventListener("change", updateAgentResponsibility);
   document.getElementById("add-project-milestone").addEventListener("click", () => {
     projectMilestones.push({ title: "", due_date: "", is_completed: false });
     renderMilestoneEditor();
