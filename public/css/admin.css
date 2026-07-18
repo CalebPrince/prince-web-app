@@ -644,6 +644,34 @@ body > .d-flex {
   color: var(--heading-color) !important;
 }
 
+/* Bootstrap list groups keep a white component background unless their own
+   variables are rethemed. Lead discovery lives inside a dark modal, so pair
+   every result row with the active theme surface and its matching text. */
+#discover-results .list-group {
+  --bs-list-group-bg: var(--bg);
+  --bs-list-group-color: var(--ink);
+  --bs-list-group-border-color: var(--line);
+  --bs-list-group-action-hover-bg: var(--bg-soft);
+  --bs-list-group-action-hover-color: var(--heading-color);
+}
+
+#discover-results .list-group-item {
+  background-color: var(--bg);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+#discover-results .list-group-item a {
+  color: var(--heading-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+#discover-results .list-group-item:has(.discover-check:checked) {
+  background-color: var(--bg-soft);
+  border-color: var(--line-strong);
+}
+
 .notif-dropdown {
   background: var(--card-bg);
   border-color: var(--line);
