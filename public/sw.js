@@ -9,7 +9,7 @@
 // while after a push. Only genuinely static binary assets (icons) are
 // cache-first. Bump CACHE_VERSION on any change here to force old caches
 // to be dropped on next activate.
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `princecaleb-shell-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -58,7 +58,11 @@ self.addEventListener("fetch", (event) => {
           }
           return res;
         })
-        .catch(() => caches.match(event.request).then((r) => r || (event.request.mode === "navigate" ? caches.match("/") : undefined)))
+        .catch(() => caches.match(event.request).then((r) => {
+          if (r) return r;
+          if (event.request.mode === "navigate") return caches.match("/").then((page) => page || Response.error());
+          return Response.error();
+        }))
     );
     return;
   }
@@ -74,7 +78,7 @@ self.addEventListener("fetch", (event) => {
           }
           return res;
         })
-        .catch(() => cached);
+        .catch(() => cached || Response.error());
       return cached || network;
     })
   );
