@@ -5,6 +5,33 @@ let draggedId = null;
 let approvedTestimonials = [];
 let slugEditedManually = false;
 
+const DELIVERY_STATUS_LABEL = {
+  on_track: "On track",
+  needs_attention: "Needs attention",
+  at_risk: "At risk",
+  due_this_month: "Due this month",
+};
+
+// Reuses existing status-pill color variants so no new CSS is needed.
+const DELIVERY_STATUS_PILL_CLASS = {
+  on_track: "published",
+  needs_attention: "unread",
+  at_risk: "flagged",
+  due_this_month: "chat-message",
+};
+
+function renderStatusCounts(projects) {
+  const counts = { on_track: 0, needs_attention: 0, at_risk: 0, due_this_month: 0 };
+  projects.forEach(p => {
+    const status = p.delivery_status || "on_track";
+    if (status in counts) counts[status]++;
+  });
+  Object.keys(counts).forEach(status => {
+    const el = document.getElementById(`status-count-${status}`);
+    if (el) el.textContent = counts[status];
+  });
+}
+
 function slugify(value) {
   return String(value || "")
     .normalize("NFKD")
@@ -76,7 +103,7 @@ function renderProjectsTable(projects) {
   currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
     return;
   }
 
@@ -91,6 +118,16 @@ function renderProjectsTable(projects) {
       <td>
         <span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span>
         ${p.is_featured ? '<span class="status-pill published ms-1">&#9733; Featured</span>' : ""}
+        <span class="status-pill ${DELIVERY_STATUS_PILL_CLASS[p.delivery_status] || "draft"} ms-1">${DELIVERY_STATUS_LABEL[p.delivery_status] || "On track"}</span>
+      </td>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <div class="progress flex-grow-1" style="height: 8px; min-width: 80px;">
+            <div class="progress-bar" role="progressbar" style="width: ${p.progress_percent || 0}%; background: var(--section-blue);"
+              aria-valuenow="${p.progress_percent || 0}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <span class="small text-muted-custom" style="min-width: 2.5rem;">${p.progress_percent || 0}%</span>
+        </div>
       </td>
       <td class="text-end pe-3">
         <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${p.id}">Edit</button>
@@ -145,6 +182,7 @@ function renderProjectsTable(projects) {
 async function loadProjects() {
   const response = await api.get("/api/v1/admin/projects");
   const projects = Array.isArray(response) ? response : [];
+  renderStatusCounts(projects);
   renderProjectsTable(projects);
 }
 
@@ -167,6 +205,9 @@ function openNewModal() {
   document.getElementById("outcome_metrics").value = "";
   document.getElementById("testimonial_id").value = "";
   document.getElementById("is_featured").checked = false;
+  document.getElementById("delivery_status").value = "on_track";
+  document.getElementById("progress_percent").value = 0;
+  document.getElementById("progress-percent-label").textContent = "0%";
   setCoverPreview(null);
   galleryPaths = [];
   renderGalleryList();
@@ -191,6 +232,9 @@ function openEditModal(project) {
   document.getElementById("is_featured").checked = !!project.is_featured;
   document.getElementById("outcome_metrics").value = project.outcome_metrics || "";
   document.getElementById("testimonial_id").value = project.testimonial_id || "";
+  document.getElementById("delivery_status").value = project.delivery_status || "on_track";
+  document.getElementById("progress_percent").value = project.progress_percent || 0;
+  document.getElementById("progress-percent-label").textContent = `${project.progress_percent || 0}%`;
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
   setCoverPreview(project.cover_image_path);
@@ -219,6 +263,8 @@ async function saveProject() {
     is_featured: document.getElementById("is_featured").checked,
     outcome_metrics: document.getElementById("outcome_metrics").value || null,
     testimonial_id: document.getElementById("testimonial_id").value || null,
+    delivery_status: document.getElementById("delivery_status").value,
+    progress_percent: Number(document.getElementById("progress_percent").value) || 0,
   };
 
   try {
@@ -260,6 +306,9 @@ async function deleteProject(id) {
     const slug = document.getElementById("slug");
     const cleaned = slugify(slug.value);
     if (slug.value !== cleaned) slug.value = cleaned;
+  });
+  document.getElementById("progress_percent").addEventListener("input", (e) => {
+    document.getElementById("progress-percent-label").textContent = `${e.target.value}%`;
   });
 
   document.getElementById("cover-upload-input").addEventListener("change", async (e) => {

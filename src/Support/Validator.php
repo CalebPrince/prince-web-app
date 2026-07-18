@@ -69,6 +69,16 @@ class Validator
         if (trim((string) ($data['cover_image_path'] ?? '')) === '') {
             $errors[] = 'Cover image path is required.';
         }
+        if (isset($data['delivery_status'])
+            && !in_array($data['delivery_status'], ['on_track', 'needs_attention', 'at_risk', 'due_this_month'], true)
+        ) {
+            $errors[] = 'Delivery status must be one of: on_track, needs_attention, at_risk, due_this_month.';
+        }
+        if (isset($data['progress_percent'])
+            && (!is_numeric($data['progress_percent']) || $data['progress_percent'] < 0 || $data['progress_percent'] > 100)
+        ) {
+            $errors[] = 'Overall progress must be a number between 0 and 100.';
+        }
 
         return $errors;
     }

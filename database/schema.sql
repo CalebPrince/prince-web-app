@@ -27,6 +27,14 @@ CREATE TABLE IF NOT EXISTS projects (
   sort_order INTEGER NOT NULL DEFAULT 0,
   outcome_metrics TEXT,
   testimonial_id INTEGER NULL REFERENCES testimonials(id) ON DELETE SET NULL,
+  -- Delivery health, set by hand on the admin Projects page — separate from
+  -- is_published, which is about public visibility, not build progress.
+  delivery_status TEXT NOT NULL DEFAULT 'on_track'
+    CHECK (delivery_status IN ('on_track', 'needs_attention', 'at_risk', 'due_this_month')),
+  -- Hand-set completion estimate, shown as a filled progress bar in the admin
+  -- project list. Independent of delivery_status — a project can be at 80%
+  -- and still "at risk" if what's left is the hard part.
+  progress_percent INTEGER NOT NULL DEFAULT 0 CHECK (progress_percent BETWEEN 0 AND 100),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -311,6 +319,25 @@ CREATE TABLE IF NOT EXISTS beacon_social_leads (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at);
+
+-- Caleb's corrections on leads Beacon got wrong (flagged as a false positive
+-- from the "Recent qualified leads" panel, with an optional note on why).
+-- Kept independent of beacon_social_leads — flagging a lead deletes it from
+-- there the same as a plain delete, but the correction survives here so
+-- BeaconController can fold recent ones into the qualification prompt as
+-- real examples of mistakes, instead of the rules only ever getting stricter
+-- in the abstract.
+CREATE TABLE IF NOT EXISTS beacon_lead_feedback (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  platform TEXT NOT NULL,
+  username TEXT NOT NULL,
+  post_content TEXT NOT NULL,
+  post_url TEXT,
+  reasoning TEXT NOT NULL,
+  comment TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_beacon_lead_feedback_created ON beacon_lead_feedback (created_at);
 
 -- URLs run_beacon_discovery.php has already evaluated (qualified or not) —
 -- dedupes so the same search result isn't re-scored (and re-billed, both

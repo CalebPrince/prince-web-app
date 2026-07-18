@@ -84,6 +84,45 @@
       <button class="btn-brand" id="new-project-btn">+ New Project</button>
     </div>
 
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-check-circle"></i></div>
+          <div>
+            <div class="stat-label">On track</div>
+            <div class="stat-value" id="status-count-on_track">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-exclamation-circle"></i></div>
+          <div>
+            <div class="stat-label">Needs attention</div>
+            <div class="stat-value" id="status-count-needs_attention">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: #fee2e2; color: #991b1b;"><i class="bi bi-exclamation-triangle"></i></div>
+          <div>
+            <div class="stat-label">At risk</div>
+            <div class="stat-value" id="status-count-at_risk">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-comms-soft); color: var(--section-comms);"><i class="bi bi-calendar-event"></i></div>
+          <div>
+            <div class="stat-label">Due this month</div>
+            <div class="stat-value" id="status-count-due_this_month">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <p class="text-muted-custom small mb-2">Drag rows by the &#x2630; handle to reorder — this controls the order projects appear on the public site.</p>
     <div class="admin-card p-0">
       <table class="table mb-0 align-middle">
@@ -94,6 +133,7 @@
             <th>Category</th>
             <th>Tags</th>
             <th>Status</th>
+            <th style="width:12rem;">Overall progress</th>
             <th class="text-end pe-3">Actions</th>
           </tr>
         </thead>
@@ -149,6 +189,19 @@
             <div class="col-md-4">
               <label class="form-label">Repo URL</label>
               <input type="url" class="form-control" id="repo_url" placeholder="https://github.com/user/repo">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Delivery status <span class="text-muted-custom fw-normal">(build progress — separate from Published/Draft)</span></label>
+              <select class="form-select" id="delivery_status">
+                <option value="on_track">On track</option>
+                <option value="needs_attention">Needs attention</option>
+                <option value="at_risk">At risk</option>
+                <option value="due_this_month">Due this month</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Overall progress <span class="text-muted-custom fw-normal" id="progress-percent-label">0%</span></label>
+              <input type="range" class="form-range" id="progress_percent" min="0" max="100" step="5" value="0">
             </div>
             <div class="col-md-8">
               <label class="form-label">Cover image</label>

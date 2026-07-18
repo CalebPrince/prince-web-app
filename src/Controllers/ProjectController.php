@@ -135,8 +135,8 @@ class ProjectController
 
         $pdo = Database::get();
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $data['slug'],
@@ -154,6 +154,8 @@ class ProjectController
             (int) ($data['sort_order'] ?? 0),
             trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
+            $data['delivery_status'] ?? 'on_track',
+            max(0, min(100, (int) ($data['progress_percent'] ?? 0))),
         ]);
         $projectId = (int) $pdo->lastInsertId();
 
@@ -193,7 +195,7 @@ class ProjectController
         $stmt = $pdo->prepare(
             "UPDATE projects SET slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
-             outcome_metrics=?, testimonial_id=?, updated_at=datetime('now') WHERE id=?"
+             outcome_metrics=?, testimonial_id=?, delivery_status=?, progress_percent=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $data['slug'],
@@ -211,6 +213,8 @@ class ProjectController
             (int) ($data['sort_order'] ?? 0),
             trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
+            $data['delivery_status'] ?? 'on_track',
+            max(0, min(100, (int) ($data['progress_percent'] ?? 0))),
             $id,
         ]);
 

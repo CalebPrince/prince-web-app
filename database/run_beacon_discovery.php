@@ -96,6 +96,23 @@ function detectPlatform(string $url): string
 }
 
 /**
+ * Serper's generic web-search snippet for a Reddit thread often includes
+ * Reddit's own "Posted by u/username" metadata verbatim, even though the
+ * full post body isn't returned. Best-effort only — Google frequently omits
+ * it — but a real username is a genuine signal the qualification prompt can
+ * use (a business-sounding handle like "WebStudioPro" reads very differently
+ * from a person's), so it's worth passing through instead of always sending
+ * the literal string 'unknown'.
+ */
+function extractRedditUsername(string $title, string $snippet): string
+{
+    if (preg_match('/\bu\/([A-Za-z0-9_-]{3,20})\b/', $snippet . ' ' . $title, $m)) {
+        return $m[1];
+    }
+    return 'unknown';
+}
+
+/**
  * @param string|null $error Set to a short failure summary when this returns null.
  * @return array<int,array<string,mixed>>|null null on a failed search — distinct
  *         from [], which means the search worked and Google had nothing. The
@@ -189,7 +206,10 @@ foreach ($keywords as $keyword) {
         // result — Google only dates some.
         $postAge = trim((string) ($result['date'] ?? '')) ?: null;
 
-        $draft = BeaconController::generateForPost(detectPlatform($url), 'unknown', $postContent, $url, 'cron', $postAge);
+        $platform = detectPlatform($url);
+        $username = $platform === 'Reddit' ? extractRedditUsername($title, $snippet) : 'unknown';
+
+        $draft = BeaconController::generateForPost($platform, $username, $postContent, $url, 'cron', $postAge);
 
         // A failed score is not a decision — don't mark it seen. Marking on null
         // cost real leads: an afternoon of testing exhausted every provider's

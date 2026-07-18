@@ -782,4 +782,33 @@ if (!in_array('service_category', $proposalColumns, true)) {
     $pdo->exec('ALTER TABLE proposals ADD COLUMN service_category TEXT');
 }
 
+// Delivery health per project — hand-set on the admin Projects page,
+// separate from is_published (public visibility). No CHECK here, same
+// pattern as inquiries.type above: SQLite's ALTER TABLE ADD COLUMN can't
+// carry the CHECK, schema.sql has it for fresh installs.
+$projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');
+if (!in_array('delivery_status', $projectColumns, true)) {
+    $pdo->exec("ALTER TABLE projects ADD COLUMN delivery_status TEXT NOT NULL DEFAULT 'on_track'");
+}
+if (!in_array('progress_percent', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN progress_percent INTEGER NOT NULL DEFAULT 0');
+}
+
+// Caleb's corrections on false-positive Beacon leads — new table, so a plain
+// CREATE TABLE IF NOT EXISTS (already in schema.sql for fresh installs) is
+// all an existing database needs too.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS beacon_lead_feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        platform TEXT NOT NULL,
+        username TEXT NOT NULL,
+        post_content TEXT NOT NULL,
+        post_url TEXT,
+        reasoning TEXT NOT NULL,
+        comment TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_beacon_lead_feedback_created ON beacon_lead_feedback (created_at)');
+
 echo "Schema applied.\n";

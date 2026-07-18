@@ -80,7 +80,7 @@ class BeaconController
     public static function generateForPost(string $platform, string $username, string $postContent, ?string $postUrl, string $source, ?string $postAge = null): ?array
     {
         $pdo = Database::get();
-        $userPrompt = self::buildUserPrompt($platform, $username, $postContent, $postUrl);
+        $userPrompt = self::buildUserPrompt($platform, $username, $postContent, $postUrl, self::recentFeedbackBlock($pdo));
 
         // Tools earn their tokens on draft(), where a human already decided the
         // post was worth handing over. The cron scores raw search snippets and
@@ -241,6 +241,40 @@ class BeaconController
         Response::json(['status' => 'deleted']);
     }
 
+    /**
+     * POST /api/v1/admin/beacon-leads/{id}/flag — body: {comment?} — dismiss a
+     * lead the same as destroyLead(), but record it as a false positive first.
+     * That record is what recentFeedbackBlock() feeds back into future
+     * scoring calls, so this is the actual "alert Beacon" action, not just a
+     * differently-labeled delete.
+     */
+    public static function flagLead(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $id = (int) ($params['id'] ?? 0);
+
+        $stmt = $pdo->prepare('SELECT platform, username, post_content, post_url, reasoning FROM beacon_social_leads WHERE id = ?');
+        $stmt->execute([$id]);
+        $lead = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$lead) {
+            Response::error('Lead not found.', 404);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $comment = trim((string) ($data['comment'] ?? ''));
+
+        $pdo->prepare(
+            'INSERT INTO beacon_lead_feedback (platform, username, post_content, post_url, reasoning, comment) VALUES (?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $lead['platform'], $lead['username'], $lead['post_content'], $lead['post_url'], $lead['reasoning'],
+            $comment !== '' ? $comment : null,
+        ]);
+        $pdo->prepare('DELETE FROM beacon_social_leads WHERE id = ?')->execute([$id]);
+
+        Response::json(['status' => 'flagged']);
+    }
+
     private static function draftToolDeclarations(): array
     {
         return [
@@ -363,11 +397,39 @@ class BeaconController
             . "further.";
     }
 
-    private static function buildUserPrompt(string $platform, string $username, string $postContent, ?string $postUrl): string
+    /**
+     * Caleb's most recent false-positive corrections (flagLead()), formatted
+     * as concrete examples prepended to the qualification prompt. This is
+     * the actual feedback loop: a correction he makes today changes what
+     * the very next scoring call rejects, not just the static rules below.
+     * Empty string — and no section at all — once there's nothing to show.
+     */
+    private static function recentFeedbackBlock(\PDO $pdo): string
+    {
+        $rows = $pdo->query(
+            'SELECT platform, post_content, reasoning, comment FROM beacon_lead_feedback ORDER BY created_at DESC LIMIT 5'
+        )->fetchAll(\PDO::FETCH_ASSOC);
+        if (!$rows) {
+            return '';
+        }
+
+        $lines = "CALEB'S RECENT CORRECTIONS — these were scored qualified before and he flagged them as wrong. "
+            . "Do not repeat the pattern that made you qualify them:\n";
+        foreach ($rows as $i => $row) {
+            $excerpt = mb_substr((string) $row['post_content'], 0, 220);
+            $comment = trim((string) $row['comment']) !== '' ? $row['comment'] : '(no note — just marked wrong)';
+            $lines .= ($i + 1) . ". [{$row['platform']}] \"{$excerpt}\" — you reasoned: \"{$row['reasoning']}\" "
+                . "— Caleb's correction: \"{$comment}\"\n";
+        }
+
+        return $lines . "\n";
+    }
+
+    private static function buildUserPrompt(string $platform, string $username, string $postContent, ?string $postUrl, string $feedbackBlock = ''): string
     {
         $urlLine = $postUrl !== null ? "- Post URL: {$postUrl}\n" : '';
 
-        return "INPUT DATA:\n"
+        return $feedbackBlock . "INPUT DATA:\n"
             . "- Platform: {$platform}\n"
             . "- Poster Username: {$username}\n"
             . "- Original Post Title/Content: {$postContent}\n"
@@ -377,15 +439,25 @@ class BeaconController
             . "done, and could plausibly pay someone to do it.\n\n"
             . "Do NOT qualify, no matter how relevant to web/mobile dev the post is:\n"
             . "- another developer debugging, discussing tooling, or asking a technical question\n"
-            . "- anyone promoting or offering their own services (i.e. a competitor)\n"
+            . "- anyone promoting or offering their own services (i.e. a competitor) — watch for these "
+            . "tells even when the post is styled as if it were someone asking for help:\n"
+            . "  * agency-style pitch phrasing: \"we build/we offer/DM us/message us for a quote/check "
+            . "out our portfolio/link in bio/limited slots available\"\n"
+            . "  * a username that reads like a business or studio, not a person (e.g. "
+            . "\"WebStudioPro\", \"DevAgencyXYZ\", \"PixelCraftDesigns\")\n"
+            . "  * the post reads like a reusable ad template rather than a specific problem — no "
+            . "concrete detail about a project, budget, or timeline, just a general sales pitch\n"
+            . "  * a suspiciously polished portfolio flex embedded in what claims to be a question\n"
             . "- someone learning to build it themselves and enjoying that\n"
             . "- commentary, opinion, listicles, or marketing posts about why websites/apps matter\n"
             . "- recruiters or listings for a salaried in-house role (a specific project someone "
             . "wants built is different — that does qualify)\n\n"
             . "\"It is relevant to web development\" is NOT a reason to qualify — that describes most "
             . "of the internet. Someone with a problem they want solved is a lead; someone discussing "
-            . "the same problem as a peer is not. Rejecting most posts you see is the expected "
-            . "outcome, not a failure.\n\n"
+            . "the same problem as a peer — or pitching their own — is not. Rejecting most posts you "
+            . "see is the expected outcome, not a failure. When genuinely torn between a real prospect "
+            . "and a vendor's pitch, lower the confidence_score rather than guessing high — the point "
+            . "of that score is to tell Caleb how sure you are.\n\n"
             . "Provide your output exactly in this JSON format so the backend can easily parse it for "
             . "Discord/Slack:\n\n"
             . "{\n"

@@ -312,7 +312,14 @@
           + '<div class="small mb-2">' + escapeHtml(lead.reasoning) + "</div>"
           + '<div class="small fst-italic mb-2">' + escapeHtml(lead.drafted_reply) + "</div>"
           + '<button type="button" class="btn btn-sm btn-outline-secondary copy-reply-btn">Copy reply</button>'
-          + '<button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-lead-btn">Delete</button>';
+          + '<button type="button" class="btn btn-sm btn-outline-warning ms-1 flag-lead-btn">Flag as false positive</button>'
+          + '<button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-lead-btn">Delete</button>'
+          + '<div class="flag-lead-form mt-2 d-none">'
+          + '<textarea class="form-control form-control-sm flag-lead-note" rows="2" placeholder="Optional — why is this wrong? e.g. \'this is a vendor pitching their own services\'"></textarea>'
+          + '<div class="mt-1">'
+          + '<button type="button" class="btn btn-sm btn-warning flag-lead-submit">Submit flag</button>'
+          + '<button type="button" class="btn btn-sm btn-outline-secondary ms-1 flag-lead-cancel">Cancel</button>'
+          + "</div></div>";
 
         // Copy the raw reply, not the escaped markup above — this is pasted
         // straight into the platform's own reply box.
@@ -338,6 +345,37 @@
           } catch (err) {
             alert(err.message);
             deleteBtn.disabled = false;
+          }
+        });
+
+        // Flag alerts Beacon: the note (if any) is stored and fed into future
+        // qualification prompts, unlike a plain delete which leaves no trace.
+        const flagBtn = card.querySelector(".flag-lead-btn");
+        const flagForm = card.querySelector(".flag-lead-form");
+        const flagNote = card.querySelector(".flag-lead-note");
+        const flagSubmit = card.querySelector(".flag-lead-submit");
+        const flagCancel = card.querySelector(".flag-lead-cancel");
+
+        flagBtn.addEventListener("click", () => {
+          flagForm.classList.remove("d-none");
+          flagBtn.classList.add("d-none");
+          flagNote.focus();
+        });
+        flagCancel.addEventListener("click", () => {
+          flagForm.classList.add("d-none");
+          flagBtn.classList.remove("d-none");
+        });
+        flagSubmit.addEventListener("click", async () => {
+          flagSubmit.disabled = true;
+          flagSubmit.textContent = "Flagging...";
+          try {
+            await api.post("/api/v1/admin/beacon-leads/" + lead.id + "/flag", { comment: flagNote.value.trim() });
+            card.remove();
+            beaconLeadsEmpty.classList.toggle("d-none", beaconLeadsList.children.length > 0);
+          } catch (err) {
+            alert(err.message);
+            flagSubmit.disabled = false;
+            flagSubmit.textContent = "Submit flag";
           }
         });
 
