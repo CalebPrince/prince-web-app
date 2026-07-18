@@ -243,6 +243,39 @@ CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments (appointment_da
 CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_slot_active
   ON appointments (appointment_date, appointment_time) WHERE status != 'cancelled';
 
+-- Queued the moment Lisa's book_appointment tool succeeds (transcript +
+-- contact info snapshotted synchronously, no AI call in that request) so a
+-- discovery-call booking never slows down her reply to the visitor. A cron
+-- (database/draft_proposals_from_bookings.php) drains 'queued' rows through
+-- Ledger's existing ProposalAgentController::buildDraft(), filling the
+-- title/scope/timeline/terms/currency/milestones_json columns and flipping
+-- status to 'drafted' — ready for Caleb to review on the Proposals page
+-- before the call happens, not after. Nothing here ever becomes a real
+-- proposals row on its own; dismissing or reviewing a drafted row just
+-- deletes it, same as ContentStudioController's items until promoted.
+CREATE TABLE IF NOT EXISTS proposal_drafts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  appointment_id INTEGER NULL REFERENCES appointments(id) ON DELETE SET NULL,
+  client_name TEXT NOT NULL,
+  client_email TEXT NOT NULL,
+  client_phone TEXT,
+  topic TEXT,
+  transcript_json TEXT NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'drafted', 'failed')),
+  title TEXT,
+  scope TEXT,
+  timeline TEXT,
+  terms TEXT,
+  currency TEXT,
+  milestones_json TEXT,
+  grounding_source TEXT,
+  grounding_note TEXT,
+  error_note TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  drafted_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_proposal_drafts_status ON proposal_drafts (status, created_at);
+
 -- A client-facing review pipeline: admin requests a testimonial (generates a
 -- token + emails a link), the client submits a quote+rating via that token,
 -- then admin approves before it's shown publicly. Separate from the static

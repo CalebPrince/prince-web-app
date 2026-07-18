@@ -176,10 +176,11 @@ class LiveChatController
         // confirmation instead of losing it to a retry on another provider
         // that would re-attempt — and likely reject — the same slot.
         $confirmedBooking = null;
-        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking) {
+        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, $transcript) {
             $result = self::runTool($name, $args, $pdo);
             if ($name === 'book_appointment' && ($result['success'] ?? false)) {
                 $confirmedBooking = $result;
+                self::queueProposalDraft($args, $result, $transcript, $pdo);
             }
             return $result;
         };
@@ -1161,6 +1162,34 @@ class LiveChatController
         } catch (\Throwable $e) {
             error_log(sprintf('Live Chat tool "%s" threw: %s', $name, $e->getMessage()));
             return ['error' => 'Tool failed to run.'];
+        }
+    }
+
+    /**
+     * Snapshots the conversation that led to a just-confirmed booking into
+     * proposal_drafts (status 'queued') so database/draft_proposals_from_bookings.php
+     * can turn it into a real Ledger-drafted proposal shortly after — ready
+     * for Caleb to review on the Proposals page before the call happens.
+     * Deliberately just an INSERT, no AI call, so it can't add latency to
+     * Lisa's reply; deliberately swallows its own errors so a problem here
+     * can never break the booking confirmation the visitor is waiting on.
+     */
+    private static function queueProposalDraft(array $bookingArgs, array $bookingResult, array $transcript, \PDO $pdo): void
+    {
+        try {
+            $pdo->prepare(
+                'INSERT INTO proposal_drafts (appointment_id, client_name, client_email, client_phone, topic, transcript_json)
+                 VALUES (?, ?, ?, ?, ?, ?)'
+            )->execute([
+                $bookingResult['appointment_id'] ?? null,
+                trim((string) ($bookingArgs['name'] ?? '')),
+                trim((string) ($bookingArgs['email'] ?? '')),
+                trim((string) ($bookingArgs['phone'] ?? '')) ?: null,
+                trim((string) ($bookingArgs['topic'] ?? '')) ?: null,
+                json_encode($transcript),
+            ]);
+        } catch (\Throwable $e) {
+            error_log('Live Chat queueProposalDraft failed (booking itself still succeeded): ' . $e->getMessage());
         }
     }
 

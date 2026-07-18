@@ -111,7 +111,7 @@ src/
                             AppointmentController, SettingsController,
                             AuthController, AiChatController, LiveChatController,
                             ContentAgentController, ContentStudioController,
-                            ReportController, TeamController,
+                            ReportController, TeamController, ProposalDraftController,
                             and more
   Middleware/              # AuthMiddleware (admin JWT), ClientAuthMiddleware
                             (client portal JWT, isolated via a `type` claim —
@@ -143,6 +143,7 @@ database/
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
+  draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
 storage/
@@ -723,6 +724,29 @@ storage/
     `inquiries`/`proposals`/`proposal_milestones` columns, and its assistant
     name/voice/accent settings ride the same generic `settings` key-value
     store every other admin-configurable setting already uses.
+
+    **Inbound Funnel (Lisa → Ledger):** the moment a visitor books a
+    discovery call through Lisa's `book_appointment` tool, the exact chat
+    transcript that led to it — plus the real, validated name/email/phone —
+    is snapshotted into a `proposal_drafts` row (`status = 'queued'`) right
+    inside that same request. It's a single fast INSERT, no AI call, so
+    booking a call never gets slower for the visitor, and the insert is
+    wrapped so a failure there can never break the booking confirmation
+    itself. `database/draft_proposals_from_bookings.php` (cron) drains
+    queued rows shortly after: it turns the transcript into a brief and
+    calls the exact same `ProposalAgentController::buildDraft()` that powers
+    the "Draft with AI" button, then overwrites whatever contact details the
+    model echoed back with the real ones from the booking (never trust the
+    model over what the visitor actually typed) before marking the row
+    `drafted`. Nothing here ever touches the real `proposals` table on its
+    own — `/admin/proposals.html` shows an "AI-drafted from bookings" panel
+    (queued/drafted/failed) above the table; **Review & Create** pre-fills
+    the same Create Proposal form "Draft with AI" does (both now share
+    `applyDraftToForm()`) and **Dismiss** just deletes the row — either way,
+    Caleb still has to click Create/Save before anything real exists, same
+    as every other path to a proposal. The result: by the time Caleb picks
+    up the call, a first-pass proposal is often already waiting for review
+    instead of starting from a blank form afterward.
 38. **Canvas & Content Studio** (`/admin/agent-chat.html` "Content" tab,
     `/admin/content-studio.html`): a content-creation agent, also running
     through `AiAgentEngine` and grounded via the shared `get_site_info`/
@@ -876,6 +900,11 @@ One-time setup on a new host:
     `/usr/local/bin/php /home/<cpanel-user>/database/backup_db.php > /dev/null`
     Periodically download a snapshot somewhere off the server too — an
     on-host backup doesn't survive losing the hosting account itself.
+4k. Add an eleventh cron job (every 5-10 minutes) to draft proposals from
+    bookings Lisa takes — no-op whenever nothing's queued, so a short
+    interval just means less delay before a proposal is ready for Caleb to
+    review:
+    `/usr/local/bin/php /home/<cpanel-user>/database/draft_proposals_from_bookings.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

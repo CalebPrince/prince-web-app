@@ -800,6 +800,34 @@ if (!in_array('progress_percent', $projectColumns, true)) {
     $pdo->exec('ALTER TABLE projects ADD COLUMN progress_percent INTEGER NOT NULL DEFAULT 0');
 }
 
+// Bookings queued for Ledger to auto-draft a proposal from — new table, so
+// a plain CREATE TABLE IF NOT EXISTS (already in schema.sql for fresh
+// installs) is all an existing database needs too.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS proposal_drafts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER NULL REFERENCES appointments(id) ON DELETE SET NULL,
+        client_name TEXT NOT NULL,
+        client_email TEXT NOT NULL,
+        client_phone TEXT,
+        topic TEXT,
+        transcript_json TEXT NOT NULL DEFAULT '[]',
+        status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'drafted', 'failed')),
+        title TEXT,
+        scope TEXT,
+        timeline TEXT,
+        terms TEXT,
+        currency TEXT,
+        milestones_json TEXT,
+        grounding_source TEXT,
+        grounding_note TEXT,
+        error_note TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        drafted_at TEXT
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_proposal_drafts_status ON proposal_drafts (status, created_at)');
+
 // Caleb's corrections on false-positive Beacon leads — new table, so a plain
 // CREATE TABLE IF NOT EXISTS (already in schema.sql for fresh installs) is
 // all an existing database needs too.

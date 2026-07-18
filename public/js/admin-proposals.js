@@ -1,6 +1,10 @@
 let proposalModal = null;
 let quoteRequests = [];
 let editingProposalId = null;
+// While a booking's draft is still 'queued', the cron hasn't filled it in
+// yet — re-poll so the card flips from the spinner to reviewable/failed on
+// its own, without Caleb having to reload the page.
+let proposalDraftPollTimer = null;
 
 const STATUS_CLASS = {
   draft: 'read',
@@ -254,6 +258,28 @@ const GROUNDING_LABEL = {
   none: 'No real pricing data to ground this in — these are placeholder numbers.',
 };
 
+// Shared by draftWithAi() (a live generate() call) and the "Review & Create"
+// button on a queued booking draft (already-fetched fields) — same JSON
+// shape either way, so the form-filling logic only needs to exist once.
+function applyDraftToForm(draft) {
+  if (draft.client_name) document.getElementById('client-name').value = draft.client_name;
+  if (draft.client_email) document.getElementById('client-email').value = draft.client_email;
+  document.getElementById('proposal-title').value = draft.title || '';
+  document.getElementById('proposal-currency').value = draft.currency || 'GHS';
+  document.getElementById('proposal-scope').value = draft.scope || '';
+  document.getElementById('proposal-timeline').value = draft.timeline || '';
+  document.getElementById('proposal-terms').value = draft.terms || defaultTerms();
+
+  const wrap = document.getElementById('milestones-wrap');
+  wrap.innerHTML = '';
+  (draft.milestones || []).forEach(m => {
+    wrap.appendChild(milestoneRow(m.title || '', m.amount || '', m.due_note || ''));
+  });
+  if (!wrap.children.length) {
+    wrap.appendChild(milestoneRow());
+  }
+}
+
 async function draftWithAi() {
   const note = document.getElementById('draft-with-ai-note');
   note.classList.add('d-none');
@@ -278,22 +304,7 @@ async function draftWithAi() {
       brief: brief || undefined,
     });
 
-    if (draft.client_name) document.getElementById('client-name').value = draft.client_name;
-    if (draft.client_email) document.getElementById('client-email').value = draft.client_email;
-    document.getElementById('proposal-title').value = draft.title || '';
-    document.getElementById('proposal-currency').value = draft.currency || 'GHS';
-    document.getElementById('proposal-scope').value = draft.scope || '';
-    document.getElementById('proposal-timeline').value = draft.timeline || '';
-    document.getElementById('proposal-terms').value = draft.terms || defaultTerms();
-
-    const wrap = document.getElementById('milestones-wrap');
-    wrap.innerHTML = '';
-    (draft.milestones || []).forEach(m => {
-      wrap.appendChild(milestoneRow(m.title || '', m.amount || '', m.due_note || ''));
-    });
-    if (!wrap.children.length) {
-      wrap.appendChild(milestoneRow());
-    }
+    applyDraftToForm(draft);
 
     note.className = 'alert alert-info py-2 small mt-2';
     note.textContent = (GROUNDING_LABEL[draft.grounding_source] || '') + (draft.grounding_note ? ' ' + draft.grounding_note : '');
@@ -352,6 +363,117 @@ async function createProposal(e) {
   }
 }
 
+function proposalDraftCard(d) {
+  const div = document.createElement('div');
+  div.className = 'border rounded p-3';
+
+  if (d.status === 'queued') {
+    div.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          <strong>${escapeHtml(d.client_name)}</strong>
+          ${d.topic ? `<span class="small text-muted-custom"> — ${escapeHtml(d.topic)}</span>` : ''}
+          <div class="small text-muted-custom">Drafting a proposal from the booking…</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary dismiss-draft-btn" data-id="${d.id}">Dismiss</button>
+      </div>`;
+  } else if (d.status === 'failed') {
+    div.innerHTML = `
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong>${escapeHtml(d.client_name)}</strong>
+          <div class="small text-danger">Could not draft a proposal automatically${d.error_note ? ' — ' + escapeHtml(d.error_note.replace(/\.+$/, '')) : ''}. Use "Draft with AI" on a new proposal instead.</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary dismiss-draft-btn" data-id="${d.id}">Dismiss</button>
+      </div>`;
+  } else {
+    div.innerHTML = `
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong>${escapeHtml(d.client_name)}</strong> <span class="small text-muted-custom">${escapeHtml(d.client_email)}</span>
+          ${d.topic ? `<div class="small text-muted-custom">${escapeHtml(d.topic)}</div>` : ''}
+          <div class="small mt-1">${escapeHtml(d.title || '')}</div>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-brand review-draft-btn" data-id="${d.id}">Review &amp; Create</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary dismiss-draft-btn" data-id="${d.id}">Dismiss</button>
+        </div>
+      </div>`;
+  }
+
+  return div;
+}
+
+async function reviewProposalDraft(draft) {
+  resetProposalForm();
+  applyDraftToForm(draft);
+  const note = document.getElementById('draft-with-ai-note');
+  note.className = 'alert alert-info py-2 small mt-2';
+  note.textContent = 'Drafted automatically from a booked discovery call.'
+    + (GROUNDING_LABEL[draft.grounding_source] ? ' ' + GROUNDING_LABEL[draft.grounding_source] : '')
+    + (draft.grounding_note ? ' ' + draft.grounding_note : '');
+  note.classList.remove('d-none');
+  proposalModal.show();
+
+  try {
+    await api.delete(`/api/v1/admin/proposal-drafts/${draft.id}`);
+  } catch (_) {
+    // Non-fatal — worst case this row just reappears on the next load.
+  }
+  await loadProposalDrafts();
+}
+
+async function loadProposalDrafts() {
+  // Any in-flight poll is about to be made redundant by this fresh load —
+  // clear it so a button-triggered reload can't leave two timers running.
+  if (proposalDraftPollTimer) {
+    clearTimeout(proposalDraftPollTimer);
+    proposalDraftPollTimer = null;
+  }
+  const card = document.getElementById('proposal-drafts-card');
+  const list = document.getElementById('proposal-drafts-list');
+  try {
+    const drafts = await api.get('/api/v1/admin/proposal-drafts');
+    if (!Array.isArray(drafts) || !drafts.length) {
+      card.classList.add('d-none');
+      list.innerHTML = '';
+      return;
+    }
+
+    // Keep refreshing while the cron still has drafting to do.
+    if (drafts.some(d => d.status === 'queued')) {
+      proposalDraftPollTimer = setTimeout(loadProposalDrafts, 15000);
+    }
+
+    card.classList.remove('d-none');
+    list.innerHTML = '';
+    drafts.forEach(d => list.appendChild(proposalDraftCard(d)));
+
+    list.querySelectorAll('.dismiss-draft-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          await api.delete(`/api/v1/admin/proposal-drafts/${btn.dataset.id}`);
+          await loadProposalDrafts();
+        } catch (err) {
+          alert(err.message);
+          btn.disabled = false;
+        }
+      });
+    });
+    list.querySelectorAll('.review-draft-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const draft = drafts.find(d => String(d.id) === btn.dataset.id);
+        if (draft) reviewProposalDraft(draft);
+      });
+    });
+  } catch (_) {
+    // Quiet failure — this panel is a convenience, not the primary flow.
+    card.classList.add('d-none');
+  }
+}
+
 function showPageError(message) {
   const box = document.getElementById('proposal-page-error');
   box.textContent = message;
@@ -389,6 +511,8 @@ function showProposalListError(message) {
   } catch (err) {
     showPageError(`Could not load quote requests: ${err.message}`);
   }
+
+  loadProposalDrafts();
 
   try {
     await loadProposals();

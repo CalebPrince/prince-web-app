@@ -285,7 +285,7 @@ class AppointmentController
             'topic' => $topic,
         ]);
 
-        return ['success' => true, 'date' => $date, 'time' => $time, 'timezone' => $cfg['timezone']];
+        return ['success' => true, 'date' => $date, 'time' => $time, 'timezone' => $cfg['timezone'], 'appointment_id' => $appointmentId];
     }
 
     /**
