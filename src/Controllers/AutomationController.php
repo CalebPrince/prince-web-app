@@ -50,8 +50,8 @@ class AutomationController
         }
 
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO automations (name, description, trigger_event, is_active) VALUES (?, ?, ?, ?)')
-            ->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['is_active']]);
+        $pdo->prepare('INSERT INTO automations (name, description, trigger_event, is_active, nurturer_enabled) VALUES (?, ?, ?, ?, ?)')
+            ->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['is_active'], $fields['nurturer_enabled']]);
 
         $id = (string) $pdo->lastInsertId();
         ActivityLog::log($user, 'created', 'automation', $id, $fields['name']);
@@ -77,8 +77,8 @@ class AutomationController
         }
 
         $pdo->prepare(
-            "UPDATE automations SET name = ?, description = ?, trigger_event = ?, is_active = ?, updated_at = datetime('now') WHERE id = ?"
-        )->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['is_active'], $automation['id']]);
+            "UPDATE automations SET name = ?, description = ?, trigger_event = ?, is_active = ?, nurturer_enabled = ?, updated_at = datetime('now') WHERE id = ?"
+        )->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['is_active'], $fields['nurturer_enabled'], $automation['id']]);
 
         ActivityLog::log($user, 'updated', 'automation', (string) $automation['id'], $fields['name']);
         Response::json(['status' => 'updated']);
@@ -98,6 +98,10 @@ class AutomationController
         if (array_key_exists('is_active', $data)) {
             $set[] = 'is_active = ?';
             $values[] = !empty($data['is_active']) ? 1 : 0;
+        }
+        if (array_key_exists('nurturer_enabled', $data)) {
+            $set[] = 'nurturer_enabled = ?';
+            $values[] = !empty($data['nurturer_enabled']) ? 1 : 0;
         }
         if (array_key_exists('name', $data)) {
             $name = trim((string) $data['name']);
@@ -161,6 +165,7 @@ class AutomationController
         $description = trim((string) ($data['description'] ?? '')) ?: null;
         $trigger = trim((string) ($data['trigger_event'] ?? 'manual'));
         $isActive = !empty($data['is_active']) ? 1 : 0;
+        $nurturerEnabled = !empty($data['nurturer_enabled']) ? 1 : 0;
 
         $errors = [];
         if ($name === '') {
@@ -171,7 +176,10 @@ class AutomationController
         }
 
         return [
-            ['name' => $name, 'description' => $description, 'trigger_event' => $trigger, 'is_active' => $isActive],
+            [
+                'name' => $name, 'description' => $description, 'trigger_event' => $trigger,
+                'is_active' => $isActive, 'nurturer_enabled' => $nurturerEnabled,
+            ],
             $errors,
         ];
     }

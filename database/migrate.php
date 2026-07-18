@@ -358,6 +358,15 @@ if ((int) $pdo->query('SELECT COUNT(*) FROM automations')->fetchColumn() === 0) 
     ]);
 }
 
+// Per-automation Nurturer opt-in column: contacts an automation enrols inherit
+// this, so Nurturer sends them its AI sequence 2/3 follow-ups too. The column
+// is added here (before the automations are seeded just below); the one-time
+// enabling of it on the lead automations happens after that seed.
+$automationColumns = array_column($pdo->query('PRAGMA table_info(automations)')->fetchAll(), 'name');
+if (!in_array('nurturer_enabled', $automationColumns, true)) {
+    $pdo->exec('ALTER TABLE automations ADD COLUMN nurturer_enabled INTEGER NOT NULL DEFAULT 0');
+}
+
 // Seed a starter (inactive) automation for each remaining lifecycle trigger so
 // the whole CRM funnel is visible and one edit away from live. Gated by a
 // settings flag rather than an existence check per trigger, so an automation
@@ -379,6 +388,26 @@ if ($pdo->query("SELECT value FROM settings WHERE name = 'automations_defaults_s
     }
     $pdo->prepare("INSERT INTO settings (name, value) VALUES ('automations_defaults_seeded', '1')")->execute();
     echo 'Seeded ' . count($defaults) . " starter automations (inactive).\n";
+}
+
+// Turn Nurturer on for the top-of-funnel lead automations only — its AI copy is
+// conversion-oriented (case study, then a booking close), which fits a fresh
+// lead but not someone who's already paid or booked. One-time (settings flag)
+// so a later manual change on the Automations page isn't reverted on deploy.
+// The cold-outreach automation (#1) is deliberately left off: enrolling a real
+// prospect into AI follow-ups stays Caleb's per-lead call there.
+if ($pdo->query("SELECT value FROM settings WHERE name = 'automation_nurturer_defaults_set'")->fetchColumn() === false) {
+    $nurturerTriggers = "'inquiry_created', 'quote_requested', 'chat_lead_captured'";
+    $pdo->exec("UPDATE automations SET nurturer_enabled = 1 WHERE trigger_event IN ({$nurturerTriggers})");
+    // Flip any contacts already enrolled in those automations (and still open to
+    // it) too, so it isn't only future enrolments that benefit.
+    $pdo->exec(
+        "UPDATE drip_enrollments SET nurturer_enabled = 1
+         WHERE status = 'active'
+           AND automation_id IN (SELECT id FROM automations WHERE trigger_event IN ({$nurturerTriggers}))"
+    );
+    $pdo->prepare("INSERT INTO settings (name, value) VALUES ('automation_nurturer_defaults_set', '1')")->execute();
+    echo "Enabled Nurturer on the lead automations.\n";
 }
 
 // Starter step copy for the seeded automations. Runs once (settings flag), and

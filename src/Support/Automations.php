@@ -61,25 +61,29 @@ class Automations
         $pdo ??= Database::get();
 
         try {
-            $stmt = $pdo->prepare('SELECT id FROM automations WHERE trigger_event = ? AND is_active = 1');
+            $stmt = $pdo->prepare('SELECT id, nurturer_enabled FROM automations WHERE trigger_event = ? AND is_active = 1');
             $stmt->execute([$event]);
-            $automationIds = $stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+            $automations = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
         } catch (\Throwable $e) {
             error_log('Automations::fire lookup failed for ' . $event . ': ' . $e->getMessage());
             return 0;
         }
 
         $enrolled = 0;
-        foreach ($automationIds as $automationId) {
+        foreach ($automations as $automation) {
             try {
+                // A contact inherits the automation's Nurturer setting unless the
+                // caller overrides it — so turning Nurturer on for an automation
+                // opts in every contact its trigger later enrols, automatically.
+                $nurturerEnabled = $opts['nurturer_enabled'] ?? (bool) $automation['nurturer_enabled'];
                 $created = DripController::enrollEmail(
                     $pdo,
-                    (int) $automationId,
+                    (int) $automation['id'],
                     $email,
                     $opts['name'] ?? null,
                     $opts['source'] ?? 'trigger',
                     $opts['lead_id'] ?? null,
-                    $opts['nurturer_enabled'] ?? false,
+                    $nurturerEnabled,
                     $opts['lead_industry'] ?? null,
                     $opts['last_action'] ?? null
                 );

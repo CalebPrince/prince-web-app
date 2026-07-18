@@ -609,6 +609,11 @@ CREATE TABLE IF NOT EXISTS automations (
     'project_completed', 'newsletter_subscribed', 'chat_lead_captured'
   )),
   is_active INTEGER NOT NULL DEFAULT 0,
+  -- When set, contacts this automation enrols inherit nurturer_enabled = 1, so
+  -- Nurturer also sends them its AI-personalized sequence 2/3 follow-ups. Only
+  -- sensible for top-of-funnel lead automations — the AI copy is conversion
+  -- oriented (case study, then a booking close). See App\Support\Automations.
+  nurturer_enabled INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

@@ -52,7 +52,10 @@ async function loadAutomations() {
     <div class="col-md-6 col-xl-4">
       <div class="admin-card p-3 h-100 d-flex flex-column">
         <div class="d-flex justify-content-between align-items-start mb-2">
-          ${triggerBadge(a.trigger_event)}
+          <div class="d-flex align-items-center gap-1 flex-wrap">
+            ${triggerBadge(a.trigger_event)}
+            ${Number(a.nurturer_enabled) ? '<span class="badge" style="background: var(--section-content-soft); color: var(--section-content); font-weight: 500;" title="Nurturer AI follow-ups on"><i class="bi bi-robot"></i> AI</span>' : ''}
+          </div>
           <div class="form-check form-switch mb-0" title="${a.is_active ? 'Active' : 'Paused'}">
             <input type="checkbox" class="form-check-input automation-toggle" data-id="${a.id}" ${Number(a.is_active) ? 'checked' : ''}>
           </div>
@@ -357,6 +360,7 @@ function openAutomationModal(automation = null) {
     document.getElementById('automation-description').value = automation.description || '';
     select.value = automation.trigger_event;
     document.getElementById('automation-active').checked = Boolean(Number(automation.is_active));
+    document.getElementById('automation-nurturer').checked = Boolean(Number(automation.nurturer_enabled));
   }
   updateTriggerHelp();
   automationModal.show();
@@ -435,6 +439,7 @@ function switchTab(tab) {
       trigger_event: document.getElementById('automation-trigger').value,
       description: document.getElementById('automation-description').value,
       is_active: document.getElementById('automation-active').checked,
+      nurturer_enabled: document.getElementById('automation-nurturer').checked,
     };
     try {
       if (editingAutomationId) {

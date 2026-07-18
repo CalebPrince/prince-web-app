@@ -225,9 +225,13 @@
             <label class="form-label">Description <span class="text-muted-custom">(optional)</span></label>
             <textarea class="form-control" id="automation-description" rows="2" placeholder="What this sequence is for."></textarea>
           </div>
-          <div class="form-check form-switch mb-3">
+          <div class="form-check form-switch mb-2">
             <input class="form-check-input" type="checkbox" id="automation-active">
             <label class="form-check-label" for="automation-active">Active <span class="text-muted-custom fw-normal">(enrols and sends — leave off until the steps are ready)</span></label>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="automation-nurturer">
+            <label class="form-check-label" for="automation-nurturer">Nurturer AI follow-ups <span class="text-muted-custom fw-normal">(also send enrolled contacts AI-personalized sequence 2/3 emails — best for lead automations, not post-sale)</span></label>
           </div>
           <div id="automation-msg" class="alert py-2 small d-none"></div>
           <button type="submit" class="btn-brand w-100">Save Automation</button>
