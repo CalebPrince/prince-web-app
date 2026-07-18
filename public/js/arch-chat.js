@@ -9,6 +9,7 @@
 
   var STEP_NAMES = ["Your business", "Look & feel", "Pages", "Features", "Your content"];
   var TOTAL_STEPS = 5;
+  var SESSION_KEY = "arch-chat-session-v1";
 
   var thread = document.getElementById("arch-thread");
   var form = document.getElementById("arch-form");
@@ -33,6 +34,7 @@
   var brief = {};
   var ready = false;
   var busy = false;
+  var currentStep = 1;
 
   // ---- helpers ----------------------------------------------------------
 
@@ -75,6 +77,7 @@
 
   function setProgress(step) {
     var s = Math.max(1, Math.min(TOTAL_STEPS, step || 1));
+    currentStep = s;
     progressWrap.setAttribute("aria-hidden", "false");
     stepLabel.textContent = "Step " + s + " of " + TOTAL_STEPS;
     stepName.textContent = STEP_NAMES[s - 1] || "";
@@ -85,6 +88,41 @@
     busy = state;
     sendBtn.disabled = state;
     input.disabled = state;
+  }
+
+  function saveSession() {
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        transcript: transcript,
+        brief: brief,
+        ready: ready,
+        step: currentStep,
+      }));
+    } catch (e) {
+      // Storage can be unavailable in strict privacy modes; chat still works.
+    }
+  }
+
+  function restoreSession() {
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+      if (!saved || !Array.isArray(saved.transcript) || !saved.transcript.length) return false;
+      transcript = saved.transcript.filter(function (turn) {
+        return turn && (turn.role === "user" || turn.role === "assistant") && typeof turn.text === "string";
+      });
+      if (!transcript.length) return false;
+      brief = saved.brief && typeof saved.brief === "object" ? saved.brief : {};
+      ready = !!saved.ready;
+      transcript.forEach(function (turn) {
+        addMessage(turn.role === "user" ? "user" : "arch", turn.text);
+      });
+      setProgress(saved.step || 1);
+      renderSuggestions(saved.step || 1);
+      if (ready) buildBtn.classList.remove("d-none");
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   // Defense in depth: the API already rejects internal model artifacts, but
@@ -140,6 +178,7 @@
     clearError();
     addMessage("user", text);
     transcript.push({ role: "user", text: text });
+    saveSession();
     input.value = "";
     autoGrow();
     suggestions.innerHTML = "";
@@ -165,6 +204,7 @@
         if (ready) {
           buildBtn.classList.remove("d-none");
         }
+        saveSession();
       })
       .catch(function (err) {
         hideTyping();
@@ -269,6 +309,12 @@
   });
 
   buildBtn.addEventListener("click", startBuild);
+  var newBuildLink = document.getElementById("arch-new-build");
+  if (newBuildLink) {
+    newBuildLink.addEventListener("click", function () {
+      try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+    });
+  }
 
   // Kick off with Arch's greeting (no server round-trip needed for the opener).
   // The agent's name is admin-configurable (Site Content → Arch), so read it
@@ -278,19 +324,24 @@
     var avatar = document.querySelector(".arch-avatar");
     if (avatar && name) avatar.textContent = name.trim().charAt(0).toUpperCase();
     setProgress(1);
-    addMessage(
-      "arch",
-      "Hi, I'm " + name + " — your AI website builder. I'll ask a few quick questions and then build you a complete, ready-to-launch website. Let's start: what's the name of your business, and what type is it (restaurant, shop, church, portfolio, and so on)?"
-    );
+    var greeting = "Hi, I'm " + name + " — your AI website builder. I'll ask a few quick questions and then build you a complete, ready-to-launch website. Let's start: what's the name of your business, and what type is it (restaurant, shop, church, portfolio, and so on)?";
+    addMessage("arch", greeting);
     transcript.push({
       role: "assistant",
-      text: "Hi, I'm " + name + ". What's the name of your business, and what type is it?",
+      text: greeting,
     });
+    saveSession();
     input.focus();
   }
 
   fetch("/api/v1/content", { credentials: "same-origin" })
     .then(function (r) { return r.ok ? r.json() : {}; })
     .catch(function () { return {}; })
-    .then(function (c) { greet((c && c.arch_assistant_name) || "Arch"); });
+    .then(function (c) {
+      var name = (c && c.arch_assistant_name) || "Arch";
+      var avatar = document.querySelector(".arch-avatar");
+      if (avatar && name) avatar.textContent = name.trim().charAt(0).toUpperCase();
+      if (!restoreSession()) greet(name);
+      input.focus();
+    });
 })();

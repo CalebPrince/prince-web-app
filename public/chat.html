@@ -25,7 +25,7 @@
   .arch-thread { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1rem; min-height: 40vh; }
   .arch-msg { max-width: 84%; padding: .7rem 1rem; border-radius: 16px; line-height: 1.55; white-space: pre-wrap; word-wrap: break-word; }
   .arch-msg.arch { align-self: flex-start; background: color-mix(in srgb, var(--heading-color) 6%, transparent); border: 1px solid color-mix(in srgb, var(--heading-color) 9%, transparent); border-bottom-left-radius: 5px; }
-  .arch-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 5px; }
+  .arch-msg.user { align-self: flex-end; background: var(--accent); color: var(--bg); border-bottom-right-radius: 5px; }
   .arch-typing { align-self: flex-start; display: inline-flex; gap: 4px; padding: .8rem 1rem; }
   .arch-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: archbounce 1.2s infinite ease-in-out; }
   .arch-typing span:nth-child(2) { animation-delay: .15s; }
@@ -111,7 +111,7 @@
       <div class="arch-actions">
         <a href="#" id="arch-open-link" target="_blank" rel="noopener" class="btn-brand">Open full preview ↗</a>
         <a href="#" id="arch-download-link" class="btn-brand-outline">Download site (.zip)</a>
-        <a href="/chat.html" class="btn-brand-outline">Build another</a>
+        <a href="/chat.html" class="btn-brand-outline" id="arch-new-build">Build another</a>
       </div>
       <div class="arch-cms-box d-none" id="arch-cms-box">
         <strong>Your admin panel is set up.</strong>
