@@ -74,6 +74,16 @@ CREATE TABLE IF NOT EXISTS inquiries (
 );
 CREATE INDEX IF NOT EXISTS idx_inquiries_status_created ON inquiries (status, created_at);
 
+CREATE TABLE IF NOT EXISTS pipeline_leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_key TEXT NOT NULL UNIQUE,
+  stage TEXT NOT NULL DEFAULT 'new' CHECK (stage IN ('new', 'researching', 'contacted', 'discovery', 'proposal', 'won', 'lost')),
+  manual_stage INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_pipeline_leads_stage ON pipeline_leads (stage, updated_at);
+
 CREATE TABLE IF NOT EXISTS rate_limits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   ip_address TEXT NOT NULL,

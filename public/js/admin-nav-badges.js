@@ -4,6 +4,21 @@
 (function () {
   const ADMIN_PAGE_SIZE = 10;
 
+  // Pipeline is a cross-source view, so add it once from this shared admin
+  // script instead of duplicating another static link across every page.
+  function injectPipelineNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/pipeline.html"]')) return;
+    const contacts = nav.querySelector('a[href="/admin/contacts.html"]');
+    if (!contacts) return;
+    const link = document.createElement('a');
+    link.href = '/admin/pipeline.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/pipeline.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-kanban nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Pipeline</span>';
+    contacts.insertAdjacentElement('afterend', link);
+  }
+  injectPipelineNav();
+
   window.AdminPagination = window.AdminPagination || {
     pageSize: ADMIN_PAGE_SIZE,
     state: new Map(),
