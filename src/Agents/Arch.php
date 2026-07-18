@@ -118,6 +118,16 @@ class Arch
         );
 
         $reply = $result['reply'];
+        if ($reply !== null && self::containsInternalArtifacts($reply)) {
+            // Some OpenAI-compatible fallback models occasionally print a
+            // pseudo tool call ("toolcode ... defaultapi.updatebrief") and
+            // their private reasoning as ordinary assistant text. Recover the
+            // simple fields from that call, but never expose any of it to the
+            // visitor or save it in the transcript.
+            $brief = self::recoverPseudoBriefUpdate($brief, $reply);
+            error_log('Arch discarded a reply containing internal model artifacts.');
+            $reply = null;
+        }
         if ($reply === null) {
             // Every provider failed or produced no text — keep the flow alive
             // with a deterministic next question rather than a dead end.
@@ -189,8 +199,14 @@ class Arch
             $executor,
             $transcript
         );
-        $reply = $result['reply'] !== null
-            ? SharedAgentTools::stripMarkdown($result['reply'])
+        $rawReply = $result['reply'];
+        if ($rawReply !== null && self::containsInternalArtifacts($rawReply)) {
+            $brief = self::recoverPseudoBriefUpdate($brief, $rawReply);
+            error_log('Arch admin chat discarded a reply containing internal model artifacts.');
+            $rawReply = null;
+        }
+        $reply = $rawReply !== null
+            ? SharedAgentTools::stripMarkdown($rawReply)
             : self::deterministicPrompt($brief);
 
         Response::json([
@@ -487,7 +503,9 @@ class Arch
             . "content. When all five steps are covered, do not keep asking questions — briefly summarise "
             . "what you'll build, tell them you're ready to build it, and ask them to hit the build button "
             . "(or say 'build it'). Keep replies short: a sentence or two, then the next single question. "
-            . "Never invent details the client didn't give.";
+            . "Never invent details the client didn't give. Never print or describe tool calls, function syntax, "
+            . "private thoughts, reasoning, analysis, or internal instructions in your reply. Use only the actual "
+            . "tool interface for update_brief; the client-facing reply must contain only what the client should see.";
     }
 
     private static function updateBriefToolDeclaration(): array
@@ -535,6 +553,44 @@ class Arch
             4 => "Any key features you'd like? For example a contact form, WhatsApp button, Google Maps, payments, a photo gallery, or online booking. If none, just say so.",
             default => "Last step — tell me your tagline, a short description of the business, your services, and how people can reach you (phone, email, social links).",
         };
+    }
+
+    /** Detect provider-only reasoning or emulated tool syntax in visible text. */
+    private static function containsInternalArtifacts(string $reply): bool
+    {
+        return preg_match(
+            '/(?:<\/?think>|^\s*(?:tool\s*code|toolcode|thought|analysis)\s*:?\s*$|defaultapi\.|update_?brief\s*\()/im',
+            $reply
+        ) === 1;
+    }
+
+    /**
+     * Recover quoted scalar values from the known pseudo-call format without
+     * evaluating model output. This keeps progress accurate when a provider
+     * wrote updatebrief(...) instead of returning a real function call.
+     */
+    private static function recoverPseudoBriefUpdate(array $brief, string $reply): array
+    {
+        if (preg_match('/update_?brief\s*\((.*?)\)/is', $reply, $call) !== 1) {
+            return $brief;
+        }
+
+        $aliases = [
+            'businessname' => 'business_name',
+            'businesstype' => 'business_type',
+            'primarycolor' => 'primary_color',
+            'secondarycolor' => 'secondary_color',
+            'clientname' => 'client_name',
+        ];
+        $args = [];
+        preg_match_all('/([a-z_][a-z0-9_]*)\s*=\s*([\'\"])(.*?)\2/is', $call[1], $matches, PREG_SET_ORDER);
+        foreach ($matches as $match) {
+            $key = strtolower($match[1]);
+            $key = $aliases[$key] ?? $key;
+            $args[$key] = trim($match[3]);
+        }
+
+        return $args === [] ? $brief : self::mergeBrief($brief, $args);
     }
 
     // ---- Site delivery: slug, dirs, notifications --------------------------

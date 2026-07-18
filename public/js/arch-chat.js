@@ -87,6 +87,23 @@
     input.disabled = state;
   }
 
+  // Defense in depth: the API already rejects internal model artifacts, but
+  // never render them if a stale deployment or upstream provider emits one.
+  function safeReply(reply, step) {
+    var text = typeof reply === "string" ? reply.trim() : "";
+    if (text && !/(^|\n)\s*(tool\s*code|toolcode|thought|analysis)\s*:?\s*(\n|$)|<\/?think>|defaultapi\.|update_?brief\s*\(/i.test(text)) {
+      return text;
+    }
+    var fallbacks = {
+      1: "Let's start with the basics — what's the name of your business, and what type is it?",
+      2: "Great. What colors and overall style are you after, and would you prefer a light or dark look?",
+      3: "Which pages do you need? Common ones are Home, About, Services, Contact, Gallery, Blog, and Shop.",
+      4: "Any key features you'd like, such as a contact form, WhatsApp, maps, payments, a gallery, or booking?",
+      5: "Last step — tell me your tagline, business description, services, and contact details.",
+    };
+    return fallbacks[step] || fallbacks[1];
+  }
+
   // Contextual quick-reply chips per step, to make answering faster.
   function renderSuggestions(step) {
     var chips = [];
@@ -140,8 +157,9 @@
         hideTyping();
         brief = data.brief || brief;
         ready = !!data.ready;
-        addMessage("arch", data.reply);
-        transcript.push({ role: "assistant", text: data.reply });
+        var reply = safeReply(data.reply, data.step || 1);
+        addMessage("arch", reply);
+        transcript.push({ role: "assistant", text: reply });
         setProgress(data.step || 1);
         renderSuggestions(data.step || 1);
         if (ready) {
