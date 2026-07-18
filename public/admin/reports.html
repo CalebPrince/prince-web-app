@@ -110,6 +110,13 @@
       <div class="small text-muted-custom mt-2" id="report-period-label"></div>
     </div>
 
+    <section class="revenue-target-card mb-4" id="revenue-target-card">
+      <header><div><div class="eyebrow mb-1">Monthly direction</div><h4>Revenue target</h4><p>Compare cash collected with closed and likely work. Forecast values are not payments.</p></div><form id="revenue-target-form"><select class="form-select form-select-sm" id="revenue-target-currency" aria-label="Target currency"><option>GHS</option><option>USD</option><option>GBP</option><option>EUR</option></select><input class="form-control form-control-sm" id="revenue-target-amount" type="number" min="0" step="0.01" placeholder="Monthly target"><button class="btn btn-sm btn-brand" type="submit">Save target</button></form></header>
+      <div class="revenue-target-track"><div id="revenue-target-actual-bar" class="actual"></div><div id="revenue-target-projected-bar" class="projected"></div></div>
+      <div class="revenue-target-metrics"><div><span>Monthly target</span><strong id="revenue-target-total">—</strong></div><div><span>Paystack collected</span><strong id="revenue-target-actual">—</strong><small id="revenue-target-actual-pct"></small></div><div><span>Deals won this month</span><strong id="revenue-target-won">—</strong></div><div><span>Weighted open forecast</span><strong id="revenue-target-forecast">—</strong><small id="revenue-target-projected-pct"></small></div></div>
+      <div id="revenue-target-status" class="small text-muted-custom mt-2"></div>
+    </section>
+
     <!-- Period KPI cards -->
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-xl-3">

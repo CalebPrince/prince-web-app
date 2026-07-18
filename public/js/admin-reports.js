@@ -84,6 +84,20 @@ function renderRevenue(data, currency) {
   }
 }
 
+function renderRevenueTarget(target) {
+  const currency = target.currency;
+  document.getElementById('revenue-target-currency').value = currency;
+  document.getElementById('revenue-target-amount').value = Number(target.target || 0) / 100 || '';
+  document.getElementById('revenue-target-total').textContent = target.target ? formatMoney(target.target, currency) : 'Not set';
+  document.getElementById('revenue-target-actual').textContent = formatMoney(target.actual, currency);
+  document.getElementById('revenue-target-won').textContent = formatMoney(target.won, currency);
+  document.getElementById('revenue-target-forecast').textContent = formatMoney(target.weighted_forecast, currency);
+  document.getElementById('revenue-target-actual-pct').textContent = target.target ? `${target.actual_pct}% of target collected` : 'Set a target to track progress';
+  document.getElementById('revenue-target-projected-pct').textContent = target.target ? `${target.projected_pct}% including forecast` : '';
+  document.getElementById('revenue-target-actual-bar').style.width = `${target.actual_pct || 0}%`;
+  document.getElementById('revenue-target-projected-bar').style.width = `${target.projected_pct || 0}%`;
+}
+
 function renderPipeline(p, currency) {
   document.getElementById('stat-win-rate').textContent = p.win_rate === null ? '—' : Math.round(p.win_rate * 100) + '%';
   document.getElementById('stat-win-rate-sub').textContent = `${p.proposals_accepted} won · ${p.proposals_declined} lost`;
@@ -348,6 +362,7 @@ async function loadReport(range) {
 
   document.getElementById('reports-error').classList.add('d-none');
   renderRevenue(data.revenue, currency);
+  renderRevenueTarget(data.revenue_target);
   renderPipeline(data.pipeline, currency);
   renderLeadSources(data.lead_sources);
   renderAutomations(data.automations);
@@ -397,6 +412,13 @@ function presetRange(preset) {
 
   document.getElementById('export-report-btn').addEventListener('click', () => {
     if (lastReportData) exportReport(lastReportData);
+  });
+  document.getElementById('revenue-target-form').addEventListener('submit', async event => {
+    event.preventDefault(); const status = document.getElementById('revenue-target-status'); status.textContent = 'Saving…';
+    try {
+      await api.put('/api/v1/admin/settings', { monthly_revenue_target: document.getElementById('revenue-target-amount').value || '0', revenue_target_currency: document.getElementById('revenue-target-currency').value });
+      await loadReport(); status.textContent = 'Target saved.';
+    } catch (err) { status.textContent = err.message || 'Could not save the target.'; }
   });
 
   try {

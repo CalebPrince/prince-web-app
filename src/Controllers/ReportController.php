@@ -50,6 +50,7 @@ class ReportController
         Response::json([
             'currency' => $currency,
             'revenue' => $revenue,
+            'revenue_target' => self::revenueTarget($pdo),
             'pipeline' => self::pipeline($pdo),
             'automations' => self::automations($pdo),
             'bookings' => self::bookings($pdo),
@@ -59,6 +60,71 @@ class ReportController
             'estimates' => self::estimates(),
             'six_month_view' => self::sixMonthView($revenue['by_month']),
         ]);
+    }
+
+    private static function revenueTarget(\PDO $pdo): array
+    {
+        $currency = strtoupper(Settings::get('revenue_target_currency') ?: (Settings::get('pricing_currency') ?: 'GHS'));
+        $rawTarget = Settings::get('monthly_revenue_target') ?: '0';
+        $target = is_numeric($rawTarget) ? (int) round((float) $rawTarget * 100) : 0;
+
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status='success' AND currency=? AND strftime('%Y-%m',created_at)=strftime('%Y-%m','now')");
+        $stmt->execute([$currency]);
+        $actual = (int) $stmt->fetchColumn();
+
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(total_amount),0) FROM proposals WHERE status='accepted' AND currency=? AND strftime('%Y-%m',accepted_at)=strftime('%Y-%m','now')");
+        $stmt->execute([$currency]);
+        $won = (int) $stmt->fetchColumn();
+
+        // Keep one forecast value per lead identity, matching the unified
+        // pipeline's email-based deduplication. When two sources describe the
+        // same opportunity, the furthest/highest estimate wins rather than
+        // making the forecast look larger than the real pipeline.
+        $opportunities = [];
+        $addOpportunity = static function (array &$items, string $key, int $value): void {
+            $items[$key] = max($items[$key] ?? 0, $value);
+        };
+
+        $stmt = $pdo->prepare("SELECT id,client_email,total_amount FROM proposals WHERE status IN ('draft','sent') AND total_amount>0 AND currency=?");
+        $stmt->execute([$currency]);
+        foreach ($stmt->fetchAll() as $proposal) {
+            $email = strtolower(trim((string) $proposal['client_email']));
+            $key = filter_var($email, FILTER_VALIDATE_EMAIL) ? 'email:' . $email : 'proposal:' . $proposal['id'];
+            $addOpportunity($opportunities, $key, (int) round((int) $proposal['total_amount'] * .80));
+        }
+
+        $marketingWeights = ['pending' => .10, 'audited' => .20, 'pitch_ready' => .35, 'sent' => .35];
+        $stmt = $pdo->prepare("SELECT id,contact_email,status,estimated_value FROM marketing_leads WHERE estimated_value>0 AND currency=? AND status!='rejected'");
+        $stmt->execute([$currency]);
+        foreach ($stmt->fetchAll() as $lead) {
+            $email = strtolower(trim((string) $lead['contact_email']));
+            $key = filter_var($email, FILTER_VALIDATE_EMAIL) ? 'email:' . $email : 'marketing:' . $lead['id'];
+            $addOpportunity($opportunities, $key, (int) round((int) $lead['estimated_value'] * ($marketingWeights[$lead['status']] ?? .10)));
+        }
+
+        $stageWeights = ['new' => .10, 'researching' => .20, 'contacted' => .35, 'discovery' => .55, 'proposal' => .80];
+        $stmt = $pdo->prepare(
+            "SELECT ml.id,ml.email,ml.estimated_value,COALESCE(pl.stage,ml.initial_stage) AS stage
+             FROM manual_leads ml
+             LEFT JOIN pipeline_leads pl ON pl.lead_key=CASE
+               WHEN ml.email IS NOT NULL AND trim(ml.email)!='' THEN 'email:'||lower(trim(ml.email))
+               ELSE 'manual:'||ml.id END
+             WHERE ml.estimated_value>0 AND ml.currency=?"
+        );
+        $stmt->execute([$currency]);
+        foreach ($stmt->fetchAll() as $lead) {
+            if (!isset($stageWeights[$lead['stage']])) continue;
+            $email = strtolower(trim((string) $lead['email']));
+            $key = filter_var($email, FILTER_VALIDATE_EMAIL) ? 'email:' . $email : 'manual:' . $lead['id'];
+            $addOpportunity($opportunities, $key, (int) round((int) $lead['estimated_value'] * $stageWeights[$lead['stage']]));
+        }
+        $weighted = array_sum($opportunities);
+
+        return [
+            'currency' => $currency, 'target' => $target, 'actual' => $actual, 'won' => $won, 'weighted_forecast' => $weighted,
+            'actual_pct' => $target > 0 ? min(100, round($actual / $target * 100, 1)) : 0,
+            'projected_pct' => $target > 0 ? min(100, round(($actual + $weighted) / $target * 100, 1)) : 0,
+        ];
     }
 
     /**

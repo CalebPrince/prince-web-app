@@ -22,6 +22,7 @@ class SettingsController
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
         'maintenance_mode',
         'paystack_public_key', 'paystack_secret_key',
+        'monthly_revenue_target', 'revenue_target_currency',
         'booking_enabled', 'booking_days', 'booking_start_time', 'booking_end_time',
         'booking_slot_minutes', 'booking_lead_days', 'booking_min_notice_hours', 'booking_timezone',
         'social_draft_enabled', 'social_draft_frequency', 'social_draft_last_run',
@@ -154,6 +155,16 @@ class SettingsController
             }
             if ($key === 'mail_from_name' && preg_match('/[\r\n]/', $value)) {
                 Response::error('Sender name cannot contain line breaks.', 422);
+            }
+            if ($key === 'monthly_revenue_target'
+                && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999999)) {
+                Response::error('Revenue target must be a valid positive amount.', 422);
+            }
+            if ($key === 'revenue_target_currency') {
+                $value = strtoupper($value);
+                if (!preg_match('/^[A-Z]{3}$/', $value)) {
+                    Response::error('Choose a valid three-letter currency.', 422);
+                }
             }
             $maxLength = str_starts_with($key, 'email_tpl_') ? 20000 : 5000;
             if (mb_strlen($value) > $maxLength) {
