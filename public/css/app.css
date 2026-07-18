@@ -38,10 +38,10 @@
 }
 
 [data-theme="dark"] {
-  --ink: #e8eaed;
+  --ink: #f1f3f5;
   --heading-color: #ffffff;
-  --ink-soft: #b4b8bf;
-  --muted: #8a8f98;
+  --ink-soft: #d7dbe0;
+  --muted: #b5bac3;
   --bg: #0b0c0e;
   --bg-soft: #101114;
   --card-bg: #121418;
@@ -53,6 +53,18 @@
   --accent-soft: rgba(255, 255, 255, 0.08);
   --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  /* Bootstrap utilities otherwise retain light-theme charcoal values and
+     become faint (or effectively black) on dark cards. */
+  --bs-body-color: var(--ink-soft);
+  --bs-body-color-rgb: 215, 219, 224;
+  --bs-emphasis-color: var(--heading-color);
+  --bs-emphasis-color-rgb: 255, 255, 255;
+  --bs-secondary-color: var(--muted);
+  --bs-secondary-color-rgb: 181, 186, 195;
+  --bs-tertiary-color: #9da3ad;
+  --bs-tertiary-color-rgb: 157, 163, 173;
+  --bs-heading-color: var(--heading-color);
+  --bs-border-color: var(--line);
 }
 /* Midnight — a cooler, deep navy-black alternative to Dark. */
 [data-theme="midnight"] {
@@ -71,6 +83,16 @@
   --accent-soft: rgba(150, 180, 255, 0.1);
   --shadow: 0 2px 16px rgba(0, 0, 10, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 10, 0.6);
+  --bs-body-color: var(--ink-soft);
+  --bs-body-color-rgb: 159, 176, 209;
+  --bs-emphasis-color: var(--heading-color);
+  --bs-emphasis-color-rgb: 255, 255, 255;
+  --bs-secondary-color: #aebddd;
+  --bs-secondary-color-rgb: 174, 189, 221;
+  --bs-tertiary-color: #91a2c5;
+  --bs-tertiary-color-rgb: 145, 162, 197;
+  --bs-heading-color: var(--heading-color);
+  --bs-border-color: var(--line);
 }
 /* Paper — a warm cream alternative to Light. */
 [data-theme="paper"] {
@@ -193,6 +215,21 @@ textarea:focus-visible {
 p a:not([class]), li a:not([class]) { text-decoration: underline; text-underline-offset: 3px; }
 
 .text-muted-custom { color: var(--muted); }
+
+/* Bootstrap marks these utilities !important, so theme variables alone do
+   not cover older CDN builds. Keep every secondary-text utility legible on
+   dark surfaces without flattening headings and primary copy into one tone. */
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] .text-body-secondary,
+[data-theme="dark"] .text-muted-custom,
+[data-theme="midnight"] .text-muted,
+[data-theme="midnight"] .text-secondary,
+[data-theme="midnight"] .text-body-secondary,
+[data-theme="midnight"] .text-muted-custom {
+  color: var(--muted) !important;
+  opacity: 1;
+}
 
 /* Buttons — editorial: solid ink block that hollows out on hover */
 .btn-brand {

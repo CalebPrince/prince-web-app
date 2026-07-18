@@ -14,6 +14,143 @@ const STAGE_LABEL = {
 };
 
 const selectedIds = new Set();
+let inboxRows = [];
+let activeInquiryId = null;
+let inboxStatus = "";
+let inboxSearch = "";
+
+function initials(name) {
+  return String(name || "?").trim().split(/\s+/).slice(0, 2).map(part => part[0] || "").join("").toUpperCase();
+}
+
+function inboxDate(value, full = false) {
+  const date = new Date(value);
+  if (full) return date.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function visibleInboxRows() {
+  const query = inboxSearch.toLowerCase();
+  return inboxRows.filter(row => {
+    if (inboxStatus && row.status !== inboxStatus) return false;
+    if (!query) return true;
+    return [row.name, row.email, row.message].some(value => String(value || "").toLowerCase().includes(query));
+  });
+}
+
+function updateInboxCounts() {
+  const counts = { all: inboxRows.length, read: 0, unread: 0, flagged: 0, archived: 0 };
+  inboxRows.forEach(row => { if (counts[row.status] !== undefined) counts[row.status]++; });
+  Object.entries(counts).forEach(([key, count]) => {
+    const el = document.querySelector(`[data-count="${key}"]`);
+    if (el) el.textContent = count ? String(count) : "";
+  });
+}
+
+function renderInboxList() {
+  const rows = visibleInboxRows();
+  const list = document.getElementById("inquiries-list");
+  const empty = document.getElementById("empty-state");
+  empty.classList.toggle("d-none", rows.length > 0);
+  list.innerHTML = rows.map((row, index) => `
+    <button type="button" class="inquiry-message ${row.status === "unread" ? "is-unread" : ""} ${Number(row.id) === Number(activeInquiryId) ? "active" : ""}"
+      data-id="${row.id}" role="option" aria-selected="${Number(row.id) === Number(activeInquiryId)}" style="--avatar-hue:${(Number(row.id) * 47) % 360}deg">
+      <span class="inquiry-avatar">${escapeHtml(initials(row.name))}</span>
+      <span class="inquiry-message-copy">
+        <span class="inquiry-message-line"><strong>${escapeHtml(row.name)}</strong><time>${inboxDate(row.created_at)}</time></span>
+        <span class="inquiry-message-subject">${escapeHtml(row.email)}</span>
+        <span class="inquiry-message-preview">${escapeHtml(row.message)}</span>
+      </span>
+      ${row.status === "flagged" ? '<i class="bi bi-flag-fill inquiry-row-flag" aria-label="Flagged"></i>' : ""}
+      ${row.status === "unread" ? '<span class="inquiry-unread-dot" aria-label="Unread"></span>' : ""}
+    </button>
+  `).join("");
+  list.querySelectorAll(".inquiry-message").forEach(button => {
+    button.addEventListener("click", () => selectInboxInquiry(Number(button.dataset.id)));
+  });
+}
+
+function renderInboxReader() {
+  const reader = document.getElementById("inquiry-reader");
+  const row = inboxRows.find(item => Number(item.id) === Number(activeInquiryId));
+  if (!row) {
+    reader.innerHTML = '<div class="inquiry-reader-empty"><div class="inquiry-empty-mark"><i class="bi bi-envelope-open"></i></div><h4>Select a message</h4><p>Choose an inquiry from the list to read it here.</p></div>';
+    return;
+  }
+  const paragraphs = escapeHtml(row.message).split(/\r?\n/).filter(Boolean).map(text => `<p>${text}</p>`).join("") || "<p>No message supplied.</p>";
+  reader.innerHTML = `
+    <header class="inquiry-reader-header">
+      <div class="inquiry-reader-sender" style="--avatar-hue:${(Number(row.id) * 47) % 360}deg">
+        <span class="inquiry-avatar">${escapeHtml(initials(row.name))}</span>
+        <span><strong>${escapeHtml(row.name)}</strong><small>${escapeHtml(row.email)}</small></span>
+      </div>
+      <div class="inquiry-reader-actions">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-action="${row.status === "unread" ? "read" : "unread"}">${row.status === "unread" ? "Mark read" : "Mark unread"}</button>
+        <button type="button" class="inquiry-icon-btn ${row.status === "flagged" ? "active" : ""}" data-action="${row.status === "flagged" ? "read" : "flagged"}" title="${row.status === "flagged" ? "Remove flag" : "Flag"}"><i class="bi bi-flag${row.status === "flagged" ? "-fill" : ""}"></i></button>
+        <button type="button" class="inquiry-icon-btn" data-action="archived" title="Archive"><i class="bi bi-archive"></i></button>
+        <button type="button" class="inquiry-icon-btn danger" data-action="delete" title="Delete permanently"><i class="bi bi-trash3"></i></button>
+      </div>
+    </header>
+    <div class="inquiry-reader-body">
+      <div class="inquiry-message-meta"><span>${inboxDate(row.created_at, true)}</span><span>${escapeHtml(row.status)}</span></div>
+      <h2>New inquiry from ${escapeHtml(row.name)}</h2>
+      <div class="inquiry-letter">${paragraphs}</div>
+      <a class="btn btn-dark inquiry-reply-btn" href="mailto:${encodeURIComponent(row.email)}?subject=${encodeURIComponent("Re: your inquiry")}"><i class="bi bi-reply me-2"></i>Reply by email</a>
+    </div>`;
+  reader.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => inboxAction(button.dataset.action)));
+}
+
+async function selectInboxInquiry(id) {
+  activeInquiryId = id;
+  const row = inboxRows.find(item => Number(item.id) === id);
+  if (row && row.status === "unread") {
+    await api.patch(`/api/v1/admin/inquiries/${id}`, { status: "read" });
+    row.status = "read";
+  }
+  renderInboxList();
+  renderInboxReader();
+  updateInboxCounts();
+}
+
+async function inboxAction(action) {
+  if (!activeInquiryId) return;
+  if (action === "delete") {
+    if (!confirm("Delete this inquiry permanently?")) return;
+    await api.delete(`/api/v1/admin/inquiries/${activeInquiryId}`);
+    inboxRows = inboxRows.filter(row => Number(row.id) !== Number(activeInquiryId));
+  } else {
+    await api.patch(`/api/v1/admin/inquiries/${activeInquiryId}`, { status: action });
+    const row = inboxRows.find(item => Number(item.id) === Number(activeInquiryId));
+    if (row) row.status = action;
+  }
+  const next = visibleInboxRows()[0];
+  activeInquiryId = next ? Number(next.id) : null;
+  updateInboxCounts(); renderInboxList(); renderInboxReader();
+}
+
+async function initInbox() {
+  inboxRows = await api.get("/api/v1/admin/inquiries?type=contact");
+  updateInboxCounts();
+  document.querySelectorAll(".inquiry-tab").forEach(tab => tab.addEventListener("click", () => {
+    inboxStatus = tab.dataset.status;
+    document.querySelectorAll(".inquiry-tab").forEach(item => item.classList.toggle("active", item === tab));
+    const first = visibleInboxRows()[0]; activeInquiryId = first ? Number(first.id) : null;
+    renderInboxList(); renderInboxReader();
+  }));
+  document.getElementById("inquiry-search-input").addEventListener("input", event => {
+    inboxSearch = event.target.value.trim();
+    const first = visibleInboxRows()[0];
+    if (!visibleInboxRows().some(row => Number(row.id) === Number(activeInquiryId))) activeInquiryId = first ? Number(first.id) : null;
+    renderInboxList(); renderInboxReader();
+  });
+  const first = visibleInboxRows()[0];
+  activeInquiryId = first ? Number(first.id) : null;
+  renderInboxList(); renderInboxReader();
+}
 
 function updateBulkToolbar() {
   const toolbar = document.getElementById("bulk-toolbar");
@@ -183,6 +320,13 @@ async function loadInquiries(status = "") {
   const user = await requireAdminAuth();
   if (!user) return;
   wireLogout();
+
+  if (document.getElementById("inquiry-inbox")) {
+    const exportLink = document.getElementById("export-csv-link");
+    exportLink.href = "/api/v1/admin/inquiries/export?type=contact";
+    await initInbox();
+    return;
+  }
 
   document.getElementById("status-filter").addEventListener("change", (e) => loadInquiries(e.target.value));
   const stageFilter = document.getElementById("stage-filter");

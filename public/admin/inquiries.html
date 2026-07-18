@@ -72,44 +72,44 @@
     </nav>
   </div>
 
-  <div class="flex-grow-1 p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-inbox"></i></div>
-        <div>
-          <h3 class="mb-0">Inquiries</h3>
-          <p class="text-muted-custom mb-0 small">General contact form submissions.</p>
+  <main class="flex-grow-1 inquiry-page-shell">
+    <header class="inquiry-page-header">
+      <div>
+        <div class="inquiry-eyebrow">Client correspondence</div>
+        <h3 class="mb-1">Inquiries</h3>
+        <p class="text-muted-custom mb-0 small">Read, triage, and keep every conversation moving.</p>
+      </div>
+      <a href="/api/v1/admin/inquiries/export" id="export-csv-link" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>Export CSV</a>
+    </header>
+
+    <section class="inquiry-inbox" id="inquiry-inbox" aria-label="Inquiry inbox">
+      <aside class="inquiry-list-pane">
+        <div class="inquiry-list-tools">
+          <label class="inquiry-search" for="inquiry-search-input">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input id="inquiry-search-input" type="search" placeholder="Search messages" autocomplete="off">
+          </label>
+          <nav class="inquiry-tabs" aria-label="Filter inquiries">
+            <button type="button" class="inquiry-tab active" data-status="">All <span data-count="all"></span></button>
+            <button type="button" class="inquiry-tab" data-status="read">Read <span data-count="read"></span></button>
+            <button type="button" class="inquiry-tab" data-status="unread">Unread <span data-count="unread"></span></button>
+            <button type="button" class="inquiry-tab" data-status="flagged">Flagged <span data-count="flagged"></span></button>
+            <button type="button" class="inquiry-tab" data-status="archived">Archived <span data-count="archived"></span></button>
+          </nav>
         </div>
-      </div>
-      <div class="d-flex gap-2">
-        <select class="form-select form-select-sm" id="status-filter" style="width:auto;">
-          <option value="">All</option>
-          <option value="unread">Unread</option>
-          <option value="read">Read</option>
-          <option value="flagged">Flagged</option>
-          <option value="archived">Archived</option>
-        </select>
-        <a href="/api/v1/admin/inquiries/export" id="export-csv-link" class="btn btn-sm btn-outline-secondary">Export CSV</a>
-      </div>
-    </div>
+        <div id="inquiries-list" class="inquiry-message-list" role="listbox" aria-label="Messages"></div>
+        <div id="empty-state" class="inquiry-list-empty d-none">No inquiries match this view.</div>
+      </aside>
 
-    <div class="d-flex align-items-center gap-2 mb-3">
-      <div class="form-check mb-0">
-        <input type="checkbox" class="form-check-input" id="select-all-checkbox">
-        <label class="form-check-label small text-muted-custom" for="select-all-checkbox">Select all</label>
-      </div>
-      <div id="bulk-toolbar" class="d-none align-items-center gap-2 ms-2">
-        <span class="small fw-semibold" id="bulk-count">0 selected</span>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="bulk-read-btn">Mark Read</button>
-        <button type="button" class="btn btn-sm btn-outline-danger" id="bulk-flag-btn">Flag</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="bulk-archive-btn">Archive</button>
-        <button type="button" class="btn btn-sm btn-link" id="bulk-clear-btn">Clear</button>
-      </div>
-    </div>
-
-    <div id="inquiries-list"></div>
-    <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No inquiries yet.</div>
-  </div>
+      <article class="inquiry-reader" id="inquiry-reader" aria-live="polite">
+        <div class="inquiry-reader-empty">
+          <div class="inquiry-empty-mark"><i class="bi bi-envelope-open"></i></div>
+          <h4>Select a message</h4>
+          <p>Choose an inquiry from the list to read it here.</p>
+        </div>
+      </article>
+    </section>
+  </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
