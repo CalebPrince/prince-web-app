@@ -1,40 +1,78 @@
 let inviteModal = null;
 let clientModal = null;
 let currentClientId = null;
+let clientsCache = [];
 
 function formatAmount(subunits, currency) {
   return `${currency} ${(Number(subunits || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
-async function loadClients() {
+function clientInitials(name) {
+  return String(name || '?').trim().split(/\s+/).slice(0, 2)
+    .map(part => part[0] || '').join('').toUpperCase();
+}
+
+function renderClientStats(rows) {
+  document.getElementById('stat-total').textContent = rows.length;
+  document.getElementById('stat-portal').textContent = rows.filter(c => c.has_password).length;
+  document.getElementById('stat-active').textContent = rows.filter(c => Number(c.is_active)).length;
+}
+
+function renderClients() {
   const tbody = document.getElementById('clients-tbody');
   const empty = document.getElementById('clients-empty');
-  const rows = await api.get('/api/v1/admin/clients');
+  const query = document.getElementById('client-search').value.trim().toLowerCase();
+  const filter = document.getElementById('client-filter').value;
+  const rows = clientsCache.filter(c => {
+    const matchesQuery = !query || [c.name, c.email, c.phone]
+      .some(value => String(value || '').toLowerCase().includes(query));
+    const matchesFilter = filter === 'all'
+      || (filter === 'active' && Number(c.is_active))
+      || (filter === 'invited' && !c.has_password && Number(c.is_active))
+      || (filter === 'deactivated' && !Number(c.is_active));
+    return matchesQuery && matchesFilter;
+  });
 
   if (!rows.length) {
     tbody.innerHTML = '';
     empty.classList.remove('d-none');
+    document.getElementById('clients-empty-title').textContent = clientsCache.length ? 'No matching clients' : 'No clients yet';
+    document.getElementById('clients-empty-copy').textContent = clientsCache.length ? 'Try another search or account filter.' : 'Invite a client to give them access to proposals, files, and messages.';
     return;
   }
   empty.classList.add('d-none');
 
   tbody.innerHTML = rows.map(c => `
-    <tr>
-      <td class="ps-3">${escapeHtml(c.name)}<br><span class="small text-muted-custom">${escapeHtml(c.email)}${c.phone ? " · " + escapeHtml(c.phone) : ""}</span></td>
+    <tr class="client-row" data-id="${c.id}" tabindex="0" aria-label="Open ${escapeHtml(c.name)}">
+      <td class="ps-3"><div class="d-flex align-items-center gap-2"><div class="client-avatar">${escapeHtml(clientInitials(c.name))}</div><div><div class="client-name">${escapeHtml(c.name)}</div><div class="small text-muted-custom">${escapeHtml(c.email)}${c.phone ? " · " + escapeHtml(c.phone) : ""}</div></div></div></td>
       <td><span class="status-pill ${c.has_password ? 'published' : 'unread'}">${c.has_password ? 'Active' : 'Invited'}</span></td>
       <td>${c.proposal_count || 0}</td>
       <td class="small text-muted-custom">${c.last_proposal_at ? new Date(c.last_proposal_at).toLocaleDateString() : '—'}</td>
       <td><span class="status-pill ${c.is_active ? 'published' : 'archived'}">${c.is_active ? 'Active' : 'Deactivated'}</span></td>
-      <td class="text-end pe-3">
-        <button class="btn btn-sm btn-outline-secondary view-client-btn" data-id="${c.id}">View</button>
-        <button class="btn btn-sm btn-outline-secondary toggle-active-btn ms-1" data-id="${c.id}" data-active="${c.is_active}">${c.is_active ? 'Deactivate' : 'Reactivate'}</button>
-        <button class="btn btn-sm btn-outline-danger delete-client-btn ms-1" data-id="${c.id}" title="Delete permanently">Delete</button>
+      <td class="text-end pe-3 client-actions">
+        <button class="btn btn-sm btn-outline-secondary view-client-btn" data-id="${c.id}">Open</button>
+        <div class="dropdown d-inline-block">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-label="More actions for ${escapeHtml(c.name)}"><i class="bi bi-three-dots"></i></button>
+          <ul class="dropdown-menu dropdown-menu-end client-action-menu">
+            <li><button class="dropdown-item toggle-active-btn" data-id="${c.id}" data-active="${c.is_active}">${c.is_active ? 'Deactivate account' : 'Reactivate account'}</button></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item text-danger delete-client-btn" data-id="${c.id}">Delete permanently</button></li>
+          </ul>
+        </div>
       </td>
     </tr>
   `).join('');
 
   tbody.querySelectorAll('.view-client-btn').forEach(btn => {
     btn.addEventListener('click', () => openClientDetail(btn.dataset.id));
+  });
+  tbody.querySelectorAll('.client-row').forEach(row => {
+    row.addEventListener('click', event => {
+      if (!event.target.closest('button, a, .dropdown-menu')) openClientDetail(row.dataset.id);
+    });
+    row.addEventListener('keydown', event => {
+      if (event.key === 'Enter') openClientDetail(row.dataset.id);
+    });
   });
 
   tbody.querySelectorAll('.delete-client-btn').forEach(btn => {
@@ -60,6 +98,22 @@ async function loadClients() {
       }
     });
   });
+}
+
+async function loadClients() {
+  const tbody = document.getElementById('clients-tbody');
+  const error = document.getElementById('clients-error');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-5"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading clients…</td></tr>';
+  error.classList.add('d-none');
+  try {
+    clientsCache = await api.get('/api/v1/admin/clients');
+    renderClientStats(clientsCache);
+    renderClients();
+  } catch (err) {
+    tbody.innerHTML = '';
+    error.textContent = err.message || 'Clients could not be loaded. Refresh the page to try again.';
+    error.classList.remove('d-none');
+  }
 }
 
 function renderProposals(proposals) {
@@ -116,7 +170,8 @@ function switchDetailTab(tab) {
 async function openClientDetail(id) {
   currentClientId = id;
   const client = await api.get(`/api/v1/admin/clients/${id}`);
-  document.getElementById('client-modal-title').textContent = `${client.name} — ${client.email}${client.phone ? " · " + client.phone : ""}`;
+  document.getElementById('client-modal-title').textContent = client.name;
+  document.getElementById('client-modal-subtitle').textContent = `${client.email}${client.phone ? " · " + client.phone : ""}`;
   document.getElementById('detail-panel-proposals').innerHTML = renderProposals(client.proposals || []);
   document.getElementById('detail-files-list').innerHTML = renderFiles(client.files || []);
   renderMessages(client.messages || []);
@@ -131,6 +186,9 @@ async function openClientDetail(id) {
 
   inviteModal = new bootstrap.Modal(document.getElementById('invite-modal'));
   clientModal = new bootstrap.Modal(document.getElementById('client-modal'));
+
+  document.getElementById('client-search').addEventListener('input', renderClients);
+  document.getElementById('client-filter').addEventListener('change', renderClients);
 
   document.getElementById('invite-btn').addEventListener('click', () => {
     document.getElementById('invite-form').reset();
