@@ -275,6 +275,7 @@ $router->get('/api/v1/admin/team', [TeamController::class, 'index']);
 $router->get('/api/v1/admin/pipeline', [PipelineController::class, 'index']);
 $router->get('/api/v1/admin/inbox', [InboxController::class, 'index']);
 $router->patch('/api/v1/admin/inbox/{type}/{id}/read', [InboxController::class, 'markRead']);
+$router->patch('/api/v1/admin/inbox/{type}/{id}/state', [InboxController::class, 'updateState']);
 $router->post('/api/v1/admin/pipeline', [PipelineController::class, 'store']);
 $router->patch('/api/v1/admin/pipeline/{id}', [PipelineController::class, 'update']);
 $router->get('/api/v1/admin/automations', [AutomationController::class, 'index']);

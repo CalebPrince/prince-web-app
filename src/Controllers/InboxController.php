@@ -16,6 +16,8 @@ class InboxController
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $items = [];
+        $states = [];
+        foreach ($pdo->query('SELECT item_key,state FROM inbox_item_states')->fetchAll() as $row) $states[$row['item_key']] = $row['state'];
 
         foreach ($pdo->query("SELECT id,name,email,message,type,status,project_type,budget,timeline,features,created_at FROM inquiries WHERE status != 'archived' AND message NOT LIKE '[Live Chat]%'")->fetchAll() as $row) {
             $quote = $row['type'] === 'project_request';
@@ -58,6 +60,11 @@ class InboxController
             ];
         }
 
+        foreach ($items as &$item) {
+            $item['state'] = $states[$item['key']] ?? ($item['flagged'] ? 'flagged' : 'normal');
+            $item['flagged'] = $item['state'] === 'flagged';
+        }
+        unset($item);
         usort($items, fn($a, $b) => strcmp($b['created_at'], $a['created_at']));
         Response::json(['items' => $items]);
     }
@@ -73,5 +80,21 @@ class InboxController
         elseif ($type === 'client') $pdo->prepare("UPDATE client_messages SET read_by_admin=1 WHERE client_id=? AND sender_type='client'")->execute([$id]);
         else Response::error('Unknown inbox source.', 422);
         Response::json(['status' => 'read']);
+    }
+
+    public static function updateState(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $type = (string) ($params['type'] ?? '');
+        $id = (int) ($params['id'] ?? 0);
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $state = (string) ($data['state'] ?? '');
+        if (!in_array($type, ['inquiry', 'chat', 'client'], true) || $id < 1) Response::error('Unknown inbox item.', 422);
+        if (!in_array($state, ['normal', 'flagged', 'archived', 'deleted'], true)) Response::error('Invalid inbox state.', 422);
+        Database::get()->prepare(
+            "INSERT INTO inbox_item_states (item_key,state,updated_at) VALUES (?,?,datetime('now'))
+             ON CONFLICT(item_key) DO UPDATE SET state=excluded.state,updated_at=datetime('now')"
+        )->execute([$type . ':' . $id, $state]);
+        Response::json(['status' => $state]);
     }
 }

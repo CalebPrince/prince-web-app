@@ -102,6 +102,13 @@ CREATE TABLE IF NOT EXISTS manual_leads (
 );
 CREATE INDEX IF NOT EXISTS idx_manual_leads_email ON manual_leads (email);
 
+CREATE TABLE IF NOT EXISTS inbox_item_states (
+  item_key TEXT PRIMARY KEY,
+  state TEXT NOT NULL DEFAULT 'normal' CHECK (state IN ('normal', 'flagged', 'archived', 'deleted')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_inbox_item_states_state ON inbox_item_states (state, updated_at);
+
 CREATE TABLE IF NOT EXISTS admin_tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,

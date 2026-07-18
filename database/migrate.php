@@ -906,6 +906,15 @@ $pdo->exec(
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_manual_leads_email ON manual_leads (email)');
 
 $pdo->exec(
+    "CREATE TABLE IF NOT EXISTS inbox_item_states (
+        item_key TEXT PRIMARY KEY,
+        state TEXT NOT NULL DEFAULT 'normal' CHECK (state IN ('normal', 'flagged', 'archived', 'deleted')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_inbox_item_states_state ON inbox_item_states (state, updated_at)');
+
+$pdo->exec(
     "CREATE TABLE IF NOT EXISTS lead_attribution (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         source_type TEXT NOT NULL CHECK (source_type IN ('inquiry', 'booking', 'chat')),
