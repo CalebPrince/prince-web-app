@@ -19,7 +19,11 @@ class InboxController
         $states = [];
         foreach ($pdo->query('SELECT item_key,state FROM inbox_item_states')->fetchAll() as $row) $states[$row['item_key']] = $row['state'];
 
-        foreach ($pdo->query("SELECT id,name,email,message,type,status,project_type,budget,timeline,features,created_at FROM inquiries WHERE status != 'archived' AND message NOT LIKE '[Live Chat]%'")->fetchAll() as $row) {
+        foreach ($pdo->query("SELECT id,name,email,message,type,status,project_type,budget,timeline,features,created_at
+                              FROM inquiries i
+                              WHERE status != 'archived'
+                                AND (message NOT LIKE '[Live Chat]%'
+                                     OR NOT EXISTS (SELECT 1 FROM chat_sessions cs WHERE lower(cs.client_email)=lower(i.email)))")->fetchAll() as $row) {
             $quote = $row['type'] === 'project_request';
             $items[] = [
                 'key' => 'inquiry:' . $row['id'], 'source' => $quote ? 'quote' : 'inquiry', 'source_id' => (int) $row['id'],

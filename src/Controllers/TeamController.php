@@ -47,7 +47,13 @@ class TeamController
                 // outcomes. Lead details land on chat_sessions first; only a
                 // visitor who finishes scheduling creates an appointment.
                 'stat_value' => (int) $pdo->query(
-                    "SELECT COUNT(*) FROM chat_sessions WHERE client_email IS NOT NULL AND client_email != ''"
+                    "SELECT COUNT(*) FROM (
+                        SELECT lower(client_email) AS email FROM chat_sessions
+                        WHERE client_email IS NOT NULL AND client_email != ''
+                        UNION
+                        SELECT lower(email) AS email FROM inquiries
+                        WHERE message LIKE '[Live Chat]%' AND email != ''
+                    )"
                 )->fetchColumn(),
                 'stat_label' => 'leads captured',
                 'secondary_stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM appointments')->fetchColumn(),

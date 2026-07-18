@@ -155,7 +155,9 @@ class DashboardController
         $pdo = Database::get();
 
         $unreadInquiries = (int) $pdo->query(
-            "SELECT COUNT(*) FROM inquiries WHERE status = 'unread' AND message NOT LIKE '[Live Chat]%'"
+            "SELECT COUNT(*) FROM inquiries i WHERE status = 'unread'
+             AND (message NOT LIKE '[Live Chat]%'
+                  OR NOT EXISTS (SELECT 1 FROM chat_sessions cs WHERE lower(cs.client_email)=lower(i.email)))"
         )->fetchColumn();
 
         // Matches LiveChatController::adminIndex's own listing filter, so the
@@ -215,7 +217,9 @@ class DashboardController
         $add = static function (string $key, string $type, string $title, string $detail, string $href, string $date, string $level = 'info') use (&$items, $read): void {
             if (!isset($read[$key])) $items[] = compact('key', 'type', 'title', 'detail', 'href', 'date', 'level');
         };
-        foreach ($pdo->query("SELECT id,name,email,message,type,created_at FROM inquiries WHERE status='unread' AND message NOT LIKE '[Live Chat]%'") as $r)
+        foreach ($pdo->query("SELECT id,name,email,message,type,created_at FROM inquiries i WHERE status='unread'
+                              AND (message NOT LIKE '[Live Chat]%'
+                                   OR NOT EXISTS (SELECT 1 FROM chat_sessions cs WHERE lower(cs.client_email)=lower(i.email)))") as $r)
             $add('inquiry:'.$r['id'], 'Inquiry', $r['name'] ?: $r['email'], $r['message'], '/admin/inbox.html?open=inquiry:'.$r['id'], $r['created_at']);
         foreach ($pdo->query("SELECT id,client_name,client_email,created_at,updated_at FROM chat_sessions WHERE admin_seen=0 AND (transcript_json!='[]' OR client_email IS NOT NULL)") as $r)
             $add('chat:'.$r['id'], 'Chat', $r['client_name'] ?: ($r['client_email'] ?: 'New chat activity'), 'A visitor has new chat activity.', '/admin/inbox.html?open=chat:'.$r['id'], $r['updated_at'] ?: $r['created_at']);
