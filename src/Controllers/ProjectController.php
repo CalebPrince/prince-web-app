@@ -121,6 +121,7 @@ class ProjectController
         $pdo = Database::get();
         $stmt = $pdo->query('SELECT p.*, c.name AS client_name, c.email AS client_email FROM projects p LEFT JOIN clients c ON c.id=p.client_id ORDER BY p.sort_order ASC');
         $projects = self::attachTags($pdo, $stmt->fetchAll());
+        $projects = self::attachOperations($pdo, $projects);
         foreach ($projects as &$project) self::attachFinanceMetrics($project);
         Response::json($projects);
     }
@@ -131,6 +132,7 @@ class ProjectController
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         self::normalizeSlugData($data);
+        $milestones = self::normalizeMilestones($data['milestones'] ?? []);
 
         $errors = Validator::validateProject($data);
         if ($errors) {
@@ -140,8 +142,8 @@ class ProjectController
         $pdo = Database::get();
         $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $clientId,
@@ -167,10 +169,13 @@ class ProjectController
             self::moneyValue($data['actual_cost'] ?? 0),
             self::hoursValue($data['hours_worked'] ?? 0),
             self::currencyValue($data['finance_currency'] ?? 'GHS'),
+            self::dateValue($data['deadline'] ?? null),
+            self::agentKeyValue($data['assigned_agent_key'] ?? null),
         ]);
         $projectId = (int) $pdo->lastInsertId();
 
         self::syncTags($pdo, $projectId, $data['tags'] ?? []);
+        self::syncMilestones($pdo, $projectId, $milestones);
 
         if (!empty($data['is_published'])) {
             MakeWebhook::send('content_published', [
@@ -190,6 +195,7 @@ class ProjectController
         AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         self::normalizeSlugData($data);
+        $milestones = self::normalizeMilestones($data['milestones'] ?? []);
         $id = (int) $params['id'];
 
         $errors = Validator::validateProject($data);
@@ -208,7 +214,7 @@ class ProjectController
             "UPDATE projects SET client_id=?, slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
              outcome_metrics=?, testimonial_id=?, delivery_status=?, progress_percent=?, contract_value=?, estimated_cost=?,
-             actual_cost=?, hours_worked=?, finance_currency=?, updated_at=datetime('now') WHERE id=?"
+             actual_cost=?, hours_worked=?, finance_currency=?, deadline=?, assigned_agent_key=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $clientId,
@@ -234,10 +240,13 @@ class ProjectController
             self::moneyValue($data['actual_cost'] ?? 0),
             self::hoursValue($data['hours_worked'] ?? 0),
             self::currencyValue($data['finance_currency'] ?? 'GHS'),
+            self::dateValue($data['deadline'] ?? null),
+            self::agentKeyValue($data['assigned_agent_key'] ?? null),
             $id,
         ]);
 
         self::syncTags($pdo, $id, $data['tags'] ?? []);
+        self::syncMilestones($pdo, $id, $milestones);
 
         if (!$wasPublished && !empty($data['is_published'])) {
             MakeWebhook::send('content_published', [
@@ -295,11 +304,79 @@ class ProjectController
         $project['cost_variance'] = (int) ($project['estimated_cost'] ?? 0) - $actual;
     }
 
+    private static function attachOperations(\PDO $pdo, array $projects): array
+    {
+        if (!$projects) return $projects;
+        $ids = array_column($projects, 'id');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $pdo->prepare("SELECT * FROM project_milestones WHERE project_id IN ($placeholders) ORDER BY sort_order,id");
+        $stmt->execute($ids);
+        $byProject = [];
+        foreach ($stmt->fetchAll() as $milestone) $byProject[$milestone['project_id']][] = $milestone;
+        $today = date('Y-m-d');
+        foreach ($projects as &$project) {
+            $project['milestones'] = $byProject[$project['id']] ?? [];
+            $project['overdue_milestones'] = count(array_filter($project['milestones'], fn($m) => !$m['is_completed'] && $m['due_date'] && $m['due_date'] < $today));
+            $project['is_overdue'] = !empty($project['deadline']) && $project['deadline'] < $today && (int) $project['progress_percent'] < 100;
+        }
+        return $projects;
+    }
+
+    private static function normalizeMilestones(mixed $value): array
+    {
+        if (!is_array($value) || count($value) > 50) Response::error('Milestones must be a list of up to 50 items.', 422);
+        $out = [];
+        foreach ($value as $index => $item) {
+            if (!is_array($item)) Response::error('Invalid milestone.', 422);
+            $title = trim((string) ($item['title'] ?? ''));
+            if ($title === '' || mb_strlen($title) > 160) Response::error('Each milestone needs a title under 160 characters.', 422);
+            $out[] = ['id' => max(0, (int) ($item['id'] ?? 0)), 'title' => $title, 'due_date' => self::dateValue($item['due_date'] ?? null), 'is_completed' => !empty($item['is_completed']) ? 1 : 0, 'sort_order' => $index];
+        }
+        return $out;
+    }
+
+    private static function syncMilestones(\PDO $pdo, int $projectId, array $milestones): void
+    {
+        $existingStmt = $pdo->prepare('SELECT id FROM project_milestones WHERE project_id=?');
+        $existingStmt->execute([$projectId]);
+        $existing = array_map('intval', $existingStmt->fetchAll(\PDO::FETCH_COLUMN));
+        $kept = [];
+        $update = $pdo->prepare("UPDATE project_milestones SET title=?,due_date=?,is_completed=?,sort_order=?,completed_at=CASE WHEN ?=1 AND is_completed=0 THEN datetime('now') WHEN ?=0 THEN NULL ELSE completed_at END,updated_at=datetime('now') WHERE id=? AND project_id=?");
+        $insert = $pdo->prepare("INSERT INTO project_milestones (project_id,title,due_date,is_completed,sort_order,completed_at) VALUES (?,?,?,?,?,CASE WHEN ?=1 THEN datetime('now') ELSE NULL END)");
+        foreach ($milestones as $item) {
+            if ($item['id'] > 0 && in_array($item['id'], $existing, true)) {
+                $update->execute([$item['title'], $item['due_date'], $item['is_completed'], $item['sort_order'], $item['is_completed'], $item['is_completed'], $item['id'], $projectId]);
+                $kept[] = $item['id'];
+            } else {
+                $insert->execute([$projectId, $item['title'], $item['due_date'], $item['is_completed'], $item['sort_order'], $item['is_completed']]);
+                $kept[] = (int) $pdo->lastInsertId();
+            }
+        }
+        foreach (array_diff($existing, $kept) as $id) $pdo->prepare('DELETE FROM project_milestones WHERE id=? AND project_id=?')->execute([$id, $projectId]);
+    }
+
+    private static function dateValue(mixed $value): ?string
+    {
+        $date = trim((string) ($value ?? ''));
+        if ($date === '') return null;
+        $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+        if (!$parsed || $parsed->format('Y-m-d') !== $date) Response::error('Choose a valid date.', 422);
+        return $date;
+    }
+
+    private static function agentKeyValue(mixed $value): ?string
+    {
+        $key = trim((string) ($value ?? ''));
+        if ($key === '') return null;
+        if (!in_array($key, ['lisa','nurturer','beacon','dossier','proposal','content','arch'], true)) Response::error('Choose a valid AI agent.', 422);
+        return $key;
+    }
+
     private static function removePrivateFinance(array &$project): void
     {
         unset(
             $project['contract_value'], $project['estimated_cost'], $project['actual_cost'],
-            $project['hours_worked'], $project['finance_currency']
+            $project['hours_worked'], $project['finance_currency'], $project['deadline'], $project['assigned_agent_key']
         );
     }
 

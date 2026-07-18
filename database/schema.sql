@@ -41,10 +41,26 @@ CREATE TABLE IF NOT EXISTS projects (
   actual_cost INTEGER NOT NULL DEFAULT 0,
   hours_worked REAL NOT NULL DEFAULT 0,
   finance_currency TEXT NOT NULL DEFAULT 'GHS',
+  deadline TEXT,
+  assigned_agent_key TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_projects_published_sort ON projects (is_published, sort_order);
+
+CREATE TABLE IF NOT EXISTS project_milestones (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  due_date TEXT,
+  is_completed INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  completed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_project_milestones_project ON project_milestones (project_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_project_milestones_due ON project_milestones (is_completed, due_date);
 
 CREATE TABLE IF NOT EXISTS tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

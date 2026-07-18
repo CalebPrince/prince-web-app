@@ -1098,3 +1098,26 @@ body > .d-flex {
 .client-project-edit { color:var(--section-leads); font-size:.75rem; font-weight:700; text-decoration:none; white-space:nowrap; }.client-project-edit:hover { text-decoration:underline; }.client-project-edit:focus-visible { border-radius:4px; outline:2px solid var(--section-leads); outline-offset:3px; }
 .client-project-empty { display:flex; align-items:center; gap:1rem; padding:1.1rem; border:1px dashed var(--line); border-radius:14px; color:var(--muted); }.client-project-empty>i { display:grid; place-items:center; width:42px; height:42px; border-radius:12px; color:var(--section-content); background:var(--section-content-soft); font-size:1.1rem; }.client-project-empty strong,.client-project-empty span { display:block; }.client-project-empty strong { color:var(--heading-color); }.client-project-empty span { font-size:.72rem; }.client-project-empty a { margin-left:auto; color:var(--section-leads); font-size:.75rem; font-weight:700; }
 @media(max-width:767.98px){.client-project-record{grid-template-columns:1fr}.client-project-record-finance{padding:0;border-left:0}.client-project-edit{justify-self:start}.client-project-empty{align-items:flex-start;flex-wrap:wrap}.client-project-empty a{width:100%;margin-left:58px}}
+.project-ops-divider { display:flex; align-items:baseline; gap:.65rem; margin-top:.5rem; padding-top:1rem; border-top:1px solid var(--line); }.project-ops-divider span { color:var(--heading-color); font-weight:750; }.project-ops-divider small { color:var(--muted); }
+.project-operation-cell strong,.project-operation-cell span { display:block; white-space:nowrap; }.project-operation-cell strong { color:var(--heading-color); font-size:.76rem; }.project-operation-cell span { color:var(--muted); font-size:.66rem; }.project-operation-cell .overdue { color:#b42318; }
+.project-milestones-editor { display:flex; flex-direction:column; gap:.45rem; }.project-milestone-edit-row { display:grid; grid-template-columns:auto minmax(160px,1fr) minmax(135px,.35fr) auto; align-items:center; gap:.5rem; padding:.5rem; border:1px solid var(--line); border-radius:10px; background:var(--bg-soft); }.project-milestone-edit-row .form-check-input { margin:0; }.project-milestone-remove { color:#b42318; }
+@media(max-width:575.98px){.project-milestone-edit-row{grid-template-columns:auto 1fr auto}.project-milestone-edit-row input[type=date]{grid-column:2/4}}
+[data-theme="dark"] .project-ledger { color:var(--ink); background:var(--card-bg); }
+[data-theme="dark"] .project-ledger-heading { color:var(--section-money); background:color-mix(in srgb,var(--section-money) 14%,var(--card-bg)); }
+[data-theme="dark"] .project-ledger-heading small { color:var(--ink-soft); opacity:1; }
+[data-theme="dark"] .project-ledger-values span,
+[data-theme="dark"] .project-ledger-values small,
+[data-theme="dark"] .project-finance-cell small,
+[data-theme="dark"] .project-operation-cell span,
+[data-theme="dark"] .project-finance-divider small,
+[data-theme="dark"] .project-ops-divider small { color:var(--ink-soft); }
+[data-theme="dark"] .project-ledger-values strong,
+[data-theme="dark"] .project-finance-cell strong,
+[data-theme="dark"] .project-operation-cell strong,
+[data-theme="dark"] .project-finance-divider span,
+[data-theme="dark"] .project-ops-divider span { color:var(--heading-color); }
+[data-theme="dark"] .project-finance-cell .negative,
+[data-theme="dark"] .project-operation-cell .overdue,
+[data-theme="dark"] .project-milestone-remove { color:#fca5a5; }
+[data-theme="dark"] .project-finance-preview,
+[data-theme="dark"] .project-milestone-edit-row { color:var(--ink); background:var(--bg); }

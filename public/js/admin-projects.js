@@ -5,6 +5,8 @@ let draggedId = null;
 let approvedTestimonials = [];
 let projectClients = [];
 let slugEditedManually = false;
+let projectMilestones = [];
+let projectAgents = {};
 
 const DELIVERY_STATUS_LABEL = {
   on_track: "On track",
@@ -55,6 +57,29 @@ function updateFinancePreview() {
   const margin = value > 0 ? `${((profit / value) * 100).toFixed(1)}% margin` : "Margin needs a project value";
   const variance = estimated - actual;
   document.getElementById("project-finance-preview").innerHTML = `<strong>${projectMoney(profit, currency)} profit</strong> · ${margin} · ${projectMoney(Math.abs(variance), currency)} ${variance >= 0 ? "under estimated cost" : "over estimated cost"}`;
+}
+
+function formatProjectDate(value) {
+  if (!value) return "No deadline";
+  return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function renderMilestoneEditor() {
+  const list = document.getElementById("project-milestones-list");
+  document.getElementById("project-milestones-empty").classList.toggle("d-none", projectMilestones.length > 0);
+  list.innerHTML = projectMilestones.map((milestone, index) => `<div class="project-milestone-edit-row" data-index="${index}">
+    <input class="form-check-input milestone-complete" type="checkbox" ${milestone.is_completed ? "checked" : ""} aria-label="Mark milestone complete">
+    <input class="form-control form-control-sm milestone-title" value="${escapeHtml(milestone.title || "")}" maxlength="160" placeholder="Milestone title" required>
+    <input class="form-control form-control-sm milestone-date" type="date" value="${escapeHtml(milestone.due_date || "")}" aria-label="Milestone due date">
+    <button class="btn btn-sm project-milestone-remove" type="button" aria-label="Remove milestone"><i class="bi bi-trash"></i></button>
+  </div>`).join("");
+  list.querySelectorAll(".project-milestone-edit-row").forEach(row => {
+    const index = Number(row.dataset.index);
+    row.querySelector(".milestone-complete").addEventListener("change", event => { projectMilestones[index].is_completed = event.target.checked; });
+    row.querySelector(".milestone-title").addEventListener("input", event => { projectMilestones[index].title = event.target.value; });
+    row.querySelector(".milestone-date").addEventListener("change", event => { projectMilestones[index].due_date = event.target.value; });
+    row.querySelector(".project-milestone-remove").addEventListener("click", () => { projectMilestones.splice(index, 1); renderMilestoneEditor(); });
+  });
 }
 
 function renderStatusCounts(projects) {
@@ -140,7 +165,7 @@ function renderProjectsTable(projects) {
   currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
     return;
   }
 
@@ -157,6 +182,10 @@ function renderProjectsTable(projects) {
         <span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span>
         ${p.is_featured ? '<span class="status-pill published ms-1">&#9733; Featured</span>' : ""}
         <span class="status-pill ${DELIVERY_STATUS_PILL_CLASS[p.delivery_status] || "draft"} ms-1">${DELIVERY_STATUS_LABEL[p.delivery_status] || "On track"}</span>
+      </td>
+      <td class="project-operation-cell">
+        <strong class="${p.is_overdue || Number(p.overdue_milestones) ? "overdue" : ""}">${p.is_overdue ? "Overdue · " : ""}${formatProjectDate(p.deadline)}</strong>
+        <span>${escapeHtml(projectAgents[p.assigned_agent_key] || p.assigned_agent_key || "Unassigned")} · ${(p.milestones || []).filter(m => Number(m.is_completed)).length}/${(p.milestones || []).length} milestones${Number(p.overdue_milestones) ? ` · ${p.overdue_milestones} late` : ""}</span>
       </td>
       <td class="project-finance-cell">
         <strong class="${Number(p.profit || 0) < 0 ? "negative" : ""}">${projectMoney(p.profit, p.finance_currency)}</strong>
@@ -247,6 +276,15 @@ async function loadClientOptions() {
   ).join('');
 }
 
+async function loadAgentOptions() {
+  const response = await api.get('/api/v1/admin/team');
+  const agents = Array.isArray(response.agents) ? response.agents : [];
+  projectAgents = Object.fromEntries(agents.map(agent => [agent.key, agent.name]));
+  document.getElementById('assigned_agent_key').innerHTML = '<option value="">Unassigned</option>' + agents.map(agent =>
+    `<option value="${escapeHtml(agent.key)}">${escapeHtml(agent.name)} — ${escapeHtml(agent.role)}</option>`
+  ).join('');
+}
+
 function openNewModal() {
   document.getElementById("project-form").reset();
   document.getElementById("project-id").value = "";
@@ -261,6 +299,10 @@ function openNewModal() {
   document.getElementById("delivery_status").value = "on_track";
   document.getElementById("progress_percent").value = 0;
   document.getElementById("progress-percent-label").textContent = "0%";
+  document.getElementById("deadline").value = "";
+  document.getElementById("assigned_agent_key").value = "";
+  projectMilestones = [];
+  renderMilestoneEditor();
   document.getElementById("finance_currency").value = "GHS";
   ["contract_value", "estimated_cost", "actual_cost", "hours_worked"].forEach(id => { document.getElementById(id).value = ""; });
   updateFinancePreview();
@@ -292,6 +334,10 @@ function openEditModal(project) {
   document.getElementById("delivery_status").value = project.delivery_status || "on_track";
   document.getElementById("progress_percent").value = project.progress_percent || 0;
   document.getElementById("progress-percent-label").textContent = `${project.progress_percent || 0}%`;
+  document.getElementById("deadline").value = project.deadline || "";
+  document.getElementById("assigned_agent_key").value = project.assigned_agent_key || "";
+  projectMilestones = (project.milestones || []).map(milestone => ({ id: Number(milestone.id), title: milestone.title, due_date: milestone.due_date || "", is_completed: !!Number(milestone.is_completed) }));
+  renderMilestoneEditor();
   document.getElementById("finance_currency").value = project.finance_currency || "GHS";
   document.getElementById("contract_value").value = Number(project.contract_value || 0) / 100 || "";
   document.getElementById("estimated_cost").value = Number(project.estimated_cost || 0) / 100 || "";
@@ -334,6 +380,9 @@ async function saveProject() {
     estimated_cost: Number(document.getElementById("estimated_cost").value) || 0,
     actual_cost: Number(document.getElementById("actual_cost").value) || 0,
     hours_worked: Number(document.getElementById("hours_worked").value) || 0,
+    deadline: document.getElementById("deadline").value || null,
+    assigned_agent_key: document.getElementById("assigned_agent_key").value || null,
+    milestones: projectMilestones.map(milestone => ({ id: milestone.id || null, title: milestone.title.trim(), due_date: milestone.due_date || null, is_completed: milestone.is_completed })),
   };
 
   try {
@@ -379,6 +428,11 @@ async function deleteProject(id) {
   document.getElementById("progress_percent").addEventListener("input", (e) => {
     document.getElementById("progress-percent-label").textContent = `${e.target.value}%`;
   });
+  document.getElementById("add-project-milestone").addEventListener("click", () => {
+    projectMilestones.push({ title: "", due_date: "", is_completed: false });
+    renderMilestoneEditor();
+    document.querySelector(".project-milestone-edit-row:last-child .milestone-title")?.focus();
+  });
   ["finance_currency", "contract_value", "estimated_cost", "actual_cost"].forEach(id => {
     document.getElementById(id).addEventListener("input", updateFinancePreview);
   });
@@ -419,6 +473,7 @@ async function deleteProject(id) {
     e.target.value = "";
   });
 
+  await loadAgentOptions();
   const [projects] = await Promise.all([loadProjects(), loadTestimonialOptions(), loadClientOptions()]);
   const requestedProjectId = Number(new URLSearchParams(location.search).get("edit"));
   const requestedProject = requestedProjectId && projects.find(project => Number(project.id) === requestedProjectId);

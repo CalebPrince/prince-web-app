@@ -964,5 +964,22 @@ if (!in_array('estimated_cost', $projectColumns, true)) $pdo->exec('ALTER TABLE 
 if (!in_array('actual_cost', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN actual_cost INTEGER NOT NULL DEFAULT 0');
 if (!in_array('hours_worked', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN hours_worked REAL NOT NULL DEFAULT 0');
 if (!in_array('finance_currency', $projectColumns, true)) $pdo->exec("ALTER TABLE projects ADD COLUMN finance_currency TEXT NOT NULL DEFAULT 'GHS'");
+if (!in_array('deadline', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN deadline TEXT');
+if (!in_array('assigned_agent_key', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN assigned_agent_key TEXT');
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS project_milestones (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        due_date TEXT,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        completed_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_project_milestones_project ON project_milestones (project_id, sort_order)');
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_project_milestones_due ON project_milestones (is_completed, due_date)');
 
 echo "Schema applied.\n";

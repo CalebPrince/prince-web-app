@@ -139,6 +139,7 @@
             <th>Category</th>
             <th>Tags</th>
             <th>Status</th>
+            <th>Operations</th>
             <th>Finances</th>
             <th style="width:12rem;">Overall progress</th>
             <th class="text-end pe-3">Actions</th>
@@ -214,6 +215,20 @@
             <div class="col-md-4">
               <label class="form-label">Overall progress <span class="text-muted-custom fw-normal" id="progress-percent-label">0%</span></label>
               <input type="range" class="form-range" id="progress_percent" min="0" max="100" step="5" value="0">
+            </div>
+            <div class="col-12"><div class="project-ops-divider"><span>Delivery operations</span><small>Private schedule and AI ownership.</small></div></div>
+            <div class="col-md-6">
+              <label class="form-label" for="deadline">Project deadline</label>
+              <input class="form-control" id="deadline" type="date">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="assigned_agent_key">Assigned AI agent</label>
+              <select class="form-select" id="assigned_agent_key"><option value="">Unassigned</option></select>
+            </div>
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center mb-2"><label class="form-label mb-0">Milestones</label><button class="btn btn-sm btn-outline-secondary" id="add-project-milestone" type="button"><i class="bi bi-plus-lg me-1"></i>Add milestone</button></div>
+              <div id="project-milestones-list" class="project-milestones-editor"></div>
+              <div id="project-milestones-empty" class="small text-muted-custom">Add delivery checkpoints and optional due dates.</div>
             </div>
             <div class="col-12"><div class="project-finance-divider"><span>Project finances</span><small>Admin only — use the agreed project fee as project value.</small></div></div>
             <div class="col-md-3">
