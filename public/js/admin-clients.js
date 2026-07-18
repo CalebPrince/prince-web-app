@@ -162,6 +162,33 @@ function renderClientProjects(projects) {
   }).join('')}</div>`;
 }
 
+function intelligenceAmounts(rows, emptyLabel) {
+  return rows?.length ? rows.map(row => `<small>${formatAmount(row.total, row.currency)}</small>`).join('') : `<small>${emptyLabel}</small>`;
+}
+
+function renderClientIntelligence(intelligence) {
+  const contact = intelligence.last_contact;
+  const invoices = intelligence.outstanding_invoices || [];
+  const history = intelligence.project_history || [];
+  const today = new Date().toISOString().slice(0, 10);
+  return `<section class="client-intelligence">
+    <div class="client-intelligence-ledger">
+      <div><span>Total paid</span><strong>${intelligenceAmounts(intelligence.total_paid, 'No payments')}</strong><small>Successful Paystack payments</small></div>
+      <div><span>Outstanding</span><strong>${intelligenceAmounts(intelligence.outstanding, 'Nothing due')}</strong><small>${invoices.length} sent invoice${invoices.length === 1 ? '' : 's'}</small></div>
+      <div><span>Project history</span><strong>${Number(intelligence.project_count || 0)}</strong><small>${Number(intelligence.active_project_count || 0)} currently active</small></div>
+      <div><span>Last contact</span><strong>${contact ? new Date(contact.contacted_at).toLocaleDateString() : 'No contact yet'}</strong><small>${contact ? escapeHtml(contact.label) : 'No linked interaction'}</small></div>
+    </div>
+    <div class="client-intelligence-columns">
+      <div><header><div><span>Receivables</span><h6>Outstanding invoices</h6></div><a href="/admin/invoices.html">Open invoices</a></header>
+        <div class="client-intelligence-list">${invoices.length ? invoices.map(invoice => `<a href="/admin/invoices.html" class="${invoice.due_date && invoice.due_date < today ? 'is-overdue' : ''}"><div><strong>${escapeHtml(invoice.invoice_number)}</strong><small>${invoice.due_date ? `${invoice.due_date < today ? 'Overdue' : 'Due'} ${new Date(`${invoice.due_date}T00:00:00`).toLocaleDateString()}` : 'No due date'}</small></div><b>${formatAmount(invoice.total, invoice.currency)}</b></a>`).join('') : '<div class="client-intelligence-empty">No sent invoices are awaiting payment.</div>'}</div>
+      </div>
+      <div><header><div><span>Delivery record</span><h6>Recent project history</h6></div><button type="button" data-open-projects>View all</button></header>
+        <div class="client-intelligence-list">${history.length ? history.map(project => `<a href="/admin/projects.html?edit=${project.id}"><div><strong>${escapeHtml(project.title)}</strong><small>${Number(project.progress_percent)}% complete · updated ${new Date(project.updated_at).toLocaleDateString()}</small></div><b>${escapeHtml(CLIENT_PROJECT_STATUS[project.delivery_status] || 'On track')}</b></a>`).join('') : '<div class="client-intelligence-empty">No projects are linked to this client.</div>'}</div>
+      </div>
+    </div>
+  </section>`;
+}
+
 function renderFiles(files) {
   if (!files.length) {
     return '<div class="text-muted-custom small">No files yet.</div>';
@@ -192,7 +219,7 @@ function renderMessages(messages) {
 }
 
 function switchDetailTab(tab) {
-  ['projects', 'proposals', 'files', 'messages'].forEach(t => {
+  ['overview', 'projects', 'proposals', 'files', 'messages'].forEach(t => {
     document.getElementById(`detail-tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`detail-panel-${t}`).classList.toggle('d-none', t !== tab);
   });
@@ -203,11 +230,13 @@ async function openClientDetail(id) {
   const client = await api.get(`/api/v1/admin/clients/${id}`);
   document.getElementById('client-modal-title').textContent = client.name;
   document.getElementById('client-modal-subtitle').textContent = `${client.email}${client.phone ? " · " + client.phone : ""}`;
+  document.getElementById('detail-panel-overview').innerHTML = renderClientIntelligence(client.intelligence || {});
   document.getElementById('detail-panel-projects').innerHTML = renderClientProjects(client.projects || []);
   document.getElementById('detail-panel-proposals').innerHTML = renderProposals(client.proposals || []);
   document.getElementById('detail-files-list').innerHTML = renderFiles(client.files || []);
   renderMessages(client.messages || []);
-  switchDetailTab('projects');
+  document.querySelector('[data-open-projects]')?.addEventListener('click', () => switchDetailTab('projects'));
+  switchDetailTab('overview');
   clientModal.show();
 }
 
@@ -260,6 +289,7 @@ async function openClientDetail(id) {
     }
   });
 
+  document.getElementById('detail-tab-overview').addEventListener('click', () => switchDetailTab('overview'));
   document.getElementById('detail-tab-projects').addEventListener('click', () => switchDetailTab('projects'));
   document.getElementById('detail-tab-proposals').addEventListener('click', () => switchDetailTab('proposals'));
   document.getElementById('detail-tab-files').addEventListener('click', () => switchDetailTab('files'));
@@ -309,6 +339,6 @@ async function openClientDetail(id) {
   if (requestedClientId && clientsCache.some(client => Number(client.id) === requestedClientId)) {
     await openClientDetail(requestedClientId);
     const requestedTab = new URLSearchParams(location.search).get('tab');
-    if (['projects', 'proposals', 'files', 'messages'].includes(requestedTab)) switchDetailTab(requestedTab);
+    if (['overview', 'projects', 'proposals', 'files', 'messages'].includes(requestedTab)) switchDetailTab(requestedTab);
   }
 })();

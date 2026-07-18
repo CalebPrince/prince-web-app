@@ -194,13 +194,15 @@
       </div>
       <div class="modal-body">
         <ul class="nav nav-tabs mb-3">
-          <li class="nav-item"><button class="nav-link active" data-detail-tab="projects" id="detail-tab-projects">Projects</button></li>
+          <li class="nav-item"><button class="nav-link active" data-detail-tab="overview" id="detail-tab-overview">Overview</button></li>
+          <li class="nav-item"><button class="nav-link" data-detail-tab="projects" id="detail-tab-projects">Projects</button></li>
           <li class="nav-item"><button class="nav-link" data-detail-tab="proposals" id="detail-tab-proposals">Proposals</button></li>
           <li class="nav-item"><button class="nav-link" data-detail-tab="files" id="detail-tab-files">Files</button></li>
           <li class="nav-item"><button class="nav-link" data-detail-tab="messages" id="detail-tab-messages">Messages</button></li>
         </ul>
 
-        <div id="detail-panel-projects"></div>
+        <div id="detail-panel-overview"></div>
+        <div id="detail-panel-projects" class="d-none"></div>
         <div id="detail-panel-proposals" class="d-none"></div>
 
         <div id="detail-panel-files" class="d-none">

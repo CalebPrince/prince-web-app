@@ -80,7 +80,69 @@ class ClientController
         $stmt->execute([$id]);
         $client['messages'] = $stmt->fetchAll();
 
+        $client['intelligence'] = self::clientIntelligence($pdo, $id, (string) $client['email'], $client['projects']);
+
         Response::json($client);
+    }
+
+    private static function clientIntelligence(\PDO $pdo, int $clientId, string $email, array $projects): array
+    {
+        $paidStmt = $pdo->prepare(
+            "SELECT currency, SUM(amount) AS total FROM (
+               SELECT pay.currency,pay.amount FROM payments pay
+               LEFT JOIN payment_links pl ON pl.id=pay.payment_link_id
+               WHERE pay.status='success' AND (pl.client_id=? OR lower(pay.email)=lower(?))
+               UNION ALL
+               SELECT sc.currency,sc.amount FROM subscription_charges sc
+               JOIN subscriptions s ON s.id=sc.subscription_id
+               WHERE s.client_id=? OR lower(s.client_email)=lower(?)
+             ) GROUP BY currency ORDER BY currency"
+        );
+        $paidStmt->execute([$clientId, $email, $clientId, $email]);
+
+        $invoiceStmt = $pdo->prepare(
+            "SELECT i.id,i.invoice_number,i.currency,i.due_date,i.sent_at,
+                    CAST(ROUND(COALESCE(SUM(ii.quantity*ii.unit_amount),0)) AS INTEGER) AS total
+             FROM invoices i LEFT JOIN invoice_items ii ON ii.invoice_id=i.id
+             WHERE i.client_id=? AND i.status='sent'
+             GROUP BY i.id ORDER BY COALESCE(i.due_date,'9999-12-31'),i.created_at DESC"
+        );
+        $invoiceStmt->execute([$clientId]);
+        $invoices = $invoiceStmt->fetchAll();
+        $outstanding = [];
+        foreach ($invoices as $invoice) {
+            $currency = (string) $invoice['currency'];
+            $outstanding[$currency] = ($outstanding[$currency] ?? 0) + (int) $invoice['total'];
+        }
+
+        $contactStmt = $pdo->prepare(
+            "SELECT contacted_at,type,label FROM (
+               SELECT created_at AS contacted_at,'message' AS type,'Portal message' AS label FROM client_messages WHERE client_id=?
+               UNION ALL SELECT created_at,'proposal','Proposal activity' FROM proposals WHERE client_id=? AND status!='draft'
+               UNION ALL SELECT sent_at,'invoice','Invoice sent' FROM invoices WHERE client_id=? AND sent_at IS NOT NULL
+               UNION ALL SELECT pay.created_at,'payment','Payment received' FROM payments pay LEFT JOIN payment_links pl ON pl.id=pay.payment_link_id WHERE pay.status='success' AND (pl.client_id=? OR lower(pay.email)=lower(?))
+               UNION ALL SELECT paid_at,'payment','Subscription payment' FROM subscription_charges sc JOIN subscriptions s ON s.id=sc.subscription_id WHERE s.client_id=? OR lower(s.client_email)=lower(?)
+               UNION ALL SELECT created_at,'booking','Discovery booking' FROM appointments WHERE lower(client_email)=lower(?)
+               UNION ALL SELECT created_at,'inquiry','Inquiry received' FROM inquiries WHERE lower(email)=lower(?)
+               UNION ALL SELECT created_at,'chat','Live chat' FROM chat_sessions WHERE lower(client_email)=lower(?)
+             ) ORDER BY datetime(contacted_at) DESC LIMIT 1"
+        );
+        $contactStmt->execute([$clientId, $clientId, $clientId, $clientId, $email, $clientId, $email, $email, $email, $email]);
+        $lastContact = $contactStmt->fetch() ?: null;
+
+        usort($projects, fn($a, $b) => strcmp((string) $b['updated_at'], (string) $a['updated_at']));
+        return [
+            'total_paid' => array_map(fn($row) => ['currency' => $row['currency'], 'total' => (int) $row['total']], $paidStmt->fetchAll()),
+            'outstanding' => array_map(fn($currency, $total) => ['currency' => $currency, 'total' => $total], array_keys($outstanding), array_values($outstanding)),
+            'outstanding_invoices' => $invoices,
+            'last_contact' => $lastContact,
+            'project_count' => count($projects),
+            'active_project_count' => count(array_filter($projects, fn($project) => (int) ($project['progress_percent'] ?? 0) < 100)),
+            'project_history' => array_slice(array_map(fn($project) => [
+                'id' => (int) $project['id'], 'title' => $project['title'], 'progress_percent' => (int) $project['progress_percent'],
+                'delivery_status' => $project['delivery_status'], 'updated_at' => $project['updated_at'],
+            ], $projects), 0, 5),
+        ];
     }
 
     /** POST /api/v1/admin/clients/invite — body: {name, email, phone?, proposal_id?} */
