@@ -973,6 +973,18 @@ body > .d-flex {
 .notification-focus { outline: 2px solid var(--accent, #6366f1); outline-offset: 3px; animation: notification-focus-fade 2.4s ease forwards; }
 @keyframes notification-focus-fade { 70% { outline-color: var(--accent, #6366f1); } 100% { outline-color: transparent; } }
 @media (prefers-reduced-motion: reduce) { .notification-focus { animation: none; } }
+.notification-center { min-width: 0; max-width: 1180px; }
+.notification-center-header { display: flex; justify-content: space-between; gap: 1.5rem; align-items: flex-start; margin-bottom: 2rem; }
+.notification-filters { display: flex; gap: .45rem; overflow-x: auto; margin-bottom: 1rem; padding-bottom: .25rem; }
+.notification-filters button { padding: .45rem .8rem; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; font-size: .76rem; font-weight: 700; }
+.notification-filters button.active { color: var(--heading-color); background: var(--bg-soft); border-color: var(--line-strong); }
+.notification-row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 1rem; align-items: center; padding: 1.15rem; border: 1px solid var(--line); border-bottom: 0; background: var(--card-bg); }
+.notification-row:first-child { border-radius: 14px 14px 0 0; }.notification-row:last-child { border-bottom: 1px solid var(--line); border-radius: 0 0 14px 14px; }
+.notification-row-icon { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; color: var(--heading-color); background: var(--bg-soft); border-radius: 10px; }
+.notification-danger .notification-row-icon { color: #b42318; background: #fee4e2; }.notification-warning .notification-row-icon { color: #b54708; background: #fef0c7; }.notification-success .notification-row-icon { color: #067647; background: #dcfae6; }
+.notification-row-meta { display: flex; gap: .6rem; color: var(--muted); font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }.notification-row h5 { margin: .25rem 0; font-size: .95rem; }.notification-row p { margin: 0; color: var(--muted); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }.notification-row-actions { display: flex; gap: .45rem; }
+.notification-center-empty { padding: 5rem 1rem; text-align: center; color: var(--muted); }.notification-center-empty i { display: block; margin-bottom: 1rem; color: #079455; font-size: 2.5rem; }
+@media (max-width: 767.98px) { .notification-center-header { flex-direction: column; }.notification-row { grid-template-columns: auto minmax(0,1fr); }.notification-row-actions { grid-column: 1 / -1; padding-left: 3.5rem; }.notification-row p { white-space: normal; } }
 .pipeline-stage-picker { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .65rem; color: var(--muted); font-size: .62rem; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; }
 .pipeline-stage-picker select { min-width: 0; padding: .25rem 1.45rem .25rem .45rem; color: var(--ink); background-color: var(--bg); border: 1px solid var(--line); border-radius: 7px; font-size: .65rem; text-transform: none; }
 .pipeline-card footer { display: flex; align-items: center; justify-content: space-between; margin-top: .75rem; padding-top: .6rem; color: var(--muted); border-top: 1px solid var(--line); font-size: .64rem; }

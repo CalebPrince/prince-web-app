@@ -898,5 +898,6 @@ $pdo->exec(
     )"
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_lead_attribution_source ON lead_attribution (source_type, source_id)');
+$pdo->exec("CREATE TABLE IF NOT EXISTS notification_reads (notification_key TEXT PRIMARY KEY, read_at TEXT NOT NULL DEFAULT (datetime('now')))");
 
 echo "Schema applied.\n";

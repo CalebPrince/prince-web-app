@@ -154,6 +154,8 @@ $router->get('/api/v1/auth/me', [AuthController::class, 'me']);
 // Admin
 $router->get('/api/v1/admin/dashboard', [DashboardController::class, 'overview']);
 $router->get('/api/v1/admin/notifications', [DashboardController::class, 'notifications']);
+$router->patch('/api/v1/admin/notifications/read-all', [DashboardController::class, 'readAllNotifications']);
+$router->patch('/api/v1/admin/notifications/{key}', [DashboardController::class, 'readNotification']);
 $router->get('/api/v1/admin/projects', [ProjectController::class, 'adminIndex']);
 $router->post('/api/v1/admin/projects', [ProjectController::class, 'store']);
 $router->patch('/api/v1/admin/projects/reorder', [ProjectController::class, 'reorder']);

@@ -165,9 +165,63 @@ class DashboardController
              WHERE admin_seen = 0 AND (transcript_json != '[]' OR client_email IS NOT NULL)"
         )->fetchColumn();
 
+        $items = self::notificationItems($pdo);
         Response::json([
             'unread_inquiries' => $unreadInquiries,
             'unseen_chats' => $unseenChats,
+            'total' => count($items),
+            'items' => $items,
         ]);
+    }
+
+    public static function readNotification(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $key = rawurldecode((string) ($params['key'] ?? ''));
+        if (!preg_match('/^[a-z_]+:\d+$/', $key)) Response::error('Invalid notification.', 422);
+        $pdo = Database::get();
+        $pdo->prepare("INSERT OR REPLACE INTO notification_reads (notification_key, read_at) VALUES (?, datetime('now'))")->execute([$key]);
+        [$type, $id] = explode(':', $key, 2);
+        if ($type === 'inquiry') $pdo->prepare("UPDATE inquiries SET status='read' WHERE id=? AND status='unread'")->execute([(int) $id]);
+        if ($type === 'chat') $pdo->prepare('UPDATE chat_sessions SET admin_seen=1 WHERE id=?')->execute([(int) $id]);
+        Response::json(['status' => 'read']);
+    }
+
+    public static function readAllNotifications(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $insert = $pdo->prepare("INSERT OR REPLACE INTO notification_reads (notification_key, read_at) VALUES (?, datetime('now'))");
+        foreach (self::notificationItems($pdo) as $item) $insert->execute([$item['key']]);
+        $pdo->exec("UPDATE inquiries SET status='read' WHERE status='unread'");
+        $pdo->exec("UPDATE chat_sessions SET admin_seen=1 WHERE admin_seen=0 AND (transcript_json!='[]' OR client_email IS NOT NULL)");
+        Response::json(['status' => 'read']);
+    }
+
+    private static function notificationItems(\PDO $pdo): array
+    {
+        $read = [];
+        $exists = $pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='notification_reads'")->fetchColumn();
+        if ($exists) foreach ($pdo->query('SELECT notification_key FROM notification_reads') as $row) $read[$row['notification_key']] = true;
+        $items = [];
+        $add = static function (string $key, string $type, string $title, string $detail, string $href, string $date, string $level = 'info') use (&$items, $read): void {
+            if (!isset($read[$key])) $items[] = compact('key', 'type', 'title', 'detail', 'href', 'date', 'level');
+        };
+        foreach ($pdo->query("SELECT id,name,email,message,type,created_at FROM inquiries WHERE status='unread'") as $r)
+            $add('inquiry:'.$r['id'], 'Inquiry', $r['name'] ?: $r['email'], $r['message'], ($r['type']==='project_request'?'/admin/quote-requests.html':'/admin/inquiries.html').'?open='.$r['id'], $r['created_at']);
+        foreach ($pdo->query("SELECT id,client_name,client_email,created_at,updated_at FROM chat_sessions WHERE admin_seen=0 AND (transcript_json!='[]' OR client_email IS NOT NULL)") as $r)
+            $add('chat:'.$r['id'], 'Chat', $r['client_name'] ?: ($r['client_email'] ?: 'New chat activity'), 'A visitor has new chat activity.', '/admin/chats.html?open='.$r['id'], $r['updated_at'] ?: $r['created_at']);
+        foreach ($pdo->query("SELECT id,client_name,topic,created_at FROM appointments WHERE status='confirmed' AND created_at>=datetime('now','-30 days')") as $r)
+            $add('booking:'.$r['id'], 'Booking', $r['client_name'].' booked a call', $r['topic'] ?: 'New discovery call', '/admin/appointments.html', $r['created_at']);
+        foreach ($pdo->query("SELECT id,customer_name,email,status,amount,currency,updated_at FROM payments WHERE status IN ('success','failed') AND updated_at>=datetime('now','-30 days')") as $r)
+            $add('payment:'.$r['id'], 'Payment', ($r['status']==='success'?'Payment received':'Payment failed'), ($r['customer_name'] ?: $r['email']).' · '.$r['currency'].' '.number_format(((int)$r['amount'])/100,2), '/admin/payments.html', $r['updated_at'], $r['status']==='failed'?'danger':'success');
+        foreach ($pdo->query("SELECT id,client_name,title,status,updated_at FROM proposals WHERE status IN ('accepted','declined') AND updated_at>=datetime('now','-30 days')") as $r)
+            $add('proposal:'.$r['id'], 'Proposal', 'Proposal '.$r['status'], $r['client_name'].' · '.$r['title'], '/admin/proposals.html', $r['updated_at'], $r['status']==='declined'?'warning':'success');
+        foreach ($pdo->query("SELECT id,invoice_number,client_name,due_date,updated_at FROM invoices WHERE status='sent' AND due_date IS NOT NULL AND due_date<date('now')") as $r)
+            $add('invoice:'.$r['id'], 'Invoice', 'Invoice '.$r['invoice_number'].' is overdue', $r['client_name'].' · due '.$r['due_date'], '/admin/invoices.html', $r['updated_at'], 'warning');
+        foreach ($pdo->query("SELECT id,name,url,last_status_changed_at,created_at FROM uptime_monitors WHERE is_active=1 AND last_status='down'") as $r)
+            $add('uptime:'.$r['id'], 'Uptime', $r['name'].' is down', $r['url'], '/admin/uptime.html', $r['last_status_changed_at'] ?: $r['created_at'], 'danger');
+        usort($items, static fn($a,$b) => strcmp($b['date'], $a['date']));
+        return array_slice($items, 0, 100);
     }
 }

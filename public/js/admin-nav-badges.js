@@ -18,6 +18,18 @@
     contacts.insertAdjacentElement('afterend', link);
   }
   injectPipelineNav();
+  function injectNotificationsNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/notifications.html"]')) return;
+    const dashboard = nav.querySelector('a[href="/admin/dashboard.html"]');
+    if (!dashboard) return;
+    const link = document.createElement('a');
+    link.href = '/admin/notifications.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/notifications.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-bell nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Notifications</span><span id="nav-badge-notifications" class="notif-badge d-none"></span>';
+    dashboard.insertAdjacentElement('afterend', link);
+  }
+  injectNotificationsNav();
 
   window.AdminPagination = window.AdminPagination || {
     pageSize: ADMIN_PAGE_SIZE,
@@ -118,9 +130,9 @@
     return `${Math.floor(hours / 24)}d ago`;
   }
 
-  function notifItem(href, title, snippet, meta) {
+  function notifItem(href, title, snippet, meta, key = "") {
     return `
-      <a class="notif-item" href="${href}">
+      <a class="notif-item" href="${href}" ${key ? `data-notification-key="${key}"` : ""}>
         <div class="notif-item-title">${normalizeText(title)}</div>
         ${snippet ? `<div class="notif-item-snippet">${normalizeText(snippet)}</div>` : ""}
         <div class="notif-item-meta">${meta}</div>
@@ -134,32 +146,8 @@
     body.innerHTML = '<div class="notif-dropdown-empty">Loading…</div>';
 
     try {
-      const [inquiries, chats] = await Promise.all([
-        api.get("/api/v1/admin/inquiries?status=unread"),
-        api.get("/api/v1/admin/chats"),
-      ]);
-
-      const unseenChats = (Array.isArray(chats) ? chats : []).filter(c => !c.admin_seen);
-
-      const inquiryItems = inquiries
-        .slice(0, 5)
-        .map(i => notifItem(
-          (i.type === "project_request" ? "/admin/quote-requests.html" : "/admin/inquiries.html") + `?open=${i.id}`,
-          i.name || i.email,
-          i.message,
-          timeAgo(i.created_at)
-        ));
-
-      const chatItems = unseenChats
-        .slice(0, 5)
-        .map(c => notifItem(
-          `/admin/chats.html?open=${c.id}`,
-          c.client_name || c.client_email || `Chat #${c.id}`,
-          "New live chat activity",
-          timeAgo(c.updated_at || c.created_at)
-        ));
-
-      const items = [...inquiryItems, ...chatItems];
+      const data = await api.get("/api/v1/admin/notifications");
+      const items = (data.items || []).slice(0, 8).map(item => notifItem(item.href, `${item.type} · ${item.title}`, item.detail, timeAgo(item.date), item.key));
       if (items.length === 0) {
         body.innerHTML = '<div class="notif-dropdown-empty">You\'re all caught up 🎉</div>';
         return;
@@ -171,6 +159,9 @@
           <a href="/admin/chats.html" class="small">View chat leads</a>
         </div>
       `;
+      body.querySelectorAll('[data-notification-key]').forEach(link => link.addEventListener('click', () => {
+        api.patch(`/api/v1/admin/notifications/${encodeURIComponent(link.dataset.notificationKey)}`, {}).catch(() => {});
+      }));
     } catch (_) {
       body.innerHTML = '<div class="notif-dropdown-empty">Could not load notifications.</div>';
     }
@@ -230,7 +221,9 @@
       const unseen = counts.unseen_chats || 0;
       setBadge("nav-badge-inquiries", unread);
       setBadge("nav-badge-chats", unseen);
-      setBadge("notif-bell-badge", unread + unseen);
+      const total = Number(counts.total ?? (unread + unseen));
+      setBadge("notif-bell-badge", total);
+      setBadge("nav-badge-notifications", total);
     } catch (_) { /* leave badges as-is on failure */ }
   }
 

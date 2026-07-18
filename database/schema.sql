@@ -799,3 +799,8 @@ CREATE TABLE IF NOT EXISTS lead_attribution (
   UNIQUE (source_type, source_id)
 );
 CREATE INDEX IF NOT EXISTS idx_lead_attribution_source ON lead_attribution (source_type, source_id);
+
+CREATE TABLE IF NOT EXISTS notification_reads (
+  notification_key TEXT PRIMARY KEY,
+  read_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
