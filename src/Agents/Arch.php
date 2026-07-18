@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Agents;
 
+use App\Middleware\AuthMiddleware;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
 use App\Support\Jwt;
@@ -132,6 +133,71 @@ class Arch
             'step' => self::currentStep($brief),
             'total_steps' => self::TOTAL_STEPS,
             'ready' => $complete,
+        ]);
+    }
+
+    /**
+     * POST /api/v1/admin/agents/arch/chat — the "Talk to Agents" console version.
+     * Admin-only. Same conversation engine and persona as the public chat, but
+     * returns just {reply, brief, step, ready} in the shape the console expects
+     * (it renders res.reply). Lets Caleb try Arch out live alongside the other
+     * agents without going through the public builder page.
+     */
+    public static function adminChat(): void
+    {
+        AuthMiddleware::requireAuth();
+        set_time_limit(120);
+
+        if (!self::aiConfigured()) {
+            Response::error('No AI provider is configured — set one up in Settings to talk to Arch.', 503);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $message = trim((string) ($data['message'] ?? ''));
+        $transcript = is_array($data['transcript'] ?? null) ? $data['transcript'] : [];
+        $brief = is_array($data['brief'] ?? null) ? $data['brief'] : [];
+
+        if ($message === '' || mb_strlen($message) > self::MAX_MESSAGE_LENGTH) {
+            Response::error('A message under ' . self::MAX_MESSAGE_LENGTH . ' characters is required.', 422);
+        }
+        if (count($transcript) > self::MAX_TRANSCRIPT_TURNS) {
+            $transcript = array_slice($transcript, -self::MAX_TRANSCRIPT_TURNS);
+        }
+        // The console sends turns as {role:'user'|'agent', text}; normalise to the
+        // {role:'user'|'assistant'} shape the engine reads (see chat()).
+        $transcript = array_values(array_filter(array_map(static function ($t) {
+            if (!is_array($t)) {
+                return null;
+            }
+            $role = ($t['role'] ?? '') === 'user' ? 'user' : 'assistant';
+            $text = trim((string) ($t['text'] ?? ''));
+            return $text === '' ? null : ['role' => $role, 'text' => $text];
+        }, $transcript)));
+        $transcript[] = ['role' => 'user', 'text' => $message];
+
+        $executor = function (string $name, array $args) use (&$brief): array {
+            if ($name !== 'update_brief') {
+                return ['error' => 'Unknown tool.'];
+            }
+            $brief = self::mergeBrief($brief, $args);
+            return ['ok' => true, 'collected' => $brief, 'complete' => self::briefIsComplete($brief)];
+        };
+
+        $result = AiAgentEngine::run(
+            self::chatSystemPrompt(),
+            [self::updateBriefToolDeclaration()],
+            $executor,
+            $transcript
+        );
+        $reply = $result['reply'] !== null
+            ? SharedAgentTools::stripMarkdown($result['reply'])
+            : self::deterministicPrompt($brief);
+
+        Response::json([
+            'reply' => $reply,
+            'brief' => $brief,
+            'step' => self::currentStep($brief),
+            'ready' => self::briefIsComplete($brief),
         ]);
     }
 
@@ -379,10 +445,28 @@ class Arch
 
     // ---- Prompts & tool ----------------------------------------------------
 
+    /** The agent's display name — admin-configurable on the Site Content page, like the other agents. */
+    public static function displayName(): string
+    {
+        return Settings::get('arch_assistant_name') ?: self::AGENT_NAME;
+    }
+
+    /** Lightly flavors the persona's framing from the configured voice gender; never surfaced to the client. */
+    private static function genderLine(): string
+    {
+        return match ((string) Settings::get('arch_voice_gender')) {
+            'male' => ' Internally you may think of yourself as he/him.',
+            'female' => ' Internally you may think of yourself as she/her.',
+            default => '',
+        };
+    }
+
     private static function chatSystemPrompt(): string
     {
-        return "You are Arch, a friendly, professional website-builder agent for Prince Caleb "
-            . "(princecaleb.dev). Arch stands for Architecture + AI. You guide a client through a short, "
+        $name = self::displayName();
+        return "You are {$name}, a friendly, professional website-builder agent for Prince Caleb "
+            . "(princecaleb.dev)." . self::genderLine() . " You are the Architecture + AI website builder. "
+            . "You guide a client through a short, "
             . "warm conversation to gather everything needed to build their website, then hand off to the "
             . "builder. Speak naturally and plainly — no markdown, no bullet symbols, no emoji spam. Ask "
             . "ONE question at a time and wait for the answer.\n\n"

@@ -9,10 +9,46 @@
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
-<title>Prototype Generator — Prince Caleb</title>
+<title>Arch — AI Website Builder — Prince Caleb</title>
 <meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Chat with Arch, an AI agent that gathers your requirements and builds a complete, deployable website for you in minutes.">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
+<style>
+  .arch-shell { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .arch-head { text-align: center; margin-bottom: 1.25rem; }
+  .arch-avatar { width: 54px; height: 54px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); margin-bottom: .5rem; }
+  .arch-progress-wrap { margin: 0 auto 1rem; max-width: 480px; }
+  .arch-progress-label { font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: .35rem; }
+  .arch-progress-track { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--heading-color) 12%, transparent); overflow: hidden; }
+  .arch-progress-bar { height: 100%; width: 0; border-radius: 999px; background: var(--accent); transition: width .5s ease; }
+  .arch-thread { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1rem; min-height: 40vh; }
+  .arch-msg { max-width: 84%; padding: .7rem 1rem; border-radius: 16px; line-height: 1.55; white-space: pre-wrap; word-wrap: break-word; }
+  .arch-msg.arch { align-self: flex-start; background: color-mix(in srgb, var(--heading-color) 6%, transparent); border: 1px solid color-mix(in srgb, var(--heading-color) 9%, transparent); border-bottom-left-radius: 5px; }
+  .arch-msg.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 5px; }
+  .arch-typing { align-self: flex-start; display: inline-flex; gap: 4px; padding: .8rem 1rem; }
+  .arch-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: archbounce 1.2s infinite ease-in-out; }
+  .arch-typing span:nth-child(2) { animation-delay: .15s; }
+  .arch-typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes archbounce { 0%,60%,100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-5px); opacity: 1; } }
+  .arch-input-row { display: flex; gap: .5rem; align-items: flex-end; }
+  .arch-textarea { flex: 1; resize: none; border-radius: 14px; padding: .75rem 1rem; background: var(--card-bg, transparent); border: 1px solid color-mix(in srgb, var(--heading-color) 15%, transparent); color: var(--heading-color); font: inherit; max-height: 160px; }
+  .arch-textarea:focus { outline: none; border-color: var(--accent); }
+  .arch-build-btn { width: 100%; margin-top: .75rem; }
+  .arch-error { margin-top: .75rem; }
+  .arch-building { text-align: center; padding: 3rem 1rem; }
+  .arch-building .brief-spinner { width: 42px; height: 42px; margin: 0 auto 1rem; }
+  .arch-building-steps { color: var(--muted); font-size: .95rem; min-height: 1.4em; }
+  .arch-result { text-align: center; }
+  .arch-frame-wrap { border-radius: 16px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--heading-color) 12%, transparent); margin: 1rem 0; background: #fff; }
+  .arch-frame-wrap iframe { width: 100%; height: 62vh; border: 0; display: block; }
+  .arch-actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
+  .arch-cms-box { margin-top: 1rem; text-align: left; border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 14px; padding: 1rem 1.2rem; background: color-mix(in srgb, var(--accent) 7%, transparent); }
+  .arch-cms-box code { background: color-mix(in srgb, var(--heading-color) 10%, transparent); padding: .1rem .4rem; border-radius: 6px; }
+  .arch-chip-row { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: .5rem; }
+  .arch-chip { border: 1px solid color-mix(in srgb, var(--heading-color) 16%, transparent); background: transparent; color: var(--heading-color); border-radius: 999px; padding: .35rem .85rem; font-size: .85rem; cursor: pointer; transition: border-color .15s ease, color .15s ease; }
+  .arch-chip:hover { border-color: var(--accent); color: var(--accent); }
+</style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -30,124 +66,66 @@
 </nav>
 
 <main id="main-content" class="workspace-shell">
-  <section id="generator-hero" class="generator-hero">
-    <div class="container text-center">
-      <p class="eyebrow mb-3">// Prototype generator</p>
-      <h1 class="display-2 mb-3">What do you want to build?</h1>
-      <p class="text-muted-custom fs-5 mb-4">Describe a website or app idea in a sentence or two — I'll generate a live concept prototype you can preview right here.</p>
-      <form id="brief-form">
-        <div class="generator-input-wrap">
-          <div id="brief-attachments" class="generator-attachments d-none">
-            <span class="generator-file-chip" id="brief-file-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span id="brief-file-chip-name"></span>
-              <button type="button" id="brief-file-remove" aria-label="Remove attached file" title="Remove attached file">&times;</button>
-            </span>
-          </div>
-          <textarea id="brief-input" class="generator-textarea" rows="2" maxlength="8000"></textarea>
-          <input type="file" id="brief-file-input" class="d-none" accept=".txt,.md,.markdown,.json,.csv,.html,.htm,.css,.js,.jsx,.ts,.tsx,.php,.py,.rb,.go,.java,.c,.cpp,.cs,.swift,.kt,.rs,.sql,.yaml,.yml,.sh">
-          <button type="button" class="generator-attach" id="brief-attach-btn" aria-label="Attach a text or code file" title="Attach a text or code file">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.2 9.19a1.5 1.5 0 0 1-2.12-2.12l8.49-8.48"/></svg>
-          </button>
-          <button type="button" class="generator-mic" id="brief-mic-btn" aria-label="Dictate your idea" title="Dictate your idea">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-          </button>
-          <button type="submit" class="generator-submit" id="brief-submit" aria-label="Generate prototype">
+  <div class="arch-shell">
+    <div class="arch-head">
+      <div class="arch-avatar" aria-hidden="true">A</div>
+      <h1 class="h3 mb-1">Build a website with Arch</h1>
+      <p class="text-muted-custom mb-0">Answer a few quick questions and I'll design and build a complete, deployable site for you.</p>
+    </div>
+
+    <!-- Conversation stage -->
+    <section id="arch-stage">
+      <div class="arch-progress-wrap" id="arch-progress" aria-hidden="true">
+        <div class="arch-progress-label"><span id="arch-step-label">Step 1 of 5</span><span id="arch-step-name">Your business</span></div>
+        <div class="arch-progress-track"><div class="arch-progress-bar" id="arch-progress-bar"></div></div>
+      </div>
+
+      <div class="arch-thread" id="arch-thread" aria-live="polite"></div>
+
+      <form id="arch-form">
+        <div class="arch-input-row">
+          <textarea id="arch-input" class="arch-textarea" rows="1" placeholder="Type your answer…" maxlength="2000" autocomplete="off"></textarea>
+          <button type="submit" class="ai-send-btn" id="arch-send" aria-label="Send">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
-        <div id="brief-error" class="alert alert-danger py-2 small mt-3 d-none"></div>
-        <div id="brief-status" class="brief-loader d-none" role="status" aria-live="polite">
-          <span class="brief-spinner" aria-hidden="true"></span>
-          <span id="brief-status-msg">Building your prototype…</span>
-        </div>
+        <div class="arch-chip-row" id="arch-suggestions"></div>
+        <button type="button" class="btn-brand arch-build-btn d-none" id="arch-build-btn">Build my website ✦</button>
+        <div id="arch-error" class="alert alert-danger py-2 small arch-error d-none" role="alert"></div>
       </form>
-      <div class="generator-suggestions">
-        <button type="button" class="generator-chip">A portfolio site for a photographer</button>
-        <button type="button" class="generator-chip">An online store for handmade jewelry</button>
-        <button type="button" class="generator-chip">A booking app for a fitness studio</button>
-      </div>
-      <p class="text-muted-custom mt-4 mb-0">Want a real, deployable website instead of a concept? <a href="/arch.html">Build one with Arch</a> — our AI website builder guides you step by step.</p>
-    </div>
-  </section>
+    </section>
 
-  <section id="generator-result" class="workspace-preview d-none">
-    <form id="refine-form" class="generator-refine">
-      <input type="text" class="form-control form-control-sm ai-chat-input" id="refine-input" placeholder="Ask for a change — e.g. add a dark hero section" autocomplete="off" required>
-      <button type="submit" class="ai-send-btn" aria-label="Regenerate with this change" title="Regenerate">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      </button>
-      <span id="refine-status" class="text-muted-custom small d-none" role="status" aria-live="polite">Regenerating…</span>
-    </form>
-    <div id="refine-error" class="alert alert-danger py-1 px-3 small mb-0 d-none"></div>
-    <div class="ws-toolbar">
-      <div class="btn-group btn-group-sm" role="group" aria-label="Preview width">
-        <button type="button" class="pager-btn active" data-width="desktop" title="Desktop width">Desktop</button>
-        <button type="button" class="pager-btn" data-width="tablet" title="Tablet width">Tablet</button>
-        <button type="button" class="pager-btn" data-width="mobile" title="Mobile width">Mobile</button>
+    <!-- Building animation -->
+    <section id="arch-building" class="arch-building d-none" role="status" aria-live="polite">
+      <span class="brief-spinner" aria-hidden="true"></span>
+      <h2 class="h5 mb-2">Building your website…</h2>
+      <p class="arch-building-steps" id="arch-building-steps">Laying the foundations…</p>
+    </section>
+
+    <!-- Result -->
+    <section id="arch-result" class="arch-result d-none">
+      <div class="arch-avatar" aria-hidden="true" style="background:color-mix(in srgb,#10b981 16%,transparent);color:#10b981;">✓</div>
+      <h2 class="h4 mb-1">Your website is ready!</h2>
+      <p class="text-muted-custom" id="arch-result-sub">Here's a live preview. Take a look and download it whenever you're ready.</p>
+      <div class="arch-frame-wrap"><iframe id="arch-frame" title="Your generated website preview" loading="lazy"></iframe></div>
+      <div class="arch-actions">
+        <a href="#" id="arch-open-link" target="_blank" rel="noopener" class="btn-brand">Open full preview ↗</a>
+        <a href="#" id="arch-download-link" class="btn-brand-outline">Download site (.zip)</a>
+        <a href="/chat.html" class="btn-brand-outline">Build another</a>
       </div>
-      <div class="ws-toolbar-actions">
-        <button type="button" class="ws-tool-btn" id="ws-copy-link" title="Copy a shareable link to this prototype" aria-label="Copy shareable link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <span class="ws-tool-label">Copy link</span>
-        </button>
-        <a href="#" id="ws-download-link" class="ws-tool-btn" download="prototype.html" title="Download the prototype as an HTML file" aria-label="Download prototype HTML">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span class="ws-tool-label">Download</span>
-        </a>
-        <a href="#" id="ws-fullscreen-link" target="_blank" rel="noopener" class="ws-tool-btn" title="Open the prototype full screen in a new tab" aria-label="Open full screen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <span class="ws-tool-label">Full screen</span>
-        </a>
-        <a href="/chat.html" class="ws-tool-btn" title="Discard this and start a new prototype" aria-label="Start over">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          <span class="ws-tool-label">Start over</span>
-        </a>
+      <div class="arch-cms-box d-none" id="arch-cms-box">
+        <strong>Your admin panel is set up.</strong>
+        <p class="mb-1 small mt-1">Edit your site's text anytime — sign in at <a href="#" id="arch-admin-link" target="_blank" rel="noopener">your admin page</a>.</p>
+        <p class="mb-0 small">Password: <code id="arch-admin-pass"></code> — save this now, it's shown only once.</p>
       </div>
-    </div>
-    <div class="workspace-frame-stage" id="ws-frame-stage">
-      <div class="ws-stage-overlay" id="ws-stage-overlay" role="status" aria-live="polite">
-        <div class="ws-spinner" aria-hidden="true"></div>
-        <p>Rebuilding your prototype… (up to a minute)</p>
-      </div>
-      <iframe id="ws-prototype-frame" title="Concept prototype preview" sandbox=""></iframe>
-    </div>
-    <div class="ws-footer">
-      <div id="ws-verdict">
-        <p class="ws-verdict-prompt">Happy with this concept?</p>
-        <div class="d-flex gap-2">
-          <button type="button" class="btn-brand flex-fill" id="ws-approve">I love it</button>
-          <button type="button" class="btn-brand-outline flex-fill" id="ws-changes">Request changes</button>
-        </div>
-        <form id="ws-feedback-form" class="ws-feedback-form d-none">
-          <textarea class="form-control form-control-sm mb-2" id="ws-comment" rows="2" placeholder="Any comments?"></textarea>
-          <div class="d-flex gap-2 mb-2">
-            <input type="text" class="form-control form-control-sm" id="ws-fb-name" placeholder="Your name" required>
-            <input type="email" class="form-control form-control-sm" id="ws-fb-email" placeholder="Your email" required>
-          </div>
-          <div id="ws-fb-error" class="text-danger small mb-2 d-none" role="alert"></div>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn-brand-outline btn-sm" id="ws-fb-cancel">Cancel</button>
-            <button type="submit" class="btn-brand btn-sm flex-fill" id="ws-fb-submit">Send to Prince</button>
-          </div>
-        </form>
-      </div>
-      <div id="ws-thanks" class="ws-thanks d-none" role="status" aria-live="polite" tabindex="-1">
-        <span class="ws-thanks-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>
-        </span>
-        <p id="ws-thanks-msg" class="mb-3"></p>
-        <button type="button" class="pager-btn" id="ws-thanks-again">Keep refining</button>
-      </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>
 <script src="/js/utility-dock.js"></script>
-<script src="/js/chat-workspace.js"></script>
+<script src="/js/arch-chat.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
 </body>

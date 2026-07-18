@@ -745,6 +745,37 @@
               <span class="form-text ms-2" id="content_voice_preview_note"></span>
             </div>
           </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-hammer me-2" style="color: var(--section-content);"></i>Arch (website builder)</h5>
+            <div class="form-text mb-3">Arch chats a client through their requirements on the public builder page (<a href="/chat.html">/chat.html</a>) and generates a complete, deployable website for them. The name lightly flavors its internal framing and is the name it introduces itself with, and the voice below is the real voice you'll hear if you talk to Arch live in the admin console (<a href="/admin/agent-chat.html">Talk to Agents</a>).</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="arch_assistant_name" placeholder="Arch" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="arch_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="arch_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="arch_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="arch_voice_preview_note"></span>
+            </div>
+          </div>
         </div>
       </div>
     </form>

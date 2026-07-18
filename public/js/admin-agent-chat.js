@@ -6,6 +6,7 @@
     nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Nurturer" },
     proposal: { label: "Proposal", nameKey: "proposal_assistant_name", genderKey: "proposal_voice_gender", accentKey: "proposal_voice_accent", fallbackName: "Ledger" },
     content: { label: "Content", nameKey: "content_assistant_name", genderKey: "content_voice_gender", accentKey: "content_voice_accent", fallbackName: "Canvas" },
+    arch: { label: "Arch", nameKey: "arch_assistant_name", genderKey: "arch_voice_gender", accentKey: "arch_voice_accent", fallbackName: "Arch" },
   };
 
   const logEl = document.getElementById("agent-chat-log");

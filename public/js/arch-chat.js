@@ -253,14 +253,26 @@
   buildBtn.addEventListener("click", startBuild);
 
   // Kick off with Arch's greeting (no server round-trip needed for the opener).
-  setProgress(1);
-  addMessage(
-    "arch",
-    "Hi, I'm Arch — your AI website builder. I'll ask a few quick questions and then build you a complete, ready-to-launch website. Let's start: what's the name of your business, and what type is it (restaurant, shop, church, portfolio, and so on)?"
-  );
-  transcript.push({
-    role: "assistant",
-    text: "Hi, I'm Arch. What's the name of your business, and what type is it?",
-  });
-  input.focus();
+  // The agent's name is admin-configurable (Site Content → Arch), so read it
+  // from the public content endpoint — same source Lisa's widget uses — and
+  // fall back to "Arch" if unset or the fetch fails.
+  function greet(name) {
+    var avatar = document.querySelector(".arch-avatar");
+    if (avatar && name) avatar.textContent = name.trim().charAt(0).toUpperCase();
+    setProgress(1);
+    addMessage(
+      "arch",
+      "Hi, I'm " + name + " — your AI website builder. I'll ask a few quick questions and then build you a complete, ready-to-launch website. Let's start: what's the name of your business, and what type is it (restaurant, shop, church, portfolio, and so on)?"
+    );
+    transcript.push({
+      role: "assistant",
+      text: "Hi, I'm " + name + ". What's the name of your business, and what type is it?",
+    });
+    input.focus();
+  }
+
+  fetch("/api/v1/content", { credentials: "same-origin" })
+    .then(function (r) { return r.ok ? r.json() : {}; })
+    .catch(function () { return {}; })
+    .then(function (c) { greet((c && c.arch_assistant_name) || "Arch"); });
 })();

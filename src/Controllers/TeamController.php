@@ -138,7 +138,7 @@ class TeamController
                 'status_label' => 'Building',
                 'stat_value' => Arch::sitesBuilt($pdo),
                 'stat_label' => 'sites built',
-                'manage_url' => '/arch.html',
+                'manage_url' => '/chat.html',
                 'manage_label' => 'Open builder',
             ],
         ];
