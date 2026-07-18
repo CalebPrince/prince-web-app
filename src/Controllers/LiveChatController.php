@@ -641,6 +641,18 @@ class LiveChatController
         Response::json(['status' => 'deleted']);
     }
 
+    /** DELETE /api/v1/admin/chats — wipes every conversation. One activity-log entry, not one per row. */
+    public static function destroyAll(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        $count = (int) $pdo->query('SELECT COUNT(*) FROM chat_sessions')->fetchColumn();
+        $pdo->exec('DELETE FROM chat_sessions');
+        ActivityLog::log($user, 'deleted_all', 'chat_session', null, "{$count} conversation(s)");
+        Response::json(['status' => 'deleted', 'count' => $count]);
+    }
+
     // ---- internals ----------------------------------------------------------
 
     /** True when Live Chat should be considered online right now, per Admin → Settings hours. */

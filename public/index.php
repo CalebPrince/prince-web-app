@@ -165,6 +165,7 @@ $router->get('/api/v1/admin/chats', [LiveChatController::class, 'adminIndex']);
 $router->get('/api/v1/admin/chats/stats', [LiveChatController::class, 'chatStats']);
 $router->get('/api/v1/admin/ai-test', [LiveChatController::class, 'aiTest']);
 $router->patch('/api/v1/admin/chats/{id}', [LiveChatController::class, 'markSeen']);
+$router->delete('/api/v1/admin/chats', [LiveChatController::class, 'destroyAll']);
 $router->delete('/api/v1/admin/chats/{id}', [LiveChatController::class, 'destroy']);
 $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);

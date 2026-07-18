@@ -115,6 +115,16 @@ async function loadStats() {
   wireLogout();
 
   document.getElementById("status-filter").addEventListener("change", applyFilter);
+
+  document.getElementById("delete-all-btn").addEventListener("click", async () => {
+    const count = allChats.length;
+    if (!count) return;
+    if (!confirm(`Delete all ${count} conversation${count === 1 ? "" : "s"} permanently? This can't be undone.`)) return;
+    await api.delete("/api/v1/admin/chats");
+    await loadChats();
+    await loadStats();
+  });
+
   await loadChats();
   await loadStats();
 })();

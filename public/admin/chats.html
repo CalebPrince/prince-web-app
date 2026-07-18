@@ -79,13 +79,16 @@
           <p class="text-muted-custom mb-0 small">Live-chat conversations, generated prototypes, and client feedback.</p>
         </div>
       </div>
-      <select class="form-select form-select-sm" id="status-filter" style="width:auto;">
-        <option value="">All</option>
-        <option value="feedback">With feedback</option>
-        <option value="approved">Approved</option>
-        <option value="changes_requested">Changes requested</option>
-        <option value="generated">Prototype built</option>
-      </select>
+      <div class="d-flex gap-2 align-items-center">
+        <select class="form-select form-select-sm" id="status-filter" style="width:auto;">
+          <option value="">All</option>
+          <option value="feedback">With feedback</option>
+          <option value="approved">Approved</option>
+          <option value="changes_requested">Changes requested</option>
+          <option value="generated">Prototype built</option>
+        </select>
+        <button type="button" class="btn btn-sm btn-outline-danger" id="delete-all-btn">Delete All</button>
+      </div>
     </div>
 
     <div id="chat-stats" class="row g-2 mb-4"></div>
