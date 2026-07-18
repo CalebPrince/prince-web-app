@@ -871,6 +871,35 @@ storage/
     and are removed from public project API responses. Deployments must run
     `php database/migrate.php` to add the project finance/operations columns
     and create `project_milestones`; no cron is required.
+43. **Team capacity** (`/admin/team.html`, `TeamController`): the owner card
+    counts every incomplete operational project, while each AI agent counts
+    only projects where it is the supporting specialist. The page shows
+    active assignments, overdue work, deadlines due within 14 days, the next
+    deadline, and direct links to the relevant projects. Capacity labels
+    (Clear/Available/Focused/At capacity) describe recorded workload, not an
+    autonomous execution queue. Historical portfolio entries are excluded
+    unless they contain real delivery data such as progress, a deadline,
+    milestones, or an agent assignment.
+44. **Client intelligence and management** (`/admin/clients.html`,
+    `ClientController`): opening a client now starts on an Overview tab with
+    successful one-off and recurring Paystack payments, sent/unpaid invoices,
+    overdue receivables, total and active project counts, recent project
+    history, and the latest linked interaction across portal messages,
+    proposals, invoices, payments, subscriptions, bookings, inquiries, and
+    live chat. Amounts remain separated by currency. The client list adds
+    pagination, CSV export of the current filtered result set, account-state
+    filters, and work filters for clients with/without projects or with
+    outstanding invoices.
+45. **Dashboard modes** (`/admin/dashboard.html`, `DashboardController`): a
+    remembered Operational/Sales/Financial switch reshapes the overview
+    around the current job. Operational shows configured delivery projects,
+    overdue projects/milestones, open tasks, bookings, drafts, alerts, and
+    system activity. Sales shows open pipeline records, recent leads, deals
+    won this month, open proposal value, and recent inquiries. Financial
+    shows current-month successful Paystack revenue, sent/unpaid invoices,
+    project portfolio profit, the Reports monthly target, and recent
+    payments. Every amount is queried live and unlike currencies are never
+    combined.
 
 ## Deployment (Namecheap cPanel)
 
