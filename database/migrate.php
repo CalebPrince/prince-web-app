@@ -10,6 +10,76 @@ $pdo = Database::get();
 $schema = file_get_contents(__DIR__ . '/schema.sql');
 $pdo->exec($schema);
 
+/**
+ * Rebuilds $table with a genuinely new schema (a NOT NULL/CHECK/FK clause
+ * SQLite can't apply via plain ALTER TABLE) without corrupting any OTHER
+ * table's foreign key that points at it.
+ *
+ * The naive approach — RENAME the old table out of the way, CREATE the new
+ * one under the real name, copy data in, DROP the renamed-away old one —
+ * looks safe but isn't: modern SQLite's ALTER TABLE RENAME automatically
+ * rewrites every OTHER table's foreign key definition to follow the
+ * renamed table. So the moment the old table gets renamed to "{table}_old",
+ * anything referencing it (e.g. proposal_milestones -> proposals) gets
+ * silently rewritten to reference "{table}_old" instead — and when that
+ * table is dropped a few statements later, those foreign keys are left
+ * pointing at a name that no longer exists. This was caught by testing
+ * against a copy of the real data before ever running it for real (see the
+ * client_id fix below) — worth keeping this helper as the single safe path
+ * so it can't recur.
+ *
+ * The safe order (SQLite's own documented procedure) creates the new table
+ * under a throwaway name FIRST — nothing references that name yet, so
+ * there's nothing for SQLite to rewrite — copies data in, drops the old
+ * table, then renames the new one into the real name. At the instant the
+ * rename happens, the new table is the only thing anything can be
+ * referencing by that name, and old tables' foreign keys are untouched.
+ *
+ * $columns is an explicit column list (never SELECT *) so id — and every
+ * OTHER table's foreign key value pointing at a specific id — survives
+ * unchanged, and AUTOINCREMENT keeps counting from the right place.
+ * $createSqlTemplate must contain exactly one %s for the (temporary) table
+ * name. Verifies with PRAGMA foreign_key_check before committing and rolls
+ * back rather than leaving a corrupted database if anything doesn't add up.
+ */
+function rebuildTable(\PDO $pdo, string $table, string $createSqlTemplate, string $columns, array $indexes = []): void
+{
+    $foreignKeysWereOn = (bool) $pdo->query('PRAGMA foreign_keys')->fetchColumn();
+    // A schema-changing PRAGMA is a no-op inside a transaction, so this has
+    // to happen before BEGIN — and be restored after COMMIT/ROLLBACK, since
+    // this $pdo connection is reused for the rest of migrate.php.
+    if ($foreignKeysWereOn) {
+        $pdo->exec('PRAGMA foreign_keys = OFF');
+    }
+
+    $tmpTable = $table . '_rebuild_tmp';
+    $pdo->exec('BEGIN TRANSACTION');
+    $pdo->exec(sprintf($createSqlTemplate, $tmpTable));
+    $pdo->exec("INSERT INTO {$tmpTable} ({$columns}) SELECT {$columns} FROM {$table}");
+    $pdo->exec("DROP TABLE {$table}");
+    $pdo->exec("ALTER TABLE {$tmpTable} RENAME TO {$table}");
+    foreach ($indexes as $indexSql) {
+        $pdo->exec($indexSql);
+    }
+
+    $problems = $pdo->query('PRAGMA foreign_key_check')->fetchAll();
+    if ($problems) {
+        $pdo->exec('ROLLBACK');
+        if ($foreignKeysWereOn) {
+            $pdo->exec('PRAGMA foreign_keys = ON');
+        }
+        throw new \RuntimeException(
+            "Rebuilding {$table} would leave a broken foreign key — rolled back, nothing was changed: "
+            . json_encode($problems)
+        );
+    }
+
+    $pdo->exec('COMMIT');
+    if ($foreignKeysWereOn) {
+        $pdo->exec('PRAGMA foreign_keys = ON');
+    }
+}
+
 $pricingDefaultUpdates = [
     'pricing_currency' => ['USD', 'GHS'],
     'pricing_tier_1_amount' => ['600', '6000'],
@@ -114,12 +184,82 @@ if (!in_array('accepted_user_agent', $proposalColumns, true)) {
     $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_user_agent TEXT');
 }
 if (!in_array('client_id', $proposalColumns, true)) {
-    $pdo->exec('ALTER TABLE proposals ADD COLUMN client_id INTEGER REFERENCES clients(id)');
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL');
 }
 
 $paymentLinkColumns = array_column($pdo->query('PRAGMA table_info(payment_links)')->fetchAll(), 'name');
 if (!in_array('client_id', $paymentLinkColumns, true)) {
-    $pdo->exec('ALTER TABLE payment_links ADD COLUMN client_id INTEGER REFERENCES clients(id)');
+    $pdo->exec('ALTER TABLE payment_links ADD COLUMN client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL');
+}
+
+// The two ADD COLUMNs above originally omitted ON DELETE SET NULL, so any
+// database that already had client_id added before this fix is stuck with a
+// FK that defaults to NO ACTION — SQLite enforces that as a hard failure
+// ("FOREIGN KEY constraint failed"), not a graceful null-out, the moment
+// ClientController::destroy() tries to delete a client with any proposal or
+// payment link on file. SQLite can't ALTER an existing column's FK action,
+// so fix it the same way the marketing_leads/beacon_social_leads rebuilds
+// above do: rename, recreate with the correct clause, copy data back
+// (explicit id list, so AUTOINCREMENT keeps counting from the right place
+// and every other table's FK to these rows — proposal_milestones,
+// client_files, payments — still resolves correctly), drop the old table.
+foreach ([
+    'proposals' => [
+        'create' => "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token TEXT UNIQUE NOT NULL,
+            inquiry_id INTEGER NULL REFERENCES inquiries(id) ON DELETE SET NULL,
+            client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
+            client_name TEXT NOT NULL,
+            client_email TEXT NOT NULL,
+            title TEXT NOT NULL,
+            scope TEXT NOT NULL,
+            timeline TEXT,
+            total_amount INTEGER NOT NULL DEFAULT 0,
+            currency TEXT NOT NULL DEFAULT 'GHS',
+            terms TEXT,
+            status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('draft', 'sent', 'accepted', 'declined')),
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            accepted_at TEXT,
+            accepted_by_name TEXT,
+            accepted_ip TEXT,
+            accepted_user_agent TEXT
+        )",
+        'columns' => 'id, token, inquiry_id, client_id, client_name, client_email, title, scope, timeline,
+            total_amount, currency, terms, status, created_at, updated_at, accepted_at, accepted_by_name,
+            accepted_ip, accepted_user_agent',
+        'indexes' => ['CREATE INDEX IF NOT EXISTS idx_proposals_status_created ON proposals (status, created_at)'],
+    ],
+    'payment_links' => [
+        'create' => "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token TEXT UNIQUE NOT NULL,
+            client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
+            client_name TEXT NOT NULL,
+            client_email TEXT NOT NULL,
+            amount INTEGER NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'GHS',
+            description TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'cancelled')),
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            paid_at TEXT
+        )",
+        'columns' => 'id, token, client_id, client_name, client_email, amount, currency, description, status,
+            created_at, paid_at',
+        'indexes' => [],
+    ],
+] as $table => $spec) {
+    $onDelete = null;
+    foreach ($pdo->query("PRAGMA foreign_key_list({$table})")->fetchAll() as $fk) {
+        if ($fk['from'] === 'client_id') {
+            $onDelete = strtoupper((string) $fk['on_delete']);
+        }
+    }
+    if ($onDelete !== null && $onDelete !== 'SET NULL') {
+        rebuildTable($pdo, $table, $spec['create'], $spec['columns'], $spec['indexes']);
+        echo "Rebuilt {$table} — client_id FK now correctly ON DELETE SET NULL.\n";
+    }
 }
 
 $milestoneColumns = array_column($pdo->query('PRAGMA table_info(proposal_milestones)')->fetchAll(), 'name');
@@ -161,35 +301,32 @@ if (!in_array('pitch_channel', $leadColumnNames, true)) {
 $leadColumns = $pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll();
 foreach ($leadColumns as $col) {
     if ($col['name'] === 'website_url' && (int) $col['notnull'] === 1) {
-        $pdo->exec('BEGIN TRANSACTION');
-        $pdo->exec('ALTER TABLE marketing_leads RENAME TO marketing_leads_old');
-        $pdo->exec("CREATE TABLE marketing_leads (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            business_name TEXT NOT NULL,
-            website_url TEXT,
-            contact_email TEXT,
-            contact_phone TEXT,
-            pitch_channel TEXT CHECK (pitch_channel IS NULL OR pitch_channel IN ('email', 'phone')),
-            status TEXT NOT NULL DEFAULT 'pending'
-              CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
-            audit_findings TEXT,
-            pitch_subject TEXT,
-            pitch_body TEXT,
-            notes TEXT,
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-            sent_at TEXT
-        )");
-        $pdo->exec(
-            'INSERT INTO marketing_leads (id, business_name, website_url, contact_email, contact_phone,
-             pitch_channel, status, audit_findings, pitch_subject, pitch_body, notes, created_at, updated_at, sent_at)
-             SELECT id, business_name, website_url, contact_email, contact_phone,
-             pitch_channel, status, audit_findings, pitch_subject, pitch_body, notes, created_at, updated_at, sent_at
-             FROM marketing_leads_old'
+        // drip_enrollments.lead_id references this table — rebuildTable()
+        // (not a bare RENAME/DROP) is what keeps that foreign key intact.
+        rebuildTable(
+            $pdo,
+            'marketing_leads',
+            "CREATE TABLE %s (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                business_name TEXT NOT NULL,
+                website_url TEXT,
+                contact_email TEXT,
+                contact_phone TEXT,
+                pitch_channel TEXT CHECK (pitch_channel IS NULL OR pitch_channel IN ('email', 'phone')),
+                status TEXT NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
+                audit_findings TEXT,
+                pitch_subject TEXT,
+                pitch_body TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                sent_at TEXT
+            )",
+            'id, business_name, website_url, contact_email, contact_phone, pitch_channel, status,
+             audit_findings, pitch_subject, pitch_body, notes, created_at, updated_at, sent_at',
+            ['CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at)']
         );
-        $pdo->exec('DROP TABLE marketing_leads_old');
-        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at)');
-        $pdo->exec('COMMIT');
         break;
     }
 }
@@ -221,28 +358,25 @@ $beaconLeadsSql = $pdo->query(
     "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'beacon_social_leads'"
 )->fetchColumn();
 if ($beaconLeadsSql && !str_contains($beaconLeadsSql, "'cron'")) {
-    $pdo->exec('BEGIN TRANSACTION');
-    $pdo->exec('ALTER TABLE beacon_social_leads RENAME TO beacon_social_leads_old');
-    $pdo->exec("CREATE TABLE beacon_social_leads (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        platform TEXT NOT NULL,
-        username TEXT NOT NULL,
-        post_content TEXT NOT NULL,
-        post_url TEXT,
-        confidence_score INTEGER NOT NULL,
-        reasoning TEXT NOT NULL,
-        drafted_reply TEXT NOT NULL,
-        source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron')),
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )");
-    $pdo->exec(
-        'INSERT INTO beacon_social_leads (id, platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, created_at)
-         SELECT id, platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, created_at
-         FROM beacon_social_leads_old'
+    rebuildTable(
+        $pdo,
+        'beacon_social_leads',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            platform TEXT NOT NULL,
+            username TEXT NOT NULL,
+            post_content TEXT NOT NULL,
+            post_url TEXT,
+            confidence_score INTEGER NOT NULL,
+            reasoning TEXT NOT NULL,
+            drafted_reply TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron')),
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply,
+         source, created_at',
+        ['CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at)']
     );
-    $pdo->exec('DROP TABLE beacon_social_leads_old');
-    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at)');
-    $pdo->exec('COMMIT');
 }
 
 // Deliberately after the rebuild above, which recreates the table from an
