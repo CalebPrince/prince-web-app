@@ -74,7 +74,11 @@ class TeamController
             ],
             [
                 'key' => 'proposal',
-                'name' => Settings::get('proposal_assistant_name') ?: 'Proposal Writer',
+                // 'Ledger', not 'Proposal Writer' — matches the fallback name
+                // Talk to Agents and Site Content use for this agent when no
+                // custom name is set. They used to disagree, so the same
+                // unnamed agent showed a different name on each page.
+                'name' => Settings::get('proposal_assistant_name') ?: 'Ledger',
                 'role' => 'Proposal Writer',
                 'description' => 'Turns a project request or a short brief into a full, on-brand proposal — scope, timeline, and payment milestones — ready for you to review and send.',
                 'icon' => 'bi-file-earmark-text',
@@ -87,7 +91,9 @@ class TeamController
             ],
             [
                 'key' => 'content',
-                'name' => Settings::get('content_assistant_name') ?: 'Content Creator',
+                // 'Canvas', not 'Content Creator' — same fix as 'proposal'
+                // above: match the fallback name used elsewhere.
+                'name' => Settings::get('content_assistant_name') ?: 'Canvas',
                 'role' => 'Content & Social Creator',
                 'description' => 'Drafts blog posts, social captions, and marketing images so your presence stays active without eating your build time.',
                 'icon' => 'bi-images',
