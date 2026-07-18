@@ -33,6 +33,7 @@ class TeamController
             "SELECT COUNT(*) FROM automations WHERE nurturer_enabled = 1 AND is_active = 1"
         )->fetchColumn() > 0;
         $beaconEnabled = (string) Settings::get('beacon_discovery_enabled') === '1';
+        $capacity = self::projectCapacity($pdo);
 
         $agents = [
             [
@@ -166,13 +167,82 @@ class TeamController
             ],
         ];
 
+        foreach ($agents as &$agent) {
+            $agent['capacity'] = $capacity['agents'][$agent['key']] ?? self::emptyCapacity();
+        }
+        unset($agent);
+
         Response::json([
             'owner' => [
                 'name' => Settings::get('site_owner_name') ?: 'Prince Caleb',
                 'role' => 'Founder & Lead Developer',
                 'tagline' => 'Premium web design & mobile app development — the human the agents work for.',
+                'capacity' => $capacity['owner'],
             ],
             'agents' => $agents,
+            'capacity_summary' => $capacity['summary'],
         ]);
+    }
+
+    private static function projectCapacity(\PDO $pdo): array
+    {
+        $rows = $pdo->query(
+            "SELECT p.id,p.title,p.progress_percent,p.deadline,p.assigned_agent_key,
+                    (SELECT COUNT(*) FROM project_milestones pm WHERE pm.project_id=p.id) AS milestone_count,
+                    (SELECT COUNT(*) FROM project_milestones pm WHERE pm.project_id=p.id AND pm.is_completed=0) AS open_milestones,
+                    (SELECT MIN(pm.due_date) FROM project_milestones pm WHERE pm.project_id=p.id AND pm.is_completed=0 AND pm.due_date IS NOT NULL) AS next_milestone_date
+             FROM projects p
+             WHERE p.progress_percent<100 AND (
+               p.progress_percent>0 OR p.deadline IS NOT NULL OR p.assigned_agent_key IS NOT NULL OR
+               EXISTS(SELECT 1 FROM project_milestones pm WHERE pm.project_id=p.id)
+             )"
+        )->fetchAll();
+
+        $today = date('Y-m-d');
+        $soon = date('Y-m-d', strtotime('+14 days'));
+        foreach ($rows as &$row) {
+            $dates = array_values(array_filter([$row['deadline'], $row['next_milestone_date']]));
+            sort($dates);
+            $row['next_deadline'] = $dates[0] ?? null;
+            $row['is_overdue'] = $row['next_deadline'] !== null && $row['next_deadline'] < $today;
+            $row['due_soon'] = $row['next_deadline'] !== null && $row['next_deadline'] >= $today && $row['next_deadline'] <= $soon;
+        }
+        unset($row);
+
+        $build = static function (array $projects): array {
+            usort($projects, static function ($a, $b): int {
+                if ($a['is_overdue'] !== $b['is_overdue']) return $a['is_overdue'] ? -1 : 1;
+                return strcmp($a['next_deadline'] ?? '9999-12-31', $b['next_deadline'] ?? '9999-12-31');
+            });
+            $active = count($projects);
+            return [
+                'active_projects' => $active,
+                'overdue_projects' => count(array_filter($projects, fn($p) => $p['is_overdue'])),
+                'due_soon' => count(array_filter($projects, fn($p) => $p['due_soon'])),
+                'next_deadline' => $projects[0]['next_deadline'] ?? null,
+                'level' => $active === 0 ? 'clear' : ($active <= 2 ? 'available' : ($active <= 4 ? 'focused' : 'full')),
+                'projects' => array_slice($projects, 0, 4),
+            ];
+        };
+
+        $agents = [];
+        foreach (['lisa','nurturer','beacon','dossier','proposal','content','arch'] as $key) {
+            $agents[$key] = $build(array_values(array_filter($rows, fn($p) => $p['assigned_agent_key'] === $key)));
+        }
+        return [
+            'owner' => $build($rows),
+            'agents' => $agents,
+            'summary' => [
+                'active_projects' => count($rows),
+                'overdue_projects' => count(array_filter($rows, fn($p) => $p['is_overdue'])),
+                'due_soon' => count(array_filter($rows, fn($p) => $p['due_soon'])),
+                'unassigned_projects' => count(array_filter($rows, fn($p) => empty($p['assigned_agent_key']))),
+            ],
+        ];
+    }
+
+    private static function emptyCapacity(): array
+    {
+        return ['active_projects' => 0, 'overdue_projects' => 0, 'due_soon' => 0, 'next_deadline' => null, 'level' => 'clear', 'projects' => []];
     }
 }

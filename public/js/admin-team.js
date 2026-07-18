@@ -27,19 +27,53 @@ const AGENT_ACCENT = {
   arch: 'var(--section-blue)',
 };
 
+const CAPACITY_LABEL = { clear: 'Clear', available: 'Available', focused: 'Focused', full: 'At capacity' };
+
+function capacityDate(value) {
+  if (!value) return 'No deadline set';
+  return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+}
+
+function renderCapacityProjects(capacity) {
+  if (!capacity.projects?.length) return '<div class="team-capacity-empty">No active project assignments.</div>';
+  return `<div class="team-capacity-projects">${capacity.projects.map(project => `
+    <a href="/admin/projects.html?edit=${Number(project.id)}" class="${project.is_overdue ? 'is-overdue' : ''}">
+      <span>${esc(project.title)}</span><small>${project.next_deadline ? `${project.is_overdue ? 'Overdue' : 'Due'} ${capacityDate(project.next_deadline)}` : `${Number(project.progress_percent)}% complete`}</small>
+    </a>`).join('')}</div>`;
+}
+
+function capacityBlock(capacity, compact = false) {
+  const level = capacity.level || 'clear';
+  return `<div class="team-capacity ${compact ? 'is-compact' : ''}" data-capacity="${esc(level)}">
+    <div class="team-capacity-head"><span><i></i>${CAPACITY_LABEL[level] || 'Clear'}</span><strong>${Number(capacity.active_projects || 0)} active</strong></div>
+    <div class="team-capacity-facts"><span>${Number(capacity.overdue_projects || 0)} overdue</span><span>${Number(capacity.due_soon || 0)} due in 14 days</span><span>${capacityDate(capacity.next_deadline)}</span></div>
+    ${renderCapacityProjects(capacity)}
+  </div>`;
+}
+
+function renderCapacitySummary(summary) {
+  document.getElementById('team-capacity-summary').innerHTML = `
+    <div class="team-capacity-summary-intro"><span>Delivery capacity</span><small>Live workload from operational projects and milestones</small></div>
+    <div><span>Active projects</span><strong>${Number(summary.active_projects || 0)}</strong></div>
+    <div><span>Overdue</span><strong class="${Number(summary.overdue_projects) ? 'is-alert' : ''}">${Number(summary.overdue_projects || 0)}</strong></div>
+    <div><span>Due in 14 days</span><strong>${Number(summary.due_soon || 0)}</strong></div>
+    <div><span>Without AI support</span><strong>${Number(summary.unassigned_projects || 0)}</strong></div>`;
+}
+
 function renderOwner(owner) {
   const initial = esc((owner.name || 'P').trim().charAt(0).toUpperCase());
   document.getElementById('owner-card').innerHTML = `
     <div class="d-flex align-items-center gap-3">
       <div class="owner-avatar" style="background: var(--section-blue-soft); color: var(--section-blue);">${initial}</div>
-      <div>
+      <div class="flex-grow-1">
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <h4 class="mb-0">${esc(owner.name)}</h4>
           <span class="badge" style="background: var(--section-blue-soft); color: var(--section-blue); font-weight: 500;">${esc(owner.role)}</span>
         </div>
         <p class="mb-0 small text-muted-custom mt-1">${esc(owner.tagline)}</p>
       </div>
-    </div>`;
+    </div>
+    ${capacityBlock(owner.capacity || {}, false)}`;
 }
 
 function renderAgents(agents) {
@@ -61,6 +95,7 @@ function renderAgents(agents) {
           </div>
         </div>
         <p class="small text-muted-custom flex-grow-1">${esc(a.description)}</p>
+        ${capacityBlock(a.capacity || {}, true)}
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <span class="fw-semibold fs-5">${Number(a.stat_value).toLocaleString()}</span>
@@ -81,6 +116,7 @@ function renderAgents(agents) {
 
   try {
     const data = await api.get('/api/v1/admin/team');
+    renderCapacitySummary(data.capacity_summary || {});
     renderOwner(data.owner);
     renderAgents(data.agents);
   } catch (err) {
