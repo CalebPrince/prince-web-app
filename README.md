@@ -111,6 +111,7 @@ src/
                             AppointmentController, SettingsController,
                             AuthController, AiChatController, LiveChatController,
                             ContentAgentController, ContentStudioController,
+                            ReportController, TeamController,
                             and more
   Middleware/              # AuthMiddleware (admin JWT), ClientAuthMiddleware
                             (client portal JWT, isolated via a `type` claim —
@@ -458,7 +459,14 @@ storage/
     text-only production logs with metrics and stack badges instead of static
     image boxes. The homepage hero previously always showed whichever project
     had the lowest `sort_order`; it now prefers the explicitly featured one,
-    falling back to the old behavior if none is set.
+    falling back to the old behavior if none is set. Each project also carries
+    an internal-only `delivery_status` (On track / Needs attention / At risk /
+    Due this month, hand-set from the admin form) and a `progress_percent`
+    (0-100, shown as a filled bar per row) — both independent of
+    `is_published`, which is about public visibility, not build progress. The
+    admin project list shows four live count cards (one per delivery status)
+    above the table, recomputed client-side from the same fetch that renders
+    the rows.
 29. **Make.com automation events** (`src/Support/MakeWebhook.php`): a single
     configurable webhook URL (Admin → Settings → Integrations) receives a
     JSON event for proposal acceptance, content publishing, testimonial
@@ -648,6 +656,17 @@ storage/
     deliberately not built — so the digest is something to act on by hand, and
     since Serper returns a search snippet rather than the full post, Beacon
     judges on less context than a real scrape would give it.
+    `run_beacon_discovery.php` also best-effort extracts the poster's real
+    Reddit username from the snippet/title (a `u/username` pattern Google
+    often preserves) instead of always passing `'unknown'`, so a
+    business-sounding handle is visible to the qualification prompt as a
+    signal. Every qualified lead in "Recent qualified leads" can be **flagged
+    as a false positive** with an optional note — this deletes the lead the
+    same as a plain delete, but first records it in `beacon_lead_feedback`,
+    and the next several qualification calls (draft, chat, and cron alike)
+    prepend Caleb's most recent corrections as concrete examples of mistakes
+    to avoid, so a correction actually changes future scoring instead of
+    being a one-off rule tweak.
     **Nurturer** writes personalized follow-up emails from a lead's industry
     and last action, both captured per-enrollment in `/admin/drip.html`.
     `database/send_nurturer_emails.php` (cron) sends them to enrollments with
@@ -731,6 +750,37 @@ storage/
     **Recent content drafts** panel (reusing `GET /api/v1/admin/content-studio`)
     as a quick glance while chatting, linking out to the full Content Studio
     page for anything more.
+39. **Reports** (`/admin/reports.html`, `ReportController`): business/CRM
+    reporting, distinct from Analytics' web-traffic view — revenue
+    (all-time/30-day/by-month/by-source/by-currency), the sales funnel and
+    win rate, per-automation email performance, bookings, lead sources, and
+    top clients by revenue, all computed live from existing tables in one
+    request. A date-range picker (with This month/Last month/This
+    quarter/YTD presets) drives a separate "period" section — revenue and
+    average-accepted-deal-size cards showing % change against the
+    immediately-preceding period of equal length — plus a revenue-mix-by-
+    service breakdown backed by a `proposals.service_category` field
+    (Websites/Mobile apps/Brand systems/Strategy/Other, set on the proposal
+    form), joined back through `proposal_milestones` to whichever payment it
+    funded; a payment with no linked proposal (e.g. Starter-tier direct
+    checkout) lands in "Uncategorized" rather than being dropped or
+    misattributed. Gross margin and utilization are shown as flat,
+    explicitly-badged **estimates** (`is_estimate` in the API response) since
+    the app has no cost/expense or hours/time-tracking data anywhere to
+    compute them for real — every other figure on the page is a genuine
+    query, never a placeholder. A six-month revenue+margin chart and a
+    client-side CSV export (built from the already-loaded report, no extra
+    endpoint) round it out.
+40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
+    read-only roster of the studio — Caleb himself plus the five AI agents
+    (Lisa, Nurturer, Beacon, Ledger, Canvas) — each card showing its real
+    role, a live headline stat pulled from its own table (e.g. Ledger shows
+    proposals drafted, Canvas shows drafts created from
+    `content_studio_items`), and a live status (Nurturer shows
+    "Sending"/"On standby" based on whether any automation actually has it
+    enabled and active; Beacon shows "Scouting"/"Paused" from the discovery
+    toggle). Agent display names stay admin-configurable via the same
+    `settings` keys the rest of the app already uses.
 
 ## Deployment (Namecheap cPanel)
 
