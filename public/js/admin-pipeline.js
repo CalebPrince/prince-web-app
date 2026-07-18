@@ -4,6 +4,7 @@ const PIPELINE_STAGE_META = {
   proposal: { label: 'Proposal', icon: 'bi-file-earmark-text' }, won: { label: 'Won', icon: 'bi-trophy' }, lost: { label: 'Lost', icon: 'bi-x-circle' },
 };
 const PIPELINE_SOURCE_LABEL = { inquiry: 'Inquiry', marketing: 'Marketing', social: 'Social', booking: 'Booking', proposal: 'Proposal', client: 'Client', chat: 'Chat', manual: 'Manual' };
+const PIPELINE_STAGE_PROBABILITY = { new: .10, researching: .20, contacted: .35, discovery: .55, proposal: .80, won: 1, lost: 0 };
 let pipelineLeads = [];
 let pipelineStages = Object.keys(PIPELINE_STAGE_META);
 let pipelineQuery = '';
@@ -12,6 +13,8 @@ let pipelineSource = '';
 function pipelineEsc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function pipelineInitials(name) { return String(name || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase(); }
 function pipelineMoney(lead) { return lead.value ? `${pipelineEsc(lead.currency)} ${(Number(lead.value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}` : ''; }
+function pipelineTotals(leads, valueForLead = lead => Number(lead.value || 0)) { return leads.reduce((totals, lead) => { const currency = lead.currency || 'GHS'; totals[currency] = (totals[currency] || 0) + valueForLead(lead); return totals; }, {}); }
+function pipelineTotalsText(totals) { const rows = Object.entries(totals).filter(([, value]) => Math.round(value)); return rows.length ? rows.map(([currency, value]) => `${pipelineEsc(currency)} ${(Math.round(value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`).join(' · ') : '—'; }
 function pipelineAttribution(lead) {
   const a = lead.attribution || {}; let label = '';
   if (a.utm_source) label = [a.utm_source, a.utm_campaign].filter(Boolean).join(' · ');
@@ -52,11 +55,16 @@ function renderPipeline() {
     const meta = PIPELINE_STAGE_META[stage]; const rows = leads.filter(l => l.stage === stage);
     return `<section class="pipeline-column" data-stage="${stage}"><header><span><i class="bi ${meta.icon}"></i>${meta.label}</span><b>${rows.length}</b></header><div class="pipeline-dropzone">${rows.map(pipelineCard).join('') || '<div class="pipeline-empty">Drop leads here</div>'}</div></section>`;
   }).join('');
-  const valued = leads.filter(l => l.stage !== 'lost' && Number(l.value));
-  const totalValue = valued.reduce((sum, l) => sum + Number(l.value || 0), 0);
-  const valueCurrency = valued[0]?.currency || '';
-  document.getElementById('pipeline-summary').innerHTML = `<div><span>Active leads</span><strong>${leads.filter(l => !['won','lost'].includes(l.stage)).length}</strong></div><div><span>In discovery</span><strong>${leads.filter(l => l.stage === 'discovery').length}</strong></div><div><span>Open proposals</span><strong>${leads.filter(l => l.stage === 'proposal').length}</strong></div><div><span>Pipeline value</span><strong>${totalValue ? `${pipelineEsc(valueCurrency)} ${(totalValue / 100).toLocaleString(undefined, {maximumFractionDigits:0})}` : '—'}</strong></div>`;
+  const open = leads.filter(l => !['won','lost'].includes(l.stage) && Number(l.value));
+  const won = leads.filter(l => l.stage === 'won' && Number(l.value));
+  document.getElementById('pipeline-summary').innerHTML = `<div><span>Active leads</span><strong>${leads.filter(l => !['won','lost'].includes(l.stage)).length}</strong></div><div><span>In discovery</span><strong>${leads.filter(l => l.stage === 'discovery').length}</strong></div><div><span>Open proposals</span><strong>${leads.filter(l => l.stage === 'proposal').length}</strong></div><div><span>Open pipeline</span><strong>${pipelineTotalsText(pipelineTotals(open))}</strong></div>`;
+  renderPipelineForecast(open, won);
   wirePipelineDrag();
+}
+function renderPipelineForecast(open, won) {
+  const weighted = pipelineTotals(open, lead => Number(lead.value || 0) * (PIPELINE_STAGE_PROBABILITY[lead.stage] || 0));
+  const stages = pipelineStages.filter(stage => !['won','lost'].includes(stage)).map(stage => { const rows = open.filter(lead => lead.stage === stage); const probability = PIPELINE_STAGE_PROBABILITY[stage]; return `<div class="pipeline-forecast-stage"><div><span>${pipelineEsc(PIPELINE_STAGE_META[stage].label)}</span><small>${Math.round(probability * 100)}% likely</small></div><strong>${pipelineTotalsText(pipelineTotals(rows, lead => Number(lead.value || 0) * probability))}</strong></div>`; }).join('');
+  document.getElementById('pipeline-forecast').innerHTML = `<header><div><div class="pipeline-eyebrow">Probability-weighted outlook</div><h4>Revenue forecast</h4></div><p>Each opportunity is weighted by how far it has moved through the sales process.</p></header><div class="pipeline-forecast-grid"><div class="pipeline-forecast-result"><span>Likely revenue</span><strong>${pipelineTotalsText(weighted)}</strong><small>Weighted open opportunities</small></div><div class="pipeline-forecast-result won"><span>Won revenue</span><strong>${pipelineTotalsText(pipelineTotals(won))}</strong><small>Closed successfully</small></div><div class="pipeline-forecast-stages">${stages}</div></div>`;
 }
 function wirePipelineDrag() {
   document.querySelectorAll('.pipeline-card').forEach(card => card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', card.dataset.id); card.classList.add('dragging'); }));

@@ -968,6 +968,19 @@ body > .d-flex {
 .pipeline-summary > div:last-child { border-right: 0; }
 .pipeline-summary span { color: var(--muted); font-size: .72rem; font-weight: 650; text-transform: uppercase; letter-spacing: .06em; }
 .pipeline-summary strong { color: var(--heading-color); font-size: 1.2rem; }
+.pipeline-forecast { margin-bottom: 1.25rem; padding: 1.15rem 1.25rem; background: var(--card-bg); border: 1px solid var(--line); border-radius: 18px; }
+.pipeline-forecast > header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.pipeline-forecast > header h4 { margin: .1rem 0 0; font-size: 1rem; }
+.pipeline-forecast > header p { max-width: 420px; margin: 0; color: var(--muted); font-size: .72rem; text-align: right; }
+.pipeline-forecast-grid { display: grid; grid-template-columns: minmax(170px,.75fr) minmax(170px,.75fr) 2fr; gap: .75rem; }
+.pipeline-forecast-result { display: flex; flex-direction: column; justify-content: center; min-height: 108px; padding: 1rem; border-radius: 14px; background: color-mix(in srgb, var(--section-money) 10%, transparent); }
+.pipeline-forecast-result.won { background: color-mix(in srgb, #16a34a 10%, transparent); }
+.pipeline-forecast-result span,.pipeline-forecast-result small { color: var(--muted); font-size: .68rem; }.pipeline-forecast-result span { font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+.pipeline-forecast-result strong { margin: .35rem 0; color: var(--heading-color); font-family: "Plus Jakarta Sans", sans-serif; font-size: 1.25rem; line-height: 1.3; }
+.pipeline-forecast-stages { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.pipeline-forecast-stage { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .65rem .8rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.pipeline-forecast-stage:nth-child(2n) { border-right: 0; }.pipeline-forecast-stage:nth-last-child(-n+2) { border-bottom: 0; }
+.pipeline-forecast-stage span,.pipeline-forecast-stage small { display: block; }.pipeline-forecast-stage span { color: var(--heading-color); font-size: .72rem; font-weight: 700; }.pipeline-forecast-stage small { color: var(--muted); font-size: .62rem; }.pipeline-forecast-stage strong { color: var(--heading-color); font-size: .72rem; text-align: right; }
 .pipeline-board { display: grid; grid-template-columns: repeat(7, minmax(260px, 1fr)); gap: .8rem; padding-bottom: 1rem; overflow-x: auto; scroll-snap-type: x proximity; }
 .pipeline-column { min-height: calc(100vh - 270px); padding: .65rem; background: color-mix(in srgb, var(--bg-soft) 76%, transparent); border: 1px solid var(--line); border-radius: 18px; scroll-snap-align: start; transition: border-color .18s, background-color .18s; }
 .pipeline-column.drag-over { background: var(--accent-soft); border-color: var(--line-strong); }
@@ -1025,6 +1038,8 @@ body > .d-flex {
 .pipeline-card footer strong { color: var(--heading-color); }
 .pipeline-empty { padding: 2rem .5rem; color: var(--muted); border: 1px dashed var(--line-strong); border-radius: 12px; text-align: center; font-size: .68rem; }
 @media (max-width: 991.98px) { .pipeline-summary { grid-template-columns: repeat(2, 1fr); } .pipeline-summary > div:nth-child(2) { border-right: 0; } .pipeline-summary > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); } .pipeline-column { min-height: 480px; } }
+@media (max-width: 991.98px) { .pipeline-forecast-grid { grid-template-columns: repeat(2,1fr); }.pipeline-forecast-stages { grid-column: 1/-1; } }
+@media (max-width: 575.98px) { .pipeline-forecast > header { align-items: start; flex-direction: column; }.pipeline-forecast > header p { text-align: left; }.pipeline-forecast-grid { grid-template-columns: 1fr; }.pipeline-forecast-stages { grid-column: auto; grid-template-columns: 1fr; }.pipeline-forecast-stage,.pipeline-forecast-stage:nth-child(2n),.pipeline-forecast-stage:nth-last-child(-n+2) { border-right: 0; border-bottom: 1px solid var(--line); }.pipeline-forecast-stage:last-child { border-bottom: 0; } }
 @media (max-width: 767.98px) { .pipeline-header { align-items: stretch; flex-direction: column; } .pipeline-controls { align-items: stretch; flex-direction: column; } .pipeline-search, .pipeline-controls .form-select { width: 100%; min-width: 0; } }
 
 /* Unified inbox — source color is structural: it follows a conversation from list to reader. */
