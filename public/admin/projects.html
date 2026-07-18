@@ -84,6 +84,11 @@
       <button class="btn-brand" id="new-project-btn">+ New Project</button>
     </div>
 
+    <section class="project-ledger mb-4" aria-label="Project financial summary">
+      <div class="project-ledger-heading"><span>Portfolio ledger</span><small>Grouped by currency; private admin figures</small></div>
+      <div class="project-ledger-values" id="project-ledger-values"><div><span>Project value</span><strong>—</strong></div><div><span>Actual cost</span><strong>—</strong></div><div><span>Profit</span><strong>—</strong></div><div><span>Hours logged</span><strong>0</strong></div></div>
+    </section>
+
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
@@ -134,6 +139,7 @@
             <th>Category</th>
             <th>Tags</th>
             <th>Status</th>
+            <th>Finances</th>
             <th style="width:12rem;">Overall progress</th>
             <th class="text-end pe-3">Actions</th>
           </tr>
@@ -209,6 +215,28 @@
               <label class="form-label">Overall progress <span class="text-muted-custom fw-normal" id="progress-percent-label">0%</span></label>
               <input type="range" class="form-range" id="progress_percent" min="0" max="100" step="5" value="0">
             </div>
+            <div class="col-12"><div class="project-finance-divider"><span>Project finances</span><small>Admin only — use the agreed project fee as project value.</small></div></div>
+            <div class="col-md-3">
+              <label class="form-label" for="finance_currency">Currency</label>
+              <select class="form-select" id="finance_currency"><option>GHS</option><option>USD</option><option>GBP</option><option>EUR</option></select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="contract_value">Project value</label>
+              <input class="form-control" id="contract_value" type="number" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="estimated_cost">Estimated cost</label>
+              <input class="form-control" id="estimated_cost" type="number" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="actual_cost">Actual cost</label>
+              <input class="form-control" id="actual_cost" type="number" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="hours_worked">Hours worked</label>
+              <input class="form-control" id="hours_worked" type="number" min="0" step="0.25" placeholder="0">
+            </div>
+            <div class="col-md-9"><div class="project-finance-preview" id="project-finance-preview"><span>Profit and margin will appear here as you enter the figures.</span></div></div>
             <div class="col-md-8">
               <label class="form-label">Cover image</label>
               <div class="d-flex align-items-center gap-2 mb-2">

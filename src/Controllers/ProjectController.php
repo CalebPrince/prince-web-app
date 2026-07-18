@@ -93,6 +93,7 @@ class ProjectController
         }
 
         $projects = self::attachTags($pdo, $stmt->fetchAll());
+        foreach ($projects as &$project) self::removePrivateFinance($project);
         Response::json($projects);
     }
 
@@ -109,6 +110,7 @@ class ProjectController
         }
 
         [$project] = self::attachTags($pdo, [$project]);
+        self::removePrivateFinance($project);
         Response::json($project);
     }
 
@@ -118,7 +120,9 @@ class ProjectController
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $stmt = $pdo->query('SELECT p.*, c.name AS client_name, c.email AS client_email FROM projects p LEFT JOIN clients c ON c.id=p.client_id ORDER BY p.sort_order ASC');
-        Response::json(self::attachTags($pdo, $stmt->fetchAll()));
+        $projects = self::attachTags($pdo, $stmt->fetchAll());
+        foreach ($projects as &$project) self::attachFinanceMetrics($project);
+        Response::json($projects);
     }
 
     /** POST /api/v1/admin/projects */
@@ -136,8 +140,8 @@ class ProjectController
         $pdo = Database::get();
         $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $clientId,
@@ -158,6 +162,11 @@ class ProjectController
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
             $data['delivery_status'] ?? 'on_track',
             max(0, min(100, (int) ($data['progress_percent'] ?? 0))),
+            self::moneyValue($data['contract_value'] ?? 0),
+            self::moneyValue($data['estimated_cost'] ?? 0),
+            self::moneyValue($data['actual_cost'] ?? 0),
+            self::hoursValue($data['hours_worked'] ?? 0),
+            self::currencyValue($data['finance_currency'] ?? 'GHS'),
         ]);
         $projectId = (int) $pdo->lastInsertId();
 
@@ -198,7 +207,8 @@ class ProjectController
         $stmt = $pdo->prepare(
             "UPDATE projects SET client_id=?, slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
-             outcome_metrics=?, testimonial_id=?, delivery_status=?, progress_percent=?, updated_at=datetime('now') WHERE id=?"
+             outcome_metrics=?, testimonial_id=?, delivery_status=?, progress_percent=?, contract_value=?, estimated_cost=?,
+             actual_cost=?, hours_worked=?, finance_currency=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $clientId,
@@ -219,6 +229,11 @@ class ProjectController
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
             $data['delivery_status'] ?? 'on_track',
             max(0, min(100, (int) ($data['progress_percent'] ?? 0))),
+            self::moneyValue($data['contract_value'] ?? 0),
+            self::moneyValue($data['estimated_cost'] ?? 0),
+            self::moneyValue($data['actual_cost'] ?? 0),
+            self::hoursValue($data['hours_worked'] ?? 0),
+            self::currencyValue($data['finance_currency'] ?? 'GHS'),
             $id,
         ]);
 
@@ -245,6 +260,47 @@ class ProjectController
         $stmt->execute([$id]);
         if (!$stmt->fetchColumn()) Response::error('Selected client no longer exists.', 422);
         return $id;
+    }
+
+    private static function moneyValue(mixed $value): int
+    {
+        if (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999999) {
+            Response::error('Project financial amounts must be valid positive numbers.', 422);
+        }
+        return (int) round((float) $value * 100);
+    }
+
+    private static function hoursValue(mixed $value): float
+    {
+        if (!is_numeric($value) || (float) $value < 0 || (float) $value > 100000) {
+            Response::error('Hours worked must be a valid positive number.', 422);
+        }
+        return round((float) $value, 2);
+    }
+
+    private static function currencyValue(mixed $value): string
+    {
+        $currency = strtoupper(trim((string) $value));
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) Response::error('Choose a valid project currency.', 422);
+        return $currency;
+    }
+
+    private static function attachFinanceMetrics(array &$project): void
+    {
+        $value = (int) ($project['contract_value'] ?? 0);
+        $actual = (int) ($project['actual_cost'] ?? 0);
+        $profit = $value - $actual;
+        $project['profit'] = $profit;
+        $project['margin_percent'] = $value > 0 ? round(($profit / $value) * 100, 1) : null;
+        $project['cost_variance'] = (int) ($project['estimated_cost'] ?? 0) - $actual;
+    }
+
+    private static function removePrivateFinance(array &$project): void
+    {
+        unset(
+            $project['contract_value'], $project['estimated_cost'], $project['actual_cost'],
+            $project['hours_worked'], $project['finance_currency']
+        );
     }
 
     private static function absoluteUrl(string $path): string

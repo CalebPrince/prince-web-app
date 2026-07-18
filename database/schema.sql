@@ -36,6 +36,11 @@ CREATE TABLE IF NOT EXISTS projects (
   -- project list. Independent of delivery_status — a project can be at 80%
   -- and still "at risk" if what's left is the hard part.
   progress_percent INTEGER NOT NULL DEFAULT 0 CHECK (progress_percent BETWEEN 0 AND 100),
+  contract_value INTEGER NOT NULL DEFAULT 0,
+  estimated_cost INTEGER NOT NULL DEFAULT 0,
+  actual_cost INTEGER NOT NULL DEFAULT 0,
+  hours_worked REAL NOT NULL DEFAULT 0,
+  finance_currency TEXT NOT NULL DEFAULT 'GHS',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

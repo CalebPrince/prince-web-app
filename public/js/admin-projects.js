@@ -21,6 +21,42 @@ const DELIVERY_STATUS_PILL_CLASS = {
   due_this_month: "chat-message",
 };
 
+function projectMoney(amount, currency) {
+  try { return new Intl.NumberFormat("en-GH", { style: "currency", currency: currency || "GHS" }).format(Number(amount || 0) / 100); }
+  catch (_) { return `${currency || "GHS"} ${(Number(amount || 0) / 100).toFixed(2)}`; }
+}
+
+function renderFinanceSummary(projects) {
+  const groups = {};
+  let hours = 0;
+  projects.forEach(project => {
+    const currency = project.finance_currency || "GHS";
+    if (!groups[currency]) groups[currency] = { value: 0, cost: 0, profit: 0 };
+    groups[currency].value += Number(project.contract_value || 0);
+    groups[currency].cost += Number(project.actual_cost || 0);
+    groups[currency].profit += Number(project.profit || 0);
+    hours += Number(project.hours_worked || 0);
+  });
+  const currencies = Object.entries(groups);
+  const renderAmounts = key => currencies.length ? currencies.map(([currency, totals]) => `<small>${projectMoney(totals[key], currency)}</small>`).join("") : "—";
+  document.getElementById("project-ledger-values").innerHTML = `
+    <div><span>Project value</span><strong>${renderAmounts("value")}</strong></div>
+    <div><span>Actual cost</span><strong>${renderAmounts("cost")}</strong></div>
+    <div><span>Profit</span><strong>${renderAmounts("profit")}</strong></div>
+    <div><span>Hours logged</span><strong>${hours.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong></div>`;
+}
+
+function updateFinancePreview() {
+  const currency = document.getElementById("finance_currency").value || "GHS";
+  const value = Number(document.getElementById("contract_value").value || 0) * 100;
+  const estimated = Number(document.getElementById("estimated_cost").value || 0) * 100;
+  const actual = Number(document.getElementById("actual_cost").value || 0) * 100;
+  const profit = value - actual;
+  const margin = value > 0 ? `${((profit / value) * 100).toFixed(1)}% margin` : "Margin needs a project value";
+  const variance = estimated - actual;
+  document.getElementById("project-finance-preview").innerHTML = `<strong>${projectMoney(profit, currency)} profit</strong> · ${margin} · ${projectMoney(Math.abs(variance), currency)} ${variance >= 0 ? "under estimated cost" : "over estimated cost"}`;
+}
+
 function renderStatusCounts(projects) {
   const counts = { on_track: 0, needs_attention: 0, at_risk: 0, due_this_month: 0 };
   projects.forEach(p => {
@@ -104,7 +140,7 @@ function renderProjectsTable(projects) {
   currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
     return;
   }
 
@@ -121,6 +157,10 @@ function renderProjectsTable(projects) {
         <span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span>
         ${p.is_featured ? '<span class="status-pill published ms-1">&#9733; Featured</span>' : ""}
         <span class="status-pill ${DELIVERY_STATUS_PILL_CLASS[p.delivery_status] || "draft"} ms-1">${DELIVERY_STATUS_LABEL[p.delivery_status] || "On track"}</span>
+      </td>
+      <td class="project-finance-cell">
+        <strong class="${Number(p.profit || 0) < 0 ? "negative" : ""}">${projectMoney(p.profit, p.finance_currency)}</strong>
+        <small>${p.margin_percent === null ? "No value set" : `${p.margin_percent}% margin`} · ${Number(p.hours_worked || 0).toLocaleString()}h</small>
       </td>
       <td>
         <div class="d-flex align-items-center gap-2">
@@ -185,6 +225,7 @@ async function loadProjects() {
   const response = await api.get("/api/v1/admin/projects");
   const projects = Array.isArray(response) ? response : [];
   renderStatusCounts(projects);
+  renderFinanceSummary(projects);
   renderProjectsTable(projects);
 }
 
@@ -219,6 +260,9 @@ function openNewModal() {
   document.getElementById("delivery_status").value = "on_track";
   document.getElementById("progress_percent").value = 0;
   document.getElementById("progress-percent-label").textContent = "0%";
+  document.getElementById("finance_currency").value = "GHS";
+  ["contract_value", "estimated_cost", "actual_cost", "hours_worked"].forEach(id => { document.getElementById(id).value = ""; });
+  updateFinancePreview();
   setCoverPreview(null);
   galleryPaths = [];
   renderGalleryList();
@@ -247,6 +291,12 @@ function openEditModal(project) {
   document.getElementById("delivery_status").value = project.delivery_status || "on_track";
   document.getElementById("progress_percent").value = project.progress_percent || 0;
   document.getElementById("progress-percent-label").textContent = `${project.progress_percent || 0}%`;
+  document.getElementById("finance_currency").value = project.finance_currency || "GHS";
+  document.getElementById("contract_value").value = Number(project.contract_value || 0) / 100 || "";
+  document.getElementById("estimated_cost").value = Number(project.estimated_cost || 0) / 100 || "";
+  document.getElementById("actual_cost").value = Number(project.actual_cost || 0) / 100 || "";
+  document.getElementById("hours_worked").value = Number(project.hours_worked || 0) || "";
+  updateFinancePreview();
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
   setCoverPreview(project.cover_image_path);
@@ -278,6 +328,11 @@ async function saveProject() {
     client_id: document.getElementById("client_id").value || null,
     delivery_status: document.getElementById("delivery_status").value,
     progress_percent: Number(document.getElementById("progress_percent").value) || 0,
+    finance_currency: document.getElementById("finance_currency").value,
+    contract_value: Number(document.getElementById("contract_value").value) || 0,
+    estimated_cost: Number(document.getElementById("estimated_cost").value) || 0,
+    actual_cost: Number(document.getElementById("actual_cost").value) || 0,
+    hours_worked: Number(document.getElementById("hours_worked").value) || 0,
   };
 
   try {
@@ -322,6 +377,9 @@ async function deleteProject(id) {
   });
   document.getElementById("progress_percent").addEventListener("input", (e) => {
     document.getElementById("progress-percent-label").textContent = `${e.target.value}%`;
+  });
+  ["finance_currency", "contract_value", "estimated_cost", "actual_cost"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateFinancePreview);
   });
 
   document.getElementById("cover-upload-input").addEventListener("change", async (e) => {

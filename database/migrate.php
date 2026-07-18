@@ -958,4 +958,11 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_admin_tasks_status_due ON admin_tasks (status, due_at)');
 
+$projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');
+if (!in_array('contract_value', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN contract_value INTEGER NOT NULL DEFAULT 0');
+if (!in_array('estimated_cost', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN estimated_cost INTEGER NOT NULL DEFAULT 0');
+if (!in_array('actual_cost', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN actual_cost INTEGER NOT NULL DEFAULT 0');
+if (!in_array('hours_worked', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN hours_worked REAL NOT NULL DEFAULT 0');
+if (!in_array('finance_currency', $projectColumns, true)) $pdo->exec("ALTER TABLE projects ADD COLUMN finance_currency TEXT NOT NULL DEFAULT 'GHS'");
+
 echo "Schema applied.\n";
