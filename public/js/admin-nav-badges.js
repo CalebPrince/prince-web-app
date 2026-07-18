@@ -31,6 +31,19 @@
   }
   injectNotificationsNav();
 
+  function initAdminSearch() {
+    const controls = document.querySelector('.admin-sidebar .brand')?.parentElement?.querySelector(':scope > .d-flex:last-child');
+    if (!controls || document.getElementById('admin-global-search-btn')) return;
+    const btn = document.createElement('button'); btn.type='button'; btn.id='admin-global-search-btn'; btn.className='notif-bell'; btn.setAttribute('aria-label','Search admin'); btn.innerHTML='<i class="bi bi-search"></i>'; controls.insertBefore(btn,controls.firstChild);
+    const shell=document.createElement('div'); shell.className='admin-search-shell d-none'; shell.id='admin-search-shell'; shell.innerHTML='<div class="admin-search-panel" role="dialog" aria-modal="true" aria-label="Search admin"><label class="admin-search-input"><i class="bi bi-search"></i><input id="admin-global-search-input" type="search" placeholder="Search people, messages, bookings…" autocomplete="off"><kbd>Esc</kbd></label><div id="admin-search-results" class="admin-search-results"><div class="admin-search-empty">Type at least two characters to search the CRM.</div></div><footer><span><kbd>Ctrl</kbd> <kbd>K</kbd> to open</span><span>Results open their admin page</span></footer></div>';
+    document.body.appendChild(shell); const input=shell.querySelector('input'); const results=shell.querySelector('#admin-search-results'); let timer;
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const open=()=>{shell.classList.remove('d-none');setTimeout(()=>input.focus(),0);}; const close=()=>{shell.classList.add('d-none');}; btn.addEventListener('click',open); shell.addEventListener('click',e=>{if(e.target===shell)close();});
+    document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}if(e.key==='Escape'&&!shell.classList.contains('d-none'))close();});
+    input.addEventListener('input',()=>{clearTimeout(timer);const q=input.value.trim();if(q.length<2){results.innerHTML='<div class="admin-search-empty">Type at least two characters to search the CRM.</div>';return;}results.innerHTML='<div class="admin-search-empty">Searching…</div>';timer=setTimeout(async()=>{try{const data=await api.get(`/api/v1/admin/search?q=${encodeURIComponent(q)}`);results.innerHTML=(data.results||[]).map(r=>`<a class="admin-search-result" href="${esc(r.href)}"><span class="admin-search-type">${esc(r.type)}</span><span><strong>${esc(r.title)}</strong><small>${esc(r.detail)}</small></span><i class="bi bi-arrow-up-right"></i></a>`).join('')||'<div class="admin-search-empty">No matching CRM records.</div>';}catch(err){results.innerHTML=`<div class="admin-search-empty">${esc(err.message||'Search is unavailable.')}</div>`;}},220);});
+  }
+  initAdminSearch();
+
   window.AdminPagination = window.AdminPagination || {
     pageSize: ADMIN_PAGE_SIZE,
     state: new Map(),

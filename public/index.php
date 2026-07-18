@@ -138,6 +138,7 @@ $router->get('/api/v1/testimonials', [TestimonialController::class, 'publicList'
 $router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'getByToken']);
 $router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'submit']);
 $router->get('/api/v1/search', [SearchController::class, 'search']);
+$router->get('/api/v1/admin/search', [SearchController::class, 'adminSearch']);
 $router->get('/api/v1/integrations/events', [IntegrationController::class, 'events']);
 $router->post('/api/v1/agents/beacon/draft', [BeaconController::class, 'draft']);
 $router->post('/api/v1/agents/nurturer/draft', [NurturerController::class, 'draft']);
