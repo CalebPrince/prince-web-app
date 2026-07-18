@@ -144,7 +144,7 @@
       const inquiryItems = inquiries
         .slice(0, 5)
         .map(i => notifItem(
-          i.type === "project_request" ? "/admin/quote-requests.html" : "/admin/inquiries.html",
+          (i.type === "project_request" ? "/admin/quote-requests.html" : "/admin/inquiries.html") + `?open=${i.id}`,
           i.name || i.email,
           i.message,
           timeAgo(i.created_at)
@@ -153,7 +153,7 @@
       const chatItems = unseenChats
         .slice(0, 5)
         .map(c => notifItem(
-          "/admin/chats.html",
+          `/admin/chats.html?open=${c.id}`,
           c.client_name || c.client_email || `Chat #${c.id}`,
           "New live chat activity",
           timeAgo(c.updated_at || c.created_at)
@@ -233,6 +233,11 @@
       setBadge("notif-bell-badge", unread + unseen);
     } catch (_) { /* leave badges as-is on failure */ }
   }
+
+  // Record pages call this after read/archive/delete actions so the bell and
+  // sidebar badges never display stale counts until the next polling cycle.
+  window.refreshAdminNotifications = refreshNavBadges;
+  window.addEventListener("admin:notifications-changed", refreshNavBadges);
 
   function paginateDomContainer(container, key, itemSelector, anchor) {
     if (!container || container.dataset.skipAutoPagination === "true") return;

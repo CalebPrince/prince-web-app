@@ -68,6 +68,7 @@ function applyFilter() {
     btn.addEventListener("click", async () => {
       await api.patch(`/api/v1/admin/chats/${btn.dataset.id}`, { admin_seen: true });
       await loadChats();
+      window.dispatchEvent(new Event("admin:notifications-changed"));
     });
   });
 
@@ -76,6 +77,7 @@ function applyFilter() {
       if (!confirm("Delete this conversation permanently? This can't be undone.")) return;
       await api.delete(`/api/v1/admin/chats/${btn.dataset.id}`);
       await loadChats();
+      window.dispatchEvent(new Event("admin:notifications-changed"));
     });
   });
 }
@@ -126,5 +128,19 @@ async function loadStats() {
   });
 
   await loadChats();
+  const requestedId = Number(new URLSearchParams(location.search).get("open"));
+  const requestedChat = allChats.find(chat => Number(chat.id) === requestedId);
+  if (requestedChat) {
+    if (!requestedChat.admin_seen) {
+      await api.patch(`/api/v1/admin/chats/${requestedId}`, { admin_seen: true });
+      requestedChat.admin_seen = true;
+      applyFilter();
+      window.dispatchEvent(new Event("admin:notifications-changed"));
+    }
+    const card = document.querySelector(`.admin-card[data-id="${requestedId}"]`);
+    card?.scrollIntoView({ behavior: "smooth", block: "center" });
+    card?.querySelector("details")?.setAttribute("open", "");
+    card?.classList.add("notification-focus");
+  }
   await loadStats();
 })();

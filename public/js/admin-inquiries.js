@@ -110,6 +110,7 @@ async function selectInboxInquiry(id) {
   if (row && row.status === "unread") {
     await api.patch(`/api/v1/admin/inquiries/${id}`, { status: "read" });
     row.status = "read";
+    window.dispatchEvent(new Event("admin:notifications-changed"));
   }
   renderInboxList();
   renderInboxReader();
@@ -130,11 +131,14 @@ async function inboxAction(action) {
   const next = visibleInboxRows()[0];
   activeInquiryId = next ? Number(next.id) : null;
   updateInboxCounts(); renderInboxList(); renderInboxReader();
+  window.dispatchEvent(new Event("admin:notifications-changed"));
 }
 
 async function initInbox() {
   inboxRows = await api.get("/api/v1/admin/inquiries?type=contact");
   updateInboxCounts();
+  const requestedId = Number(new URLSearchParams(location.search).get("open"));
+  if (requestedId && inboxRows.some(row => Number(row.id) === requestedId)) await selectInboxInquiry(requestedId);
   document.querySelectorAll(".inquiry-tab").forEach(tab => tab.addEventListener("click", () => {
     inboxStatus = tab.dataset.status;
     document.querySelectorAll(".inquiry-tab").forEach(item => item.classList.toggle("active", item === tab));
@@ -179,6 +183,7 @@ async function bulkSetStatus(status) {
 
   await Promise.all(ids.map(id => api.patch(`/api/v1/admin/inquiries/${id}`, { status })));
   await loadInquiries(document.getElementById("status-filter").value);
+  window.dispatchEvent(new Event("admin:notifications-changed"));
 }
 
 function notifyBadge(i) {
@@ -228,6 +233,13 @@ async function loadInquiries(status = "") {
   if (stageFilter && stageFilter.value) params.set("pipeline_stage", stageFilter.value);
   const query = params.toString() ? `?${params.toString()}` : "";
   const inquiries = await api.get(`/api/v1/admin/inquiries${query}`);
+  const requestedId = Number(new URLSearchParams(location.search).get("open"));
+  const requested = inquiries.find(item => Number(item.id) === requestedId);
+  if (requested && requested.status === "unread") {
+    await api.patch(`/api/v1/admin/inquiries/${requestedId}`, { status: "read" });
+    requested.status = "read";
+    window.dispatchEvent(new Event("admin:notifications-changed"));
+  }
   const list = document.getElementById("inquiries-list");
   const empty = document.getElementById("empty-state");
 
@@ -283,6 +295,7 @@ async function loadInquiries(status = "") {
       btn.addEventListener("click", async () => {
         await api.patch(`/api/v1/admin/inquiries/${btn.dataset.id}`, { status: btn.dataset.status });
         await loadInquiries(document.getElementById("status-filter").value);
+        window.dispatchEvent(new Event("admin:notifications-changed"));
       });
     });
 
@@ -291,6 +304,7 @@ async function loadInquiries(status = "") {
         if (!confirm("Delete this permanently? This can't be undone.")) return;
         await api.delete(`/api/v1/admin/inquiries/${btn.dataset.id}`);
         await loadInquiries(document.getElementById("status-filter").value);
+        window.dispatchEvent(new Event("admin:notifications-changed"));
       });
     });
 
