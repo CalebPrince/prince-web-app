@@ -774,4 +774,12 @@ if ((int) $pdo->query('SELECT COUNT(*) FROM drip_steps')->fetchColumn() === 0) {
     echo "Seeded 3 drip steps (inactive).\n";
 }
 
+// Service category on proposals — lets Reports break revenue down by service
+// line (Websites / Mobile apps / Brand systems / Strategy). Nullable: older
+// proposals stay uncategorized rather than being force-guessed.
+$proposalColumns = array_column($pdo->query('PRAGMA table_info(proposals)')->fetchAll(), 'name');
+if (!in_array('service_category', $proposalColumns, true)) {
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN service_category TEXT');
+}
+
 echo "Schema applied.\n";

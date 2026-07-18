@@ -9,6 +9,14 @@ const STATUS_CLASS = {
   declined: 'flagged',
 };
 
+const SERVICE_CATEGORY_LABEL = {
+  website: 'Websites',
+  mobile_app: 'Mobile apps',
+  brand_system: 'Brand systems',
+  strategy: 'Strategy',
+  other: 'Other',
+};
+
 function formatAmount(subunits, currency) {
   return `${currency} ${(Number(subunits || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
@@ -83,7 +91,7 @@ async function loadProposals() {
     return `
       <tr>
         <td>
-          <div class="fw-semibold">${escapeHtml(p.title)}</div>
+          <div class="fw-semibold">${escapeHtml(p.title)}${p.service_category ? ` <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal">${escapeHtml(SERVICE_CATEGORY_LABEL[p.service_category] || p.service_category)}</span>` : ''}</div>
           <div class="small text-muted-custom">${new Date(p.created_at).toLocaleString()}</div>
         </td>
         <td>
@@ -207,6 +215,7 @@ async function openEditProposal(id) {
     document.getElementById('proposal-scope').value = proposal.scope || '';
     document.getElementById('proposal-timeline').value = proposal.timeline || '';
     document.getElementById('proposal-terms').value = proposal.terms || '';
+    document.getElementById('proposal-service-category').value = proposal.service_category || '';
 
     const wrap = document.getElementById('milestones-wrap');
     wrap.innerHTML = '';
@@ -317,6 +326,7 @@ async function createProposal(e) {
     client_email: document.getElementById('client-email').value.trim(),
     title: document.getElementById('proposal-title').value.trim(),
     currency: document.getElementById('proposal-currency').value,
+    service_category: document.getElementById('proposal-service-category').value,
     scope: document.getElementById('proposal-scope').value.trim(),
     timeline: document.getElementById('proposal-timeline').value.trim(),
     terms: document.getElementById('proposal-terms').value.trim(),

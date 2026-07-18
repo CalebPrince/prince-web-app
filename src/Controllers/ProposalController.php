@@ -16,6 +16,9 @@ use App\Support\Settings;
 
 class ProposalController
 {
+    /** Service lines Reports breaks revenue down by — keep in sync with the <select> in proposals.html. */
+    private const SERVICE_CATEGORIES = ['website', 'mobile_app', 'brand_system', 'strategy', 'other'];
+
     /**
      * DELETE /api/v1/admin/proposals/{id} — also removes its milestones
      * (ON DELETE CASCADE). The payment_links a milestone generated, and any
@@ -150,6 +153,7 @@ class ProposalController
         $currency = strtoupper(trim((string) ($data['currency'] ?? ''))) ?: (Settings::get('pricing_currency') ?: 'GHS');
         $milestones = is_array($data['milestones'] ?? null) ? $data['milestones'] : [];
         $inquiryId = !empty($data['inquiry_id']) ? (int) $data['inquiry_id'] : null;
+        $serviceCategory = trim((string) ($data['service_category'] ?? '')) ?: null;
 
         $errors = [];
         if ($clientName === '') $errors[] = 'Client name is required.';
@@ -158,6 +162,9 @@ class ProposalController
         if ($scope === '') $errors[] = 'Scope is required.';
         if (!in_array($currency, ['GHS', 'NGN', 'USD', 'ZAR'], true)) $errors[] = 'Currency is not supported.';
         if (!$milestones) $errors[] = 'Add at least one payment milestone.';
+        if ($serviceCategory !== null && !in_array($serviceCategory, self::SERVICE_CATEGORIES, true)) {
+            $errors[] = 'Service category is not valid.';
+        }
 
         $cleanMilestones = [];
         $totalAmount = 0;
@@ -194,8 +201,8 @@ class ProposalController
         $pdo->beginTransaction();
         try {
             $pdo->prepare(
-                'INSERT INTO proposals (token, inquiry_id, client_name, client_email, title, scope, timeline, total_amount, currency, terms, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO proposals (token, inquiry_id, client_name, client_email, title, scope, timeline, total_amount, currency, terms, status, service_category)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
                 $token,
                 $inquiryId,
@@ -208,6 +215,7 @@ class ProposalController
                 $currency,
                 $terms ?: null,
                 'sent',
+                $serviceCategory,
             ]);
             $proposalId = (int) $pdo->lastInsertId();
 
@@ -286,6 +294,7 @@ class ProposalController
         $currency = strtoupper(trim((string) ($data['currency'] ?? ''))) ?: (Settings::get('pricing_currency') ?: 'GHS');
         $milestones = is_array($data['milestones'] ?? null) ? $data['milestones'] : [];
         $inquiryId = !empty($data['inquiry_id']) ? (int) $data['inquiry_id'] : null;
+        $serviceCategory = trim((string) ($data['service_category'] ?? '')) ?: null;
 
         $errors = [];
         if ($clientName === '') $errors[] = 'Client name is required.';
@@ -294,6 +303,9 @@ class ProposalController
         if ($scope === '') $errors[] = 'Scope is required.';
         if (!in_array($currency, ['GHS', 'NGN', 'USD', 'ZAR'], true)) $errors[] = 'Currency is not supported.';
         if (!$milestones) $errors[] = 'Add at least one payment milestone.';
+        if ($serviceCategory !== null && !in_array($serviceCategory, self::SERVICE_CATEGORIES, true)) {
+            $errors[] = 'Service category is not valid.';
+        }
 
         $cleanMilestones = [];
         $totalAmount = 0;
@@ -329,7 +341,7 @@ class ProposalController
         try {
             $pdo->prepare(
                 "UPDATE proposals SET inquiry_id = ?, client_name = ?, client_email = ?, title = ?, scope = ?,
-                 timeline = ?, total_amount = ?, currency = ?, terms = ?, updated_at = datetime('now') WHERE id = ?"
+                 timeline = ?, total_amount = ?, currency = ?, terms = ?, service_category = ?, updated_at = datetime('now') WHERE id = ?"
             )->execute([
                 $inquiryId,
                 $clientName,
@@ -340,6 +352,7 @@ class ProposalController
                 $totalAmount,
                 $currency,
                 $terms ?: null,
+                $serviceCategory,
                 $id,
             ]);
 

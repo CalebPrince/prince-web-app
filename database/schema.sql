@@ -177,7 +177,8 @@ CREATE TABLE IF NOT EXISTS proposals (
   accepted_at TEXT,
   accepted_by_name TEXT,
   accepted_ip TEXT,
-  accepted_user_agent TEXT
+  accepted_user_agent TEXT,
+  service_category TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_proposals_status_created ON proposals (status, created_at);
 

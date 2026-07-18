@@ -62,6 +62,8 @@ use App\Controllers\MarketingLeadController;
 use App\Controllers\NewsletterController;
 use App\Controllers\NurturerController;
 use App\Controllers\PaymentController;
+use App\Controllers\ReportController;
+use App\Controllers\TeamController;
 use App\Controllers\ContentAgentController;
 use App\Controllers\ContentStudioController;
 use App\Controllers\ProposalAgentController;
@@ -249,6 +251,8 @@ $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
 $router->get('/api/v1/admin/beacon-spend', [BeaconController::class, 'adminSpend']);
 $router->get('/api/v1/admin/nurturer-new-leads', [NurturerController::class, 'adminNewLeads']);
+$router->get('/api/v1/admin/reports/summary', [ReportController::class, 'summary']);
+$router->get('/api/v1/admin/team', [TeamController::class, 'index']);
 $router->get('/api/v1/admin/automations', [AutomationController::class, 'index']);
 $router->post('/api/v1/admin/automations', [AutomationController::class, 'store']);
 $router->put('/api/v1/admin/automations/{id}', [AutomationController::class, 'update']);
