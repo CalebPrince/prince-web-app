@@ -48,7 +48,7 @@ async function loadAppointments(status = 'confirmed') {
     });
   };
 
-  AdminPagination.page('appointments', filtered, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
+  AdminPagination.page('appointments', filtered, renderPage, { anchor: document.getElementById('pagination') });
 }
 
 (async function init() {

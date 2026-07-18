@@ -68,7 +68,7 @@ async function loadSubscribers() {
     updateBulkToolbar();
   };
 
-  AdminPagination.page('newsletter-subscribers', rows, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
+  AdminPagination.page('newsletter-subscribers', rows, renderPage, { anchor: document.getElementById('pagination') });
 }
 
 document.getElementById('select-all-checkbox').addEventListener('change', (e) => {

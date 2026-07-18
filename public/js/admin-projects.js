@@ -176,7 +176,7 @@ function renderProjectsTable(projects) {
     });
   };
 
-  AdminPagination.page('projects', projects, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
+  AdminPagination.page('projects', projects, renderPage, { anchor: document.getElementById('pagination') });
 }
 
 async function loadProjects() {

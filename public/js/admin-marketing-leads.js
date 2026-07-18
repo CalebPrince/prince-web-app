@@ -152,7 +152,7 @@ async function loadLeads() {
   });
   };
 
-  AdminPagination.page('marketing-leads', rows, renderPage, { anchor: tbody.closest('.table-responsive') || tbody.closest('table') });
+  AdminPagination.page('marketing-leads', rows, renderPage, { anchor: document.getElementById('pagination') });
 }
 
 function renderDiscoverResults() {
