@@ -84,17 +84,24 @@
       <a href="/admin/projects.html" class="btn-brand text-decoration-none">+ New Project</a>
     </div>
 
+    <div class="dashboard-mode-switch mb-4" role="tablist" aria-label="Dashboard summary mode">
+      <button type="button" role="tab" data-dashboard-mode="operational"><i class="bi bi-kanban"></i><span>Operational<small>Delivery and action</small></span></button>
+      <button type="button" role="tab" data-dashboard-mode="sales"><i class="bi bi-funnel"></i><span>Sales<small>Leads and deals</small></span></button>
+      <button type="button" role="tab" data-dashboard-mode="financial"><i class="bi bi-cash-stack"></i><span>Financial<small>Revenue and margin</small></span></button>
+    </div>
+    <section class="dashboard-mode-summary mb-4" id="dashboard-mode-summary" aria-live="polite"></section>
+
     <div id="chat-feedback-banner" class="alert alert-primary py-2 small d-none">
       <a href="/admin/chats.html" class="alert-link" id="chat-feedback-text"></a>
     </div>
     <div id="webhook-warning" class="alert alert-warning py-2 small d-none"></div>
 
-    <section class="dashboard-attention d-none" id="dashboard-attention" aria-labelledby="dashboard-attention-title">
+    <section class="dashboard-attention d-none dashboard-mode-section" data-visible-mode="operational" id="dashboard-attention" aria-labelledby="dashboard-attention-title">
       <header><div><p class="eyebrow mb-1">Action queue</p><h4 id="dashboard-attention-title">Needs attention</h4></div><a href="/admin/notifications.html">View all <i class="bi bi-arrow-right"></i></a></header>
       <div class="dashboard-attention-list" id="dashboard-attention-list"></div>
     </section>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 dashboard-mode-section" data-visible-mode="operational">
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-kanban"></i></div>
@@ -148,7 +155,7 @@
     </div>
 
     <div class="row g-4">
-      <div class="col-lg-7">
+      <div class="col-lg-7 dashboard-mode-section" data-visible-mode="sales">
         <div class="admin-card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0"><i class="bi bi-inbox me-2" style="color: var(--section-leads);"></i>Recent inquiries</h5>
@@ -158,7 +165,7 @@
           <div id="inquiries-empty" class="text-muted-custom small d-none">No inquiries yet.</div>
         </div>
       </div>
-      <div class="col-lg-5">
+      <div class="col-lg-5 dashboard-mode-section" data-visible-mode="operational">
         <div class="admin-card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0"><i class="bi bi-kanban me-2" style="color: var(--section-content);"></i>Draft projects</h5>
@@ -171,7 +178,7 @@
     </div>
 
     <div class="row g-4 mt-1">
-      <div class="col-lg-7">
+      <div class="col-lg-7 dashboard-mode-section" data-visible-mode="operational">
         <div class="admin-card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0"><i class="bi bi-calendar-check me-2" style="color: var(--section-money);"></i>Upcoming bookings</h5>
@@ -181,7 +188,7 @@
           <div id="appointments-empty" class="text-muted-custom small d-none">Nothing booked in the next few days.</div>
         </div>
       </div>
-      <div class="col-lg-5">
+      <div class="col-lg-5 dashboard-mode-section" data-visible-mode="financial">
         <div class="admin-card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0"><i class="bi bi-credit-card me-2" style="color: var(--section-money);"></i>Recent payments</h5>
@@ -193,7 +200,7 @@
       </div>
     </div>
 
-    <div class="row g-4 mt-1">
+    <div class="row g-4 mt-1 dashboard-mode-section" data-visible-mode="operational">
       <div class="col-12">
         <div class="admin-card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">

@@ -2,6 +2,57 @@ function formatAmount(subunits, currency) {
   return `${currency} ${(subunits / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
+const DASHBOARD_MODE_COPY = {
+  operational: 'Delivery health, workload, and immediate action.',
+  sales: 'Lead movement, open opportunities, and deals won.',
+  financial: 'Collected revenue, receivables, targets, and project profit.',
+};
+
+function summaryMoney(rows, empty = '—') {
+  return rows?.length ? rows.map(row => formatAmount(row.total, row.currency)).join('<small> + </small>') : empty;
+}
+
+function renderModeSummary(mode, summaries) {
+  const data = summaries?.[mode] || {};
+  const cards = mode === 'operational' ? [
+    ['Active projects', data.active_projects || 0, 'Configured delivery work'],
+    ['Overdue projects', data.overdue_projects || 0, 'Past project deadline'],
+    ['Late milestones', data.overdue_milestones || 0, 'Incomplete and overdue'],
+    ['Open tasks', data.open_tasks || 0, 'Admin task queue'],
+  ] : mode === 'sales' ? [
+    ['Open pipeline', data.open_pipeline || 0, 'Not won or lost'],
+    ['New leads · 30 days', data.new_leads_30_days || 0, 'Recent inquiries'],
+    ['Deals won this month', data.won_this_month || 0, 'Accepted proposals'],
+    ['Open proposal value', summaryMoney(data.open_proposal_value), 'Draft and sent proposals'],
+  ] : [
+    ['Revenue this month', summaryMoney(data.month_revenue), 'Successful Paystack payments'],
+    ['Outstanding invoices', summaryMoney(data.outstanding_invoices, 'Nothing due'), 'Sent and unpaid'],
+    ['Portfolio profit', summaryMoney(data.portfolio_profit), 'Project value less actual cost'],
+    ['Monthly target', data.monthly_target?.total ? formatAmount(data.monthly_target.total, data.monthly_target.currency) : 'Not set', 'Configured in Reports'],
+  ];
+  document.getElementById('dashboard-mode-summary').innerHTML = `<header><span>${mode} view</span><p>${DASHBOARD_MODE_COPY[mode]}</p></header>${cards.map(([label,value,note]) => `<div><span>${label}</span><strong>${value}</strong><small>${note}</small></div>`).join('')}`;
+}
+
+function applyDashboardMode(mode, summaries, userEmail) {
+  if (!DASHBOARD_MODE_COPY[mode]) mode = 'operational';
+  localStorage.setItem('admin_dashboard_mode', mode);
+  document.querySelectorAll('[data-dashboard-mode]').forEach(button => {
+    const active = button.dataset.dashboardMode === mode;
+    button.classList.toggle('active', active); button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('.dashboard-mode-section').forEach(section => {
+    const hasContent = section.id !== 'dashboard-attention' || section.dataset.hasItems === '1';
+    section.classList.toggle('d-none', section.dataset.visibleMode !== mode || !hasContent);
+  });
+  document.querySelectorAll('.row').forEach(row => {
+    const modeChildren = [...row.children].filter(child => child.classList.contains('dashboard-mode-section'));
+    if (!modeChildren.length) return;
+    row.classList.toggle('dashboard-single-mode', modeChildren.filter(child => !child.classList.contains('d-none')).length === 1);
+  });
+  document.getElementById('welcome-line').textContent = `Signed in as ${userEmail} — ${DASHBOARD_MODE_COPY[mode]}`;
+  renderModeSummary(mode, summaries);
+}
+
 function renderStats(data) {
   document.getElementById("stat-published").textContent = data.projects.published;
   document.getElementById("stat-published-sub").textContent =
@@ -118,6 +169,7 @@ function renderAttention(items) {
   const priority = { danger: 0, warning: 1, info: 2, success: 3 };
   const rows = [...(items || [])].sort((a,b)=>(priority[a.level]??2)-(priority[b.level]??2)).slice(0,6);
   const shell = document.getElementById('dashboard-attention');
+  shell.dataset.hasItems = rows.length ? '1' : '0';
   shell.classList.toggle('d-none', rows.length === 0);
   const list = document.getElementById('dashboard-attention-list');
   list.innerHTML = rows.map(item => `<a class="dashboard-attention-item attention-${escapeHtml(item.level)}" href="${escapeHtml(item.href)}" data-notification-key="${escapeHtml(item.key)}"><span class="dashboard-attention-icon"><i class="bi ${ATTENTION_ICONS[item.type]||'bi-bell'}"></i></span><span class="dashboard-attention-copy"><small>${escapeHtml(item.type)}</small><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></span><i class="bi bi-chevron-right"></i></a>`).join('');
@@ -140,4 +192,10 @@ function renderAttention(items) {
   renderRecentPayments(data.recent_payments);
   renderRateLimits(data.rate_limit);
   renderAttention(notifications.items);
+  let dashboardMode = localStorage.getItem('admin_dashboard_mode') || 'operational';
+  document.querySelectorAll('[data-dashboard-mode]').forEach(button => button.addEventListener('click', () => {
+    dashboardMode = button.dataset.dashboardMode;
+    applyDashboardMode(dashboardMode, data.mode_summaries, user.email);
+  }));
+  applyDashboardMode(dashboardMode, data.mode_summaries, user.email);
 })();

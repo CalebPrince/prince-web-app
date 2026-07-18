@@ -97,6 +97,22 @@ class DashboardController
              FROM payments ORDER BY created_at DESC LIMIT 5'
         )->fetchAll();
 
+        $activeProjects = (int) $pdo->query("SELECT COUNT(*) FROM projects p WHERE p.progress_percent<100 AND (p.progress_percent>0 OR p.deadline IS NOT NULL OR p.assigned_agent_key IS NOT NULL OR EXISTS(SELECT 1 FROM project_milestones pm WHERE pm.project_id=p.id))")->fetchColumn();
+        $overdueProjects = (int) $pdo->query("SELECT COUNT(*) FROM projects WHERE progress_percent<100 AND deadline IS NOT NULL AND deadline<date('now')")->fetchColumn();
+        $overdueMilestones = (int) $pdo->query("SELECT COUNT(*) FROM project_milestones WHERE is_completed=0 AND due_date IS NOT NULL AND due_date<date('now')")->fetchColumn();
+        $openTasks = (int) $pdo->query("SELECT COUNT(*) FROM admin_tasks WHERE status='open'")->fetchColumn();
+
+        $openPipeline = (int) $pdo->query("SELECT COUNT(*) FROM pipeline_leads WHERE stage NOT IN ('won','lost')")->fetchColumn();
+        $wonThisMonth = (int) $pdo->query("SELECT COUNT(*) FROM proposals WHERE status='accepted' AND strftime('%Y-%m',accepted_at)=strftime('%Y-%m','now')")->fetchColumn();
+        $openProposalValue = $pdo->query("SELECT currency,SUM(total_amount) AS total FROM proposals WHERE status IN ('draft','sent') GROUP BY currency")->fetchAll();
+
+        $monthRevenue = $pdo->query("SELECT currency,SUM(amount) AS total FROM payments WHERE status='success' AND strftime('%Y-%m',created_at)=strftime('%Y-%m','now') GROUP BY currency")->fetchAll();
+        $outstandingInvoices = $pdo->query("SELECT currency,SUM(total) AS total FROM (SELECT i.id,i.currency,CAST(ROUND(COALESCE(SUM(ii.quantity*ii.unit_amount),0)) AS INTEGER) AS total FROM invoices i LEFT JOIN invoice_items ii ON ii.invoice_id=i.id WHERE i.status='sent' GROUP BY i.id) GROUP BY currency")->fetchAll();
+        $portfolioProfit = $pdo->query("SELECT finance_currency AS currency,SUM(contract_value-actual_cost) AS total FROM projects WHERE contract_value>0 GROUP BY finance_currency")->fetchAll();
+        $targetCurrency = strtoupper(Settings::get('revenue_target_currency') ?: (Settings::get('pricing_currency') ?: 'GHS'));
+        $targetRaw = Settings::get('monthly_revenue_target') ?: '0';
+        $targetAmount = is_numeric($targetRaw) ? (int) round((float) $targetRaw * 100) : 0;
+
         // Abuse signal: the rate_limits table already buckets requests per
         // IP/endpoint/hour. Surface the last 24h so spikes and repeat
         // offenders are visible without digging into the DB. Wrapped in a
@@ -145,7 +161,32 @@ class DashboardController
             'draft_projects' => $draftProjects,
             'upcoming_appointments' => $upcomingAppointments,
             'recent_payments' => $recentPayments,
+            'mode_summaries' => [
+                'operational' => [
+                    'active_projects' => $activeProjects,
+                    'overdue_projects' => $overdueProjects,
+                    'overdue_milestones' => $overdueMilestones,
+                    'open_tasks' => $openTasks,
+                ],
+                'sales' => [
+                    'open_pipeline' => $openPipeline,
+                    'new_leads_30_days' => (int) $inquiries['last_30_days'],
+                    'won_this_month' => $wonThisMonth,
+                    'open_proposal_value' => self::moneyRows($openProposalValue),
+                ],
+                'financial' => [
+                    'month_revenue' => self::moneyRows($monthRevenue),
+                    'outstanding_invoices' => self::moneyRows($outstandingInvoices),
+                    'portfolio_profit' => self::moneyRows($portfolioProfit),
+                    'monthly_target' => ['currency' => $targetCurrency, 'total' => $targetAmount],
+                ],
+            ],
         ]);
+    }
+
+    private static function moneyRows(array $rows): array
+    {
+        return array_map(fn($row) => ['currency' => $row['currency'], 'total' => (int) $row['total']], $rows);
     }
 
     /** GET /api/v1/admin/notifications — lightweight unread counts for the sidebar badges */
