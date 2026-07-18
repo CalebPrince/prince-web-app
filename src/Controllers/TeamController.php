@@ -56,8 +56,13 @@ class TeamController
                 'icon' => 'bi-envelope-heart',
                 'status' => $nurturerActive ? 'active' : 'standby',
                 'status_label' => $nurturerActive ? 'Sending' : 'On standby',
-                'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM nurturer_sends')->fetchColumn(),
-                'stat_label' => 'AI emails sent',
+                // Nurturer owns the full automation journey: fixed-template
+                // steps are recorded in drip_sends and its AI-personalized
+                // sequence 2/3 messages are recorded in nurturer_sends.
+                'stat_value' => (int) $pdo->query(
+                    'SELECT (SELECT COUNT(*) FROM drip_sends) + (SELECT COUNT(*) FROM nurturer_sends)'
+                )->fetchColumn(),
+                'stat_label' => 'emails sent',
                 'manage_url' => '/admin/drip.html',
                 'manage_label' => 'Automations',
             ],
