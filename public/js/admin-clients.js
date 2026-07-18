@@ -272,4 +272,10 @@ async function openClientDetail(id) {
   });
 
   await loadClients();
+  const requestedClientId = Number(new URLSearchParams(location.search).get('open'));
+  if (requestedClientId && clientsCache.some(client => Number(client.id) === requestedClientId)) {
+    await openClientDetail(requestedClientId);
+    const requestedTab = new URLSearchParams(location.search).get('tab');
+    if (['proposals', 'files', 'messages'].includes(requestedTab)) switchDetailTab(requestedTab);
+  }
 })();
