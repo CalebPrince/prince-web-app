@@ -227,6 +227,7 @@ async function loadProjects() {
   renderStatusCounts(projects);
   renderFinanceSummary(projects);
   renderProjectsTable(projects);
+  return projects;
 }
 
 async function loadTestimonialOptions() {
@@ -418,5 +419,8 @@ async function deleteProject(id) {
     e.target.value = "";
   });
 
-  await Promise.all([loadProjects(), loadTestimonialOptions(), loadClientOptions()]);
+  const [projects] = await Promise.all([loadProjects(), loadTestimonialOptions(), loadClientOptions()]);
+  const requestedProjectId = Number(new URLSearchParams(location.search).get("edit"));
+  const requestedProject = requestedProjectId && projects.find(project => Number(project.id) === requestedProjectId);
+  if (requestedProject) openEditModal(requestedProject);
 })();

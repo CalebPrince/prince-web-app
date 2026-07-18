@@ -134,6 +134,7 @@
           <tr>
             <th class="ps-3">Client</th>
             <th>Portal access</th>
+            <th>Projects</th>
             <th>Proposals</th>
             <th>Last activity</th>
             <th>Status</th>
@@ -193,12 +194,14 @@
       </div>
       <div class="modal-body">
         <ul class="nav nav-tabs mb-3">
-          <li class="nav-item"><button class="nav-link active" data-detail-tab="proposals" id="detail-tab-proposals">Proposals</button></li>
+          <li class="nav-item"><button class="nav-link active" data-detail-tab="projects" id="detail-tab-projects">Projects</button></li>
+          <li class="nav-item"><button class="nav-link" data-detail-tab="proposals" id="detail-tab-proposals">Proposals</button></li>
           <li class="nav-item"><button class="nav-link" data-detail-tab="files" id="detail-tab-files">Files</button></li>
           <li class="nav-item"><button class="nav-link" data-detail-tab="messages" id="detail-tab-messages">Messages</button></li>
         </ul>
 
-        <div id="detail-panel-proposals"></div>
+        <div id="detail-panel-projects"></div>
+        <div id="detail-panel-proposals" class="d-none"></div>
 
         <div id="detail-panel-files" class="d-none">
           <div id="detail-files-list" class="d-flex flex-column gap-2 mb-3"></div>

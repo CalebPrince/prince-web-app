@@ -24,6 +24,7 @@ class ClientController
         $rows = Database::get()->query(
             "SELECT c.*,
                     (SELECT COUNT(*) FROM proposals p WHERE p.client_id = c.id) AS proposal_count,
+                    (SELECT COUNT(*) FROM projects pr WHERE pr.client_id = c.id) AS project_count,
                     (SELECT MAX(created_at) FROM proposals p WHERE p.client_id = c.id) AS last_proposal_at
              FROM clients c
              ORDER BY c.created_at DESC"
@@ -57,6 +58,17 @@ class ClientController
         $stmt = $pdo->prepare('SELECT * FROM proposals WHERE client_id = ? ORDER BY created_at DESC');
         $stmt->execute([$id]);
         $client['proposals'] = $stmt->fetchAll();
+
+        $stmt = $pdo->prepare(
+            "SELECT p.*,
+                    (p.contract_value - p.actual_cost) AS profit,
+                    CASE WHEN p.contract_value > 0
+                      THEN ROUND(((p.contract_value - p.actual_cost) * 100.0) / p.contract_value, 1)
+                      ELSE NULL END AS margin_percent
+             FROM projects p WHERE p.client_id = ? ORDER BY p.updated_at DESC"
+        );
+        $stmt->execute([$id]);
+        $client['projects'] = $stmt->fetchAll();
 
         $stmt = $pdo->prepare('SELECT * FROM client_files WHERE client_id = ? ORDER BY created_at DESC');
         $stmt->execute([$id]);

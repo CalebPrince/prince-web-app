@@ -46,6 +46,7 @@ function renderClients() {
     <tr class="client-row" data-id="${c.id}" tabindex="0" aria-label="Open ${escapeHtml(c.name)}">
       <td class="ps-3"><div class="d-flex align-items-center gap-2"><div class="client-avatar">${escapeHtml(clientInitials(c.name))}</div><div><div class="client-name">${escapeHtml(c.name)}</div><div class="small text-muted-custom">${escapeHtml(c.email)}${c.phone ? " · " + escapeHtml(c.phone) : ""}</div></div></div></td>
       <td><span class="status-pill ${c.has_password ? 'published' : 'unread'}">${c.has_password ? 'Active' : 'Invited'}</span></td>
+      <td>${c.project_count || 0}</td>
       <td>${c.proposal_count || 0}</td>
       <td class="small text-muted-custom">${c.last_proposal_at ? new Date(c.last_proposal_at).toLocaleDateString() : '—'}</td>
       <td><span class="status-pill ${c.is_active ? 'published' : 'archived'}">${c.is_active ? 'Active' : 'Deactivated'}</span></td>
@@ -103,7 +104,7 @@ function renderClients() {
 async function loadClients() {
   const tbody = document.getElementById('clients-tbody');
   const error = document.getElementById('clients-error');
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-5"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading clients…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-5"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading clients…</td></tr>';
   error.classList.add('d-none');
   try {
     clientsCache = await api.get('/api/v1/admin/clients');
@@ -129,6 +130,36 @@ function renderProposals(proposals) {
       <div class="small text-muted-custom">${formatAmount(p.total_amount, p.currency)}</div>
     </div>
   `).join('');
+}
+
+const CLIENT_PROJECT_STATUS = {
+  on_track: 'On track', needs_attention: 'Needs attention', at_risk: 'At risk', due_this_month: 'Due this month'
+};
+const CLIENT_PROJECT_STATUS_CLASS = {
+  on_track: 'published', needs_attention: 'unread', at_risk: 'flagged', due_this_month: 'chat-message'
+};
+
+function renderClientProjects(projects) {
+  if (!projects.length) {
+    return '<div class="client-project-empty"><i class="bi bi-kanban"></i><div><strong>No linked projects</strong><span>Assign this client while editing a project to show it here.</span></div><a href="/admin/projects.html">Open Projects</a></div>';
+  }
+  return `<div class="client-project-stack">${projects.map(project => {
+    const progress = Number(project.progress_percent || 0);
+    const currency = project.finance_currency || 'GHS';
+    const hasValue = Number(project.contract_value || 0) > 0;
+    return `<article class="client-project-record">
+      <div class="client-project-record-main">
+        <div class="client-project-kicker"><span class="status-pill ${CLIENT_PROJECT_STATUS_CLASS[project.delivery_status] || 'draft'}">${CLIENT_PROJECT_STATUS[project.delivery_status] || 'On track'}</span><span>${project.is_published ? 'Published' : 'Internal draft'}</span></div>
+        <h6>${escapeHtml(project.title)}</h6>
+        <div class="client-project-progress"><div><span style="width:${progress}%"></span></div><small>${progress}% complete</small></div>
+      </div>
+      <div class="client-project-record-finance">
+        <span>Project value</span><strong>${hasValue ? formatAmount(project.contract_value, currency) : 'Not set'}</strong>
+        <small>${hasValue ? `${formatAmount(project.profit, currency)} profit · ${project.margin_percent}% margin` : `${Number(project.hours_worked || 0).toLocaleString()} hours logged`}</small>
+      </div>
+      <a class="client-project-edit" href="/admin/projects.html?edit=${project.id}" aria-label="Edit ${escapeHtml(project.title)}">Edit project <i class="bi bi-arrow-up-right"></i></a>
+    </article>`;
+  }).join('')}</div>`;
 }
 
 function renderFiles(files) {
@@ -161,7 +192,7 @@ function renderMessages(messages) {
 }
 
 function switchDetailTab(tab) {
-  ['proposals', 'files', 'messages'].forEach(t => {
+  ['projects', 'proposals', 'files', 'messages'].forEach(t => {
     document.getElementById(`detail-tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`detail-panel-${t}`).classList.toggle('d-none', t !== tab);
   });
@@ -172,10 +203,11 @@ async function openClientDetail(id) {
   const client = await api.get(`/api/v1/admin/clients/${id}`);
   document.getElementById('client-modal-title').textContent = client.name;
   document.getElementById('client-modal-subtitle').textContent = `${client.email}${client.phone ? " · " + client.phone : ""}`;
+  document.getElementById('detail-panel-projects').innerHTML = renderClientProjects(client.projects || []);
   document.getElementById('detail-panel-proposals').innerHTML = renderProposals(client.proposals || []);
   document.getElementById('detail-files-list').innerHTML = renderFiles(client.files || []);
   renderMessages(client.messages || []);
-  switchDetailTab('proposals');
+  switchDetailTab('projects');
   clientModal.show();
 }
 
@@ -228,6 +260,7 @@ async function openClientDetail(id) {
     }
   });
 
+  document.getElementById('detail-tab-projects').addEventListener('click', () => switchDetailTab('projects'));
   document.getElementById('detail-tab-proposals').addEventListener('click', () => switchDetailTab('proposals'));
   document.getElementById('detail-tab-files').addEventListener('click', () => switchDetailTab('files'));
   document.getElementById('detail-tab-messages').addEventListener('click', () => switchDetailTab('messages'));
@@ -276,6 +309,6 @@ async function openClientDetail(id) {
   if (requestedClientId && clientsCache.some(client => Number(client.id) === requestedClientId)) {
     await openClientDetail(requestedClientId);
     const requestedTab = new URLSearchParams(location.search).get('tab');
-    if (['proposals', 'files', 'messages'].includes(requestedTab)) switchDetailTab(requestedTab);
+    if (['projects', 'proposals', 'files', 'messages'].includes(requestedTab)) switchDetailTab(requestedTab);
   }
 })();
