@@ -159,6 +159,7 @@ class MarketingLeadController
         if (count($leads) > 50) {
             Response::error('Add up to 50 leads at a time.', 422);
         }
+        [$estimatedValue, $currency] = self::opportunityValue($data);
 
         $pdo = Database::get();
         $existingUrls = array_map(
@@ -169,7 +170,7 @@ class MarketingLeadController
             )
         );
 
-        $stmt = $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_phone) VALUES (?, ?, ?)');
+        $stmt = $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_phone, estimated_value, currency) VALUES (?, ?, ?, ?, ?)');
         $added = 0;
         foreach ($leads as $lead) {
             $name = trim((string) ($lead['business_name'] ?? ''));
@@ -193,7 +194,7 @@ class MarketingLeadController
                 $phone = '';
             }
 
-            $stmt->execute([$name, $url ?: null, $phone ?: null]);
+            $stmt->execute([$name, $url ?: null, $phone ?: null, $estimatedValue, $currency]);
             if ($url !== '') {
                 $existingUrls[] = $normalized;
             }

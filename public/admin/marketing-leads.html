@@ -135,6 +135,11 @@
           <input type="text" class="form-control" id="discover-query" required maxlength="200" placeholder="e.g. plumbers in Accra">
           <button type="submit" class="btn-brand" id="discover-submit-btn">Search</button>
         </form>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="discover-estimated-value">Estimated project value for selected leads</label>
+          <div class="input-group"><select class="form-select" id="discover-currency" aria-label="Currency"><option>GHS</option><option>USD</option><option>GBP</option><option>EUR</option></select><input type="number" class="form-control" id="discover-estimated-value" min="0" step="0.01" value="0"></div>
+          <div class="form-text">Applied to every selected business. You can adjust each estimate later during pitch review.</div>
+        </div>
         <div id="discover-msg" class="alert py-2 small d-none"></div>
         <div id="discover-results"></div>
       </div>

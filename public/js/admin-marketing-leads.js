@@ -271,9 +271,15 @@ document.getElementById("discover-add-btn").addEventListener("click", async () =
   btn.disabled = true;
   btn.textContent = "Adding…";
   try {
-    const response = await api.post("/api/v1/admin/marketing-leads/bulk", { leads });
+    const response = await api.post("/api/v1/admin/marketing-leads/bulk", {
+      leads,
+      estimated_value: document.getElementById("discover-estimated-value").value,
+      currency: document.getElementById("discover-currency").value,
+    });
     discoverModal.hide();
     document.getElementById("discover-form").reset();
+    document.getElementById("discover-estimated-value").value = "0";
+    document.getElementById("discover-currency").value = "GHS";
     discoverResults = [];
     renderDiscoverResults();
     msg.classList.add("d-none");
