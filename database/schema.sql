@@ -361,6 +361,8 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   website_url TEXT,
   contact_email TEXT,
   contact_phone TEXT,
+  estimated_value INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'GHS',
   -- Which outreach channel the current pitch_subject/pitch_body were
   -- drafted for: 'email' (subject + body) or 'phone' (body holds call
   -- talking points, subject stays NULL). NULL until a pitch is generated.

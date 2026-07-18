@@ -105,6 +105,7 @@
             <th style="width:2.25rem" class="ps-3"><input type="checkbox" class="form-check-input" id="select-all-checkbox"></th>
             <th>Business</th>
             <th>Website</th>
+            <th>Est. project value</th>
             <th>Status</th>
             <th>Site check</th>
             <th class="text-end pe-3">Actions</th>
@@ -170,6 +171,11 @@
             <label class="form-label fw-semibold" for="lead-phone">Contact phone <span class="text-muted-custom fw-normal">(optional — used for a call script if there's no email)</span></label>
             <input type="tel" class="form-control" id="lead-phone" maxlength="50" placeholder="+233 20 000 0000">
           </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="lead-estimated-value">Estimated project value</label>
+            <div class="input-group"><select class="form-select" id="lead-currency" aria-label="Currency"><option>GHS</option><option>USD</option><option>GBP</option><option>EUR</option></select><input type="number" class="form-control" id="lead-estimated-value" min="0" step="0.01" value="0"></div>
+            <div class="form-text">Your current estimate of what you would charge for this project. Update it when the scope becomes clearer.</div>
+          </div>
           <div id="add-lead-alert" class="alert py-2 small d-none"></div>
         </div>
         <div class="modal-footer">
@@ -191,6 +197,10 @@
       <div class="modal-body">
         <h6 class="small text-uppercase text-muted-custom">Real findings from the site check</h6>
         <ul id="pitch-findings-list" class="small mb-3"></ul>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="pitch-estimated-value">Estimated project value <span class="text-muted-custom fw-normal">(internal only)</span></label>
+          <div class="input-group"><select class="form-select" id="pitch-currency" aria-label="Currency"><option>GHS</option><option>USD</option><option>GBP</option><option>EUR</option></select><input type="number" class="form-control" id="pitch-estimated-value" min="0" step="0.01"></div>
+        </div>
 
         <div class="mb-3" id="pitch-email-field">
           <label class="form-label fw-semibold">Contact email</label>

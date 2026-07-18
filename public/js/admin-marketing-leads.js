@@ -83,7 +83,7 @@ async function loadLeads() {
   selectedIds.clear();
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
     empty.classList.add("d-none");
     updateBulkToolbar();
     return;
@@ -103,6 +103,7 @@ async function loadLeads() {
       <td class="small">${lead.website_url
         ? `<a href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a>`
         : '<span class="text-muted-custom">No website</span>'}</td>
+      <td>${Number(lead.estimated_value) ? `<span class="fw-semibold">${escapeHtml(lead.currency || 'GHS')} ${(Number(lead.estimated_value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>` : '<span class="text-muted-custom small">Not estimated</span>'}</td>
       <td><span class="status-pill ${lead.status}">${lead.status.replace("_", " ")}</span></td>
       <td>${siteCheckBadge(lead)}</td>
       <td class="text-end pe-3">
@@ -364,6 +365,8 @@ function openPitchModal(lead) {
   document.getElementById("pitch-contact-phone").value = lead.contact_phone || "";
   document.getElementById("pitch-subject").value = lead.pitch_subject || "";
   document.getElementById("pitch-body").value = lead.pitch_body || "";
+  document.getElementById("pitch-estimated-value").value = Number(lead.estimated_value || 0) / 100;
+  document.getElementById("pitch-currency").value = lead.currency || "GHS";
   document.getElementById("pitch-modal-alert").classList.add("d-none");
 
   // A phone call has no subject line and no clickable-link preview worth
@@ -397,6 +400,8 @@ async function savePitchEdits() {
     contact_phone: document.getElementById("pitch-contact-phone").value.trim(),
     pitch_subject: document.getElementById("pitch-subject").value.trim(),
     pitch_body: document.getElementById("pitch-body").value.trim(),
+    estimated_value: document.getElementById("pitch-estimated-value").value,
+    currency: document.getElementById("pitch-currency").value,
   });
 }
 
@@ -486,6 +491,8 @@ document.getElementById("add-lead-form").addEventListener("submit", async (e) =>
       website_url: document.getElementById("lead-url").value,
       contact_email: document.getElementById("lead-email").value,
       contact_phone: document.getElementById("lead-phone").value,
+      estimated_value: document.getElementById("lead-estimated-value").value,
+      currency: document.getElementById("lead-currency").value,
     });
     document.getElementById("add-lead-form").reset();
     bootstrap.Modal.getInstance(document.getElementById("add-lead-modal")).hide();

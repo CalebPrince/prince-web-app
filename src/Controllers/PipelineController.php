@@ -24,8 +24,8 @@ class PipelineController
         self::collect($leads, $pdo->query("SELECT id, name, email, message, type, pipeline_stage, created_at FROM inquiries WHERE status != 'archived'")->fetchAll(),
             'inquiry', fn($r) => self::mapInquiry((string) $r['pipeline_stage']), fn($r) => $r['type'] === 'project_request' ? '/admin/quote-requests.html' : '/admin/inquiries.html',
             fn($r) => $r['message']);
-        self::collect($leads, $pdo->query('SELECT id, business_name AS name, contact_email AS email, contact_phone AS phone, website_url, status, created_at FROM marketing_leads')->fetchAll(),
-            'marketing', fn($r) => self::mapMarketing((string) $r['status']), fn() => '/admin/marketing-leads.html', fn($r) => $r['website_url'] ?: 'Marketing lead');
+        self::collect($leads, $pdo->query('SELECT id, business_name AS name, contact_email AS email, contact_phone AS phone, website_url, status, estimated_value AS total_amount, currency, created_at FROM marketing_leads')->fetchAll(),
+            'marketing', fn($r) => self::mapMarketing((string) $r['status']), fn() => '/admin/marketing-leads.html', fn($r) => $r['website_url'] ?: 'Marketing lead', true);
         self::collect($leads, $pdo->query('SELECT id, username AS name, lead_email AS email, platform, post_content, created_at FROM beacon_social_leads')->fetchAll(),
             'social', fn() => 'new', fn() => '/admin/agent-chat.html', fn($r) => $r['platform'] . ': ' . $r['post_content']);
         self::collect($leads, $pdo->query('SELECT id, client_name AS name, client_email AS email, client_phone AS phone, topic, status, created_at FROM appointments')->fetchAll(),

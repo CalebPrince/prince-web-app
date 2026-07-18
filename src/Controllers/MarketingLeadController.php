@@ -66,6 +66,7 @@ class MarketingLeadController
         $websiteUrl = trim((string) ($data['website_url'] ?? ''));
         $contactEmail = trim((string) ($data['contact_email'] ?? ''));
         $contactPhone = trim((string) ($data['contact_phone'] ?? ''));
+        [$estimatedValue, $currency] = self::opportunityValue($data);
 
         if ($businessName === '' || mb_strlen($businessName) > 255) {
             Response::error('Business name is required.', 422);
@@ -86,8 +87,8 @@ class MarketingLeadController
         }
 
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_email, contact_phone) VALUES (?, ?, ?, ?)')
-            ->execute([$businessName, $websiteUrl ?: null, $contactEmail ?: null, $contactPhone ?: null]);
+        $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_email, contact_phone, estimated_value, currency) VALUES (?, ?, ?, ?, ?, ?)')
+            ->execute([$businessName, $websiteUrl ?: null, $contactEmail ?: null, $contactPhone ?: null, $estimatedValue, $currency]);
 
         Response::json(['id' => (int) $pdo->lastInsertId()], 201);
     }
@@ -225,6 +226,11 @@ class MarketingLeadController
             $fields[] = 'status = ?';
             $values[] = $data['status'];
         }
+        if (array_key_exists('estimated_value', $data) || array_key_exists('currency', $data)) {
+            [$estimatedValue, $currency] = self::opportunityValue($data, (int) ($lead['estimated_value'] ?? 0), (string) ($lead['currency'] ?? 'GHS'));
+            $fields[] = 'estimated_value = ?'; $values[] = $estimatedValue;
+            $fields[] = 'currency = ?'; $values[] = $currency;
+        }
         if (!$fields) {
             Response::json(['status' => 'updated']);
         }
@@ -234,6 +240,15 @@ class MarketingLeadController
             ->execute($values);
 
         Response::json(['status' => 'updated']);
+    }
+
+    private static function opportunityValue(array $data, int $currentValue = 0, string $currentCurrency = 'GHS'): array
+    {
+        $raw = $data['estimated_value'] ?? ($currentValue / 100);
+        if (!is_numeric($raw) || (float) $raw < 0 || (float) $raw > 999999999) Response::error('Enter a valid estimated project value.', 422);
+        $currency = strtoupper(trim((string) ($data['currency'] ?? $currentCurrency)));
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) Response::error('Currency must be a three-letter code.', 422);
+        return [(int) round((float) $raw * 100), $currency];
     }
 
     /** DELETE /api/v1/admin/marketing-leads/{id} */

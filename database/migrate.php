@@ -341,6 +341,14 @@ foreach ($leadColumns as $col) {
     }
 }
 
+$leadColumnNames = array_column($pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll(), 'name');
+if (!in_array('estimated_value', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN estimated_value INTEGER NOT NULL DEFAULT 0');
+}
+if (!in_array('currency', $leadColumnNames, true)) {
+    $pdo->exec("ALTER TABLE marketing_leads ADD COLUMN currency TEXT NOT NULL DEFAULT 'GHS'");
+}
+
 $dripEnrollmentColumns = array_column($pdo->query('PRAGMA table_info(drip_enrollments)')->fetchAll(), 'name');
 if (!in_array('nurturer_enabled', $dripEnrollmentColumns, true)) {
     $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN nurturer_enabled INTEGER NOT NULL DEFAULT 0');
