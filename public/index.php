@@ -258,6 +258,7 @@ $router->post('/api/v1/admin/agents/beacon/chat', [BeaconController::class, 'cha
 $router->post('/api/v1/admin/agents/dossier/chat', [DossierController::class, 'chat']);
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
 $router->post('/api/v1/admin/agents/proposal/chat', [ProposalAgentController::class, 'chat']);
+$router->post('/api/v1/admin/agents/arch/chat', [\App\Agents\Arch::class, 'adminChat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
 $router->post('/api/v1/admin/beacon-leads/{id}/flag', [BeaconController::class, 'flagLead']);

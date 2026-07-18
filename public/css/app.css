@@ -2093,6 +2093,8 @@ pre code.hljs {
 .agent-face--proposal .agent-face-ring { border-color: #eab308; }
 .agent-face--content .agent-face-core { background: linear-gradient(135deg, #c026d3, #ec4899 55%, #fb7185); box-shadow: 0 0 15px rgba(236, 72, 153, 0.4); }
 .agent-face--content .agent-face-ring { border-color: #ec4899; }
+.agent-face--arch .agent-face-core { background: linear-gradient(135deg, #1d4ed8, #3b82f6 55%, #22d3ee); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+.agent-face--arch .agent-face-ring { border-color: #3b82f6; }
 
 /* Thinking: two staggered rings expanding outward like a radar sweep. */
 .agent-face-ring {

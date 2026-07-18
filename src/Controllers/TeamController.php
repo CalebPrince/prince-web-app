@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Agents\Arch;
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
 use App\Support\Response;
@@ -124,6 +125,21 @@ class TeamController
                 'stat_label' => 'drafts created',
                 'manage_url' => '/admin/content-studio.html',
                 'manage_label' => 'Content Studio',
+            ],
+            [
+                'key' => 'arch',
+                'name' => Settings::get('arch_assistant_name') ?: 'Arch',
+                'role' => 'AI Website Builder',
+                'description' => 'Chats a client through their requirements and builds them a complete, deployable, mobile-first website — with an optional password-protected CMS to edit it later.',
+                'icon' => 'bi-hammer',
+                // "Building" — a brand-new agent still proving itself, shown with
+                // the same blue dot as the on-demand agents (see admin-team.js).
+                'status' => 'building',
+                'status_label' => 'Building',
+                'stat_value' => Arch::sitesBuilt($pdo),
+                'stat_label' => 'sites built',
+                'manage_url' => '/chat.html',
+                'manage_label' => 'Open builder',
             ],
         ];
 

@@ -26,6 +26,7 @@ const CONTENT_FIELDS = [
   "nurturer_assistant_name", "nurturer_voice_gender", "nurturer_voice_accent",
   "proposal_assistant_name", "proposal_voice_gender", "proposal_voice_accent",
   "content_assistant_name", "content_voice_gender", "content_voice_accent",
+  "arch_assistant_name", "arch_voice_gender", "arch_voice_accent",
   "brand_primary_color", "brand_accent_color", "brand_font", "brand_style_note",
   "brand_logo_dark_url", "brand_logo_white_url",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
@@ -312,6 +313,7 @@ function wireHoursControls() {
   wireAgentVoicePreview("nurturer", "Nurturer", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("proposal", "Ledger", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("content", "Canvas", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("arch", "Arch", "This is how I'll sound when you talk to me in the admin console.");
   wireBrandLogoUpload("dark");
   wireBrandLogoUpload("white");
   wireHoursControls();
