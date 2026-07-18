@@ -18,7 +18,7 @@
   .client-stat { position: relative; overflow: hidden; min-height: 104px; }
   .client-stat::after { content: ""; position: absolute; width: 76px; height: 76px; right: -24px; bottom: -35px; border-radius: 50%; background: var(--section-leads-soft); }
   .client-stat-value { font-family: "Plus Jakarta Sans", sans-serif; font-size: 1.75rem; line-height: 1; letter-spacing: -.04em; }
-  .client-toolbar { display: grid; grid-template-columns: minmax(240px, 1fr) 180px; gap: .75rem; }
+  .client-toolbar { display: grid; grid-template-columns: minmax(240px, 1fr) 170px 180px auto; gap: .75rem; }
   .client-search { position: relative; }
   .client-search i { position: absolute; top: 50%; left: .9rem; transform: translateY(-50%); color: var(--muted); }
   .client-search .form-control { padding-left: 2.5rem; }
@@ -33,6 +33,7 @@
   .client-detail-heading { min-width: 0; }
   .client-detail-email { color: var(--muted); font-size: .82rem; font-weight: 400; }
   .client-empty-icon { width: 56px; height: 56px; margin: 0 auto 1rem; display: grid; place-items: center; border-radius: 18px; background: var(--section-leads-soft); color: var(--section-leads); font-size: 1.4rem; }
+  @media (max-width: 1199.98px) and (min-width: 768px) { .client-toolbar { grid-template-columns: 1fr 1fr; } .client-search { grid-column: 1 / -1; } }
   @media (max-width: 767.98px) {
     .client-stats { grid-template-columns: 1fr; }
     .client-toolbar { grid-template-columns: 1fr; }
@@ -125,8 +126,9 @@
         <input type="search" class="form-control" id="client-search" placeholder="Search by name, email, or phone&hellip;" autocomplete="off">
       </label>
       <label><span class="visually-hidden">Filter clients</span><select class="form-select" id="client-filter"><option value="all">All accounts</option><option value="active">Active</option><option value="invited">Awaiting setup</option><option value="deactivated">Deactivated</option></select></label>
+      <label><span class="visually-hidden">Filter client work</span><select class="form-select" id="client-work-filter"><option value="all">All client work</option><option value="projects">Has projects</option><option value="no_projects">No projects</option><option value="outstanding">Outstanding invoices</option></select></label>
+      <button class="btn btn-outline-secondary" id="export-clients-btn" type="button"><i class="bi bi-download me-1"></i>Export CSV</button>
     </div>
-
     <div id="clients-error" class="alert alert-danger d-none" role="alert"></div>
     <div class="admin-card p-0 client-list-card">
       <table class="table mb-0 align-middle">
@@ -144,6 +146,7 @@
         <tbody id="clients-tbody"></tbody>
       </table>
     </div>
+    <div id="clients-pagination-anchor"></div>
     <div id="clients-empty" class="text-center text-muted-custom py-5 d-none"><div class="client-empty-icon"><i class="bi bi-people"></i></div><div class="fw-semibold mb-1" id="clients-empty-title">No clients yet</div><div class="small" id="clients-empty-copy">Invite a client to give them access to proposals, files, and messages.</div></div>
    </div>
   </main>

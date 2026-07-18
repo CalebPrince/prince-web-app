@@ -23,6 +23,7 @@ function renderClients() {
   const empty = document.getElementById('clients-empty');
   const query = document.getElementById('client-search').value.trim().toLowerCase();
   const filter = document.getElementById('client-filter').value;
+  const workFilter = document.getElementById('client-work-filter').value;
   const rows = clientsCache.filter(c => {
     const matchesQuery = !query || [c.name, c.email, c.phone]
       .some(value => String(value || '').toLowerCase().includes(query));
@@ -30,19 +31,26 @@ function renderClients() {
       || (filter === 'active' && Number(c.is_active))
       || (filter === 'invited' && !c.has_password && Number(c.is_active))
       || (filter === 'deactivated' && !Number(c.is_active));
-    return matchesQuery && matchesFilter;
+    const matchesWork = workFilter === 'all'
+      || (workFilter === 'projects' && Number(c.project_count) > 0)
+      || (workFilter === 'no_projects' && Number(c.project_count) === 0)
+      || (workFilter === 'outstanding' && Number(c.outstanding_invoice_count) > 0);
+    return matchesQuery && matchesFilter && matchesWork;
   });
 
   if (!rows.length) {
     tbody.innerHTML = '';
     empty.classList.remove('d-none');
     document.getElementById('clients-empty-title').textContent = clientsCache.length ? 'No matching clients' : 'No clients yet';
-    document.getElementById('clients-empty-copy').textContent = clientsCache.length ? 'Try another search or account filter.' : 'Invite a client to give them access to proposals, files, and messages.';
+    document.getElementById('clients-empty-copy').textContent = clientsCache.length ? 'Try another search or filter.' : 'Invite a client to give them access to proposals, files, and messages.';
+    const pager = document.getElementById('clients-pagination');
+    if (pager) pager.innerHTML = '';
     return;
   }
   empty.classList.add('d-none');
 
-  tbody.innerHTML = rows.map(c => `
+  const renderPage = pageRows => {
+  tbody.innerHTML = pageRows.map(c => `
     <tr class="client-row" data-id="${c.id}" tabindex="0" aria-label="Open ${escapeHtml(c.name)}">
       <td class="ps-3"><div class="d-flex align-items-center gap-2"><div class="client-avatar">${escapeHtml(clientInitials(c.name))}</div><div><div class="client-name">${escapeHtml(c.name)}</div><div class="small text-muted-custom">${escapeHtml(c.email)}${c.phone ? " · " + escapeHtml(c.phone) : ""}</div></div></div></td>
       <td><span class="status-pill ${c.has_password ? 'published' : 'unread'}">${c.has_password ? 'Active' : 'Invited'}</span></td>
@@ -99,6 +107,28 @@ function renderClients() {
       }
     });
   });
+  };
+  AdminPagination.page('clients', rows, renderPage, { anchor: document.getElementById('clients-pagination-anchor'), position: 'beforebegin' });
+}
+
+function csvCell(value) {
+  return `"${String(value == null ? '' : value).replace(/"/g, '""')}"`;
+}
+
+function exportClientsCsv() {
+  const query = document.getElementById('client-search').value.trim().toLowerCase();
+  const account = document.getElementById('client-filter').value;
+  const work = document.getElementById('client-work-filter').value;
+  const rows = clientsCache.filter(c => {
+    const matchesQuery = !query || [c.name, c.email, c.phone].some(value => String(value || '').toLowerCase().includes(query));
+    const matchesAccount = account === 'all' || (account === 'active' && Number(c.is_active)) || (account === 'invited' && !c.has_password && Number(c.is_active)) || (account === 'deactivated' && !Number(c.is_active));
+    const matchesWork = work === 'all' || (work === 'projects' && Number(c.project_count) > 0) || (work === 'no_projects' && Number(c.project_count) === 0) || (work === 'outstanding' && Number(c.outstanding_invoice_count) > 0);
+    return matchesQuery && matchesAccount && matchesWork;
+  });
+  const headings = ['Name','Email','Phone','Portal setup','Account status','Projects','Proposals','Outstanding invoices','Created'];
+  const lines = [headings, ...rows.map(c => [c.name,c.email,c.phone || '',c.has_password ? 'Activated' : 'Awaiting setup',Number(c.is_active) ? 'Active' : 'Deactivated',Number(c.project_count || 0),Number(c.proposal_count || 0),Number(c.outstanding_invoice_count || 0),c.created_at])];
+  const blob = new Blob(['\uFEFF' + lines.map(line => line.map(csvCell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `clients-${new Date().toISOString().slice(0,10)}.csv`; link.click(); URL.revokeObjectURL(url);
 }
 
 async function loadClients() {
@@ -248,8 +278,11 @@ async function openClientDetail(id) {
   inviteModal = new bootstrap.Modal(document.getElementById('invite-modal'));
   clientModal = new bootstrap.Modal(document.getElementById('client-modal'));
 
-  document.getElementById('client-search').addEventListener('input', renderClients);
-  document.getElementById('client-filter').addEventListener('change', renderClients);
+  const refreshFilteredClients = () => { AdminPagination.state.set('clients', 1); renderClients(); };
+  document.getElementById('client-search').addEventListener('input', refreshFilteredClients);
+  document.getElementById('client-filter').addEventListener('change', refreshFilteredClients);
+  document.getElementById('client-work-filter').addEventListener('change', refreshFilteredClients);
+  document.getElementById('export-clients-btn').addEventListener('click', exportClientsCsv);
 
   document.getElementById('invite-btn').addEventListener('click', () => {
     document.getElementById('invite-form').reset();

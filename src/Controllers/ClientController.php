@@ -25,6 +25,7 @@ class ClientController
             "SELECT c.*,
                     (SELECT COUNT(*) FROM proposals p WHERE p.client_id = c.id) AS proposal_count,
                     (SELECT COUNT(*) FROM projects pr WHERE pr.client_id = c.id) AS project_count,
+                    (SELECT COUNT(*) FROM invoices i WHERE i.client_id = c.id AND i.status = 'sent') AS outstanding_invoice_count,
                     (SELECT MAX(created_at) FROM proposals p WHERE p.client_id = c.id) AS last_proposal_at
              FROM clients c
              ORDER BY c.created_at DESC"
