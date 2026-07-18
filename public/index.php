@@ -52,6 +52,7 @@ use App\Controllers\ClientPortalController;
 use App\Controllers\ComposioController;
 use App\Controllers\ContactsController;
 use App\Controllers\DashboardController;
+use App\Controllers\DossierController;
 use App\Controllers\DripController;
 use App\Controllers\ErrorLogController;
 use App\Controllers\InquiryController;
@@ -235,6 +236,7 @@ $router->post('/api/v1/admin/marketing-leads/discover', [MarketingLeadController
 $router->post('/api/v1/admin/marketing-leads/bulk', [MarketingLeadController::class, 'bulkStore']);
 $router->patch('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::class, 'update']);
 $router->delete('/api/v1/admin/marketing-leads/{id}', [MarketingLeadController::class, 'destroy']);
+$router->post('/api/v1/admin/marketing-leads/{id}/research', [DossierController::class, 'research']);
 $router->post('/api/v1/admin/marketing-leads/{id}/audit', [MarketingLeadController::class, 'runAudit']);
 $router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLeadController::class, 'generatePitch']);
 $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);

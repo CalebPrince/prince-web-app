@@ -45,6 +45,15 @@ function siteCheckBadge(lead) {
 
 function actionButtons(lead) {
   const buttons = [];
+  // Dossier: recon before outreach — tech-stack fingerprint, recent news, a
+  // grounded angle. Works from the business name alone, so it's offered for
+  // every lead. Once a brief exists the button just reopens it (re-running is
+  // a button inside the modal).
+  if (lead.research_findings) {
+    buttons.push(`<button class="btn btn-sm btn-outline-secondary dossier-btn" data-id="${lead.id}">View dossier</button>`);
+  } else {
+    buttons.push(`<button class="btn btn-sm btn-outline-secondary research-btn" data-id="${lead.id}">Research</button>`);
+  }
   // A lead with no website has nothing to audit — it can go straight to a
   // (generic, non-fabricated) pitch instead.
   if (lead.website_url && (lead.status === "pending" || lead.audit_findings)) {
@@ -112,6 +121,28 @@ async function loadLeads() {
   });
 
   updateBulkToolbar();
+
+  tbody.querySelectorAll(".research-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const lead = rows.find(r => r.id === Number(btn.dataset.id));
+      btn.disabled = true;
+      btn.textContent = "Researching…";
+      try {
+        const res = await api.post(`/api/v1/admin/marketing-leads/${btn.dataset.id}/research`, {});
+        // Show the brief straight away, then refresh the table underneath so
+        // the row's button flips to "View dossier".
+        openDossierModal({ ...lead, research_findings: res.research, researched_at: res.research.researched_at });
+        await loadLeads();
+      } catch (err) {
+        alert(err.message || "Research failed.");
+        await loadLeads();
+      }
+    });
+  });
+
+  tbody.querySelectorAll(".dossier-btn").forEach(btn => {
+    btn.addEventListener("click", () => openDossierModal(rows.find(r => r.id === Number(btn.dataset.id))));
+  });
 
   tbody.querySelectorAll(".audit-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -261,6 +292,60 @@ document.getElementById("discover-modal").addEventListener("hidden.bs.modal", ()
   discoverResults = [];
   renderDiscoverResults();
 });
+
+let dossierModal = null;
+let dossierLeadId = null;
+let dossierBusinessName = "";
+
+// Renders whatever Dossier's research() returned. Every section degrades to
+// its own note ("No recent news found", etc.) rather than vanishing, so an
+// empty section reads as "we looked and there was nothing" instead of "this
+// feature is broken".
+function renderDossier(research) {
+  const r = research || {};
+
+  const tech = r.tech_stack || [];
+  const techEl = document.getElementById("dossier-tech");
+  techEl.innerHTML = tech.length
+    ? tech.map(t => `
+        <li class="mb-1">
+          <span class="fw-semibold">${escapeHtml(t.signal)}</span>
+          <span class="status-pill audited ms-1">${escapeHtml(t.category)}</span>
+          <div class="small text-muted-custom">${escapeHtml(t.evidence)}</div>
+        </li>`).join("")
+    : `<li class="text-muted-custom">${escapeHtml(r.tech_note || "No tech-stack signals detected.")}</li>`;
+
+  const news = r.recent_news || [];
+  const newsEl = document.getElementById("dossier-news");
+  newsEl.innerHTML = news.length
+    ? news.map(n => `
+        <li class="mb-2">
+          ${n.link
+            ? `<a href="${escapeHtml(n.link)}" target="_blank" rel="noopener">${escapeHtml(n.title)}</a>`
+            : escapeHtml(n.title)}
+          <div class="small text-muted-custom">
+            ${n.source ? escapeHtml(n.source) : ""}${n.source && n.date ? " · " : ""}${n.date ? escapeHtml(n.date) : ""}
+          </div>
+          ${n.snippet ? `<div class="small">${escapeHtml(n.snippet)}</div>` : ""}
+        </li>`).join("")
+    : `<li class="text-muted-custom">${escapeHtml(r.news_note || "No recent news found.")}</li>`;
+
+  const summaryEl = document.getElementById("dossier-summary");
+  summaryEl.textContent = r.summary
+    || "No AI summary — this is available when a Gemini, OpenRouter, or Groq key is configured in Settings.";
+
+  document.getElementById("dossier-meta").textContent = r.researched_at
+    ? `Researched ${r.researched_at}`
+    : "";
+}
+
+function openDossierModal(lead) {
+  dossierLeadId = lead.id;
+  dossierBusinessName = lead.business_name;
+  document.getElementById("dossier-modal-business").textContent = lead.business_name;
+  renderDossier(lead.research_findings);
+  dossierModal.show();
+}
 
 function renderPitchPreview() {
   const text = document.getElementById("pitch-body").value;
@@ -447,6 +532,22 @@ document.getElementById("bulk-remove-btn").addEventListener("click", async () =>
   }
 });
 
+document.getElementById("dossier-rerun-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("dossier-rerun-btn");
+  btn.disabled = true;
+  btn.textContent = "Researching…";
+  try {
+    const res = await api.post(`/api/v1/admin/marketing-leads/${dossierLeadId}/research`, {});
+    renderDossier(res.research);
+    await loadLeads();
+  } catch (err) {
+    alert(err.message || "Research failed.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Re-run research";
+  }
+});
+
 document.getElementById("pitch-body").addEventListener("input", renderPitchPreview);
 
 (async function init() {
@@ -456,5 +557,6 @@ document.getElementById("pitch-body").addEventListener("input", renderPitchPrevi
 
   pitchModal = new bootstrap.Modal(document.getElementById("pitch-modal"));
   discoverModal = new bootstrap.Modal(document.getElementById("discover-modal"));
+  dossierModal = new bootstrap.Modal(document.getElementById("dossier-modal"));
   await loadLeads();
 })();

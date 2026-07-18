@@ -11,6 +11,7 @@ use App\Support\Automations;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
+use App\Support\SharedAgentTools;
 
 /**
  * Internal outreach tool ("Developer's Edge"): admin tracks target
@@ -48,6 +49,9 @@ class MarketingLeadController
         $rows = $pdo->query('SELECT * FROM marketing_leads ORDER BY created_at DESC')->fetchAll();
         foreach ($rows as &$row) {
             $row['audit_findings'] = $row['audit_findings'] ? json_decode($row['audit_findings'], true) : null;
+            // Dossier's research brief (DossierController) — decoded here so
+            // the Marketing Leads page gets a structured object to render.
+            $row['research_findings'] = $row['research_findings'] ? json_decode($row['research_findings'], true) : null;
         }
         Response::json($rows);
     }
@@ -257,7 +261,7 @@ class MarketingLeadController
         if (empty($lead['website_url'])) {
             Response::error('This lead has no website to audit — go straight to generating a pitch instead.', 422);
         }
-        if (!self::isSafeUrl($lead['website_url'])) {
+        if (!SharedAgentTools::isSafeUrl($lead['website_url'])) {
             Response::error('That URL cannot be audited (invalid, or resolves to a private/internal address).', 422);
         }
 
@@ -460,31 +464,6 @@ class MarketingLeadController
             Response::error('Lead not found.', 404);
         }
         return $lead;
-    }
-
-    /**
-     * Blocks anything that isn't a plain public http(s) host — no
-     * loopback/private/reserved targets (SSRF protection). A domain that
-     * fails to resolve at all is NOT blocked here: there is nothing to
-     * attack via SSRF if nothing resolves, and a non-existent/unregistered
-     * domain is itself a legitimate audit finding — see performAudit(),
-     * which lets the real curl attempt fail naturally and reports why.
-     */
-    private static function isSafeUrl(string $url): bool
-    {
-        $parts = parse_url($url);
-        if (!$parts || !in_array($parts['scheme'] ?? '', ['http', 'https'], true) || empty($parts['host'])) {
-            return false;
-        }
-        $host = $parts['host'];
-        if (strtolower($host) === 'localhost') {
-            return false;
-        }
-        $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : gethostbyname($host);
-        if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
-            return true; // DNS resolution failed — nothing reachable, so nothing unsafe to reach
-        }
-        return (bool) filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
     }
 
     /** @return array<string,mixed> Only objectively verifiable technical signals — never fabricated. */

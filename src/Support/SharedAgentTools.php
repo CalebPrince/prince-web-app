@@ -289,4 +289,36 @@ class SharedAgentTools
             ],
         ];
     }
+
+    /**
+     * Blocks anything that isn't a plain public http(s) host — no
+     * loopback/private/reserved targets (SSRF protection). A domain that
+     * fails to resolve at all is NOT blocked here: there is nothing to
+     * attack via SSRF if nothing resolves, and a non-existent/unregistered
+     * domain is itself a legitimate finding for whichever caller asked —
+     * see MarketingLeadController::performAudit() and
+     * DossierController::fetchSite(), which let the real curl attempt fail
+     * naturally and report why, rather than swallowing it here.
+     *
+     * Originally lived only in MarketingLeadController; moved here once
+     * Dossier needed the exact same guard for the same reason — one source
+     * of truth for what counts as safe to fetch, not two copies that could
+     * quietly drift apart on a security-relevant check.
+     */
+    public static function isSafeUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+        if (!$parts || !in_array($parts['scheme'] ?? '', ['http', 'https'], true) || empty($parts['host'])) {
+            return false;
+        }
+        $host = $parts['host'];
+        if (strtolower($host) === 'localhost') {
+            return false;
+        }
+        $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : gethostbyname($host);
+        if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
+            return true; // DNS resolution failed — nothing reachable, so nothing unsafe to reach
+        }
+        return (bool) filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+    }
 }

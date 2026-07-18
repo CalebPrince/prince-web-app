@@ -222,6 +222,40 @@
   </div>
 </div>
 
+<div class="modal fade" id="dossier-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title mb-0">Research dossier — <span id="dossier-modal-business"></span></h5>
+          <div class="small text-muted-custom" id="dossier-meta"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted-custom small">
+          For your eyes only — never sent to the lead. Tech stack is fingerprinted from their real site,
+          news comes from a real search, and the summary reasons only over those plus the site audit. Nothing
+          here is invented.
+        </p>
+
+        <h6 class="small text-uppercase text-muted-custom mb-1">Outreach summary</h6>
+        <div id="dossier-summary" class="p-2 rounded mb-3" style="background: var(--bg-soft); white-space: pre-wrap;"></div>
+
+        <h6 class="small text-uppercase text-muted-custom mb-1">Tech stack</h6>
+        <ul id="dossier-tech" class="small mb-3 ps-3"></ul>
+
+        <h6 class="small text-uppercase text-muted-custom mb-1">Recent news</h6>
+        <ul id="dossier-news" class="small mb-0 ps-3"></ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="dossier-rerun-btn">Re-run research</button>
+        <button type="button" class="btn-brand btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>

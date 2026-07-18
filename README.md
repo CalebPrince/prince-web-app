@@ -344,7 +344,8 @@ storage/
     deliberately no bulk-send path — "Approve & Send" opens the admin's own
     mail client with the draft prefilled (`mailto:`), and the lead is only
     marked `sent` after that. The audit fetch has an SSRF guard
-    (`MarketingLeadController::isSafeUrl`) blocking loopback/private/reserved
+    (`SharedAgentTools::isSafeUrl`, shared with Dossier's site fetch)
+    blocking loopback/private/reserved
     IP targets — a domain that simply fails to resolve is let through,
     though, since that's not an SSRF risk and is itself a real, useful
     finding. `website_url` is optional — a business with no site yet is a
@@ -382,6 +383,27 @@ storage/
     confirmation either way). Serper's Places search already returns phone
     numbers for most listings, so a niche-discovered lead is often
     call-ready immediately even with no website on file at all.
+
+    **Dossier** (`DossierController::research()`, the "Research"/"View
+    dossier" button per lead) is the recon step that sits one stage *before*
+    the audit/pitch flow: given a lead it builds a short internal briefing —
+    never sent to the business — from three real inputs. (1) A tech-stack
+    fingerprint pattern-matched out of the lead's actual homepage HTML and
+    response headers (WordPress, Shopify, Wix, React/Next.js, Google
+    Analytics, Cloudflare, etc.), each signal carrying the concrete evidence
+    it matched on, so it's defensible rather than guessed; the fetch reuses
+    the same `SharedAgentTools::isSafeUrl` SSRF guard as the audit. (2) A real
+    Serper *news* search on the business name — real results only, AI kept out
+    of this step for the same reason it's kept out of "Find leads by niche": a
+    model "recalling" news is just inventing it. (3) A single AI summary that
+    reasons *only* over (1), (2), and the stored audit findings, producing an
+    outreach angle told to invent no pain point the evidence doesn't support.
+    Both external calls degrade gracefully — no Serper key just drops the news
+    section, no AI provider just drops the summary — so the always-available
+    tech read means research never comes back empty-handed. The brief is
+    stored on the lead row (`research_findings` JSON + `researched_at`) and
+    never changes the lead's pitch-pipeline status. Dossier also appears as
+    the sixth agent on the Team page (Lead Research Analyst).
 23. **Gemini → OpenRouter → Groq fallback** (`src/Support/AiText.php`): every
     plain single-shot "prompt in, text out" AI call (pitch drafting,
     prototype generation, the secondary AI assistant) tries Gemini first
@@ -772,11 +794,12 @@ storage/
     client-side CSV export (built from the already-loaded report, no extra
     endpoint) round it out.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
-    read-only roster of the studio — Caleb himself plus the five AI agents
-    (Lisa, Nurturer, Beacon, Ledger, Canvas) — each card showing its real
-    role, a live headline stat pulled from its own table (e.g. Ledger shows
-    proposals drafted, Canvas shows drafts created from
-    `content_studio_items`), and a live status (Nurturer shows
+    read-only roster of the studio — Caleb himself plus the six AI agents
+    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas) — each card showing its
+    real role, a live headline stat pulled from its own table (e.g. Ledger
+    shows proposals drafted, Canvas shows drafts created from
+    `content_studio_items`, Dossier shows leads researched via
+    `researched_at`), and a live status (Nurturer shows
     "Sending"/"On standby" based on whether any automation actually has it
     enabled and active; Beacon shows "Scouting"/"Paused" from the discovery
     toggle). Agent display names stay admin-configurable via the same

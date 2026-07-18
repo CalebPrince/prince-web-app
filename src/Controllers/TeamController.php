@@ -12,7 +12,8 @@ use App\Support\Settings;
 /**
  * The "team" behind the studio: Caleb (the human owner) plus the AI agents that
  * actually run day to day — Lisa on chat/booking, Nurturer on email follow-up,
- * Beacon scouting leads, and the on-demand Proposal and Content writers. Each
+ * Beacon scouting leads, Dossier researching them, and the on-demand Proposal
+ * and Content writers. Each
  * agent's display name is admin-configurable (Settings), so this reads those
  * rather than hardcoding, and attaches a live headline stat and a real status
  * so the page is a genuine at-a-glance roster, not a static brochure.
@@ -69,6 +70,22 @@ class TeamController
                 'status_label' => $beaconEnabled ? 'Scouting' : 'Paused',
                 'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM beacon_social_leads')->fetchColumn(),
                 'stat_label' => 'leads found',
+                'manage_url' => '/admin/marketing-leads.html',
+                'manage_label' => 'Marketing leads',
+            ],
+            [
+                'key' => 'dossier',
+                'name' => Settings::get('dossier_assistant_name') ?: 'Dossier',
+                'role' => 'Lead Research Analyst',
+                'description' => 'Builds a research brief on a marketing lead — real tech-stack fingerprint, recent news, and a grounded outreach angle — so you reach out warm instead of cold.',
+                'icon' => 'bi-search',
+                'status' => 'ondemand',
+                'status_label' => 'On demand',
+                // Leads Dossier has actually researched — researched_at is set
+                // the moment research() writes a brief, so this counts real
+                // work done, not leads that merely could be researched.
+                'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM marketing_leads WHERE researched_at IS NOT NULL')->fetchColumn(),
+                'stat_label' => 'leads researched',
                 'manage_url' => '/admin/marketing-leads.html',
                 'manage_label' => 'Marketing leads',
             ],

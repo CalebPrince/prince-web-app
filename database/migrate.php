@@ -294,6 +294,12 @@ if (!in_array('contact_phone', $leadColumnNames, true)) {
 if (!in_array('pitch_channel', $leadColumnNames, true)) {
     $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN pitch_channel TEXT');
 }
+if (!in_array('research_findings', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN research_findings TEXT');
+}
+if (!in_array('researched_at', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN researched_at TEXT');
+}
 
 // SQLite can't relax a NOT NULL constraint via ALTER TABLE — rebuild the
 // table if website_url is still marked NOT NULL from before leads with no

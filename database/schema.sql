@@ -285,6 +285,12 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
   audit_findings TEXT,
+  -- Dossier's output: real tech-stack signals (pattern-matched, not
+  -- guessed), real recent-news search results, and an AI pain-points
+  -- summary that only ever reasons over those two plus audit_findings —
+  -- same never-invent-a-fact discipline as audit_findings/pitch drafting.
+  research_findings TEXT,
+  researched_at TEXT,
   pitch_subject TEXT,
   pitch_body TEXT,
   notes TEXT,
