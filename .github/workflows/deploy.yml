@@ -69,3 +69,27 @@ jobs:
           protocol: ftps
           local-dir: database/
           server-dir: database/
+
+      # Apply DB migrations after the files are in place. The host has no shell
+      # for us, so this pings the token-guarded public/deploy-migrate.php over
+      # HTTPS (idempotent — safe to run every deploy). Skips cleanly if the
+      # DEPLOY_MIGRATE_TOKEN secret isn't set, so it never blocks a deploy for
+      # anyone who hasn't opted in; a real migration error (5xx) does fail here.
+      - name: Apply database migrations
+        env:
+          MIGRATE_TOKEN: ${{ secrets.DEPLOY_MIGRATE_TOKEN }}
+          MIGRATE_URL: ${{ vars.MIGRATE_URL }}
+        run: |
+          if [ -z "$MIGRATE_TOKEN" ]; then
+            echo "DEPLOY_MIGRATE_TOKEN secret not set — skipping auto-migration."
+            exit 0
+          fi
+          URL="${MIGRATE_URL:-https://princecaleb.dev/deploy-migrate.php}"
+          echo "Triggering migration at $URL"
+          code=$(curl -sS -o /tmp/migrate.out -w '%{http_code}' -X POST "$URL" -H "X-Deploy-Token: $MIGRATE_TOKEN")
+          echo "HTTP $code"; cat /tmp/migrate.out; echo
+          case "$code" in
+            200) echo "Migration applied." ;;
+            503) echo "::warning::Server-side DEPLOY_MIGRATE_TOKEN not configured — migration skipped." ;;
+            *)   echo "::error::Migration request failed (HTTP $code)."; exit 1 ;;
+          esac

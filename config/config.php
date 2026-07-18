@@ -52,6 +52,11 @@ if (!function_exists('appConfig')) {
                 'slack_webhook_url' => env('SLACK_WEBHOOK_URL'),
                 'mail_from' => env('MAIL_FROM', 'noreply@princecaleb.dev'),
                 'mail_from_name' => env('MAIL_FROM_NAME', 'Prince Caleb Portfolio'),
+                // Shared secret that lets the GitHub Actions deploy trigger
+                // database migrations over HTTP after an FTP sync (there's no
+                // shell on the host). Must match the DEPLOY_MIGRATE_TOKEN
+                // GitHub secret. Empty = auto-migration disabled (fail closed).
+                'deploy_migrate_token' => env('DEPLOY_MIGRATE_TOKEN'),
             ];
         }
         return $config;
