@@ -93,7 +93,11 @@ class TeamController
                 'icon' => 'bi-images',
                 'status' => 'ondemand',
                 'status_label' => 'On demand',
-                'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM social_post_drafts')->fetchColumn(),
+                // content_studio_items, not social_post_drafts — that's a
+                // separate, older pipeline Content Studio doesn't show, so
+                // counting it here made this stat disagree with the page it
+                // links to.
+                'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM content_studio_items')->fetchColumn(),
                 'stat_label' => 'drafts created',
                 'manage_url' => '/admin/content-studio.html',
                 'manage_label' => 'Content Studio',
