@@ -4,6 +4,20 @@
 (function () {
   const ADMIN_PAGE_SIZE = 10;
 
+  function unifyInboxNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav) return;
+    const inquiries = nav.querySelector('a[href="/admin/inquiries.html"]');
+    if (inquiries) {
+      inquiries.href = '/admin/inbox.html';
+      inquiries.classList.toggle('active', location.pathname.endsWith('/admin/inbox.html'));
+      const label = inquiries.querySelector('.nav-label'); if (label) label.textContent = 'Inbox';
+    }
+    nav.querySelector('a[href="/admin/quote-requests.html"]')?.remove();
+    nav.querySelector('a[href="/admin/chats.html"]')?.remove();
+  }
+  unifyInboxNav();
+
   // Pipeline is a cross-source view, so add it once from this shared admin
   // script instead of duplicating another static link across every page.
   function injectPipelineNav() {
@@ -255,7 +269,8 @@
       const counts = await api.get("/api/v1/admin/notifications");
       const unread = counts.unread_inquiries || 0;
       const unseen = counts.unseen_chats || 0;
-      setBadge("nav-badge-inquiries", unread);
+      const clientMessages = counts.unread_client_messages || 0;
+      setBadge("nav-badge-inquiries", unread + unseen + clientMessages);
       setBadge("nav-badge-chats", unseen);
       setBadge("nav-badge-tasks", counts.open_tasks || 0);
       const total = Number(counts.total ?? (unread + unseen));

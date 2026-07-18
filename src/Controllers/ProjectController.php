@@ -117,7 +117,7 @@ class ProjectController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $stmt = $pdo->query('SELECT * FROM projects ORDER BY sort_order ASC');
+        $stmt = $pdo->query('SELECT p.*, c.name AS client_name, c.email AS client_email FROM projects p LEFT JOIN clients c ON c.id=p.client_id ORDER BY p.sort_order ASC');
         Response::json(self::attachTags($pdo, $stmt->fetchAll()));
     }
 
@@ -134,11 +134,13 @@ class ProjectController
         }
 
         $pdo = Database::get();
+        $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
+            $clientId,
             $data['slug'],
             $data['title'],
             $data['summary'],
@@ -187,17 +189,19 @@ class ProjectController
         }
 
         $pdo = Database::get();
+        $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
 
         $stmt = $pdo->prepare('SELECT is_published FROM projects WHERE id = ?');
         $stmt->execute([$id]);
         $wasPublished = (bool) $stmt->fetchColumn();
 
         $stmt = $pdo->prepare(
-            "UPDATE projects SET slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
+            "UPDATE projects SET client_id=?, slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
              outcome_metrics=?, testimonial_id=?, delivery_status=?, progress_percent=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
+            $clientId,
             $data['slug'],
             $data['title'],
             $data['summary'],
@@ -230,6 +234,17 @@ class ProjectController
         }
 
         Response::json(['status' => 'updated']);
+    }
+
+    private static function validatedClientId(\PDO $pdo, mixed $value): ?int
+    {
+        if ($value === null || $value === '') return null;
+        $id = (int) $value;
+        if ($id < 1) Response::error('Invalid client.', 422);
+        $stmt = $pdo->prepare('SELECT id FROM clients WHERE id=?');
+        $stmt->execute([$id]);
+        if (!$stmt->fetchColumn()) Response::error('Selected client no longer exists.', 422);
+        return $id;
     }
 
     private static function absoluteUrl(string $path): string

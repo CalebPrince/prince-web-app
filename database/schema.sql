@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS projects (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
   slug TEXT UNIQUE NOT NULL,
   title TEXT NOT NULL,
   summary TEXT NOT NULL,
@@ -86,6 +87,20 @@ CREATE TABLE IF NOT EXISTS pipeline_leads (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_pipeline_leads_stage ON pipeline_leads (stage, updated_at);
+
+CREATE TABLE IF NOT EXISTS manual_leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  summary TEXT NOT NULL,
+  estimated_value INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  initial_stage TEXT NOT NULL DEFAULT 'new' CHECK (initial_stage IN ('new', 'researching', 'contacted', 'discovery', 'proposal', 'won', 'lost')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_manual_leads_email ON manual_leads (email);
 
 CREATE TABLE IF NOT EXISTS admin_tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

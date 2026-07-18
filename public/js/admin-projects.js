@@ -3,6 +3,7 @@ let galleryPaths = [];
 let currentProjects = [];
 let draggedId = null;
 let approvedTestimonials = [];
+let projectClients = [];
 let slugEditedManually = false;
 
 const DELIVERY_STATUS_LABEL = {
@@ -103,7 +104,7 @@ function renderProjectsTable(projects) {
   currentProjects = projects;
   const tbody = document.getElementById("projects-tbody");
   if (projects.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted-custom py-4">No projects yet.</td></tr>';
     return;
   }
 
@@ -113,6 +114,7 @@ function renderProjectsTable(projects) {
     <tr draggable="true" data-id="${p.id}">
       <td class="ps-3 text-muted-custom" style="cursor:grab;" title="Drag to reorder">&#x2630;</td>
       <td>${p.title}</td>
+      <td>${p.client_id ? `<a class="project-client-link" href="/admin/clients.html?open=${p.client_id}" title="Open ${escapeHtml(p.client_name || 'client')}"><i class="bi bi-person-circle me-1"></i>${escapeHtml(p.client_name || p.client_email || 'Client')}</a>` : '<span class="text-muted-custom small">Unassigned</span>'}</td>
       <td class="text-capitalize">${p.category.replace("_", " ")}</td>
       <td>${p.tags.map(t => t.name).join(", ")}</td>
       <td>
@@ -195,6 +197,14 @@ async function loadTestimonialOptions() {
   ).join("");
 }
 
+async function loadClientOptions() {
+  const response = await api.get('/api/v1/admin/clients');
+  projectClients = Array.isArray(response) ? response : [];
+  document.getElementById('client_id').innerHTML = '<option value="">Unassigned</option>' + projectClients.map(client =>
+    `<option value="${client.id}">${escapeHtml(client.name)} — ${escapeHtml(client.email)}</option>`
+  ).join('');
+}
+
 function openNewModal() {
   document.getElementById("project-form").reset();
   document.getElementById("project-id").value = "";
@@ -204,6 +214,7 @@ function openNewModal() {
   document.getElementById("gallery-upload-msg").textContent = "";
   document.getElementById("outcome_metrics").value = "";
   document.getElementById("testimonial_id").value = "";
+  document.getElementById("client_id").value = "";
   document.getElementById("is_featured").checked = false;
   document.getElementById("delivery_status").value = "on_track";
   document.getElementById("progress_percent").value = 0;
@@ -232,6 +243,7 @@ function openEditModal(project) {
   document.getElementById("is_featured").checked = !!project.is_featured;
   document.getElementById("outcome_metrics").value = project.outcome_metrics || "";
   document.getElementById("testimonial_id").value = project.testimonial_id || "";
+  document.getElementById("client_id").value = project.client_id || "";
   document.getElementById("delivery_status").value = project.delivery_status || "on_track";
   document.getElementById("progress_percent").value = project.progress_percent || 0;
   document.getElementById("progress-percent-label").textContent = `${project.progress_percent || 0}%`;
@@ -263,6 +275,7 @@ async function saveProject() {
     is_featured: document.getElementById("is_featured").checked,
     outcome_metrics: document.getElementById("outcome_metrics").value || null,
     testimonial_id: document.getElementById("testimonial_id").value || null,
+    client_id: document.getElementById("client_id").value || null,
     delivery_status: document.getElementById("delivery_status").value,
     progress_percent: Number(document.getElementById("progress_percent").value) || 0,
   };
@@ -347,5 +360,5 @@ async function deleteProject(id) {
     e.target.value = "";
   });
 
-  await Promise.all([loadProjects(), loadTestimonialOptions()]);
+  await Promise.all([loadProjects(), loadTestimonialOptions(), loadClientOptions()]);
 })();

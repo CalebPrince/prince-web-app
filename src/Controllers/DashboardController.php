@@ -155,7 +155,7 @@ class DashboardController
         $pdo = Database::get();
 
         $unreadInquiries = (int) $pdo->query(
-            "SELECT COUNT(*) FROM inquiries WHERE status = 'unread'"
+            "SELECT COUNT(*) FROM inquiries WHERE status = 'unread' AND message NOT LIKE '[Live Chat]%'"
         )->fetchColumn();
 
         // Matches LiveChatController::adminIndex's own listing filter, so the
@@ -164,12 +164,16 @@ class DashboardController
             "SELECT COUNT(*) FROM chat_sessions
              WHERE admin_seen = 0 AND (transcript_json != '[]' OR client_email IS NOT NULL)"
         )->fetchColumn();
+        $unreadClientMessages = (int) $pdo->query(
+            "SELECT COUNT(DISTINCT client_id) FROM client_messages WHERE sender_type='client' AND read_by_admin=0"
+        )->fetchColumn();
         $openTasks = (int) $pdo->query("SELECT COUNT(*) FROM admin_tasks WHERE status='open'")->fetchColumn();
 
         $items = self::notificationItems($pdo);
         Response::json([
             'unread_inquiries' => $unreadInquiries,
             'unseen_chats' => $unseenChats,
+            'unread_client_messages' => $unreadClientMessages,
             'open_tasks' => $openTasks,
             'total' => count($items),
             'items' => $items,
@@ -186,6 +190,7 @@ class DashboardController
         [$type, $id] = explode(':', $key, 2);
         if ($type === 'inquiry') $pdo->prepare("UPDATE inquiries SET status='read' WHERE id=? AND status='unread'")->execute([(int) $id]);
         if ($type === 'chat') $pdo->prepare('UPDATE chat_sessions SET admin_seen=1 WHERE id=?')->execute([(int) $id]);
+        if ($type === 'client') $pdo->prepare("UPDATE client_messages SET read_by_admin=1 WHERE client_id=? AND sender_type='client'")->execute([(int) $id]);
         Response::json(['status' => 'read']);
     }
 
@@ -197,6 +202,7 @@ class DashboardController
         foreach (self::notificationItems($pdo) as $item) $insert->execute([$item['key']]);
         $pdo->exec("UPDATE inquiries SET status='read' WHERE status='unread'");
         $pdo->exec("UPDATE chat_sessions SET admin_seen=1 WHERE admin_seen=0 AND (transcript_json!='[]' OR client_email IS NOT NULL)");
+        $pdo->exec("UPDATE client_messages SET read_by_admin=1 WHERE sender_type='client'");
         Response::json(['status' => 'read']);
     }
 
@@ -209,10 +215,12 @@ class DashboardController
         $add = static function (string $key, string $type, string $title, string $detail, string $href, string $date, string $level = 'info') use (&$items, $read): void {
             if (!isset($read[$key])) $items[] = compact('key', 'type', 'title', 'detail', 'href', 'date', 'level');
         };
-        foreach ($pdo->query("SELECT id,name,email,message,type,created_at FROM inquiries WHERE status='unread'") as $r)
-            $add('inquiry:'.$r['id'], 'Inquiry', $r['name'] ?: $r['email'], $r['message'], ($r['type']==='project_request'?'/admin/quote-requests.html':'/admin/inquiries.html').'?open='.$r['id'], $r['created_at']);
+        foreach ($pdo->query("SELECT id,name,email,message,type,created_at FROM inquiries WHERE status='unread' AND message NOT LIKE '[Live Chat]%'") as $r)
+            $add('inquiry:'.$r['id'], 'Inquiry', $r['name'] ?: $r['email'], $r['message'], '/admin/inbox.html?open=inquiry:'.$r['id'], $r['created_at']);
         foreach ($pdo->query("SELECT id,client_name,client_email,created_at,updated_at FROM chat_sessions WHERE admin_seen=0 AND (transcript_json!='[]' OR client_email IS NOT NULL)") as $r)
-            $add('chat:'.$r['id'], 'Chat', $r['client_name'] ?: ($r['client_email'] ?: 'New chat activity'), 'A visitor has new chat activity.', '/admin/chats.html?open='.$r['id'], $r['updated_at'] ?: $r['created_at']);
+            $add('chat:'.$r['id'], 'Chat', $r['client_name'] ?: ($r['client_email'] ?: 'New chat activity'), 'A visitor has new chat activity.', '/admin/inbox.html?open=chat:'.$r['id'], $r['updated_at'] ?: $r['created_at']);
+        foreach ($pdo->query("SELECT m.client_id,c.name,c.email,MAX(m.created_at) AS created_at FROM client_messages m JOIN clients c ON c.id=m.client_id WHERE m.sender_type='client' AND m.read_by_admin=0 GROUP BY m.client_id,c.name,c.email") as $r)
+            $add('client:'.$r['client_id'], 'Client message', $r['name'] ?: $r['email'], 'A client sent a portal message.', '/admin/inbox.html?open=client:'.$r['client_id'], $r['created_at']);
         foreach ($pdo->query("SELECT id,client_name,topic,created_at FROM appointments WHERE status='confirmed' AND created_at>=datetime('now','-30 days')") as $r)
             $add('booking:'.$r['id'], 'Booking', $r['client_name'].' booked a call', $r['topic'] ?: 'New discovery call', '/admin/appointments.html', $r['created_at']);
         foreach ($pdo->query("SELECT id,customer_name,email,status,amount,currency,updated_at FROM payments WHERE status IN ('success','failed') AND updated_at>=datetime('now','-30 days')") as $r)

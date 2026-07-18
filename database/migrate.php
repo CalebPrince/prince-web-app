@@ -113,6 +113,10 @@ if (!in_array('ready_for_prototype', $chatSessionColumns, true)) {
 }
 
 $projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');
+if (!in_array('client_id', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL');
+}
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_projects_client ON projects (client_id)');
 if (!in_array('is_embeddable', $projectColumns, true)) {
     $pdo->exec('ALTER TABLE projects ADD COLUMN is_embeddable INTEGER NOT NULL DEFAULT 0');
 }
@@ -884,6 +888,22 @@ $pipelineColumns = array_column($pdo->query('PRAGMA table_info(pipeline_leads)')
 if (!in_array('notes', $pipelineColumns, true)) $pdo->exec('ALTER TABLE pipeline_leads ADD COLUMN notes TEXT');
 if (!in_array('next_action', $pipelineColumns, true)) $pdo->exec('ALTER TABLE pipeline_leads ADD COLUMN next_action TEXT');
 if (!in_array('follow_up_at', $pipelineColumns, true)) $pdo->exec('ALTER TABLE pipeline_leads ADD COLUMN follow_up_at TEXT');
+
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS manual_leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT,
+        phone TEXT,
+        summary TEXT NOT NULL,
+        estimated_value INTEGER NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT 'GHS',
+        initial_stage TEXT NOT NULL DEFAULT 'new' CHECK (initial_stage IN ('new', 'researching', 'contacted', 'discovery', 'proposal', 'won', 'lost')),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_manual_leads_email ON manual_leads (email)');
 
 $pdo->exec(
     "CREATE TABLE IF NOT EXISTS lead_attribution (

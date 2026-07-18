@@ -64,6 +64,7 @@ use App\Controllers\NewsletterController;
 use App\Controllers\NurturerController;
 use App\Controllers\PaymentController;
 use App\Controllers\PipelineController;
+use App\Controllers\InboxController;
 use App\Controllers\ReportController;
 use App\Controllers\TeamController;
 use App\Controllers\ContentAgentController;
@@ -272,6 +273,9 @@ $router->get('/api/v1/admin/nurturer-new-leads', [NurturerController::class, 'ad
 $router->get('/api/v1/admin/reports/summary', [ReportController::class, 'summary']);
 $router->get('/api/v1/admin/team', [TeamController::class, 'index']);
 $router->get('/api/v1/admin/pipeline', [PipelineController::class, 'index']);
+$router->get('/api/v1/admin/inbox', [InboxController::class, 'index']);
+$router->patch('/api/v1/admin/inbox/{type}/{id}/read', [InboxController::class, 'markRead']);
+$router->post('/api/v1/admin/pipeline', [PipelineController::class, 'store']);
 $router->patch('/api/v1/admin/pipeline/{id}', [PipelineController::class, 'update']);
 $router->get('/api/v1/admin/automations', [AutomationController::class, 'index']);
 $router->post('/api/v1/admin/automations', [AutomationController::class, 'store']);

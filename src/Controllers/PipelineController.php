@@ -36,6 +36,8 @@ class PipelineController
             'client', fn() => 'won', fn() => '/admin/clients.html', fn() => 'Client account');
         self::collect($leads, $pdo->query("SELECT id, COALESCE(client_name, client_email, 'Chat lead') AS name, client_email AS email, client_phone AS phone, created_at FROM chat_sessions WHERE client_email IS NOT NULL AND client_email != ''")->fetchAll(),
             'chat', fn() => 'new', fn() => '/admin/chats.html', fn() => 'Live chat lead');
+        self::collect($leads, $pdo->query('SELECT id, name, email, phone, summary, estimated_value AS total_amount, currency, initial_stage, created_at FROM manual_leads')->fetchAll(),
+            'manual', fn($r) => $r['initial_stage'], fn() => '/admin/pipeline.html', fn($r) => $r['summary'], true);
 
         $insert = $pdo->prepare('INSERT OR IGNORE INTO pipeline_leads (lead_key, stage) VALUES (?, ?)');
         $autoUpdate = $pdo->prepare("UPDATE pipeline_leads SET stage=?, updated_at=datetime('now') WHERE lead_key=? AND manual_stage=0");
@@ -75,6 +77,46 @@ class PipelineController
         }
         usort($out, fn($a, $b) => strcmp($b['latest_at'], $a['latest_at']));
         Response::json(['leads' => $out, 'stages' => self::STAGES]);
+    }
+
+    public static function store(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $name = trim((string) ($data['name'] ?? ''));
+        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        $phone = trim((string) ($data['phone'] ?? ''));
+        $summary = trim((string) ($data['summary'] ?? ''));
+        $stage = trim((string) ($data['stage'] ?? 'new'));
+        $currency = strtoupper(trim((string) ($data['currency'] ?? 'GHS')));
+        $value = $data['estimated_value'] ?? 0;
+
+        if ($name === '' || mb_strlen($name) > 200) Response::error('Enter a lead name of 200 characters or fewer.', 422);
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) Response::error('Enter a valid email address.', 422);
+        if (mb_strlen($phone) > 100) Response::error('Phone number is too long.', 422);
+        if ($summary === '' || mb_strlen($summary) > 5000) Response::error('Enter opportunity context of 5,000 characters or fewer.', 422);
+        if (!in_array($stage, self::STAGES, true)) Response::error('Invalid pipeline stage.', 422);
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) Response::error('Currency must be a three-letter code.', 422);
+        if (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999999) Response::error('Enter a valid estimated value.', 422);
+        $estimatedValue = (int) round((float) $value * 100);
+
+        $pdo = Database::get();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('INSERT INTO manual_leads (name, email, phone, summary, estimated_value, currency, initial_stage) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$name, $email ?: null, $phone ?: null, $summary, $estimatedValue, $currency, $stage]);
+            $manualId = (int) $pdo->lastInsertId();
+            $leadKey = $email !== '' ? 'email:' . $email : 'manual:' . $manualId;
+            $pdo->prepare('INSERT OR IGNORE INTO pipeline_leads (lead_key, stage, manual_stage) VALUES (?, ?, 1)')->execute([$leadKey, $stage]);
+            $pdo->prepare("UPDATE pipeline_leads SET stage=?, manual_stage=1, updated_at=datetime('now') WHERE lead_key=?")->execute([$stage, $leadKey]);
+            $pipelineId = (int) $pdo->query("SELECT id FROM pipeline_leads WHERE lead_key=" . $pdo->quote($leadKey))->fetchColumn();
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
+        }
+        ActivityLog::log($user, 'pipeline_lead_created', 'pipeline_lead', $pipelineId, null, ['name' => $name, 'stage' => $stage, 'source' => 'manual']);
+        Response::json(['status' => 'created', 'id' => $pipelineId], 201);
     }
 
     public static function update(array $params): void

@@ -3,7 +3,7 @@ const PIPELINE_STAGE_META = {
   contacted: { label: 'Contacted', icon: 'bi-send' }, discovery: { label: 'Discovery', icon: 'bi-calendar2-check' },
   proposal: { label: 'Proposal', icon: 'bi-file-earmark-text' }, won: { label: 'Won', icon: 'bi-trophy' }, lost: { label: 'Lost', icon: 'bi-x-circle' },
 };
-const PIPELINE_SOURCE_LABEL = { inquiry: 'Inquiry', marketing: 'Marketing', social: 'Social', booking: 'Booking', proposal: 'Proposal', client: 'Client', chat: 'Chat' };
+const PIPELINE_SOURCE_LABEL = { inquiry: 'Inquiry', marketing: 'Marketing', social: 'Social', booking: 'Booking', proposal: 'Proposal', client: 'Client', chat: 'Chat', manual: 'Manual' };
 let pipelineLeads = [];
 let pipelineStages = Object.keys(PIPELINE_STAGE_META);
 let pipelineQuery = '';
@@ -74,6 +74,31 @@ async function movePipelineLead(id, stage) {
   const old = lead.stage; lead.stage = stage; lead.manual_stage = true; renderPipeline();
   try { await api.patch(`/api/v1/admin/pipeline/${id}`, { stage }); } catch (err) { lead.stage = old; renderPipeline(); alert(err.message || 'Could not update the lead stage.'); }
 }
+function wireNewLeadForm() {
+  const form = document.getElementById('new-lead-form');
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const save = document.getElementById('new-lead-save');
+    const error = document.getElementById('new-lead-error');
+    error.classList.add('d-none'); save.disabled = true; save.textContent = 'Adding…';
+    try {
+      const result = await api.post('/api/v1/admin/pipeline', {
+        name: document.getElementById('new-lead-name').value,
+        email: document.getElementById('new-lead-email').value,
+        phone: document.getElementById('new-lead-phone').value,
+        summary: document.getElementById('new-lead-summary').value,
+        estimated_value: document.getElementById('new-lead-value').value,
+        currency: document.getElementById('new-lead-currency').value,
+        stage: document.getElementById('new-lead-stage').value,
+      });
+      bootstrap.Modal.getInstance(document.getElementById('new-lead-modal')).hide();
+      location.href = `/admin/pipeline.html?open=${result.id}`;
+    } catch (err) {
+      error.textContent = err.message || 'Could not add the lead.'; error.classList.remove('d-none');
+      save.disabled = false; save.textContent = 'Add lead';
+    }
+  });
+}
 (async function initPipeline(){
   const user = await requireAdminAuth(); if (!user) return; wireLogout();
   try {
@@ -82,6 +107,6 @@ async function movePipelineLead(id, stage) {
     document.getElementById('pipeline-source-filter').insertAdjacentHTML('beforeend', sourceTypes.map(s => `<option value="${pipelineEsc(s)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s] || s)}</option>`).join(''));
     document.getElementById('pipeline-search').addEventListener('input', e => { pipelineQuery = e.target.value.trim(); renderPipeline(); });
     document.getElementById('pipeline-source-filter').addEventListener('change', e => { pipelineSource = e.target.value; renderPipeline(); });
-    document.getElementById('pipeline-drawer-backdrop').addEventListener('click',closePipelineDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closePipelineDrawer();});renderPipeline();const requestedId=Number(new URLSearchParams(location.search).get('open'));if(requestedId)openPipelineDrawer(requestedId);
+    document.getElementById('pipeline-drawer-backdrop').addEventListener('click',closePipelineDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closePipelineDrawer();});wireNewLeadForm();renderPipeline();const requestedId=Number(new URLSearchParams(location.search).get('open'));if(requestedId)openPipelineDrawer(requestedId);
   } catch(err) { const box=document.getElementById('pipeline-error'); box.textContent=err.message || 'Could not load the pipeline.'; box.classList.remove('d-none'); }
 })();
