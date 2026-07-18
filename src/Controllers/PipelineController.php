@@ -45,7 +45,7 @@ class PipelineController
         }
 
         $stored = [];
-        foreach ($pdo->query('SELECT id, lead_key, stage, manual_stage, updated_at FROM pipeline_leads')->fetchAll() as $row) {
+        foreach ($pdo->query('SELECT id, lead_key, stage, manual_stage, notes, next_action, follow_up_at, updated_at FROM pipeline_leads')->fetchAll() as $row) {
             $stored[$row['lead_key']] = $row;
         }
         $attribution = [];
@@ -63,6 +63,9 @@ class PipelineController
             $lead['id'] = (int) $record['id'];
             $lead['stage'] = $record['stage'];
             $lead['manual_stage'] = (bool) $record['manual_stage'];
+            $lead['notes'] = (string) ($record['notes'] ?? '');
+            $lead['next_action'] = (string) ($record['next_action'] ?? '');
+            $lead['follow_up_at'] = $record['follow_up_at'] ?? null;
             $lead['attribution'] = null;
             foreach ($lead['sources'] as $source) {
                 $sourceKey = $source['type'] . ':' . $source['id'];
@@ -78,14 +81,24 @@ class PipelineController
     {
         $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $stage = (string) ($data['stage'] ?? '');
-        if (!in_array($stage, self::STAGES, true)) Response::error('Invalid pipeline stage.', 422);
         $id = (int) $params['id'];
         $pdo = Database::get();
-        $stmt = $pdo->prepare("UPDATE pipeline_leads SET stage=?, manual_stage=1, updated_at=datetime('now') WHERE id=?");
-        $stmt->execute([$stage, $id]);
+        $fields = []; $values = [];
+        if (array_key_exists('stage', $data)) {
+            $stage = (string) $data['stage'];
+            if (!in_array($stage, self::STAGES, true)) Response::error('Invalid pipeline stage.', 422);
+            $fields[] = 'stage=?'; $values[] = $stage; $fields[] = 'manual_stage=1';
+        }
+        foreach (['notes' => 5000, 'next_action' => 500] as $field => $limit) {
+            if (array_key_exists($field, $data)) { $value = trim((string) $data[$field]); if (mb_strlen($value) > $limit) Response::error(ucwords(str_replace('_',' ',$field)).' is too long.', 422); $fields[] = "$field=?"; $values[] = $value ?: null; }
+        }
+        if (array_key_exists('follow_up_at', $data)) { $follow = trim((string) $data['follow_up_at']); if ($follow !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/', $follow)) Response::error('Invalid follow-up date.', 422); $fields[]='follow_up_at=?'; $values[]=$follow ?: null; }
+        if (!$fields) Response::error('Nothing to update.', 422);
+        $fields[] = "updated_at=datetime('now')"; $values[] = $id;
+        $stmt = $pdo->prepare('UPDATE pipeline_leads SET '.implode(', ', $fields).' WHERE id=?');
+        $stmt->execute($values);
         if ($stmt->rowCount() === 0) Response::error('Pipeline lead not found.', 404);
-        ActivityLog::log($user, 'pipeline_stage_changed', 'pipeline_lead', $id, null, ['stage' => $stage]);
+        ActivityLog::log($user, 'pipeline_lead_updated', 'pipeline_lead', $id, null, array_intersect_key($data, array_flip(['stage','next_action','follow_up_at'])));
         Response::json(['status' => 'updated']);
     }
 

@@ -880,6 +880,10 @@ $pdo->exec(
     )"
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_pipeline_leads_stage ON pipeline_leads (stage, updated_at)');
+$pipelineColumns = array_column($pdo->query('PRAGMA table_info(pipeline_leads)')->fetchAll(), 'name');
+if (!in_array('notes', $pipelineColumns, true)) $pdo->exec('ALTER TABLE pipeline_leads ADD COLUMN notes TEXT');
+if (!in_array('next_action', $pipelineColumns, true)) $pdo->exec('ALTER TABLE pipeline_leads ADD COLUMN next_action TEXT');
+if (!in_array('follow_up_at', $pipelineColumns, true)) $pdo->exec('ALTER TABLE pipeline_leads ADD COLUMN follow_up_at TEXT');
 
 $pdo->exec(
     "CREATE TABLE IF NOT EXISTS lead_attribution (

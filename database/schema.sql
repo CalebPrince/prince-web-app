@@ -79,6 +79,9 @@ CREATE TABLE IF NOT EXISTS pipeline_leads (
   lead_key TEXT NOT NULL UNIQUE,
   stage TEXT NOT NULL DEFAULT 'new' CHECK (stage IN ('new', 'researching', 'contacted', 'discovery', 'proposal', 'won', 'lost')),
   manual_stage INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  next_action TEXT,
+  follow_up_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

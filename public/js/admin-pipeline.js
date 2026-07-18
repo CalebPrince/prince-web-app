@@ -19,6 +19,17 @@ function pipelineAttribution(lead) {
   else if (a.landing_path) label = `Landed on ${a.landing_path.split('?')[0]}`;
   return label ? `<div class="pipeline-attribution"><i class="bi bi-signpost-split"></i>${pipelineEsc(label)}</div>` : '';
 }
+function pipelineDrawer(lead) {
+  const a=lead.attribution||{}; const sources=[...new Map(lead.sources.map(s=>[`${s.type}:${s.id}`,s])).values()];
+  return `<header class="pipeline-drawer-header"><div><p class="pipeline-eyebrow mb-1">Lead record</p><h3 id="pipeline-drawer-title">${pipelineEsc(lead.name)}</h3><p>${pipelineEsc(lead.email||lead.phone||'No contact detail')}</p></div><button type="button" class="pipeline-drawer-close" aria-label="Close"><i class="bi bi-x-lg"></i></button></header>
+  <div class="pipeline-drawer-body"><section class="pipeline-detail-grid"><div><span>Stage</span><strong>${pipelineEsc(PIPELINE_STAGE_META[lead.stage]?.label||lead.stage)}</strong></div><div><span>Value</span><strong>${pipelineMoney(lead)||'—'}</strong></div><div><span>First seen</span><strong>${new Date(lead.created_at).toLocaleDateString()}</strong></div><div><span>Last activity</span><strong>${new Date(lead.latest_at).toLocaleDateString()}</strong></div></section>
+  <section class="pipeline-detail-section"><h5>Latest context</h5><p>${pipelineEsc(lead.summary||'No activity summary')}</p></section>
+  <section class="pipeline-detail-section"><h5>Source history</h5><div class="pipeline-source-timeline">${sources.map(s=>`<a href="${pipelineEsc(s.url)}"><i class="bi bi-arrow-up-right"></i><span><strong>${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type]||s.type)}</strong><small>Record #${s.id}</small></span></a>`).join('')}</div></section>
+  ${(a.landing_path||a.referrer||a.utm_source)?`<section class="pipeline-detail-section"><h5>First-touch attribution</h5><dl class="pipeline-attribution-list">${a.landing_path?`<div><dt>Landing page</dt><dd>${pipelineEsc(a.landing_path)}</dd></div>`:''}${a.referrer?`<div><dt>Referrer</dt><dd>${pipelineEsc(a.referrer)}</dd></div>`:''}${a.utm_source?`<div><dt>Campaign</dt><dd>${pipelineEsc([a.utm_source,a.utm_medium,a.utm_campaign].filter(Boolean).join(' · '))}</dd></div>`:''}</dl></section>`:''}
+  <form id="pipeline-detail-form" class="pipeline-detail-section"><h5>Next move</h5><label>Next action<input class="form-control" id="pipeline-next-action" maxlength="500" value="${pipelineEsc(lead.next_action||'')}" placeholder="Example: Send revised scope"></label><label>Follow up<input class="form-control" id="pipeline-follow-up" type="datetime-local" value="${pipelineEsc(lead.follow_up_at||'')}"></label><label>Internal notes<textarea class="form-control" id="pipeline-notes" rows="5" maxlength="5000" placeholder="Private context, objections, or decisions">${pipelineEsc(lead.notes||'')}</textarea></label><div class="d-flex align-items-center gap-2"><button class="btn-brand border-0" type="submit">Save lead</button><span id="pipeline-detail-status" class="small text-muted-custom"></span></div></form></div>`;
+}
+function closePipelineDrawer(){document.getElementById('pipeline-drawer').classList.remove('open');document.getElementById('pipeline-drawer-backdrop').classList.remove('open');document.getElementById('pipeline-drawer').setAttribute('aria-hidden','true');}
+function openPipelineDrawer(id){const lead=pipelineLeads.find(l=>Number(l.id)===Number(id));if(!lead)return;const drawer=document.getElementById('pipeline-drawer');document.getElementById('pipeline-drawer-content').innerHTML=pipelineDrawer(lead);drawer.classList.add('open');document.getElementById('pipeline-drawer-backdrop').classList.add('open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('.pipeline-drawer-close').addEventListener('click',closePipelineDrawer);drawer.querySelector('#pipeline-detail-form').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('pipeline-detail-status');status.textContent='Saving…';const payload={next_action:document.getElementById('pipeline-next-action').value,follow_up_at:document.getElementById('pipeline-follow-up').value,notes:document.getElementById('pipeline-notes').value};try{await api.patch(`/api/v1/admin/pipeline/${lead.id}`,payload);Object.assign(lead,payload);status.textContent='Saved';renderPipeline();}catch(err){status.textContent=err.message||'Could not save.';}});}
 function pipelineVisible() {
   const q = pipelineQuery.toLowerCase();
   return pipelineLeads.filter(lead => (!pipelineSource || lead.sources.some(s => s.type === pipelineSource)) && (!q || [lead.name, lead.email, lead.phone, lead.summary].some(v => String(v || '').toLowerCase().includes(q))));
@@ -48,6 +59,8 @@ function renderPipeline() {
 }
 function wirePipelineDrag() {
   document.querySelectorAll('.pipeline-card').forEach(card => card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', card.dataset.id); card.classList.add('dragging'); }));
+  document.querySelectorAll('.pipeline-card').forEach(card => card.addEventListener('click', e => { if(!e.target.closest('a,select,label,button')) openPipelineDrawer(card.dataset.id); }));
+  document.querySelectorAll('.pipeline-card').forEach(card => card.addEventListener('keydown', e => { if((e.key==='Enter'||e.key===' ')&&!e.target.closest('select')){e.preventDefault();openPipelineDrawer(card.dataset.id);} }));
   document.querySelectorAll('.pipeline-column').forEach(column => {
     column.addEventListener('dragover', e => { e.preventDefault(); column.classList.add('drag-over'); });
     column.addEventListener('dragleave', () => column.classList.remove('drag-over'));
@@ -68,6 +81,6 @@ async function movePipelineLead(id, stage) {
     document.getElementById('pipeline-source-filter').insertAdjacentHTML('beforeend', sourceTypes.map(s => `<option value="${pipelineEsc(s)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s] || s)}</option>`).join(''));
     document.getElementById('pipeline-search').addEventListener('input', e => { pipelineQuery = e.target.value.trim(); renderPipeline(); });
     document.getElementById('pipeline-source-filter').addEventListener('change', e => { pipelineSource = e.target.value; renderPipeline(); });
-    renderPipeline();
+    document.getElementById('pipeline-drawer-backdrop').addEventListener('click',closePipelineDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closePipelineDrawer();});renderPipeline();
   } catch(err) { const box=document.getElementById('pipeline-error'); box.textContent=err.message || 'Could not load the pipeline.'; box.classList.remove('d-none'); }
 })();
