@@ -178,8 +178,20 @@ class LiveChatController
         // confirmation instead of losing it to a retry on another provider
         // that would re-attempt — and likely reject — the same slot.
         $confirmedBooking = null;
-        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, $transcript) {
+        // If a provider executes a side-effecting tool and then fails while
+        // writing its reply, the engine retries the turn with the next
+        // provider. Reuse the first result so that retry cannot insert the
+        // same inquiry once per configured AI provider.
+        $sideEffectResults = [];
+        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$sideEffectResults, $transcript) {
+            if (isset($sideEffectResults[$name])) {
+                return $sideEffectResults[$name];
+            }
+
             $result = self::runTool($name, $args, $pdo);
+            if (in_array($name, ['log_inquiry', 'signal_handoff'], true)) {
+                $sideEffectResults[$name] = $result;
+            }
             if ($name === 'book_appointment' && ($result['success'] ?? false)) {
                 $confirmedBooking = $result;
                 self::queueProposalDraft($args, $result, $transcript, $pdo);
@@ -191,7 +203,7 @@ class LiveChatController
                 ? ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => false]
                 : null;
         };
-        $onGroqFailedGeneration = fn (string $failedGeneration) => self::recoverGroqFailedToolGeneration($failedGeneration, $pdo);
+        $onGroqFailedGeneration = fn (string $failedGeneration) => self::recoverGroqFailedToolGeneration($failedGeneration, $toolExecutor);
 
         $result = AiAgentEngine::run(
             self::buildSystemPrompt($projects, $isOwner),
@@ -1017,7 +1029,7 @@ class LiveChatController
      *
      * @return array{reply: string, ready: bool}|null
      */
-    private static function recoverGroqFailedToolGeneration(string $failedGeneration, \PDO $pdo): ?array
+    private static function recoverGroqFailedToolGeneration(string $failedGeneration, callable $toolExecutor): ?array
     {
         if (!preg_match('/<function=([a-zA-Z0-9_]+)\s+(\{.*\})\s*<\/function>/s', $failedGeneration, $matches)) {
             return null;
@@ -1035,7 +1047,7 @@ class LiveChatController
             return null;
         }
 
-        $toolResult = self::runTool($name, $args, $pdo);
+        $toolResult = $toolExecutor($name, $args);
         if (isset($toolResult['error'])) {
             error_log(sprintf('Live Chat Groq recovery tool "%s" failed: %s', $name, json_encode($toolResult)));
             return null;
