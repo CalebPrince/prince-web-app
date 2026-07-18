@@ -22,6 +22,7 @@ const CONTENT_FIELDS = [
   "chat_greeting", "chat_intro", "chat_offline_message", "chat_persona",
   "chat_voice_gender", "chat_voice_accent", "chat_voice_rate", "chat_voice_pitch",
   "beacon_assistant_name", "beacon_voice_gender", "beacon_voice_accent",
+  "dossier_assistant_name", "dossier_voice_gender", "dossier_voice_accent",
   "nurturer_assistant_name", "nurturer_voice_gender", "nurturer_voice_accent",
   "proposal_assistant_name", "proposal_voice_gender", "proposal_voice_accent",
   "content_assistant_name", "content_voice_gender", "content_voice_accent",
@@ -307,6 +308,7 @@ function wireHoursControls() {
   await loadContent();
   wireVoiceControls();
   wireAgentVoicePreview("beacon", "Beacon", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("dossier", "Dossier", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("nurturer", "Nurturer", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("proposal", "Ledger", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("content", "Canvas", "This is how I'll sound when you talk to me in the admin console.");

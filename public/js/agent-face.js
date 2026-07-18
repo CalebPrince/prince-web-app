@@ -1,4 +1,4 @@
-// Shared "face" avatar for the AI agents (Lisa, Beacon, Nurturer, Proposal) —
+// Shared "face" avatar for the AI agents (Lisa, Beacon, Dossier, Nurturer, Proposal) —
 // a small gradient orb with drawn eyes + a mouth that actually flaps while
 // the agent talks (plus an idle blink), so a conversation reads as talking
 // with a face rather than typing into a box. Colors match the original
@@ -6,12 +6,12 @@
 // static emoji with something that visibly speaks. Plain global — this
 // project has no bundler, everything under /js is a script tag — used by
 // ai-widget.js (Lisa's widget header) and admin-agent-chat.js (the
-// Beacon/Nurturer/Proposal admin console).
+// Beacon/Dossier/Nurturer/Proposal admin console).
 (function () {
-  const AGENT_KEYS = ["lisa", "beacon", "nurturer", "proposal", "content"];
+  const AGENT_KEYS = ["lisa", "beacon", "dossier", "nurturer", "proposal", "content"];
 
   /**
-   * @param {'lisa'|'beacon'|'nurturer'|'proposal'|'content'} agentKey
+   * @param {'lisa'|'beacon'|'dossier'|'nurturer'|'proposal'|'content'} agentKey
    * @param {'sm'|'md'|'lg'} [size]
    * @returns {{el: HTMLElement, setThinking: (on: boolean) => void, setSpeaking: (on: boolean) => void}}
    */

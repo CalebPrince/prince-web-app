@@ -113,8 +113,10 @@ class BlogController
             !empty($data['is_published']) ? 1 : 0,
             $sortOrder,
         ]);
+        $postId = (int) $pdo->lastInsertId();
 
         if (!empty($data['is_published'])) {
+            self::queueNewsletterDraft($pdo, $postId, $data);
             MakeWebhook::send('content_published', [
                 'type' => 'blog',
                 'title' => $data['title'],
@@ -123,7 +125,7 @@ class BlogController
             ]);
         }
 
-        Response::json(['id' => (int) $pdo->lastInsertId()], 201);
+        Response::json(['id' => $postId], 201);
     }
 
     /** PUT /api/v1/admin/blog/{id} */
@@ -162,6 +164,7 @@ class BlogController
         ]);
 
         if (!$wasPublished && !empty($data['is_published'])) {
+            self::queueNewsletterDraft($pdo, $id, $data);
             MakeWebhook::send('content_published', [
                 'type' => 'blog',
                 'title' => $data['title'],
@@ -183,6 +186,24 @@ class BlogController
         }
 
         return $scheme . '://' . $host . $path;
+    }
+
+    private static function queueNewsletterDraft(\PDO $pdo, int $postId, array $data): void
+    {
+        try {
+            $pdo->prepare(
+                "INSERT OR IGNORE INTO newsletter_drafts (blog_post_id, article_title, article_excerpt, article_url, status) VALUES (?, ?, ?, ?, 'queued')"
+            )->execute([
+                $postId,
+                $data['title'],
+                $data['excerpt'],
+                self::absoluteUrl('/archive-post.html?slug=' . $data['slug']),
+            ]);
+        } catch (\Throwable $e) {
+            // Publishing the article is primary; a queue problem must not make
+            // a successful publish look like a failure.
+            error_log('Newsletter draft queue failed: ' . $e->getMessage());
+        }
     }
 
     /** DELETE /api/v1/admin/blog/{id} */

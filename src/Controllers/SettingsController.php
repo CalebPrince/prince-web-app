@@ -76,6 +76,7 @@ class SettingsController
         'chat_greeting', 'chat_intro', 'chat_offline_message', 'chat_assistant_name',
         'chat_voice_gender', 'chat_voice_accent', 'chat_voice_rate', 'chat_voice_pitch',
         'beacon_assistant_name', 'beacon_voice_gender', 'beacon_voice_accent',
+        'dossier_assistant_name', 'dossier_voice_gender', 'dossier_voice_accent',
         'nurturer_assistant_name', 'nurturer_voice_gender', 'nurturer_voice_accent',
         'proposal_assistant_name', 'proposal_voice_gender', 'proposal_voice_accent',
         'content_assistant_name', 'content_voice_gender', 'content_voice_accent',

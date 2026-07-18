@@ -644,6 +644,37 @@
           </div>
 
           <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-search me-2" style="color: var(--section-content);"></i>Dossier (lead research)</h5>
+            <div class="form-text mb-3">Dossier fingerprints a marketing lead's tech stack, pulls recent news, and drafts a grounded outreach angle — the research brief is internal, for your eyes only, never sent to the lead. The name lightly flavors its internal framing either way, and the voice below is the real voice you'll hear if you talk to Dossier live in the admin console (<a href="/admin/agent-chat.html">Talk to Agents</a>).</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="dossier_assistant_name" placeholder="Dossier" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="dossier_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="dossier_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="dossier_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="dossier_voice_preview_note"></span>
+            </div>
+          </div>
+
+          <div class="admin-card p-4">
             <h5 class="mb-3"><i class="bi bi-brush me-2" style="color: var(--section-content);"></i>Brand</h5>
             <div class="form-text mb-3">The real visual facts Canvas grounds its flyers/graphics in instead of guessing — colors, font, a style note, and the two real logo files (named for the mark's own color, not the background). Leave any field blank to keep the site's own monochrome editorial defaults and the two logo files already committed under <code>public/uploads/brand/</code>.</div>
             <div class="row g-3">

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\AiAgentEngine;
+use App\Support\Automations;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
@@ -37,7 +38,7 @@ class BeaconController
     private const MAX_MESSAGE_LENGTH = 1000;
     private const MAX_CHAT_TRANSCRIPT_TURNS = 30;
 
-    /** POST /api/v1/agents/beacon/draft — body: {platform, username, post_content, post_url?} */
+    /** POST /api/v1/agents/beacon/draft — body: {platform, username, post_content, post_url?, lead_email?} */
     public static function draft(): void
     {
         $expectedKey = Settings::get('integration_api_key');
@@ -51,6 +52,7 @@ class BeaconController
         $username = trim((string) ($data['username'] ?? ''));
         $postContent = trim((string) ($data['post_content'] ?? ''));
         $postUrl = trim((string) ($data['post_url'] ?? '')) ?: null;
+        $leadEmail = trim((string) ($data['lead_email'] ?? '')) ?: null;
 
         if ($platform === '' || $username === '' || $postContent === '') {
             Response::error('platform, username, and post_content are all required.', 422);
@@ -58,8 +60,11 @@ class BeaconController
         if (mb_strlen($postContent) > self::MAX_POST_CONTENT_LENGTH) {
             Response::error('post_content must be under ' . self::MAX_POST_CONTENT_LENGTH . ' characters.', 422);
         }
+        if ($leadEmail !== null && !filter_var($leadEmail, FILTER_VALIDATE_EMAIL)) {
+            Response::error('lead_email must be a valid email address.', 422);
+        }
 
-        $result = self::generateForPost($platform, $username, $postContent, $postUrl, 'draft');
+        $result = self::generateForPost($platform, $username, $postContent, $postUrl, 'draft', null, $leadEmail);
         if ($result === null) {
             Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
         }
@@ -77,7 +82,7 @@ class BeaconController
      * @param ?string $postAge Serper's human-readable age ("3 years ago"), when the caller has one.
      * @return array{qualified:bool,confidence_score:int,reasoning:string,drafted_reply:string}|null null only on a hard failure
      */
-    public static function generateForPost(string $platform, string $username, string $postContent, ?string $postUrl, string $source, ?string $postAge = null): ?array
+    public static function generateForPost(string $platform, string $username, string $postContent, ?string $postUrl, string $source, ?string $postAge = null, ?string $leadEmail = null): ?array
     {
         $pdo = Database::get();
         $userPrompt = self::buildUserPrompt($platform, $username, $postContent, $postUrl, self::recentFeedbackBlock($pdo));
@@ -132,12 +137,25 @@ class BeaconController
         $draftedReply = SharedAgentTools::stripMarkdown((string) ($parsed['drafted_reply'] ?? ''));
         if ($qualified) {
             $pdo->prepare(
-                'INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO beacon_social_leads (platform, username, lead_email, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
-                $platform, $username, $postContent, $postUrl,
+                $platform, $username, $leadEmail, $postContent, $postUrl,
                 (int) $parsed['confidence_score'], (string) $parsed['reasoning'], $draftedReply,
                 $source, $postAge,
             ]);
+
+            // Joan -> Jason: when the source supplies contact details, hand the
+            // warm lead to the existing email automation engine immediately.
+            // Only active, reviewed marketing-pitch automations send anything.
+            if ($leadEmail !== null) {
+                Automations::fire('marketing_pitch_sent', $leadEmail, [
+                    'name' => ltrim($username, '@'),
+                    'source' => 'beacon_social_lead',
+                    'lead_industry' => $platform . ' social lead',
+                    'last_action' => 'Posted on ' . $platform . ': ' . mb_substr($postContent, 0, 700),
+                    'nurturer_enabled' => true,
+                ], $pdo);
+            }
         }
 
         return [

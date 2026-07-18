@@ -2040,6 +2040,8 @@ pre code.hljs {
 .agent-face--lisa .agent-face-ring { border-color: #34d399; }
 .agent-face--beacon .agent-face-core { background: linear-gradient(135deg, #312e81, #7c3aed 55%, #d946ef); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
 .agent-face--beacon .agent-face-ring { border-color: #d946ef; }
+.agent-face--dossier .agent-face-core { background: linear-gradient(135deg, #0f766e, #0891b2 55%, #38bdf8); box-shadow: 0 0 15px rgba(8, 145, 178, 0.4); }
+.agent-face--dossier .agent-face-ring { border-color: #38bdf8; }
 .agent-face--nurturer .agent-face-core { background: linear-gradient(135deg, #d97706, #f97316 55%, #fb7185); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
 .agent-face--nurturer .agent-face-ring { border-color: #f97316; }
 .agent-face--proposal .agent-face-core { background: linear-gradient(135deg, #1e3a8a, #2563eb 55%, #eab308); box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); }

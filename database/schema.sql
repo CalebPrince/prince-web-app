@@ -342,6 +342,7 @@ CREATE TABLE IF NOT EXISTS beacon_social_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   platform TEXT NOT NULL,
   username TEXT NOT NULL,
+  lead_email TEXT,
   post_content TEXT NOT NULL,
   post_url TEXT,
   confidence_score INTEGER NOT NULL,
@@ -358,6 +359,23 @@ CREATE TABLE IF NOT EXISTS beacon_social_leads (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at);
+
+-- Danielle -> Jason content loop. Publishing only queues work; the cron asks
+-- Nurturer to draft the announcement later, keeping the admin publish request
+-- fast and leaving every email reviewable rather than auto-sent.
+CREATE TABLE IF NOT EXISTS newsletter_drafts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  blog_post_id INTEGER NOT NULL UNIQUE REFERENCES blog_posts(id) ON DELETE CASCADE,
+  article_title TEXT NOT NULL,
+  article_excerpt TEXT NOT NULL,
+  article_url TEXT NOT NULL,
+  subject_line TEXT,
+  email_body TEXT,
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'drafted', 'failed')),
+  error_note TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  drafted_at TEXT
+);
 
 -- Caleb's corrections on leads Beacon got wrong (flagged as a false positive
 -- from the "Recent qualified leads" panel, with an optional note on why).

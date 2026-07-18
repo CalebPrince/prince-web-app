@@ -227,6 +227,7 @@ $router->get('/api/v1/admin/appointments', [AppointmentController::class, 'admin
 $router->patch('/api/v1/admin/appointments/{id}', [AppointmentController::class, 'updateStatus']);
 $router->delete('/api/v1/admin/appointments/{id}', [AppointmentController::class, 'destroy']);
 $router->get('/api/v1/admin/newsletter', [NewsletterController::class, 'adminIndex']);
+$router->get('/api/v1/admin/newsletter-drafts', [NewsletterController::class, 'adminDrafts']);
 $router->get('/api/v1/admin/newsletter/export', [NewsletterController::class, 'exportCsv']);
 $router->delete('/api/v1/admin/newsletter/{id}', [NewsletterController::class, 'destroy']);
 $router->get('/api/v1/admin/testimonials', [TestimonialController::class, 'adminIndex']);
@@ -250,6 +251,7 @@ $router->patch('/api/v1/admin/content-studio/{id}', [ContentStudioController::cl
 $router->post('/api/v1/admin/content-studio/{id}/promote', [ContentStudioController::class, 'promote']);
 $router->delete('/api/v1/admin/content-studio/{id}', [ContentStudioController::class, 'destroy']);
 $router->post('/api/v1/admin/agents/beacon/chat', [BeaconController::class, 'chat']);
+$router->post('/api/v1/admin/agents/dossier/chat', [DossierController::class, 'chat']);
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
 $router->post('/api/v1/admin/agents/proposal/chat', [ProposalAgentController::class, 'chat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);

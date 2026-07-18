@@ -845,4 +845,28 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_beacon_lead_feedback_created ON beacon_lead_feedback (created_at)');
 
+// Optional contact detail supplied by Joan/external social discovery. When
+// present on a qualified lead Beacon can pass it straight into Jason's
+// existing Nurturer automation without changing older discovery callers.
+$beaconColumns = array_column($pdo->query('PRAGMA table_info(beacon_social_leads)')->fetchAll(), 'name');
+if (!in_array('lead_email', $beaconColumns, true)) {
+    $pdo->exec('ALTER TABLE beacon_social_leads ADD COLUMN lead_email TEXT');
+}
+
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS newsletter_drafts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        blog_post_id INTEGER NOT NULL UNIQUE REFERENCES blog_posts(id) ON DELETE CASCADE,
+        article_title TEXT NOT NULL,
+        article_excerpt TEXT NOT NULL,
+        article_url TEXT NOT NULL,
+        subject_line TEXT,
+        email_body TEXT,
+        status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'drafted', 'failed')),
+        error_note TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        drafted_at TEXT
+    )"
+);
+
 echo "Schema applied.\n";

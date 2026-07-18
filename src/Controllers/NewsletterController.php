@@ -82,6 +82,14 @@ class NewsletterController
         Response::json($pdo->query('SELECT * FROM newsletter_subscribers ORDER BY created_at DESC')->fetchAll());
     }
 
+    /** GET /api/v1/admin/newsletter-drafts — Jason's reviewable blog announcements. */
+    public static function adminDrafts(): void
+    {
+        AuthMiddleware::requireAuth();
+        $rows = Database::get()->query('SELECT * FROM newsletter_drafts ORDER BY created_at DESC, id DESC')->fetchAll();
+        Response::json($rows);
+    }
+
     /** GET /api/v1/admin/newsletter/export — CSV download */
     public static function exportCsv(): void
     {

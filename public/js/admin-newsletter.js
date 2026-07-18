@@ -71,6 +71,25 @@ async function loadSubscribers() {
   AdminPagination.page('newsletter-subscribers', rows, renderPage, { anchor: document.getElementById('pagination') });
 }
 
+async function loadNewsletterDrafts() {
+  const el = document.getElementById('newsletter-drafts');
+  const rows = await api.get('/api/v1/admin/newsletter-drafts');
+  if (!rows.length) {
+    el.innerHTML = '<div class="small text-muted-custom">No blog announcements queued yet.</div>';
+    return;
+  }
+  el.innerHTML = rows.map(d => `
+    <article class="border rounded p-3 mb-2">
+      <div class="d-flex justify-content-between gap-2 mb-2">
+        <strong>${escapeHtml(d.subject_line || d.article_title)}</strong>
+        <span class="status-pill ${d.status === 'drafted' ? 'published' : d.status === 'failed' ? 'archived' : 'draft'}">${escapeHtml(d.status)}</span>
+      </div>
+      <div class="small text-muted-custom mb-2">Promotes: <a href="${escapeHtml(d.article_url)}" target="_blank" rel="noopener">${escapeHtml(d.article_title)}</a></div>
+      ${d.email_body ? `<div class="small" style="white-space:pre-wrap">${escapeHtml(d.email_body)}</div>` : `<div class="small text-muted-custom">${escapeHtml(d.error_note || 'Waiting for the newsletter drafting cron.')}</div>`}
+    </article>
+  `).join('');
+}
+
 document.getElementById('select-all-checkbox').addEventListener('change', (e) => {
   document.querySelectorAll('.row-checkbox').forEach(cb => {
     cb.checked = e.target.checked;
@@ -109,5 +128,5 @@ document.getElementById('bulk-remove-btn').addEventListener('click', async () =>
   if (!user) return;
   wireLogout();
 
-  await loadSubscribers();
+  await Promise.all([loadSubscribers(), loadNewsletterDrafts()]);
 })();

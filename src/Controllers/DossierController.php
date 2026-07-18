@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
+use App\Support\AiAgentEngine;
 use App\Support\AiText;
 use App\Support\Database;
 use App\Support\Response;
@@ -42,6 +43,9 @@ use App\Support\SharedAgentTools;
  */
 class DossierController
 {
+    private const MAX_MESSAGE_LENGTH = 1000;
+    private const MAX_CHAT_TRANSCRIPT_TURNS = 30;
+
     /**
      * POST /api/v1/admin/marketing-leads/{id}/research — build (or refresh)
      * the research dossier for a single lead. Read-only toward the outside
@@ -121,6 +125,93 @@ class DossierController
         ActivityLog::log($user, 'researched', 'marketing_lead', (int) $lead['id'], $lead['business_name'] ?: null);
 
         Response::json(['research' => $findings]);
+    }
+
+    /**
+     * POST /api/v1/admin/agents/dossier/chat — body: {message, transcript: [{role,text}, ...]}.
+     * A live, free-form conversation with Caleb himself (admin session), the
+     * same shape as the other agents' surfaces in the Talk to Agents console.
+     * Not the research() pipeline — no lead row, no stored brief — just
+     * Dossier talking through what to look for on a prospect, how to read a
+     * tech-stack signal, or an outreach angle. Stateless: the transcript
+     * lives in the browser and is replayed each turn, mirroring
+     * BeaconController::chat().
+     */
+    public static function chat(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $message = trim((string) ($data['message'] ?? ''));
+        $transcript = is_array($data['transcript'] ?? null) ? $data['transcript'] : [];
+
+        if ($message === '' || mb_strlen($message) > self::MAX_MESSAGE_LENGTH) {
+            Response::error('A message under ' . self::MAX_MESSAGE_LENGTH . ' characters is required.', 422);
+        }
+        if (count($transcript) > self::MAX_CHAT_TRANSCRIPT_TURNS) {
+            $transcript = array_slice($transcript, -self::MAX_CHAT_TRANSCRIPT_TURNS);
+        }
+        $transcript[] = ['role' => 'user', 'text' => $message];
+
+        $pdo = Database::get();
+        $result = AiAgentEngine::run(
+            self::buildChatSystemPrompt(),
+            [
+                SharedAgentTools::siteInfoToolDeclaration(),
+                SharedAgentTools::searchContentToolDeclaration(),
+            ],
+            fn(string $name, array $args) => match ($name) {
+                'get_site_info' => SharedAgentTools::getSiteInfo(),
+                'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+                default => ['error' => 'Unknown tool.'],
+            },
+            $transcript
+        );
+        if ($result['reply'] === null) {
+            Response::error('Could not generate a reply — check that an AI provider is configured and reachable.', 502);
+        }
+
+        Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
+    }
+
+    /**
+     * Talking directly with Caleb (verified by his admin session), not the
+     * automated research() pipeline — same split BeaconController draws
+     * between its chat and draft prompts: keep the persona and the real
+     * grounding tools, drop any rigid task/output contract.
+     */
+    private static function buildChatSystemPrompt(): string
+    {
+        $name = Settings::get('dossier_assistant_name') ?: 'Dossier';
+        $genderLine = self::genderLine((string) Settings::get('dossier_voice_gender'));
+
+        return "You are {$name}, the research analyst on Prince Caleb's AI team — Caleb is a highly skilled "
+            . "solo Web Designer and Mobile App Developer who runs the portfolio site princecaleb.dev.{$genderLine}\n\n"
+            . "Your day job is recon on prospective clients before Caleb reaches out: given a marketing lead you "
+            . "fingerprint the tech stack from their real site (WordPress, Shopify, React, analytics, hosting — "
+            . "always from actual evidence in the page, never a guess), pull real recent news about the business, "
+            . "and turn that plus any site audit into a short, honest outreach angle. Your ironclad rule is to "
+            . "never invent a fact: if the evidence is thin you say so plainly rather than padding it.\n\n"
+            . "Right now you're talking directly with Caleb in the admin console — a live working conversation, "
+            . "not the automated pipeline. Help him think through what's worth researching on a specific "
+            . "prospect, how to read a signal you'd surface, or how to frame a first message around real "
+            . "findings. You have get_site_info (Caleb's real bio, services, and tech stack) and search_content "
+            . "(his real past projects/blog posts) — use them to ground yourself in real facts instead of "
+            . "guessing. Speak naturally and conversationally; never output JSON unless he explicitly asks for "
+            . "it. Keep the tone knowledgeable, direct, and a little dry — an analyst briefing a colleague, "
+            . "never salesy or corporate.";
+    }
+
+    /** No TTS surface writes to a client here — this only lightly flavors the prompt's internal framing (mirrors BeaconController::genderLine). */
+    private static function genderLine(string $gender): string
+    {
+        if ($gender === 'male') {
+            return ' Internally you may think of yourself as he/him.';
+        }
+        if ($gender === 'female') {
+            return ' Internally you may think of yourself as she/her.';
+        }
+        return '';
     }
 
     // ---- internals ----------------------------------------------------------

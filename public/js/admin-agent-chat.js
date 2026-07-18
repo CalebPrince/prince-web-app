@@ -2,6 +2,7 @@
   const AGENTS = {
     lisa: { label: "Lisa", nameKey: "chat_assistant_name", genderKey: "chat_voice_gender", accentKey: "chat_voice_accent", fallbackName: "Lisa" },
     beacon: { label: "Beacon", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", accentKey: "beacon_voice_accent", fallbackName: "Beacon" },
+    dossier: { label: "Dossier", nameKey: "dossier_assistant_name", genderKey: "dossier_voice_gender", accentKey: "dossier_voice_accent", fallbackName: "Dossier" },
     nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Nurturer" },
     proposal: { label: "Proposal", nameKey: "proposal_assistant_name", genderKey: "proposal_voice_gender", accentKey: "proposal_voice_accent", fallbackName: "Ledger" },
     content: { label: "Content", nameKey: "content_assistant_name", genderKey: "content_voice_gender", accentKey: "content_voice_accent", fallbackName: "Canvas" },
@@ -767,6 +768,8 @@
       '<i class="bi bi-headset me-1"></i>' + (agentSettings.chat_assistant_name || "Lisa");
     document.getElementById("tab-beacon").innerHTML =
       '<i class="bi bi-binoculars me-1"></i>' + (agentSettings.beacon_assistant_name || "Beacon");
+    document.getElementById("tab-dossier").innerHTML =
+      '<i class="bi bi-search me-1"></i>' + (agentSettings.dossier_assistant_name || "Dossier");
     document.getElementById("tab-nurturer").innerHTML =
       '<i class="bi bi-envelope-heart me-1"></i>' + (agentSettings.nurturer_assistant_name || "Nurturer");
     document.getElementById("tab-proposal").innerHTML =

@@ -97,6 +97,29 @@ class NurturerController
         ];
     }
 
+    /** Draft the newsletter announcement Danielle queues when a blog goes live. */
+    public static function generateNewsletterUpdate(string $title, string $excerpt, string $url): ?array
+    {
+        $prompt = "Draft a concise newsletter update promoting this newly published article.\n"
+            . "Title: {$title}\nExcerpt: {$excerpt}\nURL: {$url}\n\n"
+            . "Return ONLY valid JSON with subject_line and email_body. The body should give readers a useful "
+            . "reason to click, include the exact URL, and be ready for Caleb to review. Do not claim it was sent.";
+        $result = AiAgentEngine::run(
+            self::buildSystemPrompt(),
+            self::draftToolDeclarations(),
+            fn(string $name, array $args) => self::runTool($name, $args, Database::get()),
+            [['role' => 'user', 'text' => $prompt]]
+        );
+        if ($result['reply'] === null) return null;
+        $stripped = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['reply']));
+        $parsed = json_decode($stripped, true);
+        if (!is_array($parsed) || empty($parsed['subject_line']) || empty($parsed['email_body'])) return null;
+        return [
+            'subject_line' => SharedAgentTools::stripMarkdown((string) $parsed['subject_line']),
+            'email_body' => SharedAgentTools::stripMarkdown((string) $parsed['email_body']),
+        ];
+    }
+
     /**
      * POST /api/v1/admin/agents/nurturer/chat — body: {message, transcript: [{role,text}, ...]}.
      * A live, free-form conversation with Caleb himself (admin session), not
