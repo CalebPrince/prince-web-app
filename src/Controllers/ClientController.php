@@ -146,6 +146,39 @@ class ClientController
         ];
     }
 
+    /** POST /api/v1/admin/clients — body: {name, email, phone?} — adds a client directly, with no invite link or email sent. */
+    public static function store(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $name = trim((string) ($data['name'] ?? ''));
+        $email = trim((string) ($data['email'] ?? ''));
+        $phone = trim((string) ($data['phone'] ?? ''));
+
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Response::error('A valid client name and email are required.', 422);
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT id FROM clients WHERE email = ?');
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            Response::error('A client with that email already exists.', 422);
+        }
+
+        $pdo->prepare('INSERT INTO clients (email, name, phone) VALUES (?, ?, ?)')
+            ->execute([$email, $name, $phone !== '' ? $phone : null]);
+        $clientId = (int) $pdo->lastInsertId();
+
+        $pdo->prepare('UPDATE proposals SET client_id = ? WHERE client_email = ? AND client_id IS NULL')
+            ->execute([$clientId, $email]);
+        $pdo->prepare('UPDATE payment_links SET client_id = ? WHERE client_email = ? AND client_id IS NULL')
+            ->execute([$clientId, $email]);
+
+        ActivityLog::log($user, 'created', 'client', $clientId, $name);
+        Response::json(['client_id' => $clientId], 201);
+    }
+
     /** POST /api/v1/admin/clients/invite — body: {name, email, phone?, proposal_id?} */
     public static function invite(): void
     {

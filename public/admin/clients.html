@@ -110,7 +110,10 @@
           <p class="text-muted-custom mb-0 small">Portal accounts, files, and messages per client.</p>
         </div>
       </div>
-      <button class="btn-brand" id="invite-btn"><i class="bi bi-person-plus me-1"></i> Invite client</button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" id="add-client-btn"><i class="bi bi-person-add me-1"></i> Add client manually</button>
+        <button class="btn-brand" id="invite-btn"><i class="bi bi-person-plus me-1"></i> Invite client</button>
+      </div>
     </div>
 
     <section class="client-stats mb-3" aria-label="Client overview">
@@ -187,6 +190,35 @@
   </div>
 </div>
 
+<div class="modal fade" id="add-client-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Client</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="add-client-form">
+          <div class="mb-3">
+            <label class="form-label">Client name</label>
+            <input type="text" class="form-control" id="add-client-name" required placeholder="Client full name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Client email</label>
+            <input type="email" class="form-control" id="add-client-email" required placeholder="client@example.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Client phone <span class="text-muted-custom fw-normal">(optional)</span></label>
+            <input type="tel" class="form-control" id="add-client-phone" placeholder="+1 555 123 4567">
+          </div>
+          <div id="add-client-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100">Add Client</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="client-modal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -201,11 +233,23 @@
           <li class="nav-item"><button class="nav-link" data-detail-tab="proposals" id="detail-tab-proposals">Proposals</button></li>
           <li class="nav-item"><button class="nav-link" data-detail-tab="files" id="detail-tab-files">Files</button></li>
           <li class="nav-item"><button class="nav-link" data-detail-tab="messages" id="detail-tab-messages">Messages</button></li>
+          <li class="nav-item"><button class="nav-link" data-detail-tab="automations" id="detail-tab-automations">Automations</button></li>
         </ul>
 
         <div id="detail-panel-overview"></div>
         <div id="detail-panel-projects" class="d-none"></div>
         <div id="detail-panel-proposals" class="d-none"></div>
+
+        <div id="detail-panel-automations" class="d-none">
+          <div id="detail-automations-list" class="d-flex flex-column gap-2 mb-3"></div>
+          <form id="detail-automation-form" class="d-flex gap-2 align-items-end">
+            <div class="flex-grow-1">
+              <label class="form-label small mb-1" for="detail-automation-select">Add to automation</label>
+              <select class="form-select" id="detail-automation-select" required></select>
+            </div>
+            <button type="submit" class="btn-brand">Add</button>
+          </form>
+        </div>
 
         <div id="detail-panel-files" class="d-none">
           <div id="detail-files-list" class="d-flex flex-column gap-2 mb-3"></div>
