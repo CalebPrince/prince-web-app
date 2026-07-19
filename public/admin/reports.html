@@ -116,7 +116,8 @@
       <div id="revenue-target-status" class="small text-muted-custom mt-2"></div>
     </section>
 
-    <!-- Period KPI cards -->
+    <!-- ===== KEY METRICS (selected period) ===== -->
+    <h5 class="text-uppercase small fw-bold text-muted-custom mt-4 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Key metrics · selected period</h5>
     <div class="row g-3 mb-4">
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
@@ -160,40 +161,9 @@
       </div>
     </div>
 
-    <!-- Revenue mix by service -->
-    <div class="row g-4 mb-1">
-      <div class="col-lg-6">
-        <div class="admin-card p-4 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <h5 class="mb-0"><i class="bi bi-pie-chart me-2" style="color: var(--section-money);"></i>Revenue mix</h5>
-            <span class="small text-muted-custom">By service</span>
-          </div>
-          <div class="fw-bold fs-4 mb-3" id="revenue-mix-total">–</div>
-          <div id="revenue-mix-list"></div>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="admin-card p-4 h-100">
-          <h5 class="mb-3">Mix breakdown</h5>
-          <canvas id="revenue-mix-chart" height="180"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Six month view -->
-    <div class="row g-4 mt-1 mb-1">
-      <div class="col-12">
-        <div class="admin-card p-4">
-          <h5 class="mb-1"><i class="bi bi-graph-up me-2" style="color: var(--section-money);"></i>Six month view</h5>
-          <p class="small text-muted-custom mb-3">Revenue and margin</p>
-          <canvas id="six-month-chart" height="90"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Headline stats -->
-    <h6 class="text-muted-custom text-uppercase small mb-2" style="letter-spacing: .04em;">All time</h6>
-    <div class="row g-3 mb-4">
+    <!-- ===== REVENUE ===== -->
+    <h5 class="text-uppercase small fw-bold text-muted-custom mt-5 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Revenue</h5>
+    <div class="row g-3 mb-3">
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-cash-stack"></i></div>
@@ -214,6 +184,56 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="row g-4 mb-1">
+      <div class="col-lg-8">
+        <div class="admin-card p-4">
+          <h5 class="mb-3"><i class="bi bi-graph-up-arrow me-2" style="color: var(--section-money);"></i>Revenue · last 12 months</h5>
+          <canvas id="revenue-chart" height="110"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Revenue by source</h5>
+          <div id="revenue-by-source"></div>
+          <div id="revenue-by-currency" class="small text-muted-custom mt-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-1 mb-1">
+      <div class="col-lg-6">
+        <div class="admin-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h5 class="mb-0"><i class="bi bi-pie-chart me-2" style="color: var(--section-money);"></i>Revenue mix</h5>
+            <span class="small text-muted-custom">By service</span>
+          </div>
+          <div class="fw-bold fs-4 mb-3" id="revenue-mix-total">–</div>
+          <div id="revenue-mix-list"></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Mix breakdown</h5>
+          <canvas id="revenue-mix-chart" height="180"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-1 mb-1">
+      <div class="col-12">
+        <div class="admin-card p-4">
+          <h5 class="mb-1"><i class="bi bi-graph-up me-2" style="color: var(--section-money);"></i>Six month view</h5>
+          <p class="small text-muted-custom mb-3">Revenue and margin</p>
+          <canvas id="six-month-chart" height="90"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SALES & PIPELINE ===== -->
+    <h5 class="text-uppercase small fw-bold text-muted-custom mt-5 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Sales &amp; pipeline</h5>
+    <div class="row g-3 mb-3">
       <div class="col-sm-6 col-xl-3">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-trophy"></i></div>
@@ -236,25 +256,7 @@
       </div>
     </div>
 
-    <!-- Revenue -->
     <div class="row g-4 mb-1">
-      <div class="col-lg-8">
-        <div class="admin-card p-4">
-          <h5 class="mb-3"><i class="bi bi-graph-up-arrow me-2" style="color: var(--section-money);"></i>Revenue · last 12 months</h5>
-          <canvas id="revenue-chart" height="110"></canvas>
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="admin-card p-4 h-100">
-          <h5 class="mb-3">Revenue by source</h5>
-          <div id="revenue-by-source"></div>
-          <div id="revenue-by-currency" class="small text-muted-custom mt-3"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pipeline + lead sources -->
-    <div class="row g-4 mt-1">
       <div class="col-lg-6">
         <div class="admin-card p-4 h-100">
           <h5 class="mb-3"><i class="bi bi-funnel me-2" style="color: var(--section-leads);"></i>Sales funnel</h5>
@@ -270,8 +272,29 @@
       </div>
     </div>
 
-    <!-- Automation performance -->
-    <div class="row g-4 mt-1">
+    <div class="row g-4 mt-1 mb-1">
+      <div class="col-12">
+        <div class="admin-card p-4">
+          <h5 class="mb-3"><i class="bi bi-star me-2" style="color: var(--section-money);"></i>Top clients by revenue</h5>
+          <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th class="ps-1">Client</th>
+                  <th class="text-end">Payments</th>
+                  <th class="text-end">Revenue</th>
+                </tr>
+              </thead>
+              <tbody id="top-clients-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== AUTOMATIONS ===== -->
+    <h5 class="text-uppercase small fw-bold text-muted-custom mt-5 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Automations</h5>
+    <div class="row g-4 mb-1">
       <div class="col-12">
         <div class="admin-card p-4">
           <h5 class="mb-3"><i class="bi bi-diagram-3 me-2" style="color: var(--section-leads);"></i>Email automation performance</h5>
@@ -295,10 +318,11 @@
       </div>
     </div>
 
-    <!-- Bookings + top clients -->
-    <div class="row g-4 mt-1 mb-2">
-      <div class="col-lg-6">
-        <div class="admin-card p-4 h-100">
+    <!-- ===== BOOKINGS ===== -->
+    <h5 class="text-uppercase small fw-bold text-muted-custom mt-5 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Bookings</h5>
+    <div class="row g-4 mb-2">
+      <div class="col-12">
+        <div class="admin-card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0"><i class="bi bi-calendar-check me-2" style="color: var(--section-money);"></i>Bookings · last 12 months</h5>
             <span class="small text-muted-custom" id="bookings-summary"></span>
@@ -306,33 +330,13 @@
           <canvas id="bookings-chart" height="150"></canvas>
         </div>
       </div>
-      <div class="col-lg-6">
-        <div class="admin-card p-4 h-100">
-          <h5 class="mb-3"><i class="bi bi-star me-2" style="color: var(--section-money);"></i>Top clients by revenue</h5>
-          <div class="table-responsive">
-            <table class="table mb-0 align-middle">
-              <thead>
-                <tr>
-                  <th class="ps-1">Client</th>
-                  <th class="text-end">Payments</th>
-                  <th class="text-end">Revenue</th>
-                </tr>
-              </thead>
-              <tbody id="top-clients-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- Website traffic (analytics) -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-5 mb-3">
-      <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-blue-soft); color: var(--section-blue);"><i class="bi bi-graph-up"></i></div>
-        <div>
-          <h4 class="mb-0">Website traffic</h4>
-          <p class="text-muted-custom mb-0 small">First-party page views — no cookies, no IP storage, no third party.</p>
-        </div>
+    <!-- ===== WEBSITE TRAFFIC ===== -->
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mt-5 mb-3 pb-2 border-bottom">
+      <div>
+        <h5 class="text-uppercase small fw-bold text-muted-custom mb-1" style="letter-spacing: .06em;">Website traffic</h5>
+        <p class="text-muted-custom mb-0 small">First-party page views — no cookies, no IP storage, no third party.</p>
       </div>
       <select class="form-select form-select-sm" id="days-filter" style="width:auto;">
         <option value="7">Last 7 days</option>
