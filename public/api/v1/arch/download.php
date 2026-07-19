@@ -18,8 +18,12 @@ use App\Support\Database;
 use App\Support\Response;
 
 $slug = (string) ($_GET['slug'] ?? '');
+$token = (string) ($_GET['token'] ?? '');
 if ($slug === '' || !preg_match('/^[a-z0-9-]{1,60}$/', $slug)) {
     Response::error('Invalid site reference.', 422);
+}
+if ($token === '' || !hash_equals(Arch::downloadToken($slug), $token)) {
+    Response::error('The deployable package is available after project review. Contact Prince Caleb to continue.', 403);
 }
 
 $pdo = Database::get();

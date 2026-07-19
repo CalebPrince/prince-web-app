@@ -1131,6 +1131,41 @@ body > .d-flex {
 .client-intelligence-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; margin-top:.8rem; }.client-intelligence-columns>div { overflow:hidden; border:1px solid var(--line); border-radius:14px; background:var(--card-bg); }.client-intelligence-columns header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.85rem 1rem; border-bottom:1px solid var(--line); }.client-intelligence-columns header span { color:var(--muted); font-size:.6rem; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }.client-intelligence-columns header h6 { margin:.15rem 0 0; font-size:.8rem; }.client-intelligence-columns header a,.client-intelligence-columns header button { padding:0; color:var(--section-leads); background:none; border:0; font-size:.68rem; font-weight:700; text-decoration:none; }
 .client-intelligence-list a { display:flex; align-items:center; justify-content:space-between; gap:.8rem; padding:.7rem 1rem; color:var(--heading-color); border-bottom:1px solid var(--line); text-decoration:none; }.client-intelligence-list a:last-child { border-bottom:0; }.client-intelligence-list a:hover { background:var(--bg-soft); }.client-intelligence-list strong,.client-intelligence-list small { display:block; }.client-intelligence-list strong { font-size:.73rem; }.client-intelligence-list small { margin-top:.12rem; color:var(--muted); font-size:.62rem; }.client-intelligence-list b { color:var(--heading-color); font-size:.68rem; white-space:nowrap; }.client-intelligence-list a.is-overdue small { color:#b42318; font-weight:700; }.client-intelligence-empty { padding:1.25rem 1rem; color:var(--muted); font-size:.7rem; }
 [data-theme="dark"] .client-intelligence-list a.is-overdue small { color:#fca5a5; }
+
+/* Arch's delivery log reads like a compact build journal: the revision request
+   is the visual centre, while identity and actions stay quiet at the edges. */
+.arch-activity-card { overflow:hidden; }
+.arch-activity-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; padding:1.25rem 1.35rem; border-bottom:1px solid var(--line); }
+.arch-activity-kicker { display:block; margin-bottom:.25rem; color:var(--section-blue); font-size:.68rem; font-weight:700; letter-spacing:.12em; }
+.arch-activity-list { display:flex; flex-direction:column; }
+.arch-activity-row { display:grid; grid-template-columns:minmax(180px,1.05fr) minmax(170px,.9fr) minmax(260px,1.6fr) auto; gap:1.15rem; align-items:center; padding:1rem 1.35rem; border-bottom:1px solid var(--line); }
+.arch-activity-row:last-child { border-bottom:0; }
+.arch-activity-site { display:flex; align-items:center; gap:.75rem; min-width:0; }
+.arch-site-mark { display:grid; place-items:center; width:38px; height:38px; flex:0 0 38px; border-radius:10px; color:var(--section-blue); background:var(--section-blue-soft); }
+.arch-activity-site div,.arch-activity-client,.arch-activity-revision { min-width:0; }
+.arch-activity-site strong,.arch-activity-site small,.arch-activity-client strong,.arch-activity-client small,.arch-activity-revision strong,.arch-activity-revision small { display:block; overflow:hidden; text-overflow:ellipsis; }
+.arch-activity-site strong,.arch-activity-client strong { color:var(--heading-color); white-space:nowrap; }
+.arch-activity-site small,.arch-activity-client span,.arch-activity-client small,.arch-activity-revision small { color:var(--ink-soft); font-size:.76rem; }
+.arch-activity-client span { display:block; margin-bottom:.15rem; text-transform:uppercase; letter-spacing:.06em; }
+.arch-activity-revision > span { display:inline-block; margin-bottom:.3rem; padding:.15rem .48rem; border-radius:999px; color:var(--section-blue); background:var(--section-blue-soft); font-size:.7rem; font-weight:700; }
+.arch-activity-revision strong { color:var(--ink); font-size:.86rem; line-height:1.35; white-space:nowrap; }
+.arch-activity-actions { display:flex; align-items:center; justify-content:flex-end; gap:.5rem; }
+.arch-cms-pill { padding:.18rem .42rem; border-radius:5px; color:var(--section-money); background:var(--section-money-soft); font-size:.67rem; font-weight:700; letter-spacing:.05em; }
+.arch-activity-empty { display:grid; justify-items:center; gap:.35rem; padding:2.5rem 1rem; color:var(--ink-soft); text-align:center; }
+.arch-activity-empty i { margin-bottom:.25rem; color:var(--section-blue); font-size:1.6rem; }
+.arch-activity-empty span { color:var(--heading-color); font-weight:600; }
+.arch-activity-empty small { color:var(--ink-soft); }
+@media (max-width: 991px) {
+  .arch-activity-row { grid-template-columns:1fr 1fr; }
+  .arch-activity-revision { grid-column:1 / -1; order:3; }
+  .arch-activity-actions { justify-content:flex-end; }
+}
+@media (max-width: 575px) {
+  .arch-activity-head { flex-direction:column; }
+  .arch-activity-row { grid-template-columns:1fr; gap:.8rem; }
+  .arch-activity-revision { grid-column:auto; order:initial; }
+  .arch-activity-actions { justify-content:flex-start; }
+}
 @media(max-width:767.98px){.client-intelligence-ledger{grid-template-columns:repeat(2,1fr)}.client-intelligence-ledger>div:nth-child(3){border-left:0;border-top:1px solid var(--line)}.client-intelligence-ledger>div:nth-child(4){border-top:1px solid var(--line)}.client-intelligence-columns{grid-template-columns:1fr}}
 .dashboard-mode-switch { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem; padding:.4rem; border:1px solid var(--line); border-radius:16px; background:var(--card-bg); }.dashboard-mode-switch button { display:flex; align-items:center; gap:.7rem; padding:.7rem .85rem; text-align:left; color:var(--muted); background:transparent; border:1px solid transparent; border-radius:12px; }.dashboard-mode-switch button:hover { color:var(--heading-color); background:var(--bg-soft); }.dashboard-mode-switch button.active { color:var(--heading-color); background:var(--bg-soft); border-color:var(--line); box-shadow:var(--shadow-sm); }.dashboard-mode-switch button i { font-size:1rem; }.dashboard-mode-switch button span,.dashboard-mode-switch button small { display:block; }.dashboard-mode-switch button span { font-size:.75rem; font-weight:750; }.dashboard-mode-switch button small { margin-top:.1rem; color:var(--muted); font-size:.61rem; font-weight:500; }
 .dashboard-mode-summary { display:grid; grid-template-columns:minmax(190px,1.1fr) repeat(4,minmax(120px,1fr)); overflow:hidden; border:1px solid var(--line); border-radius:16px; background:var(--card-bg); }.dashboard-mode-summary>header,.dashboard-mode-summary>div { display:flex; justify-content:center; flex-direction:column; min-height:92px; padding:.85rem 1rem; border-left:1px solid var(--line); }.dashboard-mode-summary>header { border-left:0; color:var(--section-blue); background:var(--section-blue-soft); }.dashboard-mode-summary header span { font-size:.7rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }.dashboard-mode-summary header p { margin:.25rem 0 0; color:var(--ink-soft); font-size:.66rem; }.dashboard-mode-summary>div span,.dashboard-mode-summary>div small { display:block; color:var(--muted); font-size:.63rem; }.dashboard-mode-summary>div span { font-weight:750; letter-spacing:.03em; text-transform:uppercase; }.dashboard-mode-summary>div strong { display:block; overflow-wrap:anywhere; margin:.3rem 0 .12rem; color:var(--heading-color); font-size:1rem; }.dashboard-mode-summary>div strong small { display:inline; }

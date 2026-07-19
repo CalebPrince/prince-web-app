@@ -43,6 +43,10 @@
   .arch-frame-wrap { border-radius: 16px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--heading-color) 12%, transparent); margin: 1rem 0; background: #fff; }
   .arch-frame-wrap iframe { width: 100%; height: 62vh; border: 0; display: block; }
   .arch-actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
+  .arch-review-box { margin: 1.25rem auto 0; max-width: 680px; text-align: left; border: 1px solid color-mix(in srgb, var(--heading-color) 12%, transparent); border-radius: 16px; padding: 1rem; background: var(--card-bg); }
+  .arch-review-box textarea { width: 100%; min-height: 96px; resize: vertical; }
+  .arch-review-actions { display: flex; align-items: center; gap: .75rem; margin-top: .75rem; }
+  .arch-review-status { color: var(--muted); font-size: .875rem; }
   .arch-cms-box { margin-top: 1rem; text-align: left; border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 14px; padding: 1rem 1.2rem; background: color-mix(in srgb, var(--accent) 7%, transparent); }
   .arch-cms-box code { background: color-mix(in srgb, var(--heading-color) 10%, transparent); padding: .1rem .4rem; border-radius: 6px; }
   .arch-chip-row { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: .5rem; }
@@ -106,11 +110,22 @@
     <section id="arch-result" class="arch-result d-none">
       <div class="arch-avatar" aria-hidden="true" style="background:color-mix(in srgb,#10b981 16%,transparent);color:#10b981;">✓</div>
       <h2 class="h4 mb-1">Your website is ready!</h2>
-      <p class="text-muted-custom" id="arch-result-sub">Here's a live preview. Take a look and download it whenever you're ready.</p>
+      <p class="text-muted-custom" id="arch-result-sub">Here's your live prototype. Review it, request up to two focused changes, then contact Prince Caleb for the final build.</p>
       <div class="arch-frame-wrap"><iframe id="arch-frame" title="Your generated website preview" loading="lazy"></iframe></div>
+      <form class="arch-review-box" id="arch-review-form">
+        <label for="arch-review-input" class="fw-semibold mb-1">Want anything changed?</label>
+        <p class="small text-muted-custom mb-2">Describe a focused change to this prototype. Two revision rounds are included; larger changes need a project review.</p>
+        <textarea id="arch-review-input" class="arch-textarea" maxlength="2000" placeholder="For example: use a warmer red, shorten the headline, and add our catering service."></textarea>
+        <div class="arch-review-actions">
+          <button type="submit" class="btn-brand" id="arch-review-btn">Apply changes</button>
+          <span class="arch-review-status" id="arch-review-status" role="status" aria-live="polite"></span>
+          <span class="arch-review-status ms-auto" id="arch-review-limit"></span>
+        </div>
+      </form>
       <div class="arch-actions">
+        <button type="button" id="arch-back-to-chat" class="btn-brand-outline">Back to chat</button>
         <a href="#" id="arch-open-link" target="_blank" rel="noopener" class="btn-brand">Open full preview ↗</a>
-        <a href="#" id="arch-download-link" class="btn-brand-outline">Download site (.zip)</a>
+        <a href="/contact.html" id="arch-download-link" class="btn-brand-outline">Discuss the final build</a>
         <a href="/chat.html" class="btn-brand-outline" id="arch-new-build">Build another</a>
       </div>
       <div class="arch-cms-box d-none" id="arch-cms-box">

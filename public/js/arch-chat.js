@@ -35,6 +35,7 @@
   var ready = false;
   var busy = false;
   var currentStep = 1;
+  var currentSite = null;
 
   // ---- helpers ----------------------------------------------------------
 
@@ -97,6 +98,7 @@
         brief: brief,
         ready: ready,
         step: currentStep,
+        site: currentSite,
       }));
     } catch (e) {
       // Storage can be unavailable in strict privacy modes; chat still works.
@@ -119,6 +121,7 @@
       setProgress(saved.step || 1);
       renderSuggestions(saved.step || 1);
       if (ready) buildBtn.classList.remove("d-none");
+      if (saved.site && saved.site.slug && saved.site.revision_token) showResult(saved.site, false);
       return true;
     } catch (e) {
       return false;
@@ -264,7 +267,7 @@
       .then(parseJson)
       .then(function (data) {
         clearInterval(ticker);
-        showResult(data);
+        showResult(data, true);
       })
       .catch(function (err) {
         clearInterval(ticker);
@@ -275,13 +278,18 @@
       });
   }
 
-  function showResult(data) {
+  function showResult(data, addHistory) {
+    currentSite = data;
+    stageEl.classList.add("d-none");
     buildingEl.classList.add("d-none");
     resultEl.classList.remove("d-none");
 
     document.getElementById("arch-frame").src = data.preview_url;
     document.getElementById("arch-open-link").href = data.preview_url;
-    document.getElementById("arch-download-link").href = data.download_url;
+    var handoffLink = document.getElementById("arch-download-link");
+    handoffLink.href = data.download_url || "/contact.html";
+    handoffLink.textContent = data.download_url ? "Download site (.zip)" : "Discuss the final build";
+    updateRevisionLimit(data.revisions_remaining);
 
     if (data.has_cms && data.admin_password) {
       var box = document.getElementById("arch-cms-box");
@@ -289,7 +297,79 @@
       document.getElementById("arch-admin-link").href = data.admin_url || data.preview_url + "admin/";
       document.getElementById("arch-admin-pass").textContent = data.admin_password;
     }
+    saveSession();
+    if (addHistory && window.location.hash !== "#preview") {
+      history.pushState({ archView: "preview" }, "", "#preview");
+    }
     resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function updateRevisionLimit(remaining) {
+    var count = Number.isFinite(Number(remaining)) ? Math.max(0, Number(remaining)) : 2;
+    var reviewBtn = document.getElementById("arch-review-btn");
+    document.getElementById("arch-review-limit").textContent = count + " revision" + (count === 1 ? "" : "s") + " remaining";
+    reviewBtn.disabled = count === 0;
+    if (count === 0) reviewBtn.textContent = "Revision limit reached";
+  }
+
+  function returnToChat(updateHistory) {
+    currentSite = null;
+    resultEl.classList.add("d-none");
+    buildingEl.classList.add("d-none");
+    stageEl.classList.remove("d-none");
+    saveSession();
+    if (updateHistory && window.location.hash === "#preview") {
+      history.back();
+    } else if (window.location.hash === "#preview") {
+      history.replaceState({ archView: "chat" }, "", window.location.pathname + window.location.search);
+    }
+    thread.scrollIntoView({ behavior: "smooth", block: "end" });
+    input.focus();
+  }
+
+  function submitRevision(event) {
+    event.preventDefault();
+    var reviewInput = document.getElementById("arch-review-input");
+    var reviewBtn = document.getElementById("arch-review-btn");
+    var reviewStatus = document.getElementById("arch-review-status");
+    var feedback = (reviewInput.value || "").trim();
+    if (!feedback || !currentSite || !currentSite.slug || !currentSite.revision_token) return;
+
+    reviewBtn.disabled = true;
+    reviewStatus.textContent = "Arch is applying your changes…";
+    clearError();
+    fetch("/api/v1/arch/revise.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slug: currentSite.slug,
+        revision_token: currentSite.revision_token,
+        feedback: feedback,
+      }),
+    })
+      .then(parseJson)
+      .then(function (data) {
+        brief = data.brief || brief;
+        var cacheBuster = (data.preview_url.indexOf("?") === -1 ? "?" : "&") + "revision=" + Date.now();
+        document.getElementById("arch-frame").src = data.preview_url + cacheBuster;
+        document.getElementById("arch-open-link").href = data.preview_url;
+        document.getElementById("arch-download-link").href = data.download_url || "/contact.html";
+        currentSite.preview_url = data.preview_url;
+        currentSite.download_url = data.download_url;
+        currentSite.revisions_remaining = data.revisions_remaining;
+        updateRevisionLimit(data.revisions_remaining);
+        reviewInput.value = "";
+        reviewStatus.textContent = data.message || "Changes applied. Review the refreshed preview.";
+        saveSession();
+      })
+      .catch(function (err) {
+        reviewStatus.textContent = "";
+        showError(err.message || "The changes could not be applied. Please try again.");
+      })
+      .finally(function () {
+        reviewBtn.disabled = Number(currentSite.revisions_remaining) === 0;
+      });
   }
 
   // ---- wiring -----------------------------------------------------------
@@ -309,6 +389,13 @@
   });
 
   buildBtn.addEventListener("click", startBuild);
+  document.getElementById("arch-review-form").addEventListener("submit", submitRevision);
+  document.getElementById("arch-back-to-chat").addEventListener("click", function () {
+    returnToChat(true);
+  });
+  window.addEventListener("popstate", function () {
+    if (currentSite && window.location.hash !== "#preview") returnToChat(false);
+  });
   var newBuildLink = document.getElementById("arch-new-build");
   if (newBuildLink) {
     newBuildLink.addEventListener("click", function () {

@@ -181,7 +181,52 @@ class TeamController
             ],
             'agents' => $agents,
             'capacity_summary' => $capacity['summary'],
+            'arch_activity' => self::archActivity($pdo),
         ]);
+    }
+
+    /** Latest Arch deliveries with revision activity for the admin roster. */
+    private static function archActivity(\PDO $pdo): array
+    {
+        try {
+            $rows = $pdo->query(
+                "SELECT gs.id, gs.slug, gs.business_name, gs.business_type,
+                        gs.client_name, gs.client_email, gs.has_cms, gs.provider, gs.created_at,
+                        (SELECT COUNT(*) FROM arch_site_revisions ar WHERE ar.generated_site_id=gs.id) AS revision_count,
+                        (SELECT ar.feedback FROM arch_site_revisions ar WHERE ar.generated_site_id=gs.id ORDER BY ar.id DESC LIMIT 1) AS latest_feedback,
+                        (SELECT ar.created_at FROM arch_site_revisions ar WHERE ar.generated_site_id=gs.id ORDER BY ar.id DESC LIMIT 1) AS latest_revision_at
+                 FROM generated_sites gs
+                 ORDER BY COALESCE(
+                    (SELECT MAX(ar.created_at) FROM arch_site_revisions ar WHERE ar.generated_site_id=gs.id),
+                    gs.created_at
+                 ) DESC
+                 LIMIT 12"
+            )->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            // Keeps the Team page usable during the short deploy window before
+            // the new migration is applied.
+            return [];
+        }
+
+        return array_map(static function (array $row): array {
+            return [
+                'id' => (int) $row['id'],
+                'slug' => (string) $row['slug'],
+                'business_name' => (string) $row['business_name'],
+                'business_type' => (string) ($row['business_type'] ?? ''),
+                'client_name' => (string) ($row['client_name'] ?? ''),
+                'client_email' => (string) ($row['client_email'] ?? ''),
+                'has_cms' => !empty($row['has_cms']),
+                'provider' => (string) ($row['provider'] ?? 'template'),
+                'created_at' => $row['created_at'],
+                'revision_count' => (int) $row['revision_count'],
+                'latest_feedback' => (string) ($row['latest_feedback'] ?? ''),
+                'latest_revision_at' => $row['latest_revision_at'],
+                'preview_url' => '/generated-sites/' . rawurlencode((string) $row['slug']) . '/',
+                'download_url' => '/api/v1/arch/download.php?slug=' . rawurlencode((string) $row['slug'])
+                    . '&token=' . rawurlencode(Arch::downloadToken((string) $row['slug'])),
+            ];
+        }, $rows);
     }
 
     private static function projectCapacity(\PDO $pdo): array

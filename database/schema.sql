@@ -889,3 +889,17 @@ CREATE TABLE IF NOT EXISTS generated_sites (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_generated_sites_created ON generated_sites (created_at);
+
+-- Every client-requested change applied to an Arch-generated preview. Keeping
+-- the before/after brief makes the admin activity useful for auditing what
+-- changed without storing or trusting generated HTML in the main database.
+CREATE TABLE IF NOT EXISTS arch_site_revisions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  generated_site_id INTEGER NOT NULL REFERENCES generated_sites(id) ON DELETE CASCADE,
+  feedback TEXT NOT NULL,
+  brief_before_json TEXT NOT NULL,
+  brief_after_json TEXT NOT NULL,
+  provider TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_arch_site_revisions_site ON arch_site_revisions (generated_site_id, created_at);

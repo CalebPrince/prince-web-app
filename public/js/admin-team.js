@@ -109,6 +109,43 @@ function renderAgents(agents) {
   }).join('');
 }
 
+function activityDate(value) {
+  if (!value) return 'Not revised';
+  const date = new Date(value.replace(' ', 'T') + 'Z');
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, {
+    day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit'
+  });
+}
+
+function renderArchActivity(items) {
+  const list = document.getElementById('arch-activity-list');
+  if (!items.length) {
+    list.innerHTML = '<div class="arch-activity-empty"><i class="bi bi-window-stack"></i><span>No Arch sites recorded yet.</span><small>Generated sites and client revision requests will appear here.</small></div>';
+    return;
+  }
+  list.innerHTML = items.map(item => {
+    const client = item.client_name || item.client_email || 'Visitor details not provided';
+    const revised = Number(item.revision_count || 0) > 0;
+    return `<article class="arch-activity-row">
+      <div class="arch-activity-site">
+        <span class="arch-site-mark"><i class="bi bi-window"></i></span>
+        <div><strong>${esc(item.business_name)}</strong><small>${esc(item.business_type || item.slug)}</small></div>
+      </div>
+      <div class="arch-activity-client"><span>Client</span><strong>${esc(client)}</strong>${item.client_name && item.client_email ? `<small>${esc(item.client_email)}</small>` : ''}</div>
+      <div class="arch-activity-revision">
+        <span>${revised ? `${Number(item.revision_count)} revision${Number(item.revision_count) === 1 ? '' : 's'}` : 'No revisions'}</span>
+        <strong>${revised ? esc(item.latest_feedback) : 'Client accepted the first preview'}</strong>
+        <small>${revised ? `Last changed ${esc(activityDate(item.latest_revision_at))}` : `Built ${esc(activityDate(item.created_at))}`}</small>
+      </div>
+      <div class="arch-activity-actions">
+        ${item.has_cms ? '<span class="arch-cms-pill">CMS</span>' : ''}
+        <a href="${esc(item.preview_url)}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">Preview <i class="bi bi-box-arrow-up-right"></i></a>
+        <a href="${esc(item.download_url)}" class="btn btn-sm btn-outline-secondary" title="Download deployable package"><i class="bi bi-download"></i></a>
+      </div>
+    </article>`;
+  }).join('');
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -119,6 +156,7 @@ function renderAgents(agents) {
     renderCapacitySummary(data.capacity_summary || {});
     renderOwner(data.owner);
     renderAgents(data.agents);
+    renderArchActivity(data.arch_activity || []);
   } catch (err) {
     const box = document.getElementById('team-error');
     box.textContent = 'Could not load the team: ' + err.message;
