@@ -100,14 +100,27 @@ class DripController
         Response::json(['status' => 'deleted']);
     }
 
-    /** GET /api/v1/admin/drip/enrollments?automation_id=N — omit the filter for every automation's enrollments. */
+    /** GET /api/v1/admin/drip/enrollments?automation_id=N&email=... — omit either filter for a broader match. */
     public static function enrollments(): void
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
 
         $automationId = isset($_GET['automation_id']) ? (int) $_GET['automation_id'] : null;
-        $where = $automationId !== null ? 'WHERE e.automation_id = ?' : '';
+        $email = isset($_GET['email']) ? trim((string) $_GET['email']) : '';
+
+        $conditions = [];
+        $args = [];
+        if ($automationId !== null) {
+            $conditions[] = 'e.automation_id = ?';
+            $args[] = $automationId;
+        }
+        if ($email !== '') {
+            $conditions[] = 'lower(e.email) = lower(?)';
+            $args[] = $email;
+        }
+        $where = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
         $stmt = $pdo->prepare(
             "SELECT e.*, a.name AS automation_name,
                     (SELECT COUNT(*) FROM drip_sends ds WHERE ds.enrollment_id = e.id) AS steps_received,
@@ -116,7 +129,7 @@ class DripController
              JOIN automations a ON a.id = e.automation_id
              {$where} ORDER BY e.enrolled_at DESC"
         );
-        $stmt->execute($automationId !== null ? [$automationId] : []);
+        $stmt->execute($args);
         Response::json($stmt->fetchAll());
     }
 

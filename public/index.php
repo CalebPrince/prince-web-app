@@ -224,6 +224,7 @@ $router->get('/api/v1/admin/contacts', [ContactsController::class, 'index']);
 $router->get('/api/v1/admin/contacts/pipeline-summary', [ContactsController::class, 'pipelineSummary']);
 $router->get('/api/v1/admin/contacts/{email}', [ContactsController::class, 'show']);
 $router->get('/api/v1/admin/clients', [ClientController::class, 'index']);
+$router->post('/api/v1/admin/clients', [ClientController::class, 'store']);
 $router->post('/api/v1/admin/clients/invite', [ClientController::class, 'invite']);
 $router->get('/api/v1/admin/clients/{id}', [ClientController::class, 'show']);
 $router->patch('/api/v1/admin/clients/{id}', [ClientController::class, 'update']);

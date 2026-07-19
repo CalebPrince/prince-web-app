@@ -1,7 +1,11 @@
 let inviteModal = null;
+let addClientModal = null;
 let clientModal = null;
 let currentClientId = null;
+let currentClientEmail = null;
+let currentClientName = null;
 let clientsCache = [];
+let automationsCache = [];
 
 function formatAmount(subunits, currency) {
   return `${currency} ${(Number(subunits || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
@@ -249,15 +253,72 @@ function renderMessages(messages) {
 }
 
 function switchDetailTab(tab) {
-  ['overview', 'projects', 'proposals', 'files', 'messages'].forEach(t => {
+  ['overview', 'projects', 'proposals', 'files', 'messages', 'automations'].forEach(t => {
     document.getElementById(`detail-tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`detail-panel-${t}`).classList.toggle('d-none', t !== tab);
   });
 }
 
+function renderClientAutomations(enrollments) {
+  const list = document.getElementById('detail-automations-list');
+  list.innerHTML = enrollments.length ? enrollments.map(e => `
+    <div class="d-flex justify-content-between align-items-center admin-card p-2">
+      <div>
+        <div class="fw-semibold">${escapeHtml(e.automation_name)}</div>
+        <div class="small text-muted-custom">Enrolled ${new Date(e.enrolled_at).toLocaleDateString()} · ${e.steps_received || 0} step${Number(e.steps_received) === 1 ? '' : 's'} sent</div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="status-pill ${e.status === 'active' ? 'published' : 'archived'}">${e.status === 'active' ? 'Active' : 'Stopped'}</span>
+        <button class="btn btn-sm btn-outline-secondary toggle-enrollment-btn" data-id="${e.id}" data-status="${e.status}">${e.status === 'active' ? 'Stop' : 'Reactivate'}</button>
+        <button class="btn btn-sm btn-outline-danger remove-enrollment-btn" data-id="${e.id}">Remove</button>
+      </div>
+    </div>
+  `).join('') : '<div class="text-muted-custom small">Not enrolled in any automation yet.</div>';
+
+  const enrolledIds = new Set(enrollments.map(e => Number(e.automation_id)));
+  const select = document.getElementById('detail-automation-select');
+  const available = automationsCache.filter(a => !enrolledIds.has(Number(a.id)));
+  select.innerHTML = available.length
+    ? available.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')
+    : '<option value="">No automations available</option>';
+  select.disabled = !available.length;
+  document.querySelector('#detail-automation-form button[type="submit"]').disabled = !available.length;
+
+  list.querySelectorAll('.toggle-enrollment-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const nowActive = btn.dataset.status === 'active';
+      try {
+        await api.patch(`/api/v1/admin/drip/enrollments/${btn.dataset.id}`, { status: nowActive ? 'stopped' : 'active' });
+        await refreshClientAutomations();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+  list.querySelectorAll('.remove-enrollment-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Remove this automation enrollment?')) return;
+      try {
+        await api.delete(`/api/v1/admin/drip/enrollments/${btn.dataset.id}`);
+        await refreshClientAutomations();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+  });
+}
+
+async function refreshClientAutomations() {
+  if (!currentClientEmail) return;
+  const enrollments = await api.get(`/api/v1/admin/drip/enrollments?email=${encodeURIComponent(currentClientEmail)}`);
+  renderClientAutomations(enrollments);
+}
+
 async function openClientDetail(id) {
   currentClientId = id;
   const client = await api.get(`/api/v1/admin/clients/${id}`);
+  currentClientEmail = client.email;
+  currentClientName = client.name;
   document.getElementById('client-modal-title').textContent = client.name;
   document.getElementById('client-modal-subtitle').textContent = `${client.email}${client.phone ? " · " + client.phone : ""}`;
   document.getElementById('detail-panel-overview').innerHTML = renderClientIntelligence(client.intelligence || {});
@@ -265,6 +326,7 @@ async function openClientDetail(id) {
   document.getElementById('detail-panel-proposals').innerHTML = renderProposals(client.proposals || []);
   document.getElementById('detail-files-list').innerHTML = renderFiles(client.files || []);
   renderMessages(client.messages || []);
+  await refreshClientAutomations();
   document.querySelector('[data-open-projects]')?.addEventListener('click', () => switchDetailTab('projects'));
   switchDetailTab('overview');
   clientModal.show();
@@ -276,7 +338,10 @@ async function openClientDetail(id) {
   wireLogout();
 
   inviteModal = new bootstrap.Modal(document.getElementById('invite-modal'));
+  addClientModal = new bootstrap.Modal(document.getElementById('add-client-modal'));
   clientModal = new bootstrap.Modal(document.getElementById('client-modal'));
+
+  api.get('/api/v1/admin/automations').then(rows => { automationsCache = rows; }).catch(() => {});
 
   const refreshFilteredClients = () => { AdminPagination.state.set('clients', 1); renderClients(); };
   document.getElementById('client-search').addEventListener('input', refreshFilteredClients);
@@ -313,6 +378,31 @@ async function openClientDetail(id) {
     }
   });
 
+  document.getElementById('add-client-btn').addEventListener('click', () => {
+    document.getElementById('add-client-form').reset();
+    document.getElementById('add-client-msg').classList.add('d-none');
+    addClientModal.show();
+  });
+
+  document.getElementById('add-client-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('add-client-msg');
+    msg.classList.add('d-none');
+    try {
+      await api.post('/api/v1/admin/clients', {
+        name: document.getElementById('add-client-name').value,
+        email: document.getElementById('add-client-email').value,
+        phone: document.getElementById('add-client-phone').value,
+      });
+      addClientModal.hide();
+      await loadClients();
+    } catch (err) {
+      msg.className = 'alert alert-danger py-2 small';
+      msg.textContent = err.message;
+      msg.classList.remove('d-none');
+    }
+  });
+
   document.getElementById('copy-invite-result-btn').addEventListener('click', async () => {
     const input = document.getElementById('invite-result-url');
     try {
@@ -327,6 +417,23 @@ async function openClientDetail(id) {
   document.getElementById('detail-tab-proposals').addEventListener('click', () => switchDetailTab('proposals'));
   document.getElementById('detail-tab-files').addEventListener('click', () => switchDetailTab('files'));
   document.getElementById('detail-tab-messages').addEventListener('click', () => switchDetailTab('messages'));
+  document.getElementById('detail-tab-automations').addEventListener('click', () => switchDetailTab('automations'));
+
+  document.getElementById('detail-automation-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const automationId = Number(document.getElementById('detail-automation-select').value);
+    if (!automationId || !currentClientEmail) return;
+    try {
+      await api.post('/api/v1/admin/drip/enrollments', {
+        automation_id: automationId,
+        email: currentClientEmail,
+        name: currentClientName,
+      });
+      await refreshClientAutomations();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
 
   document.getElementById('detail-file-form').addEventListener('submit', async (e) => {
     e.preventDefault();
