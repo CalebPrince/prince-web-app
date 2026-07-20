@@ -208,11 +208,18 @@ class SocialDraftController
 
     private static function findSource(\PDO $pdo): ?array
     {
+        // Ordered by updated_at, not created_at — a post drafted (e.g. via
+        // Content Studio's "Send to Blog") sitting unpublished for a while
+        // and only published later would otherwise lose to posts merely
+        // *created* more recently, even though it just went live. Every
+        // save (including the publish toggle) bumps updated_at, so it's the
+        // closer proxy for "when this actually became a live post" — there's
+        // no dedicated published_at column.
         $stmt = $pdo->query(
             "SELECT id, slug, title, excerpt FROM blog_posts
              WHERE is_published = 1
                AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'blog' AND source_id IS NOT NULL)
-             ORDER BY created_at DESC LIMIT 1"
+             ORDER BY updated_at DESC LIMIT 1"
         );
         $blog = $stmt->fetch();
         if ($blog) {
@@ -226,11 +233,12 @@ class SocialDraftController
             ];
         }
 
+        // Same updated_at-over-created_at reasoning as the blog query above.
         $stmt = $pdo->query(
             "SELECT id, slug, title, summary, cover_image_path FROM projects
              WHERE is_published = 1
                AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'project' AND source_id IS NOT NULL)
-             ORDER BY created_at DESC LIMIT 1"
+             ORDER BY updated_at DESC LIMIT 1"
         );
         $project = $stmt->fetch();
         if ($project) {
