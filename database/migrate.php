@@ -1002,4 +1002,17 @@ if (!in_array('mockup_image_url', $proposalColumns, true)) {
     $pdo->exec('ALTER TABLE proposals ADD COLUMN mockup_image_url TEXT');
 }
 
+// Per-project style guide so Caleb can hand Arch a pre-filled chat link
+// instead of the client re-picking colors/style themselves.
+$projectStyleColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');
+if (!in_array('arch_style_keyword', $projectStyleColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN arch_style_keyword TEXT');
+}
+if (!in_array('arch_primary_color', $projectStyleColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN arch_primary_color TEXT');
+}
+if (!in_array('arch_accent_color', $projectStyleColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN arch_accent_color TEXT');
+}
+
 echo "Schema applied.\n";

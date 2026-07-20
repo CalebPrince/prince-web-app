@@ -256,6 +256,29 @@
               <input class="form-control" id="hours_worked" type="number" min="0" step="0.25" placeholder="0">
             </div>
             <div class="col-md-9"><div class="project-finance-preview" id="project-finance-preview"><span>Profit and margin will appear here as you enter the figures.</span></div></div>
+            <div class="col-12"><div class="project-finance-divider"><span>Style guide</span><small>Admin only — lets you hand this client an Arch chat link pre-filled with these choices, instead of them picking colors themselves.</small></div></div>
+            <div class="col-md-3">
+              <label class="form-label" for="arch_style_keyword">Style</label>
+              <select class="form-select" id="arch_style_keyword">
+                <option value="">Let the client choose</option>
+                <option value="modern">Modern</option>
+                <option value="classic">Classic</option>
+                <option value="minimal">Minimal</option>
+                <option value="bold">Bold</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="arch_primary_color">Primary color</label>
+              <input class="form-control" id="arch_primary_color" type="text" placeholder="#3366ff">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="arch_accent_color">Accent color</label>
+              <input class="form-control" id="arch_accent_color" type="text" placeholder="#ff6633">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="button" class="btn btn-outline-secondary w-100" id="copy-arch-link-btn"><i class="bi bi-link-45deg me-1"></i>Copy Arch link</button>
+            </div>
+            <div class="col-12 d-none" id="arch-link-msg"></div>
             <div class="col-md-8">
               <label class="form-label">Cover image</label>
               <div class="d-flex align-items-center gap-2 mb-2">

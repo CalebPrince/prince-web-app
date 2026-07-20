@@ -318,6 +318,10 @@ function openNewModal() {
   document.getElementById("finance_currency").value = "GHS";
   ["contract_value", "estimated_cost", "actual_cost", "hours_worked"].forEach(id => { document.getElementById(id).value = ""; });
   updateFinancePreview();
+  document.getElementById("arch_style_keyword").value = "";
+  document.getElementById("arch_primary_color").value = "";
+  document.getElementById("arch_accent_color").value = "";
+  document.getElementById("arch-link-msg").classList.add("d-none");
   setCoverPreview(null);
   galleryPaths = [];
   renderGalleryList();
@@ -357,6 +361,10 @@ function openEditModal(project) {
   document.getElementById("actual_cost").value = Number(project.actual_cost || 0) / 100 || "";
   document.getElementById("hours_worked").value = Number(project.hours_worked || 0) || "";
   updateFinancePreview();
+  document.getElementById("arch_style_keyword").value = project.arch_style_keyword || "";
+  document.getElementById("arch_primary_color").value = project.arch_primary_color || "";
+  document.getElementById("arch_accent_color").value = project.arch_accent_color || "";
+  document.getElementById("arch-link-msg").classList.add("d-none");
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
   setCoverPreview(project.cover_image_path);
@@ -364,6 +372,44 @@ function openEditModal(project) {
   renderGalleryList();
   document.getElementById("modal-title").textContent = "Edit Project";
   projectModal.show();
+}
+
+// Base64-encodes a JSON payload safely for a URL, tolerating non-ASCII
+// (e.g. an accented business name) — plain btoa() throws on those.
+function encodeUnicodeBase64(obj) {
+  const json = JSON.stringify(obj);
+  const utf8 = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  return btoa(utf8);
+}
+
+async function copyArchLink() {
+  const msg = document.getElementById("arch-link-msg");
+  const style = document.getElementById("arch_style_keyword").value;
+  const primary = document.getElementById("arch_primary_color").value.trim();
+  const accent = document.getElementById("arch_accent_color").value.trim();
+  const businessName = document.getElementById("title").value.trim();
+
+  if (!style && !primary && !accent) {
+    msg.className = "alert alert-warning py-2 small mt-2";
+    msg.textContent = "Set a style and/or colors above first — otherwise this is just the plain Arch link.";
+    msg.classList.remove("d-none");
+  }
+
+  const prefill = {};
+  if (style) prefill.style = style;
+  if (primary) prefill.primary_color = primary;
+  if (accent) prefill.secondary_color = accent;
+  if (businessName) prefill.business_name = businessName;
+
+  const url = `${window.location.origin}/chat.html${Object.keys(prefill).length ? `?prefill=${encodeUnicodeBase64(prefill)}` : ""}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    msg.className = "alert alert-success py-2 small mt-2";
+    msg.textContent = "Copied — the client's chat will skip asking about whatever you set above.";
+    msg.classList.remove("d-none");
+  } catch (_) {
+    prompt("Copy this Arch link:", url);
+  }
 }
 
 async function saveProject() {
@@ -395,6 +441,9 @@ async function saveProject() {
     hours_worked: Number(document.getElementById("hours_worked").value) || 0,
     deadline: document.getElementById("deadline").value || null,
     assigned_agent_key: document.getElementById("assigned_agent_key").value || null,
+    arch_style_keyword: document.getElementById("arch_style_keyword").value || null,
+    arch_primary_color: document.getElementById("arch_primary_color").value.trim() || null,
+    arch_accent_color: document.getElementById("arch_accent_color").value.trim() || null,
     milestones: projectMilestones.map(milestone => ({ id: milestone.id || null, title: milestone.title.trim(), due_date: milestone.due_date || null, is_completed: milestone.is_completed })),
   };
 
@@ -431,6 +480,7 @@ async function deleteProject(id) {
   projectModal = new bootstrap.Modal(document.getElementById("project-modal"));
   document.getElementById("new-project-btn").addEventListener("click", openNewModal);
   document.getElementById("save-project-btn").addEventListener("click", saveProject);
+  document.getElementById("copy-arch-link-btn").addEventListener("click", copyArchLink);
   document.getElementById("title").addEventListener("input", () => updateSlugFromTitle());
   document.getElementById("slug").addEventListener("input", () => {
     slugEditedManually = true;

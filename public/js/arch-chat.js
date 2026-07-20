@@ -128,6 +128,25 @@
     }
   }
 
+  // Reads ?prefill= (base64 JSON from admin-projects.js's "Copy Arch link"),
+  // so a client Caleb has already set a style guide for skips being asked
+  // about it — mergeBrief() on the server just treats these as already
+  // answered, same as if the model itself had collected them. Returns null
+  // on anything malformed rather than breaking the chat.
+  function decodePrefill() {
+    try {
+      var raw = new URLSearchParams(window.location.search).get("prefill");
+      if (!raw) return null;
+      var percentEncoded = atob(raw).split("").map(function (c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join("");
+      var data = JSON.parse(decodeURIComponent(percentEncoded));
+      return data && typeof data === "object" ? data : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Defense in depth: the API already rejects internal model artifacts, but
   // never render them if a stale deployment or upstream provider emits one.
   function safeReply(reply, step) {
@@ -428,7 +447,15 @@
       var name = (c && c.arch_assistant_name) || "Arch";
       var avatar = document.querySelector(".arch-avatar");
       if (avatar && name) avatar.textContent = name.trim().charAt(0).toUpperCase();
-      if (!restoreSession()) greet(name);
+      if (!restoreSession()) {
+        var prefill = decodePrefill();
+        if (prefill) {
+          ["style", "primary_color", "secondary_color", "business_name"].forEach(function (key) {
+            if (prefill[key]) brief[key] = String(prefill[key]);
+          });
+        }
+        greet(name);
+      }
       input.focus();
     });
 })();

@@ -752,6 +752,25 @@ storage/
     even though it still appears, like every agent, as a selectable
     "supporting agent" on a project.
 
+    **Style guide → Arch pre-fill:** Arch's own brief-driven chat has no
+    link to `projects` at all — it's a standalone conversation (any visitor,
+    or a client Caleb sends a link to) that already asks the client to pick
+    a style and colors itself. To let Caleb set that in advance instead
+    (`/admin/projects.html`, a "Style guide" section next to Project
+    finances: style keyword, primary/accent color, admin-only, stripped
+    from public project API responses like the finance fields —
+    `projects.arch_style_keyword`/`arch_primary_color`/`arch_accent_color`),
+    "Copy Arch link" base64-encodes those choices (plus the project title as
+    `business_name`) into `/chat.html?prefill=...`. `arch-chat.js` decodes
+    it on load and merges the fields straight into the client-held `brief`
+    object before the first turn — no backend change to Arch itself needed,
+    since `Arch::stepStatus()`'s style check is just "is `brief['style']`
+    already set," so a pre-filled field is indistinguishable from one the
+    model collected, and that step is skipped in conversation. Purely
+    additive and stateless (no server-side storage of the link) — a client
+    who arrives without `?prefill=` still picks everything themselves,
+    exactly as before.
+
     **Inbound Funnel (Lisa → Ledger):** the moment a visitor books a
     discovery call through Lisa's `book_appointment` tool, the exact chat
     transcript that led to it — plus the real, validated name/email/phone —

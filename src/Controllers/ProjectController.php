@@ -142,8 +142,8 @@ class ProjectController
         $pdo = Database::get();
         $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key, arch_style_keyword, arch_primary_color, arch_accent_color)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $clientId,
@@ -171,6 +171,9 @@ class ProjectController
             self::currencyValue($data['finance_currency'] ?? 'GHS'),
             self::dateValue($data['deadline'] ?? null),
             self::agentKeyValue($data['assigned_agent_key'] ?? null),
+            self::styleKeywordValue($data['arch_style_keyword'] ?? null),
+            self::hexColorValue($data['arch_primary_color'] ?? null),
+            self::hexColorValue($data['arch_accent_color'] ?? null),
         ]);
         $projectId = (int) $pdo->lastInsertId();
 
@@ -214,7 +217,8 @@ class ProjectController
             "UPDATE projects SET client_id=?, slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
              outcome_metrics=?, testimonial_id=?, delivery_status=?, progress_percent=?, contract_value=?, estimated_cost=?,
-             actual_cost=?, hours_worked=?, finance_currency=?, deadline=?, assigned_agent_key=?, updated_at=datetime('now') WHERE id=?"
+             actual_cost=?, hours_worked=?, finance_currency=?, deadline=?, assigned_agent_key=?, arch_style_keyword=?,
+             arch_primary_color=?, arch_accent_color=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $clientId,
@@ -242,6 +246,9 @@ class ProjectController
             self::currencyValue($data['finance_currency'] ?? 'GHS'),
             self::dateValue($data['deadline'] ?? null),
             self::agentKeyValue($data['assigned_agent_key'] ?? null),
+            self::styleKeywordValue($data['arch_style_keyword'] ?? null),
+            self::hexColorValue($data['arch_primary_color'] ?? null),
+            self::hexColorValue($data['arch_accent_color'] ?? null),
             $id,
         ]);
 
@@ -368,15 +375,32 @@ class ProjectController
     {
         $key = trim((string) ($value ?? ''));
         if ($key === '') return null;
-        if (!in_array($key, ['lisa','nurturer','beacon','dossier','proposal','content','arch'], true)) Response::error('Choose a valid AI agent.', 422);
+        if (!in_array($key, ['lisa','nurturer','beacon','dossier','proposal','content','arch','sketch'], true)) Response::error('Choose a valid AI agent.', 422);
         return $key;
+    }
+
+    private static function styleKeywordValue(mixed $value): ?string
+    {
+        $style = strtolower(trim((string) ($value ?? '')));
+        if ($style === '') return null;
+        if (!in_array($style, ['modern', 'classic', 'minimal', 'bold'], true)) Response::error('Choose a valid style.', 422);
+        return $style;
+    }
+
+    private static function hexColorValue(mixed $value): ?string
+    {
+        $color = trim((string) ($value ?? ''));
+        if ($color === '') return null;
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $color)) Response::error('Colors must be a hex value like #3366ff.', 422);
+        return $color;
     }
 
     private static function removePrivateFinance(array &$project): void
     {
         unset(
             $project['contract_value'], $project['estimated_cost'], $project['actual_cost'],
-            $project['hours_worked'], $project['finance_currency'], $project['deadline'], $project['assigned_agent_key']
+            $project['hours_worked'], $project['finance_currency'], $project['deadline'], $project['assigned_agent_key'],
+            $project['arch_style_keyword'], $project['arch_primary_color'], $project['arch_accent_color']
         );
     }
 

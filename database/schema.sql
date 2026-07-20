@@ -43,6 +43,13 @@ CREATE TABLE IF NOT EXISTS projects (
   finance_currency TEXT NOT NULL DEFAULT 'GHS',
   deadline TEXT,
   assigned_agent_key TEXT,
+  -- Style guide for this client, set by hand so Caleb can hand Arch a
+  -- pre-filled chat link (see arch-chat.js's ?prefill= param) instead of
+  -- the client re-picking colors/style themselves. Admin-only, stripped
+  -- from public project API responses like the finance fields above.
+  arch_style_keyword TEXT,
+  arch_primary_color TEXT,
+  arch_accent_color TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
