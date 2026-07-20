@@ -365,6 +365,8 @@ body { background: var(--bg-soft, #f8fafc); font-family: "Inter", system-ui, san
 
 :root {
   --admin-sidebar-width: 272px;
+  --admin-page-space: clamp(1rem, 2vw, 1.5rem);
+  --admin-section-space: clamp(.85rem, 1.4vw, 1.15rem);
   --section-blue: var(--heading-color, #111827);
   --section-blue-soft: var(--accent-soft, rgba(10, 11, 13, 0.06));
   --section-content: var(--heading-color, #111827);
@@ -533,6 +535,33 @@ body > .d-flex {
 
 .admin-card:hover {
   border-color: var(--line-strong);
+}
+
+.admin-sidebar + .flex-grow-1.p-4,
+.admin-sidebar + main.flex-grow-1.p-4 {
+  padding: var(--admin-page-space) !important;
+}
+.admin-sidebar + .flex-grow-1 .row,
+.admin-sidebar + main.flex-grow-1 .row {
+  --bs-gutter-x: var(--admin-section-space);
+  --bs-gutter-y: var(--admin-section-space);
+}
+.admin-sidebar + .flex-grow-1 :is(h1, h2, h3),
+.admin-sidebar + main.flex-grow-1 :is(h1, h2, h3) {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  letter-spacing: -.035em;
+}
+.admin-sidebar + .flex-grow-1 :is(h4, h5, h6),
+.admin-sidebar + main.flex-grow-1 :is(h4, h5, h6) {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  letter-spacing: -.018em;
+}
+:is(.stat-value, time, .dashboard-clock, .team-list strong, .rank, [data-numeric]) {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+@media (max-width: 575.98px) {
+  :root { --admin-page-space: .85rem; --admin-section-space: .75rem; }
 }
 
 .admin-card-header {
