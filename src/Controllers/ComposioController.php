@@ -27,7 +27,7 @@ class ComposioController
         'google_calendar' => 'Google Calendar',
         'gmail' => 'Gmail',
         'slack' => 'Slack',
-        'whatsapp' => 'WhatsApp Business',
+        'linkedin' => 'LinkedIn',
     ];
 
     /** GET /api/v1/admin/composio/status */

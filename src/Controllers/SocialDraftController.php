@@ -7,9 +7,11 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AiText;
+use App\Support\Composio;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
+use App\Support\Settings;
 use App\Support\ShortLink;
 
 /**
@@ -18,8 +20,12 @@ use App\Support\ShortLink;
  * "Generate now" button. Drafts spotlight the most recent published
  * blog post / project / approved testimonial that hasn't already been
  * drafted, falling back to an original evergreen post when there's nothing
- * new. Approval fires a Make.com event (see MakeWebhook) — actual
- * publishing to social platforms happens there, not in this app.
+ * new. Approval fires a Make.com event (see MakeWebhook) for whatever
+ * platforms Caleb has wired up there, and — separately, if a LinkedIn
+ * Composio account is connected — actually publishes the post to LinkedIn
+ * directly (see publishToLinkedIn()), recording the outcome in
+ * published_at/publish_error so approval can genuinely mean "posted," not
+ * just "queued somewhere else."
  */
 class SocialDraftController
 {
@@ -99,9 +105,59 @@ class SocialDraftController
                 'source_type' => $fresh['source_type'],
             ]);
             $pdo->prepare('UPDATE social_post_drafts SET sent_to_makecom = 1 WHERE id = ?')->execute([$id]);
+
+            self::publishToLinkedIn($pdo, $fresh);
         }
 
         Response::json(['status' => 'updated']);
+    }
+
+    /**
+     * Best-effort direct LinkedIn post via Composio, run on approval — never
+     * blocks or fails the approval itself. Composio's exact LinkedIn tool
+     * slug/payload shape isn't confirmed against a live account yet (same
+     * caveat as the booking actions in AppointmentController), so this tries
+     * a couple of plausible field-name variants and records whichever
+     * succeeded — or the last error, so Caleb can see why nothing posted —
+     * in published_at/publish_error rather than failing silently.
+     */
+    private static function publishToLinkedIn(\PDO $pdo, array $draft): void
+    {
+        if (empty(Settings::get('composio_api_key'))) {
+            return;
+        }
+        $accountId = Settings::get('composio_linkedin_account_id');
+        if (empty($accountId)) {
+            return;
+        }
+        $tool = Settings::get('composio_linkedin_post_tool') ?: 'LINKEDIN_CREATE_LINKED_IN_POST';
+
+        $text = trim((string) $draft['content']);
+        if (!empty($draft['hashtags'])) {
+            $text .= "\n\n" . trim((string) $draft['hashtags']);
+        }
+
+        $variants = [
+            ['text' => $text],
+            ['commentary' => $text, 'visibility' => 'PUBLIC'],
+            ['content' => $text],
+        ];
+
+        foreach ($variants as $payload) {
+            $result = Composio::executeTool($tool, $accountId, $payload);
+            if ($result !== null) {
+                $pdo->prepare("UPDATE social_post_drafts SET published_at = datetime('now'), publish_error = NULL WHERE id = ?")
+                    ->execute([$draft['id']]);
+                Settings::set('composio_linkedin_last_error', '');
+                return;
+            }
+        }
+
+        $lastError = Composio::lastError() ?: 'No detailed Composio error was returned.';
+        $pdo->prepare('UPDATE social_post_drafts SET publish_error = ? WHERE id = ?')
+            ->execute([$lastError, $draft['id']]);
+        Settings::set('composio_linkedin_last_error', date('c') . ' - LinkedIn publish failed using ' . $tool . ': ' . $lastError);
+        error_log("Composio LinkedIn publish failed for draft {$draft['id']} using {$tool}: {$lastError}");
     }
 
     /** DELETE /api/v1/admin/social-drafts/{id} */

@@ -371,14 +371,6 @@ class AppointmentController
             'channel' => Settings::get('composio_slack_channel') ?: null,
             'text' => $details,
         ], 'SLACK_SEND_MESSAGE');
-
-        $whatsappTo = Settings::get('composio_whatsapp_booking_to') ?: $booking['phone'];
-        if (!empty($whatsappTo)) {
-            self::executeBookingAction('whatsapp', [
-                'to' => $whatsappTo,
-                'message' => $details,
-            ], 'WHATSAPP_SEND_MESSAGE');
-        }
     }
 
     private static function executeBookingAction(string $toolkit, array $payloads, string $defaultTool): void

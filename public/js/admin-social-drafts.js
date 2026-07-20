@@ -45,6 +45,8 @@ function renderDraftsTable(drafts) {
       <td>
         <span class="status-pill ${STATUS_CLASS[d.status] || 'unread'}">${escapeHtml(d.status)}</span>
         ${d.ai_provider ? `<div class="small text-muted-custom mt-1">${escapeHtml(providerLabel(d.ai_provider))}</div>` : ''}
+        ${d.published_at ? `<div class="small text-success mt-1"><i class="bi bi-linkedin"></i> Posted to LinkedIn</div>` : ''}
+        ${!d.published_at && d.publish_error ? `<div class="small text-danger mt-1" title="${escapeHtml(d.publish_error)}"><i class="bi bi-linkedin"></i> LinkedIn post failed</div>` : ''}
       </td>
       <td class="small text-muted-custom">${new Date(d.created_at).toLocaleString()}</td>
       <td class="text-end pe-3">

@@ -284,8 +284,8 @@
               <input type="text" class="form-control" id="composio-slack-auth-config-id" placeholder="ac_..." autocomplete="off">
             </div>
             <div class="mb-3">
-              <label class="form-label">Composio WhatsApp Auth Config ID <span class="text-muted-custom fw-normal">(optional)</span></label>
-              <input type="text" class="form-control" id="composio-whatsapp-auth-config-id" placeholder="ac_..." autocomplete="off">
+              <label class="form-label">Composio LinkedIn Auth Config ID <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" id="composio-linkedin-auth-config-id" placeholder="ac_..." autocomplete="off">
               <div class="form-text">Create an Auth Config per app in your Composio dashboard, then paste its ID here — this unlocks the Connect button for that app below.</div>
             </div>
             <hr>
@@ -315,14 +315,12 @@
                 <label class="form-label">Slack channel</label>
                 <input type="text" class="form-control" id="composio-slack-channel" placeholder="#bookings or channel ID" autocomplete="off">
               </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">WhatsApp booking tool</label>
-                <input type="text" class="form-control" id="composio-whatsapp-booking-tool" placeholder="WHATSAPP_SEND_MESSAGE" autocomplete="off">
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">WhatsApp recipient</label>
-                <input type="text" class="form-control" id="composio-whatsapp-booking-to" placeholder="+233..." autocomplete="off">
-              </div>
+            </div>
+            <hr>
+            <p class="text-muted-custom small mb-3">LinkedIn posting runs automatically whenever a Social Draft is approved on the Social Drafts page — no separate button, approval is the trigger.</p>
+            <div class="mb-3">
+              <label class="form-label">LinkedIn post tool</label>
+              <input type="text" class="form-control" id="composio-linkedin-post-tool" placeholder="LINKEDIN_CREATE_LINKED_IN_POST" autocomplete="off">
             </div>
             <div id="integrations-msg" class="alert py-2 small d-none"></div>
             <div class="d-flex gap-2">

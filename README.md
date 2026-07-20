@@ -515,8 +515,13 @@ storage/
     in the review modal); evergreen and testimonial drafts have none by
     default since there's no natural image to attach. Admin reviews/edits
     before approving; approval fires the `social_post_approved` Make.com
-    event above — actual publishing to social platforms happens in Make.com
-    via its platform connectors, not in this app. Each draft also records
+    event above for whatever platforms are wired up there, and — separately
+    — if a LinkedIn Composio account is connected (#33 below), also posts
+    the draft to LinkedIn directly via `Composio::executeTool()`, recording
+    the outcome in `published_at`/`publish_error` on the draft row (shown
+    in the admin list) rather than just assuming Make.com handled it. Best
+    effort and non-blocking — a LinkedIn publish failure never fails the
+    approval itself. Each draft also records
     which provider (`ai_provider`: `gemini`, `openrouter`, or `groq`)
     actually generated it, shown in the admin list and review modal —
     useful for noticing if Gemini's quota is exhausted and everything is
@@ -550,22 +555,26 @@ storage/
     extra details where relevant (e.g. changed pricing keys).
 33. **Composio connected accounts** (Admin -> Settings -> Connected Accounts,
     `src/Support/Composio.php`, `ComposioController.php`): lets the app take
-    real actions in third-party apps (Google Calendar, Gmail, Slack, WhatsApp
-    Business - extendable via `ComposioController::TOOLKITS`) on the admin's
-    behalf, via Composio's OAuth-managed tool-calling API. Each toolkit
-    needs an Auth Config ID (created once in the Composio dashboard) pasted
-    into Settings, then a one-time Connect flow that opens Composio's OAuth
-    authorization in a new tab. Booking actions can be configured per tool
-    from the same Settings form. **Status: Google Calendar, Gmail, and
-    Slack booking actions all confirmed working end-to-end against a live
-    Composio account (2026-07) — a Live Chat booking correctly created a
-    calendar event, sent the Gmail notification, and posted to Slack.
-    Slack required inviting Composio's connected app into the target
-    channel first (`/invite @Composio` or Channel → Integrations → Add an
-    App) and approving it in workspace App Management if the workspace
-    restricts unapproved third-party apps — without that, the message is
-    silently dropped with no error surfaced anywhere. WhatsApp connect flow
-    built, not yet exercised live.**
+    real actions in third-party apps (Google Calendar, Gmail, Slack,
+    LinkedIn - extendable via `ComposioController::TOOLKITS`) on the
+    admin's behalf, via Composio's OAuth-managed tool-calling API. Each
+    toolkit needs an Auth Config ID (created once in the Composio
+    dashboard) pasted into Settings, then a one-time Connect flow that
+    opens Composio's OAuth authorization in a new tab. Booking actions can
+    be configured per tool from the same Settings form. **Status: Google
+    Calendar, Gmail, and Slack booking actions all confirmed working
+    end-to-end against a live Composio account (2026-07) — a Live Chat
+    booking correctly created a calendar event, sent the Gmail
+    notification, and posted to Slack. Slack required inviting Composio's
+    connected app into the target channel first (`/invite @Composio` or
+    Channel → Integrations → Add an App) and approving it in workspace App
+    Management if the workspace restricts unapproved third-party apps —
+    without that, the message is silently dropped with no error surfaced
+    anywhere. WhatsApp Business via Composio was tried and removed — too
+    much setup friction for what it added, in favor of the Twilio
+    integration instead (#31/#32 above, Lisa on WhatsApp). LinkedIn connect
+    flow built, not yet exercised live** — see #30 above for what it's
+    wired to do once connected.
 34. **Client-side error capture** (`ClientErrorController::log()`,
     `public/js/error-log.js`) — a small script, loaded first thing in
     `<head>` on every page across the whole site (public and admin alike),
