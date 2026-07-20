@@ -2,6 +2,39 @@ function formatAmount(subunits, currency) {
   return `${currency} ${(subunits / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
+function dashboardDisplayName(user) {
+  const suppliedName = user.name || user.display_name || user.full_name;
+  if (suppliedName) return String(suppliedName).trim().split(/\s+/)[0];
+  const emailName = String(user.email || 'there').split('@')[0].split(/[._-]+/)[0];
+  return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+}
+
+function startDashboardClock(user) {
+  const greeting = document.getElementById('dashboard-greeting');
+  const date = document.getElementById('dashboard-date');
+  const time = document.getElementById('dashboard-time');
+  const timezone = document.getElementById('dashboard-timezone');
+  const firstName = dashboardDisplayName(user);
+
+  function update() {
+    const now = new Date();
+    const hour = now.getHours();
+    const salutation = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    greeting.textContent = `${salutation}, ${firstName}.`;
+    date.textContent = new Intl.DateTimeFormat(undefined, {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+    }).format(now);
+    time.textContent = new Intl.DateTimeFormat(undefined, {
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).format(now);
+    timezone.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone.replaceAll('_', ' ');
+    time.dateTime = now.toISOString();
+  }
+
+  update();
+  window.setInterval(update, 1000);
+}
+
 const DASHBOARD_MODE_COPY = {
   operational: 'Delivery health, workload, and immediate action.',
   sales: 'Lead movement, open opportunities, and deals won.',
@@ -180,6 +213,7 @@ function renderAttention(items) {
   const user = await requireAdminAuth();
   if (!user) return;
   wireLogout();
+  startDashboardClock(user);
 
   document.getElementById("welcome-line").textContent =
     `Signed in as ${user.email} — here's how your portfolio is doing.`;

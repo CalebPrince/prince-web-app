@@ -72,16 +72,21 @@
   </div>
 
   <div class="flex-grow-1 p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-blue-soft); color: var(--section-blue);"><i class="bi bi-speedometer2"></i></div>
-        <div>
-          <h3 class="mb-0">Dashboard</h3>
-          <p class="text-muted-custom mb-0 small" id="welcome-line">Here's how your portfolio is doing.</p>
-        </div>
+    <header class="dashboard-welcome mb-4" aria-labelledby="dashboard-greeting">
+      <div class="dashboard-welcome-copy">
+        <p class="dashboard-date mb-0" id="dashboard-date">Your command centre</p>
+        <h1 id="dashboard-greeting">Good morning.</h1>
+        <p class="dashboard-welcome-line mb-0" id="welcome-line">Here’s how your portfolio is doing.</p>
       </div>
-      <a href="/admin/projects.html" class="btn-brand text-decoration-none">+ New Project</a>
-    </div>
+      <div class="dashboard-welcome-actions">
+        <div class="dashboard-clock" aria-live="off">
+          <span class="dashboard-clock-label">Local time</span>
+          <time id="dashboard-time">--:--</time>
+          <span id="dashboard-timezone">Accra</span>
+        </div>
+        <a href="/admin/projects.html" class="btn-brand text-decoration-none"><i class="bi bi-plus-lg" aria-hidden="true"></i> New Project</a>
+      </div>
+    </header>
 
     <div class="dashboard-mode-switch mb-4" role="tablist" aria-label="Dashboard summary mode">
       <button type="button" role="tab" data-dashboard-mode="operational"><i class="bi bi-kanban"></i><span>Operational<small>Delivery and action</small></span></button>
@@ -219,6 +224,6 @@
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-dashboard.js?v=20260719"></script>
+<script src="/js/admin-dashboard.js?v=20260720"></script>
 </body>
 </html>
