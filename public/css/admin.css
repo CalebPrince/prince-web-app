@@ -609,9 +609,47 @@ body > .d-flex {
 }
 
 .admin-table-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
+  max-height: min(68vh, 760px);
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.admin-data-table {
+  min-width: 720px;
+  font-variant-numeric: tabular-nums;
+}
+.admin-data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding-top: .72rem;
+  padding-bottom: .72rem;
+  background: color-mix(in srgb, var(--card-bg) 96%, transparent);
+  box-shadow: inset 0 -1px var(--line);
+  backdrop-filter: blur(12px);
+}
+.admin-data-table tbody td {
+  padding-top: .68rem;
+  padding-bottom: .68rem;
+  transition: color .16s ease, background-color .16s ease;
+}
+.admin-data-table tbody tr:hover > td {
+  --bs-table-color-state: var(--ink-soft);
+  --bs-table-bg-state: var(--bg-soft);
+  color: var(--ink-soft);
+  background-color: var(--bg-soft);
+}
+.admin-data-table tbody tr:is(.active, .selected, [aria-selected="true"]) > td {
+  color: var(--heading-color);
+  background: color-mix(in srgb, var(--heading-color) 7%, var(--card-bg));
+  box-shadow: inset 3px 0 var(--heading-color);
+}
+.admin-data-table tbody tr:is(.active, .selected, [aria-selected="true"]) > td:not(:first-child) { box-shadow: none; }
+@media (max-width: 767.98px) {
+  .admin-table-scroll { max-height: min(64vh, 620px); }
+  .admin-data-table { min-width: 660px; }
 }
 
 .payments-table {
