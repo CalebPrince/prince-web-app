@@ -6,6 +6,8 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
+use App\Support\EmailTemplate;
+use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -206,5 +208,45 @@ class SettingsController
         }
 
         Response::json(['status' => 'saved']);
+    }
+
+    /**
+     * POST /api/v1/admin/settings/test-email
+     * Sends a sample of one email template to the admin's own inbox so the
+     * branded design can be checked in a real mail client. Body:
+     *   { key: "invoice_send", subject?, html?, text? }
+     * The optional subject/html/text let the button preview unsaved edits;
+     * blank ones fall back to the built-in template.
+     */
+    public static function sendTestEmail(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        $key = trim((string) ($data['key'] ?? ''));
+        if (!isset(EmailTemplate::defaults()[$key])) {
+            Response::error('Unknown email template.', 422);
+        }
+
+        // Deliver to the admin's own inbox — the notification address if set,
+        // otherwise the login email. Never to an address from the request body.
+        $to = Settings::get('notification_email') ?: (string) ($user['email'] ?? '');
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            Response::error('No valid admin inbox found. Set a notification email under Integrations first.', 422);
+        }
+
+        $rendered = EmailTemplate::preview($key, [
+            'subject' => (string) ($data['subject'] ?? ''),
+            'html' => (string) ($data['html'] ?? ''),
+            'text' => (string) ($data['text'] ?? ''),
+        ], EmailTemplate::sampleVars($to));
+
+        $sent = Mailer::sendHtml($to, '[TEST] ' . $rendered['subject'], $rendered['html'], $rendered['text']);
+        if (!$sent) {
+            Response::error('Could not send — check that Gmail SMTP is configured under Email delivery.', 502);
+        }
+
+        ActivityLog::log($user, 'sent', 'test_email', null, null, ['template' => $key, 'to' => $to]);
+        Response::json(['status' => 'sent', 'to' => $to]);
     }
 }

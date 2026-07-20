@@ -13,14 +13,71 @@ class EmailTemplate
      */
     public static function render(string $key, array $vars, array $defaults): array
     {
-        $subject = Settings::get("email_tpl_{$key}_subject") ?: $defaults['subject'];
-        $html = Settings::get("email_tpl_{$key}_html") ?: $defaults['html'];
-        $text = Settings::get("email_tpl_{$key}_text") ?: $defaults['text'];
+        return self::renderFrom($key, $vars, [
+            'subject' => Settings::get("email_tpl_{$key}_subject") ?: $defaults['subject'],
+            'html' => Settings::get("email_tpl_{$key}_html") ?: $defaults['html'],
+            'text' => Settings::get("email_tpl_{$key}_text") ?: $defaults['text'],
+        ]);
+    }
 
+    /**
+     * Render straight from supplied template strings (blank fields fall back to
+     * the built-in default), ignoring any saved Settings override. Used by the
+     * admin "send test" button so it previews exactly what's on screen, even
+     * before the template is saved.
+     *
+     * @param array{subject?:string,html?:string,text?:string} $overrides
+     * @param array<string, scalar|null> $vars
+     * @return array{subject:string,html:string,text:string}
+     */
+    public static function preview(string $key, array $overrides, array $vars): array
+    {
+        $defaults = self::defaults()[$key] ?? self::defaults()['payment_success'];
+        return self::renderFrom($key, $vars, [
+            'subject' => trim((string) ($overrides['subject'] ?? '')) !== '' ? (string) $overrides['subject'] : $defaults['subject'],
+            'html' => trim((string) ($overrides['html'] ?? '')) !== '' ? (string) $overrides['html'] : $defaults['html'],
+            'text' => trim((string) ($overrides['text'] ?? '')) !== '' ? (string) $overrides['text'] : $defaults['text'],
+        ]);
+    }
+
+    /**
+     * @param array{subject:string,html:string,text:string} $tpl
+     * @param array<string, scalar|null> $vars
+     * @return array{subject:string,html:string,text:string}
+     */
+    private static function renderFrom(string $key, array $vars, array $tpl): array
+    {
         return [
-            'subject' => self::replace($subject, $vars, false),
-            'html' => self::wrapHtml(self::replace($html, $vars, true), $key),
-            'text' => self::replace($text, $vars, false),
+            'subject' => self::replace($tpl['subject'], $vars, false),
+            'html' => self::wrapHtml(self::replace($tpl['html'], $vars, true), $key),
+            'text' => self::replace($tpl['text'], $vars, false),
+        ];
+    }
+
+    /**
+     * Realistic placeholder values covering every template's variables — used
+     * for test/preview sends so no template renders with empty {{tokens}}.
+     *
+     * @return array<string, string>
+     */
+    public static function sampleVars(string $recipientEmail = 'client@example.com'): array
+    {
+        return [
+            'name' => 'Ama', 'client_name' => 'Ama', 'client_email' => $recipientEmail, 'client_phone' => '+233 20 000 0000',
+            'currency' => 'GHS', 'amount' => '4,500.00',
+            'description' => 'Restaurant booking web app', 'plan_name' => 'Care plan — Standard', 'reference' => 'SUB-TEST-01',
+            'invoice_number' => 'INV-2041', 'invoice_url' => 'https://princecaleb.dev/invoice.html?id=test',
+            'due_line' => 'Payment is due by 30 July 2026.',
+            'booking_url' => 'https://princecaleb.dev/book.html',
+            'proposal_title' => 'Restaurant booking platform', 'proposal_url' => 'https://princecaleb.dev/proposal.html?id=test',
+            'portal_url' => 'https://princecaleb.dev/client/', 'reset_url' => 'https://princecaleb.dev/client/reset?token=test',
+            'testimonial_url' => 'https://princecaleb.dev/testimonial.html?token=test', 'project_reference_line' => ' on the booking platform',
+            'payment_url' => 'https://princecaleb.dev/pay.html?id=test', 'milestone_title' => 'Milestone 2 — Build',
+            'date' => 'Thursday, 24 July 2026', 'time' => '3:00 PM', 'timezone' => 'GMT',
+            'topic' => 'App scope call', 'topic_line' => 'We will talk through your app idea and scope.',
+            'project_type' => 'Web app', 'budget' => 'GHS 5k–10k', 'timeline' => '4–6 weeks',
+            'message_body' => 'Just checking in — let me know if you have any questions.',
+            'notification_type' => 'New inquiry', 'details_html' => '', 'details_text' => '', 'source_label' => 'contact form',
         ];
     }
 

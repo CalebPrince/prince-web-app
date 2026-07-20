@@ -300,6 +300,50 @@ async function saveEmailTemplates(e) {
   }
 }
 
+async function sendTestEmail(btn) {
+  const { key, id } = btn.dataset;
+  const status = btn.parentElement.querySelector(".test-email-status");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  status.className = "test-email-status small text-muted-custom";
+  status.textContent = "";
+  try {
+    const r = await api.post("/api/v1/admin/settings/test-email", {
+      key,
+      subject: document.getElementById(`email-tpl-${id}-subject`).value.trim(),
+      html: document.getElementById(`email-tpl-${id}-html`).value.trim(),
+      text: document.getElementById(`email-tpl-${id}-text`).value.trim(),
+    });
+    status.className = "test-email-status small text-success";
+    status.textContent = `✓ Sent to ${r.to}`;
+  } catch (err) {
+    status.className = "test-email-status small text-danger";
+    status.textContent = err.message;
+  }
+  btn.disabled = false;
+  btn.textContent = original;
+}
+
+// Add a "Send test to my inbox" button to each template's accordion body,
+// injected from the shared field list so the 15 accordions stay untouched.
+function wireTestEmailButtons() {
+  EMAIL_TEMPLATE_FIELDS.forEach(([key, id]) => {
+    const subject = document.getElementById(`email-tpl-${id}-subject`);
+    const body = subject && subject.closest(".accordion-body");
+    if (!body) return;
+    const row = document.createElement("div");
+    row.className = "d-flex align-items-center gap-2 mt-2";
+    row.innerHTML = '<button type="button" class="btn btn-sm btn-outline-secondary test-email-btn">Send test to my inbox</button>'
+      + '<span class="test-email-status small text-muted-custom"></span>';
+    const btn = row.querySelector("button");
+    btn.dataset.key = key;
+    btn.dataset.id = id;
+    btn.addEventListener("click", () => sendTestEmail(btn));
+    body.appendChild(row);
+  });
+}
+
 async function saveSmtp(e) {
   e.preventDefault();
   try {
@@ -460,6 +504,7 @@ async function testAi() {
   document.getElementById("maintenance-form").addEventListener("submit", saveMaintenance);
   document.getElementById("payments-form").addEventListener("submit", savePayments);
   document.getElementById("email-templates-form").addEventListener("submit", saveEmailTemplates);
+  wireTestEmailButtons();
   document.getElementById("smtp-form").addEventListener("submit", saveSmtp);
   document.getElementById("google-signin-form").addEventListener("submit", saveGoogleSignin);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
