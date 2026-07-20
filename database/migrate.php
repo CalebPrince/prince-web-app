@@ -891,6 +891,18 @@ $pdo->exec(
     )"
 );
 
+// Track in-app newsletter sends (the Send-to-subscribers button). A drafted
+// row is sendable while sent_at IS NULL; after sending we stamp the time and
+// how many subscribers it reached. Kept as nullable columns so the existing
+// status CHECK constraint (queued/drafted/failed) needs no table rebuild.
+$newsletterDraftColumns = array_column($pdo->query('PRAGMA table_info(newsletter_drafts)')->fetchAll(), 'name');
+if (!in_array('sent_at', $newsletterDraftColumns, true)) {
+    $pdo->exec('ALTER TABLE newsletter_drafts ADD COLUMN sent_at TEXT');
+}
+if (!in_array('recipient_count', $newsletterDraftColumns, true)) {
+    $pdo->exec('ALTER TABLE newsletter_drafts ADD COLUMN recipient_count INTEGER');
+}
+
 $pdo->exec(
     "CREATE TABLE IF NOT EXISTS pipeline_leads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

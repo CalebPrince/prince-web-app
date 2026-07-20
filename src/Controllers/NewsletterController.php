@@ -9,7 +9,8 @@ use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Automations;
 use App\Support\Database;
-use App\Support\MakeWebhook;
+use App\Support\EmailTemplate;
+use App\Support\Mailer;
 use App\Support\Response;
 
 class NewsletterController
@@ -41,7 +42,6 @@ class NewsletterController
             if ($existing['status'] === 'unsubscribed') {
                 $pdo->prepare("UPDATE newsletter_subscribers SET status = 'subscribed' WHERE id = ?")
                     ->execute([$existing['id']]);
-                MakeWebhook::send('newsletter_subscribed', ['email' => $email]);
                 Automations::fire('newsletter_subscribed', $email, [
                     'last_action' => 'Re-subscribed to the newsletter',
                 ], $pdo);
@@ -51,8 +51,6 @@ class NewsletterController
 
         $pdo->prepare('INSERT INTO newsletter_subscribers (email, unsubscribe_token) VALUES (?, ?)')
             ->execute([$email, bin2hex(random_bytes(16))]);
-
-        MakeWebhook::send('newsletter_subscribed', ['email' => $email]);
 
         Automations::fire('newsletter_subscribed', $email, [
             'last_action' => 'Subscribed to the newsletter',
@@ -88,6 +86,53 @@ class NewsletterController
         AuthMiddleware::requireAuth();
         $rows = Database::get()->query('SELECT * FROM newsletter_drafts ORDER BY created_at DESC, id DESC')->fetchAll();
         Response::json($rows);
+    }
+
+    /**
+     * POST /api/v1/admin/newsletter-drafts/{id}/send
+     * Sends a Jason-drafted newsletter to every subscribed reader, wrapped in
+     * the brand template with a per-subscriber unsubscribe link. Replaces the
+     * old Make.com hand-off — the app now sends directly. Idempotent: a draft
+     * that already has sent_at cannot be sent again.
+     */
+    public static function sendDraft(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        $stmt = $pdo->prepare('SELECT * FROM newsletter_drafts WHERE id = ?');
+        $stmt->execute([(int) $params['id']]);
+        $draft = $stmt->fetch();
+
+        if (!$draft) {
+            Response::error('Draft not found.', 404);
+        }
+        if ($draft['status'] !== 'drafted' || empty($draft['subject_line']) || empty($draft['email_body'])) {
+            Response::error('This draft is not ready to send yet.', 422);
+        }
+        if (!empty($draft['sent_at'])) {
+            Response::error('This newsletter has already been sent.', 409);
+        }
+
+        $subscribers = $pdo->query(
+            "SELECT email, unsubscribe_token FROM newsletter_subscribers WHERE status = 'subscribed'"
+        )->fetchAll();
+
+        $sent = 0;
+        foreach ($subscribers as $sub) {
+            $unsubscribeUrl = 'https://princecaleb.dev/api/v1/newsletter/unsubscribe?token=' . $sub['unsubscribe_token'];
+            $text = $draft['email_body'] . "\n\n—\nUnsubscribe: " . $unsubscribeUrl;
+            $html = EmailTemplate::wrapMarketing($draft['email_body'], 'Newsletter', $unsubscribeUrl);
+            if (Mailer::sendHtml($sub['email'], $draft['subject_line'], $html, $text)) {
+                $sent++;
+            }
+        }
+
+        $pdo->prepare("UPDATE newsletter_drafts SET sent_at = datetime('now'), recipient_count = ? WHERE id = ?")
+            ->execute([$sent, $draft['id']]);
+        ActivityLog::log($user, 'sent', 'newsletter_draft', (int) $draft['id'], $draft['subject_line'], ['recipients' => $sent]);
+
+        Response::json(['status' => 'sent', 'recipients' => $sent]);
     }
 
     /** GET /api/v1/admin/newsletter/export — CSV download */

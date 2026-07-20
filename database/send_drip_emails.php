@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 
 $pdo = Database::get();
@@ -37,11 +38,13 @@ $sent = 0;
 foreach ($due as $row) {
     $name = trim((string) ($row['name'] ?? '')) ?: 'there';
     $subject = str_replace('{{name}}', $name, $row['subject']);
-    $body = str_replace('{{name}}', $name, $row['body']);
-    $body .= "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n"
-        . 'https://princecaleb.dev/api/v1/drip/unsubscribe?token=' . $row['unsubscribe_token'];
+    $message = str_replace('{{name}}', $name, $row['body']);
+    $unsubscribeUrl = 'https://princecaleb.dev/api/v1/drip/unsubscribe?token=' . $row['unsubscribe_token'];
 
-    if (Mailer::send($row['email'], $subject, $body)) {
+    $text = $message . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n" . $unsubscribeUrl;
+    $html = EmailTemplate::wrapMarketing($message, 'Update', $unsubscribeUrl);
+
+    if (Mailer::sendHtml($row['email'], $subject, $html, $text)) {
         $pdo->prepare('INSERT OR IGNORE INTO drip_sends (enrollment_id, step_id) VALUES (?, ?)')
             ->execute([$row['enrollment_id'], $row['step_id']]);
         $sent++;

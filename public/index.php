@@ -244,6 +244,7 @@ $router->patch('/api/v1/admin/appointments/{id}', [AppointmentController::class,
 $router->delete('/api/v1/admin/appointments/{id}', [AppointmentController::class, 'destroy']);
 $router->get('/api/v1/admin/newsletter', [NewsletterController::class, 'adminIndex']);
 $router->get('/api/v1/admin/newsletter-drafts', [NewsletterController::class, 'adminDrafts']);
+$router->post('/api/v1/admin/newsletter-drafts/{id}/send', [NewsletterController::class, 'sendDraft']);
 $router->get('/api/v1/admin/newsletter/export', [NewsletterController::class, 'exportCsv']);
 $router->delete('/api/v1/admin/newsletter/{id}', [NewsletterController::class, 'destroy']);
 $router->get('/api/v1/admin/testimonials', [TestimonialController::class, 'adminIndex']);

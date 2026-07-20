@@ -78,16 +78,37 @@ async function loadNewsletterDrafts() {
     el.innerHTML = '<div class="small text-muted-custom">No blog announcements queued yet.</div>';
     return;
   }
-  el.innerHTML = rows.map(d => `
+  el.innerHTML = rows.map(d => {
+    const sendable = d.status === 'drafted' && d.email_body && !d.sent_at;
+    return `
     <article class="border rounded p-3 mb-2">
       <div class="d-flex justify-content-between gap-2 mb-2">
         <strong>${escapeHtml(d.subject_line || d.article_title)}</strong>
-        <span class="status-pill ${d.status === 'drafted' ? 'published' : d.status === 'failed' ? 'archived' : 'draft'}">${escapeHtml(d.status)}</span>
+        <span class="status-pill ${d.sent_at ? 'published' : d.status === 'drafted' ? 'published' : d.status === 'failed' ? 'archived' : 'draft'}">${d.sent_at ? 'sent' : escapeHtml(d.status)}</span>
       </div>
       <div class="small text-muted-custom mb-2">Promotes: <a href="${escapeHtml(d.article_url)}" target="_blank" rel="noopener">${escapeHtml(d.article_title)}</a></div>
       ${d.email_body ? `<div class="small" style="white-space:pre-wrap">${escapeHtml(d.email_body)}</div>` : `<div class="small text-muted-custom">${escapeHtml(d.error_note || 'Waiting for the newsletter drafting cron.')}</div>`}
-    </article>
-  `).join('');
+      ${sendable ? `<button class="btn btn-sm btn-brand mt-3 send-draft-btn" data-id="${d.id}">Send to subscribers</button>` : ''}
+      ${d.sent_at ? `<div class="small text-success mt-2">✓ Sent ${new Date(d.sent_at).toLocaleString()} to ${d.recipient_count ?? 0} subscriber${d.recipient_count === 1 ? '' : 's'}</div>` : ''}
+    </article>`;
+  }).join('');
+
+  el.querySelectorAll('.send-draft-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Send this newsletter to all current subscribers now? This cannot be undone.')) return;
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        const r = await api.post(`/api/v1/admin/newsletter-drafts/${btn.dataset.id}/send`, {});
+        await loadNewsletterDrafts();
+        alert(`Sent to ${r.recipients} subscriber${r.recipients === 1 ? '' : 's'}.`);
+      } catch (err) {
+        alert(err.message || 'Could not send the newsletter.');
+        btn.disabled = false;
+        btn.textContent = 'Send to subscribers';
+      }
+    });
+  });
 }
 
 document.getElementById('select-all-checkbox').addEventListener('change', (e) => {

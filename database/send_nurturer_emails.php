@@ -15,6 +15,7 @@ require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\NurturerController;
 use App\Support\Database;
+use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Settings;
 
@@ -53,10 +54,11 @@ foreach ([2 => $sequence2Offset, 3 => $sequence3Offset] as $sequenceNumber => $d
             continue;
         }
 
-        $body = $result['email_body'] . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n"
-            . 'https://princecaleb.dev/api/v1/drip/unsubscribe?token=' . $row['unsubscribe_token'];
+        $unsubscribeUrl = 'https://princecaleb.dev/api/v1/drip/unsubscribe?token=' . $row['unsubscribe_token'];
+        $text = $result['email_body'] . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n" . $unsubscribeUrl;
+        $html = EmailTemplate::wrapMarketing($result['email_body'], 'Following up', $unsubscribeUrl);
 
-        if (Mailer::send($row['email'], $result['subject_line'], $body)) {
+        if (Mailer::sendHtml($row['email'], $result['subject_line'], $html, $text)) {
             $pdo->prepare(
                 'INSERT OR IGNORE INTO nurturer_sends (enrollment_id, sequence_number, subject_line, email_body) VALUES (?, ?, ?, ?)'
             )->execute([$row['enrollment_id'], $sequenceNumber, $result['subject_line'], $result['email_body']]);

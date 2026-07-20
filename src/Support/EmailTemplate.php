@@ -100,15 +100,45 @@ class EmailTemplate
             return $body;
         }
 
-        // Editorial brand system: strict monochrome ink, hairline borders,
-        // P-monogram lockup, monospace eyebrow, dark footer (see app.css).
+        return self::shell($body, self::label($key));
+    }
+
+    /**
+     * Wrap free-form automation/marketing copy (Drip, Nurturer, newsletters)
+     * in the same brand shell as transactional emails. Plain-text input is
+     * converted to paragraphs; an unsubscribe link is added to the footer when
+     * a URL is supplied.
+     */
+    public static function wrapMarketing(string $bodyText, string $label, string $unsubscribeUrl = ''): string
+    {
+        $html = '';
+        foreach (preg_split('/\n{2,}/', trim($bodyText)) ?: [] as $block) {
+            $block = trim($block);
+            if ($block === '') {
+                continue;
+            }
+            $html .= '<p style="margin:0 0 16px;">' . nl2br(self::e($block)) . '</p>';
+        }
+
+        return self::shell($html, $label, $unsubscribeUrl);
+    }
+
+    /**
+     * The shared editorial brand shell: strict monochrome ink, hairline
+     * borders, P-monogram lockup, monospace eyebrow, dark footer (see app.css).
+     */
+    private static function shell(string $body, string $label, string $unsubscribeUrl = ''): string
+    {
         $ink = '#0a0b0d';
         $font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
         $mono = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace";
 
         $brand = self::brand();
         $contacts = self::contactLine($brand);
-        $label = self::e(self::label($key));
+        $label = self::e($label);
+        $unsubscribe = $unsubscribeUrl !== ''
+            ? '<div style="margin-top:12px;font-size:12px;color:#6b7280;">You are receiving this because you subscribed. <a href="' . self::e($unsubscribeUrl) . '" style="color:#9aa1ab;text-decoration:underline;">Unsubscribe</a>.</div>'
+            : '';
         $logo = $brand['logo_url'] !== ''
             ? '<img src="' . self::e($brand['logo_url']) . '" width="40" height="40" alt="Prince Caleb" style="display:block;width:40px;height:40px;border-radius:11px;object-fit:cover;">'
             : '<div style="width:40px;height:40px;border-radius:11px;background:' . $ink . ';color:#ffffff;font-family:' . $font . ';font-size:19px;font-weight:800;line-height:40px;text-align:center;">P</div>';
@@ -137,6 +167,7 @@ class EmailTemplate
             . '<div style="margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,255,255,0.1);">'
             . '<a href="' . self::e($brand['site_url']) . '" style="color:#ffffff;text-decoration:none;font-weight:600;">Visit website</a> <span style="color:#3a3d43;">&nbsp;&middot;&nbsp;</span> <a href="' . self::e($brand['book_url']) . '" style="color:#ffffff;text-decoration:none;font-weight:600;">Book a call</a>'
             . '</div>'
+            . $unsubscribe
             . '</td></tr>'
             . '</table></body></html>';
     }
