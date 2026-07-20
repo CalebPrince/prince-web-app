@@ -535,6 +535,34 @@ body > .d-flex {
   border-color: var(--line-strong);
 }
 
+.admin-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 34px;
+  margin-bottom: .75rem !important;
+  padding-bottom: .7rem;
+  border-bottom: 1px solid var(--line);
+}
+.admin-card-header :is(h4, h5, h6) {
+  margin: 0 !important;
+  color: var(--heading-color);
+  font-size: .82rem;
+  font-weight: 750;
+  letter-spacing: -.01em;
+}
+.admin-card-header :is(h4, h5, h6) i { margin-right: .45rem !important; }
+.admin-card-header > :is(a, button),
+.admin-card-header > div:last-child :is(a, button) {
+  flex: 0 0 auto;
+  font-size: .7rem;
+}
+.admin-card.p-0 > .admin-card-header { margin: 0 !important; padding: .75rem 1rem; }
+@media (max-width: 575.98px) {
+  .admin-card-header { align-items: flex-start; }
+}
+
 .icon-chip {
   width: 40px;
   height: 40px;

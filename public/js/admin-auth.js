@@ -106,10 +106,18 @@ function enhanceAdminSidebar() {
   });
 }
 
+function enhanceAdminCardHeaders() {
+  document.querySelectorAll('.admin-card > header, .admin-card > .d-flex').forEach(header => {
+    if (!header.querySelector(':scope > h4, :scope > h5, :scope > h6, :scope > div > h4, :scope > div > h5, :scope > div > h6')) return;
+    header.classList.add('admin-card-header');
+  });
+}
+
 function enhanceAdminInterface() {
   enhanceAdminPageHeaders();
   enhanceAdminTables();
   enhanceAdminSidebar();
+  enhanceAdminCardHeaders();
 }
 
 if (document.readyState === 'loading') {
