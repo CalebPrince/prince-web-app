@@ -1368,3 +1368,53 @@ body > .d-flex {
   .admin-page-header .icon-chip { display: none; }
   .admin-page-header-actions .btn-brand { width: 100%; justify-content: center; }
 }
+
+/* Compact admin density: information should size to its content, while
+   forms and editing surfaces retain comfortable working space. */
+.admin-card { border-radius: 16px; }
+.admin-card.p-4:not(:has(form, textarea, .nav-tabs, .tab-content, .accordion)) {
+  padding: 1rem !important;
+}
+.admin-card.p-3:not(:has(form, textarea)) { padding: .85rem !important; }
+.stat-card {
+  min-height: 102px;
+  gap: .7rem;
+  align-items: center;
+}
+.stat-card .stat-value {
+  margin-top: .08rem;
+  font-size: 1.65rem;
+  line-height: 1.05;
+}
+.stat-card .stat-label { font-size: .68rem; }
+.stat-card .stat-sub { margin-top: .18rem; font-size: .7rem; }
+.dashboard-mode-switch { gap: .35rem; padding: .3rem; }
+.dashboard-mode-switch button { padding: .55rem .7rem; }
+.dashboard-mode-summary > header,
+.dashboard-mode-summary > div {
+  min-height: 74px;
+  padding: .65rem .8rem;
+}
+.dashboard-attention { padding: .9rem; }
+.dashboard-attention-item { padding: .58rem .65rem; }
+.tasks-summary .admin-card strong { margin-top: .3rem; font-size: 1.45rem; }
+.task-row { padding: .72rem .85rem; }
+.team-capacity-summary > div { min-height: 62px; padding: .6rem .8rem; }
+.client-intelligence-ledger > div,
+.project-ledger-values > div { padding: .65rem .8rem; }
+.client-project-record { gap: .75rem; padding: .75rem .85rem; }
+.arch-activity-head { padding: .9rem 1rem; }
+.arch-activity-row { gap: .85rem; padding: .75rem 1rem; }
+
+/* Keep a lone dashboard card at its useful reading width instead of
+   stretching sparse content across the entire workspace. */
+@media (min-width: 992px) {
+  .row.dashboard-single-mode > .dashboard-mode-section.col-lg-7:not(.d-none) { width: 58.333333%; }
+  .row.dashboard-single-mode > .dashboard-mode-section.col-lg-5:not(.d-none) { width: 41.666667%; }
+}
+
+@media (max-width: 575.98px) {
+  .stat-card { min-height: 0; }
+  .dashboard-mode-summary > header,
+  .dashboard-mode-summary > div { min-height: 64px; }
+}
