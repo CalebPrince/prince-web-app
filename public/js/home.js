@@ -220,7 +220,7 @@
 
       archiveList.innerHTML = posts.slice(0, 3).map((p, i) => {
         const url = `/archive-post.html?slug=${encodeURIComponent(p.slug)}`;
-        const dateLabel = monthYear(p.created_at);
+        const dateLabel = monthYear(p.published_at || p.created_at);
         return `
           <article class="archive-entry reveal reveal-on-scroll${i ? ` reveal-delay-${i}` : ""}">
             <div>

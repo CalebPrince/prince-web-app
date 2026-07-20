@@ -62,7 +62,8 @@ foreach ($projects as $project) {
 }
 
 $posts = $pdo->query(
-    "SELECT slug, title, excerpt, category, created_at, updated_at, sort_order
+    "SELECT slug, title, excerpt, category,
+            COALESCE(published_at, created_at) AS published_at, updated_at, sort_order
      FROM blog_posts WHERE is_published = 1 ORDER BY sort_order ASC"
 )->fetchAll();
 
@@ -85,11 +86,11 @@ echo "Wrote public/sitemap.xml with " . (count($staticPages) + count($projects) 
 // --- RSS feed (newest 20 posts, by publish date) ---
 
 $feedPosts = $posts;
-// Tiebreak on sort_order (higher = newer) so posts seeded in the same second
-// still come out newest-first, matching the blog API's ordering.
+// Newest publish first. Tiebreak on sort_order (higher = newer) so posts
+// seeded in the same second still come out newest-first, matching the API.
 usort(
     $feedPosts,
-    fn(array $a, array $b) => strcmp($b['created_at'], $a['created_at'])
+    fn(array $a, array $b) => strcmp($b['published_at'], $a['published_at'])
         ?: ((int) $b['sort_order'] <=> (int) $a['sort_order'])
 );
 $feedPosts = array_slice($feedPosts, 0, 20);
@@ -123,7 +124,7 @@ foreach ($feedPosts as $post) {
     if (!empty($post['category'])) {
         $rss->writeElement('category', $post['category']);
     }
-    $rss->writeElement('pubDate', date(DATE_RSS, strtotime($post['created_at'] . ' UTC')));
+    $rss->writeElement('pubDate', date(DATE_RSS, strtotime($post['published_at'] . ' UTC')));
     $rss->endElement();
 }
 

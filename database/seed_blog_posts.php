@@ -25,7 +25,8 @@ foreach (BLOG_POSTS as $post) {
     if ($existing) {
         $stmt = $pdo->prepare(
             "UPDATE blog_posts SET title=?, excerpt=?, body=?, category=?, cover_image_path=?,
-             is_published=1, sort_order=?, updated_at=datetime('now') WHERE id=?"
+             is_published=1, sort_order=?, published_at=COALESCE(published_at, datetime('now')),
+             updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $post['title'],
@@ -39,8 +40,8 @@ foreach (BLOG_POSTS as $post) {
         echo "Updated: {$post['title']}\n";
     } else {
         $stmt = $pdo->prepare(
-            'INSERT INTO blog_posts (slug, title, excerpt, body, category, cover_image_path, is_published, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, 1, ?)'
+            "INSERT INTO blog_posts (slug, title, excerpt, body, category, cover_image_path, is_published, sort_order, published_at)
+             VALUES (?, ?, ?, ?, ?, ?, 1, ?, datetime('now'))"
         );
         $stmt->execute([
             $post['slug'],

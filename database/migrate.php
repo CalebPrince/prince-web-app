@@ -104,6 +104,16 @@ if (!in_array('totp_backup_codes', $userColumns, true)) {
     $pdo->exec('ALTER TABLE users ADD COLUMN totp_backup_codes TEXT');
 }
 
+// Blog posts gained a real publish date so the public feed can order and label
+// by when a post went live (not when the row was inserted). Backfill existing
+// published posts from created_at so nothing loses its date on upgrade.
+$blogPostColumns = array_column($pdo->query('PRAGMA table_info(blog_posts)')->fetchAll(), 'name');
+if (!in_array('published_at', $blogPostColumns, true)) {
+    $pdo->exec('ALTER TABLE blog_posts ADD COLUMN published_at TEXT');
+    $pdo->exec('UPDATE blog_posts SET published_at = created_at WHERE is_published = 1 AND published_at IS NULL');
+}
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_blog_posts_published_at ON blog_posts (is_published, published_at)');
+
 $chatSessionColumns = array_column($pdo->query('PRAGMA table_info(chat_sessions)')->fetchAll(), 'name');
 if (!in_array('client_phone', $chatSessionColumns, true)) {
     $pdo->exec('ALTER TABLE chat_sessions ADD COLUMN client_phone TEXT');

@@ -165,6 +165,13 @@ let allPosts = [];
 let filteredPosts = [];
 let currentPage = 1;
 
+// Publish date for a post, formatted like "12 Jul 2026". Falls back to
+// created_at for legacy rows that predate the published_at column.
+function publishedDate(p) {
+  const d = new Date(String(p.published_at || p.created_at || '').replace(' ', 'T'));
+  return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 function renderLegacyGrid(posts) {
   const grid = document.getElementById('blog-grid');
   const empty = document.getElementById('empty-state');
@@ -192,6 +199,7 @@ function renderLegacyGrid(posts) {
               ${p.category ? `<span class="eyebrow mb-0">${p.category}</span>` : '<span></span>'}
               <span class="small text-muted-custom">⏱ ${p.reading_time} min read</span>
             </div>
+            ${publishedDate(p) ? `<div class="small text-muted-custom mb-2">${esc(publishedDate(p))}</div>` : ''}
             <h5 class="mb-2">${p.title}</h5>
             <p class="small text-muted-custom mb-3">${p.excerpt}</p>
             <span class="small fw-semibold mt-auto" style="color: var(--heading-color);">Read article <span class="cta-arrow">→</span></span>
@@ -225,7 +233,8 @@ function renderGrid(posts) {
     <article class="archive-entry reveal reveal-on-scroll reveal-delay-${(i % 4) + 1}">
       <div>
         <span class="archive-domain">[${esc(p.category || 'System Architecture')}]</span>
-        <div class="small text-muted-custom mt-2">${esc(p.reading_time)} min technical read</div>
+        ${publishedDate(p) ? `<div class="small text-muted-custom mt-2">${esc(publishedDate(p))}</div>` : ''}
+        <div class="small text-muted-custom mt-1">${esc(p.reading_time)} min technical read</div>
       </div>
       <div>
         <h2 class="h3 archive-title"><a href="/archive-post.html?slug=${esc(p.slug)}">${esc(p.title)}</a></h2>

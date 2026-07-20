@@ -39,11 +39,13 @@ class BlogController
     public static function index(): void
     {
         $pdo = Database::get();
-        // Highest sort_order first: new posts get max+1 (see store()), so the
-        // newest post always leads the archive, homepage, and nav dropdown.
+        // Newest publish first: the archive, homepage, and nav dropdown all lead
+        // with the most recently published post. Fall back to created_at for any
+        // legacy row that predates the published_at column, then id as a tiebreak.
         $stmt = $pdo->query(
-            'SELECT id, slug, title, excerpt, category, cover_image_path, body, created_at
-             FROM blog_posts WHERE is_published = 1 ORDER BY sort_order DESC, id DESC'
+            'SELECT id, slug, title, excerpt, category, cover_image_path, body, published_at, created_at
+             FROM blog_posts WHERE is_published = 1
+             ORDER BY COALESCE(published_at, created_at) DESC, id DESC'
         );
         $posts = $stmt->fetchAll();
         foreach ($posts as &$post) {
@@ -99,9 +101,10 @@ class BlogController
             $sortOrder = (int) $pdo->query('SELECT COALESCE(MAX(sort_order), 0) FROM blog_posts')->fetchColumn() + 1;
         }
 
+        $isPublished = !empty($data['is_published']);
         $stmt = $pdo->prepare(
-            'INSERT INTO blog_posts (slug, title, excerpt, body, category, cover_image_path, is_published, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            "INSERT INTO blog_posts (slug, title, excerpt, body, category, cover_image_path, is_published, sort_order, published_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $stmt->execute([
             $data['slug'],
@@ -110,8 +113,9 @@ class BlogController
             $data['body'],
             trim((string) ($data['category'] ?? '')) ?: null,
             $data['cover_image_path'],
-            !empty($data['is_published']) ? 1 : 0,
+            $isPublished ? 1 : 0,
             $sortOrder,
+            $isPublished ? date('Y-m-d H:i:s') : null,
         ]);
         $postId = (int) $pdo->lastInsertId();
 
@@ -143,13 +147,22 @@ class BlogController
         $pdo = Database::get();
         $id = (int) $params['id'];
 
-        $stmt = $pdo->prepare('SELECT is_published FROM blog_posts WHERE id = ?');
+        $stmt = $pdo->prepare('SELECT is_published, published_at FROM blog_posts WHERE id = ?');
         $stmt->execute([$id]);
-        $wasPublished = (bool) $stmt->fetchColumn();
+        $existing = $stmt->fetch() ?: ['is_published' => 0, 'published_at' => null];
+        $wasPublished = (bool) $existing['is_published'];
+        $isPublished = !empty($data['is_published']);
+
+        // Stamp the publish date the first time a post goes live; keep the
+        // original date on later edits (and even if it's unpublished/republished).
+        $publishedAt = $existing['published_at'];
+        if ($isPublished && $publishedAt === null) {
+            $publishedAt = date('Y-m-d H:i:s');
+        }
 
         $stmt = $pdo->prepare(
             "UPDATE blog_posts SET slug=?, title=?, excerpt=?, body=?, category=?, cover_image_path=?,
-             is_published=?, sort_order=?, updated_at=datetime('now') WHERE id=?"
+             is_published=?, sort_order=?, published_at=?, updated_at=datetime('now') WHERE id=?"
         );
         $stmt->execute([
             $data['slug'],
@@ -158,12 +171,13 @@ class BlogController
             $data['body'],
             trim((string) ($data['category'] ?? '')) ?: null,
             $data['cover_image_path'],
-            !empty($data['is_published']) ? 1 : 0,
+            $isPublished ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
+            $publishedAt,
             $id,
         ]);
 
-        if (!$wasPublished && !empty($data['is_published'])) {
+        if (!$wasPublished && $isPublished) {
             self::queueNewsletterDraft($pdo, $id, $data);
             MakeWebhook::send('content_published', [
                 'type' => 'blog',

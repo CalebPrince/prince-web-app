@@ -184,7 +184,12 @@ function renderBody(body) {
     const imageUrl = `https://princecaleb.dev/uploads/og/blog/${slug}.png`;
     const categoryKeywords = CATEGORY_KEYWORDS[p.category] || 'custom software Ghana';
     const keywords = [p.category, categoryKeywords, 'custom software Accra'].filter(Boolean).join(', ');
-    const publishedIso = p.created_at ? p.created_at.replace(' ', 'T') + 'Z' : '';
+    const publishedRaw = p.published_at || p.created_at;
+    const publishedIso = publishedRaw ? publishedRaw.replace(' ', 'T') + 'Z' : '';
+    const publishedLabel = (() => {
+      const d = new Date(String(publishedRaw || '').replace(' ', 'T'));
+      return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    })();
     const modifiedIso = p.updated_at ? p.updated_at.replace(' ', 'T') + 'Z' : publishedIso;
 
     document.getElementById('page-title').textContent = pageTitle;
@@ -228,6 +233,7 @@ function renderBody(body) {
         <div class="container">
           <div class="d-flex flex-wrap align-items-center gap-3 mb-3 hero-animate hero-animate-1">
             ${p.category ? `<p class="eyebrow mb-0">${p.category}</p>` : ''}
+            ${publishedLabel ? `<span class="small text-muted-custom">${publishedLabel}</span>` : ''}
             <span class="small text-muted-custom">⏱ ${p.reading_time} min read</span>
           </div>
           <h1 class="detail-title mb-3 hero-animate hero-animate-2">${p.title}</h1>

@@ -194,10 +194,14 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   cover_image_path TEXT NOT NULL,
   is_published INTEGER NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL DEFAULT 0,
+  published_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_blog_posts_published_sort ON blog_posts (is_published, sort_order);
+-- idx_blog_posts_published_at is created in migrate.php: schema.sql runs before
+-- the ALTER TABLE that adds published_at to pre-existing databases, so indexing
+-- the column here would fail on upgrade.
 
 CREATE TABLE IF NOT EXISTS webhook_queue (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
