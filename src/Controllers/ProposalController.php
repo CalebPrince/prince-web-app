@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
+use App\Support\AiImage;
 use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailTemplate;
@@ -154,6 +155,7 @@ class ProposalController
         $milestones = is_array($data['milestones'] ?? null) ? $data['milestones'] : [];
         $inquiryId = !empty($data['inquiry_id']) ? (int) $data['inquiry_id'] : null;
         $serviceCategory = trim((string) ($data['service_category'] ?? '')) ?: null;
+        $mockupImageUrl = trim((string) ($data['mockup_image_url'] ?? '')) ?: null;
 
         $errors = [];
         if ($clientName === '') $errors[] = 'Client name is required.';
@@ -201,8 +203,8 @@ class ProposalController
         $pdo->beginTransaction();
         try {
             $pdo->prepare(
-                'INSERT INTO proposals (token, inquiry_id, client_name, client_email, title, scope, timeline, total_amount, currency, terms, status, service_category)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO proposals (token, inquiry_id, client_name, client_email, title, scope, timeline, total_amount, currency, terms, status, service_category, mockup_image_url)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
                 $token,
                 $inquiryId,
@@ -216,6 +218,7 @@ class ProposalController
                 $terms ?: null,
                 'sent',
                 $serviceCategory,
+                $mockupImageUrl,
             ]);
             $proposalId = (int) $pdo->lastInsertId();
 
@@ -261,6 +264,58 @@ class ProposalController
         ], 201);
     }
 
+    /**
+     * POST /api/v1/admin/proposals/generate-mockup — body: {title, scope,
+     * service_category?}. "Sketch": a concept image for the client to see
+     * alongside the proposal — not a screenshot of anything actually built,
+     * so the prompt explicitly asks for realistic-looking UI rather than an
+     * abstract graphic. Works before the proposal is ever saved, same as
+     * "Draft with AI", since the form already has these fields filled in by
+     * the time this gets clicked.
+     */
+    public static function generateMockup(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $title = trim((string) ($data['title'] ?? ''));
+        $scope = trim((string) ($data['scope'] ?? ''));
+        $serviceCategory = trim((string) ($data['service_category'] ?? ''));
+
+        if ($title === '' && $scope === '') {
+            Response::error('Add a title or scope first so Sketch has something to draw from.', 422);
+        }
+
+        $kindHint = match ($serviceCategory) {
+            'mobile_app' => 'a mobile app screen',
+            'brand_system' => 'a brand style board (logo lockup, color palette, and type samples on a clean background)',
+            default => 'a website homepage',
+        };
+
+        $prompt = "Design concept for {$kindHint}, for a project titled \"{$title}\"."
+            . ($scope !== '' ? "\n\nProject scope: " . mb_substr($scope, 0, 600) : '')
+            . "\n\nShow a clean, modern, realistic UI as if it were a real screenshot — actual layout, "
+            . "navigation, and content sections appropriate to this project, not an abstract graphic or a "
+            . "collage of app icons. No visible watermarks; use short, plausible real-looking labels "
+            . "instead of lorem ipsum placeholder text.";
+
+        $result = AiImage::generateFlyer(
+            $prompt,
+            1600,
+            1000,
+            60,
+            null,
+            '#f5f5f5',
+            'a clean, realistic UI mockup, as if it were an actual product screenshot',
+            'mockup'
+        );
+
+        if ($result === null) {
+            Response::error('Could not generate a mockup right now — check the Gemini key under Settings and try again.', 502);
+        }
+
+        Response::json(['url' => $result['url']]);
+    }
+
     /** PUT /api/v1/admin/proposals/{id} */
     public static function update(array $params): void
     {
@@ -295,6 +350,9 @@ class ProposalController
         $milestones = is_array($data['milestones'] ?? null) ? $data['milestones'] : [];
         $inquiryId = !empty($data['inquiry_id']) ? (int) $data['inquiry_id'] : null;
         $serviceCategory = trim((string) ($data['service_category'] ?? '')) ?: null;
+        $mockupImageUrl = array_key_exists('mockup_image_url', $data)
+            ? (trim((string) $data['mockup_image_url']) ?: null)
+            : $existing['mockup_image_url'];
 
         $errors = [];
         if ($clientName === '') $errors[] = 'Client name is required.';
@@ -341,7 +399,7 @@ class ProposalController
         try {
             $pdo->prepare(
                 "UPDATE proposals SET inquiry_id = ?, client_name = ?, client_email = ?, title = ?, scope = ?,
-                 timeline = ?, total_amount = ?, currency = ?, terms = ?, service_category = ?, updated_at = datetime('now') WHERE id = ?"
+                 timeline = ?, total_amount = ?, currency = ?, terms = ?, service_category = ?, mockup_image_url = ?, updated_at = datetime('now') WHERE id = ?"
             )->execute([
                 $inquiryId,
                 $clientName,
@@ -353,6 +411,7 @@ class ProposalController
                 $currency,
                 $terms ?: null,
                 $serviceCategory,
+                $mockupImageUrl,
                 $id,
             ]);
 

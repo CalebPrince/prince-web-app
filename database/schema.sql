@@ -257,7 +257,10 @@ CREATE TABLE IF NOT EXISTS proposals (
   accepted_by_name TEXT,
   accepted_ip TEXT,
   accepted_user_agent TEXT,
-  service_category TEXT
+  service_category TEXT,
+  -- AI-generated pitch mockup (Sketch), shown to the client alongside the
+  -- proposal — a concept image, not a real screenshot of anything built.
+  mockup_image_url TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_proposals_status_created ON proposals (status, created_at);
 

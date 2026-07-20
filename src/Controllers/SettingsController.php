@@ -81,6 +81,7 @@ class SettingsController
         'dossier_assistant_name', 'dossier_voice_gender', 'dossier_voice_accent',
         'nurturer_assistant_name', 'nurturer_voice_gender', 'nurturer_voice_accent',
         'proposal_assistant_name', 'proposal_voice_gender', 'proposal_voice_accent',
+        'sketch_assistant_name',
         'content_assistant_name', 'content_voice_gender', 'content_voice_accent',
         'arch_assistant_name', 'arch_voice_gender', 'arch_voice_accent',
         'brand_primary_color', 'brand_accent_color', 'brand_font', 'brand_style_note',

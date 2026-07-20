@@ -25,6 +25,19 @@ function formatAmount(subunits, currency) {
   return `${currency} ${(Number(subunits || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
+function setMockupPreview(url) {
+  document.getElementById('proposal-mockup-image-url').value = url || '';
+  const wrap = document.getElementById('mockup-preview-wrap');
+  const img = document.getElementById('mockup-preview');
+  if (url) {
+    img.src = url;
+    wrap.classList.remove('d-none');
+  } else {
+    img.src = '';
+    wrap.classList.add('d-none');
+  }
+}
+
 function defaultTerms() {
   return 'Work begins after the first milestone payment is confirmed. Scope changes may require a revised quote. Final files and deployment are handed over after all agreed milestones are paid.';
 }
@@ -66,6 +79,8 @@ function resetProposalForm() {
   document.getElementById('draft-with-ai-brief').value = '';
   document.getElementById('draft-with-ai-brief').classList.add('d-none');
   document.getElementById('draft-with-ai-note').classList.add('d-none');
+  setMockupPreview('');
+  document.getElementById('mockup-msg').classList.add('d-none');
   const wrap = document.getElementById('milestones-wrap');
   wrap.innerHTML = '';
   wrap.appendChild(milestoneRow('50% deposit', '', 'Due before kickoff'));
@@ -220,6 +235,7 @@ async function openEditProposal(id) {
     document.getElementById('proposal-timeline').value = proposal.timeline || '';
     document.getElementById('proposal-terms').value = proposal.terms || '';
     document.getElementById('proposal-service-category').value = proposal.service_category || '';
+    setMockupPreview(proposal.mockup_image_url || '');
 
     const wrap = document.getElementById('milestones-wrap');
     wrap.innerHTML = '';
@@ -356,6 +372,7 @@ async function createProposal(e) {
     scope: document.getElementById('proposal-scope').value.trim(),
     timeline: document.getElementById('proposal-timeline').value.trim(),
     terms: document.getElementById('proposal-terms').value.trim(),
+    mockup_image_url: document.getElementById('proposal-mockup-image-url').value.trim(),
     milestones: collectMilestones(),
   };
   try {
@@ -520,6 +537,31 @@ function showProposalListError(message) {
     e.preventDefault();
     document.getElementById('draft-with-ai-brief').classList.toggle('d-none');
   });
+
+  document.getElementById('generate-mockup-btn').addEventListener('click', async () => {
+    const msg = document.getElementById('mockup-msg');
+    msg.classList.add('d-none');
+    const btn = document.getElementById('generate-mockup-btn');
+    const originalLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating…';
+    try {
+      const result = await api.post('/api/v1/admin/proposals/generate-mockup', {
+        title: document.getElementById('proposal-title').value.trim(),
+        scope: document.getElementById('proposal-scope').value.trim(),
+        service_category: document.getElementById('proposal-service-category').value,
+      });
+      setMockupPreview(result.url);
+    } catch (err) {
+      msg.className = 'alert alert-danger py-2 small mt-2';
+      msg.textContent = err.message || 'Could not generate a mockup.';
+      msg.classList.remove('d-none');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalLabel;
+    }
+  });
+  document.getElementById('remove-mockup-btn').addEventListener('click', () => setMockupPreview(''));
 
   document.getElementById('fx-converter-toggle').addEventListener('click', () => {
     const box = document.getElementById('fx-converter');

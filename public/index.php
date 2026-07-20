@@ -216,6 +216,7 @@ $router->post('/api/v1/admin/proposals', [ProposalController::class, 'store']);
 $router->post('/api/v1/admin/proposals/{id}/send', [ProposalController::class, 'send']);
 $router->get('/api/v1/admin/proposals/quote-requests', [ProposalController::class, 'quoteRequests']);
 $router->post('/api/v1/admin/proposals/generate', [ProposalAgentController::class, 'generate']);
+$router->post('/api/v1/admin/proposals/generate-mockup', [ProposalController::class, 'generateMockup']);
 $router->get('/api/v1/admin/proposal-drafts', [ProposalDraftController::class, 'index']);
 $router->delete('/api/v1/admin/proposal-drafts/{id}', [ProposalDraftController::class, 'destroy']);
 $router->get('/api/v1/admin/proposals/{id}', [ProposalController::class, 'adminShow']);

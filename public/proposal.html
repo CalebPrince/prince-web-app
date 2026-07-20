@@ -132,6 +132,12 @@
           <div class="pricing-price mt-2">${formatAmount(proposal.total_amount, proposal.currency)}</div>
         </div>
       </div>
+      ${proposal.mockup_image_url ? `
+        <div class="mb-4">
+          <img src="${escapeHtml(proposal.mockup_image_url)}" alt="Concept mockup for ${escapeHtml(proposal.title)}" class="img-fluid rounded border w-100">
+          <p class="text-muted-custom small mt-2 mb-0">A concept image to give a sense of direction — not a screenshot of the finished build.</p>
+        </div>
+      ` : ''}
       <h2 class="h5 mb-2">Scope</h2>
       ${paragraphHtml(proposal.scope)}
       ${proposal.timeline ? `<h2 class="h5 mt-4 mb-2">Timeline</h2><p class="text-muted-custom">${escapeHtml(proposal.timeline)}</p>` : ''}

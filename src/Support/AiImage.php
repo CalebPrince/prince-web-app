@@ -43,16 +43,33 @@ class AiImage
      * is meant to be so the padding blends in rather than reading as an
      * error bar.
      *
+     * $formatHint frames what kind of image this is meant to look like —
+     * defaults to the original social-graphic framing so every existing
+     * flyer call is unaffected; a caller generating something else (e.g. a
+     * UI mockup, which is not "a social media graphic") should pass its own.
+     *
+     * $filePrefix names the saved file (default 'flyer') purely so
+     * public/uploads stays sortable/greppable by what generated it — has no
+     * effect on the image itself.
+     *
      * @return array{url:string,width:int,height:int}|null
      */
-    public static function generateFlyer(string $prompt, int $width, int $height, int $timeout = 60, ?string $logoPath = null, string $backgroundColor = '#0b0c0e'): ?array
-    {
+    public static function generateFlyer(
+        string $prompt,
+        int $width,
+        int $height,
+        int $timeout = 60,
+        ?string $logoPath = null,
+        string $backgroundColor = '#0b0c0e',
+        string $formatHint = 'a polished, on-brand social media graphic',
+        string $filePrefix = 'flyer'
+    ): ?array {
         $apiKey = Settings::get('gemini_api_key');
         if (empty($apiKey) || !function_exists('curl_init') || !function_exists('imagecreatefromstring')) {
             return null;
         }
 
-        $bytes = self::callGemini((string) $apiKey, $prompt, $width, $height, $timeout, $logoPath);
+        $bytes = self::callGemini((string) $apiKey, $prompt, $width, $height, $timeout, $logoPath, $formatHint);
         if ($bytes === null) {
             return null;
         }
@@ -74,7 +91,7 @@ class AiImage
             error_log('AiImage: uploads directory is missing and could not be created.');
             return null;
         }
-        $filename = 'flyer-' . bin2hex(random_bytes(8)) . '.png';
+        $filename = $filePrefix . '-' . bin2hex(random_bytes(8)) . '.png';
         if (@file_put_contents($dir . '/' . $filename, $png) === false) {
             error_log('AiImage: could not write generated flyer to uploads.');
             return null;
@@ -84,8 +101,15 @@ class AiImage
     }
 
     /** @return string|null raw image bytes the model returned, or null on failure */
-    private static function callGemini(string $apiKey, string $prompt, int $width, int $height, int $timeout, ?string $logoPath = null): ?string
-    {
+    private static function callGemini(
+        string $apiKey,
+        string $prompt,
+        int $width,
+        int $height,
+        int $timeout,
+        ?string $logoPath = null,
+        string $formatHint = 'a polished, on-brand social media graphic'
+    ): ?string {
         $model = Settings::get('gemini_image_model') ?: 'gemini-2.5-flash-image';
 
         // The model can't be forced to an exact pixel size, but naming the
@@ -96,7 +120,7 @@ class AiImage
         // trims some of one axis — the explicit safe-margin instruction below
         // is what keeps that trim from slicing through headline text.
         $ratioHint = self::aspectRatioHint($width, $height);
-        $fullPrompt = $prompt . "\n\nFormat: a polished, on-brand social media graphic in "
+        $fullPrompt = $prompt . "\n\nFormat: " . $formatHint . " in "
             . $ratioHint . ". IMPORTANT: this image will be automatically center-cropped afterward to an "
             . "exact final size, which trims some of the outer edge on at least one side. Keep all text and "
             . "essential visual elements within the center 80% of the frame — leave a generous, uncluttered "

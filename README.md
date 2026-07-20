@@ -734,6 +734,23 @@ storage/
     `inquiries`/`proposals`/`proposal_milestones` columns, and its assistant
     name/voice/accent settings ride the same generic `settings` key-value
     store every other admin-configurable setting already uses.
+    **Sketch** generates a concept mockup image for a proposal — a "Generate
+    mockup" button next to Scope on `/admin/proposals.html` calls
+    `POST /api/v1/admin/proposals/generate-mockup` with whatever title/scope/
+    service category are currently in the form (works before the proposal is
+    ever saved, same as Draft with AI), and reuses the same Gemini image
+    pipeline Canvas's flyers run on (`AiImage::generateFlyer()`, now
+    parameterized with a `$formatHint`/`$filePrefix` so this doesn't get
+    framed as "a social media graphic"). The result is stored in
+    `proposals.mockup_image_url` and shown both in the admin form and on the
+    public `/proposal.html` the client actually sees, clearly labeled as a
+    concept image rather than a real screenshot. No chat interface, so no
+    voice/persona settings — just a display name (`sketch_assistant_name`)
+    for the Team roster. Unlike Ledger/Canvas/etc., Sketch has no ongoing
+    build-stage role, so it's deliberately left out of the Team page's
+    per-agent project-capacity tracking (`TeamController::projectCapacity()`)
+    even though it still appears, like every agent, as a selectable
+    "supporting agent" on a project.
 
     **Inbound Funnel (Lisa → Ledger):** the moment a visitor books a
     discovery call through Lisa's `book_appointment` tool, the exact chat

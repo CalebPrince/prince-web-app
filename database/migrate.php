@@ -995,4 +995,11 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_arch_site_revisions_site ON arch_site_revisions (generated_site_id, created_at)');
 
+// AI-generated pitch mockup (Sketch) attached to a proposal — a concept
+// image shown to the client, not a screenshot of anything actually built.
+$proposalColumns = array_column($pdo->query('PRAGMA table_info(proposals)')->fetchAll(), 'name');
+if (!in_array('mockup_image_url', $proposalColumns, true)) {
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN mockup_image_url TEXT');
+}
+
 echo "Schema applied.\n";

@@ -34,6 +34,14 @@ class TeamController
         )->fetchColumn() > 0;
         $beaconEnabled = (string) Settings::get('beacon_discovery_enabled') === '1';
         $capacity = self::projectCapacity($pdo);
+        // Guarded like archActivity() below — keeps the Team page usable
+        // during the short deploy window before mockup_image_url's
+        // migration has actually run on this database.
+        try {
+            $mockupsGenerated = (int) $pdo->query('SELECT COUNT(*) FROM proposals WHERE mockup_image_url IS NOT NULL')->fetchColumn();
+        } catch (\Throwable $e) {
+            $mockupsGenerated = 0;
+        }
 
         $agents = [
             [
@@ -128,6 +136,19 @@ class TeamController
                 'status_label' => 'On demand',
                 'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM proposals')->fetchColumn(),
                 'stat_label' => 'proposals drafted',
+                'manage_url' => '/admin/proposals.html',
+                'manage_label' => 'Proposals',
+            ],
+            [
+                'key' => 'sketch',
+                'name' => Settings::get('sketch_assistant_name') ?: 'Sketch',
+                'role' => 'UX/UI Designer',
+                'description' => 'Generates a concept mockup image for a proposal so a prospective client can see a visual direction before signing, not just read a scope.',
+                'icon' => 'bi-vector-pen',
+                'status' => 'ondemand',
+                'status_label' => 'On demand',
+                'stat_value' => $mockupsGenerated,
+                'stat_label' => 'mockups generated',
                 'manage_url' => '/admin/proposals.html',
                 'manage_label' => 'Proposals',
             ],
