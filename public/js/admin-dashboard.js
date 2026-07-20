@@ -114,11 +114,35 @@ function renderStats(data) {
   }
 }
 
+function renderDashboardRows(box, rows) {
+  const limit = 3;
+  box.innerHTML = rows.slice(0, limit).join("");
+  if (rows.length <= limit) return;
+
+  const overflow = document.createElement('div');
+  overflow.className = 'dashboard-card-overflow d-none';
+  overflow.innerHTML = rows.slice(limit).join("");
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'dashboard-card-toggle';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.textContent = `Show ${rows.length - limit} more`;
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    overflow.classList.toggle('d-none', expanded);
+    toggle.textContent = expanded ? `Show ${rows.length - limit} more` : 'Show less';
+  });
+
+  box.append(overflow, toggle);
+}
+
 function renderRecentInquiries(inquiries) {
   const box = document.getElementById("recent-inquiries");
   document.getElementById("inquiries-empty").classList.toggle("d-none", inquiries.length > 0);
 
-  box.innerHTML = inquiries.map(i => `
+  renderDashboardRows(box, inquiries.map(i => `
     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
       <div class="me-3 text-truncate">
         <strong>${escapeHtml(i.name)}</strong>
@@ -129,19 +153,19 @@ function renderRecentInquiries(inquiries) {
         <small class="text-muted-custom">${new Date(i.created_at).toLocaleDateString()}</small>
       </div>
     </div>
-  `).join("");
+  `));
 }
 
 function renderDraftProjects(drafts) {
   const box = document.getElementById("draft-projects");
   document.getElementById("drafts-empty").classList.toggle("d-none", drafts.length > 0);
 
-  box.innerHTML = drafts.map(d => `
+  renderDashboardRows(box, drafts.map(d => `
     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
       <span class="me-3 text-truncate">${escapeHtml(d.title)}</span>
       <small class="text-muted-custom flex-shrink-0">updated ${new Date(d.updated_at).toLocaleDateString()}</small>
     </div>
-  `).join("");
+  `));
 }
 
 const PAYMENT_STATUS_PILL_CLASS = { success: "published", pending: "unread", failed: "flagged" };
@@ -150,7 +174,7 @@ function renderRecentPayments(payments) {
   const box = document.getElementById("recent-payments");
   document.getElementById("payments-empty").classList.toggle("d-none", payments.length > 0);
 
-  box.innerHTML = payments.map(p => `
+  renderDashboardRows(box, payments.map(p => `
     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
       <div class="me-3 text-truncate">
         <strong>${escapeHtml(p.customer_name || p.email)}</strong>
@@ -161,14 +185,14 @@ function renderRecentPayments(payments) {
         <small class="text-muted-custom">${new Date(p.created_at).toLocaleDateString()}</small>
       </div>
     </div>
-  `).join("");
+  `));
 }
 
 function renderUpcomingAppointments(appointments) {
   const box = document.getElementById("upcoming-appointments");
   document.getElementById("appointments-empty").classList.toggle("d-none", appointments.length > 0);
 
-  box.innerHTML = appointments.map(a => `
+  renderDashboardRows(box, appointments.map(a => `
     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
       <div class="me-3 text-truncate">
         <strong>${escapeHtml(a.client_name)}</strong>
@@ -176,7 +200,7 @@ function renderUpcomingAppointments(appointments) {
       </div>
       <small class="text-muted-custom flex-shrink-0">${new Date(`${a.appointment_date}T00:00`).toLocaleDateString()} · ${a.appointment_time}</small>
     </div>
-  `).join("");
+  `));
 }
 
 function renderRateLimits(rl) {

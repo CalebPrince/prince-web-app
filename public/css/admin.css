@@ -1620,3 +1620,18 @@ body > .d-flex {
   .modal.show .modal-dialog,
   .toast.show { animation: none !important; }
 }
+
+.dashboard-card-toggle {
+  width: 100%;
+  margin-top: .45rem;
+  padding: .45rem .6rem;
+  color: var(--muted);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: .68rem;
+  font-weight: 700;
+}
+.dashboard-card-toggle:hover,
+.dashboard-card-toggle:focus-visible { color: var(--heading-color); border-color: var(--line-strong); }
+.dashboard-card-toggle:focus-visible { outline: 2px solid var(--heading-color); outline-offset: 2px; }
