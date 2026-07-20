@@ -199,6 +199,7 @@ $router->patch('/api/v1/admin/payments/{reference}', [PaymentController::class, 
 $router->delete('/api/v1/admin/payments/{reference}', [PaymentController::class, 'destroy']);
 $router->get('/api/v1/admin/payment-links', [PaymentController::class, 'adminIndexLinks']);
 $router->post('/api/v1/admin/payment-links', [PaymentController::class, 'createLink']);
+$router->post('/api/v1/admin/payment-links/{id}/mark-paid', [PaymentController::class, 'markLinkPaid']);
 $router->get('/api/v1/admin/subscriptions', [SubscriptionController::class, 'adminIndex']);
 $router->post('/api/v1/admin/subscriptions', [SubscriptionController::class, 'store']);
 $router->post('/api/v1/admin/subscriptions/{id}/cancel', [SubscriptionController::class, 'cancel']);

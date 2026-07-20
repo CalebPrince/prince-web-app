@@ -436,4 +436,60 @@ class PaymentController
 
         Response::json(['token' => $token, 'url' => '/pay.html?token=' . $token], 201);
     }
+
+    /**
+     * POST /api/v1/admin/payment-links/{id}/mark-paid — for a client who paid
+     * outside Paystack entirely (e.g. mobile money straight to Caleb's
+     * wallet). Records a matching `payments` row so revenue reports still
+     * count it, settles any invoice tied to this link, and flips the link
+     * itself to paid — everything the real Paystack flow does, minus the
+     * client-facing "payment received" email, since Caleb already knows
+     * (he received the money directly) and the client doesn't need a
+     * Paystack-flavored receipt for a payment Paystack never touched.
+     */
+    public static function markLinkPaid(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        $stmt = $pdo->prepare('SELECT * FROM payment_links WHERE id = ?');
+        $stmt->execute([(int) $params['id']]);
+        $link = $stmt->fetch();
+        if (!$link) {
+            Response::error('Payment link not found.', 404);
+        }
+        if ($link['status'] === 'paid') {
+            Response::error('This payment link is already marked paid.', 422);
+        }
+
+        $reference = 'MANUAL_' . bin2hex(random_bytes(12));
+        $pdo->prepare(
+            'INSERT INTO payments (reference, email, customer_name, amount, currency, description, source, payment_link_id, status, reviewed, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $reference,
+            $link['client_email'],
+            $link['client_name'],
+            $link['amount'],
+            $link['currency'],
+            $link['description'],
+            'payment_link',
+            $link['id'],
+            'success',
+            1,
+            'Marked paid manually — client paid outside Paystack (e.g. mobile money), not through this link.',
+        ]);
+
+        $pdo->prepare("UPDATE payment_links SET status = 'paid', paid_at = datetime('now') WHERE id = ?")
+            ->execute([$link['id']]);
+        InvoiceController::settleByPaymentLink($pdo, (int) $link['id']);
+
+        ActivityLog::log($user, 'marked paid', 'payment_link', (string) $link['id'], $link['client_name'], [
+            'amount' => $link['amount'] / 100,
+            'currency' => $link['currency'],
+            'method' => 'manual',
+        ]);
+
+        Response::json(['status' => 'paid', 'reference' => $reference]);
+    }
 }

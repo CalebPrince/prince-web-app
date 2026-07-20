@@ -154,6 +154,7 @@ async function loadLinks() {
       <td><span class="status-pill ${STATUS_PILL_CLASS[l.status] || 'read'}">${l.status}</span></td>
       <td class="text-end pe-3">
         <button class="btn btn-sm btn-outline-secondary copy-link-btn" data-token="${l.token}">Copy link</button>
+        ${l.status === 'pending' ? `<button class="btn btn-sm btn-outline-secondary mark-link-paid-btn ms-1" data-id="${l.id}">Mark as paid</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -168,6 +169,20 @@ async function loadLinks() {
         setTimeout(() => { btn.textContent = original; }, 2000);
       } catch (_) {
         prompt('Copy this link:', url);
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.mark-link-paid-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm("Mark this as paid? Only do this once you've actually confirmed the money in your wallet/account.")) return;
+      btn.disabled = true;
+      try {
+        await api.post(`/api/v1/admin/payment-links/${btn.dataset.id}/mark-paid`, {});
+        await Promise.all([loadLinks(), loadPayments()]);
+      } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
       }
     });
   });
