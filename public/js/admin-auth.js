@@ -72,9 +72,44 @@ function enhanceAdminTables() {
   });
 }
 
+function enhanceAdminSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  if (!sidebar || sidebar.querySelector('.admin-sidebar-collapse')) return;
+
+  const headerActions = sidebar.querySelector(':scope > .d-flex:first-child > .d-flex:last-child');
+  if (!headerActions) return;
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'admin-sidebar-collapse';
+  button.setAttribute('aria-label', 'Use compact sidebar');
+  button.setAttribute('aria-expanded', 'true');
+  button.innerHTML = '<i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i>';
+  headerActions.appendChild(button);
+
+  sidebar.querySelectorAll('a.nav-link').forEach(link => {
+    const label = link.querySelector('.nav-label')?.textContent.trim();
+    if (label && !link.title) link.title = label;
+  });
+
+  const apply = compact => {
+    document.body.classList.toggle('admin-sidebar-compact', compact);
+    button.setAttribute('aria-expanded', compact ? 'false' : 'true');
+    button.setAttribute('aria-label', compact ? 'Expand sidebar' : 'Use compact sidebar');
+  };
+
+  apply(localStorage.getItem('admin_sidebar_compact') === '1');
+  button.addEventListener('click', () => {
+    const compact = !document.body.classList.contains('admin-sidebar-compact');
+    localStorage.setItem('admin_sidebar_compact', compact ? '1' : '0');
+    apply(compact);
+  });
+}
+
 function enhanceAdminInterface() {
   enhanceAdminPageHeaders();
   enhanceAdminTables();
+  enhanceAdminSidebar();
 }
 
 if (document.readyState === 'loading') {

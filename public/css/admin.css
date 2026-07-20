@@ -614,6 +614,46 @@ body > .d-flex {
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
+  transition: width .2s ease;
+}
+
+.admin-sidebar-collapse {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.admin-sidebar-collapse:hover,
+.admin-sidebar-collapse:focus-visible {
+  color: var(--heading-color);
+  border-color: var(--line-strong);
+}
+.admin-sidebar-collapse:focus-visible { outline: 2px solid var(--heading-color); outline-offset: 2px; }
+
+@media (min-width: 992px) {
+  body.admin-sidebar-compact { --admin-sidebar-width: 84px; }
+  .admin-sidebar-compact .admin-sidebar { padding-right: .65rem !important; padding-left: .65rem !important; }
+  .admin-sidebar-compact .admin-sidebar > .d-flex:first-child { align-items: center !important; flex-direction: column; gap: .65rem; }
+  .admin-sidebar-compact .admin-sidebar > .d-flex:first-child > .d-flex:last-child { gap: 0 !important; }
+  .admin-sidebar-compact .admin-sidebar .brand-text,
+  .admin-sidebar-compact .admin-sidebar .nav-label,
+  .admin-sidebar-compact .admin-sidebar .nav-group-label,
+  .admin-sidebar-compact .admin-sidebar .notif-badge,
+  .admin-sidebar-compact .admin-sidebar .position-relative,
+  .admin-sidebar-compact .admin-sidebar .theme-toggle,
+  .admin-sidebar-compact .admin-sidebar .sidebar-divider { display: none !important; }
+  .admin-sidebar-compact .admin-sidebar .brand { justify-content: center; }
+  .admin-sidebar-compact .admin-sidebar a.nav-link { justify-content: center; gap: 0; padding: .65rem; }
+  .admin-sidebar-compact .admin-sidebar a.nav-link .nav-icon { width: auto; margin: 0; font-size: 1.05rem; }
+}
+@media (max-width: 991.98px) {
+  .admin-sidebar-collapse { display: none; }
 }
 
 .admin-data-table {
