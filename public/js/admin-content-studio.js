@@ -167,6 +167,9 @@ function buildCard(item) {
   send.innerHTML = isBlog
     ? '<i class="bi bi-journal-arrow-up me-1"></i>Send to Blog'
     : '<i class="bi bi-megaphone me-1"></i>Send to Social Drafts';
+  if (!isBlog) {
+    send.title = "Lands as a new draft there — approving it on the Social Drafts page is what actually posts it (e.g. to LinkedIn, if connected).";
+  }
   footer.appendChild(send);
 
   const del = document.createElement("button");
