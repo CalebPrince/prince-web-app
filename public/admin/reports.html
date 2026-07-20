@@ -133,9 +133,9 @@
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-percent"></i></div>
           <div>
-            <div class="stat-label">Gross margin <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal" title="Estimated — this app doesn't track costs yet">est.</span></div>
+            <div class="stat-label">Gross margin <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal d-none" id="kpi-margin-badge" title="No project with a contract value was created in this period, so this falls back to a flat estimate">est.</span></div>
             <div class="stat-value" id="kpi-margin">–</div>
-            <div class="stat-sub">no cost data tracked yet</div>
+            <div class="stat-sub" id="kpi-margin-sub">no cost data tracked yet</div>
           </div>
         </div>
       </div>
@@ -153,9 +153,13 @@
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-speedometer"></i></div>
           <div>
-            <div class="stat-label">Utilization <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal" title="Estimated — this app doesn't track hours yet">est.</span></div>
+            <div class="stat-label">Utilization <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal d-none" id="kpi-utilization-badge" title="Set your weekly billable hours below for a real figure">est.</span></div>
             <div class="stat-value" id="kpi-utilization">–</div>
-            <div class="stat-sub">no hours data tracked yet</div>
+            <div class="stat-sub" id="kpi-utilization-sub">no hours data tracked yet</div>
+            <form id="capacity-form" class="d-flex gap-1 mt-2">
+              <input type="number" min="1" step="1" class="form-control form-control-sm" id="weekly-billable-hours" placeholder="Hrs/week" style="max-width:6.5rem;" title="Weekly billable hours — the denominator for utilization">
+              <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+            </form>
           </div>
         </div>
       </div>

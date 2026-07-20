@@ -57,8 +57,8 @@ class ReportController
             'lead_sources' => self::leadSources($pdo),
             'top_clients' => self::topClients($pdo),
             'period' => self::periodMetrics($pdo, $from, $to, $prevFrom, $prevTo),
-            'estimates' => self::estimates(),
-            'six_month_view' => self::sixMonthView($revenue['by_month']),
+            'estimates' => self::estimates($pdo, $from, $to),
+            'six_month_view' => self::sixMonthView($pdo, $revenue['by_month']),
         ]);
     }
 
@@ -227,38 +227,100 @@ class ReportController
     }
 
     /**
-     * Gross margin and utilization have no real data source yet — there's no
-     * cost/expense tracking and no hours/time-tracking anywhere in the
-     * schema. These are flat placeholders, explicitly flagged with
-     * is_estimate so the frontend can badge them rather than presenting them
-     * as computed figures. Replace with real queries once cost and hours
-     * data exist.
+     * Real project cost/hours data, summed for projects *created* within the
+     * given window. `created_at` is an imperfect proxy for "which period
+     * this project's cost belongs to" — a project can run for months past
+     * its creation date — but it's the only date the schema has; there's no
+     * per-period cost ledger. Only projects with a contract_value are
+     * counted, since a zero-value row (not yet priced) would drag margin
+     * toward 0% rather than being excluded.
+     *
+     * @return array{value:int,cost:int,hours:float,count:int}
      */
-    private static function estimates(): array
+    private static function projectFinancialsForPeriod(\PDO $pdo, string $from, string $to): array
     {
+        $stmt = $pdo->prepare(
+            'SELECT COALESCE(SUM(contract_value),0), COALESCE(SUM(actual_cost),0), COALESCE(SUM(hours_worked),0), COUNT(*)
+             FROM projects WHERE contract_value > 0 AND date(created_at) BETWEEN ? AND ?'
+        );
+        $stmt->execute([$from, $to]);
+        [$value, $cost, $hours, $count] = $stmt->fetch(\PDO::FETCH_NUM);
+
+        return ['value' => (int) $value, 'cost' => (int) $cost, 'hours' => (float) $hours, 'count' => (int) $count];
+    }
+
+    /**
+     * Gross margin is real whenever at least one priced project was created
+     * in the window — margin_pct = (contract value - actual cost) / contract
+     * value. Utilization is real only once a weekly billable-hours capacity
+     * is configured (Reports page, above the Utilization card) — without a
+     * denominator, hours worked has nothing to measure against. Either
+     * figure that can't be computed falls back to the flat placeholder,
+     * explicitly flagged so the frontend can badge it.
+     */
+    private static function estimates(\PDO $pdo, string $from, string $to): array
+    {
+        $financials = self::projectFinancialsForPeriod($pdo, $from, $to);
+
+        $marginIsReal = $financials['value'] > 0;
+        $grossMarginPct = $marginIsReal
+            ? round((($financials['value'] - $financials['cost']) / $financials['value']) * 100, 1)
+            : round(self::ESTIMATED_MARGIN_PCT * 100, 1);
+
+        $weeklyHours = (float) (Settings::get('weekly_billable_hours') ?: 0);
+        $days = (int) ((strtotime($to) - strtotime($from)) / 86400) + 1;
+        $capacityHours = $weeklyHours * ($days / 7);
+        $utilizationIsReal = $weeklyHours > 0 && $financials['count'] > 0;
+        $utilizationPct = $utilizationIsReal
+            ? round(($financials['hours'] / $capacityHours) * 100, 1)
+            : round(self::ESTIMATED_UTILIZATION_PCT * 100, 1);
+
+        $notes = [];
+        if (!$marginIsReal) {
+            $notes[] = 'gross margin falls back to a flat estimate because no priced project was created in this period';
+        }
+        if (!$utilizationIsReal) {
+            $notes[] = $weeklyHours > 0
+                ? 'utilization falls back to a flat estimate because no priced project was created in this period'
+                : 'utilization falls back to a flat estimate until weekly billable hours is set on this page';
+        }
+
         return [
-            'gross_margin_pct' => round(self::ESTIMATED_MARGIN_PCT * 100, 1),
-            'utilization_pct' => round(self::ESTIMATED_UTILIZATION_PCT * 100, 1),
-            'is_estimate' => true,
-            'note' => 'No cost or time-tracking data exists yet in this app — these are placeholder estimates, not computed figures.',
+            'gross_margin_pct' => $grossMarginPct,
+            'gross_margin_is_estimate' => !$marginIsReal,
+            'utilization_pct' => $utilizationPct,
+            'utilization_is_estimate' => !$utilizationIsReal,
+            'weekly_billable_hours' => $weeklyHours > 0 ? $weeklyHours : null,
+            'is_estimate' => !$marginIsReal || !$utilizationIsReal,
+            'note' => $notes ? ucfirst(implode('; ', $notes)) . '.' : 'Computed from real project cost and hours data for this period.',
         ];
     }
 
     /**
-     * Last 6 calendar months of real revenue, plus an estimated margin line
-     * (flat % of revenue — see estimates()).
+     * Last 6 calendar months of real revenue, plus real gross margin per
+     * month wherever a priced project was created that month (same rule as
+     * estimates()), falling back to the flat placeholder otherwise.
      *
      * @param list<array{month:string,amount:int}> $byMonth last 12 months, oldest first (from revenue())
      * @return list<array<string,mixed>>
      */
-    private static function sixMonthView(array $byMonth): array
+    private static function sixMonthView(\PDO $pdo, array $byMonth): array
     {
         $lastSix = array_slice($byMonth, -6);
-        return array_map(static fn(array $m): array => [
-            'month' => $m['month'],
-            'revenue' => $m['amount'],
-            'margin_est' => (int) round($m['amount'] * self::ESTIMATED_MARGIN_PCT),
-        ], $lastSix);
+        return array_map(static function (array $m) use ($pdo): array {
+            $from = $m['month'] . '-01';
+            $to = date('Y-m-d', strtotime($from . ' +1 month -1 day'));
+            $financials = self::projectFinancialsForPeriod($pdo, $from, $to);
+            $marginPct = $financials['value'] > 0
+                ? (($financials['value'] - $financials['cost']) / $financials['value'])
+                : self::ESTIMATED_MARGIN_PCT;
+
+            return [
+                'month' => $m['month'],
+                'revenue' => $m['amount'],
+                'margin_est' => (int) round($m['amount'] * $marginPct),
+            ];
+        }, $lastSix);
     }
 
     /** @return array<string,mixed> */

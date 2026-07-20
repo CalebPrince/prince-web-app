@@ -22,7 +22,7 @@ class SettingsController
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
         'maintenance_mode',
         'paystack_public_key', 'paystack_secret_key',
-        'monthly_revenue_target', 'revenue_target_currency',
+        'monthly_revenue_target', 'revenue_target_currency', 'weekly_billable_hours',
         'booking_enabled', 'booking_days', 'booking_start_time', 'booking_end_time',
         'booking_slot_minutes', 'booking_lead_days', 'booking_min_notice_hours', 'booking_timezone',
         'social_draft_enabled', 'social_draft_frequency', 'social_draft_last_run',
@@ -159,6 +159,10 @@ class SettingsController
             if ($key === 'monthly_revenue_target'
                 && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999999)) {
                 Response::error('Revenue target must be a valid positive amount.', 422);
+            }
+            if ($key === 'weekly_billable_hours' && $value !== ''
+                && (!is_numeric($value) || (float) $value <= 0 || (float) $value > 168)) {
+                Response::error('Weekly billable hours must be a positive number, at most 168.', 422);
             }
             if ($key === 'revenue_target_currency') {
                 $value = strtoupper($value);

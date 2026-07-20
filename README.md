@@ -811,13 +811,24 @@ storage/
     form), joined back through `proposal_milestones` to whichever payment it
     funded; a payment with no linked proposal (e.g. Starter-tier direct
     checkout) lands in "Uncategorized" rather than being dropped or
-    misattributed. Gross margin and utilization remain flat,
-    explicitly-badged **estimates** (`is_estimate` in the API response)
-    because this business-wide report does not yet roll project-level costs
-    and hours into the selected reporting period. Individual projects do
-    have real cost and hours tracking (see #42). Every other figure is a
-    genuine query, never a placeholder. A six-month revenue+margin chart and
-    client-side CSV export round it out. Reports also include a configurable
+    misattributed. Gross margin is real whenever at least one project with a
+    contract value was *created* within the selected period — `(contract
+    value - actual cost) / contract value`, rolled up from the same
+    project-level cost/hours tracking as #42 — and falls back to a flat,
+    explicitly-badged **estimate** only when no priced project falls in that
+    window (`gross_margin_is_estimate` in the API response). `created_at` is
+    an imperfect proxy for "which period this cost belongs to" — a
+    long-running project's entire cost lands in its creation month, since
+    there's no per-period cost ledger — but it's the only date the schema
+    has. Utilization works the same way, against a configurable **weekly
+    billable hours** capacity (Settings key `weekly_billable_hours`, set
+    from a small input directly on the Utilization card): `hours logged /
+    (weekly hours x weeks in period)`, real once that's set and a priced
+    project exists in the window, otherwise the flat estimate
+    (`utilization_is_estimate`). The six-month revenue+margin chart uses the
+    same real-or-estimate rule per month. Every other figure is a genuine
+    query, never a placeholder, and a client-side CSV export round it out.
+    Reports also include a configurable
     monthly revenue target: successful Paystack payments are collected
     revenue, accepted proposals are deals won this month, and open proposals
     plus identity-deduplicated marketing/manual leads form a weighted

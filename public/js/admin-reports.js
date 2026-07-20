@@ -199,7 +199,19 @@ function renderPeriodKpis(period, estimates, currency) {
   document.getElementById('kpi-revenue-trend').innerHTML = trendHtml(period.revenue_change_pct, 'vs previous period');
 
   document.getElementById('kpi-margin').textContent = estimates.gross_margin_pct.toFixed(1) + '%';
+  document.getElementById('kpi-margin-badge').classList.toggle('d-none', !estimates.gross_margin_is_estimate);
+  document.getElementById('kpi-margin-sub').textContent = estimates.gross_margin_is_estimate
+    ? 'no priced project created this period'
+    : 'from real project cost data';
+
   document.getElementById('kpi-utilization').textContent = estimates.utilization_pct.toFixed(1) + '%';
+  document.getElementById('kpi-utilization-badge').classList.toggle('d-none', !estimates.utilization_is_estimate);
+  document.getElementById('kpi-utilization-sub').textContent = estimates.utilization_is_estimate
+    ? (estimates.weekly_billable_hours ? 'no priced project created this period' : 'set weekly billable hours below')
+    : 'from real hours logged';
+  if (document.activeElement !== document.getElementById('weekly-billable-hours')) {
+    document.getElementById('weekly-billable-hours').value = estimates.weekly_billable_hours || '';
+  }
 
   document.getElementById('kpi-avg-project').textContent = period.avg_project === null ? '—' : formatMoney(period.avg_project, currency);
   document.getElementById('kpi-avg-project-trend').innerHTML = period.avg_project === null
@@ -299,9 +311,9 @@ function exportReport(data) {
 
   lines.push(csvRow(['KPI', 'Value', 'Change vs previous period']));
   lines.push(csvRow(['Revenue', money(data.period.revenue), data.period.revenue_change_pct === null ? '' : data.period.revenue_change_pct + '%']));
-  lines.push(csvRow(['Gross margin (estimated — no cost data tracked)', data.estimates.gross_margin_pct + '%', '']));
+  lines.push(csvRow([data.estimates.gross_margin_is_estimate ? 'Gross margin (estimated — no priced project this period)' : 'Gross margin (from real project cost data)', data.estimates.gross_margin_pct + '%', '']));
   lines.push(csvRow(['Average project', data.period.avg_project === null ? '' : money(data.period.avg_project), data.period.avg_project_change_pct === null ? '' : data.period.avg_project_change_pct + '%']));
-  lines.push(csvRow(['Utilization (estimated — no hours data tracked)', data.estimates.utilization_pct + '%', '']));
+  lines.push(csvRow([data.estimates.utilization_is_estimate ? 'Utilization (estimated — set weekly billable hours)' : 'Utilization (from real hours logged)', data.estimates.utilization_pct + '%', '']));
   lines.push('');
 
   lines.push(csvRow(['Revenue mix by service', 'Amount (' + currency + ')']));
@@ -494,6 +506,16 @@ function presetRange(preset) {
       await api.put('/api/v1/admin/settings', { monthly_revenue_target: document.getElementById('revenue-target-amount').value || '0', revenue_target_currency: document.getElementById('revenue-target-currency').value });
       await loadReport(); status.textContent = 'Target saved.';
     } catch (err) { status.textContent = err.message || 'Could not save the target.'; }
+  });
+
+  document.getElementById('capacity-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      await api.put('/api/v1/admin/settings', { weekly_billable_hours: document.getElementById('weekly-billable-hours').value });
+      await loadReport();
+    } catch (err) {
+      alert(err.message || 'Could not save weekly billable hours.');
+    }
   });
 
   document.getElementById('days-filter').addEventListener('change', (e) => {
