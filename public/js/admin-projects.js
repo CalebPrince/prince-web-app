@@ -322,6 +322,7 @@ function openNewModal() {
   document.getElementById("arch_primary_color").value = "";
   document.getElementById("arch_accent_color").value = "";
   document.getElementById("arch-link-msg").classList.add("d-none");
+  hideReviewBuild();
   setCoverPreview(null);
   galleryPaths = [];
   renderGalleryList();
@@ -365,6 +366,7 @@ function openEditModal(project) {
   document.getElementById("arch_primary_color").value = project.arch_primary_color || "";
   document.getElementById("arch_accent_color").value = project.arch_accent_color || "";
   document.getElementById("arch-link-msg").classList.add("d-none");
+  hideReviewBuild();
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
   setCoverPreview(project.cover_image_path);
@@ -409,6 +411,46 @@ async function copyArchLink() {
     msg.classList.remove("d-none");
   } catch (_) {
     prompt("Copy this Arch link:", url);
+  }
+}
+
+const REVIEW_SEVERITY_CLASS = { low: "flagged", medium: "unread", high: "flagged" };
+
+function hideReviewBuild() {
+  document.getElementById("review-build-wrap").classList.add("d-none");
+  document.getElementById("review-build-findings").innerHTML = "";
+  document.getElementById("review-build-summary").textContent = "";
+}
+
+async function reviewBuild() {
+  const url = document.getElementById("live_url").value.trim();
+  if (!url) {
+    alert("Enter a Live URL first — Sketch needs something to fetch and review.");
+    return;
+  }
+  const btn = document.getElementById("review-build-btn");
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+  try {
+    const result = await api.post("/api/v1/admin/projects/review-build", { url });
+    document.getElementById("review-build-summary").textContent = result.summary || "";
+    const findings = Array.isArray(result.findings) ? result.findings : [];
+    const list = document.getElementById("review-build-findings");
+    list.innerHTML = findings.length
+      ? findings.map(f => `
+          <div class="d-flex gap-2 align-items-start">
+            <span class="status-pill ${REVIEW_SEVERITY_CLASS[f.severity] || "read"} text-nowrap">${escapeHtml(f.severity)}</span>
+            <div><span class="small text-muted-custom">${escapeHtml(f.category)}</span><div>${escapeHtml(f.note)}</div></div>
+          </div>
+        `).join("")
+      : '<div class="small text-muted-custom">Nothing notable found.</div>';
+    document.getElementById("review-build-wrap").classList.remove("d-none");
+  } catch (err) {
+    alert(err.message || "Could not review this build.");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
   }
 }
 
@@ -481,6 +523,8 @@ async function deleteProject(id) {
   document.getElementById("new-project-btn").addEventListener("click", openNewModal);
   document.getElementById("save-project-btn").addEventListener("click", saveProject);
   document.getElementById("copy-arch-link-btn").addEventListener("click", copyArchLink);
+  document.getElementById("review-build-btn").addEventListener("click", reviewBuild);
+  document.getElementById("review-build-close-btn").addEventListener("click", hideReviewBuild);
   document.getElementById("title").addEventListener("input", () => updateSlugFromTitle());
   document.getElementById("slug").addEventListener("input", () => {
     slugEditedManually = true;

@@ -166,6 +166,7 @@ $router->patch('/api/v1/admin/notifications/{key}', [DashboardController::class,
 $router->get('/api/v1/admin/projects', [ProjectController::class, 'adminIndex']);
 $router->post('/api/v1/admin/projects', [ProjectController::class, 'store']);
 $router->patch('/api/v1/admin/projects/reorder', [ProjectController::class, 'reorder']);
+$router->post('/api/v1/admin/projects/review-build', [ProjectController::class, 'reviewBuild']);
 $router->put('/api/v1/admin/projects/{id}', [ProjectController::class, 'update']);
 $router->delete('/api/v1/admin/projects/{id}', [ProjectController::class, 'destroy']);
 $router->get('/api/v1/admin/inquiries', [InquiryController::class, 'adminIndex']);

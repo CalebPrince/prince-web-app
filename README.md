@@ -771,6 +771,21 @@ storage/
     who arrives without `?prefill=` still picks everything themselves,
     exactly as before.
 
+    **Build review:** a "Review build" button next to the Live URL field on
+    `/admin/projects.html` (`POST /api/v1/admin/projects/review-build`,
+    `ProjectController::reviewBuild()`) fetches that URL's raw HTML
+    server-side (capped, content-type-checked, no headless browser — there
+    isn't one on this shared PHP host) and asks Sketch for a structural/
+    accessibility review: heading hierarchy, missing alt text, a responsive
+    viewport meta tag, semantic landmarks vs generic divs, title/meta
+    description, unlabeled form inputs, placeholder content. The prompt is
+    explicit that this is markup only — no rendering happened, so it must
+    never claim to judge colors, spacing, or how anything actually looks.
+    Works on any live URL, not just a saved project's, same "no id
+    required" pattern as Sketch's mockup generation. Findings come back as
+    `{summary, findings: [{category, severity, note}]}`, shown inline in a
+    small panel rather than a separate page.
+
     **Inbound Funnel (Lisa → Ledger):** the moment a visitor books a
     discovery call through Lisa's `book_appointment` tool, the exact chat
     transcript that led to it — plus the real, validated name/email/phone —
