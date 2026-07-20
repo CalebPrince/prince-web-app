@@ -392,6 +392,7 @@ body > .d-flex {
 
 .admin-sidebar {
   width: var(--admin-sidebar-width);
+  flex-shrink: 0;
   min-height: 100vh;
   max-height: 100vh;
   overflow-y: auto;
@@ -425,6 +426,39 @@ body > .d-flex {
 .notif-bell:hover {
   border-color: var(--line-strong);
   color: var(--heading-color);
+}
+
+/* .utility-dock/.utility-tab/.utility-tray are the frontend header's classes
+   (styled in app.css, loaded here too) — reused as-is for the open/close
+   behavior and the tray's card styling, but the frontend's positioning
+   assumes the tab hangs off a nav bar's top border (negative margin, flat
+   top / rounded bottom only). The sidebar header has no border above it to
+   hang from, so it gets a normal standalone button instead, and the tray is
+   right-aligned rather than centered — centered would overflow the sidebar's
+   240px width with three icons in it instead of the frontend's two. */
+.admin-sidebar .utility-dock {
+  align-self: auto;
+  margin-top: 0;
+}
+.admin-sidebar .utility-tab {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  color: var(--ink);
+}
+.admin-sidebar .utility-tab:hover {
+  border-color: var(--line-strong);
+  color: var(--heading-color);
+}
+.admin-sidebar .utility-tray {
+  left: auto;
+  right: 0;
+  transform: translateY(-6px);
+}
+.admin-sidebar .utility-dock.open .utility-tray {
+  transform: translateY(0);
 }
 
 .admin-sidebar .nav-group-label {

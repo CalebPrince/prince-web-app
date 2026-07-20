@@ -59,14 +59,58 @@
   }
   injectTasksNav();
 
-  function initAdminSearch() {
+  // Collapses search/notifications/theme into the same "small tab, click to
+  // drop down a tray" pattern the frontend's header already uses
+  // (.utility-dock/.utility-tab/.utility-tray, styled in app.css, loaded on
+  // admin pages too) — reuses those exact classes instead of inventing
+  // admin-only ones, so the two only ever need one visual language.
+  // Restructures the existing header controls container in place (moves
+  // its real children, doesn't clone them) so notif-bell's and
+  // theme-toggle's own listeners, bound elsewhere, keep working unchanged.
+  function initUtilityDock() {
     const controls = document.querySelector('.admin-sidebar .brand')?.parentElement?.querySelector(':scope > .d-flex:last-child');
+    if (!controls || controls.classList.contains('utility-tray')) return null;
+
+    const dock = document.createElement('div');
+    dock.className = 'utility-dock';
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'utility-tab';
+    tab.setAttribute('aria-expanded', 'false');
+    tab.setAttribute('aria-controls', 'admin-utility-tray');
+    tab.setAttribute('aria-label', 'Quick actions');
+    tab.innerHTML = '<i class="bi bi-chevron-down"></i>';
+
+    controls.parentElement.insertBefore(dock, controls);
+    controls.classList.remove('d-flex', 'align-items-center', 'gap-2');
+    controls.classList.add('utility-tray');
+    controls.id = 'admin-utility-tray';
+    dock.appendChild(tab);
+    dock.appendChild(controls);
+
+    const setOpen = (open) => {
+      dock.classList.toggle('open', open);
+      tab.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    tab.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!dock.classList.contains('open')); });
+    document.addEventListener('click', (e) => { if (dock.classList.contains('open') && !dock.contains(e.target)) setOpen(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dock.classList.contains('open')) { setOpen(false); tab.focus(); } });
+
+    // Exposed so search/notifications can collapse the tray the moment they
+    // open their own (bigger) panel, rather than leaving both visible.
+    window.__closeAdminDock = () => setOpen(false);
+    return controls;
+  }
+  const utilityTray = initUtilityDock();
+
+  function initAdminSearch() {
+    const controls = utilityTray || document.querySelector('.admin-sidebar .brand')?.parentElement?.querySelector(':scope > .d-flex:last-child');
     if (!controls || document.getElementById('admin-global-search-btn')) return;
     const btn = document.createElement('button'); btn.type='button'; btn.id='admin-global-search-btn'; btn.className='notif-bell'; btn.setAttribute('aria-label','Search admin'); btn.innerHTML='<i class="bi bi-search"></i>'; controls.insertBefore(btn,controls.firstChild);
     const shell=document.createElement('div'); shell.className='admin-search-shell d-none'; shell.id='admin-search-shell'; shell.innerHTML='<div class="admin-search-panel" role="dialog" aria-modal="true" aria-label="Search admin"><label class="admin-search-input"><i class="bi bi-search"></i><input id="admin-global-search-input" type="search" placeholder="Search people, messages, bookings…" autocomplete="off"><kbd>Esc</kbd></label><div id="admin-search-results" class="admin-search-results"><div class="admin-search-empty">Type at least two characters to search the CRM.</div></div><footer><span><kbd>Ctrl</kbd> <kbd>K</kbd> to open</span><span>Results open their admin page</span></footer></div>';
     document.body.appendChild(shell); const input=shell.querySelector('input'); const results=shell.querySelector('#admin-search-results'); let timer;
     const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const open=()=>{shell.classList.remove('d-none');setTimeout(()=>input.focus(),0);}; const close=()=>{shell.classList.add('d-none');}; btn.addEventListener('click',open); shell.addEventListener('click',e=>{if(e.target===shell)close();});
+    const open=()=>{shell.classList.remove('d-none');setTimeout(()=>input.focus(),0);window.__closeAdminDock?.();}; const close=()=>{shell.classList.add('d-none');}; btn.addEventListener('click',open); shell.addEventListener('click',e=>{if(e.target===shell)close();});
     document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open();}if(e.key==='Escape'&&!shell.classList.contains('d-none'))close();});
     input.addEventListener('input',()=>{clearTimeout(timer);const q=input.value.trim();if(q.length<2){results.innerHTML='<div class="admin-search-empty">Type at least two characters to search the CRM.</div>';return;}results.innerHTML='<div class="admin-search-empty">Searching…</div>';timer=setTimeout(async()=>{try{const data=await api.get(`/api/v1/admin/search?q=${encodeURIComponent(q)}`);results.innerHTML=(data.results||[]).map(r=>`<a class="admin-search-result" href="${esc(r.href)}"><span class="admin-search-type">${esc(r.type)}</span><span><strong>${esc(r.title)}</strong><small>${esc(r.detail)}</small></span><i class="bi bi-arrow-up-right"></i></a>`).join('')||'<div class="admin-search-empty">No matching CRM records.</div>';}catch(err){results.innerHTML=`<div class="admin-search-empty">${esc(err.message||'Search is unavailable.')}</div>`;}},220);});
   }
@@ -246,6 +290,7 @@
       if (opening) {
         placeDropdown();
         loadNotificationDetails();
+        window.__closeAdminDock?.();
       }
     });
 
