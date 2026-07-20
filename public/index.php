@@ -77,6 +77,7 @@ use App\Controllers\ProjectRequestController;
 use App\Controllers\SearchController;
 use App\Controllers\SettingsController;
 use App\Controllers\ShortLinkController;
+use App\Controllers\SketchController;
 use App\Controllers\SocialDraftController;
 use App\Controllers\SubscriptionController;
 use App\Controllers\TagController;
@@ -269,6 +270,7 @@ $router->post('/api/v1/admin/agents/dossier/chat', [DossierController::class, 'c
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
 $router->post('/api/v1/admin/agents/proposal/chat', [ProposalAgentController::class, 'chat']);
 $router->post('/api/v1/admin/agents/arch/chat', [\App\Agents\Arch::class, 'adminChat']);
+$router->post('/api/v1/admin/agents/sketch/chat', [SketchController::class, 'chat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
 $router->post('/api/v1/admin/beacon-leads/{id}/flag', [BeaconController::class, 'flagLead']);

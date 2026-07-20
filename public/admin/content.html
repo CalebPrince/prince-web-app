@@ -578,11 +578,33 @@
           </div>
 
           <div class="admin-card p-4">
-            <h5 class="mb-3"><i class="bi bi-vector-pen me-2" style="color: var(--section-content);"></i>Sketch (pitch mockups)</h5>
-            <div class="form-text mb-3">Sketch generates a concept mockup image on the Proposals page ("Generate mockup") so a prospective client sees a visual direction, not just a text scope. No chat interface, so no voice/persona — just a display name shown on the Team roster.</div>
-            <div class="mb-0">
-              <label class="form-label">Assistant name</label>
-              <input type="text" class="form-control" id="sketch_assistant_name" placeholder="Sketch" maxlength="40">
+            <h5 class="mb-3"><i class="bi bi-vector-pen me-2" style="color: var(--section-content);"></i>Sketch (UX/UI agent)</h5>
+            <div class="form-text mb-3">Sketch generates concept mockups, pre-fills a client's Arch chat with a style guide, and reviews a live build's HTML structure — from one-shot buttons on Proposals/Projects, or live in chat (<a href="/admin/agent-chat.html">Talk to Agents</a>). The name lightly flavors its internal framing either way, and the voice below is the real voice you'll hear talking to it there.</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="sketch_assistant_name" placeholder="Sketch" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="sketch_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="sketch_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="sketch_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="sketch_voice_preview_note"></span>
             </div>
           </div>
 

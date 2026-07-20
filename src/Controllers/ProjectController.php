@@ -10,6 +10,7 @@ use App\Support\AiText;
 use App\Support\Database;
 use App\Support\MakeWebhook;
 use App\Support\Response;
+use App\Support\SiteReview;
 use App\Support\Validator;
 
 class ProjectController
@@ -415,12 +416,12 @@ class ProjectController
             Response::error('Enter a valid http(s) URL to review.', 422);
         }
 
-        $html = self::fetchHtmlForReview($url);
+        $html = SiteReview::fetchHtml($url);
         if ($html === null) {
             Response::error('Could not fetch that URL — check it is live and publicly reachable.', 502);
         }
 
-        $result = AiText::generateWithProvider(self::buildReviewPrompt($url, $html), null, 45);
+        $result = AiText::generateWithProvider(SiteReview::buildReviewPrompt($url, $html), null, 45);
         if ($result === null) {
             Response::error('Could not generate a review right now — check an AI provider is configured under Settings.', 502);
         }
@@ -441,59 +442,6 @@ class ProjectController
             ], array_filter($findings, 'is_array')),
             'provider' => $result['provider'],
         ]);
-    }
-
-    /** @return string|null raw HTML, capped and content-type-checked, or null on any failure */
-    private static function fetchHtmlForReview(string $url): ?string
-    {
-        if (!function_exists('curl_init')) {
-            return null;
-        }
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 3,
-            CURLOPT_TIMEOUT => 15,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; SketchReviewBot/1.0; +https://princecaleb.dev)',
-            // Caps the download for servers that honor Range — fetchHtmlForReview
-            // still hard-truncates below regardless, since not all do.
-            CURLOPT_RANGE => '0-500000',
-        ]);
-        $body = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $contentType = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-
-        if ($body === false || $status < 200 || $status >= 300) {
-            return null;
-        }
-        if ($contentType !== '' && stripos($contentType, 'html') === false) {
-            return null;
-        }
-
-        return mb_substr((string) $body, 0, 500000);
-    }
-
-    /** Strips script/style bodies (keeps the tags) so token budget goes to structure/copy, not JS/CSS. */
-    private static function buildReviewPrompt(string $url, string $html): string
-    {
-        $stripped = preg_replace('#<script\b[^>]*>.*?</script>#is', '<script></script>', $html);
-        $stripped = preg_replace('#<style\b[^>]*>.*?</style>#is', '<style></style>', (string) $stripped);
-        $stripped = mb_substr((string) $stripped, 0, 40000);
-
-        return "You are Sketch, a UX/UI reviewer for Prince Caleb (princecaleb.dev). You are given the raw HTML "
-            . "of a live page at {$url} — not a screenshot or a rendering. You cannot see colors, spacing, layout, "
-            . "or how anything actually looks; never claim otherwise or invent a visual opinion. Review only what "
-            . "the markup itself tells you: heading hierarchy (one h1, logical h2/h3 nesting), missing alt text on "
-            . "images, presence of a responsive viewport meta tag, semantic landmarks (nav/main/footer/header vs "
-            . "generic divs for everything), a page title and meta description, form inputs without associated "
-            . "labels, and any broken-looking or placeholder content (lorem ipsum, '#' links, an img with no src). "
-            . "Be specific — cite the actual tag or text you're flagging, not generic advice.\n\n"
-            . "Return JSON only, no markdown fences: {\"summary\": \"one or two sentences\", \"findings\": "
-            . "[{\"category\": \"structure|accessibility|seo|content\", \"severity\": \"low|medium|high\", "
-            . "\"note\": \"specific, cites the actual markup\"}]}. If a category has nothing notable, omit it — "
-            . "don't pad the list with filler.\n\nHTML:\n{$stripped}";
     }
 
     private static function removePrivateFinance(array &$project): void

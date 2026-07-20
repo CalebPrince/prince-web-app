@@ -744,13 +744,28 @@ storage/
     framed as "a social media graphic"). The result is stored in
     `proposals.mockup_image_url` and shown both in the admin form and on the
     public `/proposal.html` the client actually sees, clearly labeled as a
-    concept image rather than a real screenshot. No chat interface, so no
-    voice/persona settings — just a display name (`sketch_assistant_name`)
-    for the Team roster. Unlike Ledger/Canvas/etc., Sketch has no ongoing
-    build-stage role, so it's deliberately left out of the Team page's
-    per-agent project-capacity tracking (`TeamController::projectCapacity()`)
-    even though it still appears, like every agent, as a selectable
-    "supporting agent" on a project.
+    concept image rather than a real screenshot. Unlike Ledger/Canvas/etc.,
+    Sketch has no ongoing build-stage role, so it's deliberately left out of
+    the Team page's per-agent project-capacity tracking
+    (`TeamController::projectCapacity()`) even though it still appears, like
+    every agent, as a selectable "supporting agent" on a project.
+    Sketch also has a live chat tab in "Talk to Agents"
+    (`SketchController::chat()`, `POST /api/v1/admin/agents/sketch/chat`)
+    with the same name/voice/accent settings every other agent gets
+    (`sketch_assistant_name`/`sketch_voice_gender`/`sketch_voice_accent`) —
+    but critically, its three tools (`generate_mockup`, `review_build`,
+    `create_arch_link`) call the *exact same* underlying logic as the
+    one-shot admin buttons, not a separate implementation: generate_mockup
+    is the same `AiImage::generateFlyer()` call as the Proposals button,
+    review_build shares `SiteReview::fetchHtml()`/`buildReviewPrompt()`
+    with `ProjectController::reviewBuild()`, and create_arch_link produces
+    the identical `?prefill=` URL scheme as "Copy Arch link" on Projects
+    (`base64_encode(json_encode(...))` server-side, exactly what
+    `arch-chat.js`'s `decodePrefill()` already reverses). Chat is a second
+    front door onto the same three capabilities, grounded in a system
+    prompt that explicitly forbids claiming a tool succeeded when it
+    wasn't actually called, or inventing a visual opinion about a
+    review_build page's actual appearance — it only ever reads markup.
 
     **Style guide → Arch pre-fill:** Arch's own brief-driven chat has no
     link to `projects` at all — it's a standalone conversation (any visitor,
@@ -895,8 +910,8 @@ storage/
     forecast. Target settings use the existing key/value `settings` table and
     need no migration.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
-    read-only roster of the studio — Caleb himself plus the seven AI agents
-    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas, Arch) — each card showing its
+    read-only roster of the studio — Caleb himself plus the eight AI agents
+    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas, Arch, Sketch) — each card showing its
     real role, a live headline stat pulled from its own table (e.g. Ledger
     shows proposals drafted, Canvas shows drafts created from
     `content_studio_items`, Dossier shows leads researched via

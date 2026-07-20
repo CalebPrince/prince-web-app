@@ -7,6 +7,7 @@
     proposal: { label: "Proposal", nameKey: "proposal_assistant_name", genderKey: "proposal_voice_gender", accentKey: "proposal_voice_accent", fallbackName: "Ledger" },
     content: { label: "Content", nameKey: "content_assistant_name", genderKey: "content_voice_gender", accentKey: "content_voice_accent", fallbackName: "Canvas" },
     arch: { label: "Arch", nameKey: "arch_assistant_name", genderKey: "arch_voice_gender", accentKey: "arch_voice_accent", fallbackName: "Arch" },
+    sketch: { label: "Sketch", nameKey: "sketch_assistant_name", genderKey: "sketch_voice_gender", accentKey: "sketch_voice_accent", fallbackName: "Sketch" },
   };
 
   const logEl = document.getElementById("agent-chat-log");
@@ -777,6 +778,8 @@
       '<i class="bi bi-file-earmark-check me-1"></i>' + (agentSettings.proposal_assistant_name || "Ledger");
     document.getElementById("tab-content").innerHTML =
       '<i class="bi bi-palette me-1"></i>' + (agentSettings.content_assistant_name || "Canvas");
+    document.getElementById("tab-sketch").innerHTML =
+      '<i class="bi bi-vector-pen me-1"></i>' + (agentSettings.sketch_assistant_name || "Sketch");
     renderFace();
     resetConversation();
     updateLeadsPanelVisibility();
