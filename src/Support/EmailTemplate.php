@@ -43,61 +43,69 @@ class EmailTemplate
             return $body;
         }
 
-        $theme = self::theme($key);
+        // Editorial brand system: strict monochrome ink, hairline borders,
+        // P-monogram lockup, monospace eyebrow, dark footer (see app.css).
+        $ink = '#0a0b0d';
+        $font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+        $mono = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace";
+
         $brand = self::brand();
         $contacts = self::contactLine($brand);
+        $label = self::e(self::label($key));
         $logo = $brand['logo_url'] !== ''
-            ? '<img src="' . self::e($brand['logo_url']) . '" width="42" height="42" alt="Prince Caleb" style="display:block;width:42px;height:42px;border-radius:12px;object-fit:cover;">'
-            : '<div style="width:42px;height:42px;border-radius:12px;background:' . $theme['accent'] . ';color:#ffffff;font:bold 22px/42px Arial,sans-serif;text-align:center;">P</div>';
+            ? '<img src="' . self::e($brand['logo_url']) . '" width="40" height="40" alt="Prince Caleb" style="display:block;width:40px;height:40px;border-radius:11px;object-fit:cover;">'
+            : '<div style="width:40px;height:40px;border-radius:11px;background:' . $ink . ';color:#ffffff;font-family:' . $font . ';font-size:19px;font-weight:800;line-height:40px;text-align:center;">P</div>';
 
-        return '<!doctype html><html><body style="margin:0;background:' . $theme['background'] . ';padding:24px;font-family:Arial,sans-serif;color:#17181c;">'
-            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:660px;margin:0 auto;">'
-            . '<tr><td style="padding:0 0 14px;">'
-            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>'
-            . '<td width="52" style="vertical-align:middle;">' . $logo . '</td>'
-            . '<td style="vertical-align:middle;padding-left:12px;"><div style="font-size:18px;font-weight:800;color:#111318;">Prince Caleb<span style="color:' . $theme['accent'] . ';">.</span></div><div style="font-size:12px;color:#68707c;">Web and mobile app development</div></td>'
+        return '<!doctype html><html><body style="margin:0;background:#edece9;padding:28px 16px;font-family:' . $font . ';color:#17181c;-webkit-font-smoothing:antialiased;">'
+            . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">'
+            . '<tr><td style="padding:2px 4px 18px;">'
+            . '<table role="presentation" cellspacing="0" cellpadding="0"><tr>'
+            . '<td style="vertical-align:middle;">' . $logo . '</td>'
+            . '<td style="vertical-align:middle;padding-left:12px;"><div style="font-size:17px;font-weight:800;letter-spacing:-0.02em;color:' . $ink . ';">Prince Caleb<span style="color:' . $ink . ';">.</span></div><div style="font-size:12px;color:#6e737c;letter-spacing:0.01em;">Web &amp; mobile app development</div></td>'
             . '</tr></table>'
             . '</td></tr>'
-            . '<tr><td style="background:' . $theme['accent'] . ';height:6px;border-radius:14px 14px 0 0;font-size:0;line-height:0;">&nbsp;</td></tr>'
-            . '<tr><td style="background:#ffffff;border-left:1px solid #e6e4df;border-right:1px solid #e6e4df;">'
+            . '<tr><td style="background:#ffffff;border:1px solid #e6e4df;border-top:3px solid ' . $ink . ';border-radius:14px;">'
             . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>'
-            . '<td style="padding:24px 28px 10px;">'
-            . '<div style="display:inline-block;background:' . $theme['tint'] . ';color:' . $theme['accent'] . ';border:1px solid ' . $theme['soft'] . ';border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">' . self::e($theme['label']) . '</div>'
+            . '<td style="padding:26px 30px 0;">'
+            . '<div style="font-family:' . $mono . ';font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#8a8f98;">// ' . $label . '</div>'
             . '</td></tr>'
-            . '<tr><td style="padding:0 28px 30px;font-size:16px;line-height:1.65;">'
+            . '<tr><td style="padding:14px 30px 30px;font-size:16px;line-height:1.65;color:#17181c;">'
             . $body
             . '</td></tr></table>'
             . '</td></tr>'
-            . '<tr><td style="padding:18px 28px;background:#111318;color:#cbd5e1;font-size:13px;border-radius:0 0 14px 14px;">'
-            . '<div style="font-weight:700;color:#ffffff;margin-bottom:5px;">Prince Caleb</div>'
-            . '<div style="line-height:1.6;">' . $contacts . '</div>'
-            . '<div style="margin-top:10px;"><a href="' . self::e($brand['site_url']) . '" style="color:#ffffff;text-decoration:none;">Visit website</a> &nbsp;|&nbsp; <a href="' . self::e($brand['book_url']) . '" style="color:#ffffff;text-decoration:none;">Book a call</a></div>'
+            . '<tr><td style="height:14px;font-size:0;line-height:0;">&nbsp;</td></tr>'
+            . '<tr><td style="padding:22px 30px;background:#0b0c0e;color:#9aa1ab;font-size:13px;border-radius:14px;">'
+            . '<div style="font-size:15px;font-weight:800;letter-spacing:-0.01em;color:#ffffff;margin-bottom:6px;">Prince Caleb<span>.</span></div>'
+            . '<div style="line-height:1.7;">' . $contacts . '</div>'
+            . '<div style="margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,255,255,0.1);">'
+            . '<a href="' . self::e($brand['site_url']) . '" style="color:#ffffff;text-decoration:none;font-weight:600;">Visit website</a> <span style="color:#3a3d43;">&nbsp;&middot;&nbsp;</span> <a href="' . self::e($brand['book_url']) . '" style="color:#ffffff;text-decoration:none;font-weight:600;">Book a call</a>'
+            . '</div>'
             . '</td></tr>'
             . '</table></body></html>';
     }
 
-    /** @return array{label:string,accent:string,soft:string,tint:string,background:string} */
-    private static function theme(string $key): array
+    /** Monospace eyebrow label per email type — the only per-type differentiator (colors stay monochrome). */
+    private static function label(string $key): string
     {
-        $themes = [
-            'payment_success' => ['label' => 'Payment confirmed', 'accent' => '#0f766e', 'soft' => '#99f6e4', 'tint' => '#ecfeff', 'background' => '#eef8f7'],
-            'invoice_send' => ['label' => 'Invoice ready', 'accent' => '#2563eb', 'soft' => '#bfdbfe', 'tint' => '#eff6ff', 'background' => '#eef4ff'],
-            'invoice_receipt' => ['label' => 'Receipt', 'accent' => '#15803d', 'soft' => '#bbf7d0', 'tint' => '#f0fdf4', 'background' => '#eff8f1'],
-            'subscription_receipt' => ['label' => 'Subscription', 'accent' => '#7c3aed', 'soft' => '#ddd6fe', 'tint' => '#f5f3ff', 'background' => '#f4f1ff'],
-            'proposal_send' => ['label' => 'Proposal', 'accent' => '#4338ca', 'soft' => '#c7d2fe', 'tint' => '#eef2ff', 'background' => '#f0f2ff'],
-            'booking_client_confirmation' => ['label' => 'Booking confirmed', 'accent' => '#be123c', 'soft' => '#fecdd3', 'tint' => '#fff1f2', 'background' => '#fff1f4'],
-            'booking_internal_notification' => ['label' => 'Booking alert', 'accent' => '#334155', 'soft' => '#cbd5e1', 'tint' => '#f8fafc', 'background' => '#eef2f6'],
-            'appointment_reminder' => ['label' => 'Call reminder', 'accent' => '#b45309', 'soft' => '#fed7aa', 'tint' => '#fff7ed', 'background' => '#fff6eb'],
-            'client_invite' => ['label' => 'Client portal', 'accent' => '#0d9488', 'soft' => '#99f6e4', 'tint' => '#f0fdfa', 'background' => '#eefaf8'],
-            'client_password_reset' => ['label' => 'Security', 'accent' => '#dc2626', 'soft' => '#fecaca', 'tint' => '#fef2f2', 'background' => '#fff1f1'],
-            'client_portal_message' => ['label' => 'New message', 'accent' => '#4f46e5', 'soft' => '#c7d2fe', 'tint' => '#eef2ff', 'background' => '#f1f3ff'],
-            'project_request_confirmation' => ['label' => 'Project request', 'accent' => '#0891b2', 'soft' => '#a5f3fc', 'tint' => '#ecfeff', 'background' => '#edfaff'],
-            'testimonial_request' => ['label' => 'Review request', 'accent' => '#a21caf', 'soft' => '#f5d0fe', 'tint' => '#fdf4ff', 'background' => '#fcf0ff'],
-            'milestone_reminder' => ['label' => 'Milestone', 'accent' => '#c2410c', 'soft' => '#fed7aa', 'tint' => '#fff7ed', 'background' => '#fff5ed'],
-            'inquiry_internal_notification' => ['label' => 'New inquiry', 'accent' => '#475569', 'soft' => '#cbd5e1', 'tint' => '#f8fafc', 'background' => '#f1f5f9'],
+        $labels = [
+            'payment_success' => 'Payment confirmed',
+            'invoice_send' => 'Invoice ready',
+            'invoice_receipt' => 'Receipt',
+            'subscription_receipt' => 'Subscription',
+            'proposal_send' => 'Proposal',
+            'booking_client_confirmation' => 'Booking confirmed',
+            'booking_internal_notification' => 'Booking alert',
+            'appointment_reminder' => 'Call reminder',
+            'client_invite' => 'Client portal',
+            'client_password_reset' => 'Security',
+            'client_portal_message' => 'New message',
+            'project_request_confirmation' => 'Project request',
+            'testimonial_request' => 'Review request',
+            'milestone_reminder' => 'Milestone',
+            'inquiry_internal_notification' => 'New inquiry',
         ];
 
-        return $themes[$key] ?? ['label' => 'Prince Caleb', 'accent' => '#0a0b0d', 'soft' => '#e5e7eb', 'tint' => '#f9fafb', 'background' => '#f6f6f4'];
+        return $labels[$key] ?? 'Prince Caleb';
     }
 
     /** @return array{logo_url:string,site_url:string,book_url:string,email:string,phone:string,whatsapp:string} */
