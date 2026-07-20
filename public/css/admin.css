@@ -1438,3 +1438,30 @@ body > .d-flex {
   .dashboard-mode-summary > header,
   .dashboard-mode-summary > div { min-height: 64px; }
 }
+
+/* Sticky working controls stay available on long operational pages without
+   turning the full page masthead into a persistent, space-heavy banner. */
+.admin-sticky-toolbar {
+  position: sticky;
+  top: .75rem;
+  z-index: 25;
+  padding: .65rem !important;
+  background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .07);
+  backdrop-filter: blur(14px);
+}
+.pipeline-controls.admin-sticky-toolbar {
+  justify-content: flex-end;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 1rem auto;
+}
+[data-theme="dark"] .admin-sticky-toolbar { box-shadow: 0 8px 24px rgba(0, 0, 0, .18); }
+@media (max-width: 991.98px) {
+  .admin-sticky-toolbar { top: 4.25rem; }
+}
+@media (max-width: 767.98px) {
+  .pipeline-controls.admin-sticky-toolbar { width: 100%; }
+}
