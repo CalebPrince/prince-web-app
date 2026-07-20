@@ -319,6 +319,21 @@ async function draftWithAi() {
   }
 }
 
+function fxRecalc() {
+  const amount = Number(document.getElementById('fx-amount').value || 0);
+  const rate = Number(document.getElementById('fx-rate').value || 0);
+  const buffer = Number(document.getElementById('fx-buffer').value || 0);
+  const result = document.getElementById('fx-result');
+  if (!amount || !rate) {
+    result.textContent = 'Enter a target amount and rate to see the converted GHS figure.';
+    return null;
+  }
+  const base = amount * rate;
+  const total = base * (1 + buffer / 100);
+  result.innerHTML = `<strong>GHS ${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> (GHS ${base.toLocaleString(undefined, { minimumFractionDigits: 2 })} converted + ${buffer}% buffer for rate movement)`;
+  return total;
+}
+
 function collectMilestones() {
   return [...document.querySelectorAll('.milestone-row')].map(row => ({
     title: row.querySelector('.milestone-title').value.trim(),
@@ -504,6 +519,25 @@ function showProposalListError(message) {
   document.getElementById('draft-with-ai-brief-toggle').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('draft-with-ai-brief').classList.toggle('d-none');
+  });
+
+  document.getElementById('fx-converter-toggle').addEventListener('click', () => {
+    const box = document.getElementById('fx-converter');
+    const hidden = box.classList.toggle('d-none');
+    document.getElementById('fx-converter-toggle').textContent = hidden ? 'Show' : 'Hide';
+  });
+  ['fx-amount', 'fx-rate', 'fx-buffer'].forEach(id => {
+    document.getElementById(id).addEventListener('input', fxRecalc);
+  });
+  document.getElementById('fx-add-milestone-btn').addEventListener('click', () => {
+    const total = fxRecalc();
+    if (!total) return;
+    document.getElementById('proposal-currency').value = 'GHS';
+    const currency = document.getElementById('fx-currency').value;
+    const amount = document.getElementById('fx-amount').value;
+    document.getElementById('milestones-wrap').appendChild(
+      milestoneRow(`International rate (${currency} ${amount} converted)`, total.toFixed(2), '')
+    );
   });
 
   try {
