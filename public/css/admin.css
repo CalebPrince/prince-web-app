@@ -1664,3 +1664,69 @@ body > .d-flex {
 .dashboard-card-toggle:hover,
 .dashboard-card-toggle:focus-visible { color: var(--heading-color); border-color: var(--line-strong); }
 .dashboard-card-toggle:focus-visible { outline: 2px solid var(--heading-color); outline-offset: 2px; }
+
+/* Shared admin feedback: inline validation remains in place while this
+   region confirms the outcome without moving the page. */
+.admin-toast-region {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2200;
+  display: grid;
+  width: min(380px, calc(100vw - 2rem));
+  gap: .55rem;
+  pointer-events: none;
+}
+.admin-toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: .7rem;
+  align-items: center;
+  padding: .8rem .85rem;
+  color: var(--ink-soft);
+  background: color-mix(in srgb, var(--card-bg) 96%, transparent);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--heading-color);
+  border-radius: 13px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, .16);
+  opacity: 0;
+  transform: translateY(10px) scale(.985);
+  transition: opacity .18s ease, transform .18s ease;
+  pointer-events: auto;
+  backdrop-filter: blur(16px);
+}
+.admin-toast.show { opacity: 1; transform: none; }
+.admin-toast-error { border-left-color: #b42318; }
+.admin-toast-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--heading-color);
+  background: var(--bg-soft);
+  border-radius: 8px;
+}
+.admin-toast-error .admin-toast-icon { color: #b42318; }
+.admin-toast-message { font-size: .76rem; line-height: 1.45; }
+.admin-toast-close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+}
+.admin-toast-close:hover { color: var(--heading-color); background: var(--bg-soft); }
+.admin-toast-close:focus-visible { outline: 2px solid var(--heading-color); outline-offset: 2px; }
+[data-theme="dark"] .admin-toast { box-shadow: 0 18px 45px rgba(0, 0, 0, .3); }
+[data-theme="dark"] .admin-toast-error,
+[data-theme="dark"] .admin-toast-error .admin-toast-icon { border-left-color: #fca5a5; color: #fca5a5; }
+@media (max-width: 575.98px) {
+  .admin-toast-region { right: .75rem; bottom: .75rem; width: calc(100vw - 1.5rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-toast { transition: none; }
+}

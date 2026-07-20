@@ -127,12 +127,80 @@ function enhanceAdminEmptyStates() {
   });
 }
 
+function showAdminToast(message, type = 'success', options = {}) {
+  const text = String(message || '').trim();
+  if (!text) return;
+
+  let container = document.getElementById('admin-toast-region');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'admin-toast-region';
+    container.className = 'admin-toast-region';
+    container.setAttribute('aria-label', 'Notifications');
+    document.body.appendChild(container);
+  }
+
+  const tone = ['success', 'error', 'info'].includes(type) ? type : 'info';
+  const icon = { success: 'bi-check2', error: 'bi-exclamation-lg', info: 'bi-info-lg' }[tone];
+  const toast = document.createElement('div');
+  toast.className = `admin-toast admin-toast-${tone}`;
+  toast.setAttribute('role', tone === 'error' ? 'alert' : 'status');
+  toast.innerHTML = `<span class="admin-toast-icon" aria-hidden="true"><i class="bi ${icon}"></i></span><span class="admin-toast-message"></span><button type="button" class="admin-toast-close" aria-label="Dismiss notification"><i class="bi bi-x-lg" aria-hidden="true"></i></button>`;
+  toast.querySelector('.admin-toast-message').textContent = text;
+  container.appendChild(toast);
+
+  while (container.children.length > 4) container.firstElementChild.remove();
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  let timer;
+  const dismiss = () => {
+    clearTimeout(timer);
+    toast.classList.remove('show');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    window.setTimeout(() => toast.remove(), 300);
+  };
+  const schedule = () => { timer = window.setTimeout(dismiss, options.duration || (tone === 'error' ? 6500 : 4200)); };
+  toast.querySelector('.admin-toast-close').addEventListener('click', dismiss);
+  toast.addEventListener('mouseenter', () => clearTimeout(timer));
+  toast.addEventListener('mouseleave', schedule);
+  schedule();
+}
+
+function enhanceAdminToasts() {
+  window.adminToast = showAdminToast;
+  let queued = false;
+
+  const promoteAlerts = () => {
+    queued = false;
+    document.querySelectorAll('.alert-success, .alert-danger').forEach(alert => {
+      if (alert.classList.contains('d-none') || !alert.textContent.trim()) {
+        delete alert.dataset.adminToastText;
+        return;
+      }
+      const type = alert.classList.contains('alert-danger') ? 'error' : 'success';
+      const key = `${type}:${alert.textContent.trim()}`;
+      if (alert.dataset.adminToastText === key) return;
+      alert.dataset.adminToastText = key;
+      showAdminToast(alert.textContent, type);
+    });
+  };
+
+  const observer = new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    queueMicrotask(promoteAlerts);
+  });
+  observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+  promoteAlerts();
+}
+
 function enhanceAdminInterface() {
   enhanceAdminPageHeaders();
   enhanceAdminTables();
   enhanceAdminSidebar();
   enhanceAdminCardHeaders();
   enhanceAdminEmptyStates();
+  enhanceAdminToasts();
 }
 
 if (document.readyState === 'loading') {
