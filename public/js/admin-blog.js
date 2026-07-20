@@ -55,14 +55,21 @@ function setCoverPreview(path) {
 function renderPostsTable(posts) {
   const tbody = document.getElementById("posts-tbody");
   if (posts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted-custom py-4">No posts yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted-custom py-4">No posts yet.</td></tr>';
     return;
   }
+
+  const publishedDate = p => {
+    if (!p.published_at) return "—";
+    const d = new Date(String(p.published_at).replace(" ", "T"));
+    return isNaN(d) ? "—" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
 
   tbody.innerHTML = posts.map(p => `
     <tr>
       <td class="ps-3">${escapeHtml(p.title)}</td>
       <td>${escapeHtml(p.category || "—")}</td>
+      <td class="text-muted-custom">${escapeHtml(publishedDate(p))}</td>
       <td><span class="status-pill ${p.is_published ? "published" : "draft"}">${p.is_published ? "Published" : "Draft"}</span></td>
       <td class="text-end pe-3">
         <button class="btn btn-sm btn-outline-secondary edit-btn" data-id="${p.id}">Edit</button>

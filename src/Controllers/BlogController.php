@@ -76,7 +76,11 @@ class BlogController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $stmt = $pdo->query('SELECT * FROM blog_posts ORDER BY sort_order DESC, id DESC');
+        // Match the public feed: newest publish first, drafts (no published_at)
+        // fall back to created_at so they surface near when they were written.
+        $stmt = $pdo->query(
+            'SELECT * FROM blog_posts ORDER BY COALESCE(published_at, created_at) DESC, id DESC'
+        );
         Response::json($stmt->fetchAll());
     }
 
