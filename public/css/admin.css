@@ -1267,3 +1267,104 @@ body > .d-flex {
   .dashboard-welcome-actions { align-items: stretch; flex-direction: column; }
   .dashboard-welcome .btn-brand { justify-content: center; }
 }
+
+/* Shared command-centre masthead for admin workspace pages */
+.admin-page-header {
+  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1.5rem !important;
+  overflow: hidden;
+  width: 100%;
+  min-height: 132px;
+  margin-bottom: 1.5rem !important;
+  padding: 1.45rem 1.6rem !important;
+  color: #fff;
+  background: #111c34;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, .14);
+}
+.admin-page-header::after {
+  content: "";
+  position: absolute;
+  top: -88px;
+  right: 13%;
+  width: 190px;
+  height: 190px;
+  border: 28px solid rgba(99, 102, 241, .12);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.admin-page-header > *, .admin-page-header-copy, .admin-page-header-actions { position: relative; z-index: 1; }
+.admin-page-header > .d-flex:first-child { min-width: 0; }
+.admin-page-header .icon-chip {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  color: #fff !important;
+  background: rgba(255, 255, 255, .1) !important;
+  border: 1px solid rgba(255, 255, 255, .1);
+}
+.admin-page-header h2, .admin-page-header h3 {
+  margin-bottom: .45rem !important;
+  color: #fff;
+  font: 800 clamp(1.45rem, 2.4vw, 2.15rem)/1.08 "Plus Jakarta Sans", sans-serif;
+  letter-spacing: -.04em;
+}
+.admin-page-header p,
+.admin-page-header .text-muted-custom,
+.admin-page-header .inquiry-eyebrow,
+.admin-page-header .pipeline-eyebrow {
+  max-width: 780px;
+  color: #9eabc0 !important;
+  line-height: 1.55;
+}
+.admin-page-header .eyebrow,
+.admin-page-header .inquiry-eyebrow,
+.admin-page-header .pipeline-eyebrow {
+  color: #aebbd2 !important;
+}
+.admin-page-header :is(h4, h5, h6, strong, label),
+.admin-page-header :is(span, small, em):not(.badge):not(.status-pill),
+.admin-page-header .unified-inbox-count {
+  color: #e2e8f0 !important;
+}
+.admin-page-header .unified-inbox-count {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .16);
+}
+.admin-page-header a:not(.btn):not(.btn-brand) { color: #c7d2fe; }
+.admin-page-header-actions {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+.admin-page-header .form-select,
+.admin-page-header .form-control,
+.admin-page-header input[type="search"] {
+  background-color: rgba(255, 255, 255, .96);
+  border-color: rgba(255, 255, 255, .18);
+}
+.admin-page-header .btn-outline-secondary {
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, .3);
+}
+.admin-page-header .btn-outline-secondary:hover { color: #111c34; background: #fff; border-color: #fff; }
+[data-theme="dark"] .admin-page-header { background: #101827; border-color: #2b3950; box-shadow: none; }
+@media (max-width: 767.98px) {
+  .admin-page-header {
+    align-items: flex-start !important;
+    flex-direction: column;
+    min-height: 0;
+    padding: 1.25rem !important;
+  }
+  .admin-page-header > .d-flex:first-child { align-items: flex-start !important; }
+  .admin-page-header-actions { width: 100%; }
+  .admin-page-header-actions.d-flex,
+  .admin-page-header .pipeline-controls { flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .admin-page-header .icon-chip { display: none; }
+  .admin-page-header-actions .btn-brand { width: 100%; justify-content: center; }
+}
