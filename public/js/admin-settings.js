@@ -173,6 +173,88 @@ async function saveBooking(e) {
   }
 }
 
+async function saveAppearance(e) {
+  e.preventDefault();
+  try {
+    await api.put("/api/v1/admin/settings", {
+      default_theme: document.getElementById("default_theme").value,
+      splash_screen_enabled: document.getElementById("splash_screen_enabled").value,
+      animation_style: document.getElementById("animation_style").value,
+    });
+    showMsg("appearance-msg", "Saved — the public site reflects your changes immediately.", true);
+  } catch (err) {
+    showMsg("appearance-msg", err.message, false);
+  }
+}
+
+// Grey out the day/time controls when the "Restrict to specific hours" master
+// toggle is off — otherwise it looks like unticking a day takes the chat
+// offline, when in fact the day/time settings only apply once restriction is on.
+function syncHoursEnabledState() {
+  const enabled = document.getElementById("hours-enabled").checked;
+  document.querySelectorAll(".hours-day, #hours-start, #hours-end, #hours-timezone")
+    .forEach(el => { el.disabled = !enabled; });
+  const note = document.getElementById("hours-disabled-note");
+  if (note) note.classList.toggle("d-none", enabled);
+}
+
+function wireHoursControls() {
+  const toggle = document.getElementById("hours-enabled");
+  if (toggle) toggle.addEventListener("change", syncHoursEnabledState);
+  syncHoursEnabledState();
+}
+
+async function saveChatHours(e) {
+  e.preventDefault();
+  const days = [...document.querySelectorAll(".hours-day:checked")].map(el => el.value);
+  try {
+    await api.put("/api/v1/admin/settings", {
+      chat_hours_enabled: document.getElementById("hours-enabled").checked ? "1" : "",
+      chat_hours_days: days.join(","),
+      chat_hours_start: document.getElementById("hours-start").value,
+      chat_hours_end: document.getElementById("hours-end").value,
+      chat_timezone: document.getElementById("hours-timezone").value.trim(),
+    });
+    showMsg("chat-hours-msg", "Saved — takes effect immediately.", true);
+    const settings = await api.get("/api/v1/admin/settings");
+    await renderChatLiveStatus(settings);
+  } catch (err) {
+    showMsg("chat-hours-msg", err.message, false);
+  }
+}
+
+// Show whether Live Chat is online *right now* and, when it's not, the actual
+// reason — the #1 gotcha is that the chat stays offline until an AI provider
+// key is set, regardless of the schedule. The authoritative online flag comes
+// from the public /chat/status endpoint; the settings we already loaded tell us
+// why it's off (no key vs. outside scheduled hours).
+async function renderChatLiveStatus(settings) {
+  const el = document.getElementById("chat-live-status");
+  if (!el) return;
+  const hasKey = !!(settings.gemini_api_key || settings.openrouter_api_key || settings.groq_api_key);
+
+  let online = false;
+  try { online = !!(await api.get("/api/v1/chat/status")).online; } catch (_) { /* treat as offline */ }
+
+  el.classList.remove("d-none", "alert-success", "alert-warning");
+  if (online) {
+    el.classList.add("alert-success");
+    el.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Live Chat is <strong>online</strong> right now — visitors can chat.';
+    return;
+  }
+
+  let reason;
+  if (!hasKey) {
+    reason = "no AI provider key is set — add a Gemini, OpenRouter, or Groq key above under Integrations.";
+  } else if (settings.chat_hours_enabled) {
+    reason = "the current day/time is outside the scheduled hours set below.";
+  } else {
+    reason = "the assistant is currently unavailable.";
+  }
+  el.classList.add("alert-warning");
+  el.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Live Chat is <strong>offline</strong> right now — ' + reason;
+}
+
 async function saveWidgets(e) {
   e.preventDefault();
   try {
@@ -192,8 +274,6 @@ async function savePayments(e) {
     await api.put("/api/v1/admin/settings", {
       paystack_public_key: document.getElementById("paystack-public-key").value.trim(),
       paystack_secret_key: document.getElementById("paystack-secret-key").value.trim(),
-      pricing_currency: document.getElementById("pricing-currency").value,
-      pricing_tier_1_amount: document.getElementById("pricing-tier-1-amount").value.trim(),
     });
     showMsg("payments-msg", "Saved — takes effect immediately.", true);
   } catch (err) {
@@ -385,6 +465,8 @@ async function testAi() {
   document.getElementById("google-signin-form").addEventListener("submit", saveGoogleSignin);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
   document.getElementById("booking-form").addEventListener("submit", saveBooking);
+  document.getElementById("chat-hours-form").addEventListener("submit", saveChatHours);
+  document.getElementById("appearance-form").addEventListener("submit", saveAppearance);
   document.getElementById("social-draft-form").addEventListener("submit", saveSocialDraft);
   try {
     const settings = await api.get("/api/v1/admin/settings");
@@ -428,8 +510,6 @@ async function testAi() {
     document.getElementById("google-client-id").value = settings.google_client_id || "";
     document.getElementById("paystack-public-key").value = settings.paystack_public_key || "";
     document.getElementById("paystack-secret-key").value = settings.paystack_secret_key || "";
-    document.getElementById("pricing-currency").value = settings.pricing_currency || "GHS";
-    document.getElementById("pricing-tier-1-amount").value = settings.pricing_tier_1_amount || "";
     document.getElementById("email-brand-logo-url").value = settings.email_brand_logo_url || "";
     document.getElementById("email-site-url").value = settings.email_site_url || "https://princecaleb.dev";
     EMAIL_TEMPLATE_FIELDS.forEach(([key, id]) => {
@@ -450,6 +530,19 @@ async function testAi() {
     document.getElementById("booking-slot-minutes").value = settings.booking_slot_minutes || "30";
     document.getElementById("booking-lead-days").value = settings.booking_lead_days || "14";
     document.getElementById("booking-min-notice").value = settings.booking_min_notice_hours || "24";
+
+    document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
+    const hoursDays = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);
+    document.querySelectorAll(".hours-day").forEach(el => { el.checked = hoursDays.includes(el.value); });
+    document.getElementById("hours-start").value = settings.chat_hours_start || "";
+    document.getElementById("hours-end").value = settings.chat_hours_end || "";
+    document.getElementById("hours-timezone").value = settings.chat_timezone || "";
+    wireHoursControls();
+    await renderChatLiveStatus(settings);
+
+    document.getElementById("default_theme").value = settings.default_theme || "";
+    document.getElementById("splash_screen_enabled").value = settings.splash_screen_enabled || "1";
+    document.getElementById("animation_style").value = settings.animation_style || "slide-up";
   } catch (_) { /* fields stay empty */ }
 
   await loadComposioAccounts();

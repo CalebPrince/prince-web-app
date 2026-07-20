@@ -1,7 +1,4 @@
 const CONTENT_FIELDS = [
-  "default_theme",
-  "splash_screen_enabled",
-  "animation_style",
   "availability_badge", "hero_eyebrow", "hero_title", "hero_subtitle", "hero_video_url", "tech_badges",
   "hero_value_eyebrow",
   "hero_value_1_label", "hero_value_1_text",
@@ -66,23 +63,11 @@ async function loadContent() {
     if (el) el.value = settings[key] || el.value || "";
   });
 
-  // Live Chat availability (schedule) — not simple value fields, so handled
-  // separately from CONTENT_FIELDS. These are admin-only Settings keys, saved
-  // through the same /admin/settings endpoint as the rest of this form.
-  document.getElementById("hours-enabled").checked = !!settings.chat_hours_enabled;
-  const hoursDays = (settings.chat_hours_days || "").split(",").map(d => d.trim()).filter(Boolean);
-  document.querySelectorAll(".hours-day").forEach(el => { el.checked = hoursDays.includes(el.value); });
-  document.getElementById("hours-start").value = settings.chat_hours_start || "";
-  document.getElementById("hours-end").value = settings.chat_hours_end || "";
-  document.getElementById("hours-timezone").value = settings.chat_timezone || "";
-
   // Brand logo previews — fall back to the committed defaults (same paths
   // SharedAgentTools::getBrandInfo() falls back to server-side) so the admin
   // sees the real logo even before ever saving anything on this page.
   setBrandLogoPreview("dark", settings.brand_logo_dark_url || "/uploads/brand/logo-dark.png");
   setBrandLogoPreview("white", settings.brand_logo_white_url || "/uploads/brand/logo-white.png");
-
-  await renderChatLiveStatus(settings);
 }
 
 function setBrandLogoPreview(variant, path) {
@@ -135,38 +120,6 @@ function wireBrandLogoUpload(variant) {
   });
 }
 
-// Show whether Live Chat is online *right now* and, when it's not, the actual
-// reason — the #1 gotcha is that the chat stays offline until an AI provider
-// key is set, regardless of the schedule. The authoritative online flag comes
-// from the public /chat/status endpoint; the settings we already loaded tell us
-// why it's off (no key vs. outside scheduled hours).
-async function renderChatLiveStatus(settings) {
-  const el = document.getElementById("chat-live-status");
-  if (!el) return;
-  const hasKey = !!(settings.gemini_api_key || settings.openrouter_api_key || settings.groq_api_key);
-
-  let online = false;
-  try { online = !!(await api.get("/api/v1/chat/status")).online; } catch (_) { /* treat as offline */ }
-
-  el.classList.remove("d-none", "alert-success", "alert-warning");
-  if (online) {
-    el.classList.add("alert-success");
-    el.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Live Chat is <strong>online</strong> right now — visitors can chat.';
-    return;
-  }
-
-  let reason;
-  if (!hasKey) {
-    reason = 'no AI provider key is set — add a Gemini, OpenRouter, or Groq key under <a href="/admin/settings.html">Settings → API keys</a>.';
-  } else if (settings.chat_hours_enabled) {
-    reason = "the current day/time is outside the scheduled hours set below.";
-  } else {
-    reason = "the assistant is currently unavailable.";
-  }
-  el.classList.add("alert-warning");
-  el.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Live Chat is <strong>offline</strong> right now — ' + reason;
-}
-
 async function saveContent(e) {
   e.preventDefault();
   const payload = {};
@@ -174,13 +127,6 @@ async function saveContent(e) {
     const el = document.getElementById(key);
     if (el) payload[key] = el.value.trim();
   });
-
-  // Live Chat availability (schedule) — folded into the same save.
-  payload.chat_hours_enabled = document.getElementById("hours-enabled").checked ? "1" : "";
-  payload.chat_hours_days = [...document.querySelectorAll(".hours-day:checked")].map(el => el.value).join(",");
-  payload.chat_hours_start = document.getElementById("hours-start").value;
-  payload.chat_hours_end = document.getElementById("hours-end").value;
-  payload.chat_timezone = document.getElementById("hours-timezone").value.trim();
 
   const btn = document.getElementById("save-all-btn");
   btn.disabled = true;
@@ -283,23 +229,6 @@ function wireAgentVoicePreview(prefix, fallbackName, sampleLine) {
   });
 }
 
-// Grey out the day/time controls when the "Restrict to specific hours" master
-// toggle is off — otherwise it looks like unticking a day takes the chat
-// offline, when in fact the day/time settings only apply once restriction is on.
-function syncHoursEnabledState() {
-  const enabled = document.getElementById("hours-enabled").checked;
-  document.querySelectorAll(".hours-day, #hours-start, #hours-end, #hours-timezone")
-    .forEach(el => { el.disabled = !enabled; });
-  const note = document.getElementById("hours-disabled-note");
-  if (note) note.classList.toggle("d-none", enabled);
-}
-
-function wireHoursControls() {
-  const toggle = document.getElementById("hours-enabled");
-  if (toggle) toggle.addEventListener("change", syncHoursEnabledState);
-  syncHoursEnabledState();
-}
-
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -316,5 +245,4 @@ function wireHoursControls() {
   wireAgentVoicePreview("arch", "Arch", "This is how I'll sound when you talk to me in the admin console.");
   wireBrandLogoUpload("dark");
   wireBrandLogoUpload("white");
-  wireHoursControls();
 })();
