@@ -245,20 +245,15 @@
               <input type="password" class="form-control" id="slack-url" placeholder="https://hooks.slack.com/services/..." autocomplete="off">
             </div>
             <div class="mb-3">
-              <label class="form-label">Make.com webhook URL <span class="text-muted-custom fw-normal">(marketing automation)</span></label>
-              <input type="password" class="form-control" id="makecom-url" placeholder="https://hook.us1.make.com/..." autocomplete="off">
-              <div class="form-text">One webhook URL receives every event (proposal accepted, content published, testimonial approved, newsletter signup, stale lead) with an "event" field — route them with a Router module in your Make.com scenario.</div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Integration API key <span class="text-muted-custom fw-normal">(pull fallback for Make.com)</span></label>
+              <label class="form-label">Integration API key <span class="text-muted-custom fw-normal">(pull integration events)</span></label>
               <div class="input-group">
                 <input type="password" class="form-control" id="integration-api-key" placeholder="Click Generate to create one" autocomplete="off">
                 <button type="button" class="btn btn-outline-secondary" id="generate-api-key-btn">Generate</button>
               </div>
               <div class="form-text">
-                Backs up the webhook above — if a Make.com scenario is paused or the webhook URL isn't set yet, it can fetch missed events from
+                Lets an external consumer pull marketing events (proposal accepted, content published, testimonial approved, newsletter signup, stale lead) from
                 <code>GET https://princecaleb.dev/api/v1/integrations/events?since_id=0</code> with header <code>Authorization: Bearer &lt;key&gt;</code>.
-                By default this only returns events the webhook failed to deliver, so a scheduled poller can safely run alongside the webhook with no double-processing — add <code>&amp;include_delivered=1</code> to see the full log instead.
+                Add <code>&amp;include_delivered=1</code> to see the full log. Leave empty if you don't use an external integration.
               </div>
             </div>
             <div class="mb-3">

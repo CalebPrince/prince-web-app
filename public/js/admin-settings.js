@@ -116,7 +116,6 @@ async function saveIntegrations(e) {
       owner_whatsapp_number: document.getElementById("owner-whatsapp-number").value.trim(),
       serper_api_key: document.getElementById("serper-key").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
-      makecom_webhook_url: document.getElementById("makecom-url").value.trim(),
       integration_api_key: document.getElementById("integration-api-key").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
       composio_api_key: document.getElementById("composio-api-key").value.trim(),
@@ -526,7 +525,6 @@ async function testAi() {
     document.getElementById("owner-whatsapp-number").value = settings.owner_whatsapp_number || "";
     document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
-    document.getElementById("makecom-url").value = settings.makecom_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("smtp-gmail-address").value = settings.smtp_gmail_address || "";

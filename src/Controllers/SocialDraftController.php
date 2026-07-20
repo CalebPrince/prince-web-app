@@ -9,7 +9,7 @@ use App\Support\ActivityLog;
 use App\Support\AiText;
 use App\Support\Composio;
 use App\Support\Database;
-use App\Support\MakeWebhook;
+use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\ShortLink;
@@ -20,8 +20,8 @@ use App\Support\ShortLink;
  * "Generate now" button. Drafts spotlight the most recent published
  * blog post / project / approved testimonial that hasn't already been
  * drafted, falling back to an original evergreen post when there's nothing
- * new. Approval fires a Make.com event (see MakeWebhook) for whatever
- * platforms Caleb has wired up there, and — separately, if a LinkedIn
+ * new. Approval records a social_post_approved integration event (see
+ * IntegrationEvent) for any external consumer, and — separately, if a LinkedIn
  * Composio account is connected — actually publishes the post to LinkedIn
  * directly (see publishToLinkedIn()), recording the outcome in
  * published_at/publish_error so approval can genuinely mean "posted," not
@@ -96,7 +96,7 @@ class SocialDraftController
             $stmt->execute([$id]);
             $fresh = $stmt->fetch();
 
-            MakeWebhook::send('social_post_approved', [
+            IntegrationEvent::log('social_post_approved', [
                 'id' => (int) $fresh['id'],
                 'content' => $fresh['content'],
                 'short_content' => $fresh['short_content'],

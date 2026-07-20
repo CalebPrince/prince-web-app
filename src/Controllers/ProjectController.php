@@ -8,7 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AiText;
 use App\Support\Database;
-use App\Support\MakeWebhook;
+use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\SiteReview;
 use App\Support\Validator;
@@ -183,7 +183,7 @@ class ProjectController
         self::syncMilestones($pdo, $projectId, $milestones);
 
         if (!empty($data['is_published'])) {
-            MakeWebhook::send('content_published', [
+            IntegrationEvent::log('content_published', [
                 'type' => 'project',
                 'title' => $data['title'],
                 'summary' => $data['summary'],
@@ -258,7 +258,7 @@ class ProjectController
         self::syncMilestones($pdo, $id, $milestones);
 
         if (!$wasPublished && !empty($data['is_published'])) {
-            MakeWebhook::send('content_published', [
+            IntegrationEvent::log('content_published', [
                 'type' => 'project',
                 'title' => $data['title'],
                 'summary' => $data['summary'],

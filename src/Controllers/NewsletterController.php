@@ -91,9 +91,9 @@ class NewsletterController
     /**
      * POST /api/v1/admin/newsletter-drafts/{id}/send
      * Sends a Jason-drafted newsletter to every subscribed reader, wrapped in
-     * the brand template with a per-subscriber unsubscribe link. Replaces the
-     * old Make.com hand-off — the app now sends directly. Idempotent: a draft
-     * that already has sent_at cannot be sent again.
+     * the brand template with a per-subscriber unsubscribe link — the app
+     * sends directly. Idempotent: a draft that already has sent_at cannot be
+     * sent again. The send cron (send_newsletters.php) uses the same path.
      */
     public static function sendDraft(array $params): void
     {
@@ -114,6 +114,22 @@ class NewsletterController
             Response::error('This newsletter has already been sent.', 409);
         }
 
+        $sent = self::deliverDraft($draft, $pdo);
+        ActivityLog::log($user, 'sent', 'newsletter_draft', (int) $draft['id'], $draft['subject_line'], ['recipients' => $sent]);
+
+        Response::json(['status' => 'sent', 'recipients' => $sent]);
+    }
+
+    /**
+     * Email a ready draft to every subscribed reader as branded HTML (with a
+     * per-subscriber unsubscribe link) and stamp sent_at + recipient_count.
+     * Shared by the admin Send button and the auto-send cron. Callers must
+     * ensure the draft is ready and not already sent. Returns the count sent.
+     *
+     * @param array<string, mixed> $draft
+     */
+    public static function deliverDraft(array $draft, \PDO $pdo): int
+    {
         $subscribers = $pdo->query(
             "SELECT email, unsubscribe_token FROM newsletter_subscribers WHERE status = 'subscribed'"
         )->fetchAll();
@@ -130,9 +146,8 @@ class NewsletterController
 
         $pdo->prepare("UPDATE newsletter_drafts SET sent_at = datetime('now'), recipient_count = ? WHERE id = ?")
             ->execute([$sent, $draft['id']]);
-        ActivityLog::log($user, 'sent', 'newsletter_draft', (int) $draft['id'], $draft['subject_line'], ['recipients' => $sent]);
 
-        Response::json(['status' => 'sent', 'recipients' => $sent]);
+        return $sent;
     }
 
     /** GET /api/v1/admin/newsletter/export — CSV download */

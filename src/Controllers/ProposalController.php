@@ -11,7 +11,7 @@ use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
-use App\Support\MakeWebhook;
+use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -503,7 +503,7 @@ class ProposalController
             $pdo->prepare("UPDATE inquiries SET pipeline_stage = 'won' WHERE id = ?")->execute([$proposal['inquiry_id']]);
         }
 
-        MakeWebhook::send('proposal_accepted', [
+        IntegrationEvent::log('proposal_accepted', [
             'client_name' => $acceptedByName,
             'client_email' => $proposal['client_email'],
             'proposal_title' => $proposal['title'],

@@ -7,7 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
-use App\Support\MakeWebhook;
+use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\Validator;
 
@@ -125,7 +125,7 @@ class BlogController
 
         if (!empty($data['is_published'])) {
             self::queueNewsletterDraft($pdo, $postId, $data);
-            MakeWebhook::send('content_published', [
+            IntegrationEvent::log('content_published', [
                 'type' => 'blog',
                 'title' => $data['title'],
                 'excerpt' => $data['excerpt'],
@@ -183,7 +183,7 @@ class BlogController
 
         if (!$wasPublished && $isPublished) {
             self::queueNewsletterDraft($pdo, $id, $data);
-            MakeWebhook::send('content_published', [
+            IntegrationEvent::log('content_published', [
                 'type' => 'blog',
                 'title' => $data['title'],
                 'excerpt' => $data['excerpt'],

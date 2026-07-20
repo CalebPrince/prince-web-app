@@ -10,7 +10,7 @@ use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
-use App\Support\MakeWebhook;
+use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -178,7 +178,7 @@ class TestimonialController
             }
 
             if ($existing && $existing['status'] !== 'approved' && $data['status'] === 'approved') {
-                MakeWebhook::send('testimonial_approved', [
+                IntegrationEvent::log('testimonial_approved', [
                     'client_name' => $existing['client_name'],
                     'project_reference' => $existing['project_reference'],
                     'rating' => (int) $existing['rating'],

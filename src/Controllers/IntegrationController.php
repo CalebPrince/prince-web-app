@@ -9,9 +9,9 @@ use App\Support\Response;
 use App\Support\Settings;
 
 /**
- * Pull-based fallback for the Make.com push integration (see MakeWebhook).
- * Not an admin session endpoint — authenticated with a static API key
- * (Settings::integration_api_key) that Make.com sends as a Bearer token,
+ * Pull-based feed of integration events (see IntegrationEvent). Not an admin
+ * session endpoint — authenticated with a static API key
+ * (Settings::integration_api_key) that a consumer sends as a Bearer token,
  * since a third-party automation tool can't hold an admin JWT session.
  */
 class IntegrationController
