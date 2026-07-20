@@ -1571,3 +1571,52 @@ body > .d-flex {
 @media (max-width: 767.98px) {
   .pipeline-controls.admin-sticky-toolbar { width: 100%; }
 }
+
+/* Empty states give quiet direction without introducing a third theme color. */
+.admin-empty-state {
+  min-height: 132px;
+  padding: 1.5rem;
+  color: var(--muted);
+  text-align: center;
+  background: var(--bg-soft);
+  border: 1px dashed var(--line-strong);
+  border-radius: 14px;
+}
+.admin-empty-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto .65rem;
+  color: var(--heading-color);
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+.admin-empty-state.is-compact {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  min-height: 0;
+  padding: .75rem;
+  text-align: left;
+}
+.admin-empty-state.is-compact .admin-empty-mark { width: 30px; height: 30px; flex: 0 0 30px; margin: 0; border-radius: 8px; }
+
+/* One motion language for panels, dialogs, and feedback. */
+.admin-card,
+.admin-sticky-toolbar,
+.admin-data-table tbody tr > td { transition-duration: .18s; transition-timing-function: ease; }
+.modal.show .modal-dialog { animation: admin-panel-in .18s ease-out both; }
+.toast.show { animation: admin-panel-in .18s ease-out both; }
+@keyframes admin-panel-in {
+  from { opacity: 0; transform: translateY(8px) scale(.992); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-card,
+  .admin-sticky-toolbar,
+  .admin-data-table tbody tr > td { transition: none !important; }
+  .modal.show .modal-dialog,
+  .toast.show { animation: none !important; }
+}

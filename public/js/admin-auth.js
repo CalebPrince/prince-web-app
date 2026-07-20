@@ -113,11 +113,26 @@ function enhanceAdminCardHeaders() {
   });
 }
 
+function enhanceAdminEmptyStates() {
+  document.querySelectorAll('[id$="-empty"], [id$="-empty-state"]').forEach(empty => {
+    if (empty.closest('.modal') || empty.querySelector('.admin-empty-mark')) return;
+    empty.classList.add('admin-empty-state');
+    if (empty.closest('.dashboard-mode-section')) empty.classList.add('is-compact');
+
+    const mark = document.createElement('span');
+    mark.className = 'admin-empty-mark';
+    mark.setAttribute('aria-hidden', 'true');
+    mark.innerHTML = '<i class="bi bi-inbox"></i>';
+    empty.prepend(mark);
+  });
+}
+
 function enhanceAdminInterface() {
   enhanceAdminPageHeaders();
   enhanceAdminTables();
   enhanceAdminSidebar();
   enhanceAdminCardHeaders();
+  enhanceAdminEmptyStates();
 }
 
 if (document.readyState === 'loading') {
