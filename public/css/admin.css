@@ -599,6 +599,15 @@ body > .d-flex {
   border-bottom: 0;
 }
 
+/* Bootstrap's table hover state can reintroduce its light-theme emphasis
+   color inside the Contacts table. Keep the row tied to admin theme tokens. */
+#contacts-list .contact-row:hover > td {
+  --bs-table-color-state: var(--ink-soft);
+  --bs-table-bg-state: var(--bg-soft);
+  color: var(--ink-soft) !important;
+  background-color: var(--bg-soft) !important;
+}
+
 .admin-table-scroll {
   overflow-x: auto;
   overflow-y: hidden;
@@ -1068,6 +1077,16 @@ body > .d-flex {
 .admin-search-shell { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: start center; padding: min(14vh,110px) 1rem 1rem; background: rgba(7,10,18,.48); backdrop-filter: blur(4px); }.admin-search-panel { width: min(680px,100%); overflow: hidden; color: var(--ink); background: var(--card-bg); border: 1px solid var(--line-strong); border-radius: 16px; box-shadow: 0 30px 90px rgba(7,10,18,.28); }.admin-search-input { display: grid; grid-template-columns: auto 1fr auto; gap: .8rem; align-items: center; padding: 1rem 1.15rem; border-bottom: 1px solid var(--line); }.admin-search-input i { color: var(--muted); font-size: 1.1rem; }.admin-search-input input { min-width: 0; color: var(--heading-color); background: transparent; border: 0; outline: 0; font-size: 1rem; }.admin-search-input kbd,.admin-search-panel footer kbd{color:var(--muted);background:var(--bg-soft);border:1px solid var(--line);box-shadow:none}.admin-search-results{max-height:min(55vh,520px);overflow-y:auto;padding:.45rem}.admin-search-result{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:.85rem;align-items:center;padding:.8rem;color:var(--heading-color);border-radius:9px;text-decoration:none}.admin-search-result:hover,.admin-search-result:focus{color:var(--heading-color);background:var(--bg-soft)}.admin-search-type{color:var(--muted);font-size:.65rem;font-weight:750;text-transform:uppercase;letter-spacing:.05em}.admin-search-result strong,.admin-search-result small{display:block}.admin-search-result small{margin-top:.15rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.admin-search-result>i{color:var(--muted)}.admin-search-empty{padding:3rem 1rem;text-align:center;color:var(--muted);font-size:.85rem}.admin-search-panel footer{display:flex;justify-content:space-between;gap:1rem;padding:.7rem 1rem;color:var(--muted);background:var(--bg-soft);border-top:1px solid var(--line);font-size:.68rem}@media(max-width:575.98px){.admin-search-shell{padding-top:1rem}.admin-search-result{grid-template-columns:1fr auto}.admin-search-type{grid-column:1/-1}.admin-search-panel footer{display:none}}
 .pipeline-stage-picker { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .65rem; color: var(--muted); font-size: .62rem; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; }
 .pipeline-stage-picker select { min-width: 0; padding: .25rem 1.45rem .25rem .45rem; color: var(--ink); background-color: var(--bg); border: 1px solid var(--line); border-radius: 7px; font-size: .65rem; text-transform: none; }
+[data-theme="dark"] :is(#pipeline-source-filter, .pipeline-stage-picker select, #new-lead-currency, #new-lead-stage) {
+  color: #f1f5f9 !important;
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color-scheme: dark;
+}
+[data-theme="dark"] :is(#pipeline-source-filter, .pipeline-stage-picker select, #new-lead-currency, #new-lead-stage) option {
+  color: #f1f5f9;
+  background-color: #111827;
+}
 .pipeline-card footer { display: flex; align-items: center; justify-content: space-between; margin-top: .75rem; padding-top: .6rem; color: var(--muted); border-top: 1px solid var(--line); font-size: .64rem; }
 .pipeline-card footer strong { color: var(--heading-color); }
 .pipeline-empty { padding: 2rem .5rem; color: var(--muted); border: 1px dashed var(--line-strong); border-radius: 12px; text-align: center; font-size: .68rem; }
@@ -1221,6 +1240,7 @@ body > .d-flex {
   border-radius: 18px;
   box-shadow: 0 18px 45px rgba(15, 23, 42, .14);
 }
+
 .dashboard-welcome::after {
   content: "";
   position: absolute;
