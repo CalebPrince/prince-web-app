@@ -324,6 +324,25 @@ async function sendTestEmail(btn) {
   btn.textContent = original;
 }
 
+// Show each template's built-in copy as the field placeholder, so the admin
+// can see the starting text before overriding. Placeholders aren't values —
+// a field left blank still uses the built-in template on send.
+async function applyEmailTemplatePlaceholders() {
+  try {
+    const defaults = await api.get("/api/v1/admin/email-template-defaults");
+    EMAIL_TEMPLATE_FIELDS.forEach(([key, id]) => {
+      const d = defaults[key];
+      if (!d) return;
+      const subject = document.getElementById(`email-tpl-${id}-subject`);
+      const html = document.getElementById(`email-tpl-${id}-html`);
+      const text = document.getElementById(`email-tpl-${id}-text`);
+      if (subject && d.subject) subject.placeholder = d.subject;
+      if (html && d.html) html.placeholder = d.html;
+      if (text && d.text) text.placeholder = d.text;
+    });
+  } catch (_) { /* keep the generic placeholders */ }
+}
+
 // Add a "Send test to my inbox" button to each template's accordion body,
 // injected from the shared field list so the 15 accordions stay untouched.
 function wireTestEmailButtons() {
@@ -504,6 +523,7 @@ async function testAi() {
   document.getElementById("payments-form").addEventListener("submit", savePayments);
   document.getElementById("email-templates-form").addEventListener("submit", saveEmailTemplates);
   wireTestEmailButtons();
+  applyEmailTemplatePlaceholders();
   document.getElementById("smtp-form").addEventListener("submit", saveSmtp);
   document.getElementById("google-signin-form").addEventListener("submit", saveGoogleSignin);
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);

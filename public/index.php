@@ -187,6 +187,7 @@ $router->delete('/api/v1/admin/chats/{id}', [LiveChatController::class, 'destroy
 $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
 $router->post('/api/v1/admin/settings/test-email', [SettingsController::class, 'sendTestEmail']);
+$router->get('/api/v1/admin/email-template-defaults', [SettingsController::class, 'emailTemplateDefaults']);
 $router->patch('/api/v1/admin/account', [AuthController::class, 'updateAccount']);
 $router->post('/api/v1/admin/account/password', [AuthController::class, 'changePassword']);
 $router->post('/api/v1/admin/2fa/setup', [AuthController::class, 'setupTwoFactor']);

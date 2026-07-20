@@ -211,6 +211,18 @@ class SettingsController
     }
 
     /**
+     * GET /api/v1/admin/email-template-defaults
+     * The built-in copy for every template, shown as placeholders in the
+     * editor so the admin can see the starting text before overriding. These
+     * are display-only — leaving a field blank still uses the built-in.
+     */
+    public static function emailTemplateDefaults(): void
+    {
+        AuthMiddleware::requireAuth();
+        Response::json(EmailTemplate::defaults());
+    }
+
+    /**
      * POST /api/v1/admin/settings/test-email
      * Sends a sample of one email template to the admin's own inbox so the
      * branded design can be checked in a real mail client. Body:
