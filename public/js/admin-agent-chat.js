@@ -8,7 +8,40 @@
     content: { label: "Content", nameKey: "content_assistant_name", genderKey: "content_voice_gender", accentKey: "content_voice_accent", fallbackName: "Canvas" },
     arch: { label: "Arch", nameKey: "arch_assistant_name", genderKey: "arch_voice_gender", accentKey: "arch_voice_accent", fallbackName: "Arch" },
     sketch: { label: "Sketch", nameKey: "sketch_assistant_name", genderKey: "sketch_voice_gender", accentKey: "sketch_voice_accent", fallbackName: "Sketch" },
+    ada: { label: "Ada", nameKey: "ada_assistant_name", genderKey: "ada_voice_gender", accentKey: "ada_voice_accent", fallbackName: "Ada", attachments: true },
   };
+
+  // Files staged for the next message. Only Ada reads documents, so the
+  // attach control is shown for her and hidden for everyone else.
+  let pendingFiles = [];
+
+  function readAsBase64(file) {
+    return new Promise(function (resolve, reject) {
+      const fr = new FileReader();
+      fr.onload = function () { resolve(String(fr.result).split(",")[1]); };
+      fr.onerror = function () { reject(new Error("Could not read " + file.name)); };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function renderPendingFiles() {
+    const row = document.getElementById("ada-attach-row");
+    if (!row) return;
+    row.innerHTML = "";
+    pendingFiles.forEach(function (f, i) {
+      const chip = document.createElement("span");
+      chip.className = "badge text-bg-secondary d-inline-flex align-items-center gap-2";
+      chip.textContent = f.name;
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "btn-close btn-close-white";
+      x.style.fontSize = ".6rem";
+      x.setAttribute("aria-label", "Remove " + f.name);
+      x.addEventListener("click", function () { pendingFiles.splice(i, 1); renderPendingFiles(); });
+      chip.appendChild(x);
+      row.appendChild(chip);
+    });
+  }
 
   const logEl = document.getElementById("agent-chat-log");
   const msgEl = document.getElementById("agent-chat-msg");
@@ -672,7 +705,20 @@
     const typing = addTypingBubble();
 
     try {
-      const res = await api.post("/api/v1/admin/agents/" + activeAgent + "/chat", { message: text, transcript });
+      const payload = { message: text, transcript };
+      if (AGENTS[activeAgent] && AGENTS[activeAgent].attachments && pendingFiles.length) {
+        payload.attachments = pendingFiles.slice();
+        pendingFiles = [];
+        renderPendingFiles();
+      }
+      const demoToggle = document.getElementById("ada-demo-toggle");
+      if (activeAgent === "ada" && demoToggle) payload.demo = demoToggle.checked;
+
+      const res = await api.post("/api/v1/admin/agents/" + activeAgent + "/chat", payload);
+      if (res.read_errors && res.read_errors.length) {
+        msgEl.textContent = "Some files could not be read — " + res.read_errors.join("; ");
+        msgEl.classList.remove("d-none");
+      }
       const bubble = addBubble("agent", res.reply);
       if (autoSpeak) {
         const btn = bubble.querySelector(".speak-btn");
@@ -713,9 +759,39 @@
       renderFace();
       resetConversation();
       updateLeadsPanelVisibility();
+      updateAdaPanelVisibility();
       if (activeAgent === "beacon") loadBeaconDiscoverySettings();
     });
   });
+
+  // ---- Ada: document attachments -----------------------------------------
+  function updateAdaPanelVisibility() {
+    const panel = document.getElementById("ada-panel");
+    if (!panel) return;
+    const on = activeAgent === "ada";
+    panel.classList.toggle("d-none", !on);
+    if (!on) { pendingFiles = []; renderPendingFiles(); }
+  }
+
+  (function initAdaAttach() {
+    const btn = document.getElementById("ada-attach-btn");
+    const input = document.getElementById("ada-file");
+    if (!btn || !input) return;
+    btn.addEventListener("click", () => input.click());
+    input.addEventListener("change", async (e) => {
+      for (const file of [...e.target.files]) {
+        try {
+          pendingFiles.push({ name: file.name, data: await readAsBase64(file) });
+        } catch (err) {
+          msgEl.textContent = err.message;
+          msgEl.classList.remove("d-none");
+        }
+      }
+      e.target.value = "";
+      renderPendingFiles();
+    });
+    updateAdaPanelVisibility();
+  })();
 
   // ---- mic input (adapted from public/js/ai-widget.js initVoiceInput) ----
   (function initVoiceInput() {

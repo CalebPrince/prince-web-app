@@ -25,6 +25,8 @@ const AGENT_ACCENT = {
   proposal: 'var(--section-money)',
   content: 'var(--section-content)',
   arch: 'var(--section-blue)',
+  // Money accent — she works on invoices and payment paperwork.
+  ada: 'var(--section-money)',
 };
 
 const CAPACITY_LABEL = { clear: 'Clear', available: 'Available', focused: 'Focused', full: 'At capacity' };

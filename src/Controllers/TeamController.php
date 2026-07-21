@@ -186,6 +186,22 @@ class TeamController
                 'manage_url' => '/chat.html',
                 'manage_label' => 'Open builder',
             ],
+            [
+                'key' => 'ada',
+                'name' => Settings::get('ada_assistant_name') ?: 'Ada',
+                'role' => 'Document Reviewer',
+                'description' => 'Reads an invoice, receipt or statement, tells you honestly what is wrong or missing, and says what to do next — then drafts the invoice if you ask.',
+                'icon' => 'bi-file-earmark-text',
+                // Newest agent, same "still proving itself" state Arch launched in.
+                'status' => 'building',
+                'status_label' => 'Building',
+                // Drafts she has raised. Counts drafts only: anything sent or paid
+                // was a human decision, so crediting it to her would overstate her.
+                'stat_value' => (int) $pdo->query("SELECT COUNT(*) FROM invoices WHERE status = 'draft'")->fetchColumn(),
+                'stat_label' => 'invoices drafted',
+                'manage_url' => '/admin/agent-chat.html',
+                'manage_label' => 'Talk to Ada',
+            ],
         ];
 
         foreach ($agents as &$agent) {

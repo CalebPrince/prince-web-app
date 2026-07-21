@@ -274,6 +274,7 @@ $router->post('/api/v1/admin/agents/dossier/chat', [DossierController::class, 'c
 $router->post('/api/v1/admin/agents/nurturer/chat', [NurturerController::class, 'chat']);
 $router->post('/api/v1/admin/agents/proposal/chat', [ProposalAgentController::class, 'chat']);
 $router->post('/api/v1/admin/agents/arch/chat', [\App\Agents\Arch::class, 'adminChat']);
+$router->post('/api/v1/admin/agents/ada/chat', [\App\Agents\Ada::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/sketch/chat', [SketchController::class, 'chat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
