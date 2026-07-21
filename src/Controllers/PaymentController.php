@@ -391,6 +391,66 @@ class PaymentController
         Response::json(['status' => 'updated']);
     }
 
+    /**
+     * POST /api/v1/admin/payments/manual — record money received for a project
+     * outside Paystack (bank transfer, cash, mobile money) so it counts in
+     * revenue. Creates a confirmed payment row directly; no Paystack call, no
+     * payment link, and no client-facing email (the money already arrived).
+     * Body: {customer_name?, email?, amount, currency?, description, notes?, paid_at?}
+     */
+    public static function recordManual(): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+        $name = trim((string) ($data['customer_name'] ?? ''));
+        $email = trim((string) ($data['email'] ?? ''));
+        $amount = (float) ($data['amount'] ?? 0);
+        $description = trim((string) ($data['description'] ?? ''));
+        $currency = strtoupper(trim((string) ($data['currency'] ?? ''))) ?: (Settings::get('pricing_currency') ?: 'GHS');
+        $notes = trim((string) ($data['notes'] ?? ''));
+        $paidAt = trim((string) ($data['paid_at'] ?? ''));
+
+        $errors = [];
+        if ($description === '') $errors[] = 'Description is required.';
+        if ($amount <= 0) $errors[] = 'Amount must be greater than zero.';
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter a valid client email or leave it blank.';
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) $errors[] = 'Choose a valid three-letter currency.';
+        if ($errors) {
+            Response::json(['errors' => $errors], 422);
+        }
+
+        // Optional "paid on" date (YYYY-MM-DD) so revenue lands in the right
+        // period; noon avoids timezone date-shift. Blank = now.
+        $createdAt = ($paidAt !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $paidAt))
+            ? $paidAt . ' 12:00:00'
+            : null;
+
+        $reference = 'MANUAL_' . bin2hex(random_bytes(12));
+        $pdo = Database::get();
+        $pdo->prepare(
+            "INSERT INTO payments (reference, email, customer_name, amount, currency, description, source, status, reviewed, notes, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, 'manual', 'success', 1, ?, COALESCE(?, datetime('now')), datetime('now'))"
+        )->execute([
+            $reference,
+            $email,
+            $name !== '' ? $name : null,
+            (int) round($amount * 100),
+            $currency,
+            $description,
+            $notes !== '' ? $notes : 'Recorded manually — paid outside Paystack.',
+            $createdAt,
+        ]);
+
+        ActivityLog::log($user, 'recorded', 'payment', $reference, $name ?: ($email ?: null), [
+            'amount' => $amount,
+            'currency' => $currency,
+            'method' => 'manual',
+        ]);
+
+        Response::json(['status' => 'recorded', 'reference' => $reference], 201);
+    }
+
     /** GET /api/v1/admin/payment-links */
     public static function adminIndexLinks(): void
     {

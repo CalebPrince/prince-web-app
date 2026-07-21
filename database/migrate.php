@@ -187,6 +187,41 @@ if (!in_array('notes', $paymentColumns, true)) {
     $pdo->exec('ALTER TABLE payments ADD COLUMN notes TEXT');
 }
 
+// Allow manually-recorded payments (money received for a project outside
+// Paystack — bank transfer, cash, mobile money). SQLite can't ALTER a CHECK
+// constraint, so rebuild the table if 'manual' isn't an allowed source yet.
+$paymentsTableSql = (string) $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'payments'"
+)->fetchColumn();
+if ($paymentsTableSql !== '' && !str_contains($paymentsTableSql, "'manual'")) {
+    rebuildTable(
+        $pdo,
+        'payments',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reference TEXT UNIQUE NOT NULL,
+            email TEXT NOT NULL,
+            customer_name TEXT,
+            amount INTEGER NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'GHS',
+            description TEXT,
+            source TEXT NOT NULL DEFAULT 'tier_checkout' CHECK (source IN ('tier_checkout', 'payment_link', 'manual')),
+            payment_link_id INTEGER NULL REFERENCES payment_links(id) ON DELETE SET NULL,
+            tos_accepted INTEGER,
+            tos_accepted_at TEXT,
+            tos_version TEXT,
+            status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'success', 'failed')),
+            reviewed INTEGER NOT NULL DEFAULT 0,
+            notes TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, reference, email, customer_name, amount, currency, description, source, payment_link_id, tos_accepted, tos_accepted_at, tos_version, status, reviewed, notes, created_at, updated_at',
+        ['CREATE INDEX IF NOT EXISTS idx_payments_status_created ON payments (status, created_at)']
+    );
+    echo "Rebuilt payments — source now allows 'manual'.\n";
+}
+
 $proposalColumns = array_column($pdo->query('PRAGMA table_info(proposals)')->fetchAll(), 'name');
 if (!in_array('accepted_by_name', $proposalColumns, true)) {
     $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_by_name TEXT');

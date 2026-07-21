@@ -1,6 +1,7 @@
 let linkModal = null;
 let notesModal = null;
 let subscriptionModal = null;
+let recordPaymentModal = null;
 let notesReference = null;
 
 const STATUS_PILL_CLASS = {
@@ -8,6 +9,12 @@ const STATUS_PILL_CLASS = {
   pending: 'unread',
   failed: 'flagged', past_due: 'flagged',
   cancelled: 'archived',
+};
+
+const SOURCE_LABEL = {
+  payment_link: 'Payment link',
+  tier_checkout: 'Tier checkout',
+  manual: 'Manual',
 };
 
 function formatAmount(subunits, currency) {
@@ -62,7 +69,7 @@ async function loadPayments() {
       <td class="ps-3"><code class="small">${escapeHtml(p.reference)}</code></td>
       <td>${escapeHtml(p.customer_name || '—')}<br><span class="small text-muted-custom">${escapeHtml(p.email)}</span></td>
       <td>${formatAmount(p.amount, p.currency)}</td>
-      <td class="small text-muted-custom">${p.source === 'payment_link' ? 'Payment link' : 'Tier checkout'}</td>
+      <td class="small text-muted-custom">${SOURCE_LABEL[p.source] || 'Tier checkout'}</td>
       <td>${renderTermsCell(p)}</td>
       <td><span class="status-pill ${STATUS_PILL_CLASS[p.status] || 'read'}">${p.status}</span></td>
       <td class="text-center">
@@ -291,6 +298,40 @@ function switchTab(tab) {
     document.getElementById('link-result').classList.add('d-none');
     document.getElementById('link-msg').classList.add('d-none');
     linkModal.show();
+  });
+
+  recordPaymentModal = new bootstrap.Modal(document.getElementById('record-payment-modal'));
+  document.getElementById('record-payment-btn').addEventListener('click', () => {
+    document.getElementById('record-payment-form').reset();
+    document.getElementById('record-payment-msg').classList.add('d-none');
+    recordPaymentModal.show();
+  });
+
+  document.getElementById('record-payment-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('record-payment-msg');
+    msg.classList.add('d-none');
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      await api.post('/api/v1/admin/payments/manual', {
+        description: document.getElementById('record-description').value,
+        amount: Number(document.getElementById('record-amount').value),
+        currency: document.getElementById('record-currency').value,
+        customer_name: document.getElementById('record-client-name').value,
+        email: document.getElementById('record-client-email').value,
+        paid_at: document.getElementById('record-paid-at').value,
+        notes: document.getElementById('record-notes').value,
+      });
+      recordPaymentModal.hide();
+      await loadPayments();
+    } catch (err) {
+      msg.className = 'alert alert-danger py-2 small';
+      msg.textContent = err.message;
+      msg.classList.remove('d-none');
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   document.getElementById('tab-transactions').addEventListener('click', () => switchTab('transactions'));

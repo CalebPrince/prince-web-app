@@ -80,7 +80,10 @@
           <p class="text-muted-custom mb-0 small">Paystack transactions and payment links.</p>
         </div>
       </div>
-      <button class="btn-brand" id="new-link-btn">+ Generate Payment Link</button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" id="record-payment-btn">+ Record a payment</button>
+        <button class="btn-brand" id="new-link-btn">+ Generate Payment Link</button>
+      </div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -305,6 +308,61 @@
             <button class="btn btn-outline-secondary" type="button" id="copy-link-result-btn">Copy</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="record-payment-modal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Record a payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted-custom small">For money you received outside Paystack (bank transfer, cash, mobile money). This records it as a confirmed payment so it counts in your revenue — no email is sent to the client.</p>
+        <form id="record-payment-form">
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" id="record-description" required placeholder="Restaurant booking app — final payment">
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Amount</label>
+              <input type="number" min="0" step="0.01" class="form-control" id="record-amount" required placeholder="0.00">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Currency</label>
+              <select class="form-select" id="record-currency">
+                <option value="GHS">GHS</option>
+                <option value="NGN">NGN</option>
+                <option value="USD">USD</option>
+                <option value="ZAR">ZAR</option>
+              </select>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Client name <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" id="record-client-name" placeholder="Client full name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Paid on <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="date" class="form-control" id="record-paid-at">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Client email <span class="text-muted-custom fw-normal">(optional)</span></label>
+            <input type="email" class="form-control" id="record-client-email" placeholder="client@example.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes <span class="text-muted-custom fw-normal">(optional)</span></label>
+            <input type="text" class="form-control" id="record-notes" placeholder="e.g. Bank transfer, ref 88213">
+          </div>
+          <div id="record-payment-msg" class="alert py-2 small d-none"></div>
+          <button type="submit" class="btn-brand w-100">Record payment</button>
+        </form>
       </div>
     </div>
   </div>
