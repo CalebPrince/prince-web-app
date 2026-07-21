@@ -109,6 +109,7 @@
       <button type="button" class="agent-tab" id="tab-proposal" data-agent="proposal"><i class="bi bi-file-earmark-check me-1"></i>Proposal</button>
       <button type="button" class="agent-tab" id="tab-content" data-agent="content"><i class="bi bi-palette me-1"></i>Content</button>
       <button type="button" class="agent-tab" id="tab-arch" data-agent="arch"><i class="bi bi-hammer me-1"></i>Arch</button>
+      <button type="button" class="agent-tab" id="tab-ada" data-agent="ada"><i class="bi bi-file-earmark-text me-1"></i>Ada</button>
       <button type="button" class="agent-tab" id="tab-sketch" data-agent="sketch"><i class="bi bi-vector-pen me-1"></i>Sketch</button>
     </div>
 
@@ -123,6 +124,23 @@
       </div>
       <div id="agent-chat-log" class="agent-chat-log mb-3"></div>
       <div id="agent-chat-msg" class="alert alert-danger py-2 small d-none"></div>
+      <div id="ada-panel" class="d-none mb-2">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="ada-attach-btn">
+            <i class="bi bi-paperclip me-1"></i>Attach document
+          </button>
+          <input type="file" id="ada-file" multiple hidden
+                 accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.md,.csv,.json">
+          <div class="form-check form-switch mb-0 ms-1">
+            <input class="form-check-input" type="checkbox" id="ada-demo-toggle" checked>
+            <label class="form-check-label small" for="ada-demo-toggle">
+              Demo data <span class="text-secondary">— safe to screen-share</span>
+            </label>
+          </div>
+        </div>
+        <div id="ada-attach-row" class="d-flex flex-wrap gap-2"></div>
+      </div>
+
       <form id="agent-chat-form" class="d-flex gap-2">
         <button type="button" class="mic-btn" id="agent-mic-btn" title="Speak your message" aria-label="Speak your message" style="display:none;"><i class="bi bi-mic"></i></button>
         <input type="text" class="form-control" id="agent-chat-input" placeholder="Type a message…" maxlength="1000" autocomplete="off">
