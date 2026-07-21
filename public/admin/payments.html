@@ -360,6 +360,10 @@
             <label class="form-label">Notes <span class="text-muted-custom fw-normal">(optional)</span></label>
             <input type="text" class="form-control" id="record-notes" placeholder="e.g. Bank transfer, ref 88213">
           </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="record-send-receipt">
+            <label class="form-check-label" for="record-send-receipt">Email a branded receipt to the client <span class="text-muted-custom">(requires client email)</span></label>
+          </div>
           <div id="record-payment-msg" class="alert py-2 small d-none"></div>
           <button type="submit" class="btn-brand w-100">Record payment</button>
         </form>

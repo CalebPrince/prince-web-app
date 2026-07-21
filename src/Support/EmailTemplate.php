@@ -179,6 +179,7 @@ class EmailTemplate
             'payment_success' => 'Payment confirmed',
             'invoice_send' => 'Invoice ready',
             'invoice_receipt' => 'Receipt',
+            'manual_payment_receipt' => 'Payment receipt',
             'subscription_receipt' => 'Subscription',
             'proposal_send' => 'Proposal',
             'booking_client_confirmation' => 'Booking confirmed',
@@ -250,6 +251,11 @@ class EmailTemplate
                 'subject' => 'Receipt for invoice {{invoice_number}} - {{currency}} {{amount}}',
                 'html' => '<h1 style="margin:0 0 14px;font-size:28px;line-height:1.15;color:#0a0b0d;">Payment confirmed.</h1><p>Hi {{client_name}},</p><p>Thanks. Your payment of <strong>{{currency}} {{amount}}</strong> for invoice <strong>{{invoice_number}}</strong> has been received.</p><p>Your invoice now shows as paid and doubles as your receipt.</p><p><a href="{{invoice_url}}" style="display:inline-block;background:#0a0b0d;color:#ffffff;padding:12px 18px;border-radius:999px;text-decoration:none;">View receipt</a></p><p>Prince Caleb</p>',
                 'text' => "Hi {{client_name}},\n\nThanks. Your payment of {{currency}} {{amount}} for invoice {{invoice_number}} has been received.\n\nYour invoice now shows as paid and doubles as your receipt:\n{{invoice_url}}\n\nPrince Caleb",
+            ],
+            'manual_payment_receipt' => [
+                'subject' => 'Payment received - {{description}}',
+                'html' => '<h1 style="margin:0 0 14px;font-size:28px;line-height:1.15;color:#0a0b0d;">Payment received.</h1><p>Hi {{client_name}},</p><p>Thanks — I have received your payment of <strong>{{currency}} {{amount}}</strong> for <strong>{{description}}</strong>. This email is your receipt.</p><p><strong>Reference:</strong> {{reference}}<br><strong>Date:</strong> {{date}}</p><p>It was a pleasure working with you. If you need anything else, just reply to this email.</p><p>Prince Caleb</p>',
+                'text' => "Hi {{client_name}},\n\nThanks — I have received your payment of {{currency}} {{amount}} for {{description}}. This email is your receipt.\n\nReference: {{reference}}\nDate: {{date}}\n\nIt was a pleasure working with you. If you need anything else, just reply to this email.\n\nPrince Caleb",
             ],
             'subscription_receipt' => [
                 'subject' => 'Receipt: {{plan_name}} - {{currency}} {{amount}}',

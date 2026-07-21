@@ -410,12 +410,14 @@ class PaymentController
         $currency = strtoupper(trim((string) ($data['currency'] ?? ''))) ?: (Settings::get('pricing_currency') ?: 'GHS');
         $notes = trim((string) ($data['notes'] ?? ''));
         $paidAt = trim((string) ($data['paid_at'] ?? ''));
+        $sendReceipt = !empty($data['send_receipt']);
 
         $errors = [];
         if ($description === '') $errors[] = 'Description is required.';
         if ($amount <= 0) $errors[] = 'Amount must be greater than zero.';
         if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter a valid client email or leave it blank.';
         if (!preg_match('/^[A-Z]{3}$/', $currency)) $errors[] = 'Choose a valid three-letter currency.';
+        if ($sendReceipt && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter the client email to send a receipt.';
         if ($errors) {
             Response::json(['errors' => $errors], 422);
         }
@@ -442,13 +444,27 @@ class PaymentController
             $createdAt,
         ]);
 
+        $receiptSent = false;
+        if ($sendReceipt) {
+            $message = EmailTemplate::render('manual_payment_receipt', [
+                'client_name' => $name ?: 'there',
+                'amount' => number_format($amount, 2),
+                'currency' => $currency,
+                'description' => $description,
+                'reference' => $reference,
+                'date' => ($createdAt !== null ? substr($createdAt, 0, 10) : gmdate('Y-m-d')),
+            ], EmailTemplate::defaults()['manual_payment_receipt']);
+            $receiptSent = Mailer::sendHtml($email, $message['subject'], $message['html'], $message['text']);
+        }
+
         ActivityLog::log($user, 'recorded', 'payment', $reference, $name ?: ($email ?: null), [
             'amount' => $amount,
             'currency' => $currency,
             'method' => 'manual',
+            'receipt_sent' => $receiptSent,
         ]);
 
-        Response::json(['status' => 'recorded', 'reference' => $reference], 201);
+        Response::json(['status' => 'recorded', 'reference' => $reference, 'receipt_sent' => $receiptSent], 201);
     }
 
     /** GET /api/v1/admin/payment-links */

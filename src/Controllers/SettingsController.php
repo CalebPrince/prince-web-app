@@ -44,6 +44,7 @@ class SettingsController
         'email_tpl_payment_success_subject', 'email_tpl_payment_success_html', 'email_tpl_payment_success_text',
         'email_tpl_invoice_send_subject', 'email_tpl_invoice_send_html', 'email_tpl_invoice_send_text',
         'email_tpl_invoice_receipt_subject', 'email_tpl_invoice_receipt_html', 'email_tpl_invoice_receipt_text',
+        'email_tpl_manual_payment_receipt_subject', 'email_tpl_manual_payment_receipt_html', 'email_tpl_manual_payment_receipt_text',
         'email_tpl_subscription_receipt_subject', 'email_tpl_subscription_receipt_html', 'email_tpl_subscription_receipt_text',
         'email_tpl_proposal_send_subject', 'email_tpl_proposal_send_html', 'email_tpl_proposal_send_text',
         'email_tpl_booking_client_confirmation_subject', 'email_tpl_booking_client_confirmation_html', 'email_tpl_booking_client_confirmation_text',

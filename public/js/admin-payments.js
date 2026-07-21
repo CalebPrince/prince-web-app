@@ -314,7 +314,7 @@ function switchTab(tab) {
     const btn = e.target.querySelector('button[type="submit"]');
     btn.disabled = true;
     try {
-      await api.post('/api/v1/admin/payments/manual', {
+      const result = await api.post('/api/v1/admin/payments/manual', {
         description: document.getElementById('record-description').value,
         amount: Number(document.getElementById('record-amount').value),
         currency: document.getElementById('record-currency').value,
@@ -322,9 +322,13 @@ function switchTab(tab) {
         email: document.getElementById('record-client-email').value,
         paid_at: document.getElementById('record-paid-at').value,
         notes: document.getElementById('record-notes').value,
+        send_receipt: document.getElementById('record-send-receipt').checked,
       });
       recordPaymentModal.hide();
       await loadPayments();
+      if (document.getElementById('record-send-receipt').checked && !result.receipt_sent) {
+        alert('Payment recorded, but the receipt email could not be sent — check Email delivery (SMTP) settings.');
+      }
     } catch (err) {
       msg.className = 'alert alert-danger py-2 small';
       msg.textContent = err.message;

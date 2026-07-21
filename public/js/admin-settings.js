@@ -8,6 +8,7 @@ const EMAIL_TEMPLATE_FIELDS = [
   ["payment_success", "payment-success"],
   ["invoice_send", "invoice-send"],
   ["invoice_receipt", "invoice-receipt"],
+  ["manual_payment_receipt", "manual-payment-receipt"],
   ["subscription_receipt", "subscription-receipt"],
   ["proposal_send", "proposal-send"],
   ["booking_client_confirmation", "booking-client-confirmation"],
