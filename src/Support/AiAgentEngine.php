@@ -190,7 +190,12 @@ class AiAgentEngine
                 if (isset($part['functionCall']['name'])) {
                     $functionCalls[] = $part['functionCall'];
                 }
-                if (isset($part['text'])) {
+                // A thinking-enabled model can return its reasoning as its own
+                // text part (marked `thought: true`), ahead of the real answer
+                // part. Concatenating it in would glue an internal paraphrase
+                // straight onto the final reply with no separator — read back
+                // as the same fact stated twice in slightly different words.
+                if (isset($part['text']) && empty($part['thought'])) {
                     $text .= $part['text'];
                 }
             }
