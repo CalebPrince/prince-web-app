@@ -912,14 +912,14 @@ storage/
     need no migration.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
     read-only roster of the studio — Caleb himself plus the ten AI agents
-    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas, Arch, Sketch, Ada,
+    (Lisa, Jason, Joan, Sharon, Ledger, Danielle, Arch, Sketch, Ada,
     Chief) — each card showing its
     real role, a live headline stat pulled from its own table (e.g. Ledger
-    shows proposals drafted, Canvas shows drafts created from
-    `content_studio_items`, Dossier shows leads researched via
-    `researched_at`), and a live status (Nurturer shows
+    shows proposals drafted, Danielle shows drafts created from
+    `content_studio_items`, Sharon shows leads researched via
+    `researched_at`), and a live status (Jason shows
     "Sending"/"On standby" based on whether any automation actually has it
-    enabled and active; Beacon shows "Scouting"/"Paused" from the discovery
+    enabled and active; Joan shows "Scouting"/"Paused" from the discovery
     toggle). Agent display names stay admin-configurable via the same
     `settings` keys the rest of the app already uses.
 41. **Unified sales pipeline** (`/admin/pipeline.html`,

@@ -240,11 +240,11 @@ function wireAgentVoicePreview(prefix, fallbackName, sampleLine) {
   document.getElementById("content-form").addEventListener("submit", saveContent);
   await loadContent();
   wireVoiceControls();
-  wireAgentVoicePreview("beacon", "Beacon", "This is how I'll sound when you talk to me in the admin console.");
-  wireAgentVoicePreview("dossier", "Dossier", "This is how I'll sound when you talk to me in the admin console.");
-  wireAgentVoicePreview("nurturer", "Nurturer", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("beacon", "Joan", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("dossier", "Sharon", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("nurturer", "Jason", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("proposal", "Ledger", "This is how I'll sound when you talk to me in the admin console.");
-  wireAgentVoicePreview("content", "Canvas", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("content", "Danielle", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("arch", "Arch", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("sketch", "Sketch", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("ada", "Ada", "This is how I'll sound when you talk to me in the admin console.");

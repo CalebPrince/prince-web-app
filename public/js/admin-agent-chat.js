@@ -1,11 +1,11 @@
 (function () {
   const AGENTS = {
     lisa: { label: "Lisa", nameKey: "chat_assistant_name", genderKey: "chat_voice_gender", accentKey: "chat_voice_accent", fallbackName: "Lisa" },
-    beacon: { label: "Beacon", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", accentKey: "beacon_voice_accent", fallbackName: "Beacon" },
-    dossier: { label: "Dossier", nameKey: "dossier_assistant_name", genderKey: "dossier_voice_gender", accentKey: "dossier_voice_accent", fallbackName: "Dossier" },
-    nurturer: { label: "Nurturer", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Nurturer" },
+    beacon: { label: "Joan", nameKey: "beacon_assistant_name", genderKey: "beacon_voice_gender", accentKey: "beacon_voice_accent", fallbackName: "Joan" },
+    dossier: { label: "Sharon", nameKey: "dossier_assistant_name", genderKey: "dossier_voice_gender", accentKey: "dossier_voice_accent", fallbackName: "Sharon" },
+    nurturer: { label: "Jason", nameKey: "nurturer_assistant_name", genderKey: "nurturer_voice_gender", accentKey: "nurturer_voice_accent", fallbackName: "Jason" },
     proposal: { label: "Proposal", nameKey: "proposal_assistant_name", genderKey: "proposal_voice_gender", accentKey: "proposal_voice_accent", fallbackName: "Ledger" },
-    content: { label: "Content", nameKey: "content_assistant_name", genderKey: "content_voice_gender", accentKey: "content_voice_accent", fallbackName: "Canvas" },
+    content: { label: "Danielle", nameKey: "content_assistant_name", genderKey: "content_voice_gender", accentKey: "content_voice_accent", fallbackName: "Danielle" },
     arch: { label: "Arch", nameKey: "arch_assistant_name", genderKey: "arch_voice_gender", accentKey: "arch_voice_accent", fallbackName: "Arch" },
     sketch: { label: "Sketch", nameKey: "sketch_assistant_name", genderKey: "sketch_voice_gender", accentKey: "sketch_voice_accent", fallbackName: "Sketch" },
     ada: { label: "Ada", nameKey: "ada_assistant_name", genderKey: "ada_voice_gender", accentKey: "ada_voice_accent", fallbackName: "Ada", attachments: true },
