@@ -14,20 +14,28 @@ use App\Support\SharedAgentTools;
 use PDO;
 
 /**
- * Chief — chief of staff. Reports on the rest of the team.
+ * Chief — chief of staff. Reports on the rest of the team, and on the rest
+ * of the command center besides.
  *
  * Every other agent works on the studio. This one works on the agents: once a
  * day it counts what each of them actually did, writes a short brief, saves it,
  * and emails it. It is also chattable, so "what has Joan done this week?" has
- * an answer that isn't nine admin pages.
+ * an answer that isn't nine admin pages. Caleb asked it to watch the whole
+ * command center, not just the agents — so the same brief also covers
+ * command_center: his own actions logged across the app, a Paystack payment
+ * that clears with no admin action, a new contact/quote inquiry landing from
+ * the site. None of that is agent work, so it's reported as its own section,
+ * never folded into an agent's count.
  *
  * Three things worth knowing about the design:
  *
  * 1. snapshot() is plain SQL, no AI. The numbers are counted from the same
- *    tables the Team page reads, then handed to the model as JSON with an
- *    instruction never to state a figure that isn't in it. A supervisor that
- *    hallucinates its subordinates' output is worse than no supervisor — it
- *    launders invention into something that reads like a report.
+ *    tables the Team page reads (agent figures) and admin_activity_log (the
+ *    audit trail nearly every controller already writes to for command_center),
+ *    then handed to the model as JSON with an instruction never to state a
+ *    figure that isn't in it. A supervisor that hallucinates its subordinates'
+ *    output is worse than no supervisor — it launders invention into
+ *    something that reads like a report.
  *
  * 2. If no AI provider answers, the brief still goes out — composePlain()
  *    renders the same snapshot deterministically. A daily report that silently
@@ -38,7 +46,8 @@ use PDO;
  *    things. Lisa, Jason and Joan run on their own, so a quiet day is a
  *    signal. Sharon, Ledger, Sketch, Danielle, Arch and Ada only act when asked,
  *    so a quiet day is just a day nobody asked — flagging it would train you to
- *    ignore the brief.
+ *    ignore the brief. command_center makes no such judgment; it just reports
+ *    what it finds.
  */
 class Chief
 {
@@ -292,17 +301,73 @@ class Chief
             $agents = array_values(array_filter($agents, static fn ($a) => $a['key'] === $only));
         }
 
+        // 'command_center' is its own key, not a tenth agent — it covers work
+        // no agent gets credit for, so it's excluded from the agent totals
+        // below (which drive "N actions from N agents" in the headline) and
+        // handled as a separate section everywhere it's rendered.
+        $wantsCommandCenter = $only === null || $only === 'command_center';
+
         return [
             'window_hours' => $hours,
             'since' => $since,
             'generated_at' => date('Y-m-d H:i:s'),
             'agents' => $agents,
+            'command_center' => $wantsCommandCenter ? self::commandCenterActivity($pdo, $since) : [],
             'waiting_on_you' => $only === null ? self::waitingOnYou($pdo) : [],
             'totals' => [
                 'actions' => array_sum(array_column($agents, 'actions')),
                 'agents_that_worked' => count(array_filter($agents, static fn ($a) => $a['actions'] > 0)),
                 'agents_total' => count($agents),
             ],
+        ];
+    }
+
+    /**
+     * Everything else that happened in the admin panel in the window — work
+     * no agent gets credit for, because it wasn't an agent's work. Most of it
+     * comes from admin_activity_log, the audit trail every controller in the
+     * app already writes to (invoices, payments, clients, testimonials,
+     * pipeline moves, and so on) right after AuthMiddleware::requireAuth().
+     * Two things happen with no admin session to log them at all, so they're
+     * queried directly instead: a Paystack payment clearing on its own, and a
+     * new contact/quote inquiry arriving from the public site (excluding the
+     * ones logged as chat leads — Lisa already reports those).
+     *
+     * @return array{did: array<int,array{label:string,count:int}>, actions:int, last_active_at: ?string}
+     */
+    private static function commandCenterActivity(PDO $pdo, string $since): array
+    {
+        $did = [];
+
+        $rows = self::rows($pdo,
+            "SELECT action, entity_type, COUNT(*) AS n FROM admin_activity_log
+             WHERE created_at >= ? GROUP BY action, entity_type ORDER BY n DESC LIMIT 15", [$since]);
+        foreach ($rows as $r) {
+            $did[] = [
+                'label' => str_replace('_', ' ', (string) $r['entity_type']) . ' '
+                    . str_replace('_', ' ', (string) $r['action']),
+                'count' => (int) $r['n'],
+            ];
+        }
+
+        $did[] = ['label' => 'payments that cleared automatically via Paystack', 'count' => self::num($pdo,
+            "SELECT COUNT(*) FROM payments
+             WHERE status = 'success' AND source IN ('tier_checkout', 'payment_link') AND created_at >= ?",
+            [$since])];
+        $did[] = ['label' => 'new contact/quote inquiries from the site', 'count' => self::num($pdo,
+            "SELECT COUNT(*) FROM inquiries WHERE created_at >= ? AND message NOT LIKE '[Live Chat]%'",
+            [$since])];
+
+        $did = array_values(array_filter($did, static fn ($d) => $d['count'] > 0));
+
+        return [
+            'did' => $did,
+            'actions' => array_sum(array_column($did, 'count')),
+            'last_active_at' => self::latestOf($pdo, [
+                'SELECT MAX(created_at) FROM admin_activity_log',
+                "SELECT MAX(created_at) FROM payments WHERE status = 'success'",
+                'SELECT MAX(created_at) FROM inquiries',
+            ]),
         ];
     }
 
@@ -413,20 +478,28 @@ class Chief
     {
         return "You are " . self::displayName() . ", chief of staff to Caleb, who runs a "
             . "one-person web studio staffed by AI agents. You do not do the studio's work; "
-            . "you keep track of the agents that do, and report to Caleb once a day.\n\n"
-            . "You are given a JSON snapshot of what each agent did in the reporting window. "
-            . "Write that day's brief.\n\n"
+            . "you keep track of the agents that do — and the rest of the admin panel besides "
+            . "— and report to Caleb once a day.\n\n"
+            . "You are given a JSON snapshot of what each agent did in the reporting window, "
+            . "plus command_center: everything else that happened in the admin panel that no "
+            . "agent gets credit for — Caleb's own actions logged automatically across the app "
+            . "(edits, deletes, approvals), a Paystack payment that cleared with no admin action, "
+            . "or a new contact/quote inquiry landing from the site. Write that day's brief.\n\n"
             . "Absolute rule: every number and fact you state must come from the JSON. Never "
             . "estimate, never round into vagueness, never mention an agent doing something "
-            . "the JSON does not show. If the JSON is empty, the honest brief is that nothing "
-            . "happened.\n\n"
+            . "the JSON does not show — and never credit command_center activity to an agent, "
+            . "since none of it is agent work. If the JSON is empty, the honest brief is that "
+            . "nothing happened.\n\n"
             . "Read idleness correctly. Agents marked runs=always_on work on their own, so a "
             . "zero from them is worth a line. Agents marked runs=on_demand only act when "
-            . "asked, so a zero from them is normal and not worth mentioning at all.\n\n"
+            . "asked, so a zero from them is normal and not worth mentioning at all. "
+            . "command_center is neither — it simply reports what it finds, with no idleness "
+            . "judgment attached.\n\n"
             . "Lead the brief with whatever most deserves Caleb's attention — a problem if "
             . "there is one, otherwise the day's real result. Then, briefly: what the team "
-            . "did, anything broken or switched off (config_note and health fields are exactly "
-            . "this), and what is waiting on him. Name the specific next action.\n\n"
+            . "did, what happened elsewhere in the command center, anything broken or switched "
+            . "off (config_note and health fields are exactly this), and what is waiting on "
+            . "him. Name the specific next action.\n\n"
             . "A caveat field means the number is imprecise; only mention it if the number is "
             . "big enough to matter. An entry marked context is effort rather than output — "
             . "searches run, results scanned — so it explains a result but never counts as one.\n\n"
@@ -444,6 +517,8 @@ class Chief
         $lines = [];
         $worked = array_filter($snapshot['agents'], static fn ($a) => $a['actions'] > 0);
 
+        $commandCenter = $snapshot['command_center'] ?? [];
+
         if ($worked) {
             $lines[] = 'What the team did in the last ' . (int) $snapshot['window_hours'] . ' hours:';
             foreach ($worked as $agent) {
@@ -458,9 +533,20 @@ class Chief
                 }
                 $lines[] = '- ' . $agent['name'] . ': ' . implode(', ', $bits);
             }
-        } else {
+        } elseif (empty($commandCenter['did'])) {
             $lines[] = 'No agent recorded any activity in the last '
                 . (int) $snapshot['window_hours'] . ' hours.';
+        }
+
+        // Kept out of "What the team did" — none of this is agent work, and
+        // crediting Caleb's own edits or an automatic Paystack payment to an
+        // agent would misreport who actually did it.
+        if (!empty($commandCenter['did'])) {
+            $lines[] = '';
+            $lines[] = 'Also in the command center:';
+            foreach ($commandCenter['did'] as $item) {
+                $lines[] = '- ' . $item['label'] . ' (' . $item['count'] . ')';
+            }
         }
 
         $problems = [];
@@ -505,12 +591,22 @@ class Chief
         $actions = (int) $snapshot['totals']['actions'];
         $worked = (int) $snapshot['totals']['agents_that_worked'];
         $waiting = count($snapshot['waiting_on_you']);
+        $ccActions = (int) ($snapshot['command_center']['actions'] ?? 0);
 
-        if ($actions === 0) {
+        if ($actions === 0 && $ccActions === 0) {
             return 'Quiet day — no agent recorded any activity';
         }
-        return $actions . ' action' . ($actions === 1 ? '' : 's')
-            . ' from ' . $worked . ' agent' . ($worked === 1 ? '' : 's')
+
+        $parts = [];
+        if ($actions > 0) {
+            $parts[] = $actions . ' action' . ($actions === 1 ? '' : 's')
+                . ' from ' . $worked . ' agent' . ($worked === 1 ? '' : 's');
+        }
+        if ($ccActions > 0) {
+            $parts[] = $ccActions . ' more in the command center';
+        }
+        $headline = implode(', ', $parts) ?: 'No agent activity';
+        return $headline
             . ($waiting > 0 ? ', ' . $waiting . ' queue' . ($waiting === 1 ? '' : 's') . ' waiting on you' : '');
     }
 
@@ -681,9 +777,10 @@ class Chief
                     $key = trim((string) ($args['agent_key'] ?? ''));
                     $days = max(1, min(90, (int) ($args['days'] ?? 7)));
                     $snap = self::snapshot($pdo, $days * 24, $key);
-                    if ($snap['agents'] === []) {
+                    if ($snap['agents'] === [] && $key !== 'command_center') {
                         return ['error' => 'No agent with that key. Use one of: lisa, nurturer, '
-                            . 'beacon, dossier, proposal, sketch, content, arch, ada.'];
+                            . 'beacon, dossier, proposal, sketch, content, arch, ada, or '
+                            . 'command_center for everything else in the admin panel.'];
                     }
                     return $snap;
                 case 'past_briefs':
@@ -715,15 +812,20 @@ class Chief
     {
         return "You are " . self::displayName() . ", chief of staff to Caleb, who runs a "
             . "one-person web studio staffed by AI agents. You keep track of what those agents "
-            . "are doing and answer his questions about them.\n\n"
+            . "are doing, plus the rest of the admin panel — the command center — and answer "
+            . "his questions about either.\n\n"
             . "The team: Lisa (live chat and bookings), Jason (follow-up email), Joan "
             . "(social lead scouting), Sharon (lead research), Ledger (proposals), Sketch "
             . "(concept mockups), Danielle (content and social), Arch (website building), Ada "
-            . "(document review).\n\n"
+            . "(document review). Everything else in the command center — Caleb's own actions "
+            . "logged across the app, Paystack payments that clear on their own, new contact/"
+            . "quote inquiries — is not agent work and is reported separately, never credited "
+            . "to an agent.\n\n"
             . "Always answer from your tools, never from memory or assumption. team_activity "
-            . "covers the whole team over a window, agent_activity covers one agent over a "
-            . "number of days, past_briefs recalls briefs you have already written. If a tool "
-            . "shows nothing, the answer is that nothing happened — say it plainly.\n\n"
+            . "covers the whole team plus the command center over a window; agent_activity "
+            . "covers one agent — or pass 'command_center' as the agent_key for just that — "
+            . "over a number of days; past_briefs recalls briefs you have already written. If a "
+            . "tool shows nothing, the answer is that nothing happened — say it plainly.\n\n"
             . "Never state a number you did not read from a tool. Do not soften a bad week or "
             . "credit an agent for work the data does not show; Caleb uses these answers to "
             . "decide what to fix, and a flattering report is a useless one. Agents that only "
@@ -752,8 +854,10 @@ class Chief
     {
         return [
             'name' => 'team_activity',
-            'description' => 'What every agent did over the last N hours, plus what work is '
-                . 'currently waiting on Caleb. Use 24 for today, 168 for the past week.',
+            'description' => 'What every agent did over the last N hours, plus everything else '
+                . 'that happened in the admin panel (command center) that no agent gets credit '
+                . 'for, plus what work is currently waiting on Caleb. Use 24 for today, 168 for '
+                . 'the past week.',
             'parameters' => [
                 'type' => 'object',
                 'properties' => [
@@ -768,12 +872,14 @@ class Chief
     {
         return [
             'name' => 'agent_activity',
-            'description' => 'What one agent did over the last N days.',
+            'description' => 'What one agent did over the last N days, or what happened '
+                . 'elsewhere in the command center if agent_key is command_center.',
             'parameters' => [
                 'type' => 'object',
                 'properties' => [
                     'agent_key' => ['type' => 'string', 'description' =>
-                        'One of: lisa, nurturer, beacon, dossier, proposal, sketch, content, arch, ada.'],
+                        'One of: lisa, nurturer, beacon, dossier, proposal, sketch, content, arch, '
+                        . 'ada, or command_center for everything else in the admin panel.'],
                     'days' => ['type' => 'integer', 'description' => 'Days to look back. Default 7.'],
                 ],
                 'required' => ['agent_key'],
@@ -825,6 +931,19 @@ class Chief
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
         } catch (\Throwable $e) {
             error_log('Chief row failed: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private static function rows(PDO $pdo, string $sql, array $params = []): array
+    {
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (\Throwable $e) {
+            error_log('Chief rows failed: ' . $e->getMessage());
             return [];
         }
     }

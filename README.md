@@ -990,15 +990,26 @@ storage/
     combined.
 46. **Chief, the chief of staff** (`src/Agents/Chief.php`,
     `/admin/team.html`, `/admin/agent-chat.html` "Chief" tab): the one agent
-    whose subject is the other agents. `database/send_daily_brief.php` (cron,
+    whose subject is the rest of the studio — the other agents, and the rest
+    of the admin panel besides. `database/send_daily_brief.php` (cron,
     daily) counts what each agent actually did in the last 24 hours — from
     the same tables the Team page reads — writes it up, stores it in
     `agent_daily_briefs`, and emails it to `notification_email`. The latest
     brief is the first thing on the Team page, with a "Write today's brief"
     button for an on-demand one. Chief is also chattable, with tools for
-    whole-team activity over a window, one agent over N days, and briefs
-    already written, so "what has Beacon done this week?" has an answer that
-    isn't nine admin pages.
+    whole-team activity over a window, one agent (or `command_center`) over N
+    days, and briefs already written, so "what has Joan done this week?" has
+    an answer that isn't nine admin pages.
+
+    Alongside per-agent figures, `snapshot()` also builds `command_center`:
+    everything else that happened in the admin panel that isn't agent work —
+    grouped counts from `admin_activity_log` (the audit trail nearly every
+    controller already writes to on create/update/delete) plus the two things
+    that happen with no admin session to log them at all: a Paystack payment
+    clearing on its own, and a new contact/quote inquiry landing from the
+    site (excluding chat leads, which Lisa already reports). It's kept out of
+    the agent totals and rendered as its own section, so Caleb's own edits or
+    an automatic payment never get credited to an agent that didn't do them.
 
     Three design points worth keeping. **The counting is SQL, not AI** —
     `snapshot()` produces the figures and the model is only allowed to write
@@ -1007,13 +1018,14 @@ storage/
     key configured or every provider failing, the same snapshot is rendered
     deterministically and still sent, since a daily report that silently
     skips days is one you stop trusting. **Idleness is read asymmetrically**
-    — a quiet day from Lisa, Nurturer or Beacon (which run on their own) is
+    — a quiet day from Lisa, Jason or Joan (which run on their own) is
     reported; a quiet day from the on-demand agents is not, because flagging
     "Ada did nothing" every morning would train you to ignore the brief.
-    Effort metrics (Beacon's searches run, results scanned) are marked
-    `context` and deliberately excluded from the action count, so a day of
-    scanning a thousand results for nothing cannot report as a productive
-    one.
+    `command_center` makes no idleness judgment either way — it just reports
+    what it finds. Effort metrics (Joan's searches run, results scanned) are
+    marked `context` and deliberately excluded from the action count, so a
+    day of scanning a thousand results for nothing cannot report as a
+    productive one.
 
 ## Deployment (Namecheap cPanel)
 

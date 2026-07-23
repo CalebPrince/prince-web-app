@@ -208,7 +208,7 @@ class TeamController
                 'key' => 'chief',
                 'name' => Settings::get('chief_assistant_name') ?: 'Chief',
                 'role' => 'Chief of Staff',
-                'description' => 'Keeps track of every other agent — counts what each one actually did, writes you a daily brief, and flags the ones that are stuck, switched off or quietly doing nothing.',
+                'description' => 'Keeps track of every other agent and the rest of the command center — counts what each agent actually did, what else happened in the admin panel, writes you a daily brief, and flags what is stuck, switched off or quietly doing nothing.',
                 'icon' => 'bi-clipboard-data',
                 // Runs on the daily cron, so it is only genuinely "reporting"
                 // once a brief exists — otherwise the cron isn't wired up yet
