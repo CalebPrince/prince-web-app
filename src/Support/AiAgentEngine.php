@@ -185,20 +185,33 @@ class AiAgentEngine
             }
 
             $functionCalls = [];
-            $text = '';
+            $textParts = [];
             foreach ($parts as $part) {
                 if (isset($part['functionCall']['name'])) {
                     $functionCalls[] = $part['functionCall'];
                 }
-                // A thinking-enabled model can return its reasoning as its own
-                // text part (marked `thought: true`), ahead of the real answer
-                // part. Concatenating it in would glue an internal paraphrase
-                // straight onto the final reply with no separator — read back
-                // as the same fact stated twice in slightly different words.
+                // Drop parts the model explicitly flags as reasoning.
                 if (isset($part['text']) && empty($part['thought'])) {
-                    $text .= $part['text'];
+                    $textParts[] = $part['text'];
                 }
             }
+
+            // A thinking-enabled model can precede its real answer with a
+            // reasoning draft returned as its own text part — and (seen live
+            // with Chief) sometimes WITHOUT the `thought: true` flag filtered
+            // above, so it slips through as an ordinary part. That draft
+            // restates the final answer in slightly different words, so
+            // concatenating the parts renders the whole reply twice. The final
+            // answer is always the last text part; anything before it is a
+            // draft, so keep only the last rather than gluing them together.
+            if (count($textParts) > 1) {
+                error_log(sprintf(
+                    'Gemini chat returned %d text parts (round %d); keeping the last as the answer.',
+                    count($textParts),
+                    $round
+                ));
+            }
+            $text = $textParts ? (string) end($textParts) : '';
 
             if (!$functionCalls) {
                 if ($text === '') {
