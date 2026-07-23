@@ -182,7 +182,7 @@ class DossierController
      */
     private static function buildChatSystemPrompt(): string
     {
-        $name = Settings::get('dossier_assistant_name') ?: 'Dossier';
+        $name = Settings::get('dossier_assistant_name') ?: 'Sharon';
         $genderLine = self::genderLine((string) Settings::get('dossier_voice_gender'));
 
         return "You are {$name}, the research analyst on Prince Caleb's AI team — Caleb is a highly skilled "

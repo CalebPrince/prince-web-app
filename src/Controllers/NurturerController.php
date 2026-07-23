@@ -293,7 +293,7 @@ class NurturerController
 
     private static function buildSystemPrompt(): string
     {
-        $name = Settings::get('nurturer_assistant_name') ?: 'Nurturer';
+        $name = Settings::get('nurturer_assistant_name') ?: 'Jason';
         $genderLine = self::genderLine((string) Settings::get('nurturer_voice_gender'));
 
         return "You are {$name}, an advanced AI Email Marketer for Caleb, a premium solo Web Designer and "
@@ -344,7 +344,7 @@ class NurturerController
      */
     private static function buildChatSystemPrompt(): string
     {
-        $name = Settings::get('nurturer_assistant_name') ?: 'Nurturer';
+        $name = Settings::get('nurturer_assistant_name') ?: 'Jason';
         $genderLine = self::genderLine((string) Settings::get('nurturer_voice_gender'));
 
         return "You are {$name}, an advanced AI Email Marketer for Caleb, a premium solo Web Designer and "

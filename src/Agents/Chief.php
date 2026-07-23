@@ -18,7 +18,7 @@ use PDO;
  *
  * Every other agent works on the studio. This one works on the agents: once a
  * day it counts what each of them actually did, writes a short brief, saves it,
- * and emails it. It is also chattable, so "what has Beacon done this week?" has
+ * and emails it. It is also chattable, so "what has Joan done this week?" has
  * an answer that isn't nine admin pages.
  *
  * Three things worth knowing about the design:
@@ -35,8 +35,8 @@ use PDO;
  *    matters) never needed a model in the first place.
  *
  * 3. It reports idleness asymmetrically, because idleness means different
- *    things. Lisa, Nurturer and Beacon run on their own, so a quiet day is a
- *    signal. Dossier, Ledger, Sketch, Canvas, Arch and Ada only act when asked,
+ *    things. Lisa, Jason and Joan run on their own, so a quiet day is a
+ *    signal. Sharon, Ledger, Sketch, Danielle, Arch and Ada only act when asked,
  *    so a quiet day is just a day nobody asked — flagging it would train you to
  *    ignore the brief.
  */
@@ -103,10 +103,10 @@ class Chief
             ]),
         ];
 
-        // --- Nurturer --------------------------------------------------------
+        // --- Jason (nurturer) -------------------------------------------------
         $nurturerLive = self::num($pdo,
             'SELECT COUNT(*) FROM automations WHERE nurturer_enabled = 1 AND is_active = 1') > 0;
-        $nurturerName = Settings::get('nurturer_assistant_name') ?: 'Nurturer';
+        $nurturerName = Settings::get('nurturer_assistant_name') ?: 'Jason';
         $agents[] = [
             'key' => 'nurturer',
             'name' => $nurturerName,
@@ -134,7 +134,7 @@ class Chief
             ]),
         ];
 
-        // --- Beacon ----------------------------------------------------------
+        // --- Joan (beacon) -----------------------------------------------------
         $beaconOn = (string) Settings::get('beacon_discovery_enabled') === '1';
         $runs = self::row($pdo,
             "SELECT COUNT(*) AS runs,
@@ -142,7 +142,7 @@ class Chief
                     COALESCE(SUM(searches_failed), 0) AS failed,
                     COALESCE(SUM(results_scanned), 0) AS scanned
              FROM beacon_runs WHERE ran_at >= ?", [$since]);
-        $beaconName = Settings::get('beacon_assistant_name') ?: 'Beacon';
+        $beaconName = Settings::get('beacon_assistant_name') ?: 'Joan';
         $beacon = [
             'key' => 'beacon',
             'name' => $beaconName,
@@ -173,10 +173,10 @@ class Chief
         }
         $agents[] = $beacon;
 
-        // --- Dossier ---------------------------------------------------------
+        // --- Sharon (dossier) --------------------------------------------------
         $agents[] = [
             'key' => 'dossier',
-            'name' => Settings::get('dossier_assistant_name') ?: 'Dossier',
+            'name' => Settings::get('dossier_assistant_name') ?: 'Sharon',
             'role' => 'Lead research',
             'runs' => 'on_demand',
             'state' => 'on demand',
@@ -227,10 +227,10 @@ class Chief
                 ['SELECT MAX(updated_at) FROM proposals WHERE mockup_image_url IS NOT NULL']),
         ];
 
-        // --- Canvas (content) -------------------------------------------------
+        // --- Danielle (content) -------------------------------------------------
         $agents[] = [
             'key' => 'content',
-            'name' => Settings::get('content_assistant_name') ?: 'Canvas',
+            'name' => Settings::get('content_assistant_name') ?: 'Danielle',
             'role' => 'Content & social',
             'runs' => 'on_demand',
             'state' => 'on demand',
@@ -716,9 +716,9 @@ class Chief
         return "You are " . self::displayName() . ", chief of staff to Caleb, who runs a "
             . "one-person web studio staffed by AI agents. You keep track of what those agents "
             . "are doing and answer his questions about them.\n\n"
-            . "The team: Lisa (live chat and bookings), Nurturer (follow-up email), Beacon "
-            . "(social lead scouting), Dossier (lead research), Ledger (proposals), Sketch "
-            . "(concept mockups), Canvas (content and social), Arch (website building), Ada "
+            . "The team: Lisa (live chat and bookings), Jason (follow-up email), Joan "
+            . "(social lead scouting), Sharon (lead research), Ledger (proposals), Sketch "
+            . "(concept mockups), Danielle (content and social), Arch (website building), Ada "
             . "(document review).\n\n"
             . "Always answer from your tools, never from memory or assumption. team_activity "
             . "covers the whole team over a window, agent_activity covers one agent over a "

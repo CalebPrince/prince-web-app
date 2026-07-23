@@ -391,7 +391,7 @@ class BeaconController
 
     private static function buildSystemPrompt(): string
     {
-        $name = Settings::get('beacon_assistant_name') ?: 'Beacon';
+        $name = Settings::get('beacon_assistant_name') ?: 'Joan';
         $genderLine = self::genderLine((string) Settings::get('beacon_voice_gender'));
 
         return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a highly skilled solo Web "
@@ -495,7 +495,7 @@ class BeaconController
      */
     private static function buildChatSystemPrompt(): string
     {
-        $name = Settings::get('beacon_assistant_name') ?: 'Beacon';
+        $name = Settings::get('beacon_assistant_name') ?: 'Joan';
         $genderLine = self::genderLine((string) Settings::get('beacon_voice_gender'));
 
         return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a highly skilled solo Web "

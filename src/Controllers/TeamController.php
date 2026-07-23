@@ -13,8 +13,8 @@ use App\Support\Settings;
 
 /**
  * The "team" behind the studio: Caleb (the human owner) plus the AI agents that
- * actually run day to day — Lisa on chat/booking, Nurturer on email follow-up,
- * Beacon scouting leads, Dossier researching them, and the on-demand Proposal
+ * actually run day to day — Lisa on chat/booking, Jason on email follow-up,
+ * Joan scouting leads, Sharon researching them, and the on-demand Proposal
  * and Content writers. Each
  * agent's display name is admin-configurable (Settings), so this reads those
  * rather than hardcoding, and attaches a live headline stat and a real status
@@ -79,7 +79,7 @@ class TeamController
             ],
             [
                 'key' => 'nurturer',
-                'name' => Settings::get('nurturer_assistant_name') ?: 'Nurturer',
+                'name' => Settings::get('nurturer_assistant_name') ?: 'Jason',
                 'role' => 'AI Email Marketer',
                 'description' => 'Writes hyper-personalized follow-up emails for leads based on their industry and what they did on the site — the AI sequence inside your automations.',
                 'icon' => 'bi-envelope-heart',
@@ -97,7 +97,7 @@ class TeamController
             ],
             [
                 'key' => 'beacon',
-                'name' => Settings::get('beacon_assistant_name') ?: 'Beacon',
+                'name' => Settings::get('beacon_assistant_name') ?: 'Joan',
                 'role' => 'Social Lead Scout',
                 'description' => 'Scans social platforms for people asking for exactly what you offer, scores them, and drafts a reply so you can reach out warm.',
                 'icon' => 'bi-broadcast-pin',
@@ -110,7 +110,7 @@ class TeamController
             ],
             [
                 'key' => 'dossier',
-                'name' => Settings::get('dossier_assistant_name') ?: 'Dossier',
+                'name' => Settings::get('dossier_assistant_name') ?: 'Sharon',
                 'role' => 'Lead Research Analyst',
                 'description' => 'Builds a research brief on a marketing lead — real tech-stack fingerprint, recent news, and a grounded outreach angle — so you reach out warm instead of cold.',
                 'icon' => 'bi-search',
@@ -156,9 +156,9 @@ class TeamController
             ],
             [
                 'key' => 'content',
-                // 'Canvas', not 'Content Creator' — same fix as 'proposal'
+                // 'Danielle', not 'Content Creator' — same fix as 'proposal'
                 // above: match the fallback name used elsewhere.
-                'name' => Settings::get('content_assistant_name') ?: 'Canvas',
+                'name' => Settings::get('content_assistant_name') ?: 'Danielle',
                 'role' => 'Content & Social Creator',
                 'description' => 'Drafts blog posts, social captions, and marketing images so your presence stays active without eating your build time.',
                 'icon' => 'bi-images',

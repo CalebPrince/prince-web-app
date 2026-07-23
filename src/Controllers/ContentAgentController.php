@@ -13,7 +13,7 @@ use App\Support\Settings;
 use App\Support\SharedAgentTools;
 
 /**
- * Content agent (default name "Canvas"): a live, admin-session conversation for
+ * Content agent (default name "Danielle"): a live, admin-session conversation for
  * making content — blog posts, social captions, and flyer graphics. Unlike the
  * pipeline agents (Beacon/Nurturer/Ledger) it has no automated cron side; it
  * only exists as chat() in the "Talk to Agents" console.
@@ -329,7 +329,7 @@ class ContentAgentController
 
     private static function buildChatSystemPrompt(): string
     {
-        $name = Settings::get('content_assistant_name') ?: 'Canvas';
+        $name = Settings::get('content_assistant_name') ?: 'Danielle';
         $genderLine = self::genderLine((string) Settings::get('content_voice_gender'));
 
         return "You are {$name}, the content studio for Caleb, a premium solo web and mobile app developer "
