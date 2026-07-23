@@ -145,6 +145,7 @@ database/
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   draft_newsletters_from_blog.php    # Published blog posts -> Jason newsletter drafts, ready to review (cron, ~5-10 min)
+  send_daily_brief.php            # Chief's daily brief on what every other agent did, emailed (cron, daily)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
 storage/
@@ -910,8 +911,9 @@ storage/
     forecast. Target settings use the existing key/value `settings` table and
     need no migration.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
-    read-only roster of the studio — Caleb himself plus the eight AI agents
-    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas, Arch, Sketch) — each card showing its
+    read-only roster of the studio — Caleb himself plus the ten AI agents
+    (Lisa, Nurturer, Beacon, Dossier, Ledger, Canvas, Arch, Sketch, Ada,
+    Chief) — each card showing its
     real role, a live headline stat pulled from its own table (e.g. Ledger
     shows proposals drafted, Canvas shows drafts created from
     `content_studio_items`, Dossier shows leads researched via
@@ -986,6 +988,32 @@ storage/
     project portfolio profit, the Reports monthly target, and recent
     payments. Every amount is queried live and unlike currencies are never
     combined.
+46. **Chief, the chief of staff** (`src/Agents/Chief.php`,
+    `/admin/team.html`, `/admin/agent-chat.html` "Chief" tab): the one agent
+    whose subject is the other agents. `database/send_daily_brief.php` (cron,
+    daily) counts what each agent actually did in the last 24 hours — from
+    the same tables the Team page reads — writes it up, stores it in
+    `agent_daily_briefs`, and emails it to `notification_email`. The latest
+    brief is the first thing on the Team page, with a "Write today's brief"
+    button for an on-demand one. Chief is also chattable, with tools for
+    whole-team activity over a window, one agent over N days, and briefs
+    already written, so "what has Beacon done this week?" has an answer that
+    isn't nine admin pages.
+
+    Three design points worth keeping. **The counting is SQL, not AI** —
+    `snapshot()` produces the figures and the model is only allowed to write
+    them up, because a supervisor that hallucinates its subordinates' output
+    is worse than none. **The brief survives a provider outage**: with no AI
+    key configured or every provider failing, the same snapshot is rendered
+    deterministically and still sent, since a daily report that silently
+    skips days is one you stop trusting. **Idleness is read asymmetrically**
+    — a quiet day from Lisa, Nurturer or Beacon (which run on their own) is
+    reported; a quiet day from the on-demand agents is not, because flagging
+    "Ada did nothing" every morning would train you to ignore the brief.
+    Effort metrics (Beacon's searches run, results scanned) are marked
+    `context` and deliberately excluded from the action count, so a day of
+    scanning a thousand results for nothing cannot report as a productive
+    one.
 
 ## Deployment (Namecheap cPanel)
 
@@ -1063,6 +1091,14 @@ One-time setup on a new host:
     interval just means less delay before a proposal is ready for Caleb to
     review:
     `/usr/local/bin/php /home/<cpanel-user>/database/draft_proposals_from_bookings.php > /dev/null`
+4l. Add a twelfth cron job (once a day, early morning) for Chief's daily
+    brief on the rest of the team — counts what each agent did in the last
+    24 hours, writes it up, and emails it to `notification_email`:
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_daily_brief.php > /dev/null`
+    Safe to run more than once a day: the brief is keyed on the date, so a
+    second run refreshes it rather than duplicating it, and `emailed_at`
+    means it is only ever sent once. Add `--force` to rewrite and re-send,
+    `--no-email` to write without sending.
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

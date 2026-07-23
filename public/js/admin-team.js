@@ -27,6 +27,8 @@ const AGENT_ACCENT = {
   arch: 'var(--section-blue)',
   // Money accent — she works on invoices and payment paperwork.
   ada: 'var(--section-money)',
+  // System accent — reports on the team rather than working for clients.
+  chief: 'var(--section-system)',
 };
 
 const CAPACITY_LABEL = { clear: 'Clear', available: 'Available', focused: 'Focused', full: 'At capacity' };
@@ -111,6 +113,54 @@ function renderAgents(agents) {
   }).join('');
 }
 
+// ---- Chief's daily brief ----------------------------------------------------
+
+function briefDate(value) {
+  if (!value) return '';
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function renderDailyBrief(brief) {
+  const card = document.getElementById('daily-brief-card');
+  const head = `<div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
+      <div>
+        <span class="brief-kicker text-muted-custom">DAILY BRIEF${brief ? ` — ${esc(briefDate(brief.brief_date))}` : ''}</span>
+        <h4 class="mb-0 mt-1">${brief ? esc(brief.headline) : 'No brief yet'}</h4>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="brief-run-btn">Write today&rsquo;s brief</button>
+    </div>`;
+
+  if (!brief) {
+    card.innerHTML = `${head}
+      <p class="small text-muted-custom mb-0">Chief writes one of these a day — what every other agent actually did, what looks broken, and what is waiting on you. Schedule <code>database/send_daily_brief.php</code> daily, or write one now.</p>`;
+  } else {
+    card.innerHTML = `${head}
+      <p class="brief-body">${esc(brief.body)}</p>
+      <div class="small text-muted-custom mt-3">
+        ${brief.provider ? 'Written by Chief' : 'Written from the raw counts — no AI provider answered'}${brief.emailed_at ? ' &middot; emailed to you' : ' &middot; not emailed'}
+      </div>`;
+  }
+
+  document.getElementById('brief-run-btn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = 'Writing…';
+    try {
+      const res = await api.post('/api/v1/admin/chief/brief', { hours: 24 });
+      renderDailyBrief(res.brief);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Write today’s brief';
+      const box = document.getElementById('team-error');
+      box.textContent = 'Could not write the brief: ' + err.message;
+      box.classList.remove('d-none');
+    }
+  });
+}
+
 function activityDate(value) {
   if (!value) return 'Not revised';
   const date = new Date(value.replace(' ', 'T') + 'Z');
@@ -155,6 +205,7 @@ function renderArchActivity(items) {
 
   try {
     const data = await api.get('/api/v1/admin/team');
+    renderDailyBrief(data.daily_brief || null);
     renderCapacitySummary(data.capacity_summary || {});
     renderOwner(data.owner);
     renderAgents(data.agents);

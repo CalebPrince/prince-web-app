@@ -86,6 +86,7 @@ class SettingsController
         'proposal_assistant_name', 'proposal_voice_gender', 'proposal_voice_accent',
         'sketch_assistant_name', 'sketch_voice_gender', 'sketch_voice_accent',
         'ada_assistant_name', 'ada_voice_gender', 'ada_voice_accent',
+        'chief_assistant_name', 'chief_voice_gender', 'chief_voice_accent',
         'content_assistant_name', 'content_voice_gender', 'content_voice_accent',
         'arch_assistant_name', 'arch_voice_gender', 'arch_voice_accent',
         'brand_primary_color', 'brand_accent_color', 'brand_font', 'brand_style_note',

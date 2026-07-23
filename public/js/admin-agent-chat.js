@@ -9,6 +9,7 @@
     arch: { label: "Arch", nameKey: "arch_assistant_name", genderKey: "arch_voice_gender", accentKey: "arch_voice_accent", fallbackName: "Arch" },
     sketch: { label: "Sketch", nameKey: "sketch_assistant_name", genderKey: "sketch_voice_gender", accentKey: "sketch_voice_accent", fallbackName: "Sketch" },
     ada: { label: "Ada", nameKey: "ada_assistant_name", genderKey: "ada_voice_gender", accentKey: "ada_voice_accent", fallbackName: "Ada", attachments: true },
+    chief: { label: "Chief", nameKey: "chief_assistant_name", genderKey: "chief_voice_gender", accentKey: "chief_voice_accent", fallbackName: "Chief" },
   };
 
   // Files staged for the next message. Only Ada reads documents, so the
