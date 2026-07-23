@@ -843,20 +843,20 @@
     } catch (_) {
       agentSettings = {};
     }
-    document.getElementById("tab-lisa").innerHTML =
-      '<i class="bi bi-headset me-1"></i>' + (agentSettings.chat_assistant_name || "Lisa");
-    document.getElementById("tab-beacon").innerHTML =
-      '<i class="bi bi-binoculars me-1"></i>' + (agentSettings.beacon_assistant_name || "Beacon");
-    document.getElementById("tab-dossier").innerHTML =
-      '<i class="bi bi-search me-1"></i>' + (agentSettings.dossier_assistant_name || "Dossier");
-    document.getElementById("tab-nurturer").innerHTML =
-      '<i class="bi bi-envelope-heart me-1"></i>' + (agentSettings.nurturer_assistant_name || "Nurturer");
-    document.getElementById("tab-proposal").innerHTML =
-      '<i class="bi bi-file-earmark-check me-1"></i>' + (agentSettings.proposal_assistant_name || "Ledger");
-    document.getElementById("tab-content").innerHTML =
-      '<i class="bi bi-palette me-1"></i>' + (agentSettings.content_assistant_name || "Canvas");
-    document.getElementById("tab-sketch").innerHTML =
-      '<i class="bi bi-vector-pen me-1"></i>' + (agentSettings.sketch_assistant_name || "Sketch");
+    // Relabel every tab from Settings, driven by AGENTS rather than one line
+    // per agent — the hand-written list had silently gone stale (Arch, Ada and
+    // Chief kept their hardcoded labels while the chat header above them used
+    // the renamed one). The icon is left to the markup: we keep the existing
+    // <i> node and swap only the text beside it, so adding an agent means
+    // adding a tab + an AGENTS entry and nothing here.
+    Object.keys(AGENTS).forEach(function (key) {
+      const tab = document.getElementById("tab-" + key);
+      if (!tab) return;
+      const icon = tab.querySelector("i");
+      tab.textContent = "";
+      if (icon) tab.appendChild(icon);
+      tab.appendChild(document.createTextNode(agentSettings[AGENTS[key].nameKey] || AGENTS[key].fallbackName));
+    });
     renderFace();
     resetConversation();
     updateLeadsPanelVisibility();
