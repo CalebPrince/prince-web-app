@@ -366,9 +366,14 @@ class ReportController
             'this_month' => $thisMonth,
             'last_30_days' => $last30,
             'by_month' => $byMonth,
+            // Manually recorded payments (bank transfer, cash, mobile money —
+            // source='manual') already count in the revenue totals above, so
+            // they belong in the by-source breakdown too; without this line
+            // the sources would sum to less than all-time revenue.
             'by_source' => [
                 ['label' => 'Starter tier checkout', 'amount' => (int) ($bySourceRaw['tier_checkout'] ?? 0)],
                 ['label' => 'Custom-quoted (payment links)', 'amount' => (int) ($bySourceRaw['payment_link'] ?? 0)],
+                ['label' => 'Recorded manually (bank/cash/mobile money)', 'amount' => (int) ($bySourceRaw['manual'] ?? 0)],
             ],
             'by_currency' => array_map(
                 static fn(array $r): array => ['currency' => $r['currency'], 'total' => (int) $r['total']],
