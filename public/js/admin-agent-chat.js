@@ -830,7 +830,20 @@
         }
         inputEl.value = (finalText + interim).replace(/\s{2,}/g, " ").trimStart();
       };
-      rec.onerror = stop;
+      rec.onerror = (e) => {
+        stop();
+        // Fires on every deliberate rec.stop() too — not a real failure.
+        if (e.error === "aborted") return;
+        const reasons = {
+          "not-allowed": "Microphone access is blocked — allow it for this site in your browser's settings.",
+          "audio-capture": "No microphone found — check it's connected and not in use by another app.",
+          "no-speech": "Didn't catch that — try again.",
+          "network": "Speech recognition needs a network connection.",
+          "service-not-allowed": "The browser blocked speech recognition on this page.",
+        };
+        msgEl.textContent = reasons[e.error] || ("Speech recognition failed (" + e.error + ").");
+        msgEl.classList.remove("d-none");
+      };
       rec.onend = stop;
       try { rec.start(); } catch (_) { stop(); }
     });
