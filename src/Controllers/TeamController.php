@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Agents\Arch;
+use App\Agents\Chief;
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
 use App\Support\Response;
@@ -42,6 +43,7 @@ class TeamController
         } catch (\Throwable $e) {
             $mockupsGenerated = 0;
         }
+        $briefsWritten = Chief::briefsWritten($pdo);
 
         $agents = [
             [
@@ -202,6 +204,22 @@ class TeamController
                 'manage_url' => '/admin/agent-chat.html',
                 'manage_label' => 'Talk to Ada',
             ],
+            [
+                'key' => 'chief',
+                'name' => Settings::get('chief_assistant_name') ?: 'Chief',
+                'role' => 'Chief of Staff',
+                'description' => 'Keeps track of every other agent — counts what each one actually did, writes you a daily brief, and flags the ones that are stuck, switched off or quietly doing nothing.',
+                'icon' => 'bi-clipboard-data',
+                // Runs on the daily cron, so it is only genuinely "reporting"
+                // once a brief exists — otherwise the cron isn't wired up yet
+                // and saying "active" would be a claim, not a status.
+                'status' => $briefsWritten > 0 ? 'active' : 'standby',
+                'status_label' => $briefsWritten > 0 ? 'Reporting daily' : 'Awaiting first brief',
+                'stat_value' => $briefsWritten,
+                'stat_label' => 'briefs written',
+                'manage_url' => '/admin/team.html',
+                'manage_label' => 'Latest brief',
+            ],
         ];
 
         foreach ($agents as &$agent) {
@@ -219,7 +237,21 @@ class TeamController
             'agents' => $agents,
             'capacity_summary' => $capacity['summary'],
             'arch_activity' => self::archActivity($pdo),
+            // Chief's most recent brief, so the Team page opens on what the
+            // team actually did rather than on lifetime totals alone. Null
+            // until the first one is written; the raw snapshot it was written
+            // from stays behind /chief/brief rather than bloating this payload.
+            'daily_brief' => self::withoutSnapshot(Chief::latestBrief($pdo)),
         ]);
+    }
+
+    /** @param array<string,mixed>|null $brief @return array<string,mixed>|null */
+    private static function withoutSnapshot(?array $brief): ?array
+    {
+        if ($brief !== null) {
+            unset($brief['snapshot_json']);
+        }
+        return $brief;
     }
 
     /** Latest Arch deliveries with revision activity for the admin roster. */

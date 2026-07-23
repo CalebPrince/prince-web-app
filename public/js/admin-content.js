@@ -25,6 +25,8 @@ const CONTENT_FIELDS = [
   "sketch_assistant_name", "sketch_voice_gender", "sketch_voice_accent",
   "content_assistant_name", "content_voice_gender", "content_voice_accent",
   "arch_assistant_name", "arch_voice_gender", "arch_voice_accent",
+  "ada_assistant_name", "ada_voice_gender", "ada_voice_accent",
+  "chief_assistant_name", "chief_voice_gender", "chief_voice_accent",
   "brand_primary_color", "brand_accent_color", "brand_font", "brand_style_note",
   "brand_logo_dark_url", "brand_logo_white_url",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
@@ -245,6 +247,8 @@ function wireAgentVoicePreview(prefix, fallbackName, sampleLine) {
   wireAgentVoicePreview("content", "Canvas", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("arch", "Arch", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("sketch", "Sketch", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("ada", "Ada", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("chief", "Chief", "This is how I'll sound when you talk to me in the admin console.");
   wireBrandLogoUpload("dark");
   wireBrandLogoUpload("white");
 })();

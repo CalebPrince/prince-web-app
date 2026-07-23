@@ -917,3 +917,22 @@ CREATE TABLE IF NOT EXISTS arch_site_revisions (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_arch_site_revisions_site ON arch_site_revisions (generated_site_id, created_at);
+
+-- Chief's daily report on the rest of the team. One row per day: re-running
+-- the brief replaces that day's row rather than stacking duplicates, so the
+-- cron is safe to run repeatedly and "run now" simply refreshes. snapshot_json
+-- keeps the raw counts the brief was written from, so a past brief can always
+-- be checked against the figures that produced it. provider is NULL when no AI
+-- provider answered and the brief was composed from the counts alone.
+CREATE TABLE IF NOT EXISTS agent_daily_briefs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  brief_date TEXT NOT NULL UNIQUE,
+  window_hours INTEGER NOT NULL DEFAULT 24,
+  headline TEXT NOT NULL,
+  body TEXT NOT NULL,
+  snapshot_json TEXT NOT NULL DEFAULT '{}',
+  provider TEXT,
+  emailed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_agent_daily_briefs_date ON agent_daily_briefs (brief_date);

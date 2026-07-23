@@ -1072,4 +1072,22 @@ if (!in_array('arch_accent_color', $projectStyleColumns, true)) {
     $pdo->exec('ALTER TABLE projects ADD COLUMN arch_accent_color TEXT');
 }
 
+// Chief's daily brief on the rest of the team. UNIQUE on brief_date is what
+// makes the cron idempotent — generateBrief() upserts on it, so running twice
+// in a day refreshes that day's brief instead of duplicating it.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS agent_daily_briefs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        brief_date TEXT NOT NULL UNIQUE,
+        window_hours INTEGER NOT NULL DEFAULT 24,
+        headline TEXT NOT NULL,
+        body TEXT NOT NULL,
+        snapshot_json TEXT NOT NULL DEFAULT '{}',
+        provider TEXT,
+        emailed_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_agent_daily_briefs_date ON agent_daily_briefs (brief_date)');
+
 echo "Schema applied.\n";
