@@ -93,6 +93,14 @@ class Mailer
     /** @param string[] $headers @param array{address:string,name:string,username:string,password:string,host:string,port:int} $identity */
     private static function sendSmtp(string $to, string $subject, string $body, array $headers, array $identity): bool
     {
+        // Shared-hosting mail servers commonly present a certificate issued for
+        // the box's own hostname, not each vanity domain they route mail for -
+        // verify_peer stays on (rejects a genuinely untrusted/self-signed cert),
+        // verify_peer_name is off so a legitimate cert naming the wrong host
+        // doesn't get rejected too.
+        $context = stream_context_create([
+            'ssl' => ['verify_peer' => true, 'verify_peer_name' => false],
+        ]);
         $errno = 0;
         $error = '';
         $socket = @stream_socket_client(
@@ -100,7 +108,8 @@ class Mailer
             $errno,
             $error,
             self::SMTP_TIMEOUT,
-            STREAM_CLIENT_CONNECT
+            STREAM_CLIENT_CONNECT,
+            $context
         );
         if (!is_resource($socket)) {
             error_log(sprintf('Mailer SMTP connection failed (%d): %s', $errno, $error));
