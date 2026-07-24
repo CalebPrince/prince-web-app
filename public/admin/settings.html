@@ -521,20 +521,30 @@
             <div class="icon-chip flex-shrink-0" style="background: var(--section-system-soft); color: var(--section-system);"><i class="bi bi-send-check"></i></div>
             <div>
               <h5 class="mb-1">Email delivery</h5>
-              <p class="text-muted-custom small mb-0">Send automated email through Gmail instead of the hosting server. Use a Google App Password, never your normal Gmail password.</p>
+              <p class="text-muted-custom small mb-0">Send automated email through authenticated SMTP instead of the hosting server's default mail. Works with any provider &mdash; your domain's own mailbox, Gmail with an app password, or a transactional service.</p>
             </div>
           </div>
           <form id="smtp-form">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label" for="smtp-gmail-address">Gmail address</label>
-                <input type="email" class="form-control" id="smtp-gmail-address" placeholder="youraccount@gmail.com" autocomplete="username">
-                <div class="form-text">The Google account used to authenticate with Gmail SMTP.</div>
+                <label class="form-label" for="smtp-host">SMTP host</label>
+                <input type="text" class="form-control" id="smtp-host" placeholder="mail.princecaleb.dev" autocomplete="off">
+                <div class="form-text">Leave blank to default to Gmail's SMTP server.</div>
               </div>
               <div class="col-md-6">
-                <label class="form-label" for="smtp-app-password">Google App Password</label>
-                <input type="password" class="form-control" id="smtp-app-password" placeholder="16-character app password" autocomplete="new-password">
-                <div class="form-text">Create this under Google Account &rarr; Security &rarr; App passwords.</div>
+                <label class="form-label" for="smtp-port">SMTP port</label>
+                <input type="number" class="form-control" id="smtp-port" placeholder="465" autocomplete="off">
+                <div class="form-text">465 for implicit SSL, which is what this sender supports.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="smtp-gmail-address">SMTP username</label>
+                <input type="email" class="form-control" id="smtp-gmail-address" placeholder="hello@princecaleb.dev" autocomplete="username">
+                <div class="form-text">The mailbox address used to authenticate.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="smtp-app-password">SMTP password</label>
+                <input type="password" class="form-control" id="smtp-app-password" placeholder="mailbox password or app password" autocomplete="new-password">
+                <div class="form-text">The mailbox's password, or a Google App Password if using Gmail.</div>
               </div>
               <div class="col-md-6">
                 <label class="form-label" for="mail-from-address">No-reply address</label>
@@ -545,7 +555,6 @@
                 <input type="text" class="form-control" id="mail-from-name" placeholder="Prince Caleb" autocomplete="off">
               </div>
             </div>
-            <div class="alert alert-info py-2 small mt-3 mb-3"><i class="bi bi-info-circle me-1"></i> Add the no-reply address as a verified <strong>Send mail as</strong> address in Gmail. Without that verification, Gmail may replace it with the Gmail address.</div>
             <div id="smtp-msg" class="alert py-2 small d-none"></div>
             <button type="submit" class="btn-brand">Save email delivery</button>
           </form>

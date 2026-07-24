@@ -18,7 +18,7 @@ class SettingsController
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'slack_webhook_url',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'owner_whatsapp_number',
         'integration_api_key', 'notification_email',
-        'smtp_gmail_address', 'smtp_app_password', 'mail_from', 'mail_from_name',
+        'smtp_gmail_address', 'smtp_app_password', 'smtp_host', 'smtp_port', 'mail_from', 'mail_from_name',
         'google_client_id',
         'chat_persona',
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
@@ -161,6 +161,10 @@ class SettingsController
             }
             if ($key === 'mail_from_name' && preg_match('/[\r\n]/', $value)) {
                 Response::error('Sender name cannot contain line breaks.', 422);
+            }
+            if ($key === 'smtp_port' && $value !== ''
+                && (!is_numeric($value) || (int) $value < 1 || (int) $value > 65535)) {
+                Response::error('SMTP port must be a number between 1 and 65535.', 422);
             }
             if ($key === 'monthly_revenue_target'
                 && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999999)) {

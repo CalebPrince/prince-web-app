@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-/** Sends through authenticated Gmail SMTP when configured, otherwise PHP mail(). */
+/** Sends through authenticated SMTP when configured, otherwise PHP mail(). */
 class Mailer
 {
-    private const SMTP_HOST = 'smtp.gmail.com';
-    private const SMTP_PORT = 465;
+    private const DEFAULT_SMTP_HOST = 'smtp.gmail.com';
+    private const DEFAULT_SMTP_PORT = 465;
     private const SMTP_TIMEOUT = 15;
 
     public static function send(string $to, string $subject, string $body, ?string $replyTo = null): bool
@@ -52,30 +52,35 @@ class Mailer
         return self::deliver($to, $subject, $body, $headers, $identity);
     }
 
-    /** @return array{address:string,name:string,gmail:string,password:string} */
+    /** @return array{address:string,name:string,username:string,password:string,host:string,port:int} */
     private static function identity(): array
     {
         require_once dirname(__DIR__, 2) . '/config/config.php';
         $config = appConfig();
 
+        $host = trim((string) Settings::get('smtp_host'));
+        $port = trim((string) Settings::get('smtp_port'));
+
         return [
             'address' => Settings::get('mail_from') ?: $config['mail_from'],
             'name' => Settings::get('mail_from_name') ?: $config['mail_from_name'],
-            'gmail' => trim((string) Settings::get('smtp_gmail_address')),
+            'username' => trim((string) Settings::get('smtp_gmail_address')),
             'password' => preg_replace('/\s+/', '', (string) Settings::get('smtp_app_password')),
+            'host' => $host !== '' ? $host : self::DEFAULT_SMTP_HOST,
+            'port' => $port !== '' && is_numeric($port) ? (int) $port : self::DEFAULT_SMTP_PORT,
         ];
     }
 
-    /** @param string[] $headers @param array{address:string,name:string,gmail:string,password:string} $identity */
+    /** @param string[] $headers @param array{address:string,name:string,username:string,password:string,host:string,port:int} $identity */
     private static function deliver(string $to, string $subject, string $body, array $headers, array $identity): bool
     {
         if (!filter_var($to, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $subject)) {
             return false;
         }
 
-        if ($identity['gmail'] !== '' || $identity['password'] !== '') {
-            if (!filter_var($identity['gmail'], FILTER_VALIDATE_EMAIL) || $identity['password'] === '') {
-                error_log('Mailer: Gmail SMTP settings are incomplete.');
+        if ($identity['username'] !== '' || $identity['password'] !== '') {
+            if (!filter_var($identity['username'], FILTER_VALIDATE_EMAIL) || $identity['password'] === '') {
+                error_log('Mailer: SMTP settings are incomplete.');
                 return false;
             }
             return self::sendSmtp($to, $subject, $body, $headers, $identity);
@@ -85,13 +90,13 @@ class Mailer
         return @mail($to, $subject, $body, implode("\r\n", $headers));
     }
 
-    /** @param string[] $headers @param array{address:string,name:string,gmail:string,password:string} $identity */
+    /** @param string[] $headers @param array{address:string,name:string,username:string,password:string,host:string,port:int} $identity */
     private static function sendSmtp(string $to, string $subject, string $body, array $headers, array $identity): bool
     {
         $errno = 0;
         $error = '';
         $socket = @stream_socket_client(
-            'ssl://' . self::SMTP_HOST . ':' . self::SMTP_PORT,
+            'ssl://' . $identity['host'] . ':' . $identity['port'],
             $errno,
             $error,
             self::SMTP_TIMEOUT,
@@ -107,9 +112,9 @@ class Mailer
             if (!self::expect($socket, [220])
                 || !self::command($socket, 'EHLO princecaleb.dev', [250])
                 || !self::command($socket, 'AUTH LOGIN', [334])
-                || !self::command($socket, base64_encode($identity['gmail']), [334])
+                || !self::command($socket, base64_encode($identity['username']), [334])
                 || !self::command($socket, base64_encode($identity['password']), [235])
-                || !self::command($socket, 'MAIL FROM:<' . $identity['gmail'] . '>', [250])
+                || !self::command($socket, 'MAIL FROM:<' . $identity['username'] . '>', [250])
                 || !self::command($socket, 'RCPT TO:<' . $to . '>', [250, 251])
                 || !self::command($socket, 'DATA', [354])) {
                 return false;

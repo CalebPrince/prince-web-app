@@ -367,12 +367,14 @@ async function saveSmtp(e) {
   e.preventDefault();
   try {
     await api.put("/api/v1/admin/settings", {
+      smtp_host: document.getElementById("smtp-host").value.trim(),
+      smtp_port: document.getElementById("smtp-port").value.trim(),
       smtp_gmail_address: document.getElementById("smtp-gmail-address").value.trim(),
       smtp_app_password: document.getElementById("smtp-app-password").value.replace(/\s+/g, ""),
       mail_from: document.getElementById("mail-from-address").value.trim(),
       mail_from_name: document.getElementById("mail-from-name").value.trim(),
     });
-    showMsg("smtp-msg", "Saved. New emails will use Gmail SMTP immediately.", true);
+    showMsg("smtp-msg", "Saved. New emails will use this SMTP configuration immediately.", true);
   } catch (err) {
     showMsg("smtp-msg", err.message, false);
   }
@@ -548,6 +550,8 @@ async function testAi() {
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
+    document.getElementById("smtp-host").value = settings.smtp_host || "";
+    document.getElementById("smtp-port").value = settings.smtp_port || "";
     document.getElementById("smtp-gmail-address").value = settings.smtp_gmail_address || "";
     document.getElementById("smtp-app-password").value = settings.smtp_app_password || "";
     document.getElementById("mail-from-address").value = settings.mail_from || "no-reply@princecaleb.dev";

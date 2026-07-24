@@ -12,9 +12,10 @@ declare(strict_types=1);
 // template_key defaults to invoice_send. Any key from EmailTemplate::defaults()
 // works (payment_success, booking_client_confirmation, proposal_send, ...).
 //
-// Delivery uses whatever Mailer is configured with in Settings — Gmail SMTP if
-// smtp_gmail_address/smtp_app_password are set, otherwise PHP mail(). Run it on
-// the live host (cPanel) where SMTP is configured for a true end-to-end test.
+// Delivery uses whatever Mailer is configured with in Settings — authenticated SMTP
+// (any host, e.g. your own domain's mailbox or Gmail) if smtp_gmail_address/
+// smtp_app_password are set, otherwise PHP mail(). Run it on the live host (cPanel)
+// where SMTP is configured for a true end-to-end test.
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
