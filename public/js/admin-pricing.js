@@ -14,6 +14,10 @@ const PRICING_FIELDS = [
   "pricing_tier_3_price",
   "pricing_tier_3_tagline",
   "pricing_tier_3_features",
+  "pricing_tier_4_name",
+  "pricing_tier_4_price",
+  "pricing_tier_4_tagline",
+  "pricing_tier_4_features",
 ];
 
 const PRICING_DEFAULTS = {
@@ -29,8 +33,12 @@ const PRICING_DEFAULTS = {
   pricing_tier_2_features: "AI voice and WhatsApp assistant\nCalendar or CRM integration\nHuman escalation and notifications\nReporting dashboard and audit trail",
   pricing_tier_3_name: "AI Operations System",
   pricing_tier_3_price: "Custom quote",
-  pricing_tier_3_tagline: "A tailored AI operations system, custom website, web platform, or mobile app built around your business.",
-  pricing_tier_3_features: "Multiple agent workflows\nCustom websites, web apps, or mobile apps\nDashboards, APIs, and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
+  pricing_tier_3_tagline: "Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.",
+  pricing_tier_3_features: "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
+  pricing_tier_4_name: "Custom Websites & Mobile Apps",
+  pricing_tier_4_price: "Custom quote",
+  pricing_tier_4_tagline: "A custom website, web platform, or mobile app designed around your customers and operation.",
+  pricing_tier_4_features: "Business and e-commerce websites\nCustom web applications and portals\niOS and Android mobile apps\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
 };
 
 function showPricingMsg(text, ok) {
@@ -44,7 +52,7 @@ function renderTierEditors() {
   const wrap = document.getElementById("tier-editors");
   wrap.innerHTML = "";
 
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     const col = document.createElement("div");
     col.className = "col-12";
     col.innerHTML = `

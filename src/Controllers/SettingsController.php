@@ -104,6 +104,7 @@ class SettingsController
         'pricing_tier_1_name', 'pricing_tier_1_price', 'pricing_tier_1_tagline', 'pricing_tier_1_features',
         'pricing_tier_2_name', 'pricing_tier_2_price', 'pricing_tier_2_tagline', 'pricing_tier_2_features',
         'pricing_tier_3_name', 'pricing_tier_3_price', 'pricing_tier_3_tagline', 'pricing_tier_3_features',
+        'pricing_tier_4_name', 'pricing_tier_4_price', 'pricing_tier_4_tagline', 'pricing_tier_4_features',
         'pricing_currency', 'pricing_tier_1_amount',
         'home_pricing_eyebrow', 'home_pricing_title', 'home_pricing_note',
         'archive_eyebrow', 'archive_title',

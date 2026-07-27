@@ -159,7 +159,7 @@ class SharedAgentTools
         }
 
         $services = [];
-        for ($i = 1; $i <= 3; $i++) {
+        for ($i = 1; $i <= 4; $i++) {
             $title = Settings::get("service_{$i}_title");
             if (empty($title)) {
                 continue;

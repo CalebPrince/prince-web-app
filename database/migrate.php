@@ -102,17 +102,23 @@ $pricingDefaultUpdates = [
     'home_pricing_note' => ['Not sure which tier fits? Send over the details and I\'ll tell you honestly.', 'AI usage, calls, and messages are shown separately from implementation costs, so you can see what scales with activity.'],
 ];
 
-// Keep the AI-first packages while making the longstanding custom website and
-// mobile-app offer explicit in the custom tier.
+// Restore tier 3 to AI operations when upgrading from the short-lived version
+// that folded websites and apps into it. Those services now have their own tier.
 $pricingOfferUpdates = [
     'pricing_tier_3_tagline' => [
-        'Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.',
         'A tailored AI operations system, custom website, web platform, or mobile app built around your business.',
+        'Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.',
     ],
     'pricing_tier_3_features' => [
-        "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
         "Multiple agent workflows\nCustom websites, web apps, or mobile apps\nDashboards, APIs, and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
+        "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
     ],
+];
+$pricingOfferInserts = [
+    'pricing_tier_4_name' => 'Custom Websites & Mobile Apps',
+    'pricing_tier_4_price' => 'Custom quote',
+    'pricing_tier_4_tagline' => 'A custom website, web platform, or mobile app designed around your customers and operation.',
+    'pricing_tier_4_features' => "Business and e-commerce websites\nCustom web applications and portals\niOS and Android mobile apps\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
 ];
 $pricingUpdateStmt = $pdo->prepare('UPDATE settings SET value = ? WHERE name = ? AND value = ?');
 foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
@@ -120,6 +126,10 @@ foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
 }
 foreach ($pricingOfferUpdates as $name => [$oldValue, $newValue]) {
     $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
+}
+$pricingInsertStmt = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value) VALUES (?, ?)');
+foreach ($pricingOfferInserts as $name => $value) {
+    $pricingInsertStmt->execute([$name, $value]);
 }
 $publicCopyUpdates = [
     'contact_intro' => [
