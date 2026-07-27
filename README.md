@@ -396,6 +396,16 @@ storage/
     lead queued, connected/interested/not-interested/wrong-number close it
     out — and "calls today" counts alongside "sent today" on the panel, so the
     daily ritual is emails + calls, matching what the leads actually are.
+
+    The **scoreboard** (Sales mode on `/admin/dashboard.html`,
+    `OutreachController::computeScoreboard()`) is the accountability half:
+    today's emails/calls against their targets (`outreach_daily_cap`,
+    `outreach_daily_call_target`), whether a social post went out, a 14-day
+    activity strip, and a streak of consecutive active days. "Active"
+    deliberately means at least one outreach touch (email sent, call logged,
+    or post published) — the streak enforces "never a zero day", not
+    "hit the full cap or lose everything" — and an in-progress today never
+    breaks it.
     Guardrails: it's **off by default**
     (`outreach_enabled`), sends at most `outreach_daily_cap` (default 50) per
     day counted from the `outreach_sends` ledger, `UNIQUE(lead_id)` there means

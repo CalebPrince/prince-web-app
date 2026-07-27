@@ -233,6 +233,50 @@ function renderAttention(items) {
   list.querySelectorAll('[data-notification-key]').forEach(link=>link.addEventListener('click',async event=>{event.preventDefault();try{await api.patch(`/api/v1/admin/notifications/${encodeURIComponent(link.dataset.notificationKey)}`,{});}catch(_){}location.href=link.href;}));
 }
 
+// Sales engine scoreboard (sales mode): today's quota progress, streak, and
+// a 14-day activity strip. Data comes from the outreach scoreboard endpoint;
+// a failure leaves the card at its placeholder dashes rather than breaking
+// the rest of the dashboard.
+async function loadScoreboard() {
+  let s;
+  try {
+    s = await api.get("/api/v1/admin/outreach/scoreboard");
+  } catch (_) {
+    return;
+  }
+
+  document.getElementById("sb-streak").textContent = s.streak;
+
+  const setBar = (prefix, value, target) => {
+    document.getElementById(`sb-${prefix}`).textContent = value;
+    document.getElementById(`sb-${prefix}-target`).textContent = target;
+    const bar = document.getElementById(`sb-${prefix}-bar`);
+    const pct = Math.min(100, Math.round((value / Math.max(1, target)) * 100));
+    bar.style.width = `${pct}%`;
+    bar.classList.toggle("bg-success", value >= target);
+  };
+  setBar("emails", s.today.emails, s.targets.emails);
+  setBar("calls", s.today.calls, s.targets.calls);
+
+  const social = document.getElementById("sb-social");
+  social.textContent = s.today.social ? "posted ✓" : "not yet";
+  social.classList.toggle("text-success", s.today.social);
+  social.classList.toggle("text-muted-custom", !s.today.social);
+
+  // 14-day strip: bar height = that day's touches relative to the busiest
+  // day in the window; a dot-height stub marks a fully idle day. Social-only
+  // days still count as activity (min height), matching the streak rule.
+  const history = s.history || [];
+  const max = Math.max(1, ...history.map(d => d.emails + d.calls));
+  document.getElementById("sb-history").innerHTML = history.map(d => {
+    const touches = d.emails + d.calls;
+    const active = touches > 0 || d.social;
+    const h = active ? Math.max(12, Math.round(((touches || 1) / max) * 100)) : 6;
+    const label = `${d.date}: ${d.emails} email(s), ${d.calls} call(s)${d.social ? ", social posted" : ""}`;
+    return `<div title="${escapeHtml(label)}" style="flex:1;height:${h}%;border-radius:2px;background:${active ? "var(--section-leads)" : "var(--bg-soft)"};${active ? "" : "border:1px solid var(--border-color);"}"></div>`;
+  }).join("");
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -243,6 +287,7 @@ function renderAttention(items) {
     `Signed in as ${user.email} — here's how your portfolio is doing.`;
 
   const [data, notifications] = await Promise.all([api.get("/api/v1/admin/dashboard"), api.get("/api/v1/admin/notifications")]);
+  loadScoreboard(); // independent fetch — the scoreboard failing must not blank the dashboard
   renderStats(data);
   renderRecentInquiries(data.recent_inquiries);
   renderDraftProjects(data.draft_projects);

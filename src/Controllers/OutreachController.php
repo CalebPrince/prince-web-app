@@ -272,8 +272,106 @@ class OutreachController
             }
             Settings::set('outreach_daily_cap', (string) $cap);
         }
+        if (array_key_exists('daily_call_target', $data)) {
+            $target = (int) $data['daily_call_target'];
+            if ($target < 1 || $target > 200) {
+                Response::error('Daily call target must be between 1 and 200.', 422);
+            }
+            Settings::set('outreach_daily_call_target', (string) $target);
+        }
 
         self::stats();
+    }
+
+    /**
+     * GET /api/v1/admin/outreach/scoreboard — the daily-ritual scoreboard:
+     * today's emails/calls/social-post against their targets, a streak of
+     * consecutive active days, and a 14-day history for the activity bars.
+     * "Active" deliberately means at least one outreach touch (an email
+     * sent, a call logged, or a social post published) — the streak exists
+     * to enforce "never a zero day", not to punish a day the cap wasn't hit.
+     * Today doesn't break the streak while it's still in progress: an
+     * inactive today just isn't counted yet.
+     */
+    public static function scoreboard(): void
+    {
+        AuthMiddleware::requireAuth();
+        Response::json(self::computeScoreboard(Database::get()));
+    }
+
+    /**
+     * The scoreboard computation, separated from the HTTP handler so it can
+     * be exercised directly against a database (and reused by e.g. Chief's
+     * daily brief later) without faking an admin session.
+     *
+     * @return array{today:array{emails:int,calls:int,social:bool},targets:array{emails:int,calls:int},streak:int,history:list<array{date:string,emails:int,calls:int,social:bool}>}
+     */
+    public static function computeScoreboard(\PDO $pdo): array
+    {
+        // Per-day activity for the last 60 days (streak window), one map
+        // keyed YYYY-MM-DD. 60 days is plenty: a longer streak than that is
+        // better told by the history the admin already lived through.
+        $days = [];
+        $bump = function (string $day, string $key, int $n = 1) use (&$days): void {
+            if ($day === '') {
+                return;
+            }
+            $days[$day] ??= ['emails' => 0, 'calls' => 0, 'social' => false];
+            if ($key === 'social') {
+                $days[$day]['social'] = true;
+            } else {
+                $days[$day][$key] += $n;
+            }
+        };
+
+        foreach ($pdo->query("SELECT date(sent_at) AS d, COUNT(*) AS n FROM outreach_sends WHERE sent_at >= datetime('now', '-60 days') GROUP BY d") as $row) {
+            $bump((string) $row['d'], 'emails', (int) $row['n']);
+        }
+        foreach ($pdo->query("SELECT date(called_at) AS d, COUNT(*) AS n FROM call_log WHERE called_at >= datetime('now', '-60 days') GROUP BY d") as $row) {
+            $bump((string) $row['d'], 'calls', (int) $row['n']);
+        }
+        foreach ($pdo->query("SELECT DISTINCT date(published_at) AS d FROM social_post_drafts WHERE published_at IS NOT NULL AND published_at >= datetime('now', '-60 days')") as $row) {
+            $bump((string) $row['d'], 'social');
+        }
+
+        $isActive = fn(array $day): bool => $day['emails'] > 0 || $day['calls'] > 0 || $day['social'];
+
+        // Streak: walk back from today. An inactive today is skipped (still
+        // in progress), an inactive earlier day ends the count.
+        $streak = 0;
+        for ($i = 0; $i <= 60; $i++) {
+            $key = date('Y-m-d', strtotime("-{$i} days"));
+            $day = $days[$key] ?? null;
+            if ($day !== null && $isActive($day)) {
+                $streak++;
+            } elseif ($i > 0) {
+                break;
+            }
+        }
+
+        $history = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $key = date('Y-m-d', strtotime("-{$i} days"));
+            $day = $days[$key] ?? ['emails' => 0, 'calls' => 0, 'social' => false];
+            $history[] = ['date' => $key, 'emails' => $day['emails'], 'calls' => $day['calls'], 'social' => $day['social']];
+        }
+
+        $today = $days[date('Y-m-d')] ?? ['emails' => 0, 'calls' => 0, 'social' => false];
+        $callTarget = max(1, min(200, (int) (Settings::get('outreach_daily_call_target') ?: 10)));
+
+        return [
+            'today' => [
+                'emails' => $today['emails'],
+                'calls' => $today['calls'],
+                'social' => $today['social'],
+            ],
+            'targets' => [
+                'emails' => self::dailyCap(),
+                'calls' => $callTarget,
+            ],
+            'streak' => $streak,
+            'history' => $history,
+        ];
     }
 
     /** Outcomes that end a lead's time in the call queue, and where they send it. */

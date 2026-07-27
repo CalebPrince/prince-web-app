@@ -268,6 +268,7 @@ $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadControlle
 $router->get('/api/v1/admin/outreach/stats', [OutreachController::class, 'stats']);
 $router->post('/api/v1/admin/outreach/settings', [OutreachController::class, 'updateSettings']);
 $router->get('/api/v1/admin/outreach/call-queue', [OutreachController::class, 'callQueue']);
+$router->get('/api/v1/admin/outreach/scoreboard', [OutreachController::class, 'scoreboard']);
 $router->post('/api/v1/admin/outreach/call-log/{id}', [OutreachController::class, 'logCall']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
