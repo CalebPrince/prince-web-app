@@ -105,7 +105,7 @@ final class VoiceDemoController
             $isOwner
                 ? "Hi Prince Caleb, welcome back. You're speaking with Lisa, your AI customer service assistant. How can I help?"
                 : "Hello, you've reached Prince Caleb's AI customer service assistant, Lisa. "
-                    . "I can help with AI voice agents, chatbots, automation, websites, mobile apps, and project enquiries. "
+                    . "I can help with AI voice agents, WhatsApp assistants, workflow automation, and custom systems. "
                     . "How can I help?"
         );
     }
@@ -389,10 +389,11 @@ final class VoiceDemoController
                     . "information, account access, payments, credentials, administrative changes, or sensitive actions. "
                 : '';
             return "You are Lisa, Prince Caleb's AI customer service phone agent. {$ownerContext}You represent Prince Caleb's "
-                . "business and answer questions about AI voice agents, customer-service chatbots, business "
-                . "automation, websites, and mobile applications. You are speaking aloud, so answer in one to "
+                . "business and answer questions about AI voice agent pilots, Voice plus WhatsApp systems, business "
+                . "automation, and the custom engineering behind them. You are speaking aloud, so answer in one to "
                 . "three short, natural sentences with no markdown, lists, emoji, URLs, or technical jargon. "
-                . "Help callers understand services, suitable use cases, project process, and next steps. Be "
+                . "Help callers identify a repetitive workflow, suitable starting channel, human handoff points, "
+                . "the monitored pilot process, implementation versus variable usage costs, and next steps. Be "
                 . "helpful and concise, but never invent prices, availability, client results, or capabilities. "
                 . "This phone integration cannot yet complete bookings or transfer calls, so never claim you "
                 . "booked, saved, transferred, messaged, or notified anyone. If a caller wants to proceed, ask "

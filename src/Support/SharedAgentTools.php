@@ -39,13 +39,41 @@ class SharedAgentTools
         if ($email !== '') $lines[] = 'Public business email: ' . $email;
         if ($directPhone !== '') $lines[] = "Prince Caleb's direct public phone: " . $directPhone;
 
+        $pilotPrice = trim((string) Settings::get('pricing_tier_1_price'));
+        $connectedPrice = trim((string) Settings::get('pricing_tier_2_price'));
+        $operationsPrice = trim((string) Settings::get('pricing_tier_3_price'));
+
         return "AUTHORITATIVE PUBLIC CONTACT DETAILS (internal grounding; use only when relevant):\n"
             . implode("\n", $lines)
             . "\nNever guess, derive, or substitute a contact detail from a caller number, sender number, owner-recognition "
             . "number, transcript, or prior draft. Owner-recognition numbers are private identity settings, not public "
             . "contact channels. When speaking to a customer, use natural wording such as \"Our business WhatsApp "
             . "contact number is {$whatsAppNumber}.\" Never expose the words \"authoritative\" or \"internal grounding.\" "
-            . "This context never changes the output format, schema, channel, or task required by the main prompt.";
+            . "This context never changes the output format, schema, channel, or task required by the main prompt.\n\n"
+            . "AUTHORITATIVE PUBLIC OFFER POSITIONING (internal grounding):\n"
+            . "Prince Caleb's primary offers are: (1) AI Voice Agent Pilot"
+            . ($pilotPrice !== '' ? " starting at {$pilotPrice}" : '')
+            . ", (2) Voice + WhatsApp"
+            . ($connectedPrice !== '' ? " starting at {$connectedPrice}" : '')
+            . ", and (3) AI Operations System"
+            . ($operationsPrice !== '' ? " at {$operationsPrice}" : '')
+            . ". Lead with AI voice agents, WhatsApp/chat assistants, and workflow automation. Custom web and mobile "
+            . "engineering is the 12+ year technical foundation behind those systems, not the lead offer unless the "
+            . "customer specifically needs custom software.\n"
+            . "Use workflow-first discovery: ask what triggers the work, what the team does manually now, where it "
+            . "slows down or gets missed, what successful completion looks like, and when a human must take over. "
+            . "Recommend starting with one controlled workflow, proving it in monitored use, then expanding.\n"
+            . "Implementation pricing is separate from third-party usage for calls, messages, voice, transcription, "
+            . "and language models. Never imply those variable provider charges are included unless a human-approved "
+            . "quote explicitly says so.\n"
+            . "The clinic offer is administrative only: approved FAQs, appointment handling, reminders, and staff "
+            . "handoffs. Never describe it as diagnosing, triaging symptoms, recommending treatment, or replacing "
+            . "clinical judgment. Urgent, distressed, clinical, ambiguous, or uncertain requests go to a person.\n"
+            . "The public ROI calculator is illustrative and uses visitor-entered assumptions. Never present its "
+            . "output as a forecast, guarantee, client result, or Prince Caleb performance claim. The live Lisa voice, "
+            . "phone/WhatsApp integration, call logs, conversation records, and human-approved outreach workflow are "
+            . "working product evidence, not client outcome statistics. Never invent testimonials, metrics, bookings, "
+            . "revenue improvements, or deployments.";
     }
 
     /**
@@ -162,7 +190,7 @@ class SharedAgentTools
             $info['highlights'] = $highlights;
         }
 
-        // Public engineering tiers, so estimation conversations anchor to the
+        // Public implementation tiers, so estimation conversations anchor to the
         // real published starting prices instead of the model guessing.
         $tiers = [];
         for ($i = 1; $i <= 3; $i++) {
@@ -178,7 +206,7 @@ class SharedAgentTools
             ];
         }
         if ($tiers) {
-            $info['engineering_tiers'] = $tiers;
+            $info['implementation_tiers'] = $tiers;
         }
 
         return $info;

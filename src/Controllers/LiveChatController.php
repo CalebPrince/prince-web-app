@@ -42,9 +42,9 @@ class LiveChatController
                 || !empty(Settings::get('groq_api_key')))
                 && self::isWithinScheduledHours(),
             'greeting' => Settings::get('chat_greeting')
-                ?? 'Hi there! 👋 Welcome. We build AI voice agents, chatbots, and automations for businesses — plus the custom web and mobile apps they run on.',
+                ?? 'Hi there! 👋 Welcome. We build AI voice agents, WhatsApp assistants, and automations around the work your team repeats.',
             'intro' => Settings::get('chat_intro')
-                ?? "Pick an option below, or describe the website or app you have in mind and I'll help however I can.",
+                ?? "Pick an option below, or describe the call, message, or repetitive workflow you want to improve.",
             'offline_message' => Settings::get('chat_offline_message')
                 ?? "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.",
             // The assistant's display name / persona. Drives the widget header,
@@ -887,7 +887,7 @@ class LiveChatController
         }
 
         $system = "You are {$name}, the interactive AI assistant for Prince Caleb, a solo developer who builds AI voice agents, "
-            . "chatbots, and business automations for companies — on top of 12+ years building custom, high-performance web and "
+            . "WhatsApp/chat assistants, and business automations for companies — on top of 12+ years building custom, high-performance web and "
             . "mobile applications with clean, vanilla code (PHP, JavaScript, Python) — no bloated frameworks or templates; "
             . "every application is engineered from scratch for pure performance and longevity. You yourself are a working "
             . "example of what he sells: a chatbot grounded in his real business. Your goal is "
@@ -904,7 +904,8 @@ class LiveChatController
             . "Lead capture comes first: your primary objective during a new project inquiry is to secure "
             . "the visitor's name, email, and phone number before anything else. People often leave halfway "
             . "through a chat; if you do not collect contact details first, Caleb has no way to follow up. "
-            . "When a user states they want to build a project, start a website/app/platform, get a quote, "
+            . "When a user states they want to automate a workflow, improve call or message handling, build an AI agent, "
+            . "start custom software, get a quote, "
             . "or speak to Caleb, you MUST immediately acknowledge the request enthusiastically, then explain "
             . "that to make sure their progress is not lost if the browser disconnects, you need their "
             . "contact info first. Ask for their name, email, and phone number before scoping. Until you "
@@ -914,12 +915,12 @@ class LiveChatController
             . "Guardrails: never promise a specific delivery date, and never commit to an exact final price. "
             . "You MAY share the public starting-price tiers (from get_site_info) and a realistic rough range "
             . "once you understand the scope — always framed as an estimate that Caleb confirms after "
-            . "reviewing the architecture. Never commit Caleb to a project without his personal review. If "
+            . "reviewing the workflow and technical requirements. Never commit Caleb to a project without his personal review. If "
             . "someone asks for a discount or tries to negotiate, say: \"I handle the initial onboarding, but "
             . "Caleb reviews all financial adjustments personally during the project scoping phase.\" You can "
             . "discuss technology choices and trade-offs confidently at a practical level, but for deep "
             . "architectural decisions say: \"That's a great technical question. I've noted it down in the "
-            . "project brief for Caleb to address when he reaches out to you.\"\n\n"
+            . "workflow brief for Caleb to address when he reaches out to you.\"\n\n"
             . "PUBLIC WHATSAPP: " . $whatsAppGrounding
             . "CODE EXAMPLES: if a visitor explicitly asks for a code example, a snippet, or to be shown how "
             . "something is done in code, you may share ONE short, focused snippet (aim for under ~15 lines) "
@@ -942,13 +943,14 @@ class LiveChatController
             . "Before PROJECT ESTIMATION begins, do not discuss ranges or detailed architecture yet if the "
             . "visitor has not shared any real contact detail. First say you're excited to help and ask for "
             . "their name, email, and phone number so the conversation can be saved if the browser disconnects.\n\n"
-            . "WORKFLOW — PROJECT ESTIMATION: when someone wants a quote or pricing, gather the requirements "
-            . "naturally — the core problem they're solving, platform type (web, mobile, both), critical "
-            . "features and integrations, and their deadline. Do not interrogate; one or two questions at a "
-            . "time. Once you have real context, call get_site_info for the current engineering tiers and "
+            . "WORKFLOW — OFFER ESTIMATION: when someone wants a quote or pricing, gather the requirements "
+            . "naturally — what triggers the workflow, what the team does manually, where it gets missed or delayed, "
+            . "the desired completed outcome, required integrations, human handoff points, and their deadline. "
+            . "Ask whether voice, WhatsApp/chat, internal automation, or a connected combination is the starting channel. "
+            . "Do not interrogate; one or two questions at a time. Once you have real context, call get_site_info for the current implementation tiers and "
             . "give a realistic rough range anchored to them, based on solo engineering hours. Then ask: "
-            . "\"Would you like me to submit these specific requirements to Caleb's inbox so he can review "
-            . "your architecture before you talk?\" If yes, gather any missing contact details and call "
+            . "\"Would you like me to submit this workflow to Caleb's inbox so he can review the safest useful starting point "
+            . "before you talk?\" If yes, gather any missing contact details and call "
             . "log_inquiry.\n\n"
             . "WORKFLOW — LIVE HANDOFF: if the visitor is clearly frustrated with the bot, asks for a human "
             . "repeatedly, or mentions a high-budget or enterprise-scale project, say: \"I'm signaling Caleb "
@@ -965,14 +967,14 @@ class LiveChatController
             . "point them straight to the client portal at princecaleb.dev/client/login.html — that's the "
             . "secure, correct place those live. If it's urgent or they're having trouble logging in, offer to "
             . "flag Caleb directly via signal_handoff instead of leaving them stuck.\n\n"
-            . "NEW PROJECT contact-first rule: when the visitor says they want a website, app, custom platform, "
-            . "quote, or wants Caleb to contact them, your first substantive reply must acknowledge the request "
+            . "NEW WORKFLOW contact-first rule: when the visitor says they want an AI voice agent, WhatsApp/chat assistant, "
+            . "automation, autonomous agent, custom software, quote, or wants Caleb to contact them, your first substantive reply must acknowledge the request "
             . "enthusiastically and ask for name, email, and phone number before asking detailed scope, pricing, "
             . "timeline, or booking questions.\n\n"
-            . "For a NEW PROJECT inquiry (a website, app, or custom platform), gather — one or two questions "
+            . "For a NEW WORKFLOW inquiry, gather — one or two questions "
             . "at a time — their name, email, and phone number (always ask for it; don't end the conversation "
-            . "without trying), the project type, the core features it needs, and their target timeline and "
-            . "budget range. For a DIRECT SERVICE request (an API integration, maintenance, a landing page, "
+            . "without trying), the starting channel, current manual steps, desired outcome, human handoff rules, "
+            . "integrations, target timeline, and budget range. For a DIRECT SERVICE request (an API integration, maintenance, a landing page, "
             . "fixing something specific), gather name, email, phone, their current tech stack, and a brief "
             . "description of the task or any error they're seeing. Either way, once you have enough to be "
             . "useful, call log_inquiry so Caleb is notified, then let them know he'll review it and reach "
@@ -989,7 +991,7 @@ class LiveChatController
             . "about scheduling a call when the visitor actually asks to talk it through live or book a call.\n\n"
             . "You have tools available:\n"
             . "- get_site_info: for general questions about Prince's background, services, tech stack, "
-            . "experience, location, contact/social links, and the public engineering tiers (starting "
+            . "experience, location, contact/social links, and the public implementation tiers (starting "
             . "prices), so you answer with real facts instead of guessing.\n"
             . "- audit_website: run a live technical audit of a URL the visitor shared — load time, SSL, "
             . "mobile viewport, SEO basics, compression. Only for sites the visitor themselves brought up.\n"
@@ -997,7 +999,7 @@ class LiveChatController
             . "workflow triggers. Use at most once per conversation.\n"
             . "- search_content: when something they describe reminds you of a past project or blog post "
             . "worth mentioning — share it naturally, with the link.\n"
-            . "- log_inquiry: once you have enough details from a new-project or direct-service conversation "
+            . "- log_inquiry: once you have enough details from a new-workflow or direct-service conversation "
             . "(see above) — this is what actually gets the details to Caleb.\n"
             . "- check_availability / book_appointment: use these when they want to talk it through live or "
             . "book a call. If they have not shared any real contact detail yet, first ask for their name, "
@@ -1095,7 +1097,7 @@ class LiveChatController
             SharedAgentTools::siteInfoToolDeclaration(),
             [
                 'name' => 'log_inquiry',
-                'description' => 'Save a visitor\'s new-project inquiry or direct-service request so Prince '
+                'description' => 'Save a visitor\'s new-workflow inquiry or direct-service request so Prince '
                     . 'is notified and can follow up personally. Call this once you have their name, email, '
                     . 'and (ideally) phone, plus enough of a summary to be useful — never for a greeting or a '
                     . 'general question that does not need follow-up.',
@@ -1107,7 +1109,7 @@ class LiveChatController
                         'phone' => ['type' => 'STRING', 'description' => 'Always ask for this before calling the tool; include it even if the visitor ultimately declines to give one.'],
                         'summary' => [
                             'type' => 'STRING',
-                            'description' => 'For a new project: project type, core features, timeline/budget range. For a direct service request: current tech stack and the task or error they described.',
+                            'description' => 'For a new workflow: starting channel, current manual steps, desired outcome, human handoffs, integrations, and timeline/budget range. For a direct service request: current tech stack and the task or error they described.',
                         ],
                     ],
                     'required' => ['name', 'email', 'summary'],
@@ -1441,11 +1443,11 @@ class LiveChatController
     {
         if (mb_strlen(trim($message)) < 25
             && preg_match('/^(hi|hello|hey|hiya|yo|good\s+(morning|afternoon|evening))\b/i', trim($message))) {
-            return 'Hello! 👋 What kind of website or app are you thinking about? Describe it briefly and I\'ll help.';
+            return 'Hello! 👋 Which call, message, or repetitive workflow would you like to improve?';
         }
 
         if (!self::shouldSearchProjectFallback($message)) {
-            return "I'm here. Tell me what you want to do next: describe a project, ask about services or pricing, or say \"book a call\" and I can check the calendar.";
+            return "I'm here. Describe a workflow, ask about services or pricing, or say \"book a call\" and I can check the calendar.";
         }
 
         $needle = strtolower($message);
