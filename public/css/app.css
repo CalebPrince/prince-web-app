@@ -3569,6 +3569,131 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
 @media (prefers-reduced-motion: reduce) {
   .voice-wave i { animation: none; }
 }
+
+/* Clinic voice-agent landing page. The visual language borrows from the
+   front desk: a pressure line, a call handoff sequence, and a strict boundary
+   ledger instead of generic healthcare photography. */
+.clinic-hero {
+  min-height: calc(100vh - 76px);
+  display: flex;
+  align-items: center;
+  padding: clamp(5rem, 10vw, 8rem) 0;
+}
+.clinic-hero > .container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(21rem, 0.48fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  align-items: center;
+}
+.clinic-hero-copy h1 { max-width: 12ch; }
+.clinic-hero-copy > p:not(.eyebrow) { max-width: 42rem; }
+.clinic-safety-note {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  max-width: 42rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.76rem;
+}
+.clinic-safety-note span {
+  flex: 0 0 auto;
+  color: #16835a;
+  font: 700 0.65rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.clinic-safety-note strong { color: var(--heading-color); }
+.clinic-pressure-strip { overflow: hidden; border-block: 1px solid var(--line); background: var(--heading-color); color: var(--bg); }
+.clinic-pressure-strip .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.5rem;
+  font: 600 0.72rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.clinic-pressure-strip i { width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: color-mix(in srgb, var(--bg) 38%, transparent); }
+.clinic-pressure-strip strong { color: var(--bg); }
+.clinic-call-flow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line-strong);
+  border-left: 1px solid var(--line-strong);
+}
+.clinic-call-flow article {
+  position: relative;
+  min-height: 18rem;
+  padding: 1.5rem;
+  border-right: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+.clinic-call-flow article:not(:last-child)::after {
+  content: "→";
+  position: absolute;
+  z-index: 1;
+  right: -0.85rem;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--heading-color);
+}
+.clinic-call-flow span,
+.clinic-capability-grid span {
+  color: var(--muted);
+  font: 700 0.68rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.clinic-call-flow strong { display: block; margin: 3.5rem 0 1rem; color: var(--heading-color); font-size: 1.1rem; line-height: 1.4; }
+.clinic-call-flow p,
+.clinic-capability-grid p { color: var(--muted); font-size: 0.86rem; line-height: 1.65; }
+.clinic-boundary-section { background: var(--bg-soft); border-block: 1px solid var(--line); }
+.clinic-boundary-grid { display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(22rem, 1fr); gap: clamp(2rem, 7vw, 7rem); align-items: center; }
+.boundary-ledger { border-top: 1px solid var(--line-strong); }
+.boundary-row {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid var(--line-strong);
+}
+.boundary-row span { font: 700 0.65rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.06em; text-transform: uppercase; }
+.boundary-row.is-yes span { color: #16835a; }
+.boundary-row.is-no span { color: #b73b3b; }
+.boundary-row strong { color: var(--heading-color); }
+.clinic-capability-grid { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.clinic-capability-grid article { min-height: 15rem; padding: 2rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.clinic-capability-grid h3 { margin: 2.5rem 0 0.8rem; font-size: 1.2rem; }
+.clinic-final-cta { display: flex; justify-content: space-between; gap: 3rem; align-items: end; }
+.clinic-final-cta > div:first-child { max-width: 48rem; }
+
+@media (max-width: 991.98px) {
+  .clinic-hero > .container,
+  .clinic-boundary-grid { grid-template-columns: 1fr; }
+  .clinic-hero .hero-call-mockup { width: 100%; margin: 1rem 0 0; }
+  .clinic-call-flow { grid-template-columns: repeat(2, 1fr); }
+  .clinic-call-flow article:nth-child(2)::after { display: none; }
+  .clinic-final-cta { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 575.98px) {
+  .clinic-hero { min-height: auto; padding: 5rem 0 4rem; }
+  .clinic-pressure-strip .container { width: max-content; min-width: 100%; padding-block: 1rem; }
+  .clinic-call-flow,
+  .clinic-capability-grid { grid-template-columns: 1fr; }
+  .clinic-call-flow article { min-height: auto; }
+  .clinic-call-flow article::after { display: none !important; }
+  .clinic-call-flow strong { margin-top: 2rem; }
+  .boundary-row { grid-template-columns: 1fr; gap: 0.45rem; }
+}
 .proof-item {
   min-height: 8rem;
   border-right: 1px solid var(--line);
