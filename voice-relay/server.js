@@ -13,13 +13,18 @@ if (!relaySecret) throw new Error("RELAY_SHARED_SECRET is required.");
 if (!twilioAuthToken && !allowUnsignedLocal) throw new Error("TWILIO_AUTH_TOKEN is required.");
 
 const server = http.createServer((req, res) => {
-  if (req.url?.split("?")[0].endsWith("/health")) {
+  const pathname = req.url?.split("?")[0] || "/";
+  if (pathname === "/" || pathname.endsWith("/voice-relay") || pathname.endsWith("/health")) {
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ ok: true, service: "lisa-voice-relay" }));
+    res.end(JSON.stringify({
+      ok: true,
+      service: "lisa-voice-relay",
+      websocket: "/voice-relay/conversation"
+    }));
     return;
   }
-  res.writeHead(404);
-  res.end();
+  res.writeHead(404, { "content-type": "application/json" });
+  res.end(JSON.stringify({ error: "Not found" }));
 });
 
 const wss = new WebSocketServer({ noServer: true });

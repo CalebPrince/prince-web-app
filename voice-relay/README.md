@@ -24,6 +24,10 @@ The start command is `npm start`. Confirm
 
 `wss://princecaleb.dev/voice-relay/conversation`
 
+The application root also returns JSON with an explicit content type. This is
+intentional: CloudLinux's Node Selector checks the base application URL after
+`npm install` and can crash while comparing a missing MIME type.
+
 In the website admin Settings, save that endpoint and the same relay secret,
 then enable **Use natural ConversationRelay calls**. Until all three values are
 present and valid, the PHP application automatically keeps using the existing
