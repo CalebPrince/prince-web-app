@@ -50,10 +50,21 @@ class MarketingLeadController
         $rows = $pdo->query('SELECT * FROM marketing_leads ORDER BY created_at DESC')->fetchAll();
         foreach ($rows as &$row) {
             $row['audit_findings'] = $row['audit_findings'] ? json_decode($row['audit_findings'], true) : null;
+            $row['opportunity'] = self::classifyOpportunity(
+                !empty($row['website_url']),
+                $row['audit_findings']
+            );
             // Dossier's research brief (DossierController) — decoded here so
             // the Marketing Leads page gets a structured object to render.
             $row['research_findings'] = $row['research_findings'] ? json_decode($row['research_findings'], true) : null;
         }
+        unset($row);
+        usort(
+            $rows,
+            static fn(array $a, array $b): int =>
+                (($b['opportunity']['priority'] ?? 0) <=> ($a['opportunity']['priority'] ?? 0))
+                ?: strcmp((string) $b['created_at'], (string) $a['created_at'])
+        );
         Response::json($rows);
     }
 
@@ -291,7 +302,11 @@ class MarketingLeadController
         // it — turns a phone-only lead into an emailable one, no guessing.
         $foundEmail = self::applyFoundEmail($pdo, $lead, $findings);
 
-        Response::json(['findings' => $findings, 'found_email' => $foundEmail]);
+        Response::json([
+            'findings' => $findings,
+            'found_email' => $foundEmail,
+            'opportunity' => self::classifyOpportunity(true, $findings),
+        ]);
     }
 
     /**
@@ -745,19 +760,83 @@ class MarketingLeadController
     private static function findingsContext(array $findings): string
     {
         if (!empty($findings['no_website'])) {
-            return "This business does not appear to have a website at all. Focus on the opportunity of "
-                . "getting a first professional website/online presence — do NOT claim their site has any "
-                . "problems, since there is no existing site to critique.";
+            return "OPPORTUNITY TYPE: FIRST WEBSITE.\n"
+                . "This business does not appear to have a website at all. Lead with a focused custom business "
+                . "website that gives customers a credible place to understand the offer, enquire, book, or buy. "
+                . "AI voice, WhatsApp, and workflow automation may be mentioned as later connected improvements, "
+                . "but the first website is the primary offer. Do NOT claim their site has problems, since there "
+                . "is no existing site to critique.";
         }
 
         $issues = $findings['issues'] ?? [];
         $issuesList = $issues
             ? implode("\n", array_map(fn($i) => "- {$i['detail']}", $issues))
             : '(no specific technical issues were found)';
-        return "Only reference these ACTUAL, verified findings from a real technical check of their "
+        $opportunity = self::classifyOpportunity(true, $findings);
+        $direction = $opportunity['type'] === 'broken_website'
+            ? "OPPORTUNITY TYPE: BROKEN WEBSITE. Lead with restoring or rebuilding the website so customers can "
+                . "reach the business reliably. After that, mention relevant AI voice, WhatsApp, or workflow "
+                . "automation as an optional connected improvement."
+            : "OPPORTUNITY TYPE: ACTIVE WEBSITE. Do not sell them a replacement website by default. Lead with AI "
+                . "voice agents, WhatsApp/chat assistants, booking or follow-up automation, or another operational "
+                . "improvement that can work with their existing website. Mention a website improvement only when "
+                . "one of the verified findings below directly supports it.";
+        return "{$direction}\n\nOnly reference these ACTUAL, verified findings from a real technical check of their "
             . "site — never invent, exaggerate, or imply any other problems:\n{$issuesList}\n\n"
             . "If no specific issues are listed, do not claim their site has problems — keep this brief and "
-            . "generic instead.";
+            . "focus the message on adding useful AI and automation around the active site.";
+    }
+
+    /**
+     * Converts objective website evidence into one outreach lane. It is
+     * computed from the audit rather than stored, so re-audits immediately
+     * update both the dashboard and the next pitch.
+     *
+     * @param array<string,mixed>|null $findings
+     * @return array{type:string,label:string,reason:string,priority:int}
+     */
+    public static function classifyOpportunity(bool $hasWebsite, ?array $findings): array
+    {
+        if (!$hasWebsite) {
+            return [
+                'type' => 'no_website',
+                'label' => 'Needs a website',
+                'reason' => 'No website is listed, so a focused first website is the primary opportunity.',
+                'priority' => 90,
+            ];
+        }
+        if ($findings === null) {
+            return [
+                'type' => 'audit_pending',
+                'label' => 'Check website',
+                'reason' => 'A website is listed but has not been checked yet.',
+                'priority' => 60,
+            ];
+        }
+
+        $brokenSignals = ['unreachable', 'error_status', 'blank_page', 'error_page_content'];
+        $issues = is_array($findings['issues'] ?? null) ? $findings['issues'] : [];
+        $issueTypes = array_map(
+            static fn($issue): string => is_array($issue) ? (string) ($issue['issue'] ?? '') : '',
+            $issues
+        );
+        if (($findings['reachable'] ?? true) === false || array_intersect($brokenSignals, $issueTypes)) {
+            return [
+                'type' => 'broken_website',
+                'label' => 'Broken website',
+                'reason' => (string) ($issues[0]['detail'] ?? 'The website failed its live availability check.'),
+                'priority' => 100,
+            ];
+        }
+
+        return [
+            'type' => 'active_website',
+            'label' => 'AI & automation',
+            'reason' => $issues
+                ? 'The website is live; offer automation first and mention only the verified improvements.'
+                : 'The website is active, so lead with AI voice, WhatsApp/chat, and workflow automation.',
+            'priority' => 75,
+        ];
     }
 
     /** @return array{subject:string,body:string}|null */

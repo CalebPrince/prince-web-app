@@ -522,7 +522,14 @@ storage/
     though, since that's not an SSRF risk and is itself a real, useful
     finding. `website_url` is optional — a business with no site yet is a
     valid lead too, and skips straight to a generic (not fabricated-findings)
-    pitch instead of an audit. The generated body is instructed to avoid
+    pitch instead of an audit. Every lead is computed into one outreach lane:
+    **Broken website** (HTTP/DNS/SSL/blank/fatal-error evidence; repair or
+    rebuild first), **Needs a website** (no site listed; first website offer),
+    **AI & automation** (the site is active; keep it and lead with voice,
+    WhatsApp/chat, booking, follow-up, or workflow automation), or **Check
+    website** until the first audit runs. Broken and no-site opportunities
+    rise to the top of the admin list, while all businesses remain eligible.
+    The generated body is instructed to avoid
     invented statistics, false urgency, and unverifiable financial-harm
     claims; the sign-off and contact channels (WhatsApp/phone from Settings,
     portfolio URL) are appended in PHP from real data, never left for the

@@ -43,6 +43,18 @@ function siteCheckBadge(lead) {
   return `<span class="status-pill pitch_ready">${count} issue${count === 1 ? "" : "s"} found</span>`;
 }
 
+function opportunityBadge(lead) {
+  const opportunity = lead.opportunity || {};
+  const classes = {
+    broken_website: "rejected",
+    no_website: "audited",
+    active_website: "sent",
+    audit_pending: "pending",
+  };
+  const type = opportunity.type || "audit_pending";
+  return `<span class="status-pill ${classes[type] || "pending"}" title="${escapeHtml(opportunity.reason || "")}">${escapeHtml(opportunity.label || "Check website")}</span>`;
+}
+
 function actionButtons(lead) {
   const buttons = [];
   // Dossier: recon before outreach — tech-stack fingerprint, recent news, a
@@ -84,7 +96,7 @@ async function loadLeads() {
   selectedIds.clear();
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
     empty.classList.add("d-none");
     updateBulkToolbar();
     return;
@@ -104,6 +116,7 @@ async function loadLeads() {
       <td class="small">${lead.website_url
         ? `<a href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a>`
         : '<span class="text-muted-custom">No website</span>'}</td>
+      <td>${opportunityBadge(lead)}</td>
       <td>${Number(lead.estimated_value) ? `<span class="fw-semibold">${escapeHtml(lead.currency || 'GHS')} ${(Number(lead.estimated_value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>` : '<span class="text-muted-custom small">Not estimated</span>'}</td>
       <td><span class="status-pill ${lead.status}">${lead.status.replace("_", " ")}</span></td>
       <td>${siteCheckBadge(lead)}</td>
