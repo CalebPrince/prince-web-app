@@ -32,6 +32,18 @@
     contacts.insertAdjacentElement('afterend', link);
   }
   injectPipelineNav();
+  function injectVoiceDemoNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/voice-demo.html"]')) return;
+    const inbox = nav.querySelector('a[href="/admin/inbox.html"]');
+    if (!inbox) return;
+    const link = document.createElement('a');
+    link.href = '/admin/voice-demo.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/voice-demo.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-telephone-inbound nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Voice Demo</span>';
+    inbox.insertAdjacentElement('afterend', link);
+  }
+  injectVoiceDemoNav();
   function injectNotificationsNav() {
     const nav = document.querySelector('.admin-sidebar nav');
     if (!nav || nav.querySelector('a[href="/admin/notifications.html"]')) return;

@@ -27,6 +27,15 @@
 
   try { token = sessionStorage.getItem("voice_demo_token"); } catch (_) {}
 
+  function track(event) {
+    api.post("/api/v1/voice-demo/event", {
+      event: event,
+      token: token,
+      path: window.location.pathname
+    }).catch(function () {});
+    if (window.trackUiEvent) window.trackUiEvent("voice_demo_" + event);
+  }
+
   function setMode(mode, label, state) {
     shell.classList.remove("is-listening", "is-thinking", "is-speaking");
     wave.classList.remove("is-idle", "is-thinking");
@@ -130,9 +139,10 @@
     setMode("thinking", name + " is thinking", "Thinking");
 
     try {
-      const response = await api.post("/api/v1/chat/message", {
+      const response = await api.post("/api/v1/voice-demo/message", {
         message: text,
-        token: token
+        token: token,
+        niche: "clinic"
       }, { timeoutMs: 98000 });
       if (!response || typeof response !== "object") {
         throw new Error("The assistant returned an empty response. Check that the chat API and at least one AI provider are configured.");
@@ -146,6 +156,7 @@
       transcriptText.textContent = response.reply.trim();
       speakReply(response.reply.trim());
     } catch (error) {
+      track("answer_failed");
       showError(error.message || "The voice demo could not answer. Please try again.");
     }
   }
@@ -173,6 +184,7 @@
     let finalText = "";
 
     recognition.onstart = function () {
+      track("mic_granted");
       listening = true;
       startTimer();
       startButton.classList.add("is-listening");
@@ -199,6 +211,7 @@
         "no-speech": "I did not hear a question. Tap the button and try again."
       };
       const message = errors[event.error] || "Voice input stopped. You can try again or type your question.";
+      if (event.error === "not-allowed") track("mic_blocked");
       if (event.error === "not-allowed" || event.error === "audio-capture") showTypedFallback(message);
       else showError(message);
     };
@@ -225,7 +238,10 @@
       finish();
       return;
     }
-    if (!busy) startListening();
+    if (!busy) {
+      track("demo_started");
+      startListening();
+    }
   });
 
   form.addEventListener("submit", function (event) {
@@ -250,4 +266,8 @@
     }
     if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
   })();
+
+  document.querySelectorAll("[data-voice-demo-cta]").forEach(function (link) {
+    link.addEventListener("click", function () { track("cta_clicked"); });
+  });
 })();

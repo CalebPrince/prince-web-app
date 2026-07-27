@@ -926,6 +926,43 @@ CREATE TABLE IF NOT EXISTS lead_attribution (
 );
 CREATE INDEX IF NOT EXISTS idx_lead_attribution_source ON lead_attribution (source_type, source_id);
 
+-- Safe public voice-demo conversations and product analytics. Kept separate
+-- from chat_sessions because this surface has no lead-capture or action tools.
+CREATE TABLE IF NOT EXISTS voice_demo_sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT UNIQUE NOT NULL,
+  channel TEXT NOT NULL DEFAULT 'web' CHECK (channel IN ('web', 'phone')),
+  niche TEXT NOT NULL DEFAULT 'clinic',
+  transcript_json TEXT NOT NULL DEFAULT '[]',
+  provider TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_voice_demo_sessions_updated ON voice_demo_sessions (updated_at);
+
+CREATE TABLE IF NOT EXISTS voice_demo_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+  event_type TEXT NOT NULL,
+  metadata_json TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_voice_demo_events_type_date ON voice_demo_events (event_type, created_at);
+
+CREATE TABLE IF NOT EXISTS telephony_calls (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  provider_call_id TEXT UNIQUE NOT NULL,
+  session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+  provider TEXT NOT NULL DEFAULT 'twilio',
+  from_number TEXT,
+  to_number TEXT,
+  status TEXT NOT NULL DEFAULT 'queued',
+  duration_seconds INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at);
+
 CREATE TABLE IF NOT EXISTS notification_reads (
   notification_key TEXT PRIMARY KEY,
   read_at TEXT NOT NULL DEFAULT (datetime('now'))

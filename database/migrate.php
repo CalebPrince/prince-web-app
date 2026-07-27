@@ -1141,4 +1141,43 @@ $pdo->exec(
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_call_log_lead ON call_log (lead_id, called_at)');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_call_log_called_at ON call_log (called_at)');
 
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS voice_demo_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token TEXT UNIQUE NOT NULL,
+        channel TEXT NOT NULL DEFAULT 'web' CHECK (channel IN ('web', 'phone')),
+        niche TEXT NOT NULL DEFAULT 'clinic',
+        transcript_json TEXT NOT NULL DEFAULT '[]',
+        provider TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_voice_demo_sessions_updated ON voice_demo_sessions (updated_at)');
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS voice_demo_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+        event_type TEXT NOT NULL,
+        metadata_json TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_voice_demo_events_type_date ON voice_demo_events (event_type, created_at)');
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS telephony_calls (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        provider_call_id TEXT UNIQUE NOT NULL,
+        session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+        provider TEXT NOT NULL DEFAULT 'twilio',
+        from_number TEXT,
+        to_number TEXT,
+        status TEXT NOT NULL DEFAULT 'queued',
+        duration_seconds INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at)');
+
 echo "Schema applied.\n";

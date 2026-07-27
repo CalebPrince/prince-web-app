@@ -1221,3 +1221,26 @@ One-time setup on a new host:
   touches it, re-run `php database/migrate.php` on the server (it's
   idempotent: `CREATE TABLE IF NOT EXISTS` for new tables, guarded
   `ALTER TABLE ADD COLUMN` checks for columns added to existing tables).
+# Clinic voice demo and Twilio Voice
+
+The clinic landing page uses a dedicated, side-effect-free voice-demo API:
+
+- `POST /api/v1/voice-demo/message` — web demo conversation
+- `POST /api/v1/voice-demo/event` — product/conversion events
+- `POST /api/v1/voice/twilio/incoming` — Twilio incoming Voice webhook
+- `POST /api/v1/voice/twilio/turn` — speech-turn continuation
+- `POST /api/v1/voice/twilio/status` — call status callback
+- `GET /api/v1/admin/voice-demo/stats` — authenticated reporting
+
+After deployment:
+
+1. Run `php database/migrate.php` so the voice-demo/event/call tables exist.
+2. In Admin → Settings, save the Twilio Auth Token and Voice number, then enable the clinic voice agent.
+3. In Twilio Console, set the number's incoming-call webhook to
+   `https://princecaleb.dev/api/v1/voice/twilio/incoming` using POST.
+4. Set its status callback to
+   `https://princecaleb.dev/api/v1/voice/twilio/status` using POST.
+
+The demo deliberately has no tools and cannot create bookings, inquiries,
+messages, or handoffs. It demonstrates those workflows hypothetically and
+refuses clinical advice or collection of real patient/medical details.

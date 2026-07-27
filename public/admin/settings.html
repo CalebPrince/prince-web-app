@@ -225,6 +225,21 @@
                 brain as the site's live chat, including handing off to you when needed — no separate setup for that.
               </div>
             </div>
+            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="twilio-voice-enabled">
+                <label class="form-check-label fw-semibold" for="twilio-voice-enabled">Enable Twilio clinic voice agent</label>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Twilio Voice number</label>
+                <input type="text" class="form-control" id="twilio-voice-number" placeholder="+233...">
+              </div>
+              <div class="form-text">
+                In Twilio Console, set this number's incoming-call webhook to
+                <code>https://princecaleb.dev/api/v1/voice/twilio/incoming</code> using POST, and its status callback to
+                <code>https://princecaleb.dev/api/v1/voice/twilio/status</code>. The same Auth Token above verifies every request.
+              </div>
+            </div>
             <div class="mb-3">
               <label class="form-label">Your WhatsApp number <span class="text-muted-custom fw-normal">(so Lisa recognizes you)</span></label>
               <input type="text" class="form-control" id="owner-whatsapp-number" placeholder="+14155551234" autocomplete="off">

@@ -1,0 +1,32 @@
+(function () {
+  const esc = value => { const div = document.createElement("div"); div.textContent = String(value == null ? "" : value); return div.innerHTML; };
+  const count = (rows, key) => Number((rows.find(item => item.event_type === key) || {}).count || 0);
+  const ago = value => {
+    const seconds = Math.max(0, Math.floor((Date.now() - new Date(value + "Z").getTime()) / 1000));
+    if (seconds < 60) return "just now";
+    if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+    if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+    return Math.floor(seconds / 86400) + "d ago";
+  };
+  async function load() {
+    try {
+      const data = await api.get("/api/v1/admin/voice-demo/stats");
+      const s = data.summary || {};
+      document.getElementById("voice-summary").innerHTML = [
+        ["Sessions", s.sessions || 0, "All demo opens"], ["Engaged", s.engaged || 0, "Asked at least once"],
+        ["Web", s.web_sessions || 0, "Browser demo"], ["Phone", s.phone_sessions || 0, "Twilio calls"]
+      ].map(item => `<article><span>${item[0]}</span><strong>${item[1]}</strong><small>${item[2]}</small></article>`).join("");
+      const events = data.events || [];
+      const funnel = [["Demo started", count(events, "demo_started")], ["Question answered", count(events, "answer_received")], ["CTA clicked", count(events, "cta_clicked")]];
+      const max = Math.max(1, ...funnel.map(item => item[1]));
+      document.getElementById("voice-funnel").innerHTML = funnel.map(item => `<div class="voice-funnel-row"><div><span>${item[0]}</span><strong>${item[1]}</strong></div><i><b style="width:${Math.round(item[1] / max * 100)}%"></b></i></div>`).join("");
+      document.getElementById("voice-phone-status").innerHTML = `<div class="voice-phone-state ${data.telephony_enabled ? "is-on" : ""}"><span>${data.telephony_enabled ? "Enabled" : "Not active"}</span><strong>${esc(data.voice_number || "No voice number configured")}</strong></div><p class="small text-muted-custom mt-3 mb-2">Incoming call webhook</p><code class="d-block text-break">${esc(data.webhook_url)}</code><p class="small text-muted-custom mt-3 mb-0">${data.telephony_enabled ? "Verified Twilio calls use the clinic-safe prompt." : "Add a Twilio voice number and enable it in Settings."}</p>`;
+      const rows = data.recent || [];
+      document.getElementById("voice-session-rows").innerHTML = rows.map(row => `<tr><td><span class="voice-channel"><i class="bi ${row.channel === "phone" ? "bi-telephone" : "bi-browser-chrome"}"></i>${esc(row.channel)}</span></td><td>${esc(row.last_question || "Opened without a question")}</td><td>${Number(row.turn_count || 0)}</td><td>${esc(row.provider || "fallback")}</td><td>${ago(row.updated_at)}</td></tr>`).join("");
+      document.getElementById("voice-empty").classList.toggle("d-none", rows.length > 0);
+    } catch (error) {
+      document.getElementById("voice-summary").innerHTML = `<div class="alert alert-danger">${esc(error.message)}</div>`;
+    }
+  }
+  load();
+})();
