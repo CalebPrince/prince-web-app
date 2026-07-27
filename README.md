@@ -642,6 +642,11 @@ storage/
     Caleb supplies his own introduction for a manual call, while the outbound
     voice prompt requires Lisa to identify herself as an AI assistant calling
     on Caleb's behalf and explicitly ignores any legacy first-person wording.
+    Outbound call creation deliberately does not use synchronous Twilio
+    answering-machine detection: it can hold the answer webhook while a real
+    person hears silence. Lisa's disclosure now plays first as a standalone
+    `<Say>`, followed by a six-second speech `<Gather>`, so an answered call
+    always receives the opening before the system begins listening.
     The Review modal swaps
     Subject/email fields out for a phone field and relabels the body
     "Call script"; the send button becomes "Mark as called" and opens a

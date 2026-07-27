@@ -538,7 +538,6 @@ class OutreachController
             'StatusCallback' => $statusUrl,
             'StatusCallbackMethod' => 'POST',
             'StatusCallbackEvent' => 'completed',
-            'MachineDetection' => 'Enable',
         ]);
 
         $ch = curl_init("https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Calls.json");

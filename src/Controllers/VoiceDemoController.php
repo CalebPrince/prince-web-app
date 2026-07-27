@@ -154,15 +154,6 @@ final class VoiceDemoController
              status = 'in-progress', updated_at = datetime('now') WHERE provider_call_id = ?"
         )->execute([$session['id'], $leadId, $callSid]);
 
-        $answeredBy = trim((string) ($_POST['AnsweredBy'] ?? ''));
-        if ($answeredBy !== '' && $answeredBy !== 'human' && $answeredBy !== 'unknown') {
-            self::twimlSay(
-                "Hello, this is Lisa, an AI assistant calling on behalf of Prince Caleb following your request or consent. "
-                . "Please visit princecaleb.dev when convenient. Goodbye."
-            );
-            return;
-        }
-
         self::twimlGather(
             "Hello, this is Lisa, an AI assistant calling on behalf of Prince Caleb. "
             . "This call was individually approved after your request or consent. "
@@ -496,11 +487,11 @@ final class VoiceDemoController
         header('Content-Type: text/xml; charset=utf-8');
         $action = '/api/v1/voice/twilio/turn';
         $voice = self::twilioVoice();
-        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Gather input="speech" action="'
-            . $action . '" method="POST" speechTimeout="auto" language="en-GB"><Say voice="'
+        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="'
             . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" language="en-GB">'
             . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8')
-            . '</Say></Gather><Say voice="'
+            . '</Say><Gather input="speech" action="' . $action
+            . '" method="POST" timeout="6" speechTimeout="auto" language="en-GB"></Gather><Say voice="'
             . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8')
             . '" language="en-GB">I did not hear a response. Goodbye.</Say></Response>';
     }
