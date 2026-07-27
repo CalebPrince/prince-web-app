@@ -588,6 +588,17 @@ function renderOutreachStats(s) {
 
   document.getElementById("oe-calls-today").textContent = s.calls_today;
   document.getElementById("oe-call-queue").textContent = s.call_queue;
+
+  const discoveryToggle = document.getElementById("oe-discovery-enabled");
+  discoveryToggle.checked = !!s.discovery_enabled;
+  document.getElementById("oe-discovery-enabled-label").textContent = s.discovery_enabled ? "On" : "Off";
+  const discoveryTarget = document.getElementById("oe-discovery-target");
+  const discoveryQueries = document.getElementById("oe-discovery-queries");
+  if (document.activeElement !== discoveryTarget) discoveryTarget.value = s.discovery_daily_target || 50;
+  if (document.activeElement !== discoveryQueries) discoveryQueries.value = s.discovery_queries || "";
+  const lastRun = s.discovery_last_run ? `Last run ${s.discovery_last_run} UTC. ` : "";
+  document.getElementById("oe-discovery-status").textContent =
+    lastRun + (s.discovery_last_status || "Waiting for its first run.");
 }
 
 async function loadOutreachStats() {
@@ -756,6 +767,25 @@ function wireOutreachPanel() {
       return;
     }
     if (await saveOutreachSettings({ daily_cap: cap })) outreachMsg("Daily cap updated to " + cap + ".", true);
+  });
+
+  document.getElementById("oe-discovery-save").addEventListener("click", async () => {
+    const target = parseInt(document.getElementById("oe-discovery-target").value, 10);
+    const queries = document.getElementById("oe-discovery-queries").value.trim();
+    if (!Number.isInteger(target) || target < 1 || target > 50) {
+      outreachMsg("Daily discovery target must be between 1 and 50.", false);
+      return;
+    }
+    if (!queries) {
+      outreachMsg("Add at least one niche and location search.", false);
+      return;
+    }
+    const saved = await saveOutreachSettings({
+      discovery_enabled: document.getElementById("oe-discovery-enabled").checked,
+      discovery_daily_target: target,
+      discovery_queries: queries,
+    });
+    if (saved) outreachMsg("Automatic daily lead discovery updated.", true);
   });
 }
 

@@ -30,8 +30,8 @@ use App\Support\SharedAgentTools;
  * hallucinating plausible-looking fake ones, which is exactly what every
  * other part of this tool goes out of its way to avoid — search results
  * only ever come from a real, verifiable API response. Discovery only
- * returns candidates for review; adding them (bulkStore()) is still a
- * separate, explicit admin action, same as every other step here.
+ * returns candidates for review. The separately enabled LeadDiscovery job
+ * can also add deduplicated candidates from saved searches each day.
  *
  * Outreach isn't email-only: a lead with a phone number but no email gets
  * a call script (draftCallScript()) instead of an email pitch
@@ -420,7 +420,7 @@ class MarketingLeadController
      *
      * @return array<int,array{business_name:string,website_url:?string,address:?string,phone:?string,rating:?float}>|null null only on a hard search failure
      */
-    private static function searchBusinesses(string $apiKey, string $query): ?array
+    public static function searchBusinesses(string $apiKey, string $query, int $page = 1): ?array
     {
         if (!function_exists('curl_init')) {
             return null;
@@ -434,7 +434,7 @@ class MarketingLeadController
                 'Content-Type: application/json',
                 'X-API-KEY: ' . $apiKey,
             ],
-            CURLOPT_POSTFIELDS => json_encode(['q' => $query]),
+            CURLOPT_POSTFIELDS => json_encode(['q' => $query, 'page' => max(1, $page)]),
             CURLOPT_TIMEOUT => 15,
         ]);
         $response = curl_exec($ch);

@@ -434,6 +434,19 @@ storage/
     API key in Admin → Settings → Integrations; each hand-picked lead still
     goes through the normal audit/pitch/review/send pipeline individually.
 
+    **Daily prospect discovery** (`LeadDiscovery`,
+    `database/discover_marketing_leads.php`) removes the manual search-and-add
+    step when enabled. The Marketing Leads panel stores up to 20 real
+    niche/location searches and a target of 1-50 new leads per day. The
+    existing `send_cold_outreach.php` cron invokes discovery before
+    auto-drafting, so no additional cron is required: an internal UTC-day
+    gate makes later hourly ticks no-op. It advances a saved result-page
+    cursor per search, adds only listings with a website or phone number, and
+    deduplicates against existing business names, normalized website URLs,
+    and phone numbers. Serper Places remains the only discovery source; AI
+    never invents prospects. The standalone script is available for
+    diagnostics and accepts `--force`.
+
     Outreach isn't email-only, either: a lead with a `contact_phone` but no
     `contact_email` gets a call script instead of an email pitch
     (`generatePitch()` picks the channel — email when possible, phone only
@@ -1176,7 +1189,8 @@ One-time setup on a new host:
     `--no-email` to write without sending.
 4m. Add a thirteenth cron job (hourly) for the Cold Outreach Engine (a
     no-op until switched on under Admin -> Marketing Leads; sends reviewed
-    email pitches up to the daily cap, and with auto-draft on also prepares
+    email pitches up to the daily cap, runs the once-daily real-business
+    discovery sweep when enabled, and with auto-draft on also prepares
     pitches/call scripts):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_cold_outreach.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are

@@ -140,6 +140,31 @@
           </div>
         </div>
       </div>
+      <div class="border-top mt-3 pt-3">
+        <div class="d-flex flex-wrap align-items-start gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-search"></i></div>
+            <div>
+              <div class="fw-semibold">Daily prospect discovery</div>
+              <div class="small text-muted-custom" id="oe-discovery-status">Waiting for its first run.</div>
+            </div>
+          </div>
+          <div class="form-check form-switch ms-md-auto mt-1">
+            <input class="form-check-input" type="checkbox" role="switch" id="oe-discovery-enabled">
+            <label class="form-check-label small" for="oe-discovery-enabled" id="oe-discovery-enabled-label">Off</label>
+          </div>
+          <div>
+            <label for="oe-discovery-target" class="form-label small mb-1">New leads/day</label>
+            <input type="number" class="form-control form-control-sm" id="oe-discovery-target" min="1" max="50" step="1" style="width:6rem;">
+          </div>
+          <div class="flex-grow-1" style="min-width:min(100%,22rem);">
+            <label for="oe-discovery-queries" class="form-label small mb-1">Niche and location searches <span class="text-muted-custom">(one per line)</span></label>
+            <textarea class="form-control form-control-sm" id="oe-discovery-queries" rows="3" maxlength="4020" placeholder="private clinics in Accra Ghana"></textarea>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm align-self-end" id="oe-discovery-save">Save discovery</button>
+        </div>
+        <div class="small text-muted-custom mt-2">The existing outreach cron searches these real Google Places listings once daily, skips duplicates, and adds them as raw leads. Auto-draft then prepares email pitches or phone scripts.</div>
+      </div>
       <div id="oe-msg" class="alert py-2 small mb-0 mt-2 d-none"></div>
     </div>
 

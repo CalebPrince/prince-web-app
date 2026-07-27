@@ -28,5 +28,6 @@ if (!$result['enabled']) {
 $failed = $result['failed'] > 0 ? ", {$result['failed']} failed" : '';
 $drafted = $result['drafted'] > 0 ? "auto-drafted {$result['drafted']} email pitch(es), " : '';
 $scripts = $result['call_scripts'] > 0 ? "prepared {$result['call_scripts']} call script(s) for the call queue, " : '';
-echo "{$drafted}{$scripts}{$result['sent']} cold outreach email(s) sent{$failed} "
+$discovered = ($result['discovery_added'] ?? 0) > 0 ? "discovered {$result['discovery_added']} new lead(s), " : '';
+echo "{$discovered}{$drafted}{$scripts}{$result['sent']} cold outreach email(s) sent{$failed} "
     . "({$result['sent_today']}/{$result['cap']} today, {$result['remaining']} left in today's cap).\n";

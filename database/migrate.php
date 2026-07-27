@@ -1259,4 +1259,23 @@ if (!in_array('consent_confirmed_at', $telephonyColumns, true)) $pdo->exec('ALTE
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at)');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_marketing_lead ON telephony_calls (marketing_lead_id, created_at)');
 
+// Automatic Marketing Leads prospect discovery. It shares the existing cold
+// outreach cron and is daily-gated, so no additional scheduler is required.
+// Queries stay editable from the Marketing Leads panel.
+$leadDiscoveryDefaults = [
+    'lead_discovery_enabled' => '1',
+    'lead_discovery_daily_target' => '50',
+    'lead_discovery_queries' => implode("\n", [
+        'private clinics in Accra Ghana',
+        'dental clinics in Accra Ghana',
+        'medical clinics in Tema Ghana',
+        'diagnostic centres in Accra Ghana',
+        'private clinics in Kumasi Ghana',
+    ]),
+];
+$leadDiscoverySetting = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value) VALUES (?, ?)');
+foreach ($leadDiscoveryDefaults as $name => $value) {
+    $leadDiscoverySetting->execute([$name, $value]);
+}
+
 echo "Schema applied.\n";

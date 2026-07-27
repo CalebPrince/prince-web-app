@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailTemplate;
+use App\Support\LeadDiscovery;
 use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
@@ -16,7 +17,7 @@ use App\Support\SharedAgentTools;
 /**
  * The Cold Outreach Engine — the automated sending layer that turns the
  * existing marketing_leads funnel (discover -> research -> audit ->
- * pitch_ready, all still done by hand) into "send N personalised emails a
+ * pitch_ready) into "send N personalised emails a
  * day, every day" without Caleb opening his mail client 50 times.
  *
  * By default it only sends pitches Caleb has already reviewed: a lead is
@@ -75,6 +76,10 @@ class OutreachController
             return ['enabled' => false, 'sent' => 0, 'failed' => 0, 'drafted' => 0, 'call_scripts' => 0, 'cap' => $cap, 'sent_today' => self::sentToday($pdo), 'remaining' => 0];
         }
 
+        // Reuse this existing hourly cron for daily prospect discovery. The
+        // discovery service has its own on/off switch and once-per-day gate.
+        $discovery = LeadDiscovery::run();
+
         $sentToday = self::sentToday($pdo);
         $remaining = max(0, $cap - $sentToday);
         // Auto-draft (opt-in): top the reviewed queue up to today's remaining
@@ -97,6 +102,7 @@ class OutreachController
                 'enabled' => true, 'sent' => 0, 'failed' => 0,
                 'drafted' => $drafted['emails'], 'call_scripts' => $drafted['calls'],
                 'cap' => $cap, 'sent_today' => $sentToday, 'remaining' => 0,
+                'discovery_added' => $discovery['added'],
             ];
         }
 
@@ -152,6 +158,7 @@ class OutreachController
             'cap' => $cap,
             'sent_today' => $sentToday + $sent,
             'remaining' => max(0, $remaining - $sent),
+            'discovery_added' => $discovery['added'],
         ];
     }
 
@@ -262,6 +269,11 @@ class OutreachController
             'calls_today' => self::callsToday($pdo),
             'ai_calls_today' => self::aiCallsToday($pdo),
             'ai_call_daily_cap' => self::AI_CALL_DAILY_CAP,
+            'discovery_enabled' => Settings::get('lead_discovery_enabled') === '1',
+            'discovery_daily_target' => (int) (Settings::get('lead_discovery_daily_target') ?: 50),
+            'discovery_queries' => (string) Settings::get('lead_discovery_queries'),
+            'discovery_last_run' => Settings::get('lead_discovery_last_run'),
+            'discovery_last_status' => Settings::get('lead_discovery_last_status'),
         ]);
     }
 
@@ -290,6 +302,26 @@ class OutreachController
                 Response::error('Daily call target must be between 1 and 200.', 422);
             }
             Settings::set('outreach_daily_call_target', (string) $target);
+        }
+        if (array_key_exists('discovery_enabled', $data)) {
+            Settings::set('lead_discovery_enabled', !empty($data['discovery_enabled']) ? '1' : '0');
+        }
+        if (array_key_exists('discovery_daily_target', $data)) {
+            $target = (int) $data['discovery_daily_target'];
+            if ($target < 1 || $target > 50) {
+                Response::error('Daily discovery target must be between 1 and 50.', 422);
+            }
+            Settings::set('lead_discovery_daily_target', (string) $target);
+        }
+        if (array_key_exists('discovery_queries', $data)) {
+            $queries = array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $data['discovery_queries']) ?: [])));
+            if (!$queries) {
+                Response::error('Add at least one niche and location for automatic discovery.', 422);
+            }
+            if (count($queries) > 20 || array_filter($queries, fn(string $query): bool => mb_strlen($query) > 200)) {
+                Response::error('Use up to 20 discovery searches, each no longer than 200 characters.', 422);
+            }
+            Settings::set('lead_discovery_queries', implode("\n", array_unique($queries)));
         }
 
         self::stats();
