@@ -117,21 +117,48 @@
       </a>
     </div>
     <div class="hero-side-stack hero-animate hero-animate-4">
-      <aside class="hero-value-panel" aria-label="Direct positioning">
-        <span class="eyebrow d-block mb-3" data-content="hero_value_eyebrow">Direct positioning</span>
-        <div class="hero-value-row">
-          <strong data-content="hero_value_1_label">Build model</strong>
-          <span data-content="hero_value_1_text">AI-first custom systems</span>
+      <article class="hero-call-mockup" aria-label="Mockup of an AI voice agent handling a live booking call">
+        <header class="system-window-bar">
+          <span class="system-window-title"><span class="status-dot is-live" id="voice-demo-dot"></span> <span id="voice-demo-status">Voice demo ready</span></span>
+          <span class="system-time" id="voice-demo-timer">00:00</span>
+        </header>
+        <div class="hero-call-body">
+          <div class="call-contact">
+            <span class="call-avatar" id="voice-demo-avatar">PC</span>
+            <div>
+              <strong id="voice-demo-name">Prince's Assistant</strong>
+              <small id="voice-demo-subtitle">Ask about services, pricing, or a project</small>
+            </div>
+            <span class="call-state" id="voice-demo-state">Ready</span>
+          </div>
+          <div class="voice-wave is-idle" id="voice-demo-wave" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="transcript-line">
+            <span id="voice-demo-speaker">Voice agent</span>
+            <p id="voice-demo-transcript" aria-live="polite">Tap “Start voice demo,” then ask me what an AI voice agent could handle for your business.</p>
+          </div>
+          <div class="system-outcome" id="voice-demo-outcome">
+            <span>✓</span>
+            <div>
+              <strong>Uses the real site assistant</strong>
+              <small>Your question is answered from Prince’s actual services and business information.</small>
+            </div>
+          </div>
+          <form class="hero-demo-fallback d-none" id="voice-demo-form">
+            <label class="visually-hidden" for="voice-demo-input">Type your question</label>
+            <input type="text" id="voice-demo-input" maxlength="500" placeholder="Type your question instead…" autocomplete="off">
+            <button type="submit">Ask</button>
+          </form>
         </div>
-        <div class="hero-value-row">
-          <strong data-content="hero_value_2_label">Execution</strong>
-          <span data-content="hero_value_2_text">Voice, chat &amp; automation — API-ready</span>
-        </div>
-        <div class="hero-value-row">
-          <strong data-content="hero_value_3_label">Client edge</strong>
-          <span data-content="hero_value_3_text">No platform bloat. No agency overhead.</span>
-        </div>
-      </aside>
+        <footer class="hero-call-footer">
+          <button type="button" class="hero-demo-button" id="voice-demo-start">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/></svg>
+            <span>Start voice demo</span>
+          </button>
+          <span class="hero-demo-privacy">Microphone activates only after you tap.</span>
+        </footer>
+      </article>
     </div>
   </div>
 </header>
@@ -173,6 +200,67 @@
     </div>
   </div>
 </div>
+
+<section class="section product-proof-section">
+  <div class="container">
+    <div class="proof-heading reveal">
+      <div>
+        <p class="eyebrow mb-3">// Systems, not slides</p>
+        <h2 class="display-5 mb-0">See the work while it works.</h2>
+      </div>
+      <p class="text-muted-custom mb-0">A call gets answered, the right details reach your team, and the follow-up is already moving—without another tab to babysit.</p>
+    </div>
+
+    <div class="system-stage reveal" aria-label="Mockups of an AI voice agent, sales agent queue, and business automation">
+      <article class="system-window system-window-call">
+        <header class="system-window-bar">
+          <span class="system-window-title"><span class="status-dot is-live"></span> Voice agent · live call</span>
+          <span class="system-time">02:14</span>
+        </header>
+        <div class="call-contact">
+          <span class="call-avatar">AM</span>
+          <div><strong>Akosua Mensah</strong><small>New booking enquiry</small></div>
+          <span class="call-state">Speaking</span>
+        </div>
+        <div class="voice-wave" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="transcript-line"><span>Agent</span><p>I can book that for Thursday at 10:30. Should I send the confirmation to this number?</p></div>
+        <div class="system-outcome"><span>✓</span><div><strong>Appointment held</strong><small>Calendar slot reserved for 5 minutes</small></div></div>
+      </article>
+
+      <article class="system-window system-window-agents">
+        <header class="system-window-bar">
+          <span class="system-window-title">Agent work queue</span>
+          <span class="window-chip">4 active</span>
+        </header>
+        <div class="agent-task"><span class="task-icon">01</span><div><strong>Qualify new lead</strong><small>Beacon · completed 1m ago</small></div><span class="task-check">✓</span></div>
+        <div class="agent-task"><span class="task-icon">02</span><div><strong>Research company</strong><small>Dossier · working now</small></div><span class="task-pulse"></span></div>
+        <div class="agent-task"><span class="task-icon">03</span><div><strong>Draft first response</strong><small>Nurturer · queued</small></div><span class="task-wait">•••</span></div>
+        <div class="queue-footer"><span>Next daily report</span><strong>17:00 GMT</strong></div>
+      </article>
+
+      <article class="system-window system-window-flow">
+        <header class="system-window-bar">
+          <span class="system-window-title">Booking workflow</span>
+          <span class="window-chip is-success">Run complete</span>
+        </header>
+        <div class="flow-track">
+          <div class="flow-node"><span>01</span><div><strong>Call captured</strong><small>Voice agent</small></div></div>
+          <div class="flow-node"><span>02</span><div><strong>CRM updated</strong><small>Contact + notes</small></div></div>
+          <div class="flow-node"><span>03</span><div><strong>Confirmation sent</strong><small>WhatsApp + email</small></div></div>
+        </div>
+        <div class="run-meta"><span>Last run</span><strong>8 seconds · no errors</strong></div>
+      </article>
+    </div>
+
+    <div class="proof-caption reveal">
+      <span>One connected system</span>
+      <span>Built around your actual workflow</span>
+      <a href="/services.html">Explore the system <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+</section>
 
 <section class="section">
   <div class="container reveal">
@@ -668,6 +756,7 @@
 <script src="/js/animations.js"></script>
 <script src="/js/hero-3d.js" defer></script>
 <script src="/js/home.js"></script>
+<script src="/js/voice-demo.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>
