@@ -965,7 +965,6 @@ CREATE TABLE IF NOT EXISTS telephony_calls (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at);
-CREATE INDEX IF NOT EXISTS idx_telephony_calls_marketing_lead ON telephony_calls (marketing_lead_id, created_at);
 
 CREATE TABLE IF NOT EXISTS notification_reads (
   notification_key TEXT PRIMARY KEY,
