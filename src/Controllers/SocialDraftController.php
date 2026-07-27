@@ -276,6 +276,7 @@ class SocialDraftController
     {
         $base = 'You are drafting a social media post for Prince Caleb, a solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering. '
             . "Keep it authentic and professional, not salesy or hyperbolic — no invented statistics or false urgency.\n\n";
+        $base .= SharedAgentTools::publicContactContext() . "\n\n";
         $jsonSpec = 'Return JSON only: {"content": "2-4 sentence post for LinkedIn/Facebook", '
             . '"short_content": "a punchier version under 260 characters for X/Twitter", '
             . '"hashtags": "3-5 relevant hashtags separated by spaces"} — no markdown fences, no commentary.';
@@ -306,7 +307,8 @@ class SocialDraftController
 
         return 'You are drafting an original social media post for Prince Caleb, a solo developer in Ghana who builds AI voice '
             . "agents, chatbots, and business automations on 12+ years of web & mobile engineering. There is no new content to promote right now, so write about: {$angle}. "
-            . "Keep it authentic and specific, not salesy or generic — no invented statistics or false urgency.\n\n{$jsonSpec}";
+            . "Keep it authentic and specific, not salesy or generic — no invented statistics or false urgency.\n\n"
+            . SharedAgentTools::publicContactContext() . "\n\n{$jsonSpec}";
     }
 
     private static function absoluteUrl(string $path): string

@@ -78,7 +78,7 @@ class SettingsController
         'service_2_title', 'service_2_summary', 'service_2_desc',
         'service_3_title', 'service_3_summary', 'service_3_desc',
         'about_intro', 'about_bio',
-        'contact_intro', 'contact_location', 'contact_phone',
+        'contact_intro', 'contact_location', 'contact_phone', 'ai_voice_public_number',
         'social_github', 'social_linkedin', 'social_twitter', 'social_whatsapp', 'social_upwork', 'social_fiverr', 'social_email',
         'chat_greeting', 'chat_intro', 'chat_offline_message', 'chat_assistant_name',
         'chat_voice_gender', 'chat_voice_accent', 'chat_voice_rate', 'chat_voice_pitch',

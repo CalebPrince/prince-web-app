@@ -1270,3 +1270,15 @@ Every new inbound web-chat or WhatsApp message reopens its conversation as
 unread and clears any earlier bell dismissal for that thread. Lisa treats the
 Site Content WhatsApp link as the only authoritative public WhatsApp contact
 and never derives one from the owner-recognition or general contact number.
+
+The public AI customer-service line is editable under Admin → Site Content.
+The landing page, clinic voice-agent page, and Contact page expose direct
+Call Lisa and WhatsApp Lisa actions. The WhatsApp actions use the existing
+public WhatsApp link from Site Content.
+
+All conversational agents receive the same authoritative public-contact
+context from `SharedAgentTools`: website, AI voice line, business WhatsApp,
+public email, and direct public phone. Owner-recognition numbers and provider
+credentials are excluded and may never be substituted as public contacts.
+Social drafts, outreach copy, and the secondary case-study assistant use the
+same grounding.

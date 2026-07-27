@@ -63,6 +63,7 @@ class AiAgentEngine
         ?callable $onGroqFailedGeneration = null,
         int $maxToolRounds = 2
     ): array {
+        $systemPrompt .= "\n\n" . SharedAgentTools::publicContactContext();
         $reply = null;
         $mode = 'fallback';
         $provider = null;

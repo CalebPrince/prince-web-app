@@ -1455,6 +1455,23 @@ pre code.hljs {
 /* The arrow sits next to the anchor, not inside it, so the nudge triggers
    from the whole row rather than the a:hover rule used elsewhere. */
 .contact-channel:hover .cta-arrow { transform: translateX(4px); }
+.contact-channel-live { border-left: 3px solid #20a36a; padding-left: 1rem; }
+.contact-channel-live .contact-channel-label { display: flex; align-items: center; gap: 0.45rem; }
+.contact-channel-live .contact-channel-label i {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: #20a36a;
+  box-shadow: 0 0 0 4px rgba(32, 163, 106, 0.12);
+}
+.contact-channel-value small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-family: Inter, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
 .form-label {
   color: var(--heading-color);
 }
@@ -3130,6 +3147,59 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   letter-spacing: 0.04em;
 }
 .hero-call-footer strong { color: var(--heading-color); }
+.live-channel-rail {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  max-width: 44rem;
+  margin-top: 1.15rem;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--card-bg);
+}
+.live-channel-rail > * { padding: 0.72rem 0.85rem; }
+.live-channel-rail > * + * { border-left: 1px solid var(--line); }
+.live-channel-status {
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  color: var(--muted);
+  font: 700 0.65rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.live-channel-status i {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: #20a36a;
+  box-shadow: 0 0 0 4px rgba(32, 163, 106, 0.12);
+}
+.live-channel-rail a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--heading-color);
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+.live-channel-rail a:hover { color: var(--heading-color); background: var(--bg-soft); }
+.live-channel-rail a strong { font-size: 0.78rem; }
+.live-channel-rail a small { margin-top: 0.15rem; color: var(--muted); font-size: 0.66rem; }
+.service-live-links { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 1rem; }
+.service-live-links a {
+  color: var(--muted);
+  font: 700 0.68rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.service-live-links a::before { content: "↗"; margin-right: 0.35rem; color: #20a36a; }
+.service-live-links a:hover { color: var(--heading-color); }
+.service-live-links.is-light a { color: rgba(255, 255, 255, 0.7); }
+.service-live-links.is-light a:hover { color: #fff; }
 .hero-demo-button {
   display: inline-flex;
   align-items: center;
@@ -3288,7 +3358,8 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   .home-page .agency-hero > .container > .eyebrow,
   .home-page .agency-hero > .container > h1,
   .home-page .agency-hero > .container > p,
-  .home-page .agency-hero > .container > .d-flex {
+  .home-page .agency-hero > .container > .d-flex,
+  .home-page .agency-hero > .container > .live-channel-rail {
     grid-column: 1;
   }
   .home-page .hero-side-stack {
@@ -3725,6 +3796,7 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
 .clinic-capability-grid h3 { margin: 2.5rem 0 0.8rem; font-size: 1.2rem; }
 .clinic-final-cta { display: flex; justify-content: space-between; gap: 3rem; align-items: end; }
 .clinic-final-cta > div:first-child { max-width: 48rem; }
+.clinic-final-actions { display: grid; gap: 0.85rem; justify-items: start; }
 
 @media (max-width: 991.98px) {
   .clinic-hero > .container,
@@ -3742,6 +3814,8 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   .clinic-pressure-strip .container { width: max-content; min-width: 100%; padding-block: 1rem; }
   .clinic-capability-grid { grid-template-columns: 1fr; }
   .boundary-row { grid-template-columns: 1fr; gap: 0.45rem; }
+  .live-channel-rail { grid-template-columns: 1fr; }
+  .live-channel-rail > * + * { border-left: 0; border-top: 1px solid var(--line); }
 }
 .proof-item {
   min-height: 8rem;

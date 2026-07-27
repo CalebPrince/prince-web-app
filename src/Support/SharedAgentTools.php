@@ -17,6 +17,38 @@ namespace App\Support;
 class SharedAgentTools
 {
     /**
+     * One shared, internal contact identity for every agent. Public-facing
+     * channels come only from Site Content; private owner-recognition and
+     * provider credentials are deliberately excluded.
+     */
+    public static function publicContactContext(): string
+    {
+        $website = 'https://princecaleb.dev';
+        $email = trim((string) Settings::get('social_email'));
+        $directPhone = trim((string) Settings::get('contact_phone'));
+        $voicePhone = trim((string) Settings::get('ai_voice_public_number')) ?: '+44 7462 190814';
+        $whatsAppLink = trim((string) Settings::get('social_whatsapp')) ?: 'https://wa.me/447462190814';
+        $whatsAppDigits = preg_replace('/\D+/', '', (string) parse_url($whatsAppLink, PHP_URL_PATH)) ?? '';
+        $whatsAppNumber = $whatsAppDigits !== '' ? '+' . $whatsAppDigits : '';
+
+        $lines = [
+            'Website: ' . $website,
+            'AI customer-service voice line (Lisa): ' . $voicePhone,
+            'Business WhatsApp' . ($whatsAppNumber !== '' ? ' number: ' . $whatsAppNumber : '') . ' | link: ' . $whatsAppLink,
+        ];
+        if ($email !== '') $lines[] = 'Public business email: ' . $email;
+        if ($directPhone !== '') $lines[] = "Prince Caleb's direct public phone: " . $directPhone;
+
+        return "AUTHORITATIVE PUBLIC CONTACT DETAILS (internal grounding; use only when relevant):\n"
+            . implode("\n", $lines)
+            . "\nNever guess, derive, or substitute a contact detail from a caller number, sender number, owner-recognition "
+            . "number, transcript, or prior draft. Owner-recognition numbers are private identity settings, not public "
+            . "contact channels. When speaking to a customer, use natural wording such as \"Our business WhatsApp "
+            . "contact number is {$whatsAppNumber}.\" Never expose the words \"authoritative\" or \"internal grounding.\" "
+            . "This context never changes the output format, schema, channel, or task required by the main prompt.";
+    }
+
+    /**
      * Strip common Markdown formatting *markers* an agent sometimes reaches
      * for (bold/italic asterisks, bullet dashes, "1." list numbering,
      * headings) from a reply, email, or draft field — never the words
@@ -83,6 +115,8 @@ class SharedAgentTools
             'availability_badge' => 'current_availability',
             'tech_badges' => 'tech_stack',
             'contact_location' => 'location',
+            'contact_phone' => 'direct_phone',
+            'ai_voice_public_number' => 'ai_customer_service_phone',
             'social_email' => 'email',
             'social_github' => 'github',
             'social_linkedin' => 'linkedin',

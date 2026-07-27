@@ -8,6 +8,7 @@ use App\Middleware\RateLimitMiddleware;
 use App\Support\AiText;
 use App\Support\Database;
 use App\Support\Response;
+use App\Support\SharedAgentTools;
 
 /**
  * Secondary, opt-in AI assistant: recommends relevant case studies based on what
@@ -57,6 +58,7 @@ class AiChatController
 
         $prompt = "You are a helpful assistant on Prince Caleb's developer portfolio site. "
             . "A visitor asked: \"$message\"\n\nAvailable case studies:\n$catalog\n\n"
+            . SharedAgentTools::publicContactContext() . "\n\n"
             . "In 2-3 sentences, recommend the most relevant case study/service and briefly say why. "
             . "If nothing matches well, suggest they use the contact form to discuss their project.";
 

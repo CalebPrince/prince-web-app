@@ -782,6 +782,7 @@ class MarketingLeadController
             . "Rules: 4-6 short sentences total, friendly and specific, never salesy or hyperbolic, no invented "
             . "statistics, no false urgency, no claims of financial harm or lost business you can't verify. "
             . "Do NOT include a sign-off or any contact details — those are appended separately.\n\n"
+            . SharedAgentTools::publicContactContext() . "\n\n"
             . "Respond as JSON only: {\"subject\": \"...\", \"body\": \"...\"} — no markdown fences, no commentary.";
 
         $text = AiText::generate($prompt, null, 20);
@@ -829,6 +830,7 @@ class MarketingLeadController
             . "likely objection with a brief, honest way to respond to it. Never salesy or pushy, no invented "
             . "statistics, no false urgency, no claims of financial harm or lost business that can't be "
             . "verified.\n\n"
+            . SharedAgentTools::publicContactContext() . "\n\n"
             . "Output plain text only — no markdown, no JSON, just the talking points with line breaks between "
             . "sections.";
 
@@ -849,6 +851,9 @@ class MarketingLeadController
     private static function signatureBlock(): string
     {
         $lines = ['— Prince Caleb', 'AI Voice Agents · Chatbots · Automation · Web & Mobile', '🌐 https://princecaleb.dev'];
+
+        $voice = Settings::get('ai_voice_public_number') ?: '+44 7462 190814';
+        $lines[] = "AI customer-service line: {$voice}";
 
         $whatsapp = Settings::get('social_whatsapp');
         if (!empty($whatsapp)) {

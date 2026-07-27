@@ -34,6 +34,20 @@
     el.href = el.dataset.contentHref === "social_email" ? `mailto:${value}` : `tel:${value.replace(/[^\d+]/g, "")}`;
   });
 
+  // Lisa's production customer-service channels. Static page values keep the
+  // CTAs useful during an API outage; Site Content remains the source of truth
+  // whenever an admin-configured value is available.
+  const voiceNumber = content.ai_voice_public_number || "+44 7462 190814";
+  document.querySelectorAll("[data-voice-phone-link]").forEach(el => {
+    el.href = `tel:${voiceNumber.replace(/[^\d+]/g, "")}`;
+    const number = el.querySelector("[data-voice-phone-number]");
+    if (number) number.textContent = voiceNumber;
+  });
+  const businessWhatsApp = content.social_whatsapp || "https://wa.me/447462190814";
+  document.querySelectorAll("[data-business-whatsapp-link]").forEach(el => {
+    el.href = businessWhatsApp;
+  });
+
   // Splash screen — on by default, dismissed early if explicitly turned off.
   // The inline script in <head> shows it immediately (before this fetch can
   // possibly resolve) so a brief flash is unavoidable when disabling it, but

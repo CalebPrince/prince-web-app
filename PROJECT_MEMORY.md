@@ -26,6 +26,14 @@ Status recorded on July 27, 2026:
   clears its previous notification dismissal. Lisa must share only the public
   WhatsApp link saved in Site Content and never infer one from the owner's
   recognition number or another contact number.
+- The public site exposes Lisa's production Call and WhatsApp channels on the
+  landing page, clinic niche page, and Contact page. The AI customer-service
+  phone number is editable in Site Content; WhatsApp continues to use the
+  public Social links -> WhatsApp link.
+- All agents share one public-contact identity: princecaleb.dev, the public AI
+  voice line, business WhatsApp number/link, public email, and direct public
+  phone. Private owner-recognition numbers are excluded and must never be
+  presented as customer contact details.
 - Marketing Leads prepares phone scripts and supports either a manual call or
   one Lisa AI call after an admin explicitly approves it and confirms that the
   recipient requested or consented. There is no cron or batch dialing.
