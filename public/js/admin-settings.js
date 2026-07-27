@@ -114,6 +114,8 @@ async function saveIntegrations(e) {
       twilio_auth_token: document.getElementById("twilio-auth-token").value.trim(),
       twilio_account_sid: document.getElementById("twilio-account-sid").value.trim(),
       twilio_whatsapp_number: document.getElementById("twilio-whatsapp-number").value.trim(),
+      twilio_regulatory_approved: document.getElementById("twilio-regulatory-approved").checked ? "1" : "0",
+      twilio_whatsapp_production_approved: document.getElementById("twilio-whatsapp-production-approved").checked ? "1" : "0",
       owner_whatsapp_number: document.getElementById("owner-whatsapp-number").value.trim(),
       twilio_voice_enabled: document.getElementById("twilio-voice-enabled").checked ? "1" : "0",
       twilio_voice_number: document.getElementById("twilio-voice-number").value.trim(),
@@ -548,6 +550,8 @@ async function testAi() {
     document.getElementById("twilio-auth-token").value = settings.twilio_auth_token || "";
     document.getElementById("twilio-account-sid").value = settings.twilio_account_sid || "";
     document.getElementById("twilio-whatsapp-number").value = settings.twilio_whatsapp_number || "";
+    document.getElementById("twilio-regulatory-approved").checked = settings.twilio_regulatory_approved === "1";
+    document.getElementById("twilio-whatsapp-production-approved").checked = settings.twilio_whatsapp_production_approved === "1";
     document.getElementById("owner-whatsapp-number").value = settings.owner_whatsapp_number || "";
     document.getElementById("twilio-voice-enabled").checked = settings.twilio_voice_enabled === "1";
     document.getElementById("twilio-voice-number").value = settings.twilio_voice_number || "";

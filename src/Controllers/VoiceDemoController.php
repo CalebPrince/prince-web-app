@@ -157,6 +157,11 @@ final class VoiceDemoController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
+        $authTokenConfigured = trim((string) Settings::get('twilio_auth_token')) !== '';
+        $accountSidConfigured = trim((string) Settings::get('twilio_account_sid')) !== '';
+        $whatsappNumber = trim((string) Settings::get('twilio_whatsapp_number'));
+        $voiceNumber = trim((string) Settings::get('twilio_voice_number'));
+        $voiceEnabled = Settings::get('twilio_voice_enabled') === '1';
         $summary = $pdo->query(
             "SELECT
                 COUNT(*) AS sessions,
@@ -188,9 +193,26 @@ final class VoiceDemoController
             'summary' => $summary,
             'events' => $events,
             'recent' => $recent,
-            'telephony_enabled' => Settings::get('twilio_voice_enabled') === '1',
-            'voice_number' => Settings::get('twilio_voice_number') ?: null,
+            'telephony_enabled' => $voiceEnabled && $authTokenConfigured && $voiceNumber !== '',
+            'voice_number' => $voiceNumber ?: null,
             'webhook_url' => 'https://princecaleb.dev/api/v1/voice/twilio/incoming',
+            'status_callback_url' => 'https://princecaleb.dev/api/v1/voice/twilio/status',
+            'whatsapp' => [
+                'sandbox_tested' => true,
+                'configured' => $authTokenConfigured && $whatsappNumber !== '',
+                'number' => $whatsappNumber ?: null,
+                'webhook_url' => 'https://princecaleb.dev/api/v1/whatsapp/webhook',
+            ],
+            'readiness' => [
+                ['label' => 'Twilio Account SID saved', 'complete' => $accountSidConfigured],
+                ['label' => 'Twilio Auth Token saved', 'complete' => $authTokenConfigured],
+                ['label' => 'WhatsApp sender number saved', 'complete' => $whatsappNumber !== ''],
+                ['label' => 'WhatsApp sandbox tested with Lisa', 'complete' => true],
+                ['label' => 'Regulatory Bundle approved', 'complete' => Settings::get('twilio_regulatory_approved') === '1', 'external' => true],
+                ['label' => 'Production WhatsApp sender approved', 'complete' => Settings::get('twilio_whatsapp_production_approved') === '1', 'external' => true],
+                ['label' => 'Voice number saved', 'complete' => $voiceNumber !== ''],
+                ['label' => 'Clinic voice agent enabled', 'complete' => $voiceEnabled],
+            ],
         ]);
     }
 
