@@ -39,6 +39,10 @@ class ArchSiteBuilder
         $pages = Arch::toList($brief['pages'] ?? []);
         $summary = "Business name: " . ($brief['business_name'] ?? '') . "\n"
             . "Type: " . ($brief['business_type'] ?? '') . "\n"
+            . "Primary audience: " . ($brief['audience'] ?? '') . "\n"
+            . "Primary conversion goal: " . ($brief['primary_goal'] ?? '') . "\n"
+            . "Brand personality: " . ($brief['personality'] ?? '') . "\n"
+            . "Visual reference/direction: " . ($brief['visual_reference'] ?? 'none supplied') . "\n"
             . "Style: " . ($brief['style'] ?? 'modern') . "\n"
             . "Tagline (if given): " . ($brief['tagline'] ?? '') . "\n"
             . "Description (if given): " . ($brief['description'] ?? '') . "\n"
@@ -67,8 +71,8 @@ class ArchSiteBuilder
             . '  "cta_heading": string (a closing call-to-action headline),' . "\n"
             . '  "footer_tagline": string (one short line)' . "\n"
             . "}\n"
-            . "Use realistic, specific copy tailored to the business type. Do not invent fake awards, phone "
-            . "numbers, or addresses."
+            . "Use realistic, specific copy tailored to the stated audience and conversion goal. Avoid generic "
+            . "marketing filler. Do not invent fake awards, statistics, years of experience, phone numbers, or addresses."
             . $revisionInstruction;
 
         $result = AiText::generateWithProvider($prompt, null, 45);
@@ -149,6 +153,7 @@ class ArchSiteBuilder
         $tagline = trim((string) ($brief['tagline'] ?? ''));
         $description = trim((string) ($brief['description'] ?? ''));
         $services = Arch::toList($brief['services'] ?? []);
+        $goal = trim((string) ($brief['primary_goal'] ?? ''));
 
         $svcObjects = [];
         foreach (array_slice($services, 0, 6) as $svc) {
@@ -170,7 +175,7 @@ class ArchSiteBuilder
             'seo_keywords' => implode(', ', array_filter([$name, $type, 'website', ...$services])),
             'hero_title' => $tagline !== '' ? $tagline : $name,
             'hero_subtitle' => $description !== '' ? $description : "Welcome to $name.",
-            'hero_cta' => 'Get in touch',
+            'hero_cta' => self::goalCta($goal),
             'about_heading' => 'About ' . $name,
             'about_body' => $description !== '' ? $description
                 : "$name is a $type dedicated to serving you with care and quality.",
@@ -250,8 +255,11 @@ class ArchSiteBuilder
     private static function buildPageHtml(array $brief, array $content, bool $forCms): string
     {
         $palette = self::palette($brief);
-        $fonts = self::fontPair($brief['style'] ?? 'modern');
+        $profile = self::designProfile($brief);
+        $fonts = self::fontPair($brief['style'] ?? 'modern', $profile['kind']);
         $name = self::e((string) ($brief['business_name'] ?? 'Your Business'));
+        $audience = self::e((string) ($brief['audience'] ?? 'people who value thoughtful service'));
+        $personality = self::e((string) ($brief['personality'] ?? 'clear, considered service'));
 
         // In CMS mode these become PHP expressions; in static mode, escaped literals.
         $c = static function (string $key, string $fallback) use ($content, $forCms): string {
@@ -290,7 +298,7 @@ class ArchSiteBuilder
             . "<link href=\"" . $fonts['url'] . "\" rel=\"stylesheet\">\n"
             . "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n"
             . "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css\" rel=\"stylesheet\">\n"
-            . "<style>\n" . self::css($palette, $fonts) . "</style>\n</head>\n";
+            . "<style>\n" . self::css($palette, $fonts, $profile) . "</style>\n</head>\n";
 
         // ---- nav ----
         $navLinks = '';
@@ -299,7 +307,7 @@ class ArchSiteBuilder
         if ($wantsGallery) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#gallery">Gallery</a></li>'; }
         if ($wantsContact) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>'; }
 
-        $body = "<body>\n"
+        $body = "<body class=\"layout-" . $profile['layout'] . " niche-" . $profile['kind'] . "\">\n"
             . "<nav class=\"navbar navbar-expand-lg sticky-top site-navbar\">\n"
             . "  <div class=\"container\">\n"
             . "    <a class=\"navbar-brand fw-bold\" href=\"#home\">$name</a>\n"
@@ -310,19 +318,25 @@ class ArchSiteBuilder
             . "</ul>\n    </div>\n  </div>\n</nav>\n";
 
         // ---- hero ----
-        $body .= "<header id=\"home\" class=\"hero\">\n  <div class=\"container text-center\">\n"
-            . "    <h1 class=\"hero-title reveal\">" . $c('hero_title', $name) . "</h1>\n"
-            . "    <p class=\"hero-subtitle reveal\">" . $c('hero_subtitle', '') . "</p>\n"
-            . ($wantsContact ? "    <a href=\"#contact\" class=\"btn btn-brand btn-lg reveal\">" . $c('hero_cta', 'Get in touch') . "</a>\n" : '')
+        $body .= "<header id=\"home\" class=\"hero\">\n  <div class=\"container\">\n"
+            . "    <div class=\"hero-grid\">\n"
+            . "      <div class=\"hero-copy reveal\"><p class=\"eyebrow\">" . self::e($profile['eyebrow']) . "</p>\n"
+            . "        <h1 class=\"hero-title\">" . $c('hero_title', $name) . "</h1>\n"
+            . "        <p class=\"hero-subtitle\">" . $c('hero_subtitle', '') . "</p>\n"
+            . ($wantsContact ? "        <div class=\"hero-actions\"><a href=\"#contact\" class=\"btn btn-brand btn-lg\">" . $c('hero_cta', 'Get in touch') . "</a><a href=\"#services\" class=\"text-link\">Explore what we do <i class=\"bi bi-arrow-right\"></i></a></div>\n" : '')
+            . "      </div>\n"
+            . "      <div class=\"hero-visual reveal\"><img src=\"" . self::e($profile['images'][0]) . "\" alt=\"" . self::e($profile['image_alt']) . "\" fetchpriority=\"high\">"
+            . "<div class=\"hero-note\"><span>" . self::e($profile['note_label']) . "</span><strong>" . self::e($profile['note_value']) . "</strong></div></div>\n"
+            . "    </div>\n"
+            . "    <div class=\"trust-strip reveal\"><span>Designed for <strong>$audience</strong></span><span><i class=\"bi bi-check2-circle\"></i> Clear next steps</span><span><i class=\"bi bi-check2-circle\"></i> $personality</span></div>\n"
             . "  </div>\n</header>\n";
 
         // ---- about ----
         if ($wantsAbout) {
             $body .= "<section id=\"about\" class=\"section\">\n  <div class=\"container\">\n"
-                . "    <div class=\"row justify-content-center\"><div class=\"col-lg-8 text-center reveal\">\n"
-                . "      <h2 class=\"section-title\">" . $c('about_heading', 'About us') . "</h2>\n"
-                . "      <p class=\"lead text-body-secondary\">" . $c('about_body', '') . "</p>\n"
-                . "    </div></div>\n  </div>\n</section>\n";
+                . "    <div class=\"about-grid\"><div class=\"reveal\"><p class=\"eyebrow\">Our approach</p><h2 class=\"section-title\">" . $c('about_heading', 'About us') . "</h2></div>\n"
+                . "      <div class=\"reveal\"><p class=\"about-copy\">" . $c('about_body', '') . "</p><p class=\"about-detail\">" . self::e($profile['about_detail']) . "</p></div>\n"
+                . "    </div>\n  </div>\n</section>\n";
         }
 
         // ---- services ----
@@ -332,15 +346,23 @@ class ArchSiteBuilder
                 . "    <div class=\"row g-4 mt-2\">\n" . self::servicesHtml($content, $forCms) . "    </div>\n  </div>\n</section>\n";
         }
 
+        $body .= "<section class=\"section process-section\"><div class=\"container\"><div class=\"process-heading reveal\">"
+            . "<p class=\"eyebrow\">A simpler way forward</p><h2 class=\"section-title\">From interest to action</h2></div>"
+            . "<div class=\"process-grid\">"
+            . self::processStep('01', $profile['process'][0][0], $profile['process'][0][1])
+            . self::processStep('02', $profile['process'][1][0], $profile['process'][1][1])
+            . self::processStep('03', $profile['process'][2][0], $profile['process'][2][1])
+            . "</div></div></section>\n";
+
         // ---- gallery ----
         if ($wantsGallery) {
             $body .= "<section id=\"gallery\" class=\"section\">\n  <div class=\"container\">\n"
                 . "    <h2 class=\"section-title text-center reveal\">Gallery</h2>\n"
                 . "    <div class=\"row g-3 mt-2\">\n";
-            for ($i = 0; $i < 6; $i++) {
-                $body .= "      <div class=\"col-6 col-md-4 reveal\"><div class=\"gallery-tile\" style=\"--i:$i\"></div></div>\n";
+            foreach ($profile['images'] as $i => $image) {
+                $body .= "      <div class=\"" . ($i === 0 ? 'col-12 col-md-7' : 'col-6 col-md') . " reveal\"><img class=\"gallery-tile\" src=\"" . self::e($image) . "\" alt=\"" . self::e($profile['image_alt']) . "\" loading=\"lazy\"></div>\n";
             }
-            $body .= "    </div>\n    <p class=\"text-center text-body-secondary small mt-3\">Replace these with your own photos.</p>\n  </div>\n</section>\n";
+            $body .= "    </div>\n    <p class=\"text-center text-body-secondary small mt-3\">Curated concept imagery — replace with your own photography before launch.</p>\n  </div>\n</section>\n";
         }
 
         // ---- booking note ----
@@ -711,6 +733,106 @@ PHP;
 
     // ---- Theme / palette / fonts / CSS -------------------------------------
 
+    private static function processStep(string $number, string $title, string $body): string
+    {
+        return "<article class=\"process-step reveal\"><span class=\"process-no\">$number</span>"
+            . "<h3 class=\"h4 mt-4\">" . self::e($title) . "</h3><p>" . self::e($body) . "</p></article>";
+    }
+
+    private static function goalCta(string $goal): string
+    {
+        $goal = strtolower($goal);
+        return match (true) {
+            str_contains($goal, 'book'), str_contains($goal, 'appointment') => 'Book now',
+            str_contains($goal, 'quote'), str_contains($goal, 'estimate') => 'Request a quote',
+            str_contains($goal, 'order'), str_contains($goal, 'buy'), str_contains($goal, 'shop') => 'Order now',
+            str_contains($goal, 'call') => 'Call us',
+            str_contains($goal, 'visit') => 'Plan your visit',
+            str_contains($goal, 'subscribe'), str_contains($goal, 'join') => 'Join today',
+            default => 'Start a conversation',
+        };
+    }
+
+    /** Selects imagery, composition and conversion language from the business niche. */
+    private static function designProfile(array $brief): array
+    {
+        $haystack = strtolower(implode(' ', [
+            (string) ($brief['business_type'] ?? ''),
+            (string) ($brief['business_name'] ?? ''),
+            implode(' ', Arch::toList($brief['services'] ?? [])),
+        ]));
+        $kind = 'studio';
+        $groups = [
+            'clinical' => ['clinic', 'doctor', 'dental', 'health', 'hospital', 'pharmacy', 'medical'],
+            'food' => ['restaurant', 'cafe', 'food', 'catering', 'bakery', 'bar'],
+            'property' => ['property', 'real estate', 'realtor', 'construction', 'architecture'],
+            'beauty' => ['salon', 'spa', 'beauty', 'barber', 'cosmetic'],
+            'hospitality' => ['hotel', 'resort', 'guest house', 'travel', 'tour'],
+            'professional' => ['law', 'legal', 'account', 'consult', 'finance', 'agency', 'corporate'],
+        ];
+        foreach ($groups as $candidate => $needles) {
+            foreach ($needles as $needle) {
+                if (str_contains($haystack, $needle)) {
+                    $kind = $candidate;
+                    break 2;
+                }
+            }
+        }
+
+        $profiles = [
+            'clinical' => [
+                'layout' => 'structured', 'eyebrow' => 'Care with clarity', 'image_alt' => 'A calm healthcare consultation',
+                'note_label' => 'Your next step', 'note_value' => 'Care starts here', 'radius' => '10px',
+                'about_detail' => 'Clear information and an easy next step help every visitor feel informed before they get in touch.',
+                'process' => [['Explore', 'Find the care or support that fits your needs.'], ['Connect', 'Ask a question or choose a convenient time.'], ['Continue', 'Move forward with a clear, human next step.']],
+                'images' => ['https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=900&q=80'],
+            ],
+            'food' => [
+                'layout' => 'immersive', 'eyebrow' => 'Made to be remembered', 'image_alt' => 'A welcoming dining experience',
+                'note_label' => 'Made for', 'note_value' => 'Good moments', 'radius' => '2px',
+                'about_detail' => 'Atmosphere, appetite and a direct path to booking or ordering work together from the first screen.',
+                'process' => [['Discover', 'See the flavours and experiences waiting for you.'], ['Choose', 'Find the option that suits the moment.'], ['Enjoy', 'Reserve, order or visit with confidence.']],
+                'images' => ['https://images.unsplash.com/photo-1517248135467-4c7edcad34c5?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80'],
+            ],
+            'property' => [
+                'layout' => 'structured', 'eyebrow' => 'Space for what comes next', 'image_alt' => 'Contemporary property exterior',
+                'note_label' => 'Built around', 'note_value' => 'Your priorities', 'radius' => '0px',
+                'about_detail' => 'Strong imagery, useful details and decisive calls to action make complex choices easier to navigate.',
+                'process' => [['Browse', 'Explore the options aligned with your priorities.'], ['Compare', 'Get the details needed to make a sound decision.'], ['Enquire', 'Speak with the right person and take the next step.']],
+                'images' => ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=80'],
+            ],
+            'beauty' => [
+                'layout' => 'editorial', 'eyebrow' => 'Your time, beautifully spent', 'image_alt' => 'A refined beauty and wellness setting',
+                'note_label' => 'The experience', 'note_value' => 'Personal by design', 'radius' => '999px',
+                'about_detail' => 'An editorial rhythm and tactile imagery create a premium first impression without making the journey feel complicated.',
+                'process' => [['Select', 'Choose the experience that feels right for you.'], ['Book', 'Pick a convenient time in just a few steps.'], ['Arrive', 'Come in knowing everything is taken care of.']],
+                'images' => ['https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=900&q=80'],
+            ],
+            'hospitality' => [
+                'layout' => 'immersive', 'eyebrow' => 'Stay somewhere memorable', 'image_alt' => 'A welcoming hospitality destination',
+                'note_label' => 'Come for', 'note_value' => 'A better stay', 'radius' => '4px',
+                'about_detail' => 'Immersive imagery carries the mood while practical details keep the path to an enquiry or reservation simple.',
+                'process' => [['Imagine', 'Explore the setting and picture your time here.'], ['Plan', 'Find the experience that matches your trip.'], ['Reserve', 'Reach out or book your stay with confidence.']],
+                'images' => ['https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80'],
+            ],
+            'professional' => [
+                'layout' => 'editorial', 'eyebrow' => 'Judgement you can rely on', 'image_alt' => 'A focused professional team at work',
+                'note_label' => 'The standard', 'note_value' => 'Clear and considered', 'radius' => '3px',
+                'about_detail' => 'An authoritative editorial layout builds confidence through restraint, clarity and visible next steps.',
+                'process' => [['Understand', 'Start with the challenge and the outcome you need.'], ['Advise', 'Get a clear recommendation shaped around your situation.'], ['Act', 'Move forward with an agreed plan and next step.']],
+                'images' => ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=80'],
+            ],
+            'studio' => [
+                'layout' => 'editorial', 'eyebrow' => 'Built around your next move', 'image_alt' => 'A creative team shaping new ideas',
+                'note_label' => 'Made to', 'note_value' => 'Turn interest into action', 'radius' => '14px',
+                'about_detail' => 'A distinctive visual system and a focused customer journey give the business a stronger digital first impression.',
+                'process' => [['Discover', 'Understand what is available and why it matters.'], ['Decide', 'Find the right fit without unnecessary friction.'], ['Connect', 'Take the primary next step with confidence.']],
+                'images' => ['https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=900&q=80'],
+            ],
+        ];
+        return ['kind' => $kind] + $profiles[$kind];
+    }
+
     /** @return array{primary:string,accent:string,bg:string,surface:string,text:string,muted:string,bs_theme:string} */
     private static function palette(array $brief): array
     {
@@ -765,7 +887,7 @@ PHP;
     }
 
     /** @return array{url:string,heading:string,body:string} */
-    private static function fontPair(string $style): array
+    private static function fontPair(string $style, string $kind = 'studio'): array
     {
         $pairs = [
             'modern' => ['Plus Jakarta Sans', 'Inter'],
@@ -773,6 +895,17 @@ PHP;
             'minimal' => ['Inter', 'Inter'],
             'bold' => ['Poppins', 'Inter'],
         ];
+        $nichePairs = [
+            'clinical' => ['DM Sans', 'Inter'],
+            'food' => ['Playfair Display', 'Inter'],
+            'property' => ['Manrope', 'Inter'],
+            'beauty' => ['Cormorant Garamond', 'DM Sans'],
+            'hospitality' => ['Cormorant Garamond', 'Inter'],
+            'professional' => ['Libre Baskerville', 'Inter'],
+        ];
+        if ($style === 'modern' && isset($nichePairs[$kind])) {
+            $pairs['modern'] = $nichePairs[$kind];
+        }
         [$heading, $body] = $pairs[strtolower($style)] ?? $pairs['modern'];
         $families = $heading === $body
             ? 'family=' . str_replace(' ', '+', $heading) . ':wght@400;500;600;700;800'
@@ -784,24 +917,31 @@ PHP;
         ];
     }
 
-    private static function css(array $p, array $fonts): string
+    private static function css(array $p, array $fonts, array $profile): string
     {
-        return ":root{--brand:{$p['primary']};--accent:{$p['accent']};--bg:{$p['bg']};--surface:{$p['surface']};--text:{$p['text']};--muted:{$p['muted']};}\n"
+        return ":root{--brand:{$p['primary']};--accent:{$p['accent']};--bg:{$p['bg']};--surface:{$p['surface']};--text:{$p['text']};--muted:{$p['muted']};--radius:{$profile['radius']};}\n"
             . "body{font-family:'{$fonts['body']}',system-ui,sans-serif;color:var(--text);background:var(--bg);line-height:1.65;}\n"
-            . "h1,h2,h3,.navbar-brand,.footer-brand{font-family:'{$fonts['heading']}','{$fonts['body']}',sans-serif;font-weight:700;letter-spacing:-.01em;}\n"
+            . "h1,h2,h3,.navbar-brand,.footer-brand{font-family:'{$fonts['heading']}','{$fonts['body']}',sans-serif;font-weight:700;letter-spacing:-.035em;}\n"
             . ".site-navbar{background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid color-mix(in srgb,var(--text) 10%,transparent);}\n"
             . ".navbar-brand{color:var(--brand)!important;}\n"
-            . ".btn-brand{background:var(--brand);border:none;color:#fff;font-weight:600;border-radius:10px;padding:.6rem 1.4rem;transition:transform .15s ease,filter .15s ease;}\n"
+            . ".btn-brand{background:var(--brand);border:none;color:#fff;font-weight:700;border-radius:var(--radius);padding:.72rem 1.5rem;transition:transform .15s ease,filter .15s ease;}\n"
             . ".btn-brand:hover{color:#fff;filter:brightness(1.08);transform:translateY(-1px);}\n"
-            . ".hero{padding:7rem 0 5rem;background:linear-gradient(135deg,color-mix(in srgb,var(--brand) 16%,var(--bg)),var(--bg) 65%);}\n"
-            . ".hero-title{font-size:clamp(2.2rem,6vw,3.8rem);margin-bottom:1rem;}\n"
-            . ".hero-subtitle{font-size:clamp(1.05rem,2.5vw,1.35rem);color:var(--muted);max-width:640px;margin:0 auto 2rem;}\n"
+            . ".hero{padding:5.5rem 0 0;background:radial-gradient(circle at 8% 20%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 32%),var(--bg);overflow:hidden;}\n"
+            . ".hero-grid{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(320px,.98fr);gap:clamp(2rem,6vw,6rem);align-items:center;}\n"
+            . ".hero-title{font-size:clamp(2.7rem,6vw,5.6rem);line-height:.98;margin-bottom:1.35rem;max-width:12ch;}\n"
+            . ".hero-subtitle{font-size:clamp(1.05rem,2vw,1.28rem);color:var(--muted);max-width:610px;margin:0 0 2rem;}\n"
+            . ".eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.75rem;font-weight:800;color:var(--brand);margin-bottom:1rem;}\n"
+            . ".hero-actions{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap}.text-link{color:var(--text);font-weight:700;text-decoration:none}.text-link:hover{color:var(--brand)}\n"
+            . ".hero-visual{position:relative;min-height:540px}.hero-visual img{width:100%;height:540px;object-fit:cover;border-radius:var(--radius);box-shadow:0 30px 70px -35px #000;}\n"
+            . ".hero-note{position:absolute;left:-2rem;bottom:2rem;background:var(--bg);padding:1rem 1.2rem;border-radius:var(--radius);box-shadow:0 20px 50px -28px #000;display:grid}.hero-note span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.hero-note strong{font-size:1.05rem}\n"
+            . ".trust-strip{margin-top:3.5rem;padding:1.15rem 0;border-top:1px solid color-mix(in srgb,var(--text) 11%,transparent);display:flex;justify-content:space-between;gap:1rem;color:var(--muted);font-size:.9rem}.trust-strip i{color:var(--brand);margin-right:.35rem}\n"
             . ".section{padding:5rem 0;}\n.section-alt{background:var(--surface);}\n"
-            . ".section-title{font-size:clamp(1.6rem,4vw,2.4rem);margin-bottom:1rem;}\n"
-            . ".service-card{background:var(--bg);border:1px solid color-mix(in srgb,var(--text) 9%,transparent);border-radius:16px;padding:1.8rem;transition:transform .2s ease,box-shadow .2s ease;}\n"
+            . ".section-title{font-size:clamp(2rem,4vw,3.5rem);line-height:1.05;margin-bottom:1rem;}.about-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:clamp(2rem,8vw,8rem);align-items:start}.about-copy{font-size:clamp(1.2rem,2vw,1.6rem);line-height:1.55}.about-detail{color:var(--muted);border-left:3px solid var(--brand);padding-left:1rem}\n"
+            . ".service-card{background:var(--bg);border:1px solid color-mix(in srgb,var(--text) 9%,transparent);border-radius:var(--radius);padding:1.8rem;transition:transform .2s ease,box-shadow .2s ease;}\n"
             . ".service-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px -24px color-mix(in srgb,var(--brand) 60%,transparent);}\n"
             . ".service-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);}\n"
-            . ".gallery-tile{aspect-ratio:4/3;border-radius:14px;background:linear-gradient(135deg,color-mix(in srgb,var(--brand) calc(30% + var(--i)*8%),var(--surface)),color-mix(in srgb,var(--accent) 40%,var(--surface)));}\n"
+            . ".process-section{background:var(--text);color:var(--bg)}.process-section .eyebrow{color:var(--accent)}.process-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:color-mix(in srgb,var(--bg) 18%,transparent);margin-top:2.5rem}.process-step{background:var(--text);padding:2rem}.process-no{color:var(--accent);font-weight:800;font-size:.78rem}.process-step p{color:color-mix(in srgb,var(--bg) 66%,transparent);margin:0}\n"
+            . ".gallery-tile{width:100%;height:360px;object-fit:cover;border-radius:var(--radius);}\n"
             . ".map-embed{border:2px dashed color-mix(in srgb,var(--text) 20%,transparent);border-radius:14px;padding:3rem 1rem;}\n"
             . ".contact-form .form-control{border-radius:10px;}\n"
             . ".site-footer{padding:3rem 0 2rem;background:var(--surface);border-top:1px solid color-mix(in srgb,var(--text) 8%,transparent);}\n"
@@ -812,6 +952,8 @@ PHP;
             . ".whatsapp-fab:hover{color:#fff;transform:scale(1.08);}\n"
             . ".reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease;}\n"
             . ".reveal.in{opacity:1;transform:none;}\n"
+            . ".layout-immersive .hero-grid{grid-template-columns:.8fr 1.2fr}.layout-immersive .hero-visual img{height:620px}.layout-structured .service-card{border-top:4px solid var(--brand)}.layout-editorial .hero-title{font-weight:600}.layout-editorial .hero-visual{transform:rotate(1.5deg)}\n"
+            . "@media(max-width:767px){.hero{padding-top:3.5rem}.hero-grid,.about-grid{grid-template-columns:1fr}.hero-visual,.hero-visual img{min-height:0;height:390px}.hero-note{left:1rem;bottom:1rem}.trust-strip{overflow-x:auto;justify-content:flex-start}.trust-strip span{min-width:max-content}.process-grid{grid-template-columns:1fr}.section{padding:4rem 0}.navbar-nav{padding:1rem 0}.gallery-tile{height:240px}}\n"
             . "@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}\n";
     }
 

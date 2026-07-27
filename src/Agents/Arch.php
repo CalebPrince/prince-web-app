@@ -392,7 +392,8 @@ class Arch
     {
         $prompt = "A client is revising an existing website prototype. Return ONLY JSON containing fields that must change. "
             . "Allowed fields: primary_color, secondary_color, style (modern/classic/minimal/bold), theme (light/dark), "
-            . "pages (array), features (array), tagline, description, services (array), phone, whatsapp, email, socials (array). "
+            . "audience, primary_goal, personality, visual_reference, pages (array), features (array), tagline, "
+            . "description, services (array), phone, whatsapp, email, socials (array). "
             . "Revisions may refine copy, palette, supported pages, or supported template features. If the request changes "
             . "the business identity, asks for a different/new site, a custom application, custom backend, complex ecommerce, "
             . "or work outside the existing prototype, return {\"out_of_scope\":true,\"reason\":\"a short client-facing explanation\"}. "
@@ -446,7 +447,8 @@ class Arch
         $scalars = [
             'business_name', 'business_type', 'primary_color', 'secondary_color',
             'style', 'theme', 'tagline', 'description', 'phone', 'email',
-            'whatsapp', 'client_name',
+            'whatsapp', 'client_name', 'audience', 'primary_goal', 'personality',
+            'visual_reference',
         ];
         foreach ($scalars as $key) {
             if (isset($args[$key]) && is_scalar($args[$key])) {
@@ -525,8 +527,8 @@ class Arch
         $hasList = static fn(string $k): bool => !empty($brief[$k]) && is_array($brief[$k]);
 
         return [
-            1 => $has('business_name') && $has('business_type'),
-            2 => $has('style'),
+            1 => $has('business_name') && $has('business_type') && $has('audience') && $has('primary_goal'),
+            2 => $has('style') && $has('personality'),
             3 => $hasList('pages'),
             // Features are optional in content but the step must be answerable —
             // treat it done once there's at least one feature OR the model marked
@@ -577,6 +579,15 @@ class Arch
         if (empty($brief['style'])) {
             $missing[] = 'style';
         }
+        if (empty($brief['audience'])) {
+            $missing[] = 'target audience';
+        }
+        if (empty($brief['primary_goal'])) {
+            $missing[] = 'primary website goal';
+        }
+        if (empty($brief['personality'])) {
+            $missing[] = 'brand personality';
+        }
         if (empty($brief['pages']) || !is_array($brief['pages'])) {
             $missing[] = 'at least one page';
         }
@@ -625,10 +636,12 @@ class Arch
             . "small talk concise, avoid pretending to have a human body or personal life, and after one or two "
             . "off-topic turns guide the conversation back naturally.\n\n"
             . "Gather requirements in these five steps, in order:\n"
-            . "Step 1 — Business: their business name and what type it is (restaurant, shop, church, "
-            . "portfolio, salon, clinic, etc.).\n"
-            . "Step 2 — Look: preferred colors, and a style — one of modern, classic, minimal, or bold. "
-            . "Also gently confirm whether they want a light or dark theme.\n"
+            . "Step 1 — Business and conversion: their business name, what type it is (restaurant, shop, "
+            . "church, portfolio, salon, clinic, etc.), who the website is for, and the ONE main action visitors "
+            . "should take (book, call, request a quote, order, visit, or another clear goal).\n"
+            . "Step 2 — Creative direction: the feeling/personality the site should convey, preferred colors, "
+            . "and a style — one of modern, classic, minimal, or bold. Also gently confirm light or dark theme "
+            . "and ask whether there is a website or visual reference they like; a reference is optional.\n"
             . "Step 3 — Pages: which pages they need (Home, About, Services, Contact, Gallery, Blog, Shop). "
             . "Home is always included.\n"
             . "Step 4 — Features: key features — contact form, WhatsApp button, Google Maps, payment, photo "
@@ -660,6 +673,10 @@ class Arch
                 'properties' => [
                     'business_name' => ['type' => 'STRING'],
                     'business_type' => ['type' => 'STRING', 'description' => 'e.g. restaurant, shop, church, portfolio, salon, clinic.'],
+                    'audience' => ['type' => 'STRING', 'description' => 'The primary customer or visitor audience.'],
+                    'primary_goal' => ['type' => 'STRING', 'description' => 'The one main conversion action: book, call, request a quote, order, visit, subscribe, or similar.'],
+                    'personality' => ['type' => 'STRING', 'description' => 'Desired brand feeling, e.g. calm and trustworthy, refined and premium, warm and welcoming, bold and energetic.'],
+                    'visual_reference' => ['type' => 'STRING', 'description' => 'Optional website, brand, or visual direction the client likes.'],
                     'primary_color' => ['type' => 'STRING', 'description' => 'Preferred main color, name or hex.'],
                     'secondary_color' => ['type' => 'STRING', 'description' => 'Optional accent color, name or hex.'],
                     'style' => ['type' => 'STRING', 'description' => 'One of: modern, classic, minimal, bold.'],
@@ -687,8 +704,8 @@ class Arch
     private static function deterministicPrompt(array $brief): string
     {
         return match (self::currentStep($brief)) {
-            1 => "Let's start with the basics — what's the name of your business, and what type is it (restaurant, shop, church, portfolio, and so on)?",
-            2 => "Great. What colors and overall style are you after? For style, pick one of: modern, classic, minimal, or bold — and let me know if you'd prefer a light or dark look.",
+            1 => "Let's start with the essentials — what's your business name and type, who is it for, and what is the main action visitors should take?",
+            2 => "What should the site feel like — calm and trustworthy, refined and premium, warm and welcoming, or bold and energetic? Share preferred colors, a modern/classic/minimal/bold style, light or dark theme, and any visual reference you like.",
             3 => "Which pages do you need? Common ones are Home, About, Services, Contact, Gallery, Blog, and Shop.",
             4 => "Any key features you'd like? For example a contact form, WhatsApp button, Google Maps, payments, a photo gallery, or online booking. If none, just say so.",
             default => "Last step — tell me your tagline, a short description of the business, your services, your name, and a valid email address so Prince Caleb can follow up about your prototype.",

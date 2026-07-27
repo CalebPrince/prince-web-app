@@ -51,6 +51,51 @@ These edits use the existing settings/content API and `settings` table; no
 database schema, migrations, seed data, or stored records were changed for
 this redesign.
 
+## Arch AI website builder
+
+`/chat.html` is the public entry point for Arch, the brief-driven AI website
+builder. Arch still produces real, responsive site files under
+`public/generated-sites/{slug}/`, with a working contact form, SEO metadata,
+optional WhatsApp action, dark/light theme support, scroll reveals, and an
+optional self-contained SQLite CMS/admin panel. The controlled PHP builder
+owns the document structure and safely escapes generated copy; the language
+model supplies business-specific copy and cannot replace the page template
+with arbitrary markup. If every AI copy provider is unavailable or returns
+invalid JSON, deterministic brief-derived copy still produces a usable site.
+
+The upgraded builder now gathers strategy before styling:
+
+- business name and type;
+- primary audience;
+- the single most important conversion goal, such as booking, calling,
+  requesting a quote, ordering, visiting, or subscribing;
+- brand personality, preferred colors, style, and light/dark theme;
+- an optional website or visual reference;
+- pages, features, services, content, and verified follow-up contact details.
+
+Those inputs drive more than recoloring. `ArchSiteBuilder` classifies the brief
+into healthcare, food, property, beauty, hospitality, professional-services,
+or flexible studio profiles. Profiles select their own layout family
+(structured, immersive, or editorial), typography, corner treatment, spacing,
+conversion language, content rhythm, and curated industry imagery. Generated
+pages use an asymmetric image-led hero, audience-aware trust strip, editorial
+About composition, service presentation, a three-step customer journey,
+optional real-image gallery, focused closing CTA, contact form, and responsive
+mobile layouts. Concept imagery comes from fixed optimized Unsplash URLs and
+is clearly labelled for replacement with the client's photography before
+launch; the builder does not invent testimonials, awards, performance
+statistics, addresses, or years of experience.
+
+Arch's revision flow supports the new audience, conversion-goal, personality,
+and visual-reference fields alongside palette, theme, pages, features, copy,
+services, and contacts. Two focused revision rounds remain available. Both
+static and CMS output use the same niche-aware presentation, while CMS text and
+service content remain editable from the generated site's password-protected
+admin panel. No database migration or new environment variable is required for
+this upgrade. At least one configured Gemini, OpenRouter, or Groq key is still
+required to open the conversational builder; generated copy retains the
+existing deterministic fallback behavior once a build has started.
+
 ## Setup
 
 Requires PHP 8.1+ with the `pdo_sqlite` extension. No Composer, no Node, no
@@ -855,13 +900,13 @@ storage/
     "Copy Arch link" base64-encodes those choices (plus the project title as
     `business_name`) into `/chat.html?prefill=...`. `arch-chat.js` decodes
     it on load and merges the fields straight into the client-held `brief`
-    object before the first turn — no backend change to Arch itself needed,
-    since `Arch::stepStatus()`'s style check is just "is `brief['style']`
-    already set," so a pre-filled field is indistinguishable from one the
-    model collected, and that step is skipped in conversation. Purely
-    additive and stateless (no server-side storage of the link) — a client
-    who arrives without `?prefill=` still picks everything themselves,
-    exactly as before.
+    object before the first turn. A pre-filled style or color is
+    indistinguishable from one the model collected, but the upgraded creative
+    direction step also captures brand personality and an optional visual
+    reference, so Arch asks only for the strategic details still missing.
+    This remains purely additive and stateless (no server-side storage of the
+    link) — a client who arrives without `?prefill=` chooses the complete
+    direction themselves.
 
     **Build review:** a "Review build" button next to the Live URL field on
     `/admin/projects.html` (`POST /api/v1/admin/projects/review-build`,

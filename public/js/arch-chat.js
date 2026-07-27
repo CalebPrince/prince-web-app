@@ -7,7 +7,7 @@
 (function () {
   "use strict";
 
-  var STEP_NAMES = ["Your business", "Look & feel", "Pages", "Features", "Your content"];
+  var STEP_NAMES = ["Business & goal", "Creative direction", "Pages", "Features", "Your content"];
   var TOTAL_STEPS = 5;
   var SESSION_KEY = "arch-chat-session-v1";
 
@@ -155,8 +155,8 @@
       return text;
     }
     var fallbacks = {
-      1: "Let's start with the basics — what's the name of your business, and what type is it?",
-      2: "Great. What colors and overall style are you after, and would you prefer a light or dark look?",
+      1: "What's your business name and type, who is it for, and what is the main action visitors should take?",
+      2: "What should the site feel like? Share a personality, preferred colors, style, light or dark theme, and any optional visual reference.",
       3: "Which pages do you need? Common ones are Home, About, Services, Contact, Gallery, Blog, and Shop.",
       4: "Any key features you'd like, such as a contact form, WhatsApp, maps, payments, a gallery, or booking?",
       5: "Last step — tell me your tagline, business description, services, and contact details.",
@@ -167,7 +167,7 @@
   // Contextual quick-reply chips per step, to make answering faster.
   function renderSuggestions(step) {
     var chips = [];
-    if (step === 2) chips = ["Modern", "Classic", "Minimal", "Bold"];
+    if (step === 2) chips = ["Calm & trustworthy", "Refined & premium", "Warm & welcoming", "Bold & energetic"];
     else if (step === 3) chips = ["Home, About, Services, Contact", "Add a Gallery", "Add a Blog", "Add a Shop"];
     else if (step === 4) chips = ["Contact form + WhatsApp", "Add Google Maps", "Photo gallery", "No extra features"];
     suggestions.innerHTML = "";
