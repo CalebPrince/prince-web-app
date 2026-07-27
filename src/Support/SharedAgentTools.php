@@ -42,6 +42,8 @@ class SharedAgentTools
         $pilotPrice = trim((string) Settings::get('pricing_tier_1_price'));
         $connectedPrice = trim((string) Settings::get('pricing_tier_2_price'));
         $operationsPrice = trim((string) Settings::get('pricing_tier_3_price'));
+        $webMobilePrice = trim((string) Settings::get('pricing_tier_4_price'));
+        $webMobileDetails = trim((string) Settings::get('pricing_tier_4_tagline'));
 
         return "AUTHORITATIVE PUBLIC CONTACT DETAILS (internal grounding; use only when relevant):\n"
             . implode("\n", $lines)
@@ -57,9 +59,13 @@ class SharedAgentTools
             . ($connectedPrice !== '' ? " starting at {$connectedPrice}" : '')
             . ", and (3) AI Operations System"
             . ($operationsPrice !== '' ? " at {$operationsPrice}" : '')
-            . ". Lead with AI voice agents, WhatsApp/chat assistants, and workflow automation. Custom web and mobile "
-            . "engineering is the 12+ year technical foundation behind those systems, not the lead offer unless the "
-            . "customer specifically needs custom software.\n"
+            . ", and (4) Custom Websites & Mobile Apps"
+            . ($webMobilePrice !== '' ? " at {$webMobilePrice}" : '')
+            . ($webMobileDetails !== '' ? " ({$webMobileDetails})" : '')
+            . ". Lead with the offer that matches the customer's stated need. For an open-ended workflow enquiry, "
+            . "start with AI voice agents, WhatsApp/chat assistants, and workflow automation. For a website, web app, "
+            . "portal, e-commerce, or mobile-app enquiry, present the custom software offer directly; it is backed by "
+            . "Prince Caleb's 12+ years of engineering experience.\n"
             . "Use workflow-first discovery: ask what triggers the work, what the team does manually now, where it "
             . "slows down or gets missed, what successful completion looks like, and when a human must take over. "
             . "Recommend starting with one controlled workflow, proving it in monitored use, then expanding.\n"
@@ -193,7 +199,7 @@ class SharedAgentTools
         // Public implementation tiers, so estimation conversations anchor to the
         // real published starting prices instead of the model guessing.
         $tiers = [];
-        for ($i = 1; $i <= 3; $i++) {
+        for ($i = 1; $i <= 4; $i++) {
             $name = Settings::get("pricing_tier_{$i}_name");
             $price = Settings::get("pricing_tier_{$i}_price");
             if (empty($name) || empty($price)) {

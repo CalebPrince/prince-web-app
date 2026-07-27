@@ -10,6 +10,7 @@ use App\Support\AiAgentEngine;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
+use App\Support\SharedAgentTools;
 
 /**
  * Side-effect-free clinic web demo plus the Twilio customer-service front door.
@@ -347,8 +348,13 @@ final class VoiceDemoController
     /** @return array{reply:string,provider:?string,mode:string} */
     private static function reply(array $transcript, string $channel = 'web', ?array $context = null): array
     {
+        $systemPrompt = self::prompt($channel, $context);
+        if ($channel !== 'outbound') {
+            $systemPrompt .= "\n\n" . SharedAgentTools::publicContactContext();
+        }
+
         $result = AiAgentEngine::run(
-            self::prompt($channel, $context),
+            $systemPrompt,
             [],
             static fn (string $name, array $args): array => ['error' => 'Tools are disabled in this demonstration.'],
             $transcript,
