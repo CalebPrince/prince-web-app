@@ -102,6 +102,7 @@ class LiveChatController
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
         self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
+        self::markChatUnread($pdo, (int) $session['id']);
 
         Response::json([
             'token' => $session['token'],
@@ -306,6 +307,7 @@ class LiveChatController
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
         self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
+        self::markChatUnread($pdo, (int) $session['id']);
 
         self::respondTwiml($result['reply']);
     }
@@ -805,6 +807,18 @@ class LiveChatController
         )->execute([json_encode($transcript), $readyForPrototype ? 1 : 0, $sessionId]);
     }
 
+    /**
+     * A conversation can receive many new messages after an admin has opened
+     * it. Re-open that thread as unread and remove its prior bell dismissal so
+     * every new inbound turn creates a fresh admin notification.
+     */
+    private static function markChatUnread(\PDO $pdo, int $sessionId): void
+    {
+        $pdo->prepare('UPDATE chat_sessions SET admin_seen = 0 WHERE id = ?')->execute([$sessionId]);
+        $pdo->prepare('DELETE FROM notification_reads WHERE notification_key = ?')
+            ->execute(['chat:' . $sessionId]);
+    }
+
     /** Records an inquiry and queues it for Slack/email notification — shared by feedback(), inquiry(), and the log_inquiry tool. */
     private static function recordInquiry(\PDO $pdo, string $name, string $email, string $message): void
     {
@@ -852,6 +866,15 @@ class LiveChatController
         // self-description in agreement (a male voice → introduces itself as male).
         $name = Settings::get('chat_assistant_name') ?: 'Lisa';
         $voiceGender = Settings::get('chat_voice_gender') ?: 'female';
+        $publicWhatsApp = trim((string) Settings::get('social_whatsapp'));
+        $whatsAppGrounding = $publicWhatsApp !== ''
+            ? "The one authoritative public WhatsApp link is {$publicWhatsApp}. When anyone asks for a WhatsApp "
+                . "link or how to test/contact the business on WhatsApp, share that exact link character-for-character. "
+            : "No public WhatsApp link is currently configured. If anyone asks for one, direct them to "
+                . "princecaleb.dev instead. ";
+        $whatsAppGrounding .= "Never construct, infer, or guess a wa.me link from an owner number, caller/sender "
+            . "number, contact phone, transcript, or prior reply. The owner's private recognition number is never "
+            . "a public contact link.\n\n";
         $genderLine = '';
         if ($voiceGender === 'male') {
             $genderLine = "You present as male — if a visitor asks, you're comfortable saying you're a man and using he/him. ";
@@ -893,6 +916,7 @@ class LiveChatController
             . "discuss technology choices and trade-offs confidently at a practical level, but for deep "
             . "architectural decisions say: \"That's a great technical question. I've noted it down in the "
             . "project brief for Caleb to address when he reaches out to you.\"\n\n"
+            . "PUBLIC WHATSAPP: " . $whatsAppGrounding
             . "CODE EXAMPLES: if a visitor explicitly asks for a code example, a snippet, or to be shown how "
             . "something is done in code, you may share ONE short, focused snippet (aim for under ~15 lines) "
             . "wrapped in a fenced Markdown code block WITH its language tag — e.g. ```js\\n...\\n``` or "

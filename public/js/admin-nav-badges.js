@@ -429,5 +429,7 @@
   initNotifBell();
   initAutoPagination();
   refreshNavBadges();
-  setInterval(refreshNavBadges, 60000);
+  // Keep external channels such as WhatsApp feeling live without requiring a
+  // page reload. This is a lightweight authenticated count request.
+  setInterval(refreshNavBadges, 15000);
 })();

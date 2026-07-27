@@ -1265,3 +1265,8 @@ or batch process can initiate outbound voice calls.
 Admin → Voice Demo shows the 100 most recent Twilio call records, including
 direction, caller number, destination number, status, duration, linked lead,
 and start time for both inbound and outbound calls.
+
+Every new inbound web-chat or WhatsApp message reopens its conversation as
+unread and clears any earlier bell dismissal for that thread. Lisa treats the
+Site Content WhatsApp link as the only authoritative public WhatsApp contact
+and never derives one from the owner-recognition or general contact number.

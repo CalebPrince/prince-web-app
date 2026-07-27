@@ -22,6 +22,10 @@ Status recorded on July 27, 2026:
 - Lisa's Twilio phone voice is independently configurable in Admin Settings.
   It defaults to the British female Amazon Polly Emma voice and applies to
   inbound greetings, conversation turns, and approved outbound calls.
+- Each new inbound WhatsApp or web-chat turn resets that thread to unread and
+  clears its previous notification dismissal. Lisa must share only the public
+  WhatsApp link saved in Site Content and never infer one from the owner's
+  recognition number or another contact number.
 - Marketing Leads prepares phone scripts and supports either a manual call or
   one Lisa AI call after an admin explicitly approves it and confirms that the
   recipient requested or consented. There is no cron or batch dialing.
