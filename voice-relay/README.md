@@ -32,3 +32,16 @@ In the website admin Settings, save that endpoint and the same relay secret,
 then enable **Use natural ConversationRelay calls**. Until all three values are
 present and valid, the PHP application automatically keeps using the existing
 Twilio `<Gather>` call flow.
+
+## Fly.io deployment
+
+The included `Dockerfile` and `fly.toml` run one always-on 256 MB shared
+Machine with no volume or database. From this directory:
+
+1. Run `fly launch --no-deploy` and choose a unique application name.
+2. Set `TWILIO_AUTH_TOKEN`, `RELAY_SHARED_SECRET`, and the exact public
+   `PUBLIC_WEBSOCKET_URL` with `fly secrets set`.
+3. Run `fly deploy`.
+
+The public relay URL will be
+`wss://YOUR-APP-NAME.fly.dev/conversation`.

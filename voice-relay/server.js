@@ -19,7 +19,7 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       ok: true,
       service: "lisa-voice-relay",
-      websocket: "/voice-relay/conversation"
+      websocket: publicWebSocketUrl || "/conversation"
     }));
     return;
   }
