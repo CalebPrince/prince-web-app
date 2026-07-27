@@ -394,8 +394,8 @@ class BeaconController
         $name = Settings::get('beacon_assistant_name') ?: 'Joan';
         $genderLine = self::genderLine((string) Settings::get('beacon_voice_gender'));
 
-        return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a highly skilled solo Web "
-            . "Designer and Mobile App Developer who runs the portfolio site princecaleb.dev.{$genderLine}\n\n"
+        return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a solo developer who builds AI voice "
+            . "agents, chatbots, and business automations on 12+ years of custom web & mobile engineering, and runs princecaleb.dev.{$genderLine}\n\n"
             . "Your objective is to review a scraped social media post/comment, evaluate if it represents a "
             . "genuine opportunity, and draft a hyper-personalized, high-value response that establishes "
             . "Caleb's technical expertise without sounding like spam or a generic sales pitch.\n\n"
@@ -498,8 +498,8 @@ class BeaconController
         $name = Settings::get('beacon_assistant_name') ?: 'Joan';
         $genderLine = self::genderLine((string) Settings::get('beacon_voice_gender'));
 
-        return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a highly skilled solo Web "
-            . "Designer and Mobile App Developer who runs the portfolio site princecaleb.dev.{$genderLine} "
+        return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a solo developer who builds AI voice "
+            . "agents, chatbots, and business automations on 12+ years of custom web & mobile engineering, and runs princecaleb.dev.{$genderLine} "
             . "Your job has two stages, and you own both: a scheduled discovery run searches the web for "
             . "social posts matching Caleb's configured keywords (Reddit, X, LinkedIn — via Serper), and "
             . "every result that turns up gets scored and drafted by you, deciding whether it's a genuine "

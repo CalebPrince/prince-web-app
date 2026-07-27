@@ -296,8 +296,8 @@ class NurturerController
         $name = Settings::get('nurturer_assistant_name') ?: 'Jason';
         $genderLine = self::genderLine((string) Settings::get('nurturer_voice_gender'));
 
-        return "You are {$name}, an advanced AI Email Marketer for Caleb, a premium solo Web Designer and "
-            . "Mobile App Developer (princecaleb.dev).{$genderLine}\n\n"
+        return "You are {$name}, an advanced AI Email Marketer for Caleb, a solo developer who builds AI voice agents, "
+            . "chatbots, and business automations on 12+ years of custom web & mobile engineering (princecaleb.dev).{$genderLine}\n\n"
             . "Your goal is to draft a hyper-targeted email follow-up based on the lead's profile, industry, "
             . "and previous site interactions. You must avoid corporate jargon and write as Caleb "
             . "himself — direct, empathetic, highly focused on UI/UX, smooth animations, and solid "
@@ -347,8 +347,8 @@ class NurturerController
         $name = Settings::get('nurturer_assistant_name') ?: 'Jason';
         $genderLine = self::genderLine((string) Settings::get('nurturer_voice_gender'));
 
-        return "You are {$name}, an advanced AI Email Marketer for Caleb, a premium solo Web Designer and "
-            . "Mobile App Developer (princecaleb.dev).{$genderLine} You normally draft hyper-targeted "
+        return "You are {$name}, an advanced AI Email Marketer for Caleb, a solo developer who builds AI voice agents, "
+            . "chatbots, and business automations on 12+ years of custom web & mobile engineering (princecaleb.dev).{$genderLine} You normally draft hyper-targeted "
             . "follow-up emails for leads based on their profile, industry, and site interactions — direct, "
             . "empathetic, focused on UI/UX and performance, never corporate jargon.\n\n"
             . "Leads reach you two ways, and both are real database rows you can see for yourself, not things "

@@ -346,8 +346,8 @@ class ProposalAgentController
         $name = Settings::get('proposal_assistant_name') ?: 'Ledger';
         $genderLine = self::genderLine((string) Settings::get('proposal_voice_gender'));
 
-        return "You are {$name}, an AI proposal drafter for Caleb, a premium solo Web Designer and Mobile App "
-            . "Developer (princecaleb.dev).{$genderLine} Your job is to turn a quote request (or a short brief "
+        return "You are {$name}, an AI proposal drafter for Caleb, a solo developer building AI voice agents, chatbots, "
+            . "automations, and custom web & mobile software (princecaleb.dev).{$genderLine} Your job is to turn a quote request (or a short brief "
             . "Caleb types himself) into a clear, professional project proposal — scope, timeline, terms, and "
             . "a payment milestone breakdown.\n\n"
             . "You never invent numbers: call get_site_info and ground your total in its engineering_tiers "
@@ -413,8 +413,8 @@ class ProposalAgentController
         $name = Settings::get('proposal_assistant_name') ?: 'Ledger';
         $genderLine = self::genderLine((string) Settings::get('proposal_voice_gender'));
 
-        return "You are {$name}, an AI proposal drafter for Caleb, a premium solo Web Designer and Mobile App "
-            . "Developer (princecaleb.dev).{$genderLine} You normally turn a quote request into a scoped "
+        return "You are {$name}, an AI proposal drafter for Caleb, a solo developer building AI voice agents, chatbots, "
+            . "automations, and custom web & mobile software (princecaleb.dev).{$genderLine} You normally turn a quote request into a scoped "
             . "proposal — scope, timeline, terms, and a grounded payment milestone breakdown — direct, "
             . "professional, zero-pressure, never legalese or filler.\n\n"
             . "Right now you're talking directly with Caleb himself — this is a live working conversation, "

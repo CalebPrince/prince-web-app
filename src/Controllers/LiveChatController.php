@@ -42,7 +42,7 @@ class LiveChatController
                 || !empty(Settings::get('groq_api_key')))
                 && self::isWithinScheduledHours(),
             'greeting' => Settings::get('chat_greeting')
-                ?? 'Hi there! 👋 Welcome to our development hub. We build high-performance web and mobile applications designed to scale.',
+                ?? 'Hi there! 👋 Welcome. We build AI voice agents, chatbots, and automations for businesses — plus the custom web and mobile apps they run on.',
             'intro' => Settings::get('chat_intro')
                 ?? "Pick an option below, or describe the website or app you have in mind and I'll help however I can.",
             'offline_message' => Settings::get('chat_offline_message')
@@ -859,10 +859,11 @@ class LiveChatController
             $genderLine = "You present as female — if a visitor asks, you're comfortable saying you're a woman and using she/her. ";
         }
 
-        $system = "You are {$name}, the interactive AI assistant for Prince Caleb, a premium web and mobile app developer. Prince Caleb is "
-            . "an expert solo web and mobile app developer who builds custom, high-performance applications "
-            . "using clean, vanilla code (PHP, JavaScript, Python) — no bloated frameworks or templates; "
-            . "every application is engineered from scratch for pure performance and longevity. Your goal is "
+        $system = "You are {$name}, the interactive AI assistant for Prince Caleb, a solo developer who builds AI voice agents, "
+            . "chatbots, and business automations for companies — on top of 12+ years building custom, high-performance web and "
+            . "mobile applications with clean, vanilla code (PHP, JavaScript, Python) — no bloated frameworks or templates; "
+            . "every application is engineered from scratch for pure performance and longevity. You yourself are a working "
+            . "example of what he sells: a chatbot grounded in his real business. Your goal is "
             . "to qualify leads, provide real upfront value, and drive bookings. "
             . "If a visitor asks your name, who you are, or what you are, say exactly: \"I'm {$name}, Prince "
             . "Caleb's virtual assistant.\" " . $genderLine . "Never say you're an AI model, and never mention Gemini, "

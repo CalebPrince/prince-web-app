@@ -771,11 +771,13 @@ class MarketingLeadController
     {
         $context = self::findingsContext($findings);
 
-        $prompt = "You are drafting the BODY of a short, honest cold outreach email from Prince Caleb, a web & "
-            . "mobile developer, to a business called \"{$businessName}\".\n\n{$context}\n\n"
+        $prompt = "You are drafting the BODY of a short, honest cold outreach email from Prince Caleb, a solo developer "
+            . "who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering, "
+            . "to a business called \"{$businessName}\".\n\n{$context}\n\n"
             . "Structure: 1-2 sentences tied to what's actually true above, then a short \"here's how I can "
-            . "help\" offer mentioning relevant services in general terms (custom websites, mobile apps, "
-            . "booking/ordering systems, automation) WITHOUT claiming specific problems that weren't verified "
+            . "help\" offer mentioning relevant services in general terms (AI voice agents that answer business "
+            . "calls, chatbots, workflow automation, custom websites and mobile apps, booking/ordering systems) "
+            . "WITHOUT claiming specific problems that weren't verified "
             . "above, then a low-pressure closing line inviting a reply.\n\n"
             . "Rules: 4-6 short sentences total, friendly and specific, never salesy or hyperbolic, no invented "
             . "statistics, no false urgency, no claims of financial harm or lost business you can't verify. "
@@ -817,11 +819,13 @@ class MarketingLeadController
     {
         $context = self::findingsContext($findings);
 
-        $prompt = "You are writing short talking points — not a script to read verbatim — for Prince Caleb, a "
-            . "web & mobile developer, to use on a cold call to a business called \"{$businessName}\".\n\n{$context}\n\n"
+        $prompt = "You are writing short talking points — not a script to read verbatim — for Prince Caleb, a solo "
+            . "developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile "
+            . "engineering, to use on a cold call to a business called \"{$businessName}\".\n\n{$context}\n\n"
             . "Structure: a natural one-sentence opening introducing himself and why he's calling (tied to "
             . "what's actually true above), 2-3 short bullet points to guide the conversation (services offered, "
-            . "in general terms — custom websites, mobile apps, booking/ordering systems, automation), and one "
+            . "in general terms — AI voice agents that answer business calls, chatbots, workflow automation, "
+            . "custom websites and mobile apps), and one "
             . "likely objection with a brief, honest way to respond to it. Never salesy or pushy, no invented "
             . "statistics, no false urgency, no claims of financial harm or lost business that can't be "
             . "verified.\n\n"
@@ -844,7 +848,7 @@ class MarketingLeadController
      */
     private static function signatureBlock(): string
     {
-        $lines = ['— Prince Caleb', 'Web & Mobile App Developer', '🌐 https://princecaleb.dev'];
+        $lines = ['— Prince Caleb', 'AI Voice Agents · Chatbots · Automation · Web & Mobile', '🌐 https://princecaleb.dev'];
 
         $whatsapp = Settings::get('social_whatsapp');
         if (!empty($whatsapp)) {

@@ -185,8 +185,8 @@ class DossierController
         $name = Settings::get('dossier_assistant_name') ?: 'Sharon';
         $genderLine = self::genderLine((string) Settings::get('dossier_voice_gender'));
 
-        return "You are {$name}, the research analyst on Prince Caleb's AI team — Caleb is a highly skilled "
-            . "solo Web Designer and Mobile App Developer who runs the portfolio site princecaleb.dev.{$genderLine}\n\n"
+        return "You are {$name}, the research analyst on Prince Caleb's AI team — Caleb is a solo developer who builds "
+            . "AI voice agents, chatbots, and business automations on 12+ years of custom web & mobile engineering, and runs princecaleb.dev.{$genderLine}\n\n"
             . "Your day job is recon on prospective clients before Caleb reaches out: given a marketing lead you "
             . "fingerprint the tech stack from their real site (WordPress, Shopify, React, analytics, hosting — "
             . "always from actual evidence in the page, never a guess), pull real recent news about the business, "

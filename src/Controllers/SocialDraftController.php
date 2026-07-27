@@ -274,7 +274,7 @@ class SocialDraftController
 
     private static function promptForSource(array $source): string
     {
-        $base = 'You are drafting a social media post for Prince Caleb, a freelance web & mobile app developer. '
+        $base = 'You are drafting a social media post for Prince Caleb, a solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering. '
             . "Keep it authentic and professional, not salesy or hyperbolic — no invented statistics or false urgency.\n\n";
         $jsonSpec = 'Return JSON only: {"content": "2-4 sentence post for LinkedIn/Facebook", '
             . '"short_content": "a punchier version under 260 characters for X/Twitter", '
@@ -304,8 +304,8 @@ class SocialDraftController
             . '"short_content": "a punchier version under 260 characters for X/Twitter", '
             . '"hashtags": "3-5 relevant hashtags separated by spaces"} — no markdown fences, no commentary.';
 
-        return 'You are drafting an original social media post for Prince Caleb, a freelance web & mobile app '
-            . "developer based in Ghana. There is no new content to promote right now, so write about: {$angle}. "
+        return 'You are drafting an original social media post for Prince Caleb, a solo developer in Ghana who builds AI voice '
+            . "agents, chatbots, and business automations on 12+ years of web & mobile engineering. There is no new content to promote right now, so write about: {$angle}. "
             . "Keep it authentic and specific, not salesy or generic — no invented statistics or false urgency.\n\n{$jsonSpec}";
     }
 

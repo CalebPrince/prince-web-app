@@ -153,10 +153,11 @@
       '<div class="container mega-grid">'
       + col("SERVICE TRACKS",
           '<div class="mega-items">'
-        + item("/services.html#track-01", "01", "Custom builds from scratch", "System build")
-        + item("/services.html#track-02", "02", "CMS development & ecosystems", "Content ops")
-        + item("/services.html#track-03", "03", "Mobile app engineering", "Mobile")
-        + item("/services.html#track-04", "04", "Custom AI integrations", "AI")
+        + item("/services.html#track-01", "01", "AI voice agents", "Voice")
+        + item("/services.html#track-02", "02", "Autonomous AI agents", "Agents")
+        + item("/services.html#track-03", "03", "Business automations", "Workflow")
+        + item("/services.html#track-04", "04", "AI chatbots & assistants", "Chat")
+        + item("/services.html#track-05", "05", "Web & mobile engineering", "The backbone")
         + "</div>")
       + col("ENGAGEMENT",
           link("/pricing.html", "Pricing & packages")
