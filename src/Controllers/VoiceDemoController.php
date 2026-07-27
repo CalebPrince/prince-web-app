@@ -95,15 +95,18 @@ final class VoiceDemoController
         $pdo = Database::get();
         $token = 'tel_' . hash('sha256', $callSid);
         $session = self::session($pdo, $token, 'phone', 'clinic');
+        $isOwner = self::isOwnerNumber($from);
         $pdo->prepare(
             "INSERT OR IGNORE INTO telephony_calls
              (provider_call_id, session_id, provider, from_number, to_number, status)
              VALUES (?, ?, 'twilio', ?, ?, 'in-progress')"
         )->execute([$callSid, $session['id'], $from ?: null, trim((string) ($_POST['To'] ?? '')) ?: null]);
         self::twimlGather(
-            "Hello, you've reached Prince Caleb's AI customer service assistant, Lisa. "
-            . "I can help with AI voice agents, chatbots, automation, websites, mobile apps, and project enquiries. "
-            . "How can I help?"
+            $isOwner
+                ? "Hi Prince Caleb, welcome back. You're speaking with Lisa, your AI customer service assistant. How can I help?"
+                : "Hello, you've reached Prince Caleb's AI customer service assistant, Lisa. "
+                    . "I can help with AI voice agents, chatbots, automation, websites, mobile apps, and project enquiries. "
+                    . "How can I help?"
         );
     }
 
@@ -183,7 +186,7 @@ final class VoiceDemoController
         $pdo = Database::get();
         $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
         $callStmt = $pdo->prepare(
-            "SELECT tc.direction, ml.id, ml.business_name, ml.website_url, ml.pitch_body
+            "SELECT tc.direction, tc.from_number, ml.id, ml.business_name, ml.website_url, ml.pitch_body
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
              WHERE tc.provider_call_id = ?"
@@ -191,6 +194,8 @@ final class VoiceDemoController
         $callStmt->execute([$callSid]);
         $callContext = $callStmt->fetch() ?: [];
         $isOutbound = ($callContext['direction'] ?? '') === 'outbound' && !empty($callContext['id']);
+        $callContext['is_owner'] = !$isOutbound
+            && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
         $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
         if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
             $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
@@ -217,7 +222,7 @@ final class VoiceDemoController
             return;
         }
         $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
-        $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $isOutbound ? $callContext : null);
+        $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $callContext);
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
         self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'phone']);
@@ -367,7 +372,13 @@ final class VoiceDemoController
                 . "context.\nBusiness: {$business}\nWebsite: {$website}\nReviewed call script:\n{$script}";
         }
         if ($channel === 'phone') {
-            return "You are Lisa, Prince Caleb's AI customer service phone agent. You represent Prince Caleb's "
+            $ownerContext = !empty($context['is_owner'])
+                ? "The incoming caller ID matches Prince Caleb's saved owner voice number, so address him as "
+                    . "Prince Caleb and speak as his assistant rather than using the customer sales flow. Caller ID "
+                    . "can be spoofed: recognition is conversational context only and must never authorize private "
+                    . "information, account access, payments, credentials, administrative changes, or sensitive actions. "
+                : '';
+            return "You are Lisa, Prince Caleb's AI customer service phone agent. {$ownerContext}You represent Prince Caleb's "
                 . "business and answer questions about AI voice agents, customer-service chatbots, business "
                 . "automation, websites, and mobile applications. You are speaking aloud, so answer in one to "
                 . "three short, natural sentences with no markdown, lists, emoji, URLs, or technical jargon. "
@@ -419,6 +430,20 @@ final class VoiceDemoController
     {
         $pdo->prepare('INSERT INTO voice_demo_events (session_id, event_type, metadata_json) VALUES (?, ?, ?)')
             ->execute([$sessionId, $event, json_encode($meta, JSON_UNESCAPED_UNICODE)]);
+    }
+
+    private static function isOwnerNumber(string $number): bool
+    {
+        $ownerNumber = self::normalizePhoneNumber((string) Settings::get('owner_voice_number'));
+        return $ownerNumber !== '' && hash_equals($ownerNumber, self::normalizePhoneNumber($number));
+    }
+
+    private static function normalizePhoneNumber(string $number): string
+    {
+        $number = trim($number);
+        if ($number === '') return '';
+        $digits = preg_replace('/\D+/', '', $number) ?? '';
+        return $digits === '' ? '' : '+' . $digits;
     }
 
     private static function verifyTwilio(): bool

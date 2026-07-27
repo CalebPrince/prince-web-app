@@ -16,6 +16,9 @@ Status recorded on July 27, 2026:
   Twilio credentials, WhatsApp sender, external approvals, and voice activation.
 - The approved Twilio voice number is for Lisa's inbound Prince Caleb customer
   service line. The clinic remains a separate browser demo.
+- Admin Settings has a dedicated Owner voice number. Lisa recognizes matching
+  inbound caller ID as Prince Caleb for conversational context only; caller ID
+  never authorizes private information or sensitive actions.
 - Marketing Leads prepares phone scripts and supports either a manual call or
   one Lisa AI call after an admin explicitly approves it and confirms that the
   recipient requested or consented. There is no cron or batch dialing.

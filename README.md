@@ -1237,7 +1237,10 @@ agent; they are not used by the Marketing Leads call queue:
 After deployment:
 
 1. Run `php database/migrate.php` so the voice-demo/event/call tables exist.
-2. In Admin → Settings, save the Twilio Auth Token and Voice number, then enable the customer-service voice agent.
+2. In Admin → Settings, save the Twilio Auth Token, Voice number, and optional
+   Owner voice number, then enable the customer-service voice agent. Calls from
+   the owner number receive an owner-aware greeting, but caller ID matching is
+   never treated as authorization for private data or sensitive actions.
 3. In Twilio Console, set the number's incoming-call webhook to
    `https://princecaleb.dev/api/v1/voice/twilio/incoming` using POST.
 4. Set its status callback to

@@ -251,6 +251,14 @@
                 <label class="form-label">Twilio Voice number</label>
                 <input type="text" class="form-control" id="twilio-voice-number" placeholder="+233...">
               </div>
+              <div class="mb-3">
+                <label class="form-label">Owner voice number <span class="text-muted-custom fw-normal">(so Lisa recognizes you)</span></label>
+                <input type="tel" class="form-control" id="owner-voice-number" placeholder="+233208049962" autocomplete="tel">
+                <div class="form-text">
+                  Enter the number you call from, including the country code. Lisa will greet you as Prince Caleb,
+                  but caller ID recognition alone never authorizes access to private data or sensitive actions.
+                </div>
+              </div>
               <div class="form-text">
                 In Twilio Console, set this number's incoming-call webhook to
                 <code>https://princecaleb.dev/api/v1/voice/twilio/incoming</code> using POST, and its status callback to
