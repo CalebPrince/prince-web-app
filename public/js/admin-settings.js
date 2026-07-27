@@ -121,6 +121,10 @@ async function saveIntegrations(e) {
       twilio_voice_number: document.getElementById("twilio-voice-number").value.trim(),
       owner_voice_number: document.getElementById("owner-voice-number").value.trim(),
       twilio_voice_tts_voice: document.getElementById("twilio-voice-tts-voice").value,
+      twilio_conversation_relay_enabled: document.getElementById("twilio-conversation-relay-enabled").checked ? "1" : "0",
+      twilio_conversation_relay_url: document.getElementById("twilio-conversation-relay-url").value.trim(),
+      twilio_conversation_relay_secret: document.getElementById("twilio-conversation-relay-secret").value.trim(),
+      twilio_conversation_relay_voice: document.getElementById("twilio-conversation-relay-voice").value.trim(),
       serper_api_key: document.getElementById("serper-key").value.trim(),
       hunter_api_key: document.getElementById("hunter-key").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
@@ -559,6 +563,10 @@ async function testAi() {
     document.getElementById("twilio-voice-number").value = settings.twilio_voice_number || "";
     document.getElementById("owner-voice-number").value = settings.owner_voice_number || "";
     document.getElementById("twilio-voice-tts-voice").value = settings.twilio_voice_tts_voice || "Polly.Emma";
+    document.getElementById("twilio-conversation-relay-enabled").checked = settings.twilio_conversation_relay_enabled === "1";
+    document.getElementById("twilio-conversation-relay-url").value = settings.twilio_conversation_relay_url || "";
+    document.getElementById("twilio-conversation-relay-secret").value = settings.twilio_conversation_relay_secret || "";
+    document.getElementById("twilio-conversation-relay-voice").value = settings.twilio_conversation_relay_voice || "Fahco4VZzobUeiPqni1S";
     document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("hunter-key").value = settings.hunter_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";

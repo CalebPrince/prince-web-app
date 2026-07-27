@@ -155,6 +155,13 @@ mobile-app delivery. This section consolidates every change shipped in commits
   Demo admin view alongside recent browser voice activity.
 - Phone speech has independent gender/voice settings and defaults to a British
   female Amazon Polly voice rather than relying on the browser demo voice.
+- Natural-call mode can now route Twilio through the deployable
+  `voice-relay/` WebSocket companion. ConversationRelay supplies ElevenLabs UK
+  speech, Deepgram transcription, interruption support, backchannel filtering,
+  and faster turn detection while the PHP application remains authoritative
+  for Lisa's prompts, owner recognition, transcripts, lead context, opt-outs,
+  callbacks, and call logs. The existing `<Gather>` flow remains the automatic
+  fallback until the relay is configured and explicitly enabled.
 - The telephony migration was reordered so existing installations add
   `marketing_lead_id` before creating dependent indexes; migrations remain
   safe to re-run.
@@ -647,6 +654,12 @@ storage/
     person hears silence. Lisa's disclosure now plays first as a standalone
     `<Say>`, followed by a six-second speech `<Gather>`, so an answered call
     always receives the opening before the system begins listening.
+    Phone dialogue allows about twenty exchanges (`MAX_TURNS = 40` transcript
+    messages), waits ten seconds for the caller to begin speaking, responds to
+    what they said before asking one question, and avoids repeating identity,
+    service lists, and canned closings. Settings also exposes Twilio's UK
+    female `Polly.Amy-Generative` voice as an optional public-beta upgrade;
+    standard Emma remains available for lower-cost/stable operation.
     The Review modal swaps
     Subject/email fields out for a phone field and relabels the body
     "Call script"; the send button becomes "Mark as called" and opens a

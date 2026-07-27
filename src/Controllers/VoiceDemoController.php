@@ -20,7 +20,10 @@ use App\Support\SharedAgentTools;
  */
 final class VoiceDemoController
 {
-    private const MAX_TURNS = 16;
+    // Transcript messages, not conversational exchanges: each exchange adds
+    // one user and one assistant item. Forty allows roughly twenty natural
+    // turns before the safety stop instead of cutting a useful call at eight.
+    private const MAX_TURNS = 40;
     private const EVENT_TYPES = [
         'demo_started', 'mic_granted', 'mic_blocked', 'question_sent',
         'answer_received', 'answer_failed', 'cta_clicked',
@@ -155,10 +158,8 @@ final class VoiceDemoController
         )->execute([$session['id'], $leadId, $callSid]);
 
         self::twimlGather(
-            "Hello, this is Lisa, an AI assistant calling on behalf of Prince Caleb. "
-            . "This call was individually approved after your request or consent. "
-            . "I'm calling about ways AI voice agents, chatbots, and automation may help "
-            . trim((string) $lead['business_name']) . ". Is now a good time for a brief conversation?"
+            "Hi, this is Lisa, Prince Caleb's AI assistant. Thanks for taking my call. "
+            . "Is now still a good time to chat for a minute?"
         );
     }
 
@@ -221,6 +222,89 @@ final class VoiceDemoController
         self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'phone']);
         self::record($pdo, (int) $session['id'], 'answer_received', ['channel' => 'phone', 'provider' => $result['provider']]);
         self::twimlGather($result['reply']);
+    }
+
+    /**
+     * Internal HTTP bridge used by the stateless ConversationRelay companion.
+     * Twilio audio never reaches this endpoint: it accepts a final transcript
+     * and returns Lisa's next text response while keeping the PHP app as the
+     * source of truth for prompts, safety decisions, and stored call history.
+     */
+    public static function relayTurn(): void
+    {
+        set_time_limit(90);
+        $configuredSecret = trim((string) Settings::get('twilio_conversation_relay_secret'));
+        $providedSecret = trim((string) ($_SERVER['HTTP_X_RELAY_SECRET'] ?? ''));
+        if (
+            Settings::get('twilio_voice_enabled') !== '1'
+            || Settings::get('twilio_conversation_relay_enabled') !== '1'
+            || $configuredSecret === ''
+            || $providedSecret === ''
+            || !hash_equals($configuredSecret, $providedSecret)
+        ) {
+            Response::error('Relay authorization failed.', 403);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $callSid = mb_substr(trim((string) ($data['call_sid'] ?? '')), 0, 80);
+        $speech = mb_substr(trim((string) ($data['speech'] ?? '')), 0, 500);
+        if ($callSid === '' || $speech === '') {
+            Response::error('call_sid and speech are required.', 422);
+        }
+        RateLimitMiddleware::enforce('voice_relay_' . preg_replace('/\W/', '', $callSid), 40);
+
+        $pdo = Database::get();
+        $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
+        $callStmt = $pdo->prepare(
+            "SELECT tc.direction, tc.from_number, ml.id, ml.business_name, ml.website_url, ml.pitch_body
+             FROM telephony_calls tc
+             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
+             WHERE tc.provider_call_id = ?"
+        );
+        $callStmt->execute([$callSid]);
+        $callContext = $callStmt->fetch() ?: [];
+        $isOutbound = ($callContext['direction'] ?? '') === 'outbound' && !empty($callContext['id']);
+        $callContext['is_owner'] = !$isOutbound
+            && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
+        $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
+
+        if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
+            $reply = "Understood. We won't call again. Goodbye.";
+            $transcript[] = ['role' => 'user', 'text' => $speech];
+            $transcript[] = ['role' => 'assistant', 'text' => $reply];
+            self::save($pdo, (int) $session['id'], $transcript, null);
+            $pdo->prepare("UPDATE marketing_leads SET status = 'rejected', updated_at = datetime('now') WHERE id = ?")
+                ->execute([(int) $callContext['id']]);
+            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'not_interested', ?)")
+                ->execute([(int) $callContext['id'], 'Opted out during Lisa AI call']);
+            Response::json(['reply' => $reply, 'end' => true]);
+        }
+        if ($isOutbound && preg_match('/\b(call (me )?later|not (a )?good time|not now|busy right now)\b/i', $speech)) {
+            $reply = 'Of course. Goodbye.';
+            $transcript[] = ['role' => 'user', 'text' => $speech];
+            $transcript[] = ['role' => 'assistant', 'text' => $reply];
+            self::save($pdo, (int) $session['id'], $transcript, null);
+            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'callback', ?)")
+                ->execute([(int) $callContext['id'], 'Recipient asked to be contacted later during Lisa AI call']);
+            Response::json(['reply' => $reply, 'end' => true]);
+        }
+        if (count($transcript) >= self::MAX_TURNS) {
+            Response::json([
+                'reply' => 'Thank you for your time. This call has reached its conversation limit. Goodbye.',
+                'end' => true,
+            ]);
+        }
+
+        $transcript[] = ['role' => 'user', 'text' => $speech];
+        $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $callContext);
+        $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+        self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
+        self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'conversation_relay']);
+        self::record($pdo, (int) $session['id'], 'answer_received', [
+            'channel' => 'conversation_relay',
+            'provider' => $result['provider'],
+        ]);
+        Response::json(['reply' => $result['reply'], 'end' => false]);
     }
 
     public static function callStatus(): void
@@ -342,6 +426,11 @@ final class VoiceDemoController
                 ['label' => 'Production WhatsApp sender approved', 'complete' => Settings::get('twilio_whatsapp_production_approved') === '1', 'external' => true],
                 ['label' => 'Voice number saved', 'complete' => $voiceNumber !== ''],
                 ['label' => 'Customer-service voice agent enabled', 'complete' => $voiceEnabled],
+                [
+                    'label' => 'Natural ConversationRelay configured',
+                    'complete' => self::conversationRelayReady(),
+                    'external' => true,
+                ],
             ],
         ]);
     }
@@ -379,13 +468,18 @@ final class VoiceDemoController
             $website = mb_substr(trim((string) ($context['website_url'] ?? '')), 0, 300);
             $script = mb_substr(trim((string) ($context['pitch_body'] ?? '')), 0, 3000);
             return "You are Lisa, Prince Caleb's disclosed AI outreach assistant on a single human-approved outbound "
-                . "call. The recipient requested or consented to this call. Speak in one to three short, natural "
-                . "sentences with no markdown, lists, emoji, or URLs. Immediately respect no, not interested, stop, "
+                . "call. The recipient requested or consented to this call. Sound warm, curious, and conversational, "
+                . "not like a script or sales presentation. Respond directly to what the person just said before "
+                . "moving the conversation forward. Usually speak one or two short natural sentences, use contractions, "
+                . "and ask at most one relevant question at a time. Vary your wording; do not repeat the business name, "
+                . "your identity, the full service list, or a canned closing on every turn. Use no markdown, lists, "
+                . "emoji, or spoken URLs. Immediately respect no, not interested, stop, "
                 . "or a request to call later; do not pressure, argue, or continue pitching. Never hide that you are "
                 . "an AI assistant. Do not collect sensitive information, payment details, passwords, IDs, or health "
                 . "information. You cannot book, transfer, save, or notify anyone yet, so never claim that you did. "
-                . "Your goal is only to have a brief, relevant conversation and invite an interested person to use "
-                . "the booking or contact option on princecaleb.dev. Ground the conversation only in this reviewed "
+                . "First understand whether the person has a repetitive customer-service or operational problem; only "
+                . "then connect one relevant capability to it. Mention the booking or contact option only once, when "
+                . "the person shows interest or asks for a next step. Ground the conversation only in this reviewed "
                 . "context. Always speak as Lisa and refer to Prince Caleb in the third person. The stored call brief "
                 . "may be an older draft containing a first-person Prince introduction; treat that only as background, "
                 . "never repeat it, never say you are Prince, and never imply Prince is personally speaking.\n"
@@ -484,6 +578,10 @@ final class VoiceDemoController
 
     private static function twimlGather(string $message): void
     {
+        if (self::conversationRelayReady()) {
+            self::twimlConversationRelay($message);
+            return;
+        }
         header('Content-Type: text/xml; charset=utf-8');
         $action = '/api/v1/voice/twilio/turn';
         $voice = self::twilioVoice();
@@ -491,9 +589,43 @@ final class VoiceDemoController
             . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" language="en-GB">'
             . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8')
             . '</Say><Gather input="speech" action="' . $action
-            . '" method="POST" timeout="6" speechTimeout="auto" language="en-GB"></Gather><Say voice="'
+            . '" method="POST" timeout="10" speechTimeout="auto" language="en-GB"></Gather><Say voice="'
             . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8')
             . '" language="en-GB">I did not hear a response. Goodbye.</Say></Response>';
+    }
+
+    private static function twimlConversationRelay(string $welcomeGreeting): void
+    {
+        header('Content-Type: text/xml; charset=utf-8');
+        $url = trim((string) Settings::get('twilio_conversation_relay_url'));
+        $voice = trim((string) Settings::get('twilio_conversation_relay_voice'));
+        if ($voice === '') {
+            $voice = 'Fahco4VZzobUeiPqni1S';
+        }
+        $xml = static fn (string $value): string =>
+            htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Connect>'
+            . '<ConversationRelay url="' . $xml($url) . '"'
+            . ' welcomeGreeting="' . $xml($welcomeGreeting) . '"'
+            . ' welcomeGreetingInterruptible="speech" language="en-GB"'
+            . ' ttsProvider="ElevenLabs" voice="' . $xml($voice) . '"'
+            . ' transcriptionProvider="Deepgram" speechModel="nova-3-general"'
+            . ' interruptible="speech" interruptSensitivity="medium"'
+            . ' reportInputDuringAgentSpeech="speech" ignoreBackchannel="true"'
+            . ' speechTimeout="900" elevenlabsTextNormalization="on"'
+            . ' events="speaker-events tokens-played" />'
+            . '</Connect></Response>';
+    }
+
+    private static function conversationRelayReady(): bool
+    {
+        if (Settings::get('twilio_conversation_relay_enabled') !== '1') {
+            return false;
+        }
+        $url = trim((string) Settings::get('twilio_conversation_relay_url'));
+        $secret = trim((string) Settings::get('twilio_conversation_relay_secret'));
+        return $secret !== '' && filter_var($url, FILTER_VALIDATE_URL) !== false
+            && str_starts_with(strtolower($url), 'wss://');
     }
 
     private static function twimlSay(string $message): void
@@ -508,7 +640,7 @@ final class VoiceDemoController
     private static function twilioVoice(): string
     {
         $voice = trim((string) Settings::get('twilio_voice_tts_voice'));
-        $allowed = ['Polly.Emma', 'Polly.Amy', 'Polly.Brian', 'woman', 'man'];
+        $allowed = ['Polly.Amy-Generative', 'Polly.Emma', 'Polly.Amy', 'Polly.Brian', 'woman', 'man'];
         return in_array($voice, $allowed, true) ? $voice : 'Polly.Emma';
     }
 }

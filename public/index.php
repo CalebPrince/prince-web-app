@@ -140,6 +140,7 @@ $router->post('/api/v1/voice-demo/event', [VoiceDemoController::class, 'event'])
 $router->post('/api/v1/voice/twilio/incoming', [VoiceDemoController::class, 'incomingCall']);
 $router->post('/api/v1/voice/twilio/outbound', [VoiceDemoController::class, 'outboundCall']);
 $router->post('/api/v1/voice/twilio/turn', [VoiceDemoController::class, 'callTurn']);
+$router->post('/api/v1/voice/twilio/relay-turn', [VoiceDemoController::class, 'relayTurn']);
 $router->post('/api/v1/voice/twilio/status', [VoiceDemoController::class, 'callStatus']);
 $router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePrototype']);
 $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'viewPrototype']);
