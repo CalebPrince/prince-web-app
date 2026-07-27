@@ -19,18 +19,18 @@ const PRICING_FIELDS = [
 const PRICING_DEFAULTS = {
   pricing_currency: "GHS",
   pricing_tier_1_amount: "6000",
-  pricing_tier_1_name: "Starter",
+  pricing_tier_1_name: "AI Voice Agent Pilot",
   pricing_tier_1_price: "From GHS 6,000",
-  pricing_tier_1_tagline: "Landing pages, small brochure sites, and simple booking or contact tools.",
-  pricing_tier_1_features: "Up to 5 pages, responsive design\nContact or booking form wired to email\nBasic on-page SEO\n~2 weeks typical delivery",
-  pricing_tier_2_name: "Growth",
+  pricing_tier_1_tagline: "One focused call flow, trained on your approved information and tested before it reaches customers.",
+  pricing_tier_1_features: "One inbound call flow\nApproved FAQ and handoff rules\nCall logs and staff summaries\nLaunch review after monitored testing",
+  pricing_tier_2_name: "Voice + WhatsApp",
   pricing_tier_2_price: "From GHS 25,000",
-  pricing_tier_2_tagline: "Custom web apps, CMS ecosystems, and dashboards built around your actual workflow.",
-  pricing_tier_2_features: "Custom database & API design\nAdmin dashboard / CMS\nThird-party integrations (payments, messaging)\n4-8 weeks typical delivery",
-  pricing_tier_3_name: "Custom / Enterprise",
+  pricing_tier_2_tagline: "A connected customer-service system that carries context across calls, WhatsApp, bookings, and staff handoffs.",
+  pricing_tier_2_features: "AI voice and WhatsApp assistant\nCalendar or CRM integration\nHuman escalation and notifications\nReporting dashboard and audit trail",
+  pricing_tier_3_name: "AI Operations System",
   pricing_tier_3_price: "Custom quote",
-  pricing_tier_3_tagline: "Multi-feature platforms, mobile apps, and ongoing engineering partnerships.",
-  pricing_tier_3_features: "Cross-platform mobile apps\nAI integrations & automation\nOngoing support & iteration\nScoped after a discovery call",
+  pricing_tier_3_tagline: "Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.",
+  pricing_tier_3_features: "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
 };
 
 function showPricingMsg(text, ok) {

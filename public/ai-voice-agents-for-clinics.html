@@ -236,6 +236,68 @@
     </div>
   </section>
 
+  <section class="section clinic-pilot-section" id="clinic-pilot">
+    <div class="container">
+      <div class="proof-heading reveal">
+        <div><p class="eyebrow mb-3">// A controlled first deployment</p><h2 class="display-5 mb-0">Start with one call your team repeats every day.</h2></div>
+        <p class="text-muted-custom mb-0">The pilot proves the workflow with monitored conversations before anything expands.</p>
+      </div>
+      <div class="clinic-pilot-grid">
+        <article class="reveal"><span>Week 1</span><h3>Map</h3><p>Choose one routine call, approved answers, escalation rules, and the result staff need to receive.</p></article>
+        <article class="reveal reveal-delay-1"><span>Week 2</span><h3>Build</h3><p>Configure Lisa’s voice, knowledge, booking steps, notifications, and visible audit trail.</p></article>
+        <article class="reveal reveal-delay-2"><span>Week 3</span><h3>Test</h3><p>Your team makes controlled calls, reviews transcripts, and corrects language or edge cases.</p></article>
+        <article class="reveal reveal-delay-3"><span>Launch review</span><h3>Decide</h3><p>Review answered calls, safe handoffs, captured bookings, and whether the workflow should expand.</p></article>
+      </div>
+      <div class="clinic-pilot-includes reveal">
+        <strong>Pilot includes</strong>
+        <span>One inbound call flow</span><span>Approved FAQ set</span><span>Human handoff rules</span><span>Call logs</span><span>Staff summaries</span>
+        <a href="/pricing.html">See implementation starting points →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section clinic-roi-section" id="clinic-roi">
+    <div class="container clinic-roi-layout">
+      <div class="reveal">
+        <p class="eyebrow mb-3">// Missed-call opportunity</p>
+        <h2 class="display-5 mb-3">What could one answered call be worth?</h2>
+        <p class="text-muted-custom">Use your own operating assumptions. This estimates opportunity, not guaranteed revenue.</p>
+        <div class="clinic-roi-form">
+          <label>Calls on a typical day <input type="number" id="roi-calls" min="0" max="1000" value="30" inputmode="numeric"></label>
+          <label>Currently missed <span><output id="roi-missed-output">20%</output></span><input type="range" id="roi-missed" min="0" max="100" value="20"></label>
+          <label>Missed callers who would book <span><output id="roi-book-output">35%</output></span><input type="range" id="roi-book" min="0" max="100" value="35"></label>
+          <label>Average appointment value (GHS) <input type="number" id="roi-value" min="0" max="1000000" value="250" inputmode="decimal"></label>
+          <label>Working days per month <input type="number" id="roi-days" min="1" max="31" value="26" inputmode="numeric"></label>
+        </div>
+      </div>
+      <aside class="clinic-roi-result reveal" aria-live="polite">
+        <span>Estimated monthly opportunity</span>
+        <strong id="roi-total">GHS 13,650</strong>
+        <div><p><b id="roi-missed-calls">156</b> missed calls</p><p><b id="roi-bookings">55</b> potential bookings</p></div>
+        <small>Illustrative estimate based entirely on the values you entered. It does not predict actual performance.</small>
+        <a href="/book.html?utm_source=clinic_roi&amp;utm_medium=niche_landing&amp;utm_campaign=clinic_voice_agent" class="btn-brand">Review one call flow</a>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section clinic-faq-section" id="clinic-faq">
+    <div class="container">
+      <div class="proof-heading reveal">
+        <div><p class="eyebrow mb-3">// Before a clinic trusts the line</p><h2 class="display-5 mb-0">The questions worth asking.</h2></div>
+        <p class="text-muted-custom mb-0">A useful voice agent is defined as much by its limits as by what it can do.</p>
+      </div>
+      <div class="clinic-faq-grid">
+        <details class="reveal"><summary>Does Lisa replace reception staff?</summary><p>No. Lisa handles repeatable administrative calls and gives staff a clear handoff when judgment or personal attention is required.</p></details>
+        <details class="reveal"><summary>What happens with an emergency or clinical question?</summary><p>Lisa does not diagnose or recommend treatment. Urgent, distressed, clinical, or unclear conversations follow the clinic’s approved escalation instructions.</p></details>
+        <details class="reveal"><summary>Can we use our existing number?</summary><p>Often, yes—through forwarding, porting, or a compatible provider. The right route depends on the country, carrier, and whether the number must also support WhatsApp.</p></details>
+        <details class="reveal"><summary>Can a human take over?</summary><p>Yes. The workflow can notify staff, transfer eligible calls, or collect a callback request with the context already summarised.</p></details>
+        <details class="reveal"><summary>Are calls recorded?</summary><p>Recording is optional. If enabled, disclosure, access, retention, and deletion rules must be agreed before launch.</p></details>
+        <details class="reveal"><summary>What happens when the AI is uncertain?</summary><p>It should say it is unsure, avoid inventing an answer, capture the request, and send it to an authorised person.</p></details>
+      </div>
+      <div class="clinic-trust-link reveal"><div><strong>Safety is part of the build.</strong><span>See how disclosure, consent, recordings, data retention, and human escalation are handled.</span></div><a href="/ai-safety.html" class="btn-brand-outline">Read the trust &amp; safety approach</a></div>
+    </div>
+  </section>
+
   <section class="section agency-cta">
     <div class="container clinic-final-cta reveal">
       <div><p class="eyebrow mb-3">// Start with your busiest call</p><h2 class="display-5 mb-3">Show me what your front desk repeats every day.</h2><p class="mb-0">I’ll map one practical call flow and show you where a voice agent should—and should not—act.</p></div>
@@ -269,6 +331,7 @@
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/voice-demo.js"></script>
+<script src="/js/clinic-roi.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>

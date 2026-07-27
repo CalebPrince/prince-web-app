@@ -85,6 +85,21 @@ $pricingDefaultUpdates = [
     'pricing_tier_1_amount' => ['600', '6000'],
     'pricing_tier_1_price' => ['From $600', 'From GHS 6,000'],
     'pricing_tier_2_price' => ['From $2,500', 'From GHS 25,000'],
+    'pricing_intro' => [
+        'Every project is scoped and quoted individually — these are starting ranges to help you budget, not fixed quotes. Get in touch with your details and I\'ll send a tailored number.',
+        'Start with one useful workflow, prove it with real conversations, then expand. These are implementation starting points; telephony, messaging, and AI usage are billed separately.'
+    ],
+    'pricing_tier_1_name' => ['Starter', 'AI Voice Agent Pilot'],
+    'pricing_tier_1_tagline' => ['Landing pages, small brochure sites, and simple booking or contact tools.', 'One focused call flow, trained on your approved information and tested before it reaches customers.'],
+    'pricing_tier_1_features' => ["Up to 5 pages, responsive design\nContact or booking form wired to email\nBasic on-page SEO\n~2 weeks typical delivery", "One inbound call flow\nApproved FAQ and handoff rules\nCall logs and staff summaries\nLaunch review after monitored testing"],
+    'pricing_tier_2_name' => ['Growth', 'Voice + WhatsApp'],
+    'pricing_tier_2_tagline' => ['Custom web apps, CMS ecosystems, and dashboards built around your actual workflow.', 'A connected customer-service system that carries context across calls, WhatsApp, bookings, and staff handoffs.'],
+    'pricing_tier_2_features' => ["Custom database & API design\nAdmin dashboard / CMS\nThird-party integrations (payments, messaging)\n4-8 weeks typical delivery", "AI voice and WhatsApp assistant\nCalendar or CRM integration\nHuman escalation and notifications\nReporting dashboard and audit trail"],
+    'pricing_tier_3_name' => ['Custom / Enterprise', 'AI Operations System'],
+    'pricing_tier_3_tagline' => ['Multi-feature platforms, mobile apps, and ongoing engineering partnerships.', 'Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.'],
+    'pricing_tier_3_features' => ["Cross-platform mobile apps\nAI integrations & automation\nOngoing support & iteration\nScoped after a discovery call", "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support"],
+    'home_pricing_title' => ['Straightforward starting points.', 'Start with one workflow. Expand after it works.'],
+    'home_pricing_note' => ['Not sure which tier fits? Send over the details and I\'ll tell you honestly.', 'AI usage, calls, and messages are shown separately from implementation costs, so you can see what scales with activity.'],
 ];
 $pricingUpdateStmt = $pdo->prepare('UPDATE settings SET value = ? WHERE name = ? AND value = ?');
 foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
