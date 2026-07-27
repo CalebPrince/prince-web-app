@@ -157,7 +157,7 @@
         + item("/services.html#track-02", "02", "Autonomous AI agents", "Agents")
         + item("/services.html#track-03", "03", "Business automations", "Workflow")
         + item("/services.html#track-04", "04", "AI chatbots & assistants", "Chat")
-        + item("/services.html#track-05", "05", "Web & mobile engineering", "The backbone")
+        + item("/services.html#track-05", "05", "Custom websites & mobile apps", "Digital products")
         + "</div>")
       + col("ENGAGEMENT",
           link("/pricing.html", "Pricing & packages")

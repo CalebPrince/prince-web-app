@@ -101,8 +101,24 @@ $pricingDefaultUpdates = [
     'home_pricing_title' => ['Straightforward starting points.', 'Start with one workflow. Expand after it works.'],
     'home_pricing_note' => ['Not sure which tier fits? Send over the details and I\'ll tell you honestly.', 'AI usage, calls, and messages are shown separately from implementation costs, so you can see what scales with activity.'],
 ];
+
+// Keep the AI-first packages while making the longstanding custom website and
+// mobile-app offer explicit in the custom tier.
+$pricingOfferUpdates = [
+    'pricing_tier_3_tagline' => [
+        'Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.',
+        'A tailored AI operations system, custom website, web platform, or mobile app built around your business.',
+    ],
+    'pricing_tier_3_features' => [
+        "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
+        "Multiple agent workflows\nCustom websites, web apps, or mobile apps\nDashboards, APIs, and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
+    ],
+];
 $pricingUpdateStmt = $pdo->prepare('UPDATE settings SET value = ? WHERE name = ? AND value = ?');
 foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
+    $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
+}
+foreach ($pricingOfferUpdates as $name => [$oldValue, $newValue]) {
     $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
 }
 $publicCopyUpdates = [

@@ -29,8 +29,8 @@ const PRICING_DEFAULTS = {
   pricing_tier_2_features: "AI voice and WhatsApp assistant\nCalendar or CRM integration\nHuman escalation and notifications\nReporting dashboard and audit trail",
   pricing_tier_3_name: "AI Operations System",
   pricing_tier_3_price: "Custom quote",
-  pricing_tier_3_tagline: "Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.",
-  pricing_tier_3_features: "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
+  pricing_tier_3_tagline: "A tailored AI operations system, custom website, web platform, or mobile app built around your business.",
+  pricing_tier_3_features: "Multiple agent workflows\nCustom websites, web apps, or mobile apps\nDashboards, APIs, and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
 };
 
 function showPricingMsg(text, ok) {
