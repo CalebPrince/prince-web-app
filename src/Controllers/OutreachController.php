@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\Automations;
+use App\Support\CallOutcomeSync;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\LeadDiscovery;
@@ -438,6 +439,7 @@ class OutreachController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
+        CallOutcomeSync::reconcile($pdo);
 
         $rows = $pdo->query(
             "SELECT ml.id, ml.business_name, ml.contact_phone, ml.website_url, ml.pitch_body,

@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\AiAgentEngine;
+use App\Support\CallOutcomeSync;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
@@ -238,14 +239,17 @@ final class VoiceDemoController
             exit;
         }
         $pdo = Database::get();
+        $callSid = trim((string) ($_POST['CallSid'] ?? ''));
+        $callStatus = mb_substr(trim((string) ($_POST['CallStatus'] ?? 'unknown')), 0, 40);
         $pdo->prepare(
             'UPDATE telephony_calls SET status = ?, duration_seconds = ?, updated_at = datetime(\'now\') WHERE provider_call_id = ?'
         )->execute([
-            mb_substr(trim((string) ($_POST['CallStatus'] ?? 'unknown')), 0, 40),
+            $callStatus,
             max(0, (int) ($_POST['CallDuration'] ?? 0)),
-            trim((string) ($_POST['CallSid'] ?? '')),
+            $callSid,
         ]);
-        Response::json(['status' => 'ok']);
+        $attemptLogged = CallOutcomeSync::record($pdo, $callSid, $callStatus);
+        Response::json(['status' => 'ok', 'attempt_logged' => $attemptLogged]);
     }
 
     public static function adminStats(): void

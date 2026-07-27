@@ -568,7 +568,12 @@ storage/
     robocalls by itself); every attempt is logged to `call_log`
     (`OutreachController::logCall()`) — no-answer/voicemail/callback keep the
     lead queued, connected/interested/not-interested/wrong-number close it
-    out — and "calls today" counts alongside "sent today" on the panel, so the
+    out. Twilio `no-answer`, `busy`, `failed`, and `canceled` results from an
+    approved Lisa call are synchronized automatically by `CallOutcomeSync`;
+    they create one idempotent `no_answer` attempt and leave the lead
+    `pitch_ready`, so it returns to the call list for a later retry. Opening
+    the call list also reconciles older final statuses that arrived before
+    this behavior was deployed. "Calls today" counts alongside "sent today" on the panel, so the
     daily ritual is emails + calls, matching what the leads actually are.
 
     The **scoreboard** (Sales mode on `/admin/dashboard.html`,
