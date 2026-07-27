@@ -3835,6 +3835,13 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
 .safety-principles article > span { color: var(--accent); font: 700 0.7rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.09em; }
 .safety-principles h2 { margin: 2.5rem 0 0.8rem; font-size: 1.3rem; }
 .safety-principles p { color: var(--muted); line-height: 1.7; }
+.live-proof-section { background: var(--bg-soft); border-block: 1px solid var(--line); }
+.live-proof-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.live-proof-grid article { display: flex; flex-direction: column; min-height: 18rem; padding: 1.7rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg); }
+.live-proof-grid article > div { display: flex; align-items: center; gap: 0.5rem; color: #16835a; font: 700 0.68rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.07em; text-transform: uppercase; }
+.live-proof-grid h3 { margin: 2.5rem 0 0.75rem; font-size: 1.18rem; }
+.live-proof-grid p { margin-bottom: 1.5rem; color: var(--muted); font-size: 0.86rem; line-height: 1.68; }
+.live-proof-grid a { margin-top: auto; font-size: 0.82rem; font-weight: 750; }
 
 @media (max-width: 991.98px) {
   .clinic-hero > .container,
@@ -3848,6 +3855,7 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   .clinic-final-cta { align-items: flex-start; flex-direction: column; }
   .clinic-pilot-grid { grid-template-columns: repeat(2, 1fr); }
   .clinic-roi-layout { grid-template-columns: 1fr; }
+  .live-proof-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 575.98px) {
   .clinic-hero { min-height: auto; padding: 5rem 0 4rem; }
@@ -3857,6 +3865,7 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   .clinic-roi-form,
   .clinic-faq-grid,
   .safety-principles { grid-template-columns: 1fr; }
+  .live-proof-grid { grid-template-columns: 1fr; }
   .clinic-pilot-includes a { width: 100%; margin-left: 0; }
   .clinic-trust-link { align-items: flex-start; flex-direction: column; }
   .boundary-row { grid-template-columns: 1fr; gap: 0.45rem; }

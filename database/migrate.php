@@ -105,6 +105,15 @@ $pricingUpdateStmt = $pdo->prepare('UPDATE settings SET value = ? WHERE name = ?
 foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
     $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
 }
+$publicCopyUpdates = [
+    'contact_intro' => [
+        'Tell me a bit about your project and I\'ll get back to you within a couple of business days.',
+        'Describe the call, message, follow-up, or repetitive task. I’ll review where an agent should act, where a person should stay in control, and the smallest useful place to start.'
+    ],
+];
+foreach ($publicCopyUpdates as $name => [$oldValue, $newValue]) {
+    $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
+}
 
 // SQLite has no "ADD COLUMN IF NOT EXISTS" — guard new columns on tables that
 // may already exist from before this migration was written.
