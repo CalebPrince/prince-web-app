@@ -96,6 +96,128 @@ this upgrade. At least one configured Gemini, OpenRouter, or Groq key is still
 required to open the conversational builder; generated copy retains the
 existing deterministic fallback behavior once a build has started.
 
+## 2026-07-27 AI business-platform upgrade
+
+The July 27 release moved the platform from a general developer portfolio
+toward a focused AI automation business while retaining custom website and
+mobile-app delivery. This section consolidates every change shipped in commits
+`c9d3a45` through `421bbbc`.
+
+### Automated sales engine
+
+- The new Cold Outreach Engine turns Marketing Leads into reviewed,
+  personalized email pitches, uses the existing mailer, records delivery and
+  replies, and observes a hard 50-email daily cap. Auto-drafting and sending
+  remain separately controllable.
+- Leads with phone numbers can enter Lisa's call list. Calls are
+  approval-gated: a human initiates and confirms consent, then Lisa places one
+  call. No cron or bulk action can autonomously call the list.
+- The Sales dashboard now shows daily email progress against the cap, social
+  posting activity, streak/status information, and the current state of the
+  sales engine.
+- Marketing Leads can automatically discover real businesses from Serper
+  Places. Admin can store up to 20 niche/location searches, choose a target of
+  1-50 new leads per day, and switch discovery off, on, or into the configured
+  automated flow. Duplicate businesses are suppressed; only source-backed
+  contact details are stored.
+- The hourly `database/send_cold_outreach.php` job now runs the due daily
+  discovery sweep before drafting/sending. Phone-only discoveries feed Lisa's
+  approval list; usable email leads remain in the separate 50/day email path.
+
+### AI-focused public positioning and conversion flow
+
+- Homepage and Services messaging now lead with four connected offers: AI
+  voice agents, chatbots/WhatsApp assistants, workflow automation, and custom
+  web/mobile products.
+- Public conversion pages, calls to action, service descriptions, metadata,
+  niche content, and internal identity copy were aligned with that direction.
+  Cold outreach, social drafts, proposals, live chat, and the wider agent team
+  now pitch the current services.
+- Interactive service mockups make each workflow tangible. The homepage voice
+  section links into the clinic voice-agent niche page, whose expanded process
+  mockups show the customer and staff journey.
+- The AI voice demo page uses the complete public side navigation instead of
+  an isolated reduced menu.
+
+### Production voice agent and calling controls
+
+- The browser voice demo remains side-effect-free, while Twilio endpoints let
+  Lisa answer the public customer-service line and make individually approved
+  Marketing Leads calls.
+- Production-readiness settings track the Twilio Account SID, Auth Token,
+  purchased voice number, owner-recognition number, enabled state, and webhook
+  setup without exposing credentials publicly.
+- Incoming calls can recognize the configured owner number for a personalized
+  greeting. Recognition is context only and never authorizes private data or
+  sensitive actions.
+- Voice logs record incoming and outgoing numbers, direction, status, duration,
+  start time, and any linked marketing lead. They are visible in the Voice
+  Demo admin view alongside recent browser voice activity.
+- Phone speech has independent gender/voice settings and defaults to a British
+  female Amazon Polly voice rather than relying on the browser demo voice.
+- The telephony migration was reordered so existing installations add
+  `marketing_lead_id` before creating dependent indexes; migrations remain
+  safe to re-run.
+
+### WhatsApp and public contact rollout
+
+- Twilio WhatsApp inbound messaging uses `/api/v1/whatsapp/webhook`; each new
+  message reopens its conversation as unread and resets any previously
+  dismissed notification for that thread.
+- Site Content holds the authoritative public WhatsApp link and wording.
+  Homepage, Contact, clinic voice-agent, and relevant service surfaces expose
+  consistent Call Lisa and WhatsApp Lisa actions.
+- All conversational agents receive the same public website, voice line,
+  business WhatsApp, email, and direct-phone context through
+  `SharedAgentTools`. Owner-recognition numbers and provider credentials are
+  excluded from public contact grounding.
+
+### Ghana-market pricing and retained software services
+
+Four public tiers are synchronized across the homepage, Pricing page, admin
+content settings, live chat, website demo, proposals, outreach copy, and the
+rest of the agent team:
+
+1. **AI Voice Agent Pilot** — from **GHS 5,000**.
+2. **Voice + WhatsApp** — from **GHS 15,000**.
+3. **AI Operations System** — from **GHS 25,000**.
+4. **Custom Websites & Mobile Apps** — business websites from **GHS 5,000**,
+   custom web applications from **GHS 15,000**, and iOS/Android mobile-app
+   MVPs from **GHS 35,000**.
+
+The fourth tier prevents the AI repositioning from hiding custom website,
+web-platform, API, payment-integration, and mobile-app work. Pricing remains
+editable in Admin; `SharedAgentTools` reads the live values so agents do not
+retain stale hard-coded figures after an update.
+
+### Arch first-impression upgrade
+
+- Arch's five-step brief now captures audience, primary conversion goal, brand
+  personality, and an optional visual reference before producing a direction.
+- Seven niche profiles and three different composition families drive
+  typography, imagery, spacing, shape language, customer journey, and CTA
+  wording.
+- Generated sites now include image-led heroes, audience trust strips,
+  editorial About layouts, service presentation, three-step conversion
+  journeys, curated galleries, stronger mobile behavior, working contact
+  actions, and the existing optional CMS.
+- AI copy rules prohibit fabricated awards, statistics, addresses, and years
+  of experience. Static and CMS builds share the upgraded rendering and
+  deterministic provider-outage fallback.
+
+### Deployment notes for this release
+
+Pushes to `main` deploy through the existing workflow. After deployment, run:
+
+```bash
+php database/migrate.php
+```
+
+This applies the Marketing Leads, telephony, call-log, and fourth-pricing-tier
+changes and updates older default pricing values. Keep the existing hourly
+`send_cold_outreach.php` cron active for scheduled outreach and automatic lead
+discovery. Arch's design upgrade itself requires no migration.
+
 ## Setup
 
 Requires PHP 8.1+ with the `pdo_sqlite` extension. No Composer, no Node, no
