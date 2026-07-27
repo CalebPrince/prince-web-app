@@ -41,6 +41,18 @@ $pdo->exec($schema);
  * $createSqlTemplate must contain exactly one %s for the (temporary) table
  * name. Verifies with PRAGMA foreign_key_check before committing and rolls
  * back rather than leaving a corrupted database if anything doesn't add up.
+ *
+ * That verification has to be a whole-database check (PRAGMA foreign_key_check
+ * with no table argument): the corruption a bad RENAME/DROP causes shows up in
+ * OTHER tables' foreign keys pointing AT the rebuilt one, which a single-table
+ * check can't see. The cost is that the same scan also surfaces pre-existing
+ * orphans in tables this rebuild never touches — e.g. an admin_activity_log
+ * row whose user was hard-deleted (its user_id FK is ON DELETE SET NULL, so a
+ * normal delete nulls it, but a row written while foreign_keys was OFF, as it
+ * is during every rebuild here, can be left dangling). Those orphans are not
+ * this rebuild's doing and must not abort the migration, so we snapshot the
+ * violations that already exist BEFORE touching anything and roll back only on
+ * violations this rebuild newly introduced.
  */
 function rebuildTable(\PDO $pdo, string $table, string $createSqlTemplate, string $columns, array $indexes = []): void
 {
@@ -50,6 +62,16 @@ function rebuildTable(\PDO $pdo, string $table, string $createSqlTemplate, strin
     // this $pdo connection is reused for the rest of migrate.php.
     if ($foreignKeysWereOn) {
         $pdo->exec('PRAGMA foreign_keys = OFF');
+    }
+
+    // Baseline of orphans already present across the whole database. Rows that
+    // survive the rebuild keep their id (copied explicitly below), so their
+    // rowid — and therefore their foreign_key_check signature — is stable, and
+    // untouched tables don't change at all; that's what lets a straight tuple
+    // diff isolate the violations this rebuild is actually responsible for.
+    $preexistingViolations = [];
+    foreach ($pdo->query('PRAGMA foreign_key_check')->fetchAll() as $violation) {
+        $preexistingViolations[json_encode($violation)] = true;
     }
 
     $tmpTable = $table . '_rebuild_tmp';
@@ -62,7 +84,12 @@ function rebuildTable(\PDO $pdo, string $table, string $createSqlTemplate, strin
         $pdo->exec($indexSql);
     }
 
-    $problems = $pdo->query('PRAGMA foreign_key_check')->fetchAll();
+    $problems = [];
+    foreach ($pdo->query('PRAGMA foreign_key_check')->fetchAll() as $violation) {
+        if (!isset($preexistingViolations[json_encode($violation)])) {
+            $problems[] = $violation;
+        }
+    }
     if ($problems) {
         $pdo->exec('ROLLBACK');
         if ($foreignKeysWereOn) {
