@@ -273,8 +273,14 @@ final class VoiceDemoController
             'SELECT event_type, COUNT(*) AS count FROM voice_demo_events GROUP BY event_type'
         )->fetchAll();
         $recent = $pdo->query(
-            "SELECT id, token, channel, niche, provider, transcript_json, created_at, updated_at
-             FROM voice_demo_sessions ORDER BY updated_at DESC LIMIT 30"
+            "SELECT vds.id, vds.token, vds.channel, vds.niche, vds.provider,
+                    vds.transcript_json, vds.created_at, vds.updated_at,
+                    tc.direction AS call_direction, tc.status AS call_status,
+                    ml.business_name AS call_business_name
+             FROM voice_demo_sessions vds
+             LEFT JOIN telephony_calls tc ON tc.session_id = vds.id
+             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
+             ORDER BY vds.updated_at DESC LIMIT 30"
         )->fetchAll();
         foreach ($recent as &$row) {
             $turns = json_decode((string) $row['transcript_json'], true) ?: [];

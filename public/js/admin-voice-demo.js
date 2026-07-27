@@ -36,6 +36,16 @@
     }).join("");
     document.getElementById("voice-call-empty").classList.toggle("d-none", rows.length > 0);
   };
+  const sessionActivity = row => {
+    if (row.last_question) return row.last_question;
+    if (row.call_direction === "outbound") {
+      const business = row.call_business_name || "Outbound recipient";
+      const status = String(row.call_status || "completed").replaceAll("-", " ");
+      return `${business}: call ${status}; no speech captured`;
+    }
+    if (row.channel === "phone") return "Phone call opened; no speech captured";
+    return "Demo opened without a question";
+  };
   async function load() {
     try {
       const data = await api.get("/api/v1/admin/voice-demo/stats");
@@ -56,7 +66,7 @@
       document.getElementById("marketing-call-status").innerHTML = `<div class="d-flex gap-4 mb-3"><div><span class="small text-muted-custom d-block">Phone-only leads</span><strong class="fs-4">${Number(calls.queued || 0)}</strong></div><div><span class="small text-muted-custom d-block">Lisa calls today</span><strong class="fs-4">${Number(calls.ai_calls_today || 0)} / ${Number(calls.ai_call_daily_cap || 5)}</strong></div><div><span class="small text-muted-custom d-block">Remaining</span><strong class="fs-4">${Number(calls.ai_calls_remaining || 0)}</strong></div></div><div class="alert alert-light border small mb-3"><i class="bi bi-person-check me-1"></i>Each AI call requires your approval and confirmation that the recipient requested or consented to it. Lisa then places that one call; there is no unattended batch dialing.</div><a class="btn btn-outline-secondary btn-sm" href="/admin/marketing-leads.html"><i class="bi bi-bullseye me-1"></i>Open call list</a>`;
       renderCallLogs(data.call_logs || []);
       const rows = data.recent || [];
-      document.getElementById("voice-session-rows").innerHTML = rows.map(row => `<tr><td><span class="voice-channel"><i class="bi ${row.channel === "phone" ? "bi-telephone" : "bi-browser-chrome"}"></i>${esc(row.channel)}</span></td><td>${esc(row.last_question || "Opened without a question")}</td><td>${Number(row.turn_count || 0)}</td><td>${esc(row.provider || "fallback")}</td><td>${ago(row.updated_at)}</td></tr>`).join("");
+      document.getElementById("voice-session-rows").innerHTML = rows.map(row => `<tr><td><span class="voice-channel"><i class="bi ${row.channel === "phone" ? "bi-telephone" : "bi-browser-chrome"}"></i>${esc(row.channel)}</span></td><td>${esc(sessionActivity(row))}</td><td>${Number(row.turn_count || 0)}</td><td>${esc(row.provider || "fallback")}</td><td>${ago(row.updated_at)}</td></tr>`).join("");
       document.getElementById("voice-empty").classList.toggle("d-none", rows.length > 0);
     } catch (error) {
       document.getElementById("voice-summary").innerHTML = `<div class="alert alert-danger">${esc(error.message)}</div>`;

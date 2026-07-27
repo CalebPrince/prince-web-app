@@ -1066,7 +1066,10 @@ class LiveChatController
                 . "place a new outbound call after Prince approves it in Marketing Leads and confirms consent; "
                 . "a WhatsApp message itself does not initiate a call. When Prince asks whether you called a "
                 . "business or asks about a recent call result, use get_recent_calls and answer from its real "
-                . "records. Never tell Prince that you cannot make calls or cannot view call records.";
+                . "records. The tool returns the captured conversation for owner review when speech exists. If "
+                . "conversation_captured is false, say plainly that the call completed but no speech was captured; "
+                . "do not imply that inaccessible conversation details exist. Never tell Prince that you cannot "
+                . "make calls or cannot view call records.";
         } else {
             $system .= "\n\nCALL PRIVACY: you can explain that Lisa supports human-approved customer-service "
                 . "calls, but never reveal whether a specific person or business was called, any number, call "
@@ -1265,9 +1268,10 @@ class LiveChatController
         $sql =
             "SELECT tc.direction, tc.from_number, tc.to_number, tc.status,
                     tc.duration_seconds, tc.created_at, tc.updated_at,
-                    ml.business_name
+                    ml.business_name, COALESCE(vds.transcript_json, '[]') AS transcript_json
              FROM telephony_calls tc
-             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id";
+             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
+             LEFT JOIN voice_demo_sessions vds ON vds.id = tc.session_id";
         $params = [];
         if ($businessName !== '') {
             $sql .= ' WHERE lower(COALESCE(ml.business_name, \'\')) LIKE lower(?)';
@@ -1276,16 +1280,29 @@ class LiveChatController
         $sql .= ' ORDER BY tc.created_at DESC, tc.id DESC LIMIT 10';
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
-        $calls = array_map(static fn(array $row): array => [
-            'business_name' => $row['business_name'] ?: null,
-            'direction' => $row['direction'],
-            'from_number' => $row['from_number'],
-            'to_number' => $row['to_number'],
-            'status' => $row['status'],
-            'duration_seconds' => (int) ($row['duration_seconds'] ?? 0),
-            'started_at' => $row['created_at'],
-            'updated_at' => $row['updated_at'],
-        ], $stmt->fetchAll());
+        $calls = array_map(static function (array $row): array {
+            $rawTranscript = json_decode((string) ($row['transcript_json'] ?? '[]'), true);
+            $rawTranscript = is_array($rawTranscript) ? $rawTranscript : [];
+            $conversation = array_map(static fn(array $turn): array => [
+                'speaker' => ($turn['role'] ?? '') === 'assistant' ? 'Lisa' : 'Recipient',
+                'text' => mb_substr(trim((string) ($turn['text'] ?? '')), 0, 500),
+            ], array_slice(array_values(array_filter(
+                $rawTranscript,
+                static fn($turn): bool => is_array($turn) && trim((string) ($turn['text'] ?? '')) !== ''
+            )), -12));
+            return [
+                'business_name' => $row['business_name'] ?: null,
+                'direction' => $row['direction'],
+                'from_number' => $row['from_number'],
+                'to_number' => $row['to_number'],
+                'status' => $row['status'],
+                'duration_seconds' => (int) ($row['duration_seconds'] ?? 0),
+                'started_at' => $row['created_at'],
+                'updated_at' => $row['updated_at'],
+                'conversation_captured' => count($conversation) > 0,
+                'conversation' => $conversation,
+            ];
+        }, $stmt->fetchAll());
         return ['calls' => $calls, 'count' => count($calls)];
     }
 

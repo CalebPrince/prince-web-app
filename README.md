@@ -571,7 +571,11 @@ storage/
     out. Twilio `no-answer`, `busy`, `failed`, and `canceled` results from an
     approved Lisa call are synchronized automatically by `CallOutcomeSync`;
     they create one idempotent `no_answer` attempt and leave the lead
-    `pitch_ready`, so it returns to the call list for a later retry. Opening
+    `pitch_ready`, so it returns to the call list for a later retry. A Twilio
+    `completed` call whose linked voice session captured no speech is treated
+    the same way: carrier completion only proves the greeting played, not that
+    a conversation happened. Completed calls with actual transcript turns are
+    left for a human-reviewed outcome. Opening
     the call list also reconciles older final statuses that arrived before
     this behavior was deployed. "Calls today" counts alongside "sent today" on the panel, so the
     daily ritual is emails + calls, matching what the leads actually are.
@@ -907,8 +911,10 @@ storage/
     private owner-recognition number (`owner_whatsapp_number` or
     `owner_voice_number`) gets that same owner mode plus the owner-only
     `get_recent_calls` tool. Lisa can then answer Caleb's questions about real
-    recent inbound/outbound call records, while ordinary visitors cannot query
-    or infer any call history. Verified owner threads remain logged for
+    recent inbound/outbound call records and review the linked captured voice
+    transcript when one exists. Empty transcripts are reported accurately as
+    "no speech captured", not as inaccessible conversation details. Ordinary
+    visitors cannot query or infer any call history. Verified owner threads remain logged for
     accountability but appear as **Prince Caleb · Owner**, not Visitor, in the
     unified inbox. Her admin tab shows a **Recent visitor
     conversations** panel (reusing `GET /api/v1/admin/chats`, the same data as

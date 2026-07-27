@@ -22,27 +22,38 @@ final class CallOutcomeSync
     {
         $callSid = trim($callSid);
         $status = strtolower(str_replace('_', '-', trim($status)));
-        if ($callSid === '' || !isset(self::RETRYABLE_STATUSES[$status])) {
+        if ($callSid === '' || (!isset(self::RETRYABLE_STATUSES[$status]) && $status !== 'completed')) {
             return false;
         }
 
         $stmt = $pdo->prepare(
-            "SELECT marketing_lead_id
-             FROM telephony_calls
-             WHERE provider_call_id = ?
-               AND direction = 'outbound'
-               AND marketing_lead_id IS NOT NULL
+            "SELECT tc.marketing_lead_id, COALESCE(vds.transcript_json, '[]') AS transcript_json
+             FROM telephony_calls tc
+             LEFT JOIN voice_demo_sessions vds ON vds.id = tc.session_id
+             WHERE tc.provider_call_id = ?
+               AND tc.direction = 'outbound'
+               AND tc.marketing_lead_id IS NOT NULL
              LIMIT 1"
         );
         $stmt->execute([$callSid]);
-        $leadId = (int) ($stmt->fetchColumn() ?: 0);
+        $call = $stmt->fetch();
+        $leadId = (int) ($call['marketing_lead_id'] ?? 0);
         if ($leadId < 1) {
             return false;
         }
 
+        if ($status === 'completed') {
+            $transcript = json_decode((string) ($call['transcript_json'] ?? '[]'), true);
+            if (is_array($transcript) && count($transcript) > 0) {
+                return false; // A real conversation needs a real, reviewed outcome.
+            }
+            $detail = 'The call connected and completed, but the recipient gave no speech response.';
+        } else {
+            $detail = self::RETRYABLE_STATUSES[$status];
+        }
         $note = sprintf(
             'Lisa AI call: %s Twilio status: %s. Call SID: %s',
-            self::RETRYABLE_STATUSES[$status],
+            $detail,
             $status,
             $callSid
         );
@@ -68,7 +79,7 @@ final class CallOutcomeSync
              FROM telephony_calls
              WHERE direction = 'outbound'
                AND marketing_lead_id IS NOT NULL
-               AND lower(replace(status, '_', '-')) IN ('no-answer', 'busy', 'failed', 'canceled')"
+               AND lower(replace(status, '_', '-')) IN ('no-answer', 'busy', 'failed', 'canceled', 'completed')"
         )->fetchAll();
         $added = 0;
         foreach ($rows as $row) {
