@@ -3618,43 +3618,93 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
 }
 .clinic-pressure-strip i { width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: color-mix(in srgb, var(--bg) 38%, transparent); }
 .clinic-pressure-strip strong { color: var(--bg); }
-.clinic-call-flow {
+.clinic-process-mockups {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border-top: 1px solid var(--line-strong);
-  border-left: 1px solid var(--line-strong);
+  grid-template-columns: minmax(0, 1fr) 3rem minmax(0, 1fr) 3rem minmax(0, 1fr);
+  align-items: center;
 }
-.clinic-call-flow article {
-  position: relative;
-  min-height: 18rem;
-  padding: 1.5rem;
-  border-right: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
-}
-.clinic-call-flow article:not(:last-child)::after {
-  content: "→";
-  position: absolute;
-  z-index: 1;
-  right: -0.85rem;
-  top: 50%;
-  display: grid;
-  place-items: center;
-  width: 1.7rem;
-  height: 1.7rem;
+.clinic-process-window {
+  overflow: hidden;
+  min-width: 0;
+  min-height: 31rem;
   border: 1px solid var(--line-strong);
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--heading-color);
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
 }
-.clinic-call-flow span,
+.clinic-process-window > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.2rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.clinic-process-window > header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--heading-color);
+  font: 700 0.68rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-transform: uppercase;
+}
+.clinic-process-window > header b {
+  color: var(--muted);
+  font: 600 0.6rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-transform: uppercase;
+}
+.process-connector { display: grid; justify-items: center; gap: 0.65rem; color: var(--muted); }
+.process-connector span { writing-mode: vertical-rl; transform: rotate(180deg); font: 600 0.58rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+.process-connector i { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--bg); color: var(--heading-color); font-style: normal; }
+.process-caller { display: flex; align-items: center; gap: 0.7rem; padding: 1rem; border-bottom: 1px solid var(--line); }
+.process-caller strong,
+.process-caller small { display: block; }
+.process-caller small { margin-top: 0.15rem; color: var(--muted); font-size: 0.67rem; }
+.process-caller em { margin-left: auto; color: #16835a; font: 700 0.62rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-transform: uppercase; }
+.process-transcript { margin: 1rem; padding: 1rem; border: 1px solid var(--line); border-radius: 4px 12px 12px 12px; background: var(--bg-soft); }
+.process-transcript span,
+.process-fields span,
+.handoff-patient span,
+.handoff-note span { color: var(--muted); font: 600 0.6rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-transform: uppercase; }
+.process-transcript p { margin: 0.45rem 0 0; color: var(--ink); font-size: 0.8rem; line-height: 1.5; }
+.process-fields { margin: 0 1rem; border-top: 1px solid var(--line); }
+.process-fields > div { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+.process-fields strong { color: var(--heading-color); font-size: 0.7rem; text-align: right; }
+.clinic-process-window > footer { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-top: 1rem; padding: 0.8rem 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.68rem; }
+.clinic-process-window > footer strong { color: var(--heading-color); }
+.calendar-heading { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 1rem; }
+.calendar-heading strong { color: var(--heading-color); font-size: 0.78rem; }
+.calendar-heading button { width: 1.7rem; height: 1.7rem; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--muted); }
+.calendar-days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35rem; padding: 0 1rem 1rem; }
+.calendar-days span { display: grid; place-items: center; height: 2rem; border-radius: 6px; color: var(--muted); font: 600 0.62rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.calendar-days span.active { background: var(--heading-color); color: var(--bg); }
+.slot-list { border-top: 1px solid var(--line); }
+.slot-list > div { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.85rem 1rem; border-bottom: 1px solid var(--line); font-size: 0.7rem; }
+.slot-list span { color: var(--heading-color); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.slot-list em { color: var(--muted); font-style: normal; }
+.slot-list strong { color: #16835a; font-size: 0.66rem; }
+.slot-list .selected { background: rgba(32, 163, 106, 0.08); box-shadow: inset 3px 0 #20a36a; }
+.booking-confirmed { display: flex; gap: 0.65rem; align-items: center; margin: 1rem; padding: 0.8rem; border: 1px solid rgba(32, 163, 106, 0.25); border-radius: 9px; background: rgba(32, 163, 106, 0.07); }
+.booking-confirmed > span { color: #16835a; font-weight: 800; }
+.booking-confirmed strong,
+.booking-confirmed small { display: block; }
+.booking-confirmed strong { color: var(--heading-color); font-size: 0.7rem; }
+.booking-confirmed small { color: var(--muted); font-size: 0.62rem; margin-top: 0.15rem; }
+.handoff-alert { display: flex; justify-content: space-between; margin: 1rem; padding: 0.75rem; border-left: 3px solid #20a36a; background: var(--bg-soft); }
+.handoff-alert span { color: var(--heading-color); font-weight: 700; font-size: 0.72rem; }
+.handoff-alert strong { color: #16835a; font: 600 0.6rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-transform: uppercase; }
+.handoff-patient { margin: 0 1rem; border-top: 1px solid var(--line); }
+.handoff-patient > div { padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+.handoff-patient strong { display: block; margin-top: 0.3rem; color: var(--heading-color); font-size: 0.73rem; }
+.handoff-note { margin: 1rem; padding: 0.85rem; border: 1px solid var(--line); border-radius: 9px; }
+.handoff-note p { margin: 0.45rem 0 0; color: var(--ink); font-size: 0.7rem; line-height: 1.5; }
 .clinic-capability-grid span {
   color: var(--muted);
   font: 700 0.68rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.clinic-call-flow strong { display: block; margin: 3.5rem 0 1rem; color: var(--heading-color); font-size: 1.1rem; line-height: 1.4; }
-.clinic-call-flow p,
 .clinic-capability-grid p { color: var(--muted); font-size: 0.86rem; line-height: 1.65; }
 .clinic-boundary-section { background: var(--bg-soft); border-block: 1px solid var(--line); }
 .clinic-boundary-grid { display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(22rem, 1fr); gap: clamp(2rem, 7vw, 7rem); align-items: center; }
@@ -3680,18 +3730,17 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   .clinic-hero > .container,
   .clinic-boundary-grid { grid-template-columns: 1fr; }
   .clinic-hero .hero-call-mockup { width: 100%; margin: 1rem 0 0; }
-  .clinic-call-flow { grid-template-columns: repeat(2, 1fr); }
-  .clinic-call-flow article:nth-child(2)::after { display: none; }
+  .clinic-process-mockups { grid-template-columns: 1fr; gap: 1rem; }
+  .process-connector { grid-template-columns: auto auto; justify-content: center; align-items: center; }
+  .process-connector span { writing-mode: initial; transform: none; }
+  .process-connector i { transform: rotate(90deg); }
+  .clinic-process-window { min-height: auto; }
   .clinic-final-cta { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 575.98px) {
   .clinic-hero { min-height: auto; padding: 5rem 0 4rem; }
   .clinic-pressure-strip .container { width: max-content; min-width: 100%; padding-block: 1rem; }
-  .clinic-call-flow,
   .clinic-capability-grid { grid-template-columns: 1fr; }
-  .clinic-call-flow article { min-height: auto; }
-  .clinic-call-flow article::after { display: none !important; }
-  .clinic-call-flow strong { margin-top: 2rem; }
   .boundary-row { grid-template-columns: 1fr; gap: 0.45rem; }
 }
 .proof-item {

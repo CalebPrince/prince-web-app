@@ -136,11 +136,65 @@
         <div><p class="eyebrow mb-3">// One routine call</p><h2 class="display-5 mb-0">Handled end to end.</h2></div>
         <p class="text-muted-custom mb-0">The agent does not replace clinical judgment. It removes the repeatable call work around it.</p>
       </div>
-      <div class="clinic-call-flow reveal">
-        <article><span>Incoming</span><strong>“Can I see a doctor Thursday morning?”</strong><p>The agent answers immediately and identifies the caller’s intent.</p></article>
-        <article><span>Qualified</span><strong>Service, date, contact details</strong><p>It collects only the information your booking workflow requires.</p></article>
-        <article><span>Booked</span><strong>Available time confirmed</strong><p>The appointment enters your calendar and the patient receives a confirmation.</p></article>
-        <article><span>Visible</span><strong>Your team gets the summary</strong><p>Staff can see what happened without replaying the entire call.</p></article>
+      <div class="clinic-process-mockups reveal" aria-label="Mockups showing call intake, appointment booking, and staff handoff">
+        <article class="clinic-process-window process-intake">
+          <header>
+            <span><i class="status-dot is-live"></i> Call intake</span>
+            <b>01 · Listening</b>
+          </header>
+          <div class="process-caller">
+            <span class="call-avatar">AM</span>
+            <div><strong>Akosua Mensah</strong><small>First-time caller · 00:42</small></div>
+            <em>Live</em>
+          </div>
+          <div class="process-transcript">
+            <span>Caller</span>
+            <p>Can I see a doctor on Thursday morning?</p>
+          </div>
+          <div class="process-fields">
+            <div><span>Intent</span><strong>New appointment</strong></div>
+            <div><span>Preference</span><strong>Thursday · AM</strong></div>
+            <div><span>Contact</span><strong>Confirmed</strong></div>
+          </div>
+          <footer><span>Details captured</span><strong>3 / 3</strong></footer>
+        </article>
+
+        <div class="process-connector" aria-hidden="true"><span>Qualified request</span><i>→</i></div>
+
+        <article class="clinic-process-window process-calendar">
+          <header>
+            <span>Appointment calendar</span>
+            <b>02 · Checking</b>
+          </header>
+          <div class="calendar-heading"><button type="button" tabindex="-1" aria-hidden="true">‹</button><strong>Thursday, 30 July</strong><button type="button" tabindex="-1" aria-hidden="true">›</button></div>
+          <div class="calendar-days" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span class="active">T</span><span>F</span></div>
+          <div class="slot-list">
+            <div><span>08:30</span><em>Unavailable</em></div>
+            <div class="selected"><span>10:30</span><strong>Available · selected</strong></div>
+            <div><span>11:45</span><strong>Available</strong></div>
+          </div>
+          <div class="booking-confirmed"><span>✓</span><div><strong>10:30 held for Akosua</strong><small>Confirmation sent by WhatsApp</small></div></div>
+        </article>
+
+        <div class="process-connector" aria-hidden="true"><span>Booking confirmed</span><i>→</i></div>
+
+        <article class="clinic-process-window process-handoff">
+          <header>
+            <span>Front desk inbox</span>
+            <b>03 · Visible</b>
+          </header>
+          <div class="handoff-alert"><span>New booking</span><strong>Just now</strong></div>
+          <div class="handoff-patient">
+            <div><span>Patient</span><strong>Akosua Mensah</strong></div>
+            <div><span>Appointment</span><strong>Thu 30 Jul · 10:30</strong></div>
+            <div><span>Request</span><strong>New consultation</strong></div>
+          </div>
+          <div class="handoff-note">
+            <span>Agent note</span>
+            <p>Caller requested a Thursday morning appointment. No clinical questions asked. Contact details confirmed.</p>
+          </div>
+          <footer><span class="task-check">✓</span><strong>No staff action required</strong></footer>
+        </article>
       </div>
     </div>
   </section>
