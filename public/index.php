@@ -295,6 +295,7 @@ $router->post('/api/v1/admin/agents/chief/chat', [\App\Agents\Chief::class, 'adm
 $router->get('/api/v1/admin/chief/brief', [\App\Agents\Chief::class, 'show']);
 $router->post('/api/v1/admin/chief/brief', [\App\Agents\Chief::class, 'generate']);
 $router->get('/api/v1/admin/chief/briefs', [\App\Agents\Chief::class, 'index']);
+$router->get('/api/v1/admin/chief/dashboard', [\App\Agents\Chief::class, 'dashboard']);
 $router->post('/api/v1/admin/agents/sketch/chat', [SketchController::class, 'chat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);

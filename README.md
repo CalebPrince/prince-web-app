@@ -1270,6 +1270,17 @@ storage/
     day of scanning a thousand results for nothing cannot report as a
     productive one.
 
+    The Team page now includes Chief's customizable command readout beneath
+    the written daily brief. It can recalculate the same verified snapshot for
+    the last 24 hours, 7 days, 30 days, or 90 days and focus the view on the
+    whole studio, agents that produced output, always-on agents, or on-demand
+    agents. The chosen view is stored only in that browser. It separates agent
+    output, owner/Command Center actions, queues waiting for Caleb, and the
+    seven most recent stored briefs; selecting a brief loads it back into the
+    daily-brief panel. `GET /api/v1/admin/chief/dashboard?hours=N` supplies the
+    live data and reuses `Chief::snapshot()` rather than introducing a second
+    reporting calculation or AI-generated figures.
+
 ## Deployment (Namecheap cPanel)
 
 The live site runs on Namecheap shared hosting. The layout keeps everything

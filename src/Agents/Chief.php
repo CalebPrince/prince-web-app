@@ -692,6 +692,29 @@ class Chief
         Response::json(['briefs' => $rows]);
     }
 
+    /** GET /api/v1/admin/chief/dashboard?hours=24 — live customizable reporting data. */
+    public static function dashboard(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $hours = max(1, min(24 * 90, (int) ($_GET['hours'] ?? 24)));
+
+        try {
+            $briefs = $pdo->query(
+                'SELECT id, brief_date, headline, provider, emailed_at, created_at
+                 FROM agent_daily_briefs ORDER BY brief_date DESC LIMIT 7'
+            )->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            $briefs = [];
+        }
+
+        Response::json([
+            'snapshot' => self::snapshot($pdo, $hours),
+            'briefs' => $briefs,
+            'chief_name' => self::displayName(),
+        ]);
+    }
+
     /** GET /api/v1/admin/chief/brief — the latest brief, with its snapshot. */
     public static function show(): void
     {
