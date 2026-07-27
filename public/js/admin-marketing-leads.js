@@ -646,7 +646,10 @@ async function loadCallList() {
     return;
   }
   document.getElementById("call-list-today").textContent = data.calls_today;
+  document.getElementById("ai-call-list-today").textContent = data.ai_calls_today || 0;
+  document.getElementById("ai-call-list-cap").textContent = data.ai_call_daily_cap || 5;
   const rows = data.queue || [];
+  const aiCallsAvailable = Number(data.ai_calls_remaining || 0) > 0;
   empty.classList.toggle("d-none", rows.length > 0);
 
   body.innerHTML = rows.map(row => `
@@ -656,7 +659,7 @@ async function loadCallList() {
           <div class="fw-semibold">${escapeHtml(row.business_name)}</div>
           <div class="small text-muted-custom">${callAttemptLabel(row)}</div>
         </div>
-        <a class="btn btn-sm btn-brand ms-auto" href="tel:${encodeURIComponent(row.contact_phone)}"><i class="bi bi-telephone"></i> ${escapeHtml(row.contact_phone)}</a>
+        <a class="btn btn-sm btn-outline-secondary ms-auto" href="tel:${encodeURIComponent(row.contact_phone)}"><i class="bi bi-telephone"></i> Call myself</a>
       </div>
       <details class="mb-2">
         <summary class="small" style="cursor:pointer;">Talking points</summary>
@@ -670,7 +673,40 @@ async function loadCallList() {
         <input type="text" class="form-control form-control-sm call-notes" maxlength="2000" placeholder="Notes (optional)" style="max-width:18rem;">
         <button type="button" class="btn btn-sm btn-outline-secondary call-save-btn">Save</button>
       </div>
+      <div class="mt-3 pt-3 border-top">
+        <div class="form-check mb-2">
+          <input class="form-check-input ai-call-consent" type="checkbox" id="ai-call-consent-${row.id}">
+          <label class="form-check-label small" for="ai-call-consent-${row.id}">I confirm this person requested or consented to this call.</label>
+        </div>
+        <button type="button" class="btn btn-sm btn-brand ai-call-btn" disabled><i class="bi bi-robot me-1"></i>Approve Lisa call</button>
+        <span class="small text-muted-custom ms-2 ai-call-state">${aiCallsAvailable ? "" : "Daily Lisa call limit reached."}</span>
+      </div>
     </div>`).join("");
+
+  body.querySelectorAll("[data-lead-id]").forEach(card => {
+    const consent = card.querySelector(".ai-call-consent");
+    const button = card.querySelector(".ai-call-btn");
+    const state = card.querySelector(".ai-call-state");
+    consent.disabled = !aiCallsAvailable;
+    consent.addEventListener("change", () => { button.disabled = !consent.checked || !aiCallsAvailable; });
+    button.addEventListener("click", async () => {
+      if (!consent.checked || !confirm("Approve one AI call from Lisa to this number now?")) return;
+      button.disabled = true;
+      consent.disabled = true;
+      state.textContent = "Starting call…";
+      try {
+        const result = await api.post(`/api/v1/admin/outreach/ai-call/${card.dataset.leadId}`, {
+          approved: true,
+          consent_confirmed: true,
+        });
+        state.textContent = `Call ${result.status || "queued"}.`;
+      } catch (err) {
+        state.textContent = err.message || "Could not start the call.";
+        consent.disabled = false;
+        button.disabled = !consent.checked;
+      }
+    });
+  });
 
   body.querySelectorAll(".call-save-btn").forEach(btn => {
     btn.addEventListener("click", async () => {

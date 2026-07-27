@@ -54,6 +54,7 @@ class OutreachController
     private const DEFAULT_DAILY_CAP = 50;
     private const MAX_DAILY_CAP = 500;
     private const BASE_URL = 'https://princecaleb.dev';
+    private const AI_CALL_DAILY_CAP = 5;
     /** Most leads auto-draft will audit + pitch in a single cron run (bounds runtime). */
     private const AUTODRAFT_PER_RUN = 10;
 
@@ -76,20 +77,27 @@ class OutreachController
 
         $sentToday = self::sentToday($pdo);
         $remaining = max(0, $cap - $sentToday);
-        if ($remaining === 0) {
-            return ['enabled' => true, 'sent' => 0, 'failed' => 0, 'drafted' => 0, 'call_scripts' => 0, 'cap' => $cap, 'sent_today' => $sentToday, 'remaining' => 0];
-        }
-
         // Auto-draft (opt-in): top the reviewed queue up to today's remaining
         // cap so there's something to send, bounded per run. Runs before the
         // send loop so freshly-drafted leads go out in the same tick. Phone
-        // leads in the batch become call scripts for the call queue instead.
+        // leads in the batch become call scripts for Lisa's approval queue
+        // instead. Drafting continues after the email cap is reached so
+        // phone-only discoveries do not wait until the next day to appear.
         $drafted = ['emails' => 0, 'calls' => 0];
         if (Settings::get('outreach_autodraft') === '1') {
-            $needed = $remaining - self::eligibleCount($pdo);
+            $needed = $remaining > 0
+                ? max(0, $remaining - self::eligibleCount($pdo))
+                : self::AUTODRAFT_PER_RUN;
             if ($needed > 0) {
                 $drafted = self::autoDraft($pdo, min($needed, self::AUTODRAFT_PER_RUN));
             }
+        }
+        if ($remaining === 0) {
+            return [
+                'enabled' => true, 'sent' => 0, 'failed' => 0,
+                'drafted' => $drafted['emails'], 'call_scripts' => $drafted['calls'],
+                'cap' => $cap, 'sent_today' => $sentToday, 'remaining' => 0,
+            ];
         }
 
         $stmt = $pdo->prepare(self::ELIGIBLE_SQL . ' ORDER BY ml.created_at ASC LIMIT ?');
@@ -247,9 +255,13 @@ class OutreachController
             'call_queue' => (int) $pdo->query(
                 "SELECT COUNT(*) FROM marketing_leads
                  WHERE status = 'pitch_ready' AND pitch_channel = 'phone'
-                   AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''"
+                   AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''
+                   AND (contact_email IS NULL OR trim(contact_email) = ''
+                        OR contact_email NOT LIKE '%_@_%.__%')"
             )->fetchColumn(),
             'calls_today' => self::callsToday($pdo),
+            'ai_calls_today' => self::aiCallsToday($pdo),
+            'ai_call_daily_cap' => self::AI_CALL_DAILY_CAP,
         ]);
     }
 
@@ -404,13 +416,149 @@ class OutreachController
              WHERE ml.status = 'pitch_ready'
                AND ml.pitch_channel = 'phone'
                AND ml.contact_phone IS NOT NULL AND trim(ml.contact_phone) <> ''
+               AND (ml.contact_email IS NULL OR trim(ml.contact_email) = ''
+                    OR ml.contact_email NOT LIKE '%_@_%.__%')
              ORDER BY last_called_at IS NOT NULL, last_called_at ASC, ml.created_at ASC"
         )->fetchAll();
 
         Response::json([
             'queue' => $rows,
             'calls_today' => self::callsToday($pdo),
+            'ai_calls_today' => self::aiCallsToday($pdo),
+            'ai_call_daily_cap' => self::AI_CALL_DAILY_CAP,
+            'ai_calls_remaining' => max(0, self::AI_CALL_DAILY_CAP - self::aiCallsToday($pdo)),
         ]);
+    }
+
+    /**
+     * POST /api/v1/admin/outreach/ai-call/{id}
+     *
+     * Places exactly one admin-approved Twilio call. This endpoint is never
+     * called by cron or the outreach sender. The admin must confirm that the
+     * recipient requested or consented to the call in the request body.
+     */
+    public static function initiateAiCall(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        if (($data['approved'] ?? false) !== true || ($data['consent_confirmed'] ?? false) !== true) {
+            Response::error('Confirm both your approval and the recipient’s request or consent before Lisa calls.', 422);
+        }
+
+        $pdo = Database::get();
+        $leadId = (int) ($params['id'] ?? 0);
+        $stmt = $pdo->prepare(
+            "SELECT id, business_name, contact_phone, pitch_body, status, pitch_channel
+             FROM marketing_leads WHERE id = ?"
+        );
+        $stmt->execute([$leadId]);
+        $lead = $stmt->fetch();
+        if (!$lead) {
+            Response::error('Lead not found.', 404);
+        }
+        if ($lead['status'] !== 'pitch_ready' || $lead['pitch_channel'] !== 'phone') {
+            Response::error('Review and approve a phone call script before asking Lisa to call.', 422);
+        }
+
+        $to = preg_replace('/[\s().-]+/', '', trim((string) $lead['contact_phone'])) ?? '';
+        if (!preg_match('/^\+[1-9]\d{7,14}$/', $to)) {
+            Response::error('The contact phone must use international format, for example +233…', 422);
+        }
+
+        $accountSid = trim((string) Settings::get('twilio_account_sid'));
+        $authToken = trim((string) Settings::get('twilio_auth_token'));
+        $from = preg_replace('/[\s().-]+/', '', trim((string) Settings::get('twilio_voice_number'))) ?? '';
+        if (Settings::get('twilio_voice_enabled') !== '1' || $accountSid === '' || $authToken === '' || $from === '') {
+            Response::error('Enable the Twilio voice agent and save the Account SID, Auth Token, and voice number first.', 422);
+        }
+        if (!preg_match('/^AC[0-9a-fA-F]{32}$/', $accountSid) || !preg_match('/^\+[1-9]\d{7,14}$/', $from)) {
+            Response::error('The saved Twilio Account SID or voice number is invalid.', 422);
+        }
+        if (!function_exists('curl_init')) {
+            Response::error('The server needs the PHP cURL extension before it can start Twilio calls.', 503);
+        }
+        $aiCallsToday = self::aiCallsToday($pdo);
+        if ($aiCallsToday >= self::AI_CALL_DAILY_CAP) {
+            Response::error('Today’s limit of five approved Lisa calls has been reached.', 429);
+        }
+
+        $active = $pdo->prepare(
+            "SELECT 1 FROM telephony_calls
+             WHERE marketing_lead_id = ?
+               AND status IN ('queued', 'initiated', 'ringing', 'in-progress')
+               AND created_at >= datetime('now', '-15 minutes')
+             LIMIT 1"
+        );
+        $active->execute([$leadId]);
+        if ($active->fetchColumn()) {
+            Response::error('Lisa already has a recent active call for this lead.', 409);
+        }
+
+        $answerUrl = 'https://princecaleb.dev/api/v1/voice/twilio/outbound?lead=' . $leadId;
+        $statusUrl = 'https://princecaleb.dev/api/v1/voice/twilio/status';
+        $payload = http_build_query([
+            'To' => $to,
+            'From' => $from,
+            'Url' => $answerUrl,
+            'Method' => 'POST',
+            'StatusCallback' => $statusUrl,
+            'StatusCallbackMethod' => 'POST',
+            'StatusCallbackEvent' => 'completed',
+            'MachineDetection' => 'Enable',
+        ]);
+
+        $ch = curl_init("https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Calls.json");
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+            CURLOPT_USERPWD => $accountSid . ':' . $authToken,
+        ]);
+        $raw = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $twilio = is_string($raw) ? json_decode($raw, true) : null;
+        if ($raw === false || $httpCode < 200 || $httpCode >= 300 || !is_array($twilio) || empty($twilio['sid'])) {
+            error_log('Twilio outbound call failed: ' . ($curlError ?: (string) $raw));
+            Response::error('Twilio could not start the call. Check the number, balance, permissions, and Voice logs.', 502);
+        }
+
+        $pdo->prepare(
+            "INSERT OR IGNORE INTO telephony_calls
+             (provider_call_id, marketing_lead_id, provider, direction, from_number, to_number, status, consent_confirmed_at)
+             VALUES (?, ?, 'twilio', 'outbound', ?, ?, ?, datetime('now'))"
+        )->execute([
+            (string) $twilio['sid'],
+            $leadId,
+            $from,
+            $to,
+            mb_substr((string) ($twilio['status'] ?? 'queued'), 0, 40),
+        ]);
+        $pdo->prepare(
+            "UPDATE telephony_calls
+             SET marketing_lead_id = ?, direction = 'outbound', from_number = ?, to_number = ?,
+                 status = ?, consent_confirmed_at = COALESCE(consent_confirmed_at, datetime('now')),
+                 updated_at = datetime('now')
+             WHERE provider_call_id = ?"
+        )->execute([
+            $leadId,
+            $from,
+            $to,
+            mb_substr((string) ($twilio['status'] ?? 'queued'), 0, 40),
+            (string) $twilio['sid'],
+        ]);
+
+        Response::json([
+            'started' => true,
+            'call_sid' => $twilio['sid'],
+            'status' => $twilio['status'] ?? 'queued',
+            'business_name' => $lead['business_name'],
+            'remaining_today' => max(0, self::AI_CALL_DAILY_CAP - $aiCallsToday - 1),
+        ], 201);
     }
 
     /**
@@ -551,6 +699,15 @@ class OutreachController
     private static function callsToday(\PDO $pdo): int
     {
         return (int) $pdo->query("SELECT COUNT(*) FROM call_log WHERE date(called_at) = date('now')")->fetchColumn();
+    }
+
+    private static function aiCallsToday(\PDO $pdo): int
+    {
+        return (int) $pdo->query(
+            "SELECT COUNT(*) FROM telephony_calls
+             WHERE direction = 'outbound' AND marketing_lead_id IS NOT NULL
+               AND date(created_at) = date('now')"
+        )->fetchColumn();
     }
 
     private static function dailyCap(): int

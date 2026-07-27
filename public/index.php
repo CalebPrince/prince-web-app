@@ -138,6 +138,7 @@ $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
 $router->post('/api/v1/voice-demo/message', [VoiceDemoController::class, 'message']);
 $router->post('/api/v1/voice-demo/event', [VoiceDemoController::class, 'event']);
 $router->post('/api/v1/voice/twilio/incoming', [VoiceDemoController::class, 'incomingCall']);
+$router->post('/api/v1/voice/twilio/outbound', [VoiceDemoController::class, 'outboundCall']);
 $router->post('/api/v1/voice/twilio/turn', [VoiceDemoController::class, 'callTurn']);
 $router->post('/api/v1/voice/twilio/status', [VoiceDemoController::class, 'callStatus']);
 $router->post('/api/v1/chat/prototype', [LiveChatController::class, 'generatePrototype']);
@@ -275,6 +276,7 @@ $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadControlle
 $router->get('/api/v1/admin/outreach/stats', [OutreachController::class, 'stats']);
 $router->post('/api/v1/admin/outreach/settings', [OutreachController::class, 'updateSettings']);
 $router->get('/api/v1/admin/outreach/call-queue', [OutreachController::class, 'callQueue']);
+$router->post('/api/v1/admin/outreach/ai-call/{id}', [OutreachController::class, 'initiateAiCall']);
 $router->get('/api/v1/admin/outreach/scoreboard', [OutreachController::class, 'scoreboard']);
 $router->post('/api/v1/admin/outreach/call-log/{id}', [OutreachController::class, 'logCall']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);

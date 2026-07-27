@@ -12,7 +12,7 @@ use App\Support\Response;
 use App\Support\Settings;
 
 /**
- * Side-effect-free clinic voice demo plus the Twilio Voice front door.
+ * Side-effect-free clinic web demo plus the Twilio customer-service front door.
  * Unlike LiveChatController, this surface has no tools: it cannot book,
  * create inquiries, notify staff, or mutate business data.
  */
@@ -42,7 +42,7 @@ final class VoiceDemoController
         }
 
         $transcript[] = ['role' => 'user', 'text' => $message];
-        $result = self::reply($transcript);
+        $result = self::reply($transcript, 'web');
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
         self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'web']);
@@ -101,8 +101,68 @@ final class VoiceDemoController
              VALUES (?, ?, 'twilio', ?, ?, 'in-progress')"
         )->execute([$callSid, $session['id'], $from ?: null, trim((string) ($_POST['To'] ?? '')) ?: null]);
         self::twimlGather(
-            "Hello, this is the clinic voice agent demonstration by Prince Caleb. "
-            . "Ask me how I can help a clinic handle calls, appointments, or routine questions."
+            "Hello, you've reached Prince Caleb's AI customer service assistant, Lisa. "
+            . "I can help with AI voice agents, chatbots, automation, websites, mobile apps, and project enquiries. "
+            . "How can I help?"
+        );
+    }
+
+    public static function outboundCall(): void
+    {
+        if (!self::verifyTwilio() || Settings::get('twilio_voice_enabled') !== '1') {
+            http_response_code(403);
+            exit;
+        }
+        $callSid = trim((string) ($_POST['CallSid'] ?? ''));
+        $leadId = max(0, (int) ($_GET['lead'] ?? 0));
+        if ($callSid === '' || $leadId === 0) {
+            http_response_code(422);
+            exit;
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare(
+            "SELECT id, business_name, pitch_body FROM marketing_leads
+             WHERE id = ? AND status = 'pitch_ready' AND pitch_channel = 'phone'"
+        );
+        $stmt->execute([$leadId]);
+        $lead = $stmt->fetch();
+        if (!$lead) {
+            self::twimlSay('This approved call is no longer available. Goodbye.');
+            return;
+        }
+
+        $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'outreach');
+        $pdo->prepare(
+            "INSERT OR IGNORE INTO telephony_calls
+             (provider_call_id, session_id, marketing_lead_id, provider, direction, from_number, to_number, status, consent_confirmed_at)
+             VALUES (?, ?, ?, 'twilio', 'outbound', ?, ?, 'in-progress', datetime('now'))"
+        )->execute([
+            $callSid,
+            $session['id'],
+            $leadId,
+            trim((string) ($_POST['From'] ?? '')) ?: null,
+            trim((string) ($_POST['To'] ?? '')) ?: null,
+        ]);
+        $pdo->prepare(
+            "UPDATE telephony_calls SET session_id = ?, marketing_lead_id = ?, direction = 'outbound',
+             status = 'in-progress', updated_at = datetime('now') WHERE provider_call_id = ?"
+        )->execute([$session['id'], $leadId, $callSid]);
+
+        $answeredBy = trim((string) ($_POST['AnsweredBy'] ?? ''));
+        if ($answeredBy !== '' && $answeredBy !== 'human' && $answeredBy !== 'unknown') {
+            self::twimlSay(
+                "Hello, this is Lisa, an AI assistant calling on behalf of Prince Caleb following your request or consent. "
+                . "Please visit princecaleb.dev when convenient. Goodbye."
+            );
+            return;
+        }
+
+        self::twimlGather(
+            "Hello, this is Lisa, an AI assistant calling on behalf of Prince Caleb. "
+            . "This call was individually approved after your request or consent. "
+            . "I'm calling about ways AI voice agents, chatbots, and automation may help "
+            . trim((string) $lead['business_name']) . ". Is now a good time for a brief conversation?"
         );
     }
 
@@ -122,13 +182,42 @@ final class VoiceDemoController
         RateLimitMiddleware::enforce('voice_phone_' . preg_replace('/\W/', '', $callSid), 30);
         $pdo = Database::get();
         $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
+        $callStmt = $pdo->prepare(
+            "SELECT tc.direction, ml.id, ml.business_name, ml.website_url, ml.pitch_body
+             FROM telephony_calls tc
+             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
+             WHERE tc.provider_call_id = ?"
+        );
+        $callStmt->execute([$callSid]);
+        $callContext = $callStmt->fetch() ?: [];
+        $isOutbound = ($callContext['direction'] ?? '') === 'outbound' && !empty($callContext['id']);
         $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
+        if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
+            $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
+            $transcript[] = ['role' => 'assistant', 'text' => "Understood. We won't call again. Goodbye."];
+            self::save($pdo, (int) $session['id'], $transcript, null);
+            $pdo->prepare("UPDATE marketing_leads SET status = 'rejected', updated_at = datetime('now') WHERE id = ?")
+                ->execute([(int) $callContext['id']]);
+            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'not_interested', ?)")
+                ->execute([(int) $callContext['id'], 'Opted out during Lisa AI call']);
+            self::twimlSay("Understood. We won't call again. Goodbye.");
+            return;
+        }
+        if ($isOutbound && preg_match('/\b(call (me )?later|not (a )?good time|not now|busy right now)\b/i', $speech)) {
+            $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
+            $transcript[] = ['role' => 'assistant', 'text' => 'Of course. Goodbye.'];
+            self::save($pdo, (int) $session['id'], $transcript, null);
+            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'callback', ?)")
+                ->execute([(int) $callContext['id'], 'Recipient asked to be contacted later during Lisa AI call']);
+            self::twimlSay('Of course. Goodbye.');
+            return;
+        }
         if (count($transcript) >= self::MAX_TURNS) {
-            self::twimlSay("Thanks for trying the demonstration. The demo call limit has been reached. Goodbye.");
+            self::twimlSay("Thank you for your time. This call has reached its conversation limit. Goodbye.");
             return;
         }
         $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
-        $result = self::reply($transcript);
+        $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $isOutbound ? $callContext : null);
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
         self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'phone']);
@@ -189,6 +278,21 @@ final class VoiceDemoController
             }
             unset($row['transcript_json'], $row['token']);
         }
+        $callQueue = (int) $pdo->query(
+            "SELECT COUNT(*) FROM marketing_leads
+             WHERE status = 'pitch_ready' AND pitch_channel = 'phone'
+               AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''
+               AND (contact_email IS NULL OR trim(contact_email) = ''
+                    OR contact_email NOT LIKE '%_@_%.__%')"
+        )->fetchColumn();
+        $callsToday = (int) $pdo->query(
+            "SELECT COUNT(*) FROM call_log WHERE date(called_at) = date('now')"
+        )->fetchColumn();
+        $aiCallsToday = (int) $pdo->query(
+            "SELECT COUNT(*) FROM telephony_calls
+             WHERE direction = 'outbound' AND marketing_lead_id IS NOT NULL
+               AND date(created_at) = date('now')"
+        )->fetchColumn();
         Response::json([
             'summary' => $summary,
             'events' => $events,
@@ -203,6 +307,15 @@ final class VoiceDemoController
                 'number' => $whatsappNumber ?: null,
                 'webhook_url' => 'https://princecaleb.dev/api/v1/whatsapp/webhook',
             ],
+            'marketing_calls' => [
+                'queued' => $callQueue,
+                'logged_today' => $callsToday,
+                'ai_calls_today' => $aiCallsToday,
+                'ai_call_daily_cap' => 5,
+                'ai_calls_remaining' => max(0, 5 - $aiCallsToday),
+                'automated_dialing' => false,
+                'approval_gated_ai_calls' => true,
+            ],
             'readiness' => [
                 ['label' => 'Twilio Account SID saved', 'complete' => $accountSidConfigured],
                 ['label' => 'Twilio Auth Token saved', 'complete' => $authTokenConfigured],
@@ -211,16 +324,16 @@ final class VoiceDemoController
                 ['label' => 'Regulatory Bundle approved', 'complete' => Settings::get('twilio_regulatory_approved') === '1', 'external' => true],
                 ['label' => 'Production WhatsApp sender approved', 'complete' => Settings::get('twilio_whatsapp_production_approved') === '1', 'external' => true],
                 ['label' => 'Voice number saved', 'complete' => $voiceNumber !== ''],
-                ['label' => 'Clinic voice agent enabled', 'complete' => $voiceEnabled],
+                ['label' => 'Customer-service voice agent enabled', 'complete' => $voiceEnabled],
             ],
         ]);
     }
 
     /** @return array{reply:string,provider:?string,mode:string} */
-    private static function reply(array $transcript): array
+    private static function reply(array $transcript, string $channel = 'web', ?array $context = null): array
     {
         $result = AiAgentEngine::run(
-            self::prompt(),
+            self::prompt($channel, $context),
             [],
             static fn (string $name, array $args): array => ['error' => 'Tools are disabled in this demonstration.'],
             $transcript,
@@ -229,14 +342,44 @@ final class VoiceDemoController
             1
         );
         if (!is_string($result['reply']) || trim($result['reply']) === '') {
-            $result['reply'] = "I can demonstrate routine call handling, appointment intake, approved clinic FAQs, "
-                . "and safe staff handoffs. The AI service is temporarily unavailable, but the demo never performs real actions.";
+            $result['reply'] = in_array($channel, ['phone', 'outbound'], true)
+                ? "The customer service assistant is temporarily unavailable. Please use the contact or booking option on princecaleb.dev."
+                : "I can demonstrate routine call handling, appointment intake, approved clinic FAQs, "
+                    . "and safe staff handoffs. The AI service is temporarily unavailable, but the demo never performs real actions.";
         }
         return ['reply' => trim($result['reply']), 'provider' => $result['provider'], 'mode' => $result['mode']];
     }
 
-    private static function prompt(): string
+    private static function prompt(string $channel = 'web', ?array $context = null): string
     {
+        if ($channel === 'outbound') {
+            $business = mb_substr(trim((string) ($context['business_name'] ?? 'the business')), 0, 160);
+            $website = mb_substr(trim((string) ($context['website_url'] ?? '')), 0, 300);
+            $script = mb_substr(trim((string) ($context['pitch_body'] ?? '')), 0, 3000);
+            return "You are Lisa, Prince Caleb's disclosed AI outreach assistant on a single human-approved outbound "
+                . "call. The recipient requested or consented to this call. Speak in one to three short, natural "
+                . "sentences with no markdown, lists, emoji, or URLs. Immediately respect no, not interested, stop, "
+                . "or a request to call later; do not pressure, argue, or continue pitching. Never hide that you are "
+                . "an AI assistant. Do not collect sensitive information, payment details, passwords, IDs, or health "
+                . "information. You cannot book, transfer, save, or notify anyone yet, so never claim that you did. "
+                . "Your goal is only to have a brief, relevant conversation and invite an interested person to use "
+                . "the booking or contact option on princecaleb.dev. Ground the conversation only in this reviewed "
+                . "context.\nBusiness: {$business}\nWebsite: {$website}\nReviewed call script:\n{$script}";
+        }
+        if ($channel === 'phone') {
+            return "You are Lisa, Prince Caleb's AI customer service phone agent. You represent Prince Caleb's "
+                . "business and answer questions about AI voice agents, customer-service chatbots, business "
+                . "automation, websites, and mobile applications. You are speaking aloud, so answer in one to "
+                . "three short, natural sentences with no markdown, lists, emoji, URLs, or technical jargon. "
+                . "Help callers understand services, suitable use cases, project process, and next steps. Be "
+                . "helpful and concise, but never invent prices, availability, client results, or capabilities. "
+                . "This phone integration cannot yet complete bookings or transfer calls, so never claim you "
+                . "booked, saved, transferred, messaged, or notified anyone. If a caller wants to proceed, ask "
+                . "them to use the contact or booking option on princecaleb.dev, or send a WhatsApp message. "
+                . "Do not collect payment details, passwords, government IDs, medical information, or other "
+                . "sensitive data. This is an inbound customer-service line, never a cold-outreach caller.";
+        }
+
         return "You are Lisa, Prince Caleb's clinic voice-agent demonstration. You are speaking aloud, so answer in "
             . "one to three short, natural sentences with no markdown, lists, emoji, URLs, or technical jargon. "
             . "Demonstrate how a clinic agent can answer approved administrative FAQs, collect minimal appointment "

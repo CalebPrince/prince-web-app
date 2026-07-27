@@ -14,6 +14,14 @@ Status recorded on July 27, 2026:
   an unofficial linked-device integration and is not the production choice.
 - Admin -> Voice Demo includes a production-readiness panel for the saved
   Twilio credentials, WhatsApp sender, external approvals, and voice activation.
+- The approved Twilio voice number is for Lisa's inbound Prince Caleb customer
+  service line. The clinic remains a separate browser demo.
+- Marketing Leads prepares phone scripts and supports either a manual call or
+  one Lisa AI call after an admin explicitly approves it and confirms that the
+  recipient requested or consented. There is no cron or batch dialing.
+- Lisa AI outreach calls have a separate limit of five per day. Phone-only
+  generated leads are drafted into her approval queue; leads with a usable
+  email remain in the email outreach path and its separate 50/day cap.
 
 Remaining production steps:
 

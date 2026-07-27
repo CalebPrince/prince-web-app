@@ -953,15 +953,19 @@ CREATE TABLE IF NOT EXISTS telephony_calls (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   provider_call_id TEXT UNIQUE NOT NULL,
   session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+  marketing_lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
   provider TEXT NOT NULL DEFAULT 'twilio',
+  direction TEXT NOT NULL DEFAULT 'inbound',
   from_number TEXT,
   to_number TEXT,
   status TEXT NOT NULL DEFAULT 'queued',
   duration_seconds INTEGER NOT NULL DEFAULT 0,
+  consent_confirmed_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at);
+CREATE INDEX IF NOT EXISTS idx_telephony_calls_marketing_lead ON telephony_calls (marketing_lead_id, created_at);
 
 CREATE TABLE IF NOT EXISTS notification_reads (
   notification_key TEXT PRIMARY KEY,

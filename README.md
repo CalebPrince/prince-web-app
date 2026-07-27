@@ -1221,9 +1221,11 @@ One-time setup on a new host:
   touches it, re-run `php database/migrate.php` on the server (it's
   idempotent: `CREATE TABLE IF NOT EXISTS` for new tables, guarded
   `ALTER TABLE ADD COLUMN` checks for columns added to existing tables).
-# Clinic voice demo and Twilio Voice
+# Clinic web demo and Twilio customer-service voice
 
-The clinic landing page uses a dedicated, side-effect-free voice-demo API:
+The clinic landing page uses a dedicated, side-effect-free browser demo. The
+Twilio phone endpoints use Lisa as Prince Caleb's inbound customer-service
+agent; they are not used by the Marketing Leads call queue:
 
 - `POST /api/v1/voice-demo/message` — web demo conversation
 - `POST /api/v1/voice-demo/event` — product/conversion events
@@ -1235,12 +1237,22 @@ The clinic landing page uses a dedicated, side-effect-free voice-demo API:
 After deployment:
 
 1. Run `php database/migrate.php` so the voice-demo/event/call tables exist.
-2. In Admin → Settings, save the Twilio Auth Token and Voice number, then enable the clinic voice agent.
+2. In Admin → Settings, save the Twilio Auth Token and Voice number, then enable the customer-service voice agent.
 3. In Twilio Console, set the number's incoming-call webhook to
    `https://princecaleb.dev/api/v1/voice/twilio/incoming` using POST.
 4. Set its status callback to
    `https://princecaleb.dev/api/v1/voice/twilio/status` using POST.
 
-The demo deliberately has no tools and cannot create bookings, inquiries,
-messages, or handoffs. It demonstrates those workflows hypothetically and
-refuses clinical advice or collection of real patient/medical details.
+The browser demo deliberately has no tools and cannot create bookings,
+inquiries, messages, or handoffs. It demonstrates those workflows
+hypothetically and refuses clinical advice or collection of real
+patient/medical details. The inbound phone agent answers customer-service
+questions about Prince Caleb's services but also does not yet perform bookings
+or transfers. Marketing Leads prepares call scripts and supports a manual
+`tel:` call or one approval-gated Lisa call. The AI-call action requires the
+admin to confirm that the recipient requested or consented, places exactly one
+Twilio call, identifies Lisa as an AI assistant, and honors stop/call-later
+requests. Lisa calls have a separate hard limit of five per day. Generated
+phone-only leads are drafted into this approval queue, while leads with a
+usable email stay in the email path and its separate 50/day cap. No cron task
+or batch process can initiate outbound voice calls.

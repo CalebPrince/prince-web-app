@@ -1169,15 +1169,23 @@ $pdo->exec(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         provider_call_id TEXT UNIQUE NOT NULL,
         session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+        marketing_lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
         provider TEXT NOT NULL DEFAULT 'twilio',
+        direction TEXT NOT NULL DEFAULT 'inbound',
         from_number TEXT,
         to_number TEXT,
         status TEXT NOT NULL DEFAULT 'queued',
         duration_seconds INTEGER NOT NULL DEFAULT 0,
+        consent_confirmed_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )"
 );
+$telephonyColumns = array_column($pdo->query('PRAGMA table_info(telephony_calls)')->fetchAll(), 'name');
+if (!in_array('marketing_lead_id', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN marketing_lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL');
+if (!in_array('direction', $telephonyColumns, true)) $pdo->exec("ALTER TABLE telephony_calls ADD COLUMN direction TEXT NOT NULL DEFAULT 'inbound'");
+if (!in_array('consent_confirmed_at', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN consent_confirmed_at TEXT');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at)');
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_marketing_lead ON telephony_calls (marketing_lead_id, created_at)');
 
 echo "Schema applied.\n";

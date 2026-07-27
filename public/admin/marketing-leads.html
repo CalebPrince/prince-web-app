@@ -328,14 +328,18 @@
       <div class="modal-header">
         <div>
           <h5 class="modal-title mb-0">Today's call list</h5>
-          <div class="small text-muted-custom"><span id="call-list-today">0</span> call(s) logged today · leads stay listed until a call actually connects</div>
+          <div class="small text-muted-custom">
+            <span id="call-list-today">0</span> manual call(s) logged today ·
+            <span id="ai-call-list-today">0</span>/<span id="ai-call-list-cap">5</span> Lisa calls used
+          </div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <p class="text-muted-custom small mb-3">
-          Phone-channel leads with a reviewed call script. The tel: link opens your dialer — nothing here dials
-          or robocalls on its own. Log every attempt: no-answer, voicemail and callback keep the lead queued;
+          Phone-channel leads with a reviewed call script. You can call manually, or explicitly approve one Lisa
+          call after confirming the recipient requested or consented to it. Nothing batch-dials on its own.
+          Log every manual attempt: no-answer, voicemail and callback keep the lead queued;
           connected, interested, not interested or wrong number close it out.
         </p>
         <div id="call-list-empty" class="text-center text-muted-custom py-4 d-none">No calls queued — auto-draft prepares scripts for phone-only leads, or generate one from a lead's row.</div>
