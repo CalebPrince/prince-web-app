@@ -22,23 +22,23 @@ const PRICING_FIELDS = [
 
 const PRICING_DEFAULTS = {
   pricing_currency: "GHS",
-  pricing_tier_1_amount: "6000",
+  pricing_tier_1_amount: "3000",
   pricing_tier_1_name: "AI Voice Agent Pilot",
-  pricing_tier_1_price: "From GHS 6,000",
+  pricing_tier_1_price: "From GHS 5,000",
   pricing_tier_1_tagline: "One focused call flow, trained on your approved information and tested before it reaches customers.",
   pricing_tier_1_features: "One inbound call flow\nApproved FAQ and handoff rules\nCall logs and staff summaries\nLaunch review after monitored testing",
   pricing_tier_2_name: "Voice + WhatsApp",
-  pricing_tier_2_price: "From GHS 25,000",
+  pricing_tier_2_price: "From GHS 15,000",
   pricing_tier_2_tagline: "A connected customer-service system that carries context across calls, WhatsApp, bookings, and staff handoffs.",
   pricing_tier_2_features: "AI voice and WhatsApp assistant\nCalendar or CRM integration\nHuman escalation and notifications\nReporting dashboard and audit trail",
   pricing_tier_3_name: "AI Operations System",
-  pricing_tier_3_price: "Custom quote",
+  pricing_tier_3_price: "From GHS 25,000",
   pricing_tier_3_tagline: "Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.",
   pricing_tier_3_features: "Multiple agent workflows\nCustom dashboards and integrations\nPermissions, monitoring, and safeguards\nOngoing optimisation and support",
   pricing_tier_4_name: "Custom Websites & Mobile Apps",
-  pricing_tier_4_price: "Custom quote",
-  pricing_tier_4_tagline: "A custom website, web platform, or mobile app designed around your customers and operation.",
-  pricing_tier_4_features: "Business and e-commerce websites\nCustom web applications and portals\niOS and Android mobile apps\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
+  pricing_tier_4_price: "Websites from GHS 5,000",
+  pricing_tier_4_tagline: "Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.",
+  pricing_tier_4_features: "Business and e-commerce websites\nCustom web applications from GHS 15,000\niOS and Android mobile app MVPs from GHS 35,000\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
 };
 
 function showPricingMsg(text, ok) {

@@ -116,9 +116,9 @@ $pricingOfferUpdates = [
 ];
 $pricingOfferInserts = [
     'pricing_tier_4_name' => 'Custom Websites & Mobile Apps',
-    'pricing_tier_4_price' => 'Custom quote',
-    'pricing_tier_4_tagline' => 'A custom website, web platform, or mobile app designed around your customers and operation.',
-    'pricing_tier_4_features' => "Business and e-commerce websites\nCustom web applications and portals\niOS and Android mobile apps\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
+    'pricing_tier_4_price' => 'Websites from GHS 5,000',
+    'pricing_tier_4_tagline' => 'Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.',
+    'pricing_tier_4_features' => "Business and e-commerce websites\nCustom web applications from GHS 15,000\niOS and Android mobile app MVPs from GHS 35,000\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
 ];
 $pricingUpdateStmt = $pdo->prepare('UPDATE settings SET value = ? WHERE name = ? AND value = ?');
 foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
@@ -131,6 +131,27 @@ $pricingInsertStmt = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value)
 foreach ($pricingOfferInserts as $name => $value) {
     $pricingInsertStmt->execute([$name, $value]);
 }
+$marketPricingUpdates = [
+    'pricing_tier_1_amount' => ['6000', '3000'],
+    'pricing_tier_1_price' => ['From GHS 6,000', 'From GHS 5,000'],
+    'pricing_tier_2_price' => ['From GHS 8,000', 'From GHS 15,000'],
+    'pricing_tier_3_price' => ['Custom quote', 'From GHS 25,000'],
+    'pricing_tier_4_price' => ['Custom quote', 'Websites from GHS 5,000'],
+    'pricing_tier_4_tagline' => [
+        'A custom website, web platform, or mobile app designed around your customers and operation.',
+        'Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.',
+    ],
+    'pricing_tier_4_features' => [
+        "Business and e-commerce websites\nCustom web applications and portals\niOS and Android mobile apps\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
+        "Business and e-commerce websites\nCustom web applications from GHS 15,000\niOS and Android mobile app MVPs from GHS 35,000\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
+    ],
+];
+foreach ($marketPricingUpdates as $name => [$oldValue, $newValue]) {
+    $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
+}
+// A fresh upgrade can pass through the previous GHS 25,000 default earlier in
+// this same migration; normalise that value to the new market anchor too.
+$pricingUpdateStmt->execute(['From GHS 15,000', 'pricing_tier_2_price', 'From GHS 25,000']);
 $publicCopyUpdates = [
     'contact_intro' => [
         'Tell me a bit about your project and I\'ll get back to you within a couple of business days.',
