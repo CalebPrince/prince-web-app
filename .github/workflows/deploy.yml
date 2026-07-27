@@ -69,3 +69,13 @@ jobs:
           protocol: ftps
           local-dir: database/
           server-dir: database/
+
+      - name: Sync voice-relay/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: voice-relay/
+          server-dir: voice-relay/

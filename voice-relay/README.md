@@ -7,20 +7,22 @@ outcomes.
 
 ## Deploy
 
-Deploy this directory to a host that supports always-on Node processes and
-WebSockets (for example Railway or Render). Namecheap shared PHP hosting cannot
-host this persistent connection.
+Deploy this directory as a cPanel Node.js application mounted at
+`https://princecaleb.dev/voice-relay`. The application remains separate from
+the PHP document root even though it uses the existing domain and certificate.
 
 Set:
 
 - `APP_BASE_URL=https://princecaleb.dev`
+- `PUBLIC_WEBSOCKET_URL=wss://princecaleb.dev/voice-relay/conversation`
 - `TWILIO_AUTH_TOKEN` to the same Twilio Auth Token used by the main site
 - `RELAY_SHARED_SECRET` to a new long random value
 
-The start command is `npm start`. Confirm `https://YOUR-HOST/health` returns
+The start command is `npm start`. Confirm
+`https://princecaleb.dev/voice-relay/health` returns
 `{"ok":true,...}`. The WebSocket endpoint is:
 
-`wss://YOUR-HOST/conversation`
+`wss://princecaleb.dev/voice-relay/conversation`
 
 In the website admin Settings, save that endpoint and the same relay secret,
 then enable **Use natural ConversationRelay calls**. Until all three values are

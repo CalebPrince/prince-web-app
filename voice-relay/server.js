@@ -6,13 +6,14 @@ const port = Number(process.env.PORT || 8080);
 const appBaseUrl = (process.env.APP_BASE_URL || "https://princecaleb.dev").replace(/\/+$/, "");
 const relaySecret = process.env.RELAY_SHARED_SECRET || "";
 const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN || "";
+const publicWebSocketUrl = (process.env.PUBLIC_WEBSOCKET_URL || "").trim();
 const allowUnsignedLocal = process.env.ALLOW_UNSIGNED_LOCAL === "1";
 
 if (!relaySecret) throw new Error("RELAY_SHARED_SECRET is required.");
 if (!twilioAuthToken && !allowUnsignedLocal) throw new Error("TWILIO_AUTH_TOKEN is required.");
 
 const server = http.createServer((req, res) => {
-  if (req.url === "/health") {
+  if (req.url?.split("?")[0].endsWith("/health")) {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ ok: true, service: "lisa-voice-relay" }));
     return;
@@ -27,12 +28,12 @@ server.on("upgrade", (req, socket, head) => {
   const forwardedProto = String(req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
   const protocol = forwardedProto === "http" ? "ws" : "wss";
   const host = req.headers["x-forwarded-host"] || req.headers.host;
-  const requestUrl = `${protocol}://${host}${req.url}`;
+  const requestUrl = publicWebSocketUrl || `${protocol}://${host}${req.url}`;
   const signature = String(req.headers["x-twilio-signature"] || "");
   const valid = allowUnsignedLocal
     || (signature !== "" && twilio.validateRequest(twilioAuthToken, signature, requestUrl, {}));
 
-  if (!valid || !req.url?.startsWith("/conversation")) {
+  if (!valid || !req.url?.split("?")[0].endsWith("/conversation")) {
     socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
     socket.destroy();
     return;
