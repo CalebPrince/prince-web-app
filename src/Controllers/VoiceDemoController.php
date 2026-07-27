@@ -283,6 +283,15 @@ final class VoiceDemoController
             }
             unset($row['transcript_json'], $row['token']);
         }
+        $callLogs = $pdo->query(
+            "SELECT tc.id, tc.provider_call_id, tc.direction, tc.from_number, tc.to_number,
+                    tc.status, tc.duration_seconds, tc.created_at, tc.updated_at,
+                    ml.business_name AS lead_name
+             FROM telephony_calls tc
+             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
+             ORDER BY tc.created_at DESC, tc.id DESC
+             LIMIT 100"
+        )->fetchAll();
         $callQueue = (int) $pdo->query(
             "SELECT COUNT(*) FROM marketing_leads
              WHERE status = 'pitch_ready' AND pitch_channel = 'phone'
@@ -302,6 +311,7 @@ final class VoiceDemoController
             'summary' => $summary,
             'events' => $events,
             'recent' => $recent,
+            'call_logs' => $callLogs,
             'telephony_enabled' => $voiceEnabled && $authTokenConfigured && $voiceNumber !== '',
             'voice_number' => $voiceNumber ?: null,
             'webhook_url' => 'https://princecaleb.dev/api/v1/voice/twilio/incoming',
@@ -465,16 +475,29 @@ final class VoiceDemoController
     {
         header('Content-Type: text/xml; charset=utf-8');
         $action = '/api/v1/voice/twilio/turn';
+        $voice = self::twilioVoice();
         echo '<?xml version="1.0" encoding="UTF-8"?><Response><Gather input="speech" action="'
-            . $action . '" method="POST" speechTimeout="auto" language="en-GB"><Say voice="Polly.Amy">'
+            . $action . '" method="POST" speechTimeout="auto" language="en-GB"><Say voice="'
+            . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" language="en-GB">'
             . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8')
-            . '</Say></Gather><Say voice="Polly.Amy">I did not hear a response. Goodbye.</Say></Response>';
+            . '</Say></Gather><Say voice="'
+            . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8')
+            . '" language="en-GB">I did not hear a response. Goodbye.</Say></Response>';
     }
 
     private static function twimlSay(string $message): void
     {
         header('Content-Type: text/xml; charset=utf-8');
-        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Amy">'
+        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="'
+            . htmlspecialchars(self::twilioVoice(), ENT_XML1 | ENT_QUOTES, 'UTF-8')
+            . '" language="en-GB">'
             . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Say></Response>';
+    }
+
+    private static function twilioVoice(): string
+    {
+        $voice = trim((string) Settings::get('twilio_voice_tts_voice'));
+        $allowed = ['Polly.Emma', 'Polly.Amy', 'Polly.Brian', 'woman', 'man'];
+        return in_array($voice, $allowed, true) ? $voice : 'Polly.Emma';
     }
 }

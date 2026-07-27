@@ -8,6 +8,34 @@
     if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
     return Math.floor(seconds / 86400) + "d ago";
   };
+  const duration = value => {
+    const seconds = Math.max(0, Number(value || 0));
+    if (seconds < 60) return seconds + "s";
+    return Math.floor(seconds / 60) + "m " + (seconds % 60) + "s";
+  };
+  const callStatus = value => {
+    const status = String(value || "unknown").toLowerCase();
+    const tone = ["completed", "in-progress", "ringing"].includes(status)
+      ? "success"
+      : (["failed", "busy", "no-answer", "canceled"].includes(status) ? "danger" : "secondary");
+    return `<span class="badge rounded-pill text-bg-${tone}">${esc(status.replaceAll("-", " "))}</span>`;
+  };
+  const renderCallLogs = rows => {
+    document.getElementById("voice-call-rows").innerHTML = rows.map(row => {
+      const outbound = row.direction === "outbound";
+      const started = row.created_at || row.updated_at;
+      return `<tr>
+        <td><span class="voice-call-direction ${outbound ? "is-outbound" : "is-inbound"}"><i class="bi ${outbound ? "bi-telephone-outbound" : "bi-telephone-inbound"}"></i>${outbound ? "Outbound" : "Inbound"}</span></td>
+        <td><a class="voice-phone-number" href="tel:${esc(row.from_number || "")}">${esc(row.from_number || "Unknown")}</a></td>
+        <td><a class="voice-phone-number" href="tel:${esc(row.to_number || "")}">${esc(row.to_number || "Unknown")}</a></td>
+        <td>${callStatus(row.status)}</td>
+        <td>${duration(row.duration_seconds)}</td>
+        <td>${esc(row.lead_name || (outbound ? "Manual / unlinked" : "Caller"))}</td>
+        <td title="${esc(started || "")}">${started ? ago(started) : "Unknown"}</td>
+      </tr>`;
+    }).join("");
+    document.getElementById("voice-call-empty").classList.toggle("d-none", rows.length > 0);
+  };
   async function load() {
     try {
       const data = await api.get("/api/v1/admin/voice-demo/stats");
@@ -26,6 +54,7 @@
       document.getElementById("twilio-readiness").innerHTML = (data.readiness || []).map(item => `<div class="d-flex align-items-center gap-2 p-2 rounded" style="background:var(--bg-soft)"><i class="bi ${item.complete ? "bi-check-circle-fill text-success" : (item.external ? "bi-hourglass-split text-warning" : "bi-circle text-muted")}"></i><span class="small flex-grow-1">${esc(item.label)}</span>${item.external && !item.complete ? '<span class="badge text-bg-warning">Twilio/Meta</span>' : ""}</div>`).join("");
       const calls = data.marketing_calls || {};
       document.getElementById("marketing-call-status").innerHTML = `<div class="d-flex gap-4 mb-3"><div><span class="small text-muted-custom d-block">Phone-only leads</span><strong class="fs-4">${Number(calls.queued || 0)}</strong></div><div><span class="small text-muted-custom d-block">Lisa calls today</span><strong class="fs-4">${Number(calls.ai_calls_today || 0)} / ${Number(calls.ai_call_daily_cap || 5)}</strong></div><div><span class="small text-muted-custom d-block">Remaining</span><strong class="fs-4">${Number(calls.ai_calls_remaining || 0)}</strong></div></div><div class="alert alert-light border small mb-3"><i class="bi bi-person-check me-1"></i>Each AI call requires your approval and confirmation that the recipient requested or consented to it. Lisa then places that one call; there is no unattended batch dialing.</div><a class="btn btn-outline-secondary btn-sm" href="/admin/marketing-leads.html"><i class="bi bi-bullseye me-1"></i>Open call list</a>`;
+      renderCallLogs(data.call_logs || []);
       const rows = data.recent || [];
       document.getElementById("voice-session-rows").innerHTML = rows.map(row => `<tr><td><span class="voice-channel"><i class="bi ${row.channel === "phone" ? "bi-telephone" : "bi-browser-chrome"}"></i>${esc(row.channel)}</span></td><td>${esc(row.last_question || "Opened without a question")}</td><td>${Number(row.turn_count || 0)}</td><td>${esc(row.provider || "fallback")}</td><td>${ago(row.updated_at)}</td></tr>`).join("");
       document.getElementById("voice-empty").classList.toggle("d-none", rows.length > 0);
@@ -33,5 +62,13 @@
       document.getElementById("voice-summary").innerHTML = `<div class="alert alert-danger">${esc(error.message)}</div>`;
     }
   }
+  document.getElementById("refresh-call-logs").addEventListener("click", async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Refreshing';
+    await load();
+    button.disabled = false;
+    button.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Refresh logs';
+  });
   load();
 })();

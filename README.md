@@ -1241,6 +1241,8 @@ After deployment:
    Owner voice number, then enable the customer-service voice agent. Calls from
    the owner number receive an owner-aware greeting, but caller ID matching is
    never treated as authorization for private data or sensitive actions.
+   The phone voice can be selected independently; it defaults to the British
+   female Amazon Polly Emma voice and applies to inbound and outbound speech.
 3. In Twilio Console, set the number's incoming-call webhook to
    `https://princecaleb.dev/api/v1/voice/twilio/incoming` using POST.
 4. Set its status callback to
@@ -1259,3 +1261,7 @@ requests. Lisa calls have a separate hard limit of five per day. Generated
 phone-only leads are drafted into this approval queue, while leads with a
 usable email stay in the email path and its separate 50/day cap. No cron task
 or batch process can initiate outbound voice calls.
+
+Admin → Voice Demo shows the 100 most recent Twilio call records, including
+direction, caller number, destination number, status, duration, linked lead,
+and start time for both inbound and outbound calls.
