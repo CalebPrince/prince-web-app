@@ -867,9 +867,13 @@ class LiveChatController
         $name = Settings::get('chat_assistant_name') ?: 'Lisa';
         $voiceGender = Settings::get('chat_voice_gender') ?: 'female';
         $publicWhatsApp = trim((string) Settings::get('social_whatsapp'));
+        $publicWhatsAppDigits = preg_replace('/\D+/', '', (string) parse_url($publicWhatsApp, PHP_URL_PATH)) ?? '';
+        $publicWhatsAppNumber = $publicWhatsAppDigits !== '' ? '+' . $publicWhatsAppDigits : '';
         $whatsAppGrounding = $publicWhatsApp !== ''
-            ? "The one authoritative public WhatsApp link is {$publicWhatsApp}. When anyone asks for a WhatsApp "
-                . "link or how to test/contact the business on WhatsApp, share that exact link character-for-character. "
+            ? "Internally treat {$publicWhatsApp} as the only authoritative public WhatsApp link. Do not expose "
+                . "the words 'authoritative public WhatsApp link' to the user. When anyone asks for the business "
+                . "WhatsApp number, say naturally: \"Our business WhatsApp contact number is {$publicWhatsAppNumber}.\" "
+                . "When a clickable link is useful, add {$publicWhatsApp} exactly as saved. "
             : "No public WhatsApp link is currently configured. If anyone asks for one, direct them to "
                 . "princecaleb.dev instead. ";
         $whatsAppGrounding .= "Never construct, infer, or guess a wa.me link from an owner number, caller/sender "
