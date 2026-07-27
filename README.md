@@ -898,7 +898,14 @@ storage/
     — her exact public-widget brain, but run in owner mode so she drops the
     lead-capture/sales script (no asking for name/email, no quote pitch) while
     keeping her useful tools (`check_availability`, `get_site_info`,
-    `search_content`, `audit_website`); her tab shows a **Recent visitor
+    `search_content`, `audit_website`). A WhatsApp sender matching either
+    private owner-recognition number (`owner_whatsapp_number` or
+    `owner_voice_number`) gets that same owner mode plus the owner-only
+    `get_recent_calls` tool. Lisa can then answer Caleb's questions about real
+    recent inbound/outbound call records, while ordinary visitors cannot query
+    or infer any call history. Verified owner threads remain logged for
+    accountability but appear as **Prince Caleb · Owner**, not Visitor, in the
+    unified inbox. Her admin tab shows a **Recent visitor
     conversations** panel (reusing `GET /api/v1/admin/chats`, the same data as
     the Chat Leads page) for context while talking to her. A fifth agent,
     **Canvas**, handles content creation and is documented separately below

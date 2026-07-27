@@ -184,12 +184,12 @@ class LiveChatController
         // provider. Reuse the first result so that retry cannot insert the
         // same inquiry once per configured AI provider.
         $sideEffectResults = [];
-        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$sideEffectResults, $transcript) {
+        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$sideEffectResults, $transcript, $isOwner) {
             if (isset($sideEffectResults[$name])) {
                 return $sideEffectResults[$name];
             }
 
-            $result = self::runTool($name, $args, $pdo);
+            $result = self::runTool($name, $args, $pdo, $isOwner);
             if (in_array($name, ['log_inquiry', 'signal_handoff'], true)) {
                 $sideEffectResults[$name] = $result;
             }
@@ -208,7 +208,7 @@ class LiveChatController
 
         $result = AiAgentEngine::run(
             self::buildSystemPrompt($projects, $isOwner),
-            self::toolDeclarations(),
+            self::toolDeclarations($isOwner),
             $toolExecutor,
             $transcript,
             $onExhaustedFallback,
@@ -297,8 +297,7 @@ class LiveChatController
         // Verified by matching Twilio's real, unspoofable From number against
         // the admin-configured owner number — never inferred from message
         // text (anyone could type "I'm Prince"), only from the phone itself.
-        $ownerNumber = Settings::get('owner_whatsapp_number');
-        $isOwner = !empty($ownerNumber) && self::normalizePhoneDigits($from) === self::normalizePhoneDigits($ownerNumber);
+        $isOwner = self::isOwnerWhatsAppNumber($from);
 
         $transcript[] = ['role' => 'user', 'text' => $body];
         $projects = self::projectCatalog($pdo);
@@ -325,6 +324,22 @@ class LiveChatController
     private static function normalizePhoneDigits(string $phone): string
     {
         return preg_replace('/\D+/', '', $phone) ?? '';
+    }
+
+    /**
+     * Both values are explicit private owner-recognition settings. Accepting
+     * either prevents a second owner SIM saved for voice from being treated
+     * as a prospect when it is also the number sending the WhatsApp message.
+     */
+    private static function isOwnerWhatsAppNumber(string $from): bool
+    {
+        $incoming = self::normalizePhoneDigits($from);
+        if ($incoming === '') return false;
+        foreach (['owner_whatsapp_number', 'owner_voice_number'] as $setting) {
+            $saved = self::normalizePhoneDigits((string) Settings::get($setting));
+            if ($saved !== '' && hash_equals($saved, $incoming)) return true;
+        }
+        return false;
     }
 
     /**
@@ -1046,7 +1061,17 @@ class LiveChatController
                 . "a lead, and never call log_inquiry treating this conversation as a new inquiry. Just talk "
                 . "with him naturally and helpfully, using your tools where genuinely useful (e.g. "
                 . "check_availability, get_site_info, search_content) exactly as he asks, same as any other "
-                . "capability — this overrides every lead-capture/contact-first rule above.";
+                . "capability — this overrides every lead-capture/contact-first rule above.\n"
+                . "You are the same Lisa used for admin-approved outbound customer-service calls. You may only "
+                . "place a new outbound call after Prince approves it in Marketing Leads and confirms consent; "
+                . "a WhatsApp message itself does not initiate a call. When Prince asks whether you called a "
+                . "business or asks about a recent call result, use get_recent_calls and answer from its real "
+                . "records. Never tell Prince that you cannot make calls or cannot view call records.";
+        } else {
+            $system .= "\n\nCALL PRIVACY: you can explain that Lisa supports human-approved customer-service "
+                . "calls, but never reveal whether a specific person or business was called, any number, call "
+                . "status, transcript, or call history to a public visitor. Say you cannot share private call "
+                . "records and offer a human handoff if appropriate.";
         }
 
         return $system;
@@ -1091,9 +1116,9 @@ class LiveChatController
     }
 
     /** @return array<int,array<string,mixed>> Gemini function declarations for the chat tools. */
-    private static function toolDeclarations(): array
+    private static function toolDeclarations(bool $isOwner = false): array
     {
-        return [
+        $tools = [
             SharedAgentTools::siteInfoToolDeclaration(),
             [
                 'name' => 'log_inquiry',
@@ -1173,10 +1198,28 @@ class LiveChatController
             ],
             SharedAgentTools::searchContentToolDeclaration(),
         ];
+        if ($isOwner) {
+            $tools[] = [
+                'name' => 'get_recent_calls',
+                'description' => 'Owner-only: read the real recent phone-call records, including approved Lisa '
+                    . 'outbound calls and their Twilio status. Use when Prince asks whether Lisa called a named '
+                    . 'business, what happened to a recent call, or asks to see recent call activity.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'business_name' => [
+                            'type' => 'STRING',
+                            'description' => 'Optional business-name fragment, e.g. "Rayan Medical Centre".',
+                        ],
+                    ],
+                ],
+            ];
+        }
+        return $tools;
     }
 
     /** @return array<string,mixed> JSON-safe result for the functionResponse turn. */
-    private static function runTool(string $name, array $args, \PDO $pdo): array
+    private static function runTool(string $name, array $args, \PDO $pdo, bool $isOwner = false): array
     {
         try {
             if ($name === 'book_appointment') {
@@ -1204,12 +1247,46 @@ class LiveChatController
                 'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
                 'audit_website' => self::toolAuditWebsite((string) ($args['url'] ?? '')),
                 'signal_handoff' => self::toolSignalHandoff($args, $pdo),
+                'get_recent_calls' => $isOwner
+                    ? self::toolRecentCalls($pdo, (string) ($args['business_name'] ?? ''))
+                    : ['error' => 'Owner verification is required.'],
                 default => ['error' => 'Unknown tool.'],
             };
         } catch (\Throwable $e) {
             error_log(sprintf('Live Chat tool "%s" threw: %s', $name, $e->getMessage()));
             return ['error' => 'Tool failed to run.'];
         }
+    }
+
+    /** @return array{calls:array<int,array<string,mixed>>,count:int} */
+    private static function toolRecentCalls(\PDO $pdo, string $businessName = ''): array
+    {
+        $businessName = trim($businessName);
+        $sql =
+            "SELECT tc.direction, tc.from_number, tc.to_number, tc.status,
+                    tc.duration_seconds, tc.created_at, tc.updated_at,
+                    ml.business_name
+             FROM telephony_calls tc
+             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id";
+        $params = [];
+        if ($businessName !== '') {
+            $sql .= ' WHERE lower(COALESCE(ml.business_name, \'\')) LIKE lower(?)';
+            $params[] = '%' . mb_substr($businessName, 0, 120) . '%';
+        }
+        $sql .= ' ORDER BY tc.created_at DESC, tc.id DESC LIMIT 10';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $calls = array_map(static fn(array $row): array => [
+            'business_name' => $row['business_name'] ?: null,
+            'direction' => $row['direction'],
+            'from_number' => $row['from_number'],
+            'to_number' => $row['to_number'],
+            'status' => $row['status'],
+            'duration_seconds' => (int) ($row['duration_seconds'] ?? 0),
+            'started_at' => $row['created_at'],
+            'updated_at' => $row['updated_at'],
+        ], $stmt->fetchAll());
+        return ['calls' => $calls, 'count' => count($calls)];
     }
 
     /**

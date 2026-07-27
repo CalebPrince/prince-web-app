@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\Database;
 use App\Support\Response;
+use App\Support\Settings;
 
 /** A conversation-level inbox spanning every client contact channel. */
 class InboxController
@@ -17,6 +18,10 @@ class InboxController
         $pdo = Database::get();
         $items = [];
         $states = [];
+        $ownerNumbers = array_values(array_filter(array_map(
+            static fn(string $key): string => preg_replace('/\D+/', '', (string) Settings::get($key)) ?? '',
+            ['owner_whatsapp_number', 'owner_voice_number']
+        )));
         foreach ($pdo->query('SELECT item_key,state FROM inbox_item_states')->fetchAll() as $row) $states[$row['item_key']] = $row['state'];
 
         foreach ($pdo->query("SELECT id,name,email,message,type,status,project_type,budget,timeline,features,created_at
@@ -37,11 +42,15 @@ class InboxController
         foreach ($pdo->query("SELECT id,token,transcript_json,prototype_status,client_comment,client_name,client_email,client_phone,admin_seen,updated_at FROM chat_sessions WHERE transcript_json != '[]' OR client_email IS NOT NULL")->fetchAll() as $row) {
             $transcript = json_decode($row['transcript_json'], true) ?: [];
             $last = $row['client_comment'] ?: ($transcript ? (string) ($transcript[count($transcript) - 1]['text'] ?? 'Live chat conversation') : 'Live chat conversation');
+            $isWhatsApp = str_starts_with($row['token'], 'whatsapp:');
+            $sessionDigits = preg_replace('/\D+/', '', (string) $row['token']) ?? '';
+            $isOwner = $isWhatsApp && $sessionDigits !== '' && in_array($sessionDigits, $ownerNumbers, true);
             $items[] = [
-                'key' => 'chat:' . $row['id'], 'source' => str_starts_with($row['token'], 'whatsapp:') ? 'whatsapp' : 'chat', 'source_id' => (int) $row['id'],
-                'name' => $row['client_name'] ?: 'Anonymous visitor', 'email' => $row['client_email'] ?: '', 'phone' => $row['client_phone'] ?: '',
+                'key' => 'chat:' . $row['id'], 'source' => $isWhatsApp ? 'whatsapp' : 'chat', 'source_id' => (int) $row['id'],
+                'name' => $isOwner ? 'Prince Caleb' : ($row['client_name'] ?: 'Anonymous visitor'), 'email' => $row['client_email'] ?: '', 'phone' => $row['client_phone'] ?: '',
+                'is_owner' => $isOwner,
                 'preview' => $last, 'unread' => !(bool) $row['admin_seen'], 'flagged' => false, 'created_at' => $row['updated_at'],
-                'detail' => ['message' => $row['client_comment'] ?: '', 'transcript' => $transcript, 'prototype_status' => $row['prototype_status']],
+                'detail' => ['message' => $row['client_comment'] ?: '', 'transcript' => $transcript, 'prototype_status' => $row['prototype_status'], 'is_owner' => $isOwner],
                 'source_url' => '/admin/chats.html?open=' . $row['id'],
             ];
         }
