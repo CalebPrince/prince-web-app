@@ -80,8 +80,8 @@
           <p class="text-muted-custom mb-0 small">
             Audits are a real technical check of the target site (SSL, mobile viewport, title/description, response
             time) — never fabricated. Pitches (or call scripts, for phone-only leads) are drafted only from those
-            findings. Following through always requires an explicit confirmation from you first — nothing is
-            auto-sent or auto-called in bulk.
+            findings. Sending stays in your hands by default; the Cold Outreach Engine below is the opt-in way to
+            let reviewed email pitches send themselves on a daily cap.
           </p>
         </div>
       </div>
@@ -89,6 +89,58 @@
         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#discover-modal">Find leads by niche</button>
         <button type="button" class="btn-brand btn-sm" data-bs-toggle="modal" data-bs-target="#add-lead-modal">+ Add lead</button>
       </div>
+    </div>
+
+    <div class="admin-card mb-3 p-3" id="outreach-engine">
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-send"></i></div>
+          <div>
+            <div class="fw-semibold">Cold Outreach Engine</div>
+            <div class="small text-muted-custom"><span id="oe-queue">0</span> reviewed &amp; ready to send · <span id="oe-draftable">0</span> raw leads auto-draft can pitch</div>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-4 ms-auto">
+          <div class="text-center">
+            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;"><span id="oe-sent-today">0</span><span class="text-muted-custom">/<span id="oe-cap-label">50</span></span></div>
+            <div class="small text-muted-custom">sent today</div>
+          </div>
+          <div class="text-center">
+            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;" id="oe-sent-total">0</div>
+            <div class="small text-muted-custom">sent all-time</div>
+          </div>
+          <div class="text-center">
+            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;" id="oe-suppressed">0</div>
+            <div class="small text-muted-custom">unsubscribed</div>
+          </div>
+          <div class="text-center">
+            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;" id="oe-calls-today">0</div>
+            <div class="small text-muted-custom">calls today</div>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="oe-call-list-btn" data-bs-toggle="modal" data-bs-target="#call-list-modal">
+            <i class="bi bi-telephone"></i> Call list (<span id="oe-call-queue">0</span>)
+          </button>
+
+          <div class="d-flex align-items-end gap-3">
+            <div>
+              <label for="oe-cap" class="form-label small mb-1">Daily cap</label>
+              <input type="number" class="form-control form-control-sm" id="oe-cap" min="1" max="500" step="1" style="width:5.5rem;">
+            </div>
+            <div class="d-flex flex-column gap-1 mb-1">
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="oe-enabled" style="cursor:pointer;">
+                <label class="form-check-label small" for="oe-enabled" id="oe-enabled-label">Off</label>
+              </div>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="oe-autodraft" style="cursor:pointer;">
+                <label class="form-check-label small" for="oe-autodraft" id="oe-autodraft-label" title="Audits raw leads, mines a published email from their site if there's none on file, then pitches — to keep the queue full">Auto-draft off</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="oe-msg" class="alert py-2 small mb-0 mt-2 d-none"></div>
     </div>
 
     <div id="bulk-toolbar" class="d-none align-items-center gap-2 mb-3 p-2 rounded" style="background: var(--section-leads-soft);">
@@ -265,6 +317,32 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary btn-sm" id="dossier-rerun-btn">Re-run research</button>
         <button type="button" class="btn-brand btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="call-list-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title mb-0">Today's call list</h5>
+          <div class="small text-muted-custom"><span id="call-list-today">0</span> call(s) logged today · leads stay listed until a call actually connects</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted-custom small mb-3">
+          Phone-channel leads with a reviewed call script. The tel: link opens your dialer — nothing here dials
+          or robocalls on its own. Log every attempt: no-answer, voicemail and callback keep the lead queued;
+          connected, interested, not interested or wrong number close it out.
+        </p>
+        <div id="call-list-empty" class="text-center text-muted-custom py-4 d-none">No calls queued — auto-draft prepares scripts for phone-only leads, or generate one from a lead's row.</div>
+        <div id="call-list-body" class="d-flex flex-column gap-3"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-brand btn-sm" data-bs-dismiss="modal">Done</button>
       </div>
     </div>
   </div>

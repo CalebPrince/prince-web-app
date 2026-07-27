@@ -414,11 +414,60 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   pitch_subject TEXT,
   pitch_body TEXT,
   notes TEXT,
+  -- Per-lead opt-out token, minted the first time the Cold Outreach Engine
+  -- emails this lead. The unsubscribe link in every automated pitch carries
+  -- it; clicking it suppresses the address everywhere (see email_suppressions).
+  unsubscribe_token TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   sent_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at);
+
+-- The Cold Outreach Engine's send ledger. One row per lead the automated
+-- sender (database/send_cold_outreach.php) has emailed. UNIQUE(lead_id) is
+-- what makes "never cold-email the same prospect twice" true and lets the
+-- cron count today's sends to honour the daily cap — retries and overlapping
+-- runs can't double-send. Only successful sends are recorded here; a failed
+-- Mailer attempt leaves the lead pitch_ready so the next run retries it.
+CREATE TABLE IF NOT EXISTS outreach_sends (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER NOT NULL UNIQUE REFERENCES marketing_leads(id) ON DELETE CASCADE,
+  recipient_email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  sent_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_outreach_sends_sent_at ON outreach_sends (sent_at);
+
+-- Global do-not-email list. An address lands here when someone unsubscribes
+-- from a cold pitch; the sender skips any lead whose contact_email matches,
+-- regardless of which source added the lead. Kept separate from
+-- drip_enrollments so a suppression outlives the lead row it came from.
+CREATE TABLE IF NOT EXISTS email_suppressions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  reason TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- The phone half of the outreach engine: one row per call attempt Caleb
+-- logs against a lead from the call queue (phone-channel pitch_ready
+-- leads). Non-terminal outcomes (no_answer, voicemail, callback) keep the
+-- lead in the queue for another attempt; terminal ones advance the lead
+-- (connected/interested/not_interested -> sent, wrong_number -> rejected)
+-- in OutreachController::logCall(). The log itself is append-only history —
+-- the "calls made today" quota counts rows here by date(called_at).
+CREATE TABLE IF NOT EXISTS call_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER NOT NULL REFERENCES marketing_leads(id) ON DELETE CASCADE,
+  outcome TEXT NOT NULL CHECK (outcome IN
+    ('connected', 'voicemail', 'no_answer', 'wrong_number', 'not_interested', 'interested', 'callback')),
+  notes TEXT,
+  called_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_call_log_lead ON call_log (lead_id, called_at);
+CREATE INDEX IF NOT EXISTS idx_call_log_called_at ON call_log (called_at);
 
 -- Social posts/comments Beacon has judged worth a reply. source distinguishes
 -- leads the automated draft() pipeline logged deterministically (qualified

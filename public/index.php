@@ -62,6 +62,7 @@ use App\Controllers\LiveChatController;
 use App\Controllers\MarketingLeadController;
 use App\Controllers\NewsletterController;
 use App\Controllers\NurturerController;
+use App\Controllers\OutreachController;
 use App\Controllers\PaymentController;
 use App\Controllers\PipelineController;
 use App\Controllers\InboxController;
@@ -123,6 +124,7 @@ $router->post('/api/v1/client/messages', [ClientPortalController::class, 'sendMe
 $router->post('/api/v1/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
 $router->get('/api/v1/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 $router->get('/api/v1/drip/unsubscribe', [DripController::class, 'unsubscribe']);
+$router->get('/api/v1/outreach/unsubscribe', [OutreachController::class, 'unsubscribe']);
 $router->post('/api/v1/analytics/track', [AnalyticsController::class, 'track']);
 $router->post('/api/v1/client-error', [ClientErrorController::class, 'log']);
 $router->get('/api/v1/appointments/config', [AppointmentController::class, 'publicConfig']);
@@ -263,6 +265,10 @@ $router->post('/api/v1/admin/marketing-leads/{id}/research', [DossierController:
 $router->post('/api/v1/admin/marketing-leads/{id}/audit', [MarketingLeadController::class, 'runAudit']);
 $router->post('/api/v1/admin/marketing-leads/{id}/generate-pitch', [MarketingLeadController::class, 'generatePitch']);
 $router->post('/api/v1/admin/marketing-leads/{id}/send', [MarketingLeadController::class, 'markSent']);
+$router->get('/api/v1/admin/outreach/stats', [OutreachController::class, 'stats']);
+$router->post('/api/v1/admin/outreach/settings', [OutreachController::class, 'updateSettings']);
+$router->get('/api/v1/admin/outreach/call-queue', [OutreachController::class, 'callQueue']);
+$router->post('/api/v1/admin/outreach/call-log/{id}', [OutreachController::class, 'logCall']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
 $router->get('/api/v1/admin/content-studio', [ContentStudioController::class, 'index']);

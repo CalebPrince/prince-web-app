@@ -142,6 +142,7 @@ database/
   check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
+  send_cold_outreach.php          # Cold Outreach Engine: sends reviewed marketing-lead pitches, capped/day (cron, hourly)
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   draft_newsletters_from_blog.php    # Published blog posts -> Jason newsletter drafts, ready to review (cron, ~5-10 min)
@@ -343,10 +344,11 @@ storage/
     title/meta description, response time, HTTP error status, and common
     broken-page signatures like a WordPress DB-connection error or an
     unresolvable domain — genuinely verifiable, never fabricated), then
-    draft an AI pitch that only references the actual findings. There is
-    deliberately no bulk-send path — "Approve & Send" opens the admin's own
-    mail client with the draft prefilled (`mailto:`), and the lead is only
-    marked `sent` after that. The audit fetch has an SSRF guard
+    draft an AI pitch that only references the actual findings. By default
+    sending stays manual — "Approve & Send" opens the admin's own mail client
+    with the draft prefilled (`mailto:`), and the lead is only marked `sent`
+    after that. The **Cold Outreach Engine** (below) is the opt-in way to let
+    that last step run itself. The audit fetch has an SSRF guard
     (`SharedAgentTools::isSafeUrl`, shared with Dossier's site fetch)
     blocking loopback/private/reserved
     IP targets — a domain that simply fails to resolve is let through,
@@ -358,6 +360,57 @@ storage/
     claims; the sign-off and contact channels (WhatsApp/phone from Settings,
     portfolio URL) are appended in PHP from real data, never left for the
     model to guess at.
+
+    The **Cold Outreach Engine** (`OutreachController`,
+    `database/send_cold_outreach.php`, "Outreach Engine" panel on the same
+    page) is the automated sending layer on top of that funnel — it turns
+    "send 50 personalised emails a day, forever" into a cron instead of 50
+    manual `mailto:` clicks. By default it only sends pitches Caleb has already
+    reviewed (a lead is eligible only at `status = 'pitch_ready'` with an
+    email-channel pitch and a real `contact_email`). **Auto-draft**
+    (`outreach_autodraft`, a separate toggle, off by default) is the opt-in
+    that keeps the queue full without hand-pitching every lead: when on, each
+    run audits + drafts just enough raw leads (`pending`/`audited`, with a
+    contact_email) to top today's queue up to the cap, then sends them the
+    same run. It reuses `MarketingLeadController::performAudit()` and
+    `draftPitch()` verbatim, so an auto-drafted pitch is identical to a
+    hand-triggered one and stays grounded in real audit findings — never
+    invented — and drafting is bounded per run (`AUTODRAFT_PER_RUN`, 10) so one
+    cron tick can't stall on dozens of sequential audits. Because most
+    Places-discovered leads arrive **phone-only** (Google Places returns phone
+    numbers, not emails), the audit step also scrapes the fetched page for a
+    real *published* email — an address on the business's own domain, or a
+    free-provider address they list (`extractContactEmail()`,
+    `applyFoundEmail()`) — and fills an empty `contact_email` with it. When the
+    site publishes nothing, an optional Hunter.io key (Admin -> Settings ->
+    Integrations) lets `EmailEnrichment` fall back to Hunter's domain search —
+    verified, confidence-gated addresses only. It never guesses `info@domain`
+    (an unverified guess just bounces and burns sender reputation). A lead
+    that still has no email but has a phone number isn't a dead end either:
+    auto-draft prepares a **call script** for it instead (same
+    `draftCallScript()` a hand-triggered phone pitch uses) and it joins the
+    **call queue** — the "Call list" modal on the same page. That list shows
+    each phone lead's talking points and a `tel:` link (nothing ever dials or
+    robocalls by itself); every attempt is logged to `call_log`
+    (`OutreachController::logCall()`) — no-answer/voicemail/callback keep the
+    lead queued, connected/interested/not-interested/wrong-number close it
+    out — and "calls today" counts alongside "sent today" on the panel, so the
+    daily ritual is emails + calls, matching what the leads actually are.
+    Guardrails: it's **off by default**
+    (`outreach_enabled`), sends at most `outreach_daily_cap` (default 50) per
+    day counted from the `outreach_sends` ledger, `UNIQUE(lead_id)` there means
+    a prospect is cold-emailed at most once, every send carries a one-click
+    unsubscribe that suppresses the address globally (`email_suppressions`) and
+    stops any drip follow-up for it, and the sender skips suppressed addresses
+    and anyone who already opted out of a drip sequence. A successful send
+    fires the same `marketing_pitch_sent` automation trigger a hand-sent pitch
+    does, so the follow-up sequence starts either way. Hourly is a good cron
+    cadence — each run tops the day up toward the cap, spreading sends out more
+    naturally than one morning blast. The panel shows today's count vs the cap,
+    how many reviewed pitches are queued, how many raw leads auto-draft could
+    still pitch, and the on/off + auto-draft + cap dials; when the queue is dry
+    the fix is to add more raw leads (Find leads by niche) and/or turn on
+    auto-draft — not to raise the cap.
 
     "Find leads by niche" (`MarketingLeadController::discover()`) searches
     for real candidate businesses (e.g. "plumbers in Accra") via Serper's
@@ -1111,6 +1164,11 @@ One-time setup on a new host:
     second run refreshes it rather than duplicating it, and `emailed_at`
     means it is only ever sent once. Add `--force` to rewrite and re-send,
     `--no-email` to write without sending.
+4m. Add a thirteenth cron job (hourly) for the Cold Outreach Engine (a
+    no-op until switched on under Admin -> Marketing Leads; sends reviewed
+    email pitches up to the daily cap, and with auto-draft on also prepares
+    pitches/call scripts):
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_cold_outreach.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

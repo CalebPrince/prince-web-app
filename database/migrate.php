@@ -1090,4 +1090,55 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_agent_daily_briefs_date ON agent_daily_briefs (brief_date)');
 
+// Cold Outreach Engine — the automated sending layer on top of the existing
+// marketing_leads funnel (discover -> research -> audit -> pitch_ready). The
+// funnel already existed and set status='sent' by hand; these give it a
+// throttled, idempotent, opt-out-respecting cron sender.
+$marketingLeadColumns = array_column($pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll(), 'name');
+if (!in_array('unsubscribe_token', $marketingLeadColumns, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN unsubscribe_token TEXT');
+}
+
+// One row per lead the sender has emailed. UNIQUE(lead_id) guarantees a
+// prospect is cold-emailed at most once and lets the cron count today's
+// sends against the daily cap.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS outreach_sends (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER NOT NULL UNIQUE REFERENCES marketing_leads(id) ON DELETE CASCADE,
+        recipient_email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        body TEXT NOT NULL,
+        sent_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_outreach_sends_sent_at ON outreach_sends (sent_at)');
+
+// Global do-not-email list — an unsubscribe from any cold pitch lands here
+// and the sender skips every matching lead thereafter.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS email_suppressions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        reason TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+
+// The phone half of the outreach engine — call attempts logged from the
+// call queue. Terminal outcomes advance the lead; non-terminal ones keep it
+// queued for another attempt (see OutreachController::logCall()).
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS call_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER NOT NULL REFERENCES marketing_leads(id) ON DELETE CASCADE,
+        outcome TEXT NOT NULL CHECK (outcome IN
+            ('connected', 'voicemail', 'no_answer', 'wrong_number', 'not_interested', 'interested', 'callback')),
+        notes TEXT,
+        called_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_call_log_lead ON call_log (lead_id, called_at)');
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_call_log_called_at ON call_log (called_at)');
+
 echo "Schema applied.\n";

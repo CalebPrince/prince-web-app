@@ -9,6 +9,7 @@ use App\Support\ActivityLog;
 use App\Support\AiText;
 use App\Support\Automations;
 use App\Support\Database;
+use App\Support\EmailEnrichment;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -286,7 +287,11 @@ class MarketingLeadController
         $pdo->prepare("UPDATE marketing_leads SET audit_findings = ?, status = 'audited', updated_at = datetime('now') WHERE id = ?")
             ->execute([json_encode($findings), $lead['id']]);
 
-        Response::json(['findings' => $findings]);
+        // If the site publishes a real email and we had none on file, capture
+        // it — turns a phone-only lead into an emailable one, no guessing.
+        $foundEmail = self::applyFoundEmail($pdo, $lead, $findings);
+
+        Response::json(['findings' => $findings, 'found_email' => $foundEmail]);
     }
 
     /**
@@ -483,7 +488,13 @@ class MarketingLeadController
     }
 
     /** @return array<string,mixed> Only objectively verifiable technical signals — never fabricated. */
-    private static function performAudit(string $url): array
+    /**
+     * Runs the real technical audit and returns the findings array. Public so
+     * the Cold Outreach Engine's auto-draft (OutreachController) can audit a
+     * lead unattended before drafting; callers are responsible for the
+     * SharedAgentTools::isSafeUrl() SSRF check first (runAudit() does it).
+     */
+    public static function performAudit(string $url): array
     {
         if (!function_exists('curl_init')) {
             return ['error' => 'Audit unavailable on this host (curl not installed).', 'checked_at' => date('c')];
@@ -582,8 +593,128 @@ class MarketingLeadController
             'page_size_kb' => round(strlen($html) / 1024, 1),
             'title' => $title,
             'issues' => $issues,
+            // A real, published email scraped from the page (mailto: or text) —
+            // the business's own-domain address, or a free-provider address
+            // they list. null when the site publishes none. Never guessed:
+            // this is the only honest way to get an email for a lead that
+            // Google Places only gave us a phone number for. applyFoundEmail()
+            // uses it to fill an empty contact_email.
+            'contact_email_found' => self::extractContactEmail($html, $finalUrl),
             'checked_at' => date('c'),
         ];
+    }
+
+    /** Free email providers a small business legitimately lists as its contact. */
+    private const FREE_EMAIL_PROVIDERS = [
+        'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'hotmail.co.uk',
+        'live.com', 'yahoo.com', 'yahoo.co.uk', 'ymail.com', 'icloud.com', 'aol.com',
+        'proton.me', 'protonmail.com',
+    ];
+
+    /** Vendor/boilerplate domains that show up in page source but aren't the business. */
+    private const EMAIL_DOMAIN_BLOCKLIST = [
+        'example.com', 'example.org', 'example.net', 'domain.com', 'yourdomain.com',
+        'email.com', 'sentry.io', 'wixpress.com', 'wordpress.com', 'wordpress.org',
+        'godaddy.com', 'squarespace.com', 'shopify.com',
+    ];
+
+    /**
+     * Pulls the best real contact email published on the fetched page, or null.
+     * Prefers an address on the business's own domain; otherwise accepts a
+     * free-provider address they list. Deliberately rejects third-party vendor
+     * domains, no-reply boxes, and asset false-positives (foo@2x.png), and
+     * never fabricates one — an unverified guess would just bounce and hurt
+     * deliverability.
+     */
+    private static function extractContactEmail(string $html, string $siteUrl): ?string
+    {
+        if (trim($html) === '') {
+            return null;
+        }
+
+        $candidates = [];
+        if (preg_match_all('/mailto:([^"\'?>\s]+)/i', $html, $m)) {
+            foreach ($m[1] as $raw) {
+                $candidates[] = rawurldecode($raw);
+            }
+        }
+        if (preg_match_all('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i', $html, $m2)) {
+            $candidates = array_merge($candidates, $m2[0]);
+        }
+
+        $host = strtolower((string) parse_url($siteUrl, PHP_URL_HOST));
+        $host = preg_replace('/^www\./', '', $host);
+
+        $fallback = null;
+        foreach ($candidates as $cand) {
+            $email = strtolower(trim($cand));
+            $email = preg_replace('/[?&].*$/', '', $email); // drop ?subject=… on mailto:
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            [$local, $domain] = explode('@', $email, 2);
+            if (preg_match('/\.(png|jpe?g|gif|svg|webp|css|js|ico)$/', $domain)) {
+                continue; // asset path that happens to match name@2x.png
+            }
+            if (preg_match('/(no-?reply|do-?not-?reply|donotreply|postmaster|mailer-daemon)/', $local)) {
+                continue;
+            }
+            if (in_array($domain, self::EMAIL_DOMAIN_BLOCKLIST, true)) {
+                continue;
+            }
+            // Their own domain is the strongest signal — take it immediately.
+            if ($host !== '' && ($domain === $host || str_ends_with($domain, '.' . $host))) {
+                return $email;
+            }
+            // A listed free-provider address is a fine fallback; anything else
+            // (some theme vendor's support box) is skipped to avoid mis-targeting.
+            if ($fallback === null && in_array($domain, self::FREE_EMAIL_PROVIDERS, true)) {
+                $fallback = $email;
+            }
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * Fills a lead's contact_email from an audit's discovered address, but
+     * only when it's currently empty — a hand-entered email is never
+     * overwritten. When the homepage published nothing, falls back to
+     * Hunter.io enrichment (EmailEnrichment, opt-in via hunter_api_key —
+     * returns only verified, confidence-gated addresses, never guesses).
+     * Returns the email that was set, or null if nothing changed. Shared by
+     * runAudit() and the Cold Outreach Engine's auto-draft.
+     */
+    public static function applyFoundEmail(\PDO $pdo, array $lead, array $findings): ?string
+    {
+        if (trim((string) ($lead['contact_email'] ?? '')) !== '') {
+            return null;
+        }
+
+        $found = trim((string) ($findings['contact_email_found'] ?? ''));
+        $source = 'published on their website';
+
+        if ($found === '' && !empty($lead['website_url']) && EmailEnrichment::isConfigured()) {
+            $enriched = EmailEnrichment::findEmail((string) $lead['website_url']);
+            if ($enriched !== null) {
+                $found = $enriched['email'];
+                $source = "Hunter.io, confidence {$enriched['confidence']}%";
+            }
+        }
+
+        if ($found === '') {
+            return null;
+        }
+
+        // Note where the address came from so a later reader of the lead can
+        // judge it — appended, never replacing hand-written notes.
+        $note = "Email found ({$source}): {$found}";
+        $pdo->prepare(
+            "UPDATE marketing_leads SET contact_email = ?,
+             notes = CASE WHEN notes IS NULL OR trim(notes) = '' THEN ? ELSE notes || char(10) || ? END,
+             updated_at = datetime('now') WHERE id = ?"
+        )->execute([$found, $note, $note, $lead['id']]);
+        return $found;
     }
 
     /** Turns a raw curl error into a specific, plain-English finding — distinguishing "domain doesn't exist" from other failure modes matters for how compelling the pitch angle is. */
@@ -630,7 +761,13 @@ class MarketingLeadController
     }
 
     /** @return array{subject:string,body:string}|null */
-    private static function draftPitch(string $businessName, array $findings): ?array
+    /**
+     * Drafts the email pitch (subject + body, with the real signature block
+     * appended) grounded only in $findings. Public so the Cold Outreach
+     * Engine's auto-draft can generate a pitch unattended — same code path as
+     * a hand-triggered generate-pitch, so the two can't drift.
+     */
+    public static function draftPitch(string $businessName, array $findings): ?array
     {
         $context = self::findingsContext($findings);
 
@@ -670,9 +807,13 @@ class MarketingLeadController
      * subject line and no JSON parsing needed (unlike draftPitch()) since
      * there's no separate subject/body split for a phone call.
      *
+     * Public so the Cold Outreach Engine's auto-draft can prepare a call
+     * script for a lead that has a phone number but no reachable email —
+     * same code path as a hand-triggered phone pitch, so the two can't drift.
+     *
      * @return string|null
      */
-    private static function draftCallScript(string $businessName, array $findings): ?string
+    public static function draftCallScript(string $businessName, array $findings): ?string
     {
         $context = self::findingsContext($findings);
 

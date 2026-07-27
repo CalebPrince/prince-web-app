@@ -241,6 +241,11 @@
               <div class="form-text">Get a key at serper.dev — used to search real Google Places results (business name, website, address, phone) for a niche/location you type in, e.g. "plumbers in Accra". Nothing is AI-generated here; results only ever come from the real search API response.</div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Hunter.io API key <span class="text-muted-custom fw-normal">(optional — email enrichment)</span></label>
+              <input type="password" class="form-control" id="hunter-key" placeholder="Paste your Hunter.io API key" autocomplete="off">
+              <div class="form-text">Optional fallback for the Cold Outreach Engine: when a lead's website publishes no email, Hunter's domain search can supply one it has actually verified (confidence-gated — low-confidence pattern guesses are rejected, so nothing is ever invented). Leave empty to rely only on emails published on the lead's own site.</div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Slack webhook URL <span class="text-muted-custom fw-normal">(inquiry notifications)</span></label>
               <input type="password" class="form-control" id="slack-url" placeholder="https://hooks.slack.com/services/..." autocomplete="off">
             </div>

@@ -75,6 +75,7 @@ function actionButtons(lead) {
 }
 
 async function loadLeads() {
+  loadOutreachStats(); // eligible-queue count tracks lead state; refresh alongside
   const response = await api.get("/api/v1/admin/marketing-leads");
   const rows = Array.isArray(response) ? response : [];
   const tbody = document.getElementById("leads-tbody");
@@ -150,7 +151,8 @@ async function loadLeads() {
       btn.disabled = true;
       btn.textContent = "Checking…";
       try {
-        await api.post(`/api/v1/admin/marketing-leads/${btn.dataset.id}/audit`, {});
+        const res = await api.post(`/api/v1/admin/marketing-leads/${btn.dataset.id}/audit`, {});
+        if (res && res.found_email) alert(`Found a published email on their site: ${res.found_email} — added to the lead.`);
       } catch (err) {
         alert(err.message || "Audit failed.");
       }
@@ -563,6 +565,164 @@ document.getElementById("dossier-rerun-btn").addEventListener("click", async () 
 
 document.getElementById("pitch-body").addEventListener("input", renderPitchPreview);
 
+// --- Cold Outreach Engine panel ------------------------------------------
+
+function renderOutreachStats(s) {
+  document.getElementById("oe-queue").textContent = s.eligible_queue;
+  document.getElementById("oe-draftable").textContent = s.draftable_queue;
+  document.getElementById("oe-sent-today").textContent = s.sent_today;
+  document.getElementById("oe-cap-label").textContent = s.daily_cap;
+  document.getElementById("oe-sent-total").textContent = s.sent_total;
+  document.getElementById("oe-suppressed").textContent = s.suppressed;
+
+  const cap = document.getElementById("oe-cap");
+  if (document.activeElement !== cap) cap.value = s.daily_cap;
+
+  const toggle = document.getElementById("oe-enabled");
+  toggle.checked = s.enabled;
+  document.getElementById("oe-enabled-label").textContent = s.enabled ? "On" : "Off";
+
+  const autodraft = document.getElementById("oe-autodraft");
+  autodraft.checked = s.autodraft;
+  document.getElementById("oe-autodraft-label").textContent = s.autodraft ? "Auto-draft on" : "Auto-draft off";
+
+  document.getElementById("oe-calls-today").textContent = s.calls_today;
+  document.getElementById("oe-call-queue").textContent = s.call_queue;
+}
+
+async function loadOutreachStats() {
+  try {
+    renderOutreachStats(await api.get("/api/v1/admin/outreach/stats"));
+  } catch (err) {
+    /* panel is non-critical — leave defaults if it fails */
+  }
+}
+
+function outreachMsg(text, ok) {
+  const el = document.getElementById("oe-msg");
+  el.textContent = text;
+  el.className = "alert py-2 small mb-0 mt-2 alert-" + (ok ? "success" : "danger");
+  setTimeout(() => el.classList.add("d-none"), 4000);
+}
+
+async function saveOutreachSettings(body) {
+  try {
+    renderOutreachStats(await api.post("/api/v1/admin/outreach/settings", body));
+    return true;
+  } catch (err) {
+    outreachMsg(err.message || "Could not update the engine.", false);
+    await loadOutreachStats();
+    return false;
+  }
+}
+
+// --- Today's call list -----------------------------------------------------
+
+const CALL_OUTCOMES = [
+  ["connected", "Connected"],
+  ["interested", "Interested"],
+  ["callback", "Call back later"],
+  ["voicemail", "Voicemail"],
+  ["no_answer", "No answer"],
+  ["not_interested", "Not interested"],
+  ["wrong_number", "Wrong number"],
+];
+
+function callAttemptLabel(row) {
+  if (!row.attempts) return "Never called";
+  const outcome = CALL_OUTCOMES.find(([v]) => v === row.last_outcome);
+  const label = outcome ? outcome[1] : row.last_outcome;
+  return `${row.attempts} attempt${row.attempts > 1 ? "s" : ""} · last: ${label}`;
+}
+
+async function loadCallList() {
+  const body = document.getElementById("call-list-body");
+  const empty = document.getElementById("call-list-empty");
+  let data;
+  try {
+    data = await api.get("/api/v1/admin/outreach/call-queue");
+  } catch (err) {
+    body.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(err.message || "Could not load the call queue.")}</div>`;
+    return;
+  }
+  document.getElementById("call-list-today").textContent = data.calls_today;
+  const rows = data.queue || [];
+  empty.classList.toggle("d-none", rows.length > 0);
+
+  body.innerHTML = rows.map(row => `
+    <div class="p-3 rounded" style="background: var(--bg-soft);" data-lead-id="${row.id}">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <div>
+          <div class="fw-semibold">${escapeHtml(row.business_name)}</div>
+          <div class="small text-muted-custom">${callAttemptLabel(row)}</div>
+        </div>
+        <a class="btn btn-sm btn-brand ms-auto" href="tel:${encodeURIComponent(row.contact_phone)}"><i class="bi bi-telephone"></i> ${escapeHtml(row.contact_phone)}</a>
+      </div>
+      <details class="mb-2">
+        <summary class="small" style="cursor:pointer;">Talking points</summary>
+        <div class="small mt-1" style="white-space: pre-wrap;">${escapeHtml(row.pitch_body || "")}</div>
+      </details>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <select class="form-select form-select-sm call-outcome" style="width:auto;">
+          <option value="">Log outcome…</option>
+          ${CALL_OUTCOMES.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}
+        </select>
+        <input type="text" class="form-control form-control-sm call-notes" maxlength="2000" placeholder="Notes (optional)" style="max-width:18rem;">
+        <button type="button" class="btn btn-sm btn-outline-secondary call-save-btn">Save</button>
+      </div>
+    </div>`).join("");
+
+  body.querySelectorAll(".call-save-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const card = btn.closest("[data-lead-id]");
+      const outcome = card.querySelector(".call-outcome").value;
+      if (!outcome) { alert("Pick an outcome first."); return; }
+      btn.disabled = true;
+      try {
+        await api.post(`/api/v1/admin/outreach/call-log/${card.dataset.leadId}`, {
+          outcome,
+          notes: card.querySelector(".call-notes").value.trim(),
+        });
+        await loadCallList();
+        await loadLeads();
+      } catch (err) {
+        alert(err.message || "Could not log the call.");
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+function wireOutreachPanel() {
+  document.getElementById("call-list-modal").addEventListener("show.bs.modal", loadCallList);
+
+  document.getElementById("oe-enabled").addEventListener("change", async (e) => {
+    const on = e.target.checked;
+    if (await saveOutreachSettings({ enabled: on })) {
+      outreachMsg(on ? "Cold outreach is on — reviewed pitches will send on the daily cap." : "Cold outreach paused.", true);
+    }
+  });
+
+  document.getElementById("oe-autodraft").addEventListener("change", async (e) => {
+    const on = e.target.checked;
+    if (await saveOutreachSettings({ autodraft: on })) {
+      outreachMsg(on
+        ? "Auto-draft on — the engine will audit & pitch raw leads to keep the queue full (up to the daily cap)."
+        : "Auto-draft off — only pitches you've reviewed will send.", true);
+    }
+  });
+
+  document.getElementById("oe-cap").addEventListener("change", async (e) => {
+    const cap = parseInt(e.target.value, 10);
+    if (!Number.isInteger(cap) || cap < 1 || cap > 500) {
+      outreachMsg("Daily cap must be between 1 and 500.", false);
+      await loadOutreachStats();
+      return;
+    }
+    if (await saveOutreachSettings({ daily_cap: cap })) outreachMsg("Daily cap updated to " + cap + ".", true);
+  });
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -571,5 +731,6 @@ document.getElementById("pitch-body").addEventListener("input", renderPitchPrevi
   pitchModal = new bootstrap.Modal(document.getElementById("pitch-modal"));
   discoverModal = new bootstrap.Modal(document.getElementById("discover-modal"));
   dossierModal = new bootstrap.Modal(document.getElementById("dossier-modal"));
+  wireOutreachPanel();
   await loadLeads();
 })();
