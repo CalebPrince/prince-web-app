@@ -318,11 +318,8 @@ function renderArchActivity(items) {
   const user = await requireAdminAuth();
   if (!user) return;
   wireLogout();
-  initChiefDashboard();
-
   try {
     const data = await api.get('/api/v1/admin/team');
-    renderDailyBrief(data.daily_brief || null);
     renderCapacitySummary(data.capacity_summary || {});
     renderOwner(data.owner);
     renderAgents(data.agents);

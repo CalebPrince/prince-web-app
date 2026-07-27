@@ -1270,8 +1270,10 @@ storage/
     day of scanning a thousand results for nothing cannot report as a
     productive one.
 
-    The Team page now includes Chief's customizable command readout beneath
-    the written daily brief. It can recalculate the same verified snapshot for
+    Chief's daily brief and customizable command readout now live on the
+    dedicated `/admin/chief.html` page, linked as **Chief Reports** in the
+    Overview menu; the Team page is reserved for roster and delivery capacity.
+    Chief Reports can recalculate the same verified snapshot for
     the last 24 hours, 7 days, 30 days, or 90 days and focus the view on the
     whole studio, agents that produced output, always-on agents, or on-demand
     agents. The chosen view is stored only in that browser. It separates agent

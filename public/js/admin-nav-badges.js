@@ -70,6 +70,18 @@
     anchor.insertAdjacentElement('afterend', link);
   }
   injectTasksNav();
+  function injectChiefNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/chief.html"]')) return;
+    const team = nav.querySelector('a[href="/admin/team.html"]');
+    if (!team) return;
+    const link = document.createElement('a');
+    link.href = '/admin/chief.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/chief.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-clipboard-data nav-icon" style="color: var(--section-system)"></i><span class="nav-label">Chief Reports</span>';
+    team.insertAdjacentElement('beforebegin', link);
+  }
+  injectChiefNav();
 
   // Collapses search/notifications/theme into the same "small tab, click to
   // drop down a tray" pattern the frontend's header already uses
