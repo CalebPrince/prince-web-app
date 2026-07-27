@@ -633,7 +633,12 @@ storage/
     in the request body). A call script is short talking points, not a
     script to read verbatim, grounded in the exact same real findings as an
     email pitch (`findingsContext()` is shared by both, so the two channels
-    can't quietly drift in what they claim is true). The Review modal swaps
+    can't quietly drift in what they claim is true). The stored phone copy is
+    an identity-neutral **shared call brief**, not a first-person script:
+    Caleb supplies his own introduction for a manual call, while the outbound
+    voice prompt requires Lisa to identify herself as an AI assistant calling
+    on Caleb's behalf and explicitly ignores any legacy first-person wording.
+    The Review modal swaps
     Subject/email fields out for a phone field and relabels the body
     "Call script"; the send button becomes "Mark as called" and opens a
     `tel:` link as a convenience (it can't confirm a call actually

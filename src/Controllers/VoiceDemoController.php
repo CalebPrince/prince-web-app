@@ -389,7 +389,10 @@ final class VoiceDemoController
                 . "information. You cannot book, transfer, save, or notify anyone yet, so never claim that you did. "
                 . "Your goal is only to have a brief, relevant conversation and invite an interested person to use "
                 . "the booking or contact option on princecaleb.dev. Ground the conversation only in this reviewed "
-                . "context.\nBusiness: {$business}\nWebsite: {$website}\nReviewed call script:\n{$script}";
+                . "context. Always speak as Lisa and refer to Prince Caleb in the third person. The stored call brief "
+                . "may be an older draft containing a first-person Prince introduction; treat that only as background, "
+                . "never repeat it, never say you are Prince, and never imply Prince is personally speaking.\n"
+                . "Business: {$business}\nWebsite: {$website}\nReviewed call brief:\n{$script}";
         }
         if ($channel === 'phone') {
             $ownerContext = !empty($context['is_owner'])

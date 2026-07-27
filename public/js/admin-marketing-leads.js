@@ -686,7 +686,8 @@ async function loadCallList() {
         <a class="btn btn-sm btn-outline-secondary ms-auto" href="tel:${encodeURIComponent(row.contact_phone)}"><i class="bi bi-telephone"></i> Call myself</a>
       </div>
       <details class="mb-2">
-        <summary class="small" style="cursor:pointer;">Talking points</summary>
+        <summary class="small" style="cursor:pointer;">Shared call brief</summary>
+        <div class="small text-muted-custom mt-1">Lisa introduces herself as an AI assistant. If you call manually, introduce yourself before using these points.</div>
         <div class="small mt-1" style="white-space: pre-wrap;">${escapeHtml(row.pitch_body || "")}</div>
       </details>
       <div class="d-flex flex-wrap gap-2 align-items-center">

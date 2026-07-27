@@ -900,18 +900,21 @@ class MarketingLeadController
     {
         $context = self::findingsContext($findings);
 
-        $prompt = "You are writing short talking points — not a script to read verbatim — for Prince Caleb, a solo "
-            . "developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile "
-            . "engineering, to use on a cold call to a business called \"{$businessName}\".\n\n{$context}\n\n"
-            . "Structure: a natural one-sentence opening introducing himself and why he's calling (tied to "
-            . "what's actually true above), 2-3 short bullet points to guide the conversation (services offered, "
+        $prompt = "You are writing an identity-neutral call brief for a human-approved call to a business called "
+            . "\"{$businessName}\". The call may be handled by Prince Caleb himself or by Lisa, his disclosed AI "
+            . "assistant, so these must be shared talking points rather than words to read verbatim. Prince builds "
+            . "AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering.\n\n{$context}\n\n"
+            . "Structure: one short reason for the call tied to what's actually true above, 2-3 short talking "
+            . "points to guide the conversation (services offered, "
             . "in general terms — AI voice agents that answer business calls, WhatsApp/chat assistants, workflow "
             . "automation, and connected booking or follow-up systems; mention custom software only when relevant), and one "
             . "likely objection with a brief, honest way to respond to it. Never salesy or pushy, no invented "
             . "statistics, no false urgency, no claims of financial harm or lost business that can't be "
-            . "verified.\n\n"
+            . "verified. Do not write a first-person introduction, do not say \"I'm Prince Caleb\", and do not imply "
+            . "who is placing the call. The caller supplies the introduction: Prince introduces himself on a manual "
+            . "call; Lisa identifies herself as an AI assistant calling on Prince's behalf.\n\n"
             . SharedAgentTools::publicContactContext() . "\n\n"
-            . "Output plain text only — no markdown, no JSON, just the talking points with line breaks between "
+            . "Output plain text only — no markdown, no JSON, no scripted greeting, just the shared call brief with line breaks between "
             . "sections.";
 
         $text = AiText::generate($prompt, null, 20);
