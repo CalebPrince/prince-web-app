@@ -12,6 +12,7 @@ use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Settings;
+use App\Support\WhatsAppNotifier;
 
 require_once dirname(__DIR__) . '/config/config.php';
 $config = appConfig();
@@ -20,7 +21,7 @@ $slackUrl = Settings::get('slack_webhook_url');
 $notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');
 
 $pending = $pdo->query(
-    "SELECT wq.id AS queue_id, wq.slack_sent, wq.email_sent, wq.attempts, i.* FROM webhook_queue wq
+    "SELECT wq.id AS queue_id, wq.slack_sent, wq.email_sent, wq.whatsapp_sent, wq.attempts, i.* FROM webhook_queue wq
      JOIN inquiries i ON i.id = wq.inquiry_id
      WHERE wq.status = 'pending' AND wq.attempts < 5"
 )->fetchAll();
@@ -31,6 +32,8 @@ foreach ($pending as $row) {
     // (e.g. a bad Slack webhook URL) keeps failing on the same row.
     $slackDone = !empty($row['slack_sent']) || empty($slackUrl);
     $emailDone = !empty($row['email_sent']) || empty($notifyEmail);
+    $isHandoff = str_starts_with((string) $row['message'], '[LIVE HANDOFF REQUESTED]');
+    $whatsappDone = !$isHandoff || !empty($row['whatsapp_sent']);
 
     $isProjectRequest = ($row['type'] ?? 'contact') === 'project_request';
     $attachments = $isProjectRequest && $row['attachments'] ? (json_decode($row['attachments'], true) ?: []) : [];
@@ -47,13 +50,13 @@ foreach ($pending as $row) {
     ) : '';
 
     $notification = EmailTemplate::render('inquiry_internal_notification', [
-        'notification_type' => $isProjectRequest ? 'New project request' : 'New inquiry',
+        'notification_type' => $isHandoff ? 'Urgent Lisa handoff' : ($isProjectRequest ? 'New project request' : 'New inquiry'),
         'client_name' => $row['name'],
         'client_email' => $row['email'],
         'message_body' => $row['message'],
         'details_text' => $detailLines,
         'details_html' => $detailLines,
-        'source_label' => $isProjectRequest ? 'project request form' : 'contact form',
+        'source_label' => $isHandoff ? 'Lisa live chat or WhatsApp' : ($isProjectRequest ? 'project request form' : 'contact form'),
     ], EmailTemplate::defaults()['inquiry_internal_notification']);
 
     if (!$slackDone) {
@@ -82,7 +85,7 @@ foreach ($pending as $row) {
     }
 
     if (!$emailDone) {
-        $subject = ($isProjectRequest ? 'New project request from ' : 'New inquiry from ') . $row['name'];
+        $subject = ($isHandoff ? 'Urgent: Lisa handoff from ' : ($isProjectRequest ? 'New project request from ' : 'New inquiry from ')) . $row['name'];
         $body = "Name: {$row['name']}\nEmail: {$row['email']}\n\n{$detailLines}{$row['message']}\n\n"
             . "— sent automatically from the princecaleb.dev "
             . ($isProjectRequest ? 'project request form.' : 'contact form.');
@@ -95,15 +98,25 @@ foreach ($pending as $row) {
         );
     }
 
-    if ($slackDone && $emailDone) {
-        $pdo->prepare("UPDATE webhook_queue SET status = 'sent', slack_sent = 1, email_sent = 1 WHERE id = ?")
+    if (!$whatsappDone) {
+        $whatsappDone = WhatsAppNotifier::sendOwnerAlert(
+            "🔴 *Lisa handoff — someone wants to speak with you*\n\n"
+            . "Name: {$row['name']}\n"
+            . "Email: {$row['email']}\n\n"
+            . trim((string) $row['message']) . "\n\n"
+            . "Open Admin Inbox: https://princecaleb.dev/admin/inbox.html"
+        );
+    }
+
+    if ($slackDone && $emailDone && $whatsappDone) {
+        $pdo->prepare("UPDATE webhook_queue SET status = 'sent', slack_sent = 1, email_sent = 1, whatsapp_sent = 1 WHERE id = ?")
             ->execute([$row['queue_id']]);
     } else {
         $newAttempts = $row['attempts'] + 1;
         $newStatus = $newAttempts >= 5 ? 'failed' : 'pending';
         $pdo->prepare(
-            'UPDATE webhook_queue SET status = ?, attempts = ?, slack_sent = ?, email_sent = ? WHERE id = ?'
-        )->execute([$newStatus, $newAttempts, (int) $slackDone, (int) $emailDone, $row['queue_id']]);
+            'UPDATE webhook_queue SET status = ?, attempts = ?, slack_sent = ?, email_sent = ?, whatsapp_sent = ? WHERE id = ?'
+        )->execute([$newStatus, $newAttempts, (int) $slackDone, (int) $emailDone, (int) $whatsappDone, $row['queue_id']]);
     }
 }
 

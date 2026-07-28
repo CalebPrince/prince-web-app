@@ -218,6 +218,9 @@ if (!in_array('slack_sent', $webhookColumns, true)) {
 if (!in_array('email_sent', $webhookColumns, true)) {
     $pdo->exec('ALTER TABLE webhook_queue ADD COLUMN email_sent INTEGER NOT NULL DEFAULT 0');
 }
+if (!in_array('whatsapp_sent', $webhookColumns, true)) {
+    $pdo->exec('ALTER TABLE webhook_queue ADD COLUMN whatsapp_sent INTEGER NOT NULL DEFAULT 0');
+}
 
 $inquiryColumns = array_column($pdo->query('PRAGMA table_info(inquiries)')->fetchAll(), 'name');
 if (!in_array('type', $inquiryColumns, true)) {
@@ -1199,6 +1202,30 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_outreach_sends_sent_at ON outreach_sends (sent_at)');
 
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS nurturer_replies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        enrollment_id INTEGER NOT NULL REFERENCES drip_enrollments(id) ON DELETE CASCADE,
+        message_id TEXT NOT NULL UNIQUE,
+        in_reply_to TEXT,
+        from_email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        body TEXT NOT NULL,
+        classification TEXT NOT NULL DEFAULT 'pending' CHECK (classification IN (
+            'pending', 'interested', 'question', 'neutral', 'not_now',
+            'not_interested', 'unsubscribe', 'out_of_office', 'needs_review'
+        )),
+        confidence REAL,
+        reply_subject TEXT,
+        reply_body TEXT,
+        status TEXT NOT NULL DEFAULT 'received' CHECK (status IN ('received', 'replied', 'review')),
+        received_at TEXT NOT NULL DEFAULT (datetime('now')),
+        replied_at TEXT
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_nurturer_replies_enrollment ON nurturer_replies (enrollment_id, received_at)');
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_nurturer_replies_status ON nurturer_replies (status, received_at)');
+
 // Global do-not-email list — an unsubscribe from any cold pitch lands here
 // and the sender skips every matching lead thereafter.
 $pdo->exec(
@@ -1291,5 +1318,15 @@ $leadDiscoverySetting = $pdo->prepare('INSERT OR IGNORE INTO settings (name, val
 foreach ($leadDiscoveryDefaults as $name => $value) {
     $leadDiscoverySetting->execute([$name, $value]);
 }
+
+foreach (['nurturer_reply_sync_enabled' => '1', 'nurturer_reply_auto_send' => '1'] as $name => $value) {
+    $leadDiscoverySetting->execute([$name, $value]);
+}
+$pdo->exec("UPDATE automations SET nurturer_enabled = 1, updated_at = datetime('now') WHERE trigger_event = 'marketing_pitch_sent'");
+$pdo->exec(
+    "UPDATE drip_enrollments SET nurturer_enabled = 1
+     WHERE status = 'active' AND lead_id IS NOT NULL
+       AND automation_id IN (SELECT id FROM automations WHERE trigger_event = 'marketing_pitch_sent')"
+);
 
 echo "Schema applied.\n";

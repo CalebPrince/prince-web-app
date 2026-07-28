@@ -58,7 +58,7 @@ foreach ([2 => $sequence2Offset, 3 => $sequence3Offset] as $sequenceNumber => $d
         $text = $result['email_body'] . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n" . $unsubscribeUrl;
         $html = EmailTemplate::wrapMarketing($result['email_body'], 'Following up', $unsubscribeUrl);
 
-        if (Mailer::sendHtml($row['email'], $result['subject_line'], $html, $text)) {
+        if (Mailer::sendHtml($row['email'], $result['subject_line'], $html, $text, Mailer::replyInbox())) {
             $pdo->prepare(
                 'INSERT OR IGNORE INTO nurturer_sends (enrollment_id, sequence_number, subject_line, email_body) VALUES (?, ?, ?, ?)'
             )->execute([$row['enrollment_id'], $sequenceNumber, $result['subject_line'], $result['email_body']]);

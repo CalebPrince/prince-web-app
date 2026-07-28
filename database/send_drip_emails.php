@@ -44,7 +44,7 @@ foreach ($due as $row) {
     $text = $message . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n" . $unsubscribeUrl;
     $html = EmailTemplate::wrapMarketing($message, 'Update', $unsubscribeUrl);
 
-    if (Mailer::sendHtml($row['email'], $subject, $html, $text)) {
+    if (Mailer::sendHtml($row['email'], $subject, $html, $text, Mailer::replyInbox())) {
         $pdo->prepare('INSERT OR IGNORE INTO drip_sends (enrollment_id, step_id) VALUES (?, ?)')
             ->execute([$row['enrollment_id'], $row['step_id']]);
         $sent++;

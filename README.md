@@ -318,6 +318,7 @@ database/
   check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
+  sync_nurturer_replies.php       # Jason: imports replies, pauses drip, safely continues threads (cron, hourly)
   send_cold_outreach.php          # Cold Outreach Engine: sends reviewed marketing-lead pitches, capped/day (cron, hourly)
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
@@ -613,6 +614,17 @@ storage/
     still pitch, and the on/off + auto-draft + cap dials; when the queue is dry
     the fix is to add more raw leads (Find leads by niche) and/or turn on
     auto-draft — not to raise the cap.
+
+    **Jason owns the complete email cold-lead thread.** A successful
+    `marketing_pitch_sent` enrollment enables his AI follow-ups automatically.
+    `database/sync_nurturer_replies.php` polls the Gmail inbox configured under
+    Email delivery with the same Gmail app password, matches replies to known
+    marketing-lead enrollments, and pauses every scheduled follow-up before it
+    classifies anything. Clear interested, question, neutral, and not-now
+    replies can continue in the same thread. Rejections, unsubscribes, and
+    out-of-office messages stop. Low-confidence or sensitive replies appear
+    under Talk to Agents -> Jason for review and manual send. PHP's IMAP
+    extension must be enabled on the server.
 
     "Find leads by niche" (`MarketingLeadController::discover()`) searches
     for real candidate businesses (e.g. "plumbers in Accra") via Serper's
@@ -1393,6 +1405,10 @@ One-time setup on a new host:
     follow-ups (no-op until a lead is enrolled with "AI-personalize via
     Nurturer" ticked in `/admin/drip.html`):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_nurturer_emails.php > /dev/null`
+4h-b. Add another hourly cron for Jason's reply-aware mailbox sync. Enable
+    PHP's `imap` extension in cPanel first; it reuses the Gmail address and app
+    password saved under Settings -> Email delivery:
+    `/usr/local/bin/php /home/<cpanel-user>/database/sync_nurturer_replies.php > /dev/null`
 4i. Add a ninth cron job (hourly) for Beacon's social lead discovery (no-op
     until enabled, with keywords, under Admin -> Talk to Agents -> Beacon).
     Hourly is deliberate even for a daily/weekly cadence: the script checks
@@ -1515,6 +1531,15 @@ Every new inbound web-chat or WhatsApp message reopens its conversation as
 unread and clears any earlier bell dismissal for that thread. Lisa treats the
 Site Content WhatsApp link as the only authoritative public WhatsApp contact
 and never derives one from the owner-recognition or general contact number.
+
+When Lisa triggers a human handoff, the request is saved as an urgent Admin
+Inbox inquiry and the existing `database/process_webhooks.php` worker sends a
+detailed alert to the configured notification email and owner WhatsApp number.
+The alert includes any available visitor name, email, phone, request summary,
+handoff reason, and a direct Inbox link. Slack, email, and WhatsApp delivery
+states are tracked separately, so retries do not resend channels that already
+succeeded. Outside WhatsApp's customer-service window, Meta may require an
+approved utility template for the proactive owner alert.
 
 The public AI customer-service line is editable under Admin → Site Content.
 The landing page, clinic voice-agent page, and Contact page expose direct

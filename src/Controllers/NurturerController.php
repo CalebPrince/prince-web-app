@@ -7,6 +7,8 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
+use App\Support\EmailTemplate;
+use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -97,6 +99,62 @@ class NurturerController
         ];
     }
 
+    /**
+     * Classify an actual inbound email and draft the next message in that
+     * thread. Scheduled drip has already been paused before this runs.
+     *
+     * @return array{classification:string,confidence:float,needs_review:bool,subject_line:string,email_body:string}|null
+     */
+    public static function generateReplyContinuation(
+        string $leadName,
+        string $leadIndustry,
+        string $originalPitch,
+        string $inboundSubject,
+        string $inboundBody
+    ): ?array {
+        $system = "You are Jason, Prince Caleb's email follow-up agent. You own cold-email conversations after "
+            . "the first outreach message. Read the prospect's real reply and decide what should happen next.\n\n"
+            . "Safety rules:\n"
+            . "- unsubscribe or explicit removal requests: classification unsubscribe, no reply body.\n"
+            . "- clear rejection: classification not_interested, no sales reply.\n"
+            . "- not now or later: classification not_now, acknowledge briefly without pressure.\n"
+            . "- automatic/out-of-office response: classification out_of_office, no reply.\n"
+            . "- pricing negotiations, legal/privacy complaints, angry messages, attachments, ambiguous identity, "
+            . "or anything requiring a promise from Caleb: classification needs_review.\n"
+            . "- otherwise use interested, question, or neutral and draft a concise, natural reply grounded only "
+            . "in the thread. Never invent availability, pricing, case studies, results, or technical findings.\n"
+            . "- The email is sent as Prince Caleb. Sign it Prince Caleb, not Jason.\n\n"
+            . "Return JSON only with classification, confidence from 0 to 1, needs_review boolean, subject_line, "
+            . "and email_body. Use an empty email_body when no reply should be sent.";
+        $prompt = "Lead: " . ($leadName ?: 'Unknown contact') . "\n"
+            . "Industry: " . ($leadIndustry ?: 'Unknown') . "\n\n"
+            . "Original outreach:\n" . mb_substr($originalPitch, 0, 5000) . "\n\n"
+            . "Inbound subject: " . mb_substr($inboundSubject, 0, 300) . "\n"
+            . "Inbound reply:\n" . mb_substr($inboundBody, 0, 6000);
+        $result = AiAgentEngine::run(
+            $system,
+            [],
+            fn(string $name, array $args) => ['error' => 'No tools are available for automatic replies.'],
+            [['role' => 'user', 'text' => $prompt]]
+        );
+        if ($result['reply'] === null) return null;
+        $stripped = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['reply']));
+        $parsed = json_decode($stripped, true);
+        $allowed = ['interested', 'question', 'neutral', 'not_now', 'not_interested', 'unsubscribe', 'out_of_office', 'needs_review'];
+        $classification = strtolower(trim((string) ($parsed['classification'] ?? '')));
+        if (!is_array($parsed) || !in_array($classification, $allowed, true)) {
+            error_log('Nurturer reply continuation: invalid model response: ' . substr($stripped, 0, 800));
+            return null;
+        }
+        return [
+            'classification' => $classification,
+            'confidence' => max(0, min(1, (float) ($parsed['confidence'] ?? 0))),
+            'needs_review' => !empty($parsed['needs_review']) || $classification === 'needs_review',
+            'subject_line' => SharedAgentTools::stripMarkdown((string) ($parsed['subject_line'] ?? '')),
+            'email_body' => SharedAgentTools::stripMarkdown((string) ($parsed['email_body'] ?? '')),
+        ];
+    }
+
     /** Draft the newsletter announcement Danielle queues when a blog goes live. */
     public static function generateNewsletterUpdate(string $title, string $excerpt, string $url): ?array
     {
@@ -170,6 +228,44 @@ class NurturerController
         Response::json(self::toolListNewLeads(Database::get()));
     }
 
+    /** POST /api/v1/admin/nurturer-replies/{id}/send */
+    public static function adminSendReply(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $subject = trim((string) ($data['subject'] ?? ''));
+        $body = trim((string) ($data['body'] ?? ''));
+        if ($id < 1 || $subject === '' || $body === '' || mb_strlen($body) > 12000) {
+            Response::error('A subject and reply under 12,000 characters are required.', 422);
+        }
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT * FROM nurturer_replies WHERE id = ?');
+        $stmt->execute([$id]);
+        $reply = $stmt->fetch();
+        if (!$reply || $reply['status'] === 'replied') {
+            Response::error('That reply is unavailable or has already been sent.', 409);
+        }
+        $html = EmailTemplate::wrapMarketing($body, 'Reply from Prince Caleb');
+        $sent = Mailer::sendHtml(
+            $reply['from_email'],
+            $subject,
+            $html,
+            $body,
+            Mailer::replyInbox(),
+            [
+                'In-Reply-To' => $reply['message_id'],
+                'References' => trim(($reply['in_reply_to'] ?? '') . ' ' . $reply['message_id']),
+            ]
+        );
+        if (!$sent) Response::error('The reply could not be sent. Check email delivery settings.', 502);
+        $pdo->prepare(
+            "UPDATE nurturer_replies SET reply_subject=?, reply_body=?, status='replied',
+             replied_at=datetime('now') WHERE id=?"
+        )->execute([$subject, $body, $id]);
+        Response::json(['status' => 'sent']);
+    }
+
     private static function draftToolDeclarations(): array
     {
         return [
@@ -231,7 +327,7 @@ class NurturerController
         };
     }
 
-    /** @return array{recent_enrollments: array<int,array<string,mixed>>, awaiting_send: array<int,array<string,mixed>>} */
+    /** @return array{recent_enrollments: array<int,array<string,mixed>>, awaiting_send: array<int,array<string,mixed>>, recent_replies: array<int,array<string,mixed>>} */
     private static function toolListNewLeads(\PDO $pdo): array
     {
         $recentStmt = $pdo->query(
@@ -251,7 +347,16 @@ class NurturerController
         );
         $awaiting = $awaitingStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-        return ['recent_enrollments' => $recent, 'awaiting_send' => $awaiting];
+        $replies = $pdo->query(
+            "SELECT nr.id, nr.from_email AS email, nr.subject, nr.body, nr.classification,
+                    nr.confidence, nr.reply_subject, nr.reply_body, nr.status, nr.received_at,
+                    e.name, e.lead_industry
+             FROM nurturer_replies nr
+             JOIN drip_enrollments e ON e.id = nr.enrollment_id
+             ORDER BY nr.received_at DESC LIMIT 10"
+        )->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        return ['recent_enrollments' => $recent, 'awaiting_send' => $awaiting, 'recent_replies' => $replies];
     }
 
     /** @return array{enrollments: array<int,array<string,mixed>>, marketing_leads: array<int,array<string,mixed>>} */
@@ -355,9 +460,9 @@ class NurturerController
             . "Caleb has to describe to you: someone gets enrolled by hand on the Drip page, or — far more "
             . "often — the outbound pipeline auto-enrolls them the instant Caleb marks a marketing pitch as "
             . "sent, carrying over their industry and a real last_action built from the site audit. "
-            . "Auto-enrolled leads land with you turned off (nurturer_enabled = 0) until Caleb opts each one "
-            . "in on the Drip page — that's a deliberate per-lead decision, not a bug, but it also means new "
-            . "leads pile up invisibly if nobody checks. That's your job to check, not his to announce: call "
+            . "Email cold leads are assigned to you automatically. Scheduled follow-ups stay yours until a "
+            . "prospect replies; mailbox sync then pauses the sequence before you classify and continue the "
+            . "real thread. That's your job to check, not Caleb's to announce: call "
             . "list_new_leads at the start of a conversation, or any time he asks if there's anything new, "
             . "instead of waiting to be told a name.\n\n"
             . "Right now you're talking directly with Caleb himself — this is a live working conversation, "

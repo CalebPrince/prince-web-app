@@ -490,14 +490,15 @@
       nurturerLeadsList.innerHTML = "";
 
       const ready = data.awaiting_send || [];
+      const replies = data.recent_replies || [];
       const readyIds = new Set(ready.map((e) => e.id));
-      // Auto-enrolled but never opted into AI follow-up — the exact leads
-      // that used to pile up invisibly (nurturer_enabled defaults off).
+      // Legacy/manual enrollments can still have Jason disabled; new email
+      // cold leads are assigned to him automatically.
       const needsOptIn = (data.recent_enrollments || []).filter(
         (e) => !e.nurturer_enabled && !readyIds.has(e.id)
       );
 
-      nurturerLeadsEmpty.classList.toggle("d-none", ready.length + needsOptIn.length > 0);
+      nurturerLeadsEmpty.classList.toggle("d-none", ready.length + needsOptIn.length + replies.length > 0);
 
       const renderRow = (lead, badge, badgeClass) => {
         const card = document.createElement("div");
@@ -518,7 +519,41 @@
       };
 
       ready.forEach((lead) => renderRow(lead, "Ready for follow-up", "text-success"));
-      needsOptIn.forEach((lead) => renderRow(lead, "Needs opt-in on Drip", "text-warning"));
+      needsOptIn.forEach((lead) => renderRow(lead, "Jason disabled", "text-warning"));
+      replies.forEach((reply) => {
+        const card = document.createElement("div");
+        card.className = "border rounded p-3";
+        const held = reply.status === "review";
+        const body = String(reply.body || "");
+        const snippet = body.slice(0, 180);
+        card.innerHTML =
+          '<div class="d-flex justify-content-between small text-muted-custom mb-1">'
+          + '<span>' + escapeHtml(reply.name || reply.email) + " · " + escapeHtml(reply.subject) + "</span>"
+          + '<span class="' + (held ? "text-warning" : "text-success") + '">'
+          + (held ? "Reply needs review" : reply.status === "replied" ? "Jason replied" : "Sequence stopped")
+          + "</span></div>"
+          + '<div class="small mb-1">' + escapeHtml(snippet) + (body.length > 180 ? "…" : "") + "</div>"
+          + '<div class="small text-muted-custom">' + escapeHtml(String(reply.classification || "pending").replaceAll("_", " "))
+          + " · " + new Date(reply.received_at + "Z").toLocaleString() + "</div>"
+          + (held ? '<button type="button" class="btn btn-sm btn-outline-primary mt-2 review-reply-btn">Review &amp; send</button>' : "");
+        if (held) {
+          card.querySelector(".review-reply-btn").addEventListener("click", async event => {
+            const subject = prompt("Reply subject", reply.reply_subject || (/^re:/i.test(reply.subject) ? reply.subject : "Re: " + reply.subject));
+            if (subject === null) return;
+            const replyBody = prompt("Review Jason's reply before sending", reply.reply_body || "");
+            if (replyBody === null || !replyBody.trim()) return;
+            event.currentTarget.disabled = true;
+            try {
+              await api.post("/api/v1/admin/nurturer-replies/" + reply.id + "/send", { subject: subject.trim(), body: replyBody.trim() });
+              await loadNurturerNewLeads();
+            } catch (error) {
+              alert(error.message);
+              event.currentTarget.disabled = false;
+            }
+          });
+        }
+        nurturerLeadsList.prepend(card);
+      });
     } catch (_) {
       // Quiet failure — this panel is a convenience, not the primary flow.
     }

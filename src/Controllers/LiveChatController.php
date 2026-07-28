@@ -33,6 +33,7 @@ use App\Support\SharedAgentTools;
 class LiveChatController
 {
     private const MAX_TRANSCRIPT_MESSAGES = 40;
+    private const ROLLING_TRANSCRIPT_MESSAGES = 30;
 
     /** GET /api/v1/chat/status — availability plus the editable widget copy */
     public static function status(): void
@@ -90,14 +91,16 @@ class LiveChatController
         $session = self::findOrCreateSession($pdo, $data['token'] ?? null);
         $transcript = json_decode($session['transcript_json'], true) ?: [];
 
-        if (count($transcript) >= self::MAX_TRANSCRIPT_MESSAGES) {
-            Response::error('This conversation is quite long — please use the contact form to continue.', 422);
-        }
+        $transcript = self::rollingTranscript($transcript);
 
         $transcript[] = ['role' => 'user', 'text' => $message];
 
         $projects = self::projectCatalog($pdo);
-        $result = self::generateReply($message, $transcript, $projects, $pdo, self::isOwnerSession());
+        $result = self::generateReply($message, $transcript, $projects, $pdo, self::isOwnerSession(), [
+            'name' => $session['client_name'] ?? '',
+            'email' => $session['client_email'] ?? '',
+            'phone' => $session['client_phone'] ?? '',
+        ]);
 
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
@@ -170,7 +173,14 @@ class LiveChatController
      *
      * @return array{reply: string, mode: string, provider: ?string, ready: bool}
      */
-    private static function generateReply(string $message, array $transcript, array $projects, \PDO $pdo, bool $isOwner = false): array
+    private static function generateReply(
+        string $message,
+        array $transcript,
+        array $projects,
+        \PDO $pdo,
+        bool $isOwner = false,
+        array $handoffContext = []
+    ): array
     {
         // book_appointment's success is tracked here (rather than inside the
         // engine, which knows nothing about Lisa's tools) so that if a
@@ -184,11 +194,18 @@ class LiveChatController
         // provider. Reuse the first result so that retry cannot insert the
         // same inquiry once per configured AI provider.
         $sideEffectResults = [];
-        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$sideEffectResults, $transcript, $isOwner) {
+        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$sideEffectResults, $transcript, $isOwner, $handoffContext) {
             if (isset($sideEffectResults[$name])) {
                 return $sideEffectResults[$name];
             }
 
+            if ($name === 'signal_handoff') {
+                foreach (['name', 'email', 'phone'] as $field) {
+                    if (trim((string) ($args[$field] ?? '')) === '' && trim((string) ($handoffContext[$field] ?? '')) !== '') {
+                        $args[$field] = $handoffContext[$field];
+                    }
+                }
+            }
             $result = self::runTool($name, $args, $pdo, $isOwner);
             if (in_array($name, ['log_inquiry', 'signal_handoff'], true)) {
                 $sideEffectResults[$name] = $result;
@@ -289,10 +306,7 @@ class LiveChatController
                 ->execute([$displayPhone, $profileName !== '' ? $profileName : null, $session['id']]);
         }
 
-        if (count($transcript) >= self::MAX_TRANSCRIPT_MESSAGES) {
-            self::respondTwiml("This conversation's gotten quite long — I've flagged it for Caleb to pick up directly from here.");
-            return;
-        }
+        $transcript = self::rollingTranscript($transcript);
 
         // Verified by matching Twilio's real, unspoofable From number against
         // the admin-configured owner number — never inferred from message
@@ -301,7 +315,10 @@ class LiveChatController
 
         $transcript[] = ['role' => 'user', 'text' => $body];
         $projects = self::projectCatalog($pdo);
-        $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner);
+        $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
+            'name' => $profileName,
+            'phone' => preg_replace('/^whatsapp:/', '', $from),
+        ]);
 
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
@@ -823,6 +840,18 @@ class LiveChatController
     }
 
     /**
+     * Browser and WhatsApp identities resume the same session indefinitely.
+     * Preserve recent context without turning the transcript safety limit into
+     * a permanent handoff response on every future message.
+     */
+    private static function rollingTranscript(array $transcript): array
+    {
+        return count($transcript) >= self::MAX_TRANSCRIPT_MESSAGES
+            ? array_slice($transcript, -self::ROLLING_TRANSCRIPT_MESSAGES)
+            : $transcript;
+    }
+
+    /**
      * A conversation can receive many new messages after an admin has opened
      * it. Re-open that thread as unread and remove its prior bell dismissal so
      * every new inbound turn creates a fresh admin notification.
@@ -1192,6 +1221,7 @@ class LiveChatController
                     'type' => 'OBJECT',
                     'properties' => [
                         'reason' => ['type' => 'STRING', 'description' => 'One line on why the handoff triggered, e.g. "enterprise logistics platform, budget $40k+".'],
+                        'request_summary' => ['type' => 'STRING', 'description' => 'A concise summary of what the visitor wants, including useful project, budget, timing, or callback details already stated.'],
                         'name' => ['type' => 'STRING', 'description' => 'Visitor name if they stated one.'],
                         'email' => ['type' => 'STRING', 'description' => 'Visitor email if they stated one.'],
                         'phone' => ['type' => 'STRING', 'description' => 'Visitor phone if they stated one.'],
@@ -1339,6 +1369,7 @@ class LiveChatController
         $name = trim((string) ($args['name'] ?? ''));
         $email = trim((string) ($args['email'] ?? ''));
         $phone = trim((string) ($args['phone'] ?? ''));
+        $summary = trim((string) ($args['request_summary'] ?? ''));
         $summary = trim((string) ($args['summary'] ?? ''));
 
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $summary === '') {
@@ -1492,7 +1523,9 @@ class LiveChatController
             $email,
             "[LIVE HANDOFF REQUESTED] 🔴 A visitor in live chat needs you now.\n\n"
                 . "Reason: {$reason}"
+                . ($summary !== '' ? "\nRequest: {$summary}" : '')
                 . ($phone !== '' ? "\nPhone: {$phone}" : '')
+                . "\n\nOpen Admin Inbox: https://princecaleb.dev/admin/inbox.html"
         );
 
         $result = ['signaled' => true];

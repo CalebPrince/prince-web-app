@@ -75,7 +75,13 @@ class Automations
                 // A contact inherits the automation's Nurturer setting unless the
                 // caller overrides it — so turning Nurturer on for an automation
                 // opts in every contact its trigger later enrols, automatically.
-                $nurturerEnabled = $opts['nurturer_enabled'] ?? (bool) $automation['nurturer_enabled'];
+                // Jason owns the complete email cold-lead lifecycle. A sent
+                // marketing pitch therefore always enters his reply-aware
+                // follow-up queue; other automation types keep their explicit
+                // per-automation setting.
+                $nurturerEnabled = $event === 'marketing_pitch_sent'
+                    ? true
+                    : ($opts['nurturer_enabled'] ?? (bool) $automation['nurturer_enabled']);
                 $created = DripController::enrollEmail(
                     $pdo,
                     (int) $automation['id'],
@@ -91,7 +97,7 @@ class Automations
                     $enrolled++;
                 }
             } catch (\Throwable $e) {
-                error_log('Automations::fire enroll into #' . $automationId . ' failed: ' . $e->getMessage());
+                error_log('Automations::fire enroll into #' . ($automation['id'] ?? 'unknown') . ' failed: ' . $e->getMessage());
             }
         }
 

@@ -518,6 +518,9 @@ class DashboardController
         }
         foreach ($pdo->query("SELECT id,title,notes,priority,due_at FROM admin_tasks WHERE status='open' AND due_at IS NOT NULL AND datetime(due_at)<=datetime('now')") as $r)
             $add('task:'.$r['id'], 'Task', $r['title'], $r['notes'] ?: 'This task is due.', '/admin/tasks.html', $r['due_at'], $r['priority']==='urgent'?'danger':'warning');
+        $replyTable = $pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='nurturer_replies'")->fetchColumn();
+        if ($replyTable) foreach ($pdo->query("SELECT id,from_email,subject,classification,received_at FROM nurturer_replies WHERE status='review'") as $r)
+            $add('nurturer_reply:'.$r['id'], 'Follow-up', 'Jason needs reply approval', $r['from_email'].' · '.$r['subject'], '/admin/agent-chat.html', $r['received_at'], 'warning');
         usort($items, static fn($a,$b) => strcmp($b['date'], $a['date']));
         return array_slice($items, 0, 100);
     }

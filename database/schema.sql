@@ -210,6 +210,7 @@ CREATE TABLE IF NOT EXISTS webhook_queue (
   attempts INTEGER NOT NULL DEFAULT 0,
   slack_sent INTEGER NOT NULL DEFAULT 0,
   email_sent INTEGER NOT NULL DEFAULT 0,
+  whatsapp_sent INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -907,6 +908,31 @@ CREATE TABLE IF NOT EXISTS nurturer_sends (
   sent_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (enrollment_id, sequence_number)
 );
+
+-- Replies to cold-lead and Nurturer emails synchronized from the configured
+-- mailbox. message_id is the idempotency anchor for the polling cron. Every
+-- detected reply pauses the scheduled sequence before Jason classifies it.
+CREATE TABLE IF NOT EXISTS nurturer_replies (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  enrollment_id INTEGER NOT NULL REFERENCES drip_enrollments(id) ON DELETE CASCADE,
+  message_id TEXT NOT NULL UNIQUE,
+  in_reply_to TEXT,
+  from_email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  classification TEXT NOT NULL DEFAULT 'pending' CHECK (classification IN (
+    'pending', 'interested', 'question', 'neutral', 'not_now',
+    'not_interested', 'unsubscribe', 'out_of_office', 'needs_review'
+  )),
+  confidence REAL,
+  reply_subject TEXT,
+  reply_body TEXT,
+  status TEXT NOT NULL DEFAULT 'received' CHECK (status IN ('received', 'replied', 'review')),
+  received_at TEXT NOT NULL DEFAULT (datetime('now')),
+  replied_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_nurturer_replies_enrollment ON nurturer_replies (enrollment_id, received_at);
+CREATE INDEX IF NOT EXISTS idx_nurturer_replies_status ON nurturer_replies (status, received_at);
 
 -- First-touch context supplied by the visitor's browser. Kept separate from
 -- CRM records so the same shape can serve contact forms, bookings and chat.

@@ -11,6 +11,13 @@ class Mailer
     private const DEFAULT_SMTP_PORT = 465;
     private const SMTP_TIMEOUT = 15;
 
+    /** Mailbox the reply-sync cron reads; safe to expose only to server code. */
+    public static function replyInbox(): ?string
+    {
+        $email = trim((string) Settings::get('smtp_gmail_address'));
+        return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
+    }
+
     public static function send(string $to, string $subject, string $body, ?string $replyTo = null): bool
     {
         $identity = self::identity();
@@ -26,7 +33,14 @@ class Mailer
         return self::deliver($to, $subject, $body, $headers, $identity);
     }
 
-    public static function sendHtml(string $to, string $subject, string $html, string $text, ?string $replyTo = null): bool
+    public static function sendHtml(
+        string $to,
+        string $subject,
+        string $html,
+        string $text,
+        ?string $replyTo = null,
+        array $threadHeaders = []
+    ): bool
     {
         $identity = self::identity();
         $boundary = 'pc-mail-' . bin2hex(random_bytes(12));
@@ -37,6 +51,12 @@ class Mailer
         ];
         if ($replyTo && filter_var($replyTo, FILTER_VALIDATE_EMAIL)) {
             $headers[] = 'Reply-To: ' . $replyTo;
+        }
+        foreach (['In-Reply-To', 'References'] as $name) {
+            $value = trim((string) ($threadHeaders[$name] ?? ''));
+            if ($value !== '' && !preg_match('/[\r\n]/', $value)) {
+                $headers[] = $name . ': ' . $value;
+            }
         }
 
         $body = "--{$boundary}\r\n"

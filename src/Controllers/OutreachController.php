@@ -130,7 +130,7 @@ class OutreachController
             $preheader = 'A quick note about ' . ($lead['business_name'] ?: 'your website');
             $html = EmailTemplate::wrapMarketing($body, $preheader, $unsubscribeUrl);
 
-            if (!Mailer::sendHtml($email, $subject, $html, $text)) {
+            if (!Mailer::sendHtml($email, $subject, $html, $text, Mailer::replyInbox())) {
                 $failed++;
                 continue;
             }
