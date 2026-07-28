@@ -95,16 +95,6 @@
 .account-demo-step textarea{margin-top:.5rem;resize:vertical}
 
 /* Outreach performance analytics */
-.analytics-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem}
-.metric-card{padding:1rem 1.1rem;border:1px solid var(--line);border-radius:14px;background:var(--card-bg,#fff)}
-.metric-card h3{font:700 .66rem/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted,#667085);margin-bottom:.5rem}
-.metric-card .value{font:800 1.5rem/1.1 "Plus Jakarta Sans",sans-serif;color:var(--text,#172033)}
-.metric-card .trend{font-size:.72rem;color:var(--text-muted,#667085);margin-top:.35rem;font-weight:600}
-.metric-card .trend.positive{color:#0f9d58}
-.metric-card .trend.negative{color:#d64545}
-.analytics-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:1.25rem}
-.analytics-grid>div{min-width:0}
-@media(max-width:960px){.analytics-grid{grid-template-columns:1fr}}
 .chart-wrap{position:relative;height:220px}
 .chart-wrap.chart-wrap-sm{height:180px}
 .reply-card{border:1px solid var(--line);border-radius:14px;padding:1rem;background:var(--bg-soft)}
@@ -282,23 +272,89 @@
       </div>
     </div>
 
-    <div class="analytics-metrics mb-3" id="analytics-metrics">
-      <div class="metric-card"><h3>Emails sent</h3><div class="value" id="am-emails-total">0</div><div class="trend" id="am-emails-sub">0 today</div></div>
-      <div class="metric-card"><h3>Replies received</h3><div class="value" id="am-replies-total">0</div><div class="trend" id="am-replies-sub">0% reply rate</div></div>
-      <div class="metric-card"><h3>Interested / questions</h3><div class="value" id="am-replies-interested">0</div><div class="trend" id="am-replies-review">0 need review</div></div>
-      <div class="metric-card"><h3>Demo views</h3><div class="value" id="am-demo-views">0</div><div class="trend" id="am-demo-clicks">0 CTA clicks</div></div>
-      <div class="metric-card"><h3>Avg. intent score</h3><div class="value" id="am-demo-intent">0</div><div class="trend" id="am-demo-hot">0 hot leads (70+)</div></div>
-      <div class="metric-card"><h3>Calls logged</h3><div class="value" id="am-calls-total">0</div><div class="trend" id="am-calls-connected">0 connected</div></div>
+    <div class="row g-3 mb-1" id="analytics-metrics">
+      <div class="col-sm-6 col-xl-2">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-envelope-check"></i></div>
+          <div>
+            <div class="stat-label">Emails sent</div>
+            <div class="stat-value" id="am-emails-total">0</div>
+            <div class="stat-sub" id="am-emails-sub">0 today</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-reply-fill"></i></div>
+          <div>
+            <div class="stat-label">Replies received</div>
+            <div class="stat-value" id="am-replies-total">0</div>
+            <div class="stat-sub" id="am-replies-sub">0% reply rate</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-emoji-smile"></i></div>
+          <div>
+            <div class="stat-label">Interested / questions</div>
+            <div class="stat-value" id="am-replies-interested">0</div>
+            <div class="stat-sub" id="am-replies-review">0 need review</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-eye"></i></div>
+          <div>
+            <div class="stat-label">Demo views</div>
+            <div class="stat-value" id="am-demo-views">0</div>
+            <div class="stat-sub" id="am-demo-clicks">0 CTA clicks</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-graph-up-arrow"></i></div>
+          <div>
+            <div class="stat-label">Avg. intent score</div>
+            <div class="stat-value" id="am-demo-intent">0</div>
+            <div class="stat-sub" id="am-demo-hot">0 hot leads (70+)</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="admin-card stat-card p-3">
+          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-telephone"></i></div>
+          <div>
+            <div class="stat-label">Calls logged</div>
+            <div class="stat-value" id="am-calls-total">0</div>
+            <div class="stat-sub" id="am-calls-connected">0 connected</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="analytics-grid mb-3">
-      <div>
-        <div class="card">
-          <h2>Send &amp; reply activity <small class="text-muted-custom fw-normal" style="font-size:.68rem;">Last 30 days</small></h2>
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-lg-8">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Send &amp; reply activity <small class="text-muted-custom fw-normal" style="font-size:.7rem;">Last 30 days</small></h5>
           <div class="chart-wrap"><canvas id="send-trend-chart"></canvas></div>
         </div>
-        <div class="card">
-          <h2>Emails sent <small class="text-muted-custom fw-normal" style="font-size:.68rem;" id="sends-count-label"></small></h2>
+      </div>
+      <div class="col-lg-4">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Reply breakdown</h5>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="reply-breakdown-chart"></canvas></div>
+          <div id="reply-breakdown-empty" class="text-center text-muted-custom py-4 d-none">No replies yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1 mb-1">
+      <div class="col-lg-7">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Emails sent <small class="text-muted-custom fw-normal" style="font-size:.7rem;" id="sends-count-label"></small></h5>
           <div class="table-responsive">
             <table class="table table-sm mb-0 align-middle">
               <thead><tr><th>Business</th><th>Subject</th><th>Sent</th><th class="text-end">Replied</th></tr></thead>
@@ -307,22 +363,22 @@
           </div>
           <div id="sends-empty" class="text-center text-muted-custom py-4 d-none">No emails sent yet — approved pitches will appear here once sent.</div>
         </div>
-        <div class="card mb-0">
-          <h2>Replies received <small class="text-muted-custom fw-normal" style="font-size:.68rem;" id="replies-count-label"></small></h2>
-          <div id="replies-list" class="d-flex flex-column gap-3"></div>
-          <div id="replies-empty" class="text-center text-muted-custom py-4 d-none">No replies yet — they'll show up here as soon as a prospect writes back.</div>
-        </div>
       </div>
-      <div>
-        <div class="card">
-          <h2>Reply breakdown</h2>
-          <div class="chart-wrap chart-wrap-sm"><canvas id="reply-breakdown-chart"></canvas></div>
-          <div id="reply-breakdown-empty" class="text-center text-muted-custom py-4 d-none">No replies yet.</div>
-        </div>
-        <div class="card mb-0">
-          <h2>Top engaged demos</h2>
+      <div class="col-lg-5">
+        <div class="admin-card p-4 h-100">
+          <h5 class="mb-3">Top engaged demos</h5>
           <div id="top-demos-list"></div>
           <div id="top-demos-empty" class="text-center text-muted-custom py-4 d-none">No demo activity yet — publish a walkthrough and share the link to start tracking.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mt-1 mb-3">
+      <div class="col-12">
+        <div class="admin-card p-4">
+          <h5 class="mb-3">Replies received <small class="text-muted-custom fw-normal" style="font-size:.7rem;" id="replies-count-label"></small></h5>
+          <div id="replies-list" class="d-flex flex-column gap-3"></div>
+          <div id="replies-empty" class="text-center text-muted-custom py-4 d-none">No replies yet — they'll show up here as soon as a prospect writes back.</div>
         </div>
       </div>
     </div>
