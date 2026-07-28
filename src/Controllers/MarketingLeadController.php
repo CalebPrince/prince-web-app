@@ -48,6 +48,8 @@ class MarketingLeadController
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $rows = $pdo->query('SELECT * FROM marketing_leads ORDER BY created_at DESC')->fetchAll();
+        $demoRows = $pdo->query('SELECT lead_id FROM account_demos')->fetchAll();
+        $demoLeadIds = array_flip(array_map(static fn(array $row): int => (int) $row['lead_id'], $demoRows));
         foreach ($rows as &$row) {
             $row['audit_findings'] = $row['audit_findings'] ? json_decode($row['audit_findings'], true) : null;
             $row['opportunity'] = self::classifyOpportunity(
@@ -57,12 +59,16 @@ class MarketingLeadController
             // Dossier's research brief (DossierController) — decoded here so
             // the Marketing Leads page gets a structured object to render.
             $row['research_findings'] = $row['research_findings'] ? json_decode($row['research_findings'], true) : null;
+            $row['account_demo'] = isset($demoLeadIds[(int) $row['id']])
+                ? AccountDemoController::forLead($pdo, (int) $row['id'])
+                : null;
         }
         unset($row);
         usort(
             $rows,
             static fn(array $a, array $b): int =>
-                (($b['opportunity']['priority'] ?? 0) <=> ($a['opportunity']['priority'] ?? 0))
+                ((int) ($b['is_high_priority'] ?? 0) <=> (int) ($a['is_high_priority'] ?? 0))
+                ?: (($b['opportunity']['priority'] ?? 0) <=> ($a['opportunity']['priority'] ?? 0))
                 ?: strcmp((string) $b['created_at'], (string) $a['created_at'])
         );
         Response::json($rows);
@@ -239,6 +245,10 @@ class MarketingLeadController
             $fields[] = 'status = ?';
             $values[] = $data['status'];
         }
+        if (array_key_exists('is_high_priority', $data)) {
+            $fields[] = 'is_high_priority = ?';
+            $values[] = !empty($data['is_high_priority']) ? 1 : 0;
+        }
         if (array_key_exists('estimated_value', $data) || array_key_exists('currency', $data)) {
             [$estimatedValue, $currency] = self::opportunityValue($data, (int) ($lead['estimated_value'] ?? 0), (string) ($lead['currency'] ?? 'GHS'));
             $fields[] = 'estimated_value = ?'; $values[] = $estimatedValue;
@@ -354,7 +364,8 @@ class MarketingLeadController
             Response::json(['channel' => 'phone', 'subject' => null, 'body' => $script]);
         }
 
-        $pitch = self::draftPitch($lead['business_name'], $findings);
+        $demoUrl = AccountDemoController::publishedUrlForLead($pdo, (int) $lead['id']);
+        $pitch = self::draftPitch($lead['business_name'], $findings, $demoUrl);
         if ($pitch === null) {
             Response::error('Pitch generation failed — please try again in a moment.', 502);
         }
@@ -846,7 +857,7 @@ class MarketingLeadController
      * Engine's auto-draft can generate a pitch unattended — same code path as
      * a hand-triggered generate-pitch, so the two can't drift.
      */
-    public static function draftPitch(string $businessName, array $findings): ?array
+    public static function draftPitch(string $businessName, array $findings, ?string $accountDemoUrl = null): ?array
     {
         $context = self::findingsContext($findings);
 
@@ -878,9 +889,13 @@ class MarketingLeadController
             return null;
         }
 
+        $body = (string) $parsed['body'];
+        if ($accountDemoUrl) {
+            $body .= "\n\nI put together a short outcome walkthrough for {$businessName}: {$accountDemoUrl}";
+        }
         return [
             'subject' => (string) $parsed['subject'],
-            'body' => (string) $parsed['body'] . "\n\n" . self::signatureBlock(),
+            'body' => $body . "\n\n" . self::signatureBlock(),
         ];
     }
 

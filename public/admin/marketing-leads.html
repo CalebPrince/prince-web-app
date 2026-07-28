@@ -7,11 +7,90 @@
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
 <title>Marketing Leads — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@700;800&amp;display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
 <link href="/css/admin.css" rel="stylesheet">
+<style>
+:root{
+  --lead-ink:#10233f;
+  --lead-blue:#2457d6;
+  --lead-cyan:#22a9c7;
+  --lead-amber:#f0a43a;
+  --lead-paper:#f5f7fb;
+}
+.leads-workspace{max-width:1680px;margin-inline:auto}
+.leads-hero{position:relative;overflow:hidden;padding:1.5rem;border:1px solid rgba(36,87,214,.18);border-radius:24px;background:linear-gradient(118deg,#10233f 0%,#17335a 67%,#2457d6 140%);color:#fff;box-shadow:0 22px 55px rgba(16,35,63,.14)}
+.leads-hero::after{content:"";position:absolute;width:18rem;height:18rem;right:-7rem;top:-10rem;border:3rem solid rgba(255,255,255,.055);border-radius:50%;pointer-events:none}
+.leads-kicker{font:700 .7rem/1 Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8dd9e9}
+.leads-hero h1{font-family:"Plus Jakarta Sans",sans-serif;font-size:clamp(1.75rem,3vw,2.7rem);letter-spacing:-.05em}
+.leads-hero-copy{max-width:48rem;color:rgba(255,255,255,.7);line-height:1.65}
+.leads-hero .btn-outline-light{border-color:rgba(255,255,255,.32)}
+.lead-pulse-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;margin-top:1rem}
+.lead-pulse{padding:1rem 1.1rem;border:1px solid rgba(255,255,255,.11);border-radius:16px;background:rgba(255,255,255,.065);backdrop-filter:blur(8px)}
+.lead-pulse strong{display:block;font:800 1.35rem/1.1 "Plus Jakarta Sans",sans-serif;letter-spacing:-.04em}
+.lead-pulse span{display:block;margin-top:.35rem;color:rgba(255,255,255,.6);font-size:.72rem}
+.engine-shell{border:1px solid var(--line);border-radius:20px;background:var(--card-bg,#fff);box-shadow:0 12px 35px rgba(16,35,63,.06)}
+.engine-primary{padding:1.2rem 1.3rem}
+.engine-status-dot{width:.65rem;height:.65rem;border-radius:50%;background:#97a1b1;box-shadow:0 0 0 .3rem rgba(151,161,177,.13)}
+.engine-metrics{display:flex;gap:.35rem;flex-wrap:wrap}
+.engine-metric{min-width:6rem;padding:.7rem .85rem;border-radius:12px;background:var(--bg-soft);text-align:left}
+.engine-metric strong{display:block;font:800 1.05rem/1 "Plus Jakarta Sans",sans-serif}
+.engine-metric span{font-size:.68rem;color:var(--text-muted,#667085)}
+.discovery-drawer{border-top:1px solid var(--line);padding:1rem 1.3rem;background:linear-gradient(90deg,var(--bg-soft),transparent);border-radius:0 0 20px 20px}
+.lead-board-head{display:flex;align-items:center;gap:1rem;margin:1.5rem 0 .8rem}
+.lead-board-title{margin:0;font:800 1.15rem "Plus Jakarta Sans",sans-serif;letter-spacing:-.025em}
+.lead-board-controls{display:flex;gap:.55rem;margin-left:auto}
+.lead-search{position:relative;min-width:15rem}
+.lead-search i{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--text-muted,#667085)}
+.lead-search input{padding-left:2.3rem}
+.lead-table-shell{overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--card-bg,#fff);box-shadow:0 15px 40px rgba(16,35,63,.055)}
+.lead-table-shell table{border-collapse:separate;border-spacing:0}
+.lead-table-shell thead th{padding:.8rem .65rem;border-bottom:1px solid var(--line);background:var(--bg-soft);color:var(--text-muted,#667085);font-size:.66rem;text-transform:uppercase;letter-spacing:.09em;white-space:nowrap}
+.lead-table-shell tbody td{padding:1rem .65rem;border-color:var(--line);vertical-align:middle}
+.lead-table-shell tbody tr{transition:background .18s ease,transform .18s ease}
+.lead-table-shell tbody tr:hover{background:rgba(36,87,214,.025)}
+.lead-account{display:flex;gap:.75rem;align-items:flex-start;min-width:13rem}
+.lead-account .min-w-0{min-width:0}
+.lead-avatar{display:grid;place-items:center;flex:0 0 2.35rem;height:2.35rem;border-radius:12px;background:linear-gradient(145deg,#dce7ff,#eef3ff);color:var(--lead-blue);font:800 .8rem "Plus Jakarta Sans",sans-serif}
+.lead-account-name{font-weight:750;color:var(--text,#172033)}
+.lead-contact-line{max-width:15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.readiness-rail{display:flex;align-items:center;width:7.5rem;margin-bottom:.35rem}
+.readiness-node{width:.55rem;height:.55rem;border:2px solid #c9d0dc;border-radius:50%;background:var(--card-bg,#fff)}
+.readiness-node.done{border-color:var(--lead-blue);background:var(--lead-blue)}
+.readiness-line{height:2px;flex:1;background:#d9dee7}
+.readiness-line.done{background:var(--lead-blue)}
+.readiness-label{font-size:.68rem;color:var(--text-muted,#667085);white-space:nowrap}
+.lead-actions .btn{border-radius:9px}
+.lead-actions .btn-brand{box-shadow:none}
+.lead-actions-more{display:flex;gap:.3rem;justify-content:flex-end;flex-wrap:wrap;max-width:25rem;margin-left:auto}
+.priority-btn{width:2rem}
+.priority-btn.is-priority{color:#9a5b00;border-color:#e6a234;background:#fff7e6}
+[data-theme="dark"] .leads-hero{border-color:rgba(90,137,255,.28)}
+[data-theme="dark"] .lead-avatar{background:#1c3152;color:#8fb0ff}
+[data-theme="dark"] .readiness-node{background:var(--card-bg,#151b28)}
+@media(max-width:1100px){
+  .lead-pulse-grid{grid-template-columns:repeat(2,1fr)}
+  .lead-table-shell{overflow-x:auto}
+  .lead-table-shell table{min-width:1050px}
+}
+@media(max-width:700px){
+  .flex-grow-1.p-4{padding:1rem!important}
+  .leads-hero{padding:1.15rem;border-radius:18px}
+  .lead-pulse-grid{grid-template-columns:1fr 1fr}
+  .lead-board-head{align-items:stretch;flex-direction:column}
+  .lead-board-controls{margin-left:0;flex-wrap:wrap}
+  .lead-search{min-width:100%;flex:1}
+}
+.account-demo-editor .modal-header{background:linear-gradient(135deg,var(--section-leads-soft),transparent 70%)}
+.account-demo-flow-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;font-weight:700}
+.account-demo-flow-head small{font-weight:500;color:var(--text-muted,#667085)}
+.account-demo-step{position:relative;padding:1rem 1rem 1rem 2.5rem;margin-bottom:.75rem;border:1px solid var(--line);border-radius:14px;background:var(--bg-soft)}
+.account-demo-step::before{content:attr(data-step);position:absolute;left:.8rem;top:1rem;display:grid;place-items:center;width:1.2rem;height:1.2rem;border-radius:50%;background:var(--section-leads);color:#fff;font-size:.62rem;font-weight:800}
+.account-demo-step .form-control,.account-demo-step .form-select{font-size:.85rem}
+.account-demo-step textarea{margin-top:.5rem;resize:vertical}
+</style>
 </head>
 <body>
 
@@ -44,7 +123,7 @@
       <a href="/admin/tags.html" class="nav-link"><i class="bi bi-tags nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Tags</span></a>
       <a href="/admin/content.html" class="nav-link"><i class="bi bi-file-earmark-richtext nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Site Content</span></a>
       <a href="/admin/frontend-wording.html" class="nav-link"><i class="bi bi-translate nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Frontend Wording</span></a>
-      <div class="nav-group-label">Leads & Clients</div>
+      <div class="nav-group-label">Leads &amp; Clients</div>
       <a href="/admin/contacts.html" class="nav-link"><i class="bi bi-person-vcard nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Contacts</span></a>
       <a href="/admin/inquiries.html" class="nav-link"><i class="bi bi-inbox nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
       <a href="/admin/quote-requests.html" class="nav-link"><i class="bi bi-file-earmark-text nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Quote Requests</span></a>
@@ -55,7 +134,7 @@
       <a href="/admin/newsletter.html" class="nav-link"><i class="bi bi-envelope nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Newsletter</span></a>
       <a href="/admin/drip.html" class="nav-link"><i class="bi bi-diagram-3 nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Automations</span></a>
       <a href="/admin/agent-chat.html" class="nav-link"><i class="bi bi-mic nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Talk to Agents</span></a>
-      <div class="nav-group-label">Bookings & Payments</div>
+      <div class="nav-group-label">Bookings &amp; Payments</div>
       <a href="/admin/appointments.html" class="nav-link"><i class="bi bi-calendar-check nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Bookings</span></a>
       <a href="/admin/payments.html" class="nav-link"><i class="bi bi-credit-card nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Payments</span></a>
       <a href="/admin/invoices.html" class="nav-link"><i class="bi bi-receipt-cutoff nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Invoices</span></a>
@@ -72,52 +151,46 @@
   </div>
 
   <div class="flex-grow-1 p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-bullseye"></i></div>
-        <div>
-          <h3 class="mb-0">Marketing Leads</h3>
-          <p class="text-muted-custom mb-0 small">
-            Audits are a real technical check of the target site (SSL, mobile viewport, title/description, response
-            time) — never fabricated. Pitches (or call scripts, for phone-only leads) are drafted only from those
-            findings. Sending stays in your hands by default; the Cold Outreach Engine below is the opt-in way to
-            let reviewed email pitches send themselves on a daily cap.
-          </p>
-        </div>
-      </div>
-      <div class="d-flex gap-2">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#discover-modal">Find leads by niche</button>
-        <button type="button" class="btn-brand btn-sm" data-bs-toggle="modal" data-bs-target="#add-lead-modal">+ Add lead</button>
-      </div>
-    </div>
-
-    <div class="admin-card mb-3 p-3" id="outreach-engine">
-      <div class="d-flex flex-wrap align-items-center gap-3">
-        <div class="d-flex align-items-center gap-2">
-          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-send"></i></div>
+   <div class="leads-workspace">
+    <section class="leads-hero mb-3">
+      <div class="position-relative" style="z-index:1">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
           <div>
-            <div class="fw-semibold">Cold Outreach Engine</div>
-            <div class="small text-muted-custom"><span id="oe-queue">0</span> reviewed &amp; ready to send · <span id="oe-draftable">0</span> raw leads auto-draft can pitch</div>
+            <div class="leads-kicker mb-2">Sales intelligence workspace</div>
+            <h1 class="mb-2">Move the right accounts forward.</h1>
+            <p class="leads-hero-copy mb-0">Research real businesses, turn verified gaps into relevant outreach, and keep every call, pitch, and account walkthrough in one operating view.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#discover-modal"><i class="bi bi-radar me-1"></i> Find prospects</button>
+            <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#add-lead-modal"><i class="bi bi-plus-lg me-1"></i> Add lead</button>
+          </div>
+        </div>
+        <div class="lead-pulse-grid">
+          <div class="lead-pulse"><strong id="lead-total">0</strong><span>accounts in pipeline</span></div>
+          <div class="lead-pulse"><strong id="lead-priority">0</strong><span>high-priority accounts</span></div>
+          <div class="lead-pulse"><strong id="lead-ready">0</strong><span>ready for outreach</span></div>
+          <div class="lead-pulse"><strong id="lead-pipeline-value">GHS 0</strong><span>estimated pipeline value</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="engine-shell mb-3" id="outreach-engine">
+      <div class="engine-primary d-flex flex-wrap align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <span class="engine-status-dot" id="oe-status-dot"></span>
+          <div>
+            <div class="fw-semibold">Outreach engine</div>
+            <div class="small text-muted-custom"><span id="oe-queue">0</span> ready · <span id="oe-draftable">0</span> awaiting a draft</div>
           </div>
         </div>
 
-        <div class="d-flex flex-wrap align-items-center gap-4 ms-auto">
-          <div class="text-center">
-            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;"><span id="oe-sent-today">0</span><span class="text-muted-custom">/<span id="oe-cap-label">50</span></span></div>
-            <div class="small text-muted-custom">sent today</div>
-          </div>
-          <div class="text-center">
-            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;" id="oe-sent-total">0</div>
-            <div class="small text-muted-custom">sent all-time</div>
-          </div>
-          <div class="text-center">
-            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;" id="oe-suppressed">0</div>
-            <div class="small text-muted-custom">unsubscribed</div>
-          </div>
-          <div class="text-center">
-            <div class="fw-semibold" style="font-size:1.35rem;line-height:1;" id="oe-calls-today">0</div>
-            <div class="small text-muted-custom">calls today</div>
-          </div>
+        <div class="engine-metrics ms-lg-auto">
+          <div class="engine-metric"><strong><span id="oe-sent-today">0</span>/<span id="oe-cap-label">50</span></strong><span>sent today</span></div>
+          <div class="engine-metric"><strong id="oe-sent-total">0</strong><span>sent all-time</span></div>
+          <div class="engine-metric"><strong id="oe-suppressed">0</strong><span>unsubscribed</span></div>
+          <div class="engine-metric"><strong id="oe-calls-today">0</strong><span>calls today</span></div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-3">
           <button type="button" class="btn btn-outline-secondary btn-sm" id="oe-call-list-btn" data-bs-toggle="modal" data-bs-target="#call-list-modal">
             <i class="bi bi-telephone"></i> Call list (<span id="oe-call-queue">0</span>)
           </button>
@@ -140,10 +213,10 @@
           </div>
         </div>
       </div>
-      <div class="border-top mt-3 pt-3">
+      <div class="discovery-drawer">
         <div class="d-flex flex-wrap align-items-start gap-3">
           <div class="d-flex align-items-center gap-2">
-            <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-search"></i></div>
+            <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-radar"></i></div>
             <div>
               <div class="fw-semibold">Daily prospect discovery</div>
               <div class="small text-muted-custom" id="oe-discovery-status">Waiting for its first run.</div>
@@ -168,23 +241,41 @@
       <div id="oe-msg" class="alert py-2 small mb-0 mt-2 d-none"></div>
     </div>
 
+    <div class="lead-board-head">
+      <div>
+        <h2 class="lead-board-title">Account pipeline</h2>
+        <div class="small text-muted-custom" id="lead-result-count">Loading accounts…</div>
+      </div>
+      <div class="lead-board-controls">
+        <div class="lead-search"><i class="bi bi-search"></i><input class="form-control form-control-sm" id="lead-search" type="search" placeholder="Search accounts or contacts"></div>
+        <select class="form-select form-select-sm" id="lead-status-filter" aria-label="Filter leads by status">
+          <option value="">All stages</option>
+          <option value="pending">New</option>
+          <option value="audited">Audited</option>
+          <option value="pitch_ready">Pitch ready</option>
+          <option value="sent">Sent</option>
+          <option value="rejected">Rejected</option>
+          <option value="priority">High priority</option>
+        </select>
+      </div>
+    </div>
+
     <div id="bulk-toolbar" class="d-none align-items-center gap-2 mb-3 p-2 rounded" style="background: var(--section-leads-soft);">
       <span class="small fw-semibold" id="bulk-count">0 selected</span>
       <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="bulk-remove-btn">Delete selected</button>
       <button type="button" class="btn btn-sm btn-link" id="bulk-clear-btn">Clear</button>
     </div>
 
-    <div class="admin-card p-0">
+    <div class="lead-table-shell">
       <table class="table mb-0 align-middle">
         <thead>
           <tr>
             <th style="width:2.25rem" class="ps-3"><input type="checkbox" class="form-check-input" id="select-all-checkbox"></th>
             <th>Business</th>
-            <th>Website</th>
             <th>Opportunity</th>
-            <th>Est. project value</th>
-            <th>Status</th>
-            <th>Site check</th>
+            <th>Readiness</th>
+            <th>Value</th>
+            <th>Stage</th>
             <th class="text-end pe-3">Actions</th>
           </tr>
         </thead>
@@ -193,6 +284,7 @@
     </div>
     <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No leads yet — add one to get started.</div>
     <div id="pagination" class="d-flex flex-wrap gap-2 justify-content-center mt-4"></div>
+   </div>
   </div>
 </div>
 
@@ -314,6 +406,65 @@
   </div>
 </div>
 
+<div class="modal fade" id="account-demo-modal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content account-demo-editor">
+      <div class="modal-header">
+        <div>
+          <p class="small text-uppercase text-muted-custom fw-semibold mb-1" style="letter-spacing:.12em;">Account-based proof</p>
+          <h5 class="modal-title mb-0">Outcome walkthrough — <span id="account-demo-business"></span></h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="account-demo-priority">
+            <label class="form-check-label fw-semibold" for="account-demo-priority">High-priority account</label>
+          </div>
+          <span class="status-pill pending" id="account-demo-status">Draft</span>
+          <span class="small text-muted-custom ms-md-auto" id="account-demo-metrics">0 views · 0 CTA clicks</span>
+        </div>
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="account-demo-headline">Outcome headline</label>
+              <input class="form-control" id="account-demo-headline" maxlength="160">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="account-demo-summary">Future-state summary</label>
+              <textarea class="form-control" id="account-demo-summary" rows="4" maxlength="700"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="account-demo-friction">Current-state framing</label>
+              <textarea class="form-control" id="account-demo-friction" rows="3" maxlength="300"></textarea>
+              <div class="form-text">Keep this hypothetical unless the audit or dossier proves it.</div>
+            </div>
+            <div class="mb-0">
+              <label class="form-label fw-semibold" for="account-demo-proof">Evidence note</label>
+              <textarea class="form-control" id="account-demo-proof" rows="3" maxlength="500"></textarea>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="account-demo-flow-head">
+              <span>Outcome playback</span>
+              <small>Exactly four steps</small>
+            </div>
+            <div id="account-demo-workflow"></div>
+          </div>
+        </div>
+        <div id="account-demo-alert" class="alert py-2 small mt-3 d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary me-auto" id="account-demo-regenerate">Regenerate from evidence</button>
+        <a class="btn btn-outline-secondary d-none" id="account-demo-open" target="_blank" rel="noopener">Open private page</a>
+        <button type="button" class="btn btn-outline-secondary" id="account-demo-save">Save draft</button>
+        <button type="button" class="btn-brand" id="account-demo-publish">Publish walkthrough</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="dossier-modal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -383,6 +534,6 @@
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-marketing-leads.js?v=20260727-call-identity"></script>
+<script src="/js/admin-marketing-leads.js?v=20260728-command-board"></script>
 </body>
 </html>

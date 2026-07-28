@@ -415,6 +415,7 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   pitch_subject TEXT,
   pitch_body TEXT,
   notes TEXT,
+  is_high_priority INTEGER NOT NULL DEFAULT 0,
   -- Per-lead opt-out token, minted the first time the Cold Outreach Engine
   -- emails this lead. The unsubscribe link in every automated pitch carries
   -- it; clicking it suppresses the address everywhere (see email_suppressions).
@@ -424,6 +425,28 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   sent_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at);
+
+-- Reviewed, account-specific outcome pages for a small set of priority
+-- prospects. Content is stored as structured copy, never model-generated
+-- HTML, and remains private until an admin publishes its unguessable token.
+CREATE TABLE IF NOT EXISTS account_demos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER NOT NULL UNIQUE REFERENCES marketing_leads(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+  headline TEXT NOT NULL,
+  outcome_summary TEXT NOT NULL,
+  friction_label TEXT NOT NULL,
+  workflow_json TEXT NOT NULL DEFAULT '[]',
+  proof_note TEXT NOT NULL,
+  source_snapshot_json TEXT NOT NULL DEFAULT '{}',
+  views INTEGER NOT NULL DEFAULT 0,
+  cta_clicks INTEGER NOT NULL DEFAULT 0,
+  generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  published_at TEXT,
+  last_viewed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_account_demos_status ON account_demos (status, published_at);
 
 -- The Cold Outreach Engine's send ledger. One row per lead the automated
 -- sender (database/send_cold_outreach.php) has emailed. UNIQUE(lead_id) is

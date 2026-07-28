@@ -415,6 +415,9 @@ $leadColumnNames = array_column($leadColumns, 'name');
 if (!in_array('contact_phone', $leadColumnNames, true)) {
     $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN contact_phone TEXT');
 }
+if (!in_array('is_high_priority', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN is_high_priority INTEGER NOT NULL DEFAULT 0');
+}
 if (!in_array('pitch_channel', $leadColumnNames, true)) {
     $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN pitch_channel TEXT');
 }
@@ -446,20 +449,45 @@ foreach ($leadColumns as $col) {
                 status TEXT NOT NULL DEFAULT 'pending'
                   CHECK (status IN ('pending', 'audited', 'pitch_ready', 'sent', 'rejected')),
                 audit_findings TEXT,
+                research_findings TEXT,
+                researched_at TEXT,
                 pitch_subject TEXT,
                 pitch_body TEXT,
                 notes TEXT,
+                is_high_priority INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 updated_at TEXT NOT NULL DEFAULT (datetime('now')),
                 sent_at TEXT
             )",
             'id, business_name, website_url, contact_email, contact_phone, pitch_channel, status,
-             audit_findings, pitch_subject, pitch_body, notes, created_at, updated_at, sent_at',
+             audit_findings, research_findings, researched_at, pitch_subject, pitch_body, notes,
+             is_high_priority, created_at, updated_at, sent_at',
             ['CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at)']
         );
         break;
     }
 }
+
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS account_demos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER NOT NULL UNIQUE REFERENCES marketing_leads(id) ON DELETE CASCADE,
+        token TEXT NOT NULL UNIQUE,
+        status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+        headline TEXT NOT NULL,
+        outcome_summary TEXT NOT NULL,
+        friction_label TEXT NOT NULL,
+        workflow_json TEXT NOT NULL DEFAULT '[]',
+        proof_note TEXT NOT NULL,
+        source_snapshot_json TEXT NOT NULL DEFAULT '{}',
+        views INTEGER NOT NULL DEFAULT 0,
+        cta_clicks INTEGER NOT NULL DEFAULT 0,
+        generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        published_at TEXT,
+        last_viewed_at TEXT
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_account_demos_status ON account_demos (status, published_at)');
 
 $leadColumnNames = array_column($pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll(), 'name');
 if (!in_array('estimated_value', $leadColumnNames, true)) {

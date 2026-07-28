@@ -651,6 +651,18 @@ storage/
     never invents prospects. The standalone script is available for
     diagnostics and accepts `--force`.
 
+    **Account demos** add a reviewed account-based proof layer for the small
+    set of prospects worth deeper work. A lead can be marked high priority,
+    then Marketing Leads generates structured outcome copy from its stored
+    audit and Dossier evidence. The model never writes HTML and must frame
+    unverified operational friction as a likely scenario, not a fact. The
+    admin edits four workflow steps, previews the result, and explicitly
+    publishes an unguessable `/account-demo.html?token=...` link. Public
+    pages are `noindex`; views and CTA clicks are counted. Once published,
+    regenerating the lead's email pitch adds the private walkthrough link.
+    Auto-draft also includes a link when a published demo already exists,
+    but it never creates or publishes account demos automatically.
+
     Outreach isn't email-only, either: a lead with a `contact_phone` but no
     `contact_email` gets a call script instead of an email pitch
     (`generatePitch()` picks the channel — email when possible, phone only

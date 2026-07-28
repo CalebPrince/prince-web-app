@@ -2,7 +2,64 @@ let currentLead = null;
 let pitchModal = null;
 let discoverModal = null;
 let discoverResults = [];
+let accountDemoModal = null;
+let accountDemoLead = null;
 const selectedIds = new Set();
+
+function leadInitials(name) {
+  return String(name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
+}
+
+function readinessState(lead) {
+  const steps = [
+    true,
+    Boolean(lead.research_findings),
+    !lead.website_url || Boolean(lead.audit_findings),
+    Boolean(lead.pitch_body),
+    lead.status === "sent",
+  ];
+  const complete = steps.filter(Boolean).length;
+  const labels = ["Discovered", "Researched", "Checked", "Pitch ready", "Contacted"];
+  return {
+    steps,
+    label: labels[Math.max(0, complete - 1)],
+    percent: Math.round((complete / steps.length) * 100),
+  };
+}
+
+function readinessRail(lead) {
+  const readiness = readinessState(lead);
+  return `
+    <div class="readiness-rail" title="${readiness.percent}% ready">
+      ${readiness.steps.map((done, index) => `${index ? `<span class="readiness-line ${readiness.steps[index - 1] && done ? "done" : ""}"></span>` : ""}<span class="readiness-node ${done ? "done" : ""}"></span>`).join("")}
+    </div>
+    <div class="readiness-label">${readiness.label} · ${readiness.percent}%</div>`;
+}
+
+function updateLeadPulse(rows) {
+  document.getElementById("lead-total").textContent = rows.length.toLocaleString();
+  document.getElementById("lead-priority").textContent = rows.filter(lead => Number(lead.is_high_priority) === 1).length.toLocaleString();
+  document.getElementById("lead-ready").textContent = rows.filter(lead => Boolean(lead.pitch_body) && lead.status !== "sent").length.toLocaleString();
+  const currencies = [...new Set(rows.filter(lead => Number(lead.estimated_value) > 0).map(lead => lead.currency || "GHS"))];
+  const total = rows.reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0) / 100;
+  document.getElementById("lead-pipeline-value").textContent = currencies.length > 1
+    ? "Mixed currencies"
+    : `${currencies[0] || "GHS"} ${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+}
+
+function applyLeadFilters() {
+  const search = document.getElementById("lead-search").value.trim().toLowerCase();
+  const stage = document.getElementById("lead-status-filter").value;
+  let visible = 0;
+  document.querySelectorAll("#leads-tbody tr[data-lead-row]").forEach(row => {
+    const matchesSearch = !search || row.dataset.search.includes(search);
+    const matchesStage = !stage || (stage === "priority" ? row.dataset.priority === "1" : row.dataset.status === stage);
+    const show = matchesSearch && matchesStage;
+    row.classList.toggle("d-none", !show);
+    if (show) visible += 1;
+  });
+  document.getElementById("lead-result-count").textContent = `${visible} account${visible === 1 ? "" : "s"} shown on this page`;
+}
 
 function updateBulkToolbar() {
   const toolbar = document.getElementById("bulk-toolbar");
@@ -57,6 +114,7 @@ function opportunityBadge(lead) {
 
 function actionButtons(lead) {
   const buttons = [];
+  buttons.push(`<button class="btn btn-sm btn-outline-secondary priority-btn ${Number(lead.is_high_priority) ? "is-priority" : ""}" data-id="${lead.id}" title="${Number(lead.is_high_priority) ? "Remove high priority" : "Mark high priority"}"><i class="bi bi-star${Number(lead.is_high_priority) ? "-fill" : ""}"></i></button>`);
   // Dossier: recon before outreach — tech-stack fingerprint, recent news, a
   // grounded angle. Works from the business name alone, so it's offered for
   // every lead. Once a brief exists the button just reopens it (re-running is
@@ -82,6 +140,7 @@ function actionButtons(lead) {
   if (lead.pitch_body) {
     buttons.push(`<button class="btn btn-sm btn-brand review-btn" data-id="${lead.id}">Review &amp; Send</button>`);
   }
+  buttons.push(`<button class="btn btn-sm btn-outline-secondary account-demo-btn" data-id="${lead.id}">${lead.account_demo ? "Account demo" : "Create demo"}</button>`);
   buttons.push(`<button class="btn btn-sm btn-outline-danger remove-btn" data-id="${lead.id}">Delete</button>`);
   return buttons.join(" ");
 }
@@ -94,9 +153,11 @@ async function loadLeads() {
   const empty = document.getElementById("empty-state");
 
   selectedIds.clear();
+  updateLeadPulse(rows);
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted-custom py-4">No leads yet. Add one to get started.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-5">No accounts yet. Find prospects by niche or add your first lead.</td></tr>';
+    document.getElementById("lead-result-count").textContent = "No accounts yet";
     empty.classList.add("d-none");
     updateBulkToolbar();
     return;
@@ -105,26 +166,30 @@ async function loadLeads() {
 
   const renderPage = pageRows => {
     tbody.innerHTML = pageRows.map(lead => `
-    <tr>
+    <tr data-lead-row data-search="${escapeHtml(`${lead.business_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase())}" data-status="${escapeHtml(lead.status || "")}" data-priority="${Number(lead.is_high_priority) ? "1" : "0"}">
       <td class="ps-3"><input type="checkbox" class="form-check-input row-checkbox" data-id="${lead.id}"></td>
       <td>
-        <div class="fw-semibold">${escapeHtml(lead.business_name)}</div>
-        ${lead.contact_email ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_email)}</div>` : ''}
-        ${lead.contact_phone ? `<div class="small text-muted-custom">${escapeHtml(lead.contact_phone)}</div>` : ''}
-        ${!lead.contact_email && !lead.contact_phone ? '<div class="small text-muted-custom">No contact info yet</div>' : ''}
+        <div class="lead-account">
+          <div class="lead-avatar">${escapeHtml(leadInitials(lead.business_name))}</div>
+          <div class="min-w-0">
+            <div class="lead-account-name">${Number(lead.is_high_priority) ? '<i class="bi bi-star-fill me-1" style="color:#e6a234" title="High priority"></i>' : ''}${escapeHtml(lead.business_name)}</div>
+            ${lead.contact_email ? `<div class="small text-muted-custom lead-contact-line">${escapeHtml(lead.contact_email)}</div>` : ''}
+            ${lead.contact_phone ? `<div class="small text-muted-custom lead-contact-line">${escapeHtml(lead.contact_phone)}</div>` : ''}
+            ${!lead.contact_email && !lead.contact_phone ? '<div class="small text-muted-custom">Contact not found</div>' : ''}
+            ${lead.website_url ? `<a class="small lead-contact-line d-block" href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a>` : '<span class="small text-muted-custom">No website</span>'}
+          </div>
+        </div>
       </td>
-      <td class="small">${lead.website_url
-        ? `<a href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a>`
-        : '<span class="text-muted-custom">No website</span>'}</td>
       <td>${opportunityBadge(lead)}</td>
+      <td>${readinessRail(lead)}</td>
       <td>${Number(lead.estimated_value) ? `<span class="fw-semibold">${escapeHtml(lead.currency || 'GHS')} ${(Number(lead.estimated_value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>` : '<span class="text-muted-custom small">Not estimated</span>'}</td>
       <td><span class="status-pill ${lead.status}">${lead.status.replace("_", " ")}</span></td>
-      <td>${siteCheckBadge(lead)}</td>
-      <td class="text-end pe-3">
-        <div class="d-flex gap-1 justify-content-end flex-wrap">${actionButtons(lead)}</div>
+      <td class="text-end pe-3 lead-actions">
+        <div class="lead-actions-more">${actionButtons(lead)}</div>
       </td>
     </tr>
     `).join("");
+  applyLeadFilters();
 
   tbody.querySelectorAll(".row-checkbox").forEach(cb => {
     cb.addEventListener("change", () => {
@@ -136,6 +201,39 @@ async function loadLeads() {
   });
 
   updateBulkToolbar();
+
+  tbody.querySelectorAll(".priority-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const lead = rows.find(r => r.id === Number(btn.dataset.id));
+      btn.disabled = true;
+      try {
+        await api.patch(`/api/v1/admin/marketing-leads/${lead.id}`, { is_high_priority: !Number(lead.is_high_priority) });
+      } catch (err) {
+        alert(err.message || "Could not update priority.");
+      }
+      await loadLeads();
+    });
+  });
+
+  tbody.querySelectorAll(".account-demo-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const lead = rows.find(r => r.id === Number(btn.dataset.id));
+      if (lead.account_demo) {
+        openAccountDemo(lead, lead.account_demo);
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Building…";
+      try {
+        const response = await api.post(`/api/v1/admin/marketing-leads/${lead.id}/account-demo/generate`, {});
+        openAccountDemo({ ...lead, is_high_priority: 1 }, response.demo);
+        await loadLeads();
+      } catch (err) {
+        alert(err.message || "Could not create the account demo.");
+        await loadLeads();
+      }
+    });
+  });
 
   tbody.querySelectorAll(".research-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -594,6 +692,9 @@ function renderOutreachStats(s) {
   const toggle = document.getElementById("oe-enabled");
   toggle.checked = s.enabled;
   document.getElementById("oe-enabled-label").textContent = s.enabled ? "On" : "Off";
+  const statusDot = document.getElementById("oe-status-dot");
+  statusDot.style.background = s.enabled ? "#28a879" : "#97a1b1";
+  statusDot.style.boxShadow = s.enabled ? "0 0 0 .3rem rgba(40,168,121,.14)" : "0 0 0 .3rem rgba(151,161,177,.13)";
 
   const autodraft = document.getElementById("oe-autodraft");
   autodraft.checked = s.autodraft;
@@ -803,6 +904,107 @@ function wireOutreachPanel() {
   });
 }
 
+function accountDemoMessage(message, ok) {
+  const box = document.getElementById("account-demo-alert");
+  box.className = `alert alert-${ok ? "success" : "danger"} py-2 small mt-3`;
+  box.textContent = message;
+  box.classList.remove("d-none");
+}
+
+function renderAccountDemoWorkflow(steps) {
+  document.getElementById("account-demo-workflow").innerHTML = (steps || []).map((step, index) => `
+    <div class="account-demo-step" data-step="${index + 1}">
+      <div class="row g-2">
+        <div class="col-8"><input class="form-control account-demo-step-label" maxlength="80" value="${escapeHtml(step.label || "")}" aria-label="Step ${index + 1} label"></div>
+        <div class="col-4"><select class="form-select account-demo-step-actor" aria-label="Step ${index + 1} actor">
+          ${["Lisa", "Team", "System"].map(actor => `<option ${step.actor === actor ? "selected" : ""}>${actor}</option>`).join("")}
+        </select></div>
+      </div>
+      <textarea class="form-control account-demo-step-detail" rows="2" maxlength="280" aria-label="Step ${index + 1} detail">${escapeHtml(step.detail || "")}</textarea>
+    </div>`).join("");
+}
+
+function openAccountDemo(lead, demo) {
+  accountDemoLead = { ...lead, account_demo: demo };
+  document.getElementById("account-demo-business").textContent = lead.business_name;
+  document.getElementById("account-demo-priority").checked = Number(demo.is_high_priority ?? lead.is_high_priority) === 1;
+  document.getElementById("account-demo-headline").value = demo.headline || "";
+  document.getElementById("account-demo-summary").value = demo.outcome_summary || "";
+  document.getElementById("account-demo-friction").value = demo.friction_label || "";
+  document.getElementById("account-demo-proof").value = demo.proof_note || "";
+  renderAccountDemoWorkflow(demo.workflow || []);
+  const status = document.getElementById("account-demo-status");
+  status.textContent = demo.status === "published" ? "Published" : "Draft";
+  status.className = `status-pill ${demo.status === "published" ? "sent" : "pending"}`;
+  document.getElementById("account-demo-metrics").textContent = `${Number(demo.views || 0)} views · ${Number(demo.cta_clicks || 0)} CTA clicks`;
+  const open = document.getElementById("account-demo-open");
+  open.href = demo.url || "#";
+  open.classList.toggle("d-none", demo.status !== "published");
+  document.getElementById("account-demo-publish").textContent = demo.status === "published" ? "Republish changes" : "Publish walkthrough";
+  document.getElementById("account-demo-alert").classList.add("d-none");
+  accountDemoModal.show();
+}
+
+function accountDemoPayload() {
+  return {
+    is_high_priority: document.getElementById("account-demo-priority").checked,
+    headline: document.getElementById("account-demo-headline").value.trim(),
+    outcome_summary: document.getElementById("account-demo-summary").value.trim(),
+    friction_label: document.getElementById("account-demo-friction").value.trim(),
+    proof_note: document.getElementById("account-demo-proof").value.trim(),
+    workflow: [...document.querySelectorAll(".account-demo-step")].map(step => ({
+      label: step.querySelector(".account-demo-step-label").value.trim(),
+      actor: step.querySelector(".account-demo-step-actor").value,
+      detail: step.querySelector(".account-demo-step-detail").value.trim(),
+    })),
+  };
+}
+
+async function saveAccountDemo() {
+  const response = await api.patch(`/api/v1/admin/marketing-leads/${accountDemoLead.id}/account-demo`, accountDemoPayload());
+  accountDemoLead.account_demo = response.demo;
+  return response.demo;
+}
+
+document.getElementById("account-demo-save").addEventListener("click", async () => {
+  try {
+    const demo = await saveAccountDemo();
+    openAccountDemo(accountDemoLead, demo);
+    accountDemoMessage("Draft saved.", true);
+    await loadLeads();
+  } catch (err) {
+    accountDemoMessage(err.message || "Could not save the walkthrough.", false);
+  }
+});
+
+document.getElementById("account-demo-publish").addEventListener("click", async () => {
+  try {
+    await saveAccountDemo();
+    const response = await api.post(`/api/v1/admin/marketing-leads/${accountDemoLead.id}/account-demo/publish`, {});
+    openAccountDemo(accountDemoLead, response.demo);
+    accountDemoMessage("Published. Regenerate the lead's pitch to include this private link.", true);
+    await loadLeads();
+  } catch (err) {
+    accountDemoMessage(err.message || "Could not publish the walkthrough.", false);
+  }
+});
+
+document.getElementById("account-demo-regenerate").addEventListener("click", async () => {
+  if (!confirm("Replace the current draft with a fresh version grounded in the latest audit and dossier?")) return;
+  const button = document.getElementById("account-demo-regenerate");
+  button.disabled = true;
+  try {
+    const response = await api.post(`/api/v1/admin/marketing-leads/${accountDemoLead.id}/account-demo/generate`, {});
+    openAccountDemo(accountDemoLead, response.demo);
+    accountDemoMessage("Regenerated from the latest evidence. Review it before publishing.", true);
+    await loadLeads();
+  } catch (err) {
+    accountDemoMessage(err.message || "Could not regenerate the walkthrough.", false);
+  } finally {
+    button.disabled = false;
+  }
+});
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -811,6 +1013,9 @@ function wireOutreachPanel() {
   pitchModal = new bootstrap.Modal(document.getElementById("pitch-modal"));
   discoverModal = new bootstrap.Modal(document.getElementById("discover-modal"));
   dossierModal = new bootstrap.Modal(document.getElementById("dossier-modal"));
+  accountDemoModal = new bootstrap.Modal(document.getElementById("account-demo-modal"));
+  document.getElementById("lead-search").addEventListener("input", applyLeadFilters);
+  document.getElementById("lead-status-filter").addEventListener("change", applyLeadFilters);
   wireOutreachPanel();
   await loadLeads();
 })();
