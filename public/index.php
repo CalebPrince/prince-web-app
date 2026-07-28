@@ -270,6 +270,7 @@ $router->post('/api/v1/admin/testimonials', [TestimonialController::class, 'requ
 $router->patch('/api/v1/admin/testimonials/{id}', [TestimonialController::class, 'update']);
 $router->delete('/api/v1/admin/testimonials/{id}', [TestimonialController::class, 'destroy']);
 $router->get('/api/v1/admin/marketing-leads', [MarketingLeadController::class, 'adminIndex']);
+$router->get('/api/v1/admin/marketing-leads/analytics', [MarketingLeadController::class, 'analytics']);
 $router->post('/api/v1/admin/marketing-leads', [MarketingLeadController::class, 'store']);
 $router->post('/api/v1/admin/marketing-leads/discover', [MarketingLeadController::class, 'discover']);
 $router->post('/api/v1/admin/marketing-leads/bulk', [MarketingLeadController::class, 'bulkStore']);

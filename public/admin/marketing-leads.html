@@ -93,6 +93,34 @@
 .account-demo-step::before{content:attr(data-step);position:absolute;left:.8rem;top:1rem;display:grid;place-items:center;width:1.2rem;height:1.2rem;border-radius:50%;background:var(--section-leads);color:#fff;font-size:.62rem;font-weight:800}
 .account-demo-step .form-control,.account-demo-step .form-select{font-size:.85rem}
 .account-demo-step textarea{margin-top:.5rem;resize:vertical}
+
+/* Outreach performance analytics */
+.analytics-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem}
+.metric-card{padding:1rem 1.1rem;border:1px solid var(--line);border-radius:14px;background:var(--card-bg,#fff)}
+.metric-card h3{font:700 .66rem/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted,#667085);margin-bottom:.5rem}
+.metric-card .value{font:800 1.5rem/1.1 "Plus Jakarta Sans",sans-serif;color:var(--text,#172033)}
+.metric-card .trend{font-size:.72rem;color:var(--text-muted,#667085);margin-top:.35rem;font-weight:600}
+.metric-card .trend.positive{color:#0f9d58}
+.metric-card .trend.negative{color:#d64545}
+.analytics-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:1.25rem}
+@media(max-width:960px){.analytics-grid{grid-template-columns:1fr}}
+.reply-card{border:1px solid var(--line);border-radius:14px;padding:1rem;background:var(--bg-soft)}
+.reply-card-head{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.reply-from{font-weight:700;color:var(--text,#172033)}
+.reply-classification{padding:.2rem .55rem;border-radius:6px;font:700 .62rem/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+.reply-classification.tone-positive{color:#0f7a3d;background:rgba(15,157,88,.14)}
+.reply-classification.tone-negative{color:#a52b2b;background:rgba(214,69,69,.14)}
+.reply-classification.tone-warning{color:#8a5900;background:rgba(240,164,58,.16)}
+.reply-classification.tone-neutral{color:#4a5568;background:rgba(148,163,184,.18)}
+[data-theme="dark"] .reply-classification.tone-positive{color:#7be3a8;background:rgba(15,157,88,.22)}
+[data-theme="dark"] .reply-classification.tone-negative{color:#ff9c9c;background:rgba(214,69,69,.22)}
+[data-theme="dark"] .reply-classification.tone-warning{color:#ffd07d;background:rgba(240,164,58,.22)}
+[data-theme="dark"] .reply-classification.tone-neutral{color:#c3ccd9;background:rgba(148,163,184,.16)}
+.reply-body-preview{font-size:.85rem;color:var(--text-muted,#667085);white-space:pre-wrap;max-height:5.5rem;overflow:hidden}
+.demo-row{display:flex;align-items:center;gap:.75rem;padding:.65rem 0;border-bottom:1px dashed var(--line)}
+.demo-row:last-child{border-bottom:none}
+.demo-row .intent-pill{flex:0 0 auto;min-width:2.6rem;text-align:center;padding:.25rem .4rem;border-radius:8px;font:800 .78rem/1 "Plus Jakarta Sans",sans-serif;background:rgba(36,87,214,.1);color:var(--lead-blue)}
+.demo-row .demo-meta{font-size:.72rem;color:var(--text-muted,#667085)}
 </style>
 </head>
 <body>
@@ -242,6 +270,58 @@
         <div class="small text-muted-custom mt-2">The existing outreach cron searches these real Google Places listings once daily, skips duplicates, and adds them as raw leads. Auto-draft then prepares email pitches or phone scripts.</div>
       </div>
       <div id="oe-msg" class="alert py-2 small mb-0 mt-2 d-none"></div>
+    </div>
+
+    <div class="lead-board-head">
+      <div>
+        <h2 class="lead-board-title">Outreach performance</h2>
+        <div class="small text-muted-custom">Emails sent, replies received, demo reactions, and clicks — all in one view.</div>
+      </div>
+    </div>
+
+    <div class="analytics-metrics mb-3" id="analytics-metrics">
+      <div class="metric-card"><h3>Emails sent</h3><div class="value" id="am-emails-total">0</div><div class="trend" id="am-emails-sub">0 today</div></div>
+      <div class="metric-card"><h3>Replies received</h3><div class="value" id="am-replies-total">0</div><div class="trend" id="am-replies-sub">0% reply rate</div></div>
+      <div class="metric-card"><h3>Interested / questions</h3><div class="value" id="am-replies-interested">0</div><div class="trend" id="am-replies-review">0 need review</div></div>
+      <div class="metric-card"><h3>Demo views</h3><div class="value" id="am-demo-views">0</div><div class="trend" id="am-demo-clicks">0 CTA clicks</div></div>
+      <div class="metric-card"><h3>Avg. intent score</h3><div class="value" id="am-demo-intent">0</div><div class="trend" id="am-demo-hot">0 hot leads (70+)</div></div>
+      <div class="metric-card"><h3>Calls logged</h3><div class="value" id="am-calls-total">0</div><div class="trend" id="am-calls-connected">0 connected</div></div>
+    </div>
+
+    <div class="analytics-grid mb-3">
+      <div>
+        <div class="card">
+          <h2>Send &amp; reply activity <small class="text-muted-custom fw-normal" style="font-size:.68rem;">Last 30 days</small></h2>
+          <canvas id="send-trend-chart" height="90"></canvas>
+        </div>
+        <div class="card">
+          <h2>Emails sent <small class="text-muted-custom fw-normal" style="font-size:.68rem;" id="sends-count-label"></small></h2>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0 align-middle">
+              <thead><tr><th>Business</th><th>Subject</th><th>Sent</th><th class="text-end">Replied</th></tr></thead>
+              <tbody id="sends-tbody"></tbody>
+            </table>
+          </div>
+          <div id="sends-empty" class="text-center text-muted-custom py-4 d-none">No emails sent yet — approved pitches will appear here once sent.</div>
+        </div>
+        <div class="card mb-0">
+          <h2>Replies received <small class="text-muted-custom fw-normal" style="font-size:.68rem;" id="replies-count-label"></small></h2>
+          <div id="replies-list" class="d-flex flex-column gap-3"></div>
+          <div id="replies-empty" class="text-center text-muted-custom py-4 d-none">No replies yet — they'll show up here as soon as a prospect writes back.</div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h2>Reply breakdown</h2>
+          <canvas id="reply-breakdown-chart" height="200"></canvas>
+          <div id="reply-breakdown-empty" class="text-center text-muted-custom py-4 d-none">No replies yet.</div>
+        </div>
+        <div class="card mb-0">
+          <h2>Top engaged demos</h2>
+          <div id="top-demos-list"></div>
+          <div id="top-demos-empty" class="text-center text-muted-custom py-4 d-none">No demo activity yet — publish a walkthrough and share the link to start tracking.</div>
+        </div>
+      </div>
     </div>
 
     <div class="lead-board-head">
@@ -533,10 +613,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="/js/api.js?v=20260719"></script>
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-marketing-leads.js?v=20260728-command-board"></script>
+<script src="/js/admin-marketing-leads.js?v=20260728-analytics-dashboard"></script>
 </body>
 </html>

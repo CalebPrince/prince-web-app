@@ -74,6 +74,242 @@ class MarketingLeadController
         Response::json($rows);
     }
 
+    /** Days of daily history returned by the send/reply trend chart. */
+    private const TREND_DAYS = 30;
+
+    /**
+     * GET /api/v1/admin/marketing-leads/analytics — the numbers behind the
+     * outreach funnel: how many emails actually went out, how many real
+     * replies came back (and how they broke down), how prospects reacted to
+     * their account demos, and the raw activity feeds (recent sends, recent
+     * replies, most-engaged demos) an advanced dashboard renders as tables.
+     * Every figure is derived from existing tables (outreach_sends,
+     * nurturer_replies, account_demos, call_log) — nothing here is stored
+     * separately, so it can never drift from what MarketingLeadController /
+     * OutreachController / NurturerController actually recorded.
+     */
+    public static function analytics(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        Response::json([
+            'overview' => self::buildAnalyticsOverview($pdo),
+            'send_trend' => self::buildSendTrend($pdo),
+            'reply_breakdown' => self::buildReplyBreakdown($pdo),
+            'opportunity_breakdown' => self::buildOpportunityBreakdown($pdo),
+            'recent_sends' => self::buildRecentSends($pdo, 25),
+            'recent_replies' => self::buildRecentReplies($pdo, 25),
+            'top_demos' => self::buildTopDemos($pdo, 10),
+        ]);
+    }
+
+    /** @return array<string,mixed> */
+    private static function buildAnalyticsOverview(\PDO $pdo): array
+    {
+        $emailsTotal = (int) $pdo->query('SELECT COUNT(*) FROM outreach_sends')->fetchColumn();
+        $emailsToday = (int) $pdo->query("SELECT COUNT(*) FROM outreach_sends WHERE date(sent_at) = date('now')")->fetchColumn();
+        $emails7d = (int) $pdo->query("SELECT COUNT(*) FROM outreach_sends WHERE sent_at >= datetime('now', '-7 days')")->fetchColumn();
+        $emails30d = (int) $pdo->query("SELECT COUNT(*) FROM outreach_sends WHERE sent_at >= datetime('now', '-30 days')")->fetchColumn();
+
+        // Replies are scoped to enrollments the outbound pipeline itself
+        // created (source = 'marketing_lead') — a manually-enrolled
+        // newsletter contact replying to an unrelated drip shouldn't count
+        // toward this outreach funnel's reply rate.
+        $repliesTotal = (int) $pdo->query(
+            "SELECT COUNT(*) FROM nurturer_replies nr
+             JOIN drip_enrollments e ON e.id = nr.enrollment_id
+             WHERE e.source = 'marketing_lead'"
+        )->fetchColumn();
+        $repliesNeedingReview = (int) $pdo->query(
+            "SELECT COUNT(*) FROM nurturer_replies nr
+             JOIN drip_enrollments e ON e.id = nr.enrollment_id
+             WHERE e.source = 'marketing_lead' AND (nr.status = 'review' OR nr.classification = 'needs_review')"
+        )->fetchColumn();
+        $repliesInterested = (int) $pdo->query(
+            "SELECT COUNT(*) FROM nurturer_replies nr
+             JOIN drip_enrollments e ON e.id = nr.enrollment_id
+             WHERE e.source = 'marketing_lead' AND nr.classification IN ('interested', 'question')"
+        )->fetchColumn();
+
+        $callsTotal = (int) $pdo->query('SELECT COUNT(*) FROM call_log')->fetchColumn();
+        $callsConnected = (int) $pdo->query("SELECT COUNT(*) FROM call_log WHERE outcome IN ('connected', 'interested')")->fetchColumn();
+
+        $demoRow = $pdo->query(
+            "SELECT COUNT(*) AS demos_total,
+                    COALESCE(SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END), 0) AS demos_published,
+                    COALESCE(SUM(views), 0) AS views_total,
+                    COALESCE(SUM(cta_clicks), 0) AS cta_clicks_total,
+                    COALESCE(SUM(interaction_count), 0) AS interactions_total,
+                    COALESCE(AVG(intent_score), 0) AS avg_intent,
+                    COALESCE(SUM(CASE WHEN intent_score >= 70 THEN 1 ELSE 0 END), 0) AS hot_count
+             FROM account_demos"
+        )->fetch();
+
+        $pipelineValue = $pdo->query(
+            "SELECT currency, SUM(estimated_value) AS total FROM marketing_leads
+             WHERE estimated_value > 0 GROUP BY currency"
+        )->fetchAll();
+
+        return [
+            'total_leads' => (int) $pdo->query('SELECT COUNT(*) FROM marketing_leads')->fetchColumn(),
+            'high_priority' => (int) $pdo->query('SELECT COUNT(*) FROM marketing_leads WHERE is_high_priority = 1')->fetchColumn(),
+            'pipeline_value' => array_map(
+                static fn(array $r): array => ['currency' => (string) $r['currency'], 'total' => (int) $r['total']],
+                $pipelineValue
+            ),
+            'emails_sent_total' => $emailsTotal,
+            'emails_sent_today' => $emailsToday,
+            'emails_sent_7d' => $emails7d,
+            'emails_sent_30d' => $emails30d,
+            'replies_total' => $repliesTotal,
+            'replies_needing_review' => $repliesNeedingReview,
+            'replies_interested' => $repliesInterested,
+            'reply_rate' => $emailsTotal > 0 ? round(($repliesTotal / $emailsTotal) * 100, 1) : 0.0,
+            'calls_total' => $callsTotal,
+            'calls_connected' => $callsConnected,
+            'demos_total' => (int) ($demoRow['demos_total'] ?? 0),
+            'demos_published' => (int) ($demoRow['demos_published'] ?? 0),
+            'demo_views_total' => (int) ($demoRow['views_total'] ?? 0),
+            'demo_cta_clicks_total' => (int) ($demoRow['cta_clicks_total'] ?? 0),
+            'demo_interactions_total' => (int) ($demoRow['interactions_total'] ?? 0),
+            'demo_avg_intent' => round((float) ($demoRow['avg_intent'] ?? 0), 1),
+            'demo_hot_count' => (int) ($demoRow['hot_count'] ?? 0),
+        ];
+    }
+
+    /**
+     * Daily emails-sent vs. replies-received for the last TREND_DAYS days —
+     * the two series a "did outreach work today" line chart needs, aligned
+     * on the same date axis (missing days filled with 0 rather than omitted).
+     *
+     * @return list<array{date:string,sent:int,replies:int}>
+     */
+    private static function buildSendTrend(\PDO $pdo): array
+    {
+        $sent = [];
+        foreach ($pdo->query("SELECT date(sent_at) AS d, COUNT(*) AS n FROM outreach_sends WHERE sent_at >= datetime('now', '-30 days') GROUP BY d") as $row) {
+            $sent[(string) $row['d']] = (int) $row['n'];
+        }
+        $replies = [];
+        foreach ($pdo->query(
+            "SELECT date(nr.received_at) AS d, COUNT(*) AS n FROM nurturer_replies nr
+             JOIN drip_enrollments e ON e.id = nr.enrollment_id
+             WHERE e.source = 'marketing_lead' AND nr.received_at >= datetime('now', '-30 days')
+             GROUP BY d"
+        ) as $row) {
+            $replies[(string) $row['d']] = (int) $row['n'];
+        }
+
+        $trend = [];
+        for ($i = self::TREND_DAYS - 1; $i >= 0; $i--) {
+            $key = date('Y-m-d', strtotime("-{$i} days"));
+            $trend[] = ['date' => $key, 'sent' => $sent[$key] ?? 0, 'replies' => $replies[$key] ?? 0];
+        }
+        return $trend;
+    }
+
+    /** @return list<array{classification:string,count:int}> */
+    private static function buildReplyBreakdown(\PDO $pdo): array
+    {
+        $rows = $pdo->query(
+            "SELECT nr.classification, COUNT(*) AS n FROM nurturer_replies nr
+             JOIN drip_enrollments e ON e.id = nr.enrollment_id
+             WHERE e.source = 'marketing_lead'
+             GROUP BY nr.classification ORDER BY n DESC"
+        )->fetchAll();
+        return array_map(
+            static fn(array $r): array => ['classification' => (string) $r['classification'], 'count' => (int) $r['n']],
+            $rows
+        );
+    }
+
+    /**
+     * How the current pipeline splits by opportunity type (recomputed live
+     * from each lead's audit findings via classifyOpportunity(), the same
+     * function that drives the per-row badge — so this chart can never
+     * disagree with what the table shows).
+     *
+     * @return list<array{type:string,label:string,count:int}>
+     */
+    private static function buildOpportunityBreakdown(\PDO $pdo): array
+    {
+        $rows = $pdo->query('SELECT website_url, audit_findings FROM marketing_leads')->fetchAll();
+        $counts = [];
+        foreach ($rows as $row) {
+            $findings = $row['audit_findings'] ? (json_decode((string) $row['audit_findings'], true) ?: null) : null;
+            $opportunity = self::classifyOpportunity(!empty($row['website_url']), is_array($findings) ? $findings : null);
+            $type = $opportunity['type'];
+            if (!isset($counts[$type])) {
+                $counts[$type] = ['label' => $opportunity['label'], 'count' => 0];
+            }
+            $counts[$type]['count']++;
+        }
+        $out = [];
+        foreach ($counts as $type => $c) {
+            $out[] = ['type' => $type, 'label' => $c['label'], 'count' => $c['count']];
+        }
+        return $out;
+    }
+
+    /** @return list<array<string,mixed>> */
+    private static function buildRecentSends(\PDO $pdo, int $limit): array
+    {
+        $stmt = $pdo->prepare(
+            "SELECT os.id, os.lead_id, ml.business_name, os.recipient_email, os.subject, os.sent_at,
+                    EXISTS (
+                      SELECT 1 FROM nurturer_replies nr
+                      JOIN drip_enrollments e ON e.id = nr.enrollment_id
+                      WHERE e.lead_id = os.lead_id
+                    ) AS replied
+             FROM outreach_sends os
+             JOIN marketing_leads ml ON ml.id = os.lead_id
+             ORDER BY os.sent_at DESC LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return array_map(static function (array $r): array {
+            $r['replied'] = (bool) $r['replied'];
+            return $r;
+        }, $stmt->fetchAll());
+    }
+
+    /** @return list<array<string,mixed>> */
+    private static function buildRecentReplies(\PDO $pdo, int $limit): array
+    {
+        $stmt = $pdo->prepare(
+            "SELECT nr.id, nr.from_email, nr.subject, nr.body, nr.classification, nr.confidence,
+                    nr.status, nr.received_at, nr.reply_subject, nr.reply_body,
+                    COALESCE(ml.business_name, e.name) AS business_name, e.lead_id
+             FROM nurturer_replies nr
+             JOIN drip_enrollments e ON e.id = nr.enrollment_id
+             LEFT JOIN marketing_leads ml ON ml.id = e.lead_id
+             WHERE e.source = 'marketing_lead'
+             ORDER BY nr.received_at DESC LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
+
+    /** @return list<array<string,mixed>> */
+    private static function buildTopDemos(\PDO $pdo, int $limit): array
+    {
+        $stmt = $pdo->prepare(
+            "SELECT ad.lead_id, ml.business_name, ad.status, ad.token, ad.views, ad.cta_clicks,
+                    ad.interaction_count, ad.max_scroll_depth, ad.engaged_seconds, ad.intent_score,
+                    ad.last_viewed_at
+             FROM account_demos ad
+             JOIN marketing_leads ml ON ml.id = ad.lead_id
+             WHERE ad.views > 0 OR ad.status = 'published'
+             ORDER BY ad.intent_score DESC, ad.views DESC LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return array_map(static function (array $r): array {
+            $r['url'] = $r['status'] === 'published' ? '/account-demo.html?token=' . $r['token'] : null;
+            unset($r['token']);
+            return $r;
+        }, $stmt->fetchAll());
+    }
+
     /** POST /api/v1/admin/marketing-leads — body: {business_name, website_url?, contact_email?, contact_phone?} */
     public static function store(): void
     {

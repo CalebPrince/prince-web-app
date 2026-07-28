@@ -5,6 +5,13 @@ let discoverResults = [];
 let accountDemoModal = null;
 let accountDemoLead = null;
 const selectedIds = new Set();
+let sendTrendChart = null;
+let replyBreakdownChart = null;
+
+if (window.Chart) {
+  Chart.defaults.color = "#8b93a7";
+  Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+}
 
 function leadInitials(name) {
   return String(name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase();
@@ -1013,6 +1020,211 @@ document.getElementById("account-demo-regenerate").addEventListener("click", asy
   }
 });
 
+// --- Outreach performance analytics ---------------------------------------
+
+const REPLY_CLASSIFICATION_TONE = {
+  interested: "positive",
+  question: "positive",
+  not_interested: "negative",
+  unsubscribe: "negative",
+  needs_review: "warning",
+};
+
+function replyClassificationLabel(classification) {
+  return String(classification || "pending").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function formatShortDate(value) {
+  if (!value) return "—";
+  const d = new Date(String(value).replace(" ", "T") + (String(value).includes("Z") ? "" : "Z"));
+  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function renderAnalyticsMetrics(overview) {
+  document.getElementById("am-emails-total").textContent = Number(overview.emails_sent_total || 0).toLocaleString();
+  document.getElementById("am-emails-sub").textContent =
+    `${overview.emails_sent_today || 0} today · ${overview.emails_sent_7d || 0} this week`;
+
+  document.getElementById("am-replies-total").textContent = Number(overview.replies_total || 0).toLocaleString();
+  document.getElementById("am-replies-sub").textContent = `${overview.reply_rate || 0}% reply rate`;
+
+  document.getElementById("am-replies-interested").textContent = Number(overview.replies_interested || 0).toLocaleString();
+  document.getElementById("am-replies-review").textContent = `${overview.replies_needing_review || 0} need review`;
+
+  document.getElementById("am-demo-views").textContent = Number(overview.demo_views_total || 0).toLocaleString();
+  document.getElementById("am-demo-clicks").textContent = `${overview.demo_cta_clicks_total || 0} CTA clicks`;
+
+  document.getElementById("am-demo-intent").textContent = Number(overview.demo_avg_intent || 0).toLocaleString();
+  document.getElementById("am-demo-hot").textContent = `${overview.demo_hot_count || 0} hot leads (70+)`;
+
+  document.getElementById("am-calls-total").textContent = Number(overview.calls_total || 0).toLocaleString();
+  document.getElementById("am-calls-connected").textContent = `${overview.calls_connected || 0} connected`;
+}
+
+function renderSendTrendChart(trend) {
+  const el = document.getElementById("send-trend-chart");
+  if (!el || !window.Chart) return;
+  if (sendTrendChart) sendTrendChart.destroy();
+  sendTrendChart = new Chart(el.getContext("2d"), {
+    type: "line",
+    data: {
+      labels: trend.map(d => formatShortDate(d.date)),
+      datasets: [
+        {
+          label: "Emails sent",
+          data: trend.map(d => d.sent),
+          borderColor: "#2457d6",
+          backgroundColor: "rgba(36,87,214,.12)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+        },
+        {
+          label: "Replies received",
+          data: trend.map(d => d.replies),
+          borderColor: "#10b981",
+          backgroundColor: "rgba(16,185,129,.12)",
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: "index", intersect: false },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } },
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } } },
+    },
+  });
+}
+
+function renderReplyBreakdownChart(breakdown) {
+  const el = document.getElementById("reply-breakdown-chart");
+  document.getElementById("reply-breakdown-empty").classList.toggle("d-none", breakdown.length > 0);
+  el.classList.toggle("d-none", breakdown.length === 0);
+  if (!breakdown.length || !window.Chart) return;
+  if (replyBreakdownChart) replyBreakdownChart.destroy();
+  const palette = ["#2457d6", "#10b981", "#f0a43a", "#a52b2b", "#8b5cf6", "#22a9c7", "#94a3b8"];
+  replyBreakdownChart = new Chart(el.getContext("2d"), {
+    type: "doughnut",
+    data: {
+      labels: breakdown.map(b => replyClassificationLabel(b.classification)),
+      datasets: [{ data: breakdown.map(b => b.count), backgroundColor: palette }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } } },
+    },
+  });
+}
+
+function renderSendsTable(sends) {
+  const tbody = document.getElementById("sends-tbody");
+  document.getElementById("sends-empty").classList.toggle("d-none", sends.length > 0);
+  document.getElementById("sends-count-label").textContent = sends.length ? `(most recent ${sends.length})` : "";
+  tbody.innerHTML = sends.map(s => `
+    <tr>
+      <td class="fw-semibold">${escapeHtml(s.business_name || "—")}</td>
+      <td class="small text-muted-custom">${escapeHtml(s.subject || "—")}</td>
+      <td class="small text-muted-custom">${formatShortDate(s.sent_at)}</td>
+      <td class="text-end">${s.replied ? '<span class="status-pill sent">Replied</span>' : '<span class="small text-muted-custom">—</span>'}</td>
+    </tr>`).join("");
+}
+
+function renderRepliesList(replies) {
+  const list = document.getElementById("replies-list");
+  document.getElementById("replies-empty").classList.toggle("d-none", replies.length > 0);
+  document.getElementById("replies-count-label").textContent = replies.length ? `(most recent ${replies.length})` : "";
+
+  list.innerHTML = replies.map(r => {
+    const tone = REPLY_CLASSIFICATION_TONE[r.classification] || "neutral";
+    const alreadyReplied = r.status === "replied";
+    return `
+    <div class="reply-card" data-reply-id="${r.id}">
+      <div class="reply-card-head">
+        <span class="reply-from">${escapeHtml(r.business_name || r.from_email)}</span>
+        <span class="small text-muted-custom">${escapeHtml(r.from_email)}</span>
+        <span class="reply-classification tone-${tone}">${escapeHtml(replyClassificationLabel(r.classification))}</span>
+        <span class="small text-muted-custom ms-auto">${formatShortDate(r.received_at)}</span>
+      </div>
+      <div class="small fw-semibold mb-1">${escapeHtml(r.subject || "(no subject)")}</div>
+      <div class="reply-body-preview mb-2">${escapeHtml(r.body || "")}</div>
+      ${alreadyReplied
+        ? `<div class="small text-muted-custom"><i class="bi bi-reply-fill me-1"></i>Replied ${formatShortDate(r.replied_at)}: ${escapeHtml(r.reply_subject || "")}</div>`
+        : `
+        <details>
+          <summary class="small" style="cursor:pointer;">Write a reply</summary>
+          <div class="mt-2">
+            <input type="text" class="form-control form-control-sm mb-2 reply-subject-input" maxlength="255" placeholder="Subject" value="${escapeHtml(r.subject ? 'Re: ' + r.subject : '')}">
+            <textarea class="form-control form-control-sm mb-2 reply-body-input" rows="4" maxlength="12000" placeholder="Write your reply…"></textarea>
+            <button type="button" class="btn btn-sm btn-brand reply-send-btn">Send reply</button>
+            <span class="small ms-2 reply-send-status"></span>
+          </div>
+        </details>`}
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll(".reply-card").forEach(card => {
+    const btn = card.querySelector(".reply-send-btn");
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      const subject = card.querySelector(".reply-subject-input").value.trim();
+      const body = card.querySelector(".reply-body-input").value.trim();
+      const status = card.querySelector(".reply-send-status");
+      if (!subject || !body) {
+        status.className = "small ms-2 reply-send-status text-danger";
+        status.textContent = "Add a subject and a message first.";
+        return;
+      }
+      btn.disabled = true;
+      status.className = "small ms-2 reply-send-status text-muted-custom";
+      status.textContent = "Sending…";
+      try {
+        await api.post(`/api/v1/admin/nurturer-replies/${card.dataset.replyId}/send`, { subject, body });
+        await loadAnalytics();
+      } catch (err) {
+        status.className = "small ms-2 reply-send-status text-danger";
+        status.textContent = err.message || "Could not send the reply.";
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+function renderTopDemos(demos) {
+  const list = document.getElementById("top-demos-list");
+  document.getElementById("top-demos-empty").classList.toggle("d-none", demos.length > 0);
+  list.innerHTML = demos.map(d => `
+    <div class="demo-row">
+      <span class="intent-pill" title="Engagement intent score">${Number(d.intent_score || 0)}</span>
+      <div class="flex-grow-1 min-w-0">
+        <div class="fw-semibold text-truncate">
+          ${escapeHtml(d.business_name)}
+          ${d.status === "published" ? '<span class="status-pill sent ms-1">Published</span>' : '<span class="status-pill pending ms-1">Draft</span>'}
+        </div>
+        <div class="demo-meta">${Number(d.views || 0)} views · ${Number(d.cta_clicks || 0)} CTA clicks · ${Number(d.interaction_count || 0)} interactions · ${Number(d.max_scroll_depth || 0)}% depth · ${Number(d.engaged_seconds || 0)}s active</div>
+      </div>
+      ${d.url ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(d.url)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i></a>` : ""}
+    </div>`).join("");
+}
+
+async function loadAnalytics() {
+  let data;
+  try {
+    data = await api.get("/api/v1/admin/marketing-leads/analytics");
+  } catch (err) {
+    return; // non-critical panel — leave whatever was last rendered
+  }
+  renderAnalyticsMetrics(data.overview || {});
+  renderSendTrendChart(data.send_trend || []);
+  renderReplyBreakdownChart(data.reply_breakdown || []);
+  renderSendsTable(data.recent_sends || []);
+  renderRepliesList(data.recent_replies || []);
+  renderTopDemos(data.top_demos || []);
+}
+
 (async function init() {
   const user = await requireAdminAuth();
   if (!user) return;
@@ -1026,4 +1238,5 @@ document.getElementById("account-demo-regenerate").addEventListener("click", asy
   document.getElementById("lead-status-filter").addEventListener("change", applyLeadFilters);
   wireOutreachPanel();
   await loadLeads();
+  await loadAnalytics();
 })();
