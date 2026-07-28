@@ -69,7 +69,7 @@ class NurturerReplySync
 
         $pdo = Database::get();
         $lead = $pdo->prepare(
-            "SELECT e.*, ml.business_name, ml.industry, ml.pitch_body
+            "SELECT e.*, ml.business_name, ml.pitch_body
              FROM drip_enrollments e
              LEFT JOIN marketing_leads ml ON ml.id = e.lead_id
              WHERE lower(e.email) = lower(?) AND e.lead_id IS NOT NULL
@@ -131,7 +131,7 @@ class NurturerReplySync
             'email_body' => '',
         ] : NurturerController::generateReplyContinuation(
             (string) ($enrollment['name'] ?: $enrollment['business_name'] ?: ''),
-            (string) ($enrollment['lead_industry'] ?: $enrollment['industry'] ?: ''),
+            (string) ($enrollment['lead_industry'] ?: 'general business'),
             $threadContext,
             $subject,
             $body
