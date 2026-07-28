@@ -600,7 +600,7 @@ final class VoiceDemoController
         $url = trim((string) Settings::get('twilio_conversation_relay_url'));
         $voice = trim((string) Settings::get('twilio_conversation_relay_voice'));
         if ($voice === '') {
-            $voice = 'Fahco4VZzobUeiPqni1S';
+            $voice = 'Xb7hH8MSUJpSbSDYk0k2';
         }
         $xml = static fn (string $value): string =>
             htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');

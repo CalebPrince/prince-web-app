@@ -162,6 +162,8 @@ mobile-app delivery. This section consolidates every change shipped in commits
   for Lisa's prompts, owner recognition, transcripts, lead context, opt-outs,
   callbacks, and call logs. The existing `<Gather>` flow remains the automatic
   fallback until the relay is configured and explicitly enabled.
+  The default relay voice is Alice (`Xb7hH8MSUJpSbSDYk0k2`), a British female
+  voice; the voice ID remains editable in Admin Settings.
 - The telephony migration was reordered so existing installations add
   `marketing_lead_id` before creating dependent indexes; migrations remain
   safe to re-run.

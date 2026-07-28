@@ -566,7 +566,7 @@ async function testAi() {
     document.getElementById("twilio-conversation-relay-enabled").checked = settings.twilio_conversation_relay_enabled === "1";
     document.getElementById("twilio-conversation-relay-url").value = settings.twilio_conversation_relay_url || "";
     document.getElementById("twilio-conversation-relay-secret").value = settings.twilio_conversation_relay_secret || "";
-    document.getElementById("twilio-conversation-relay-voice").value = settings.twilio_conversation_relay_voice || "Fahco4VZzobUeiPqni1S";
+    document.getElementById("twilio-conversation-relay-voice").value = settings.twilio_conversation_relay_voice || "Xb7hH8MSUJpSbSDYk0k2";
     document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("hunter-key").value = settings.hunter_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";

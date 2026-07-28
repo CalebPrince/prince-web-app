@@ -39,10 +39,16 @@ server.on("upgrade", (req, socket, head) => {
     || (signature !== "" && twilio.validateRequest(twilioAuthToken, signature, requestUrl, {}));
 
   if (!valid || !req.url?.split("?")[0].endsWith("/conversation")) {
+    console.warn("websocket upgrade rejected", {
+      path: req.url?.split("?")[0] || "",
+      signaturePresent: signature !== "",
+      signatureValid: valid
+    });
     socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
     socket.destroy();
     return;
   }
+  console.info("websocket upgrade accepted", { path: req.url?.split("?")[0] || "" });
   wss.handleUpgrade(req, socket, head, ws => wss.emit("connection", ws));
 });
 
@@ -60,12 +66,14 @@ wss.on("connection", ws => {
 
     if (message.type === "setup") {
       callSid = String(message.callSid || "");
+      console.info("conversation setup received", { callSid });
       return;
     }
     if (message.type !== "prompt" || message.last !== true || processing || !callSid) return;
 
     const speech = String(message.voicePrompt || "").trim();
     if (!speech) return;
+    console.info("final caller prompt received", { callSid, characters: speech.length });
     processing = true;
     try {
       const response = await fetch(`${appBaseUrl}/api/v1/voice/twilio/relay-turn`, {
@@ -78,6 +86,7 @@ wss.on("connection", ws => {
         signal: AbortSignal.timeout(85000)
       });
       const data = await response.json();
+      console.info("application turn completed", { callSid, status: response.status });
       if (!response.ok || typeof data.reply !== "string" || !data.reply.trim()) {
         throw new Error(data.error || `Application returned HTTP ${response.status}`);
       }
@@ -112,6 +121,14 @@ wss.on("connection", ws => {
     } finally {
       processing = false;
     }
+  });
+
+  ws.on("error", error => {
+    console.error("websocket error", { callSid, error: error.message });
+  });
+
+  ws.on("close", (code, reason) => {
+    console.info("websocket closed", { callSid, code, reason: reason.toString() });
   });
 });
 
