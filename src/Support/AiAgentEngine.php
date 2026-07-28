@@ -459,7 +459,6 @@ class AiAgentEngine
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false || $status !== 200) {
             // Silent failures here are indistinguishable from "model declined to
@@ -497,7 +496,6 @@ class AiAgentEngine
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(
@@ -530,7 +528,6 @@ class AiAgentEngine
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($response === false || $status !== 200) {
             $decoded = is_string($response) ? json_decode($response, true) : null;
