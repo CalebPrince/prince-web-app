@@ -15,12 +15,13 @@ class DashboardController
     public static function exchangeRate(): void
     {
         AuthMiddleware::requireAuth();
-        $cachedRate = (float) (Settings::get('external_fx_usd_ghs_rate') ?: 0);
-        $cachedAt = Settings::get('external_fx_usd_ghs_updated_at') ?: '';
+        $cachedRate = (float) (Settings::get('external_fx_ghana_api_usd_ghs_rate') ?: 0);
+        $cachedAt = Settings::get('external_fx_ghana_api_updated_at') ?: '';
+        $sourceTimestamp = Settings::get('external_fx_ghana_api_source_timestamp') ?: '';
         $isFresh = $cachedRate > 0 && $cachedAt !== '' && strtotime($cachedAt) >= time() - 43200;
 
         if (!$isFresh && function_exists('curl_init')) {
-            $curl = curl_init('https://api.exchangerate.fun/latest?base=USD');
+            $curl = curl_init('https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD');
             curl_setopt_array($curl, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_TIMEOUT => 6,
@@ -32,12 +33,23 @@ class DashboardController
             $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
             curl_close($curl);
             $data = is_string($body) ? json_decode($body, true) : null;
-            $liveRate = (float) ($data['rates']['GHS'] ?? 0);
-            if ($status === 200 && $liveRate > 0) {
-                $cachedRate = $liveRate;
+            $usdRow = null;
+            foreach (($data['data'] ?? []) as $row) {
+                if (($row['baseCurrency'] ?? '') === 'GHS' && ($row['targetCurrency'] ?? '') === 'USD') {
+                    $usdRow = $row;
+                    break;
+                }
+            }
+            $ghsToUsd = (float) ($usdRow['rate'] ?? 0);
+            if ($status === 200 && ($data['success'] ?? false) && $ghsToUsd > 0) {
+                // Ghana API quotes 1 GHS in USD; this dashboard displays the
+                // inverse because expense conversion is expressed as GHS per USD.
+                $cachedRate = 1 / $ghsToUsd;
                 $cachedAt = date('c');
-                Settings::set('external_fx_usd_ghs_rate', (string) $cachedRate);
-                Settings::set('external_fx_usd_ghs_updated_at', $cachedAt);
+                $sourceTimestamp = (string) ($usdRow['timestamp'] ?? $data['timestamp'] ?? $cachedAt);
+                Settings::set('external_fx_ghana_api_usd_ghs_rate', (string) $cachedRate);
+                Settings::set('external_fx_ghana_api_updated_at', $cachedAt);
+                Settings::set('external_fx_ghana_api_source_timestamp', $sourceTimestamp);
                 $isFresh = true;
             }
         }
@@ -50,6 +62,8 @@ class DashboardController
             'quote' => 'GHS',
             'rate' => $cachedRate,
             'updated_at' => $cachedAt,
+            'source_timestamp' => $sourceTimestamp,
+            'provider' => 'Ghana API',
             'cached' => !$isFresh,
         ]);
     }
