@@ -91,7 +91,8 @@
         <form class="admin-card expense-controls" id="expense-form">
           <p class="expense-kicker mb-1">Controls</p><h4>Budget settings</h4>
           <label for="expense-currency">Reporting currency</label>
-          <input class="form-control" id="expense-currency" maxlength="3" placeholder="USD" required>
+          <select class="form-select" id="expense-currency" required><option value="USD">USD</option><option value="GHS">GHS</option></select>
+          <div class="expense-rate-status" id="expense-rate-status"><i class="bi bi-arrow-repeat"></i><span>Loading the USD/GHS rate…</span></div>
           <label for="expense-budget">Monthly budget</label>
           <div class="input-group"><span class="input-group-text" id="expense-budget-prefix">USD</span><input class="form-control" id="expense-budget" type="number" min="0" step="0.01" placeholder="25.00"></div>
           <div class="expense-control-note"><i class="bi bi-info-circle"></i><span>Usage charges are planning estimates. Update them from real invoices as the month develops.</span></div>

@@ -11,6 +11,49 @@ use App\Support\Settings;
 
 class DashboardController
 {
+    /** GET /api/v1/admin/exchange-rate — cached USD/GHS planning rate */
+    public static function exchangeRate(): void
+    {
+        AuthMiddleware::requireAuth();
+        $cachedRate = (float) (Settings::get('external_fx_usd_ghs_rate') ?: 0);
+        $cachedAt = Settings::get('external_fx_usd_ghs_updated_at') ?: '';
+        $isFresh = $cachedRate > 0 && $cachedAt !== '' && strtotime($cachedAt) >= time() - 43200;
+
+        if (!$isFresh && function_exists('curl_init')) {
+            $curl = curl_init('https://api.exchangerate.fun/latest?base=USD');
+            curl_setopt_array($curl, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 6,
+                CURLOPT_CONNECTTIMEOUT => 3,
+                CURLOPT_HTTPHEADER => ['Accept: application/json'],
+                CURLOPT_USERAGENT => 'PrinceCalebFinanceDashboard/1.0',
+            ]);
+            $body = curl_exec($curl);
+            $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+            $data = is_string($body) ? json_decode($body, true) : null;
+            $liveRate = (float) ($data['rates']['GHS'] ?? 0);
+            if ($status === 200 && $liveRate > 0) {
+                $cachedRate = $liveRate;
+                $cachedAt = date('c');
+                Settings::set('external_fx_usd_ghs_rate', (string) $cachedRate);
+                Settings::set('external_fx_usd_ghs_updated_at', $cachedAt);
+                $isFresh = true;
+            }
+        }
+
+        if ($cachedRate <= 0) {
+            Response::error('The USD/GHS exchange rate is temporarily unavailable.', 503);
+        }
+        Response::json([
+            'base' => 'USD',
+            'quote' => 'GHS',
+            'rate' => $cachedRate,
+            'updated_at' => $cachedAt,
+            'cached' => !$isFresh,
+        ]);
+    }
+
     /**
      * GET /api/v1/health — lightweight public probe for uptime monitoring.
      * Reports DB connectivity, webhook-queue backlog, and which AI providers

@@ -1757,7 +1757,7 @@ body > .d-flex {
 .expense-page { min-width:0; max-width:1600px; margin:0 auto; }
 .expense-header { display:flex; align-items:flex-end; justify-content:space-between; gap:2rem; padding:2rem; color:#f8fafc; background:#111b2e; border-radius:18px; overflow:hidden; position:relative; }
 .expense-header::after { content:""; position:absolute; width:190px; height:190px; right:18%; bottom:-140px; border:34px solid rgba(85,216,174,.15); border-radius:50%; pointer-events:none; }
-.expense-header h1 { color:#fff; max-width:650px; margin:0 0 .6rem; font-size:clamp(1.8rem,3vw,2.8rem); letter-spacing:-.045em; }
+.admin-sidebar + main.expense-page .expense-header h1 { color:#fff; max-width:650px; margin:0 0 .6rem; font-size:clamp(1.8rem,3vw,2.8rem); letter-spacing:-.045em; }
 .expense-header p:not(.expense-kicker) { color:#afbdd2; max-width:680px; }
 .expense-kicker { color:#6e829e; font-size:.72rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
 .expense-header .expense-kicker { color:#55d8ae; }
@@ -1809,6 +1809,8 @@ body > .d-flex {
 .expense-empty i { font-size:2rem; color:#55d8ae; }
 .expense-empty strong { color:var(--heading-color); }
 .expense-controls label { margin:1.1rem 0 .4rem; color:var(--heading-color); font-size:.78rem; font-weight:700; }
+.expense-rate-status { display:flex; align-items:flex-start; gap:.45rem; margin-top:.5rem; color:#14815b; font-size:.72rem; line-height:1.4; }
+.expense-rate-status.is-unavailable { color:#b64c55; }
 .expense-control-note { display:flex; gap:.65rem; margin:1.15rem 0; padding:.85rem; color:var(--text-muted); background:rgba(69,111,222,.07); border-radius:10px; font-size:.76rem; line-height:1.5; }
 .expense-control-note i { color:#456fde; }
 .expense-donut { --fixed-share:0deg; width:154px; aspect-ratio:1; margin:1.5rem auto 1.1rem; display:grid; place-items:center; border-radius:50%; background:conic-gradient(#3857d6 var(--fixed-share),#55d8ae 0); position:relative; }

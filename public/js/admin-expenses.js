@@ -6,11 +6,22 @@
   let items = [];
   let monthlyRevenue = [];
   let monthlyRevenueBySource = [];
+  let usdGhsRate = null;
+  let activeCurrency = "USD";
 
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
   const amount = (subunits, currency) => `${currency} ${(Number(subunits || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  function convert(subunits, from, to) {
+    from = String(from).toUpperCase();
+    to = String(to).toUpperCase();
+    if (from === to) return Number(subunits || 0);
+    if (!usdGhsRate) return null;
+    if (from === "USD" && to === "GHS") return Math.round(Number(subunits || 0) * usdGhsRate);
+    if (from === "GHS" && to === "USD") return Math.round(Number(subunits || 0) / usdGhsRate);
+    return null;
+  }
 
   function rowTemplate(item, index) {
     return `<div class="expense-ledger-row" data-index="${index}">
@@ -58,11 +69,12 @@
     const budget = Math.round(Math.max(0, Number(budgetEl.value || 0)) * 100);
     const largest = [...namedItems].filter(i => i.amount !== null).sort((a, b) => b.amount - a.amount)[0];
     const fixedShare = total ? Math.round((fixed / total) * 100) : 0;
-    const matchingRevenue = monthlyRevenue.find(row => String(row.currency).toUpperCase() === currency);
-    const revenue = Number(matchingRevenue?.total || 0);
+    const convertedRevenue = monthlyRevenue.map(row => convert(row.total, row.currency, currency)).filter(value => value !== null);
+    const hasComparableRevenue = convertedRevenue.length > 0;
+    const revenue = convertedRevenue.reduce((sum, value) => sum + value, 0);
     const net = revenue - total;
     const margin = revenue > 0 ? Math.round((net / revenue) * 100) : null;
-    const coverage = matchingRevenue && total > 0 ? revenue / total : null;
+    const coverage = hasComparableRevenue && total > 0 ? revenue / total : null;
 
     document.getElementById("expense-monthly-total").textContent = amount(total, currency);
     document.getElementById("expense-fixed-total").textContent = amount(fixed, currency);
@@ -75,20 +87,20 @@
     document.getElementById("expense-fixed-share").textContent = `${fixedShare}%`;
     document.getElementById("expense-donut").style.setProperty("--fixed-share", `${fixedShare * 3.6}deg`);
 
-    document.getElementById("finance-revenue").textContent = monthlyRevenue.length
-      ? monthlyRevenue.map(row => amount(row.total, row.currency)).join(" + ")
+    document.getElementById("finance-revenue").textContent = hasComparableRevenue
+      ? amount(revenue, currency)
       : amount(0, currency);
     document.getElementById("finance-expenses").textContent = amount(total, currency);
     const netEl = document.getElementById("finance-net");
-    netEl.textContent = matchingRevenue ? `${net < 0 ? "−" : ""}${amount(Math.abs(net), currency)}` : "Not comparable";
-    netEl.classList.toggle("is-negative", matchingRevenue && net < 0);
-    netEl.classList.toggle("is-positive", matchingRevenue && net >= 0);
+    netEl.textContent = hasComparableRevenue ? `${net < 0 ? "−" : ""}${amount(Math.abs(net), currency)}` : "—";
+    netEl.classList.toggle("is-negative", hasComparableRevenue && net < 0);
+    netEl.classList.toggle("is-positive", hasComparableRevenue && net >= 0);
     document.getElementById("finance-margin").textContent = margin === null ? "—" : `${margin}%`;
-    document.getElementById("finance-net-note").textContent = matchingRevenue
+    document.getElementById("finance-net-note").textContent = hasComparableRevenue
       ? (net >= 0 ? "Operating surplus this month" : "Operating shortfall this month")
-      : "Revenue and expenses use different currencies";
-    document.getElementById("finance-coverage").textContent = !matchingRevenue
-      ? "Use a matching reporting currency"
+      : "No confirmed revenue this month";
+    document.getElementById("finance-coverage").textContent = !hasComparableRevenue
+      ? "Waiting for confirmed revenue"
       : coverage === null
         ? "Add expenses to calculate coverage"
         : `${coverage.toFixed(1)}× expense coverage`;
@@ -97,15 +109,22 @@
       ? `${sources.length} recorded payment source${sources.length === 1 ? "" : "s"}`
       : "No confirmed payments this month";
     document.getElementById("finance-sources").innerHTML = sources.length
-      ? sources.map(source => `<div><span>${esc(source.source)}</span><strong>${amount(source.total, source.currency)}</strong></div>`).join("")
+      ? sources.map(source => {
+          const converted = convert(source.total, source.currency, currency);
+          const value = converted === null ? amount(source.total, source.currency) : amount(converted, currency);
+          return `<div><span>${esc(source.source)}</span><strong>${value}</strong></div>`;
+        }).join("")
       : '<p class="text-muted-custom small mb-0">No successful Paystack or manually recorded payments this month.</p>';
 
-    const unmatched = monthlyRevenue.filter(row => String(row.currency).toUpperCase() !== currency);
+    const convertedCurrencies = monthlyRevenue.filter(row => String(row.currency).toUpperCase() !== currency && convert(row.total, row.currency, currency) !== null);
+    const unmatched = monthlyRevenue.filter(row => convert(row.total, row.currency, currency) === null);
     const currencyNote = document.getElementById("finance-currency-note");
-    currencyNote.classList.toggle("d-none", monthlyRevenue.length === 0 || unmatched.length === 0);
-    currencyNote.innerHTML = unmatched.length
-      ? `<i class="bi bi-currency-exchange"></i><span><strong>Currency note:</strong> Net profit compares only ${esc(currency)} revenue with ${esc(currency)} expenses. Revenue in ${unmatched.map(row => esc(row.currency)).join(", ")} is shown but not converted automatically.</span>`
-      : "";
+    currencyNote.classList.toggle("d-none", convertedCurrencies.length === 0 && unmatched.length === 0);
+    currencyNote.innerHTML = convertedCurrencies.length
+      ? `<i class="bi bi-currency-exchange"></i><span><strong>Automatic conversion:</strong> Revenue and expenses are displayed in ${esc(currency)} using 1 USD = ${usdGhsRate.toFixed(4)} GHS.${unmatched.length ? ` ${unmatched.map(row => esc(row.currency)).join(", ")} could not be converted.` : ""}</span>`
+      : unmatched.length
+        ? `<i class="bi bi-exclamation-circle"></i><span>Revenue in ${unmatched.map(row => esc(row.currency)).join(", ")} could not be converted to ${esc(currency)}.</span>`
+        : "";
 
     const ceiling = Math.max(total, budget, 1);
     document.getElementById("expense-budget-bar").style.width = `${Math.min(100, total / ceiling * 100)}%`;
@@ -135,7 +154,22 @@
     renderRows();
     rowsEl.querySelector(".expense-ledger-row:last-child .expense-name")?.focus();
   });
-  currencyEl.addEventListener("input", renderMetrics);
+  currencyEl.addEventListener("change", () => {
+    syncFromRows();
+    const nextCurrency = currencyEl.value;
+    if (nextCurrency === activeCurrency) return renderMetrics();
+    const factorAvailable = convert(100, activeCurrency, nextCurrency) !== null;
+    if (!factorAvailable) {
+      currencyEl.value = activeCurrency;
+      return showMessage("The live exchange rate is unavailable, so amounts were not changed.", false);
+    }
+    items = items.map(item => ({ ...item, amount: item.amount === null ? null : convert(item.amount, activeCurrency, nextCurrency) }));
+    const budget = Math.round(Math.max(0, Number(budgetEl.value || 0)) * 100);
+    budgetEl.value = budget ? (convert(budget, activeCurrency, nextCurrency) / 100).toFixed(2) : "";
+    activeCurrency = nextCurrency;
+    renderRows();
+    renderMetrics();
+  });
   budgetEl.addEventListener("input", renderMetrics);
 
   form.addEventListener("submit", async event => {
@@ -167,9 +201,26 @@
     wireLogout();
     document.getElementById("expense-period-label").textContent = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date());
     try {
-      const data = await api.get("/api/v1/admin/dashboard");
+      const [data, fx] = await Promise.all([
+        api.get("/api/v1/admin/dashboard"),
+        api.get("/api/v1/admin/exchange-rate").catch(() => null),
+      ]);
       const expenses = data.external_expenses || {};
+      if (![...currencyEl.options].some(option => option.value === expenses.currency)) {
+        currencyEl.add(new Option(expenses.currency, expenses.currency));
+      }
       currencyEl.value = expenses.currency || "USD";
+      activeCurrency = currencyEl.value;
+      usdGhsRate = Number(fx?.rate || 0) || null;
+      const rateStatus = document.getElementById("expense-rate-status");
+      const rateUpdated = fx?.updated_at ? new Date(fx.updated_at) : null;
+      const rateUpdatedLabel = rateUpdated && !Number.isNaN(rateUpdated.getTime())
+        ? rateUpdated.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+        : "recently";
+      rateStatus.innerHTML = usdGhsRate
+        ? `<i class="bi bi-check2-circle"></i><span>1 USD = ${usdGhsRate.toFixed(4)} GHS · updated ${esc(rateUpdatedLabel)}</span>`
+        : '<i class="bi bi-exclamation-circle"></i><span>Live conversion is temporarily unavailable.</span>';
+      rateStatus.classList.toggle("is-unavailable", !usdGhsRate);
       budgetEl.value = expenses.monthly_budget ? (expenses.monthly_budget / 100).toFixed(2) : "";
       items = (expenses.items || []).map(item => ({ name: item.name, type: item.type, amount: item.amount }));
       monthlyRevenue = expenses.monthly_revenue || [];

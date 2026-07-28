@@ -169,6 +169,7 @@ $router->get('/api/v1/auth/me', [AuthController::class, 'me']);
 
 // Admin
 $router->get('/api/v1/admin/dashboard', [DashboardController::class, 'overview']);
+$router->get('/api/v1/admin/exchange-rate', [DashboardController::class, 'exchangeRate']);
 $router->get('/api/v1/admin/tasks', [TaskController::class, 'index']);
 $router->post('/api/v1/admin/tasks', [TaskController::class, 'store']);
 $router->put('/api/v1/admin/tasks/{id}', [TaskController::class, 'update']);
