@@ -38,6 +38,7 @@ class TextToSpeechController
         if (mb_strlen($text) > 700) {
             Response::error('Text is too long for website speech.', 422);
         }
+        $text = self::normalizeForSpeech($text);
 
         $url = 'https://api.elevenlabs.io/v1/text-to-speech/'
             . rawurlencode($voiceId)
@@ -82,5 +83,18 @@ class TextToSpeechController
         header('X-Content-Type-Options: nosniff');
         echo $audio;
         exit;
+    }
+
+    /**
+     * Expand business-specific abbreviations before synthesis. The visible
+     * chat copy keeps the compact currency code; only Lisa's spoken copy is
+     * changed, e.g. "GHS 600" becomes "600 Ghana cedis".
+     */
+    private static function normalizeForSpeech(string $text): string
+    {
+        $amount = '([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?)';
+        $text = preg_replace('/\bGHS\s*' . $amount . '\b/i', '$1 Ghana cedis', $text) ?? $text;
+        $text = preg_replace('/\b' . $amount . '\s*GHS\b/i', '$1 Ghana cedis', $text) ?? $text;
+        return $text;
     }
 }
