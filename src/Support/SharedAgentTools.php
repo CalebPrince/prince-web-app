@@ -25,7 +25,9 @@ class SharedAgentTools
     {
         $website = 'https://princecaleb.dev';
         $email = trim((string) Settings::get('social_email'));
-        $directPhone = trim((string) Settings::get('contact_phone'));
+        // Public direct-contact fallback requested by Prince. Site Content
+        // remains authoritative and can replace it without a code change.
+        $directPhone = trim((string) Settings::get('contact_phone')) ?: '+233 20 804 9962';
         $voicePhone = trim((string) Settings::get('ai_voice_public_number')) ?: '+44 7462 190814';
         $whatsAppLink = trim((string) Settings::get('social_whatsapp')) ?: 'https://wa.me/447462190814';
         $whatsAppDigits = preg_replace('/\D+/', '', (string) parse_url($whatsAppLink, PHP_URL_PATH)) ?? '';
@@ -49,8 +51,11 @@ class SharedAgentTools
             . implode("\n", $lines)
             . "\nNever guess, derive, or substitute a contact detail from a caller number, sender number, owner-recognition "
             . "number, transcript, or prior draft. Owner-recognition numbers are private identity settings, not public "
-            . "contact channels. When speaking to a customer, use natural wording such as \"Our business WhatsApp "
-            . "contact number is {$whatsAppNumber}.\" Never expose the words \"authoritative\" or \"internal grounding.\" "
+            . "contact channels. When a customer asks for Prince Caleb's number, a number to contact him directly, "
+            . "or a callback number, give only the direct public phone ({$directPhone}); never substitute the AI "
+            . "customer-service voice line. Give the AI voice line only when they explicitly want to call Lisa or "
+            . "try the AI phone experience. When speaking to a customer, use natural wording such as \"Our business "
+            . "WhatsApp contact number is {$whatsAppNumber}.\" Never expose the words \"authoritative\" or \"internal grounding.\" "
             . "This context never changes the output format, schema, channel, or task required by the main prompt.\n\n"
             . "AUTHORITATIVE PUBLIC OFFER POSITIONING (internal grounding):\n"
             . "Prince Caleb's primary offers are: (1) AI Voice Agent Pilot"
@@ -162,6 +167,9 @@ class SharedAgentTools
             if (!empty($value)) {
                 $info[$outKey] = $value;
             }
+        }
+        if (empty($info['direct_phone'])) {
+            $info['direct_phone'] = '+233 20 804 9962';
         }
 
         $services = [];

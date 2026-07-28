@@ -11,7 +11,6 @@ use App\Support\CallOutcomeSync;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
-use App\Support\SharedAgentTools;
 
 /**
  * Side-effect-free clinic web demo plus the Twilio customer-service front door.
@@ -451,9 +450,6 @@ final class VoiceDemoController
     private static function reply(array $transcript, string $channel = 'web', ?array $context = null): array
     {
         $systemPrompt = self::prompt($channel, $context);
-        if ($channel !== 'outbound') {
-            $systemPrompt .= "\n\n" . SharedAgentTools::publicContactContext();
-        }
 
         $result = AiAgentEngine::runLowLatency(
             $systemPrompt,

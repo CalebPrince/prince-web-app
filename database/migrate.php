@@ -128,6 +128,7 @@ foreach ($pricingOfferUpdates as $name => [$oldValue, $newValue]) {
     $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
 }
 $pricingInsertStmt = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value) VALUES (?, ?)');
+$pricingInsertStmt->execute(['contact_phone', '+233 20 804 9962']);
 foreach ($pricingOfferInserts as $name => $value) {
     $pricingInsertStmt->execute([$name, $value]);
 }

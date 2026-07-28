@@ -942,7 +942,7 @@ class MarketingLeadController
         if (!empty($whatsapp)) {
             $lines[] = "💬 WhatsApp: {$whatsapp}";
         }
-        $phone = Settings::get('contact_phone');
+        $phone = Settings::get('contact_phone') ?: '+233 20 804 9962';
         if (!empty($phone)) {
             $lines[] = "📞 {$phone}";
         }
