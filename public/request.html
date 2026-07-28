@@ -83,7 +83,7 @@
   </div>
 </header>
 
-<section class="section">
+<section class="section" data-currency-zone>
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-lg-8">
@@ -129,10 +129,10 @@
                   <label class="form-label fw-semibold" for="budget">Budget</label>
                   <select class="form-select" id="budget" required>
                     <option value="" selected disabled>Select a range</option>
-                    <option>Under GHS 10,000</option>
-                    <option>GHS 10,000 – GHS 50,000</option>
-                    <option>GHS 50,000 – GHS 150,000</option>
-                    <option>GHS 150,000+</option>
+                    <option value="Under GHS 10,000" data-currency-price>Under GHS 10,000</option>
+                    <option value="GHS 10,000 – GHS 50,000" data-currency-price>GHS 10,000 – GHS 50,000</option>
+                    <option value="GHS 50,000 – GHS 150,000" data-currency-price>GHS 50,000 – GHS 150,000</option>
+                    <option value="GHS 150,000+" data-currency-price>GHS 150,000+</option>
                     <option>Not sure yet</option>
                   </select>
                 </div>
@@ -269,6 +269,7 @@
 <script src="/js/nav-dropdowns.js"></script>
 <script src="/js/mobile-nav.js"></script>
 <script src="/js/content.js"></script>
+<script src="/js/currency-switcher.js?v=20260728"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/ai-boot.js"></script>
 <script>

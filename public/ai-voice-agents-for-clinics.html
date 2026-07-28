@@ -256,7 +256,7 @@
     </div>
   </section>
 
-  <section class="section clinic-roi-section" id="clinic-roi">
+  <section class="section clinic-roi-section" id="clinic-roi" data-currency-zone>
     <div class="container clinic-roi-layout">
       <div class="reveal">
         <p class="eyebrow mb-3">// Missed-call opportunity</p>
@@ -266,7 +266,7 @@
           <label>Calls on a typical day <input type="number" id="roi-calls" min="0" max="1000" value="30" inputmode="numeric"></label>
           <label>Currently missed <span><output id="roi-missed-output">20%</output></span><input type="range" id="roi-missed" min="0" max="100" value="20"></label>
           <label>Missed callers who would book <span><output id="roi-book-output">35%</output></span><input type="range" id="roi-book" min="0" max="100" value="35"></label>
-          <label>Average appointment value (GHS) <input type="number" id="roi-value" min="0" max="1000000" value="250" inputmode="decimal"></label>
+          <label>Average appointment value (<span id="roi-value-currency">GHS</span>) <input type="number" id="roi-value" min="0" max="1000000" value="250" inputmode="decimal"></label>
           <label>Working days per month <input type="number" id="roi-days" min="1" max="31" value="26" inputmode="numeric"></label>
         </div>
       </div>
@@ -329,6 +329,7 @@
 <script src="/js/nav-dropdowns.js"></script>
 <script src="/js/mobile-nav.js"></script>
 <script src="/js/content.js"></script>
+<script src="/js/currency-switcher.js?v=20260728"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/elevenlabs-tts.js?v=20260728-consistent"></script>
 <script src="/js/voice-demo.js?v=20260728-elevenlabs-consistent"></script>

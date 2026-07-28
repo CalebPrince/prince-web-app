@@ -15,6 +15,17 @@ class DashboardController
     public static function exchangeRate(): void
     {
         AuthMiddleware::requireAuth();
+        self::respondExchangeRate();
+    }
+
+    /** GET /api/v1/exchange-rate — public, non-sensitive display rate */
+    public static function publicExchangeRate(): void
+    {
+        self::respondExchangeRate();
+    }
+
+    private static function respondExchangeRate(): void
+    {
         $cachedRate = (float) (
             Settings::get('external_fx_usd_ghs_rate_v2')
             ?: Settings::get('external_fx_ghana_api_usd_ghs_rate')

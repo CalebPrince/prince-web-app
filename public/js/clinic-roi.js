@@ -9,7 +9,15 @@
   if (Object.values(fields).some(field => !field)) return;
 
   const whole = value => Math.max(0, Math.round(Number(value) || 0));
-  const money = new Intl.NumberFormat("en-GH", { style: "currency", currency: "GHS", maximumFractionDigits: 0 });
+  let activeCurrency = "GHS";
+
+  function money(value) {
+    return new Intl.NumberFormat(activeCurrency === "GHS" ? "en-GH" : "en-US", {
+      style: "currency",
+      currency: activeCurrency,
+      maximumFractionDigits: activeCurrency === "GHS" ? 0 : 2,
+    }).format(value);
+  }
 
   function calculate() {
     const calls = whole(fields.calls.value);
@@ -24,9 +32,19 @@
     document.getElementById("roi-book-output").textContent = `${whole(fields.book.value)}%`;
     document.getElementById("roi-missed-calls").textContent = Math.round(missedCalls).toLocaleString();
     document.getElementById("roi-bookings").textContent = Math.round(bookings).toLocaleString();
-    document.getElementById("roi-total").textContent = money.format(bookings * appointmentValue);
+    document.getElementById("roi-total").textContent = money(bookings * appointmentValue);
   }
 
   Object.values(fields).forEach(field => field.addEventListener("input", calculate));
+  document.addEventListener("sitecurrencychange", event => {
+    const nextCurrency = event.detail?.currency || "GHS";
+    if (nextCurrency !== activeCurrency && window.SiteCurrency?.rate) {
+      fields.value.value = window.SiteCurrency.convert(fields.value.value, activeCurrency, nextCurrency)
+        .toFixed(nextCurrency === "GHS" ? 0 : 2);
+    }
+    activeCurrency = nextCurrency;
+    document.getElementById("roi-value-currency").textContent = activeCurrency;
+    calculate();
+  });
   calculate();
 })();
