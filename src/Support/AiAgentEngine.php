@@ -232,6 +232,20 @@ class AiAgentEngine
 
             $result = self::callGeminiRaw($apiKey, $body, $timeoutSeconds);
             $parts = $result['candidates'][0]['content']['parts'] ?? null;
+            // Gemini occasionally returns HTTP 200 + finishReason=STOP but no
+            // content at all. That is neither a safety block nor a useful
+            // completion. Retry this provider once before moving to the next
+            // configured provider; do not consume a tool round for an empty
+            // response.
+            if (!is_array($parts)
+                && ($result['candidates'][0]['finishReason'] ?? null) === 'STOP') {
+                error_log(sprintf(
+                    'Gemini chat returned an empty STOP response (round %d); retrying once.',
+                    $round
+                ));
+                $result = self::callGeminiRaw($apiKey, $body, $timeoutSeconds);
+                $parts = $result['candidates'][0]['content']['parts'] ?? null;
+            }
             if (!is_array($parts)) {
                 error_log(sprintf(
                     'Gemini chat returned no usable content (round %d): finishReason=%s promptFeedback=%s',
@@ -239,7 +253,7 @@ class AiAgentEngine
                     $result['candidates'][0]['finishReason'] ?? 'none',
                     json_encode($result['promptFeedback'] ?? null)
                 ));
-                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+                return null;
             }
 
             $functionCalls = [];
@@ -279,8 +293,9 @@ class AiAgentEngine
                         $result['candidates'][0]['finishReason'] ?? 'none',
                         json_encode($parts)
                     ));
+                    return null;
                 }
-                return ['reply' => $text !== '' ? $text : null, 'ready' => $ready];
+                return ['reply' => $text, 'ready' => $ready];
             }
 
             // Echo the model's turn back exactly as received — thinking-enabled
