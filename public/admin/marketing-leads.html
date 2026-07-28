@@ -103,7 +103,10 @@
 .metric-card .trend.positive{color:#0f9d58}
 .metric-card .trend.negative{color:#d64545}
 .analytics-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:1.25rem}
+.analytics-grid>div{min-width:0}
 @media(max-width:960px){.analytics-grid{grid-template-columns:1fr}}
+.chart-wrap{position:relative;height:220px}
+.chart-wrap.chart-wrap-sm{height:180px}
 .reply-card{border:1px solid var(--line);border-radius:14px;padding:1rem;background:var(--bg-soft)}
 .reply-card-head{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-bottom:.5rem}
 .reply-from{font-weight:700;color:var(--text,#172033)}
@@ -292,7 +295,7 @@
       <div>
         <div class="card">
           <h2>Send &amp; reply activity <small class="text-muted-custom fw-normal" style="font-size:.68rem;">Last 30 days</small></h2>
-          <canvas id="send-trend-chart" height="90"></canvas>
+          <div class="chart-wrap"><canvas id="send-trend-chart"></canvas></div>
         </div>
         <div class="card">
           <h2>Emails sent <small class="text-muted-custom fw-normal" style="font-size:.68rem;" id="sends-count-label"></small></h2>
@@ -313,7 +316,7 @@
       <div>
         <div class="card">
           <h2>Reply breakdown</h2>
-          <canvas id="reply-breakdown-chart" height="200"></canvas>
+          <div class="chart-wrap chart-wrap-sm"><canvas id="reply-breakdown-chart"></canvas></div>
           <div id="reply-breakdown-empty" class="text-center text-muted-custom py-4 d-none">No replies yet.</div>
         </div>
         <div class="card mb-0">

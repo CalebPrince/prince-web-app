@@ -1093,6 +1093,7 @@ function renderSendTrendChart(trend) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } },
       plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } } },
@@ -1103,7 +1104,7 @@ function renderSendTrendChart(trend) {
 function renderReplyBreakdownChart(breakdown) {
   const el = document.getElementById("reply-breakdown-chart");
   document.getElementById("reply-breakdown-empty").classList.toggle("d-none", breakdown.length > 0);
-  el.classList.toggle("d-none", breakdown.length === 0);
+  el.closest(".chart-wrap").classList.toggle("d-none", breakdown.length === 0);
   if (!breakdown.length || !window.Chart) return;
   if (replyBreakdownChart) replyBreakdownChart.destroy();
   const palette = ["#2457d6", "#10b981", "#f0a43a", "#a52b2b", "#8b5cf6", "#22a9c7", "#94a3b8"];
@@ -1115,6 +1116,7 @@ function renderReplyBreakdownChart(breakdown) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } } },
     },
   });
