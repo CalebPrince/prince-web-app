@@ -294,9 +294,21 @@ final class VoiceDemoController
                 'end' => true,
             ]);
         }
+        if (self::callerFinishedConversation($speech)) {
+            $reply = "You're welcome. Thank you for calling. Goodbye.";
+            $transcript[] = ['role' => 'user', 'text' => $speech];
+            $transcript[] = ['role' => 'assistant', 'text' => $reply];
+            self::save($pdo, (int) $session['id'], $transcript, null);
+            self::record($pdo, (int) $session['id'], 'answer_received', [
+                'channel' => 'conversation_relay',
+                'conversation_complete' => true,
+            ]);
+            Response::json(['reply' => $reply, 'end' => true]);
+        }
 
         $transcript[] = ['role' => 'user', 'text' => $speech];
         $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $callContext);
+        $endConversation = self::assistantFinishedConversation($result['reply']);
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
         self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'conversation_relay']);
@@ -304,7 +316,7 @@ final class VoiceDemoController
             'channel' => 'conversation_relay',
             'provider' => $result['provider'],
         ]);
-        Response::json(['reply' => $result['reply'], 'end' => false]);
+        Response::json(['reply' => $result['reply'], 'end' => $endConversation]);
     }
 
     public static function callStatus(): void
@@ -559,6 +571,25 @@ final class VoiceDemoController
         if ($number === '') return '';
         $digits = preg_replace('/\D+/', '', $number) ?? '';
         return $digits === '' ? '' : '+' . $digits;
+    }
+
+    private static function callerFinishedConversation(string $speech): bool
+    {
+        return preg_match(
+            '/\b(?:goodbye|bye(?:\s+bye)?|that(?:\'s| is) all|that will be all|'
+            . 'nothing else|no,?\s+thanks|no,?\s+thank you|thanks,?\s+bye|'
+            . 'thank you,?\s+bye|we(?:\'re| are) done|end the call|hang up)\b/i',
+            $speech
+        ) === 1;
+    }
+
+    private static function assistantFinishedConversation(string $reply): bool
+    {
+        return preg_match(
+            '/\b(?:goodbye|bye-bye|have a (?:good|great|lovely|wonderful) '
+            . '(?:day|evening|weekend)|speak (?:to you )?soon)\b/i',
+            $reply
+        ) === 1;
     }
 
     private static function verifyTwilio(): bool

@@ -99,6 +99,12 @@ wss.on("connection", ws => {
         preemptible: true
       }));
       if (data.end === true) {
+        // Allow the final goodbye to finish before returning control to
+        // Twilio. With no TwiML verb after <Connect>, Twilio then hangs up.
+        const endDelayMs = Math.min(
+          12000,
+          Math.max(2500, Math.ceil((data.reply.trim().length / 12) * 1000) + 800)
+        );
         setTimeout(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
@@ -106,7 +112,7 @@ wss.on("connection", ws => {
               handoffData: JSON.stringify({ reason: "conversation-complete" })
             }));
           }
-        }, 2500);
+        }, endDelayMs);
       }
     } catch (error) {
       console.error("relay turn failed", { callSid, error: error.message });
