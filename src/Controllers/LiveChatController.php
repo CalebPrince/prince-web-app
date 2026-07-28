@@ -246,7 +246,9 @@ class LiveChatController
                 ));
             }
             $bookingReply = self::bookingFallback($message, $transcript);
-            $result['reply'] = $bookingReply ?? self::keywordFallback($message, $projects);
+            $result['reply'] = $bookingReply ?? ($isOwner
+                ? self::ownerKeywordFallback($message)
+                : self::keywordFallback($message, $projects));
         }
 
         return $result;
@@ -1091,6 +1093,11 @@ class LiveChatController
                 . "with him naturally and helpfully, using your tools where genuinely useful (e.g. "
                 . "check_availability, get_site_info, search_content) exactly as he asks, same as any other "
                 . "capability — this overrides every lead-capture/contact-first rule above.\n"
+                . "Never ask Prince \"what brings you by,\" what workflow he wants to automate, whether he is "
+                . "exploring an AI assistant, or any other prospect-discovery question. After a greeting, "
+                . "compliment, thanks, or casual remark, respond naturally and, if a follow-up is useful, ask "
+                . "an operator-oriented question such as \"What would you like me to check or handle for you "
+                . "today?\" Do not turn casual owner conversation into a sales conversation.\n"
                 . "You are the same Lisa used for admin-approved outbound customer-service calls. You may only "
                 . "place a new outbound call after Prince approves it in Marketing Leads and confirms consent; "
                 . "a WhatsApp message itself does not initiate a call. When Prince asks whether you called a "
@@ -1600,6 +1607,14 @@ class LiveChatController
         }
         return "I'd love to hear more about your project — describe what you're building, "
             . "or use the contact form and I'll get back to you personally.";
+    }
+
+    private static function ownerKeywordFallback(string $message): string
+    {
+        if (preg_match('/^(hi|hello|hey|hiya|yo|good\s+(morning|afternoon|evening))\b/i', trim($message))) {
+            return 'Hello, Prince Caleb! 👋 What would you like me to check or handle for you today?';
+        }
+        return "I'm here, Prince Caleb. What would you like me to check or handle?";
     }
 
     private static function shouldSearchProjectFallback(string $message): bool
