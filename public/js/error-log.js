@@ -1,5 +1,10 @@
 (function () {
+  function isIgnorable(message) {
+    return /transition was skipped/i.test(String(message || ''));
+  }
+
   function send(message, extra) {
+    if (isIgnorable(message)) return;
     try {
       var payload = Object.assign({
         message: String(message || 'Unknown error').slice(0, 500),
@@ -31,6 +36,7 @@
   window.addEventListener('unhandledrejection', function (event) {
     var reason = event.reason;
     var message = reason && reason.message ? reason.message : String(reason);
+    if (isIgnorable(message)) return;
     send(message, { stack: reason && reason.stack ? String(reason.stack) : undefined });
   });
 })();

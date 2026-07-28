@@ -30,6 +30,9 @@ class ClientErrorController
         if ($message === '') {
             Response::json(['status' => 'ignored']);
         }
+        if (preg_match('/transition was skipped/i', $message)) {
+            Response::json(['status' => 'ignored']);
+        }
 
         $source = trim((string) ($data['source'] ?? ''));
         $line = $data['line'] ?? null;

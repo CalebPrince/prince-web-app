@@ -19,6 +19,10 @@ class Database
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             $pdo->exec('PRAGMA foreign_keys = ON');
+            // Shared hosting can run several PHP workers and cron jobs against
+            // the same SQLite file. Wait briefly for a writer instead of
+            // immediately throwing "database is locked" under normal overlap.
+            $pdo->exec('PRAGMA busy_timeout = 5000');
             $pdo->exec('PRAGMA journal_mode = WAL');
             self::$instance = $pdo;
         }

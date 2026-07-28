@@ -1,16 +1,38 @@
 (function () {
-  let activeAudio = null;
+  const activeAudio = new Audio();
   let activeUrl = null;
+  let unlocked = false;
 
   function release() {
-    if (activeAudio) {
-      activeAudio.pause();
-      activeAudio.src = "";
-      activeAudio = null;
-    }
+    activeAudio.pause();
+    activeAudio.onplay = null;
+    activeAudio.onended = null;
+    activeAudio.onerror = null;
+    activeAudio.removeAttribute("src");
+    activeAudio.load();
     if (activeUrl) {
       URL.revokeObjectURL(activeUrl);
       activeUrl = null;
+    }
+  }
+
+  // Browsers may reject audio started only after a network request because the
+  // original click's activation has expired. Prime one reusable media element
+  // on the first pointer/keyboard gesture so later Lisa replies can play.
+  function unlock() {
+    if (unlocked) return;
+    activeAudio.muted = true;
+    activeAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAAAA";
+    const attempt = activeAudio.play();
+    if (attempt && typeof attempt.then === "function") {
+      attempt.then(function () {
+        activeAudio.pause();
+        activeAudio.currentTime = 0;
+        activeAudio.muted = false;
+        unlocked = true;
+      }).catch(function () {
+        activeAudio.muted = false;
+      });
     }
   }
 
@@ -28,19 +50,19 @@
     if (!response.ok) throw new Error("Natural speech unavailable");
 
     activeUrl = URL.createObjectURL(await response.blob());
-    const audio = new Audio(activeUrl);
-    activeAudio = audio;
-    audio.onplay = function () { if (handlers && handlers.onstart) handlers.onstart(); };
-    audio.onended = function () {
+    activeAudio.src = activeUrl;
+    activeAudio.muted = false;
+    activeAudio.onplay = function () { if (handlers && handlers.onstart) handlers.onstart(); };
+    activeAudio.onended = function () {
       if (handlers && handlers.onend) handlers.onend();
       release();
     };
-    audio.onerror = function () {
+    activeAudio.onerror = function () {
       if (handlers && handlers.onerror) handlers.onerror();
       release();
     };
-    await audio.play();
-    return audio;
+    await activeAudio.play();
+    return activeAudio;
   }
 
   function stop() {
@@ -48,8 +70,11 @@
   }
 
   function isPlaying() {
-    return !!(activeAudio && !activeAudio.paused);
+    return !activeAudio.paused;
   }
 
-  window.ElevenLabsTTS = { play: play, stop: stop, isPlaying: isPlaying };
+  document.addEventListener("pointerdown", unlock, { capture: true, once: true });
+  document.addEventListener("keydown", unlock, { capture: true, once: true });
+
+  window.ElevenLabsTTS = { play: play, stop: stop, isPlaying: isPlaying, unlock: unlock };
 })();
