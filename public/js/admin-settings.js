@@ -384,6 +384,7 @@ async function saveSmtp(e) {
     await api.put("/api/v1/admin/settings", {
       smtp_host: document.getElementById("smtp-host").value.trim(),
       smtp_port: document.getElementById("smtp-port").value.trim(),
+      imap_host: document.getElementById("imap-host").value.trim(),
       smtp_gmail_address: document.getElementById("smtp-gmail-address").value.trim(),
       smtp_app_password: document.getElementById("smtp-app-password").value.replace(/\s+/g, ""),
       mail_from: document.getElementById("mail-from-address").value.trim(),
@@ -582,6 +583,7 @@ async function testAi() {
     document.getElementById("notification-email").value = settings.notification_email || "";
     document.getElementById("smtp-host").value = settings.smtp_host || "";
     document.getElementById("smtp-port").value = settings.smtp_port || "";
+    document.getElementById("imap-host").value = settings.imap_host || "";
     document.getElementById("smtp-gmail-address").value = settings.smtp_gmail_address || "";
     document.getElementById("smtp-app-password").value = settings.smtp_app_password || "";
     document.getElementById("mail-from-address").value = settings.mail_from || "no-reply@princecaleb.dev";

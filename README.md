@@ -1406,8 +1406,10 @@ One-time setup on a new host:
     Nurturer" ticked in `/admin/drip.html`):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_nurturer_emails.php > /dev/null`
 4h-b. Add another hourly cron for Jason's reply-aware mailbox sync. Enable
-    PHP's `imap` extension in cPanel first; it reuses the Gmail address and app
-    password saved under Settings -> Email delivery:
+    PHP's `imap` extension in cPanel first; it reuses the mailbox username and
+    password saved under Settings -> Email delivery. Set the separate IMAP
+    host to the certificate-valid server hostname (for the current Namecheap
+    host, `premium305.web-hosting.com`) rather than `mail.princecaleb.dev`:
     `/usr/local/bin/php /home/<cpanel-user>/database/sync_nurturer_replies.php > /dev/null`
 4i. Add a ninth cron job (hourly) for Beacon's social lead discovery (no-op
     until enabled, with keywords, under Admin -> Talk to Agents -> Beacon).

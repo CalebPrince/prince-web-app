@@ -31,11 +31,14 @@ class NurturerReplySync
         $username = trim((string) Settings::get('smtp_gmail_address'));
         $password = preg_replace('/\s+/', '', (string) Settings::get('smtp_app_password'));
         if (!filter_var($username, FILTER_VALIDATE_EMAIL) || $password === '') {
-            $summary['error'] = 'Gmail address or app password is not configured.';
+            $summary['error'] = 'Reply mailbox username or password is not configured.';
             return $summary;
         }
 
-        $host = self::imapHost((string) Settings::get('smtp_host'));
+        $host = self::imapHost(
+            (string) Settings::get('imap_host'),
+            (string) Settings::get('smtp_host')
+        );
         $mailbox = '{' . $host . ':993/imap/ssl}INBOX';
         $imap = @imap_open($mailbox, $username, $password, OP_READONLY, 1);
         if (!$imap) {
@@ -222,8 +225,11 @@ class NurturerReplySync
             ->execute([$email]);
     }
 
-    private static function imapHost(string $smtpHost): string
+    private static function imapHost(string $configuredImapHost, string $smtpHost): string
     {
+        $configuredImapHost = strtolower(trim($configuredImapHost));
+        if ($configuredImapHost !== '') return $configuredImapHost;
+
         $smtpHost = strtolower(trim($smtpHost));
         if ($smtpHost === '' || $smtpHost === 'smtp.gmail.com') return 'imap.gmail.com';
         return str_starts_with($smtpHost, 'smtp.') ? 'imap.' . substr($smtpHost, 5) : $smtpHost;
