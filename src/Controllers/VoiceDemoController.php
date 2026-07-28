@@ -31,7 +31,7 @@ final class VoiceDemoController
 
     public static function message(): void
     {
-        set_time_limit(90);
+        set_time_limit(30);
         RateLimitMiddleware::enforce('voice_demo', 20);
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $message = trim((string) ($data['message'] ?? ''));
@@ -455,13 +455,11 @@ final class VoiceDemoController
             $systemPrompt .= "\n\n" . SharedAgentTools::publicContactContext();
         }
 
-        $result = AiAgentEngine::run(
+        $result = AiAgentEngine::runLowLatency(
             $systemPrompt,
             [],
             static fn (string $name, array $args): array => ['error' => 'Tools are disabled in this demonstration.'],
             $transcript,
-            null,
-            null,
             1
         );
         if (!is_string($result['reply']) || trim($result['reply']) === '') {

@@ -1538,6 +1538,13 @@ Admin → Voice Demo shows the 100 most recent Twilio call records, including
 direction, caller number, destination number, status, duration, linked lead,
 and start time for both inbound and outbound calls.
 
+Phone ConversationRelay turns and the public voice demo use a low-latency AI
+path: Groq is tried first, followed by tightly timed Gemini and OpenRouter
+fallbacks. Text chat retains the longer reliability-oriented fallback
+budgets. ElevenLabs website speech also uses a shorter connection/response
+budget, and the Fly relay stops waiting after 25 seconds instead of holding a
+silent call for more than a minute.
+
 Every new inbound web-chat or WhatsApp message reopens its conversation as
 unread and clears any earlier bell dismissal for that thread. Lisa treats the
 Site Content WhatsApp link as the only authoritative public WhatsApp contact

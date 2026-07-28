@@ -58,8 +58,8 @@ class TextToSpeechController
         curl_setopt_array($curl, [
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CONNECTTIMEOUT => 8,
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 15,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
                 'Accept: audio/mpeg',
@@ -70,7 +70,6 @@ class TextToSpeechController
         $audio = curl_exec($curl);
         $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $error = curl_error($curl);
-        curl_close($curl);
 
         if ($audio === false || $status < 200 || $status >= 300) {
             error_log('ElevenLabs TTS failed: HTTP ' . $status . ($error ? ' - ' . $error : ''));

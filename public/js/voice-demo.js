@@ -163,7 +163,7 @@
         message: text,
         token: token,
         niche: "clinic"
-      }, { timeoutMs: 98000 });
+      }, { timeoutMs: 30000 });
       if (!response || typeof response !== "object") {
         throw new Error("The assistant returned an empty response. Check that the chat API and at least one AI provider are configured.");
       }

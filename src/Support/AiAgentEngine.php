@@ -45,6 +45,9 @@ class AiAgentEngine
     // Groq's own infrastructure is fast, but this still needs headroom for
     // a cold key/model or a transient slowdown rather than assuming best case.
     private const GROQ_CHAT_TIMEOUT_SECONDS = 20;
+    private const FAST_GROQ_TIMEOUT_SECONDS = 6;
+    private const FAST_GEMINI_TIMEOUT_SECONDS = 6;
+    private const FAST_OPENROUTER_TIMEOUT_SECONDS = 8;
 
     /**
      * @param array<int,array<string,mixed>> $toolDeclarations Gemini functionDeclarations shape; translated internally for OpenRouter/Groq.
@@ -129,6 +132,59 @@ class AiAgentEngine
         return ['reply' => $reply, 'mode' => $mode, 'provider' => $provider, 'ready' => $ready];
     }
 
+    /**
+     * Voice-first path: try the typically fastest provider first and keep a
+     * tight budget on fallbacks. Spoken interactions cannot tolerate the
+     * standard chat path's potentially minute-long chain of free-provider
+     * timeouts.
+     *
+     * @return array{reply:?string,mode:'ai'|'fallback',provider:?string,ready:bool}
+     */
+    public static function runLowLatency(
+        string $systemPrompt,
+        array $toolDeclarations,
+        callable $toolExecutor,
+        array $transcript,
+        int $maxToolRounds = 1
+    ): array {
+        $systemPrompt .= "\n\n" . SharedAgentTools::publicContactContext();
+
+        $groqKey = Settings::get('groq_api_key');
+        if (!empty($groqKey)) {
+            $result = self::chatWithGroq(
+                $groqKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript,
+                null, null, $maxToolRounds, self::FAST_GROQ_TIMEOUT_SECONDS
+            );
+            if (is_array($result) && is_string($result['reply'] ?? null) && trim($result['reply']) !== '') {
+                return ['reply' => $result['reply'], 'mode' => 'ai', 'provider' => 'groq', 'ready' => (bool) $result['ready']];
+            }
+        }
+
+        $geminiKey = Settings::get('gemini_api_key');
+        if (!empty($geminiKey)) {
+            $result = self::chatWithGemini(
+                $geminiKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript,
+                null, $maxToolRounds, self::FAST_GEMINI_TIMEOUT_SECONDS
+            );
+            if (is_array($result) && is_string($result['reply'] ?? null) && trim($result['reply']) !== '') {
+                return ['reply' => $result['reply'], 'mode' => 'ai', 'provider' => 'gemini', 'ready' => (bool) $result['ready']];
+            }
+        }
+
+        $openRouterKey = Settings::get('openrouter_api_key');
+        if (!empty($openRouterKey)) {
+            $result = self::chatWithOpenRouter(
+                $openRouterKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript,
+                null, $maxToolRounds, self::FAST_OPENROUTER_TIMEOUT_SECONDS
+            );
+            if (is_array($result) && is_string($result['reply'] ?? null) && trim($result['reply']) !== '') {
+                return ['reply' => $result['reply'], 'mode' => 'ai', 'provider' => 'openrouter', 'ready' => (bool) $result['ready']];
+            }
+        }
+
+        return ['reply' => null, 'mode' => 'fallback', 'provider' => null, 'ready' => false];
+    }
+
     /** @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to the next provider) */
     private static function chatWithGemini(
         string $apiKey,
@@ -137,7 +193,8 @@ class AiAgentEngine
         callable $toolExecutor,
         array $transcript,
         ?callable $onExhaustedFallback,
-        int $maxToolRounds
+        int $maxToolRounds,
+        int $timeoutSeconds = self::GEMINI_CHAT_TIMEOUT_SECONDS
     ): ?array {
         // The full transcript is sent, not a truncated tail — messages here
         // are short and providers' context windows are enormous, so there's
@@ -173,7 +230,7 @@ class AiAgentEngine
             }
             $body = json_encode($payload);
 
-            $result = self::callGeminiRaw($apiKey, $body, self::GEMINI_CHAT_TIMEOUT_SECONDS);
+            $result = self::callGeminiRaw($apiKey, $body, $timeoutSeconds);
             $parts = $result['candidates'][0]['content']['parts'] ?? null;
             if (!is_array($parts)) {
                 error_log(sprintf(
@@ -285,7 +342,8 @@ class AiAgentEngine
         callable $toolExecutor,
         array $transcript,
         ?callable $onExhaustedFallback,
-        int $maxToolRounds
+        int $maxToolRounds,
+        int $timeoutSeconds = self::OPENROUTER_CHAT_TIMEOUT_SECONDS
     ): ?array {
         $messages = [['role' => 'system', 'content' => $system]];
         // See chatWithGemini — full transcript, not a truncated tail.
@@ -314,7 +372,7 @@ class AiAgentEngine
             if ($round < $maxToolRounds - 1) {
                 $payload['tools'] = $tools;
             }
-            $result = self::callOpenRouterRaw($apiKey, $payload, self::OPENROUTER_CHAT_TIMEOUT_SECONDS);
+            $result = self::callOpenRouterRaw($apiKey, $payload, $timeoutSeconds);
             if ($result === null) {
                 return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
             }
@@ -370,7 +428,8 @@ class AiAgentEngine
         array $transcript,
         ?callable $onExhaustedFallback,
         ?callable $onGroqFailedGeneration,
-        int $maxToolRounds
+        int $maxToolRounds,
+        int $timeoutSeconds = self::GROQ_CHAT_TIMEOUT_SECONDS
     ): ?array {
         $messages = [['role' => 'system', 'content' => $system]];
         foreach ($transcript as $turn) {
@@ -391,7 +450,7 @@ class AiAgentEngine
                 $payload['tool_choice'] = 'auto';
                 $payload['parallel_tool_calls'] = false;
             }
-            $result = self::callGroqRaw($apiKey, $payload, self::GROQ_CHAT_TIMEOUT_SECONDS);
+            $result = self::callGroqRaw($apiKey, $payload, $timeoutSeconds);
             if ($result === null) {
                 return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
             }

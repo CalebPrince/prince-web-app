@@ -83,7 +83,7 @@ wss.on("connection", ws => {
           "x-relay-secret": relaySecret
         },
         body: JSON.stringify({ call_sid: callSid, speech }),
-        signal: AbortSignal.timeout(85000)
+        signal: AbortSignal.timeout(25000)
       });
       const data = await response.json();
       console.info("application turn completed", { callSid, status: response.status });
