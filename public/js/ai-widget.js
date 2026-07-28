@@ -186,7 +186,10 @@
         onstart: () => setSpeaking(btn, true),
         onend: () => setSpeaking(btn, false),
         onerror: () => setSpeaking(btn, false),
-      }).catch(() => speakWithBrowser(spoken, btn));
+      }).catch((error) => {
+        setSpeaking(btn, false);
+        if (window.ElevenLabsTTS.shouldFallback(error)) speakWithBrowser(spoken, btn);
+      });
       return;
     }
     speakWithBrowser(spoken, btn);

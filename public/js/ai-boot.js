@@ -25,15 +25,15 @@ document.addEventListener("DOMContentLoaded", () => {
     face.onload = () => {
       if (window.ElevenLabsTTS) {
         const widget = document.createElement("script");
-        widget.src = "/js/ai-widget.js?v=20260728-elevenlabs";
+        widget.src = "/js/ai-widget.js?v=20260728-elevenlabs-consistent";
         document.body.appendChild(widget);
         return;
       }
       const naturalVoice = document.createElement("script");
-      naturalVoice.src = "/js/elevenlabs-tts.js?v=20260728-audio";
+      naturalVoice.src = "/js/elevenlabs-tts.js?v=20260728-consistent";
       naturalVoice.onload = naturalVoice.onerror = () => {
         const widget = document.createElement("script");
-        widget.src = "/js/ai-widget.js?v=20260728-elevenlabs";
+        widget.src = "/js/ai-widget.js?v=20260728-elevenlabs-consistent";
         document.body.appendChild(widget);
       };
       document.body.appendChild(naturalVoice);

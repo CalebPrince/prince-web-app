@@ -98,7 +98,10 @@
         },
         onend: finish,
         onerror: finish
-      }).catch(function () { speakWithBrowser(spoken); });
+      }).catch(function (error) {
+        if (window.ElevenLabsTTS.shouldFallback(error)) speakWithBrowser(spoken);
+        else finish();
+      });
       return;
     }
     speakWithBrowser(spoken);

@@ -17,7 +17,7 @@ class TextToSpeechController
      */
     public static function speak(): void
     {
-        RateLimitMiddleware::enforce('elevenlabs_tts', 20);
+        RateLimitMiddleware::enforce('elevenlabs_tts', 50);
 
         if (Settings::get('elevenlabs_tts_enabled') !== '1') {
             Response::error('Natural website speech is not enabled.', 503);
