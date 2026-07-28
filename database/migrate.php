@@ -1161,6 +1161,20 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_agent_daily_briefs_date ON agent_daily_briefs (brief_date)');
 
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS external_expense_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        period_month TEXT NOT NULL UNIQUE,
+        currency TEXT NOT NULL,
+        fixed_total INTEGER NOT NULL DEFAULT 0,
+        usage_total INTEGER NOT NULL DEFAULT 0,
+        total INTEGER NOT NULL DEFAULT 0,
+        items_json TEXT NOT NULL DEFAULT '[]',
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_external_expense_history_month ON external_expense_history (period_month)');
+
 // Cold Outreach Engine — the automated sending layer on top of the existing
 // marketing_leads funnel (discover -> research -> audit -> pitch_ready). The
 // funnel already existed and set status='sent' by hand; these give it a

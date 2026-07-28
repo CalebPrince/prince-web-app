@@ -6,6 +6,8 @@
   let items = [];
   let monthlyRevenue = [];
   let monthlyRevenueBySource = [];
+  let expenseHistory = [];
+  let trendPeriod = "month";
   let usdGhsRate = null;
   let activeCurrency = "USD";
 
@@ -21,6 +23,84 @@
     if (from === "USD" && to === "GHS") return Math.round(Number(subunits || 0) * usdGhsRate);
     if (from === "GHS" && to === "USD") return Math.round(Number(subunits || 0) / usdGhsRate);
     return null;
+  }
+
+  const monthKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  const shiftedMonth = (date, months) => new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const monthName = key => {
+    const [year, month] = key.split("-").map(Number);
+    return new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric" }).format(new Date(year, month - 1, 1));
+  };
+
+  function trendMonths(period, previous = false) {
+    const now = new Date();
+    if (period === "month") return [monthKey(shiftedMonth(now, previous ? -1 : 0))];
+    if (period === "quarter") {
+      const elapsed = (now.getMonth() % 3) + 1;
+      const start = new Date(now.getFullYear(), now.getMonth() - (now.getMonth() % 3) + (previous ? -3 : 0), 1);
+      return Array.from({ length: elapsed }, (_, index) => monthKey(shiftedMonth(start, index)));
+    }
+    const year = now.getFullYear() - (previous ? 1 : 0);
+    return Array.from({ length: now.getMonth() + 1 }, (_, index) => monthKey(new Date(year, index, 1)));
+  }
+
+  function trendLabel(period, previous = false) {
+    const now = new Date();
+    if (period === "month") return monthName(monthKey(shiftedMonth(now, previous ? -1 : 0)));
+    if (period === "quarter") {
+      const date = shiftedMonth(now, previous ? -3 : 0);
+      return `Q${Math.floor(date.getMonth() / 3) + 1} ${date.getFullYear()}${date.getMonth() % 3 < 2 ? " to date" : ""}`;
+    }
+    return `${now.getFullYear() - (previous ? 1 : 0)} to ${new Intl.DateTimeFormat(undefined, { month: "short" }).format(now)}`;
+  }
+
+  function renderExpenseTrends(liveTotal, currency) {
+    const currentKey = monthKey(new Date());
+    const values = new Map();
+    expenseHistory.forEach(row => {
+      const converted = convert(row.total, row.currency, currency);
+      if (converted !== null) values.set(row.period_month, converted);
+    });
+    values.set(currentKey, liveTotal);
+
+    const currentMonths = trendMonths(trendPeriod);
+    const previousMonths = trendMonths(trendPeriod, true);
+    const currentRecorded = currentMonths.filter(key => values.has(key));
+    const previousRecorded = previousMonths.filter(key => values.has(key));
+    const currentTotal = currentRecorded.reduce((sum, key) => sum + values.get(key), 0);
+    const previousTotal = previousRecorded.reduce((sum, key) => sum + values.get(key), 0);
+    const complete = currentRecorded.length === currentMonths.length && previousRecorded.length === previousMonths.length;
+    const difference = currentTotal - previousTotal;
+    const percentage = previousTotal > 0 ? Math.abs(difference / previousTotal * 100) : null;
+
+    document.getElementById("expense-current-label").textContent = trendLabel(trendPeriod);
+    document.getElementById("expense-previous-label").textContent = trendLabel(trendPeriod, true);
+    document.getElementById("expense-current-period").textContent = amount(currentTotal, currency);
+    document.getElementById("expense-previous-period").textContent = previousRecorded.length ? amount(previousTotal, currency) : "—";
+    document.getElementById("expense-current-coverage").textContent = `${currentRecorded.length} of ${currentMonths.length} month${currentMonths.length === 1 ? "" : "s"} recorded`;
+    document.getElementById("expense-previous-coverage").textContent = `${previousRecorded.length} of ${previousMonths.length} month${previousMonths.length === 1 ? "" : "s"} recorded`;
+
+    const direction = document.getElementById("expense-trend-direction");
+    direction.className = "expense-trend-direction";
+    if (!complete) {
+      direction.innerHTML = '<i class="bi bi-dash-lg"></i><strong>Not enough history yet</strong><small>Both equivalent periods must be fully recorded before the difference is calculated.</small>';
+    } else if (difference === 0) {
+      direction.innerHTML = '<i class="bi bi-arrow-left-right"></i><strong>No spending change</strong><small>The two periods have the same recorded expense.</small>';
+    } else {
+      const more = difference > 0;
+      direction.classList.add(more ? "is-more" : "is-less");
+      direction.innerHTML = `<i class="bi bi-arrow-${more ? "up" : "down"}-right"></i><strong>${amount(Math.abs(difference), currency)} ${more ? "more" : "less"}</strong><small>${percentage === null ? "Previous period was zero." : `${percentage.toFixed(1)}% ${more ? "increase" : "decrease"} from the previous period.`}</small>`;
+    }
+
+    const months = Array.from({ length: 12 }, (_, index) => monthKey(shiftedMonth(new Date(), index - 11)));
+    const maximum = Math.max(...months.map(key => values.get(key) || 0), 1);
+    document.getElementById("expense-history-bars").innerHTML = months.some(key => values.has(key))
+      ? months.map(key => {
+          const value = values.get(key);
+          const height = value === undefined ? 0 : Math.max(3, value / maximum * 100);
+          return `<div class="expense-history-bar${key === currentKey ? " is-current" : ""}" title="${esc(monthName(key))}: ${value === undefined ? "not recorded" : amount(value, currency)}"><i style="height:${height}%"></i><span>${esc(monthName(key).split(" ")[0])}</span></div>`;
+        }).join("")
+      : '<div class="expense-history-empty">Save this month’s expense plan to begin the comparison history.</div>';
   }
 
   function rowTemplate(item, index) {
@@ -135,6 +215,7 @@
     varianceEl.classList.toggle("text-danger", budget > 0 && variance < 0);
     document.getElementById("expense-variance-note").textContent = !budget ? "Add a monthly ceiling" : variance >= 0 ? "remaining in budget" : "over monthly budget";
     document.getElementById("expense-budget-note").textContent = !budget ? "Set a budget to measure headroom." : variance >= 0 ? `${amount(variance, currency)} headroom remains.` : `${amount(Math.abs(variance), currency)} above budget.`;
+    renderExpenseTrends(total, currency);
 
     const missing = namedItems.filter(i => i.amount === null);
     const missingEl = document.getElementById("expense-missing");
@@ -171,6 +252,11 @@
     renderMetrics();
   });
   budgetEl.addEventListener("input", renderMetrics);
+  document.querySelectorAll(".expense-trend-tabs button").forEach(button => button.addEventListener("click", () => {
+    trendPeriod = button.dataset.period;
+    document.querySelectorAll(".expense-trend-tabs button").forEach(item => item.classList.toggle("active", item === button));
+    renderMetrics();
+  }));
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
@@ -225,6 +311,7 @@
       items = (expenses.items || []).map(item => ({ name: item.name, type: item.type, amount: item.amount }));
       monthlyRevenue = expenses.monthly_revenue || [];
       monthlyRevenueBySource = expenses.monthly_revenue_by_source || [];
+      expenseHistory = expenses.history || [];
       renderRows();
       renderMetrics();
     } catch (error) {

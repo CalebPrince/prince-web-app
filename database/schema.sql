@@ -1025,3 +1025,18 @@ CREATE TABLE IF NOT EXISTS agent_daily_briefs (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_agent_daily_briefs_date ON agent_daily_briefs (brief_date);
+
+-- Monthly operating-cost snapshots. Saving the expense plan updates the
+-- current month instead of stacking duplicates, which makes month, quarter,
+-- and year comparisons deterministic while preserving historical totals.
+CREATE TABLE IF NOT EXISTS external_expense_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  period_month TEXT NOT NULL UNIQUE,
+  currency TEXT NOT NULL,
+  fixed_total INTEGER NOT NULL DEFAULT 0,
+  usage_total INTEGER NOT NULL DEFAULT 0,
+  total INTEGER NOT NULL DEFAULT 0,
+  items_json TEXT NOT NULL DEFAULT '[]',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_external_expense_history_month ON external_expense_history (period_month);

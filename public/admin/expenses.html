@@ -78,6 +78,26 @@
       <article><span>Budget position</span><strong id="expense-variance">—</strong><small id="expense-variance-note">Add a monthly ceiling</small></article>
     </section>
 
+    <section class="admin-card expense-trends mb-4" aria-labelledby="expense-trends-title">
+      <header>
+        <div><p class="expense-kicker mb-1">Spending direction</p><h4 id="expense-trends-title">Are costs moving up or down?</h4><p>Compare equivalent periods in the reporting currency. The current month updates whenever you save the expense plan.</p></div>
+        <div class="expense-trend-tabs" role="tablist" aria-label="Expense comparison period">
+          <button type="button" class="active" data-period="month">Monthly</button>
+          <button type="button" data-period="quarter">Quarterly</button>
+          <button type="button" data-period="year">Yearly</button>
+        </div>
+      </header>
+      <div class="expense-trend-comparison">
+        <article><span id="expense-current-label">Current month</span><strong id="expense-current-period">—</strong><small id="expense-current-coverage"></small></article>
+        <div class="expense-trend-direction" id="expense-trend-direction"><i class="bi bi-dash-lg"></i><strong>Waiting for history</strong><small>Save expenses over time to compare periods.</small></div>
+        <article><span id="expense-previous-label">Previous month</span><strong id="expense-previous-period">—</strong><small id="expense-previous-coverage"></small></article>
+      </div>
+      <div class="expense-history">
+        <div class="expense-history-head"><span>Monthly history</span><small>Latest 12 recorded months</small></div>
+        <div class="expense-history-bars" id="expense-history-bars"></div>
+      </div>
+    </section>
+
     <div class="row g-4">
       <div class="col-xl-8">
         <section class="admin-card expense-ledger">
@@ -117,6 +137,6 @@
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260728-expenses-page"></script>
-<script src="/js/admin-expenses.js?v=20260728"></script>
+<script src="/js/admin-expenses.js?v=20260728-trends"></script>
 </body>
 </html>

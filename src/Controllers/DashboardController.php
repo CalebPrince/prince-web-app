@@ -344,6 +344,32 @@ class DashboardController
             if ($item['type'] === 'usage') $usage += $item['amount'];
             else $fixed += $item['amount'];
         }
+        $monthlyTotal = $fixed + $usage;
+        $snapshot = $pdo->prepare(
+            "INSERT INTO external_expense_history
+                (period_month, currency, fixed_total, usage_total, total, items_json, updated_at)
+             VALUES (strftime('%Y-%m', 'now'), ?, ?, ?, ?, ?, datetime('now'))
+             ON CONFLICT(period_month) DO UPDATE SET
+                currency=excluded.currency,
+                fixed_total=excluded.fixed_total,
+                usage_total=excluded.usage_total,
+                total=excluded.total,
+                items_json=excluded.items_json,
+                updated_at=datetime('now')"
+        );
+        $snapshot->execute([
+            $currency,
+            $fixed,
+            $usage,
+            $monthlyTotal,
+            json_encode($items, JSON_UNESCAPED_SLASHES),
+        ]);
+        $history = $pdo->query(
+            "SELECT period_month, currency, fixed_total, usage_total, total, updated_at
+             FROM external_expense_history
+             ORDER BY period_month DESC
+             LIMIT 36"
+        )->fetchAll();
         $budgetRaw = Settings::get('external_expense_monthly_budget') ?: '0';
         $budget = is_numeric($budgetRaw) ? (int) round((float) $budgetRaw * 100) : 0;
         $monthlyRevenue = $pdo->query(
@@ -373,7 +399,7 @@ class DashboardController
             'currency' => $currency,
             'fixed_total' => $fixed,
             'usage_total' => $usage,
-            'monthly_total' => $fixed + $usage,
+            'monthly_total' => $monthlyTotal,
             'monthly_budget' => $budget,
             'items' => $items,
             'monthly_revenue' => self::moneyRows($monthlyRevenue),
@@ -384,6 +410,17 @@ class DashboardController
                     'total' => (int) $row['total'],
                 ],
                 $monthlyRevenueBySource
+            ),
+            'history' => array_map(
+                fn($row) => [
+                    'period_month' => $row['period_month'],
+                    'currency' => $row['currency'],
+                    'fixed_total' => (int) $row['fixed_total'],
+                    'usage_total' => (int) $row['usage_total'],
+                    'total' => (int) $row['total'],
+                    'updated_at' => $row['updated_at'],
+                ],
+                $history
             ),
         ];
     }
