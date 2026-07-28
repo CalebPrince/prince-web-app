@@ -218,7 +218,7 @@
         ? rateUpdated.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
         : "recently";
       rateStatus.innerHTML = usdGhsRate
-        ? `<i class="bi bi-check2-circle"></i><span>1 USD = ${usdGhsRate.toFixed(4)} GHS · Ghana API · updated ${esc(rateUpdatedLabel)}</span>`
+        ? `<i class="bi bi-check2-circle"></i><span>1 USD = ${usdGhsRate.toFixed(4)} GHS · ${esc(fx.provider || "cached rate")} · updated ${esc(rateUpdatedLabel)}</span>`
         : '<i class="bi bi-exclamation-circle"></i><span>Live conversion is temporarily unavailable.</span>';
       rateStatus.classList.toggle("is-unavailable", !usdGhsRate);
       budgetEl.value = expenses.monthly_budget ? (expenses.monthly_budget / 100).toFixed(2) : "";

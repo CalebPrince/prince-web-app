@@ -15,24 +15,41 @@ class DashboardController
     public static function exchangeRate(): void
     {
         AuthMiddleware::requireAuth();
-        $cachedRate = (float) (Settings::get('external_fx_ghana_api_usd_ghs_rate') ?: 0);
-        $cachedAt = Settings::get('external_fx_ghana_api_updated_at') ?: '';
-        $sourceTimestamp = Settings::get('external_fx_ghana_api_source_timestamp') ?: '';
+        $cachedRate = (float) (
+            Settings::get('external_fx_usd_ghs_rate_v2')
+            ?: Settings::get('external_fx_ghana_api_usd_ghs_rate')
+            ?: Settings::get('external_fx_usd_ghs_rate')
+            ?: 0
+        );
+        $cachedAt = Settings::get('external_fx_updated_at_v2')
+            ?: Settings::get('external_fx_ghana_api_updated_at')
+            ?: Settings::get('external_fx_usd_ghs_updated_at')
+            ?: '';
+        $sourceTimestamp = Settings::get('external_fx_source_timestamp_v2')
+            ?: Settings::get('external_fx_ghana_api_source_timestamp')
+            ?: '';
+        $provider = Settings::get('external_fx_provider_v2') ?: 'Cached exchange rate';
         $isFresh = $cachedRate > 0 && $cachedAt !== '' && strtotime($cachedAt) >= time() - 43200;
 
         if (!$isFresh && function_exists('curl_init')) {
-            $curl = curl_init('https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD');
-            curl_setopt_array($curl, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 6,
-                CURLOPT_CONNECTTIMEOUT => 3,
-                CURLOPT_HTTPHEADER => ['Accept: application/json'],
-                CURLOPT_USERAGENT => 'PrinceCalebFinanceDashboard/1.0',
-            ]);
-            $body = curl_exec($curl);
-            $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            curl_close($curl);
-            $data = is_string($body) ? json_decode($body, true) : null;
+            $fetchJson = static function (string $url): array {
+                $curl = curl_init($url);
+                curl_setopt_array($curl, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 6,
+                    CURLOPT_CONNECTTIMEOUT => 3,
+                    CURLOPT_HTTPHEADER => ['Accept: application/json'],
+                    CURLOPT_USERAGENT => 'PrinceCalebFinanceDashboard/1.0',
+                ]);
+                $body = curl_exec($curl);
+                $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                curl_close($curl);
+                return [$status, is_string($body) ? json_decode($body, true) : null];
+            };
+
+            [$status, $data] = $fetchJson(
+                'https://api.ghana-api.dev/api/v1/exchange-rates/current?currencies=USD'
+            );
             $usdRow = null;
             foreach (($data['data'] ?? []) as $row) {
                 if (($row['baseCurrency'] ?? '') === 'GHS' && ($row['targetCurrency'] ?? '') === 'USD') {
@@ -47,10 +64,29 @@ class DashboardController
                 $cachedRate = 1 / $ghsToUsd;
                 $cachedAt = date('c');
                 $sourceTimestamp = (string) ($usdRow['timestamp'] ?? $data['timestamp'] ?? $cachedAt);
-                Settings::set('external_fx_ghana_api_usd_ghs_rate', (string) $cachedRate);
-                Settings::set('external_fx_ghana_api_updated_at', $cachedAt);
-                Settings::set('external_fx_ghana_api_source_timestamp', $sourceTimestamp);
+                $provider = 'Ghana API';
                 $isFresh = true;
+            }
+
+            if (!$isFresh) {
+                [$fallbackStatus, $fallbackData] = $fetchJson(
+                    'https://api.exchangerate.fun/latest?base=USD'
+                );
+                $fallbackRate = (float) ($fallbackData['rates']['GHS'] ?? 0);
+                if ($fallbackStatus === 200 && $fallbackRate > 0) {
+                    $cachedRate = $fallbackRate;
+                    $cachedAt = date('c');
+                    $sourceTimestamp = (string) ($fallbackData['date'] ?? $cachedAt);
+                    $provider = 'ExchangeRate.fun fallback';
+                    $isFresh = true;
+                }
+            }
+
+            if ($isFresh) {
+                Settings::set('external_fx_usd_ghs_rate_v2', (string) $cachedRate);
+                Settings::set('external_fx_updated_at_v2', $cachedAt);
+                Settings::set('external_fx_source_timestamp_v2', $sourceTimestamp);
+                Settings::set('external_fx_provider_v2', $provider);
             }
         }
 
@@ -63,7 +99,7 @@ class DashboardController
             'rate' => $cachedRate,
             'updated_at' => $cachedAt,
             'source_timestamp' => $sourceTimestamp,
-            'provider' => 'Ghana API',
+            'provider' => $provider,
             'cached' => !$isFresh,
         ]);
     }
