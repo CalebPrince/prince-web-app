@@ -1159,9 +1159,14 @@ $pdo->exec(
         snapshot_json TEXT NOT NULL DEFAULT '{}',
         provider TEXT,
         emailed_at TEXT,
+        whatsapp_sent_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )"
 );
+$dailyBriefColumns = array_column($pdo->query('PRAGMA table_info(agent_daily_briefs)')->fetchAll(), 'name');
+if (!in_array('whatsapp_sent_at', $dailyBriefColumns, true)) {
+    $pdo->exec('ALTER TABLE agent_daily_briefs ADD COLUMN whatsapp_sent_at TEXT');
+}
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_agent_daily_briefs_date ON agent_daily_briefs (brief_date)');
 
 $pdo->exec(

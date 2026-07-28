@@ -1299,7 +1299,9 @@ storage/
     of the admin panel besides. `database/send_daily_brief.php` (cron,
     daily) counts what each agent actually did in the last 24 hours — from
     the same tables the Team page reads — writes it up, stores it in
-    `agent_daily_briefs`, and emails it to `notification_email`. The latest
+    `agent_daily_briefs`, and sends it to `notification_email` plus the
+    configured private owner WhatsApp number. Each channel is stamped
+    separately so a retry cannot duplicate one that already succeeded. The latest
     brief is the first thing on the Team page, with a "Write today's brief"
     button for an on-demand one. Chief is also chattable, with tools for
     whole-team activity over a window, one agent (or `command_center`) over N
@@ -1430,12 +1432,19 @@ One-time setup on a new host:
     `/usr/local/bin/php /home/<cpanel-user>/database/draft_proposals_from_bookings.php > /dev/null`
 4l. Add a twelfth cron job (once a day, early morning) for Chief's daily
     brief on the rest of the team — counts what each agent did in the last
-    24 hours, writes it up, and emails it to `notification_email`:
+    24 hours, writes it up, and sends it to `notification_email` plus the
+    configured owner WhatsApp number:
     `/usr/local/bin/php /home/<cpanel-user>/database/send_daily_brief.php > /dev/null`
     Safe to run more than once a day: the brief is keyed on the date, so a
-    second run refreshes it rather than duplicating it, and `emailed_at`
-    means it is only ever sent once. Add `--force` to rewrite and re-send,
-    `--no-email` to write without sending.
+    second run refreshes it rather than duplicating it; per-channel delivery
+    timestamps mean email and WhatsApp are each sent only once. Add `--force`
+    to rewrite and re-send both, or `--no-email` to write without sending
+    either notification.
+    After deployment, smoke-test both owner WhatsApp paths once with:
+    `/usr/local/bin/php /home/<cpanel-user>/database/test_owner_whatsapp.php all`
+    This sends a clearly labeled fictional Lisa handoff plus Chief's real
+    last-24-hours summary; it does not create a fake Inbox inquiry or resend
+    the daily email.
 4m. Add a thirteenth cron job (hourly) for the Cold Outreach Engine (a
     no-op until switched on under Admin -> Marketing Leads; sends reviewed
     email pitches up to the daily cap, runs the once-daily real-business

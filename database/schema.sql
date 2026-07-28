@@ -1048,6 +1048,7 @@ CREATE TABLE IF NOT EXISTS agent_daily_briefs (
   snapshot_json TEXT NOT NULL DEFAULT '{}',
   provider TEXT,
   emailed_at TEXT,
+  whatsapp_sent_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_agent_daily_briefs_date ON agent_daily_briefs (brief_date);

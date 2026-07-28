@@ -24,19 +24,15 @@ $today = (string) $pdo->query("SELECT date('now')")->fetchColumn();
 
 $existing = Chief::briefFor($pdo, $today);
 if ($existing !== null && !$force) {
-    if ($existing['emailed_at'] !== null) {
-        echo "Today's brief was already written and emailed.\n";
-        exit;
-    }
     if ($noEmail) {
-        echo "Today's brief is already written; not emailing (--no-email).\n";
+        echo "Today's brief is already written; not sending notifications (--no-email).\n";
         exit;
     }
     // Written but unsent — a brief raised by the admin "run now" button, or by
     // a run where SMTP was briefly down, should still reach the inbox rather
     // than being skipped because the writing half already succeeded.
     $sent = Chief::emailBrief($pdo, $existing);
-    echo $sent ? "Today's brief emailed.\n" : "Today's brief could not be emailed.\n";
+    echo $sent ? "Today's brief notifications delivered.\n" : "Today's brief has a pending notification channel.\n";
     exit;
 }
 
@@ -52,6 +48,13 @@ if ($noEmail) {
     exit;
 }
 
+if ($force) {
+    $pdo->prepare('UPDATE agent_daily_briefs SET emailed_at = NULL, whatsapp_sent_at = NULL WHERE id = ?')
+        ->execute([$brief['id']]);
+    $brief['emailed_at'] = null;
+    $brief['whatsapp_sent_at'] = null;
+}
+
 echo Chief::emailBrief($pdo, $brief)
-    ? "Brief emailed.\n"
-    : "Brief written but not emailed (no notification address, or the mailer failed).\n";
+    ? "Brief notifications delivered.\n"
+    : "Brief written, but one notification channel could not be delivered.\n";

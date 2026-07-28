@@ -8,6 +8,7 @@ use App\Support\AiText;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
+use App\Support\WhatsAppNotifier;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -613,32 +614,46 @@ class Chief
     // ----------------------------------------------------------------- email
 
     /**
-     * Email one brief to the studio's notification address. Stamps emailed_at
-     * so the cron can run as often as it likes and still send once a day.
+     * Deliver one brief by email and owner WhatsApp. Each channel keeps its
+     * own timestamp so retries do not duplicate a successful delivery.
      */
     public static function emailBrief(PDO $pdo, array $brief): bool
     {
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
-        if (!$to) {
-            return false;
-        }
+        $emailDone = !$to || !empty($brief['emailed_at']);
 
         $label = 'Daily brief — ' . date('j M Y', strtotime((string) $brief['brief_date']));
         $text = $brief['headline'] . "\n\n" . $brief['body'];
         $html = EmailTemplate::wrapMarketing($text, $label);
 
-        $sent = Mailer::sendHtml(
-            $to,
-            self::displayName() . ': ' . $brief['headline'],
-            $html,
-            $text
-        );
+        if (!$emailDone) {
+            $emailDone = Mailer::sendHtml(
+                $to,
+                self::displayName() . ': ' . $brief['headline'],
+                $html,
+                $text
+            );
+        }
 
-        if ($sent) {
+        if ($emailDone && $to && empty($brief['emailed_at'])) {
             $pdo->prepare("UPDATE agent_daily_briefs SET emailed_at = datetime('now') WHERE id = ?")
                 ->execute([$brief['id']]);
         }
-        return $sent;
+
+        $whatsAppConfigured = WhatsAppNotifier::isOwnerConfigured();
+        $whatsAppDone = !$whatsAppConfigured || !empty($brief['whatsapp_sent_at']);
+        if (!$whatsAppDone) {
+            $whatsAppBody = "📊 *Chief daily report — last 24 hours*\n\n"
+                . mb_substr($brief['headline'] . "\n\n" . $brief['body'], 0, 1150)
+                . "\n\nFull report: https://princecaleb.dev/admin/chief.html";
+            $whatsAppDone = WhatsAppNotifier::sendOwnerAlert($whatsAppBody);
+        }
+        if ($whatsAppDone && $whatsAppConfigured && empty($brief['whatsapp_sent_at'])) {
+            $pdo->prepare("UPDATE agent_daily_briefs SET whatsapp_sent_at = datetime('now') WHERE id = ?")
+                ->execute([$brief['id']]);
+        }
+
+        return $emailDone && $whatsAppDone;
     }
 
     // ------------------------------------------------------------- retrieval

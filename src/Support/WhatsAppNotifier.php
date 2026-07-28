@@ -7,6 +7,14 @@ namespace App\Support;
 /** Sends private operational alerts through Lisa's Twilio WhatsApp sender. */
 class WhatsAppNotifier
 {
+    public static function isOwnerConfigured(): bool
+    {
+        return trim((string) Settings::get('twilio_account_sid')) !== ''
+            && trim((string) Settings::get('twilio_auth_token')) !== ''
+            && self::address((string) Settings::get('twilio_whatsapp_number')) !== null
+            && self::address((string) Settings::get('owner_whatsapp_number')) !== null;
+    }
+
     public static function sendOwnerAlert(string $body): bool
     {
         $accountSid = trim((string) Settings::get('twilio_account_sid'));
