@@ -30,7 +30,7 @@ class SettingsController
         'maintenance_mode',
         'paystack_public_key', 'paystack_secret_key',
         'monthly_revenue_target', 'revenue_target_currency', 'weekly_billable_hours',
-        'external_expense_currency', 'external_service_expenses',
+        'external_expense_currency', 'external_service_expenses', 'external_expense_monthly_budget',
         'booking_enabled', 'booking_days', 'booking_start_time', 'booking_end_time',
         'booking_slot_minutes', 'booking_lead_days', 'booking_min_notice_hours', 'booking_timezone',
         'social_draft_enabled', 'social_draft_frequency', 'social_draft_last_run',
@@ -176,6 +176,10 @@ class SettingsController
             if ($key === 'monthly_revenue_target'
                 && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999999)) {
                 Response::error('Revenue target must be a valid positive amount.', 422);
+            }
+            if ($key === 'external_expense_monthly_budget' && $value !== ''
+                && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999999)) {
+                Response::error('Expense budget must be a valid positive amount.', 422);
             }
             if ($key === 'weekly_billable_hours' && $value !== ''
                 && (!is_numeric($value) || (float) $value <= 0 || (float) $value > 168)) {

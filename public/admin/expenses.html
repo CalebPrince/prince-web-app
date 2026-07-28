@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/js/error-log.js?v=20260719"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
+<title>Website Expenses — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="/css/app.css" rel="stylesheet">
+<link href="/css/admin.css" rel="stylesheet">
+</head>
+<body>
+<div class="d-flex">
+  <aside class="admin-sidebar p-3">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div class="brand fs-5"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="position-relative"><button type="button" class="notif-bell" id="notif-bell-btn" aria-label="Notifications"><i class="bi bi-bell"></i><span id="notif-bell-badge" class="notif-badge d-none"></span></button><div id="notif-dropdown" class="notif-dropdown d-none"><div class="notif-dropdown-header">Notifications</div><div id="notif-dropdown-body"></div></div></div>
+        <button type="button" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </div>
+    <nav class="d-flex flex-column gap-1">
+      <div class="nav-group-label">Overview</div>
+      <a href="/admin/dashboard.html" class="nav-link"><i class="bi bi-speedometer2 nav-icon"></i><span class="nav-label">Dashboard</span></a>
+      <a href="/admin/reports.html" class="nav-link"><i class="bi bi-bar-chart-line nav-icon"></i><span class="nav-label">Reports</span></a>
+      <a href="/admin/team.html" class="nav-link"><i class="bi bi-people-fill nav-icon"></i><span class="nav-label">Team</span></a>
+      <div class="nav-group-label">Content</div>
+      <a href="/admin/projects.html" class="nav-link"><i class="bi bi-kanban nav-icon"></i><span class="nav-label">Projects</span></a>
+      <a href="/admin/content.html" class="nav-link"><i class="bi bi-file-earmark-richtext nav-icon"></i><span class="nav-label">Site Content</span></a>
+      <div class="nav-group-label">Leads &amp; Clients</div>
+      <a href="/admin/contacts.html" class="nav-link"><i class="bi bi-person-vcard nav-icon"></i><span class="nav-label">Contacts</span></a>
+      <a href="/admin/inquiries.html" class="nav-link"><i class="bi bi-inbox nav-icon"></i><span class="nav-label">Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
+      <a href="/admin/marketing-leads.html" class="nav-link"><i class="bi bi-bullseye nav-icon"></i><span class="nav-label">Marketing Leads</span></a>
+      <a href="/admin/agent-chat.html" class="nav-link"><i class="bi bi-mic nav-icon"></i><span class="nav-label">Talk to Agents</span></a>
+      <div class="nav-group-label">Bookings &amp; Payments</div>
+      <a href="/admin/appointments.html" class="nav-link"><i class="bi bi-calendar-check nav-icon"></i><span class="nav-label">Bookings</span></a>
+      <a href="/admin/payments.html" class="nav-link"><i class="bi bi-credit-card nav-icon"></i><span class="nav-label">Payments</span></a>
+      <a href="/admin/invoices.html" class="nav-link"><i class="bi bi-receipt-cutoff nav-icon"></i><span class="nav-label">Invoices</span></a>
+      <a href="/admin/pricing.html" class="nav-link"><i class="bi bi-tag nav-icon"></i><span class="nav-label">Pricing</span></a>
+      <a href="/admin/expenses.html" class="nav-link active"><i class="bi bi-wallet2 nav-icon"></i><span class="nav-label">Expenses</span></a>
+      <div class="nav-group-label">System</div>
+      <a href="/admin/uptime.html" class="nav-link"><i class="bi bi-activity nav-icon"></i><span class="nav-label">Uptime</span></a>
+      <a href="/admin/settings.html" class="nav-link"><i class="bi bi-gear nav-icon"></i><span class="nav-label">Settings</span></a>
+      <hr class="sidebar-divider">
+      <a href="/" class="nav-link"><i class="bi bi-box-arrow-up-right nav-icon"></i><span class="nav-label">View site</span></a>
+      <a href="#" class="nav-link" id="logout-link"><i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Log out</span></a>
+    </nav>
+  </aside>
+
+  <main class="flex-grow-1 p-4 expense-page">
+    <header class="expense-header mb-4">
+      <div><p class="expense-kicker mb-2">Website operating ledger</p><h1>Know the cost of staying online.</h1><p class="mb-0">Subscriptions, usage exposure, and the monthly budget behind your automated business.</p></div>
+      <div class="expense-period"><span>Reporting period</span><strong id="expense-period-label">This month</strong><small>Rolling monthly estimate</small></div>
+    </header>
+
+    <section class="finance-comparison mb-4" aria-label="Revenue and expense comparison">
+      <article class="is-revenue"><span>Revenue this month</span><strong id="finance-revenue">—</strong><small id="finance-revenue-source">Confirmed payments received</small></article>
+      <article class="is-expense"><span>Operating expenses</span><strong id="finance-expenses">—</strong><small>Current monthly estimate</small></article>
+      <article class="is-net"><span>Net position</span><strong id="finance-net">—</strong><small id="finance-net-note">Revenue minus operating expenses</small></article>
+      <article class="is-margin"><span>Operating margin</span><strong id="finance-margin">—</strong><small id="finance-coverage">Waiting for comparable revenue</small></article>
+    </section>
+    <div id="finance-currency-note" class="finance-currency-note d-none mb-4"></div>
+
+    <section class="expense-runway mb-4" aria-labelledby="expense-runway-title">
+      <div class="expense-runway-copy"><span>Monthly burn</span><strong id="expense-monthly-total">—</strong><small id="expense-budget-note">Set a budget to measure headroom.</small></div>
+      <div class="expense-runway-track"><div id="expense-budget-bar"></div><i id="expense-fixed-marker"></i></div>
+      <div class="expense-runway-legend"><span><i class="is-fixed"></i>Fixed commitments <b id="expense-fixed-total">—</b></span><span><i class="is-usage"></i>Usage estimate <b id="expense-usage-total">—</b></span><span><i class="is-budget"></i>Budget <b id="expense-budget-total">Not set</b></span></div>
+    </section>
+
+    <section class="expense-metrics mb-4" aria-label="Expense metrics">
+      <article><span>Annual projection</span><strong id="expense-annual">—</strong><small>Monthly estimate × 12</small></article>
+      <article><span>Average daily burn</span><strong id="expense-daily">—</strong><small>Based on 30.4 days</small></article>
+      <article><span>Largest service</span><strong id="expense-largest">—</strong><small id="expense-largest-name">No costs entered</small></article>
+      <article><span>Budget position</span><strong id="expense-variance">—</strong><small id="expense-variance-note">Add a monthly ceiling</small></article>
+    </section>
+
+    <div class="row g-4">
+      <div class="col-xl-8">
+        <section class="admin-card expense-ledger">
+          <header><div><p class="expense-kicker mb-1">Service register</p><h4>Monthly commitments</h4></div><button type="button" class="btn-brand-outline btn-sm" id="expense-add"><i class="bi bi-plus-lg"></i> Add service</button></header>
+          <div class="expense-ledger-head"><span>Service</span><span>Cost type</span><span>Monthly amount</span><span></span></div>
+          <div id="expense-rows"></div>
+          <div id="expense-empty" class="expense-empty d-none"><i class="bi bi-wallet2"></i><strong>No services yet</strong><span>Add the first tool that keeps the website running.</span></div>
+        </section>
+      </div>
+      <div class="col-xl-4">
+        <form class="admin-card expense-controls" id="expense-form">
+          <p class="expense-kicker mb-1">Controls</p><h4>Budget settings</h4>
+          <label for="expense-currency">Reporting currency</label>
+          <input class="form-control" id="expense-currency" maxlength="3" placeholder="USD" required>
+          <label for="expense-budget">Monthly budget</label>
+          <div class="input-group"><span class="input-group-text" id="expense-budget-prefix">USD</span><input class="form-control" id="expense-budget" type="number" min="0" step="0.01" placeholder="25.00"></div>
+          <div class="expense-control-note"><i class="bi bi-info-circle"></i><span>Usage charges are planning estimates. Update them from real invoices as the month develops.</span></div>
+          <div id="expense-msg" class="alert py-2 small d-none"></div>
+          <button class="btn-brand w-100" type="submit" id="expense-save">Save expense plan</button>
+        </form>
+        <section class="admin-card expense-mix mt-4">
+          <p class="expense-kicker mb-1">Cost structure</p><h4>Fixed vs usage</h4>
+          <div class="expense-donut" id="expense-donut"><span><strong id="expense-fixed-share">0%</strong><small>fixed</small></span></div>
+          <div id="expense-missing" class="expense-missing d-none"></div>
+        </section>
+        <section class="admin-card expense-sources mt-4">
+          <p class="expense-kicker mb-1">Cash collected</p><h4>Revenue sources this month</h4>
+          <div id="finance-sources"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/api.js?v=20260719"></script>
+<script src="/js/theme.js?v=20260719"></script>
+<script src="/js/admin-auth.js?v=20260719"></script>
+<script src="/js/admin-nav-badges.js?v=20260728-expenses-page"></script>
+<script src="/js/admin-expenses.js?v=20260728"></script>
+</body>
+</html>

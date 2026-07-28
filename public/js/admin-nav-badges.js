@@ -82,6 +82,18 @@
     team.insertAdjacentElement('beforebegin', link);
   }
   injectChiefNav();
+  function injectExpensesNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/expenses.html"]')) return;
+    const pricing = nav.querySelector('a[href="/admin/pricing.html"]');
+    if (!pricing) return;
+    const link = document.createElement('a');
+    link.href = '/admin/expenses.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/expenses.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-wallet2 nav-icon" style="color: var(--section-money)"></i><span class="nav-label">Expenses</span>';
+    pricing.insertAdjacentElement('afterend', link);
+  }
+  injectExpensesNav();
 
   // Collapses search/notifications/theme into the same "small tab, click to
   // drop down a tray" pattern the frontend's header already uses

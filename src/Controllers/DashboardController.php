@@ -112,7 +112,7 @@ class DashboardController
         $targetCurrency = strtoupper(Settings::get('revenue_target_currency') ?: (Settings::get('pricing_currency') ?: 'GHS'));
         $targetRaw = Settings::get('monthly_revenue_target') ?: '0';
         $targetAmount = is_numeric($targetRaw) ? (int) round((float) $targetRaw * 100) : 0;
-        $externalExpenses = self::externalExpenses();
+        $externalExpenses = self::externalExpenses($pdo);
 
         // Abuse signal: the rate_limits table already buckets requests per
         // IP/endpoint/hour. Surface the last 24h so spikes and repeat
@@ -191,7 +191,7 @@ class DashboardController
         return array_map(fn($row) => ['currency' => $row['currency'], 'total' => (int) $row['total']], $rows);
     }
 
-    private static function externalExpenses(): array
+    private static function externalExpenses(\PDO $pdo): array
     {
         $currency = strtoupper(trim((string) Settings::get('external_expense_currency')) ?: 'USD');
         if (!preg_match('/^[A-Z]{3}$/', $currency)) {
@@ -240,12 +240,47 @@ class DashboardController
             if ($item['type'] === 'usage') $usage += $item['amount'];
             else $fixed += $item['amount'];
         }
+        $budgetRaw = Settings::get('external_expense_monthly_budget') ?: '0';
+        $budget = is_numeric($budgetRaw) ? (int) round((float) $budgetRaw * 100) : 0;
+        $monthlyRevenue = $pdo->query(
+            "SELECT currency, SUM(amount) AS total FROM (
+                SELECT currency, amount FROM payments
+                WHERE status = 'success'
+                  AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+                UNION ALL
+                SELECT currency, amount FROM subscription_charges
+                WHERE strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')
+             ) GROUP BY currency ORDER BY currency"
+        )->fetchAll();
+        $monthlyRevenueBySource = $pdo->query(
+            "SELECT source, currency, SUM(amount) AS total FROM (
+                SELECT CASE WHEN source = 'manual' THEN 'Other payments' ELSE 'Paystack' END AS source,
+                       currency, amount
+                FROM payments
+                WHERE status = 'success'
+                  AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+                UNION ALL
+                SELECT 'Paystack subscriptions' AS source, currency, amount
+                FROM subscription_charges
+                WHERE strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')
+             ) GROUP BY source, currency ORDER BY total DESC"
+        )->fetchAll();
         return [
             'currency' => $currency,
             'fixed_total' => $fixed,
             'usage_total' => $usage,
             'monthly_total' => $fixed + $usage,
+            'monthly_budget' => $budget,
             'items' => $items,
+            'monthly_revenue' => self::moneyRows($monthlyRevenue),
+            'monthly_revenue_by_source' => array_map(
+                fn($row) => [
+                    'source' => $row['source'],
+                    'currency' => $row['currency'],
+                    'total' => (int) $row['total'],
+                ],
+                $monthlyRevenueBySource
+            ),
         ];
     }
 
