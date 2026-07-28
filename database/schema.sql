@@ -442,9 +442,14 @@ CREATE TABLE IF NOT EXISTS account_demos (
   source_snapshot_json TEXT NOT NULL DEFAULT '{}',
   views INTEGER NOT NULL DEFAULT 0,
   cta_clicks INTEGER NOT NULL DEFAULT 0,
+  interaction_count INTEGER NOT NULL DEFAULT 0,
+  max_scroll_depth INTEGER NOT NULL DEFAULT 0,
+  engaged_seconds INTEGER NOT NULL DEFAULT 0,
+  intent_score INTEGER NOT NULL DEFAULT 0,
   generated_at TEXT NOT NULL DEFAULT (datetime('now')),
   published_at TEXT,
-  last_viewed_at TEXT
+  last_viewed_at TEXT,
+  last_event_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_account_demos_status ON account_demos (status, published_at);
 

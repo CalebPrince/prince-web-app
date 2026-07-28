@@ -482,12 +482,29 @@ $pdo->exec(
         source_snapshot_json TEXT NOT NULL DEFAULT '{}',
         views INTEGER NOT NULL DEFAULT 0,
         cta_clicks INTEGER NOT NULL DEFAULT 0,
+        interaction_count INTEGER NOT NULL DEFAULT 0,
+        max_scroll_depth INTEGER NOT NULL DEFAULT 0,
+        engaged_seconds INTEGER NOT NULL DEFAULT 0,
+        intent_score INTEGER NOT NULL DEFAULT 0,
         generated_at TEXT NOT NULL DEFAULT (datetime('now')),
         published_at TEXT,
-        last_viewed_at TEXT
+        last_viewed_at TEXT,
+        last_event_at TEXT
     )"
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_account_demos_status ON account_demos (status, published_at)');
+$accountDemoColumnNames = array_column($pdo->query('PRAGMA table_info(account_demos)')->fetchAll(), 'name');
+foreach ([
+    'interaction_count' => 'INTEGER NOT NULL DEFAULT 0',
+    'max_scroll_depth' => 'INTEGER NOT NULL DEFAULT 0',
+    'engaged_seconds' => 'INTEGER NOT NULL DEFAULT 0',
+    'intent_score' => 'INTEGER NOT NULL DEFAULT 0',
+    'last_event_at' => 'TEXT',
+] as $column => $definition) {
+    if (!in_array($column, $accountDemoColumnNames, true)) {
+        $pdo->exec("ALTER TABLE account_demos ADD COLUMN {$column} {$definition}");
+    }
+}
 
 $leadColumnNames = array_column($pdo->query('PRAGMA table_info(marketing_leads)')->fetchAll(), 'name');
 if (!in_array('estimated_value', $leadColumnNames, true)) {

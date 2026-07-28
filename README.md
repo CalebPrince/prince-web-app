@@ -658,7 +658,11 @@ storage/
     unverified operational friction as a likely scenario, not a fact. The
     admin edits four workflow steps, previews the result, and explicitly
     publishes an unguessable `/account-demo.html?token=...` link. Public
-    pages are `noindex`; views and CTA clicks are counted. Once published,
+    pages are `noindex`; views and CTA clicks are counted. The published page
+    also includes a grounded before/after process comparison. Aggregate views,
+    maximum scroll depth, active seconds, comparison interactions and CTA
+    clicks produce a transparent 0–100 intent score for follow-up. Tracking
+    does not fingerprint visitors or invent stakeholder identities. Once published,
     regenerating the lead's email pitch adds the private walkthrough link.
     Auto-draft also includes a link when a published demo already exists,
     but it never creates or publishes account demos automatically.

@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Private outcome walkthrough | Prince Caleb</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/account-demo.css?v=20260728">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/account-demo.css?v=20260728-intent">
 </head>
 <body>
   <header class="demo-nav">
@@ -37,7 +37,31 @@
       </aside>
     </section>
 
-    <section class="demo-playback" aria-labelledby="playback-title">
+    <section class="demo-contrast" data-engagement-section="comparison" aria-labelledby="contrast-title">
+      <header>
+        <p class="demo-kicker">Drag to compare</p>
+        <h2 id="contrast-title">From interrupted work to a controlled flow.</h2>
+        <p>This is a proposed operating concept, not a claim about your current internal process.</p>
+      </header>
+      <div class="contrast-stage" data-contrast style="--split:50%">
+        <article class="contrast-panel contrast-before">
+          <span>Likely friction</span>
+          <h3>Requests compete for attention.</h3>
+          <p data-contrast-before></p>
+          <div class="contrast-queue" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        </article>
+        <article class="contrast-panel contrast-after">
+          <span>Proposed flow</span>
+          <h3>Routine work keeps moving.</h3>
+          <p data-contrast-after></p>
+          <div class="contrast-flow" aria-hidden="true"><i></i><b></b><i></i><b></b><i></i></div>
+        </article>
+        <input class="contrast-range" data-contrast-range type="range" min="12" max="88" value="50" aria-label="Compare likely friction with the proposed workflow">
+        <div class="contrast-handle" aria-hidden="true"><span>‹ ›</span></div>
+      </div>
+    </section>
+
+    <section class="demo-playback" data-engagement-section="workflow" aria-labelledby="playback-title">
       <header>
         <p class="demo-kicker">One request, followed through</p>
         <h2 id="playback-title">What a quieter operation can feel like</h2>
@@ -45,7 +69,7 @@
       <div class="workflow-track" data-workflow></div>
     </section>
 
-    <section class="demo-proof">
+    <section class="demo-proof" data-engagement-section="evidence">
       <div>
         <p class="demo-kicker">Built around evidence, not assumptions</p>
         <h2>A proposed starting point, ready for human review.</h2>
@@ -59,6 +83,6 @@
     </section>
   </template>
 
-  <script src="/js/account-demo.js?v=20260728"></script>
+  <script src="/js/account-demo.js?v=20260728-intent"></script>
 </body>
 </html>

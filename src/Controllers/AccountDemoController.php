@@ -130,15 +130,34 @@ class AccountDemoController
         $token = trim((string) ($params['token'] ?? ''));
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $event = (string) ($data['event'] ?? '');
-        if (!preg_match('/^[a-f0-9]{36}$/', $token) || !in_array($event, ['view', 'cta'], true)) {
+        if (!preg_match('/^[a-f0-9]{36}$/', $token) || !in_array($event, ['view', 'cta', 'interaction', 'scroll', 'engaged', 'session'], true)) {
             Response::error('Invalid event.', 422);
         }
         $pdo = Database::get();
-        $sql = $event === 'view'
-            ? "UPDATE account_demos SET views=views+1, last_viewed_at=datetime('now') WHERE token=? AND status='published'"
-            : "UPDATE account_demos SET cta_clicks=cta_clicks+1 WHERE token=? AND status='published'";
+        $value = max(0, (int) ($data['value'] ?? 0));
+        $sql = match ($event) {
+            'view' => "UPDATE account_demos SET views=views+1, last_viewed_at=datetime('now'), last_event_at=datetime('now') WHERE token=? AND status='published'",
+            'cta' => "UPDATE account_demos SET cta_clicks=cta_clicks+1, last_event_at=datetime('now') WHERE token=? AND status='published'",
+            'interaction' => "UPDATE account_demos SET interaction_count=interaction_count+1, last_event_at=datetime('now') WHERE token=? AND status='published'",
+            'scroll' => "UPDATE account_demos SET max_scroll_depth=MAX(max_scroll_depth, ?), last_event_at=datetime('now') WHERE token=? AND status='published'",
+            'engaged' => "UPDATE account_demos SET engaged_seconds=MAX(engaged_seconds, ?), last_event_at=datetime('now') WHERE token=? AND status='published'",
+            'session' => "UPDATE account_demos SET max_scroll_depth=MAX(max_scroll_depth, ?), engaged_seconds=MAX(engaged_seconds, ?), last_event_at=datetime('now') WHERE token=? AND status='published'",
+        };
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$token]);
+        if ($event === 'session') {
+            $stmt->execute([
+                min(100, max(0, (int) ($data['scroll'] ?? 0))),
+                min(3600, max(0, (int) ($data['engaged'] ?? 0))),
+                $token,
+            ]);
+        } else {
+            $stmt->execute(in_array($event, ['scroll', 'engaged'], true)
+                ? [min($event === 'scroll' ? 100 : 3600, $value), $token]
+                : [$token]);
+        }
+        if ($stmt->rowCount() > 0) {
+            self::refreshIntentScore($pdo, $token);
+        }
         Response::json(['tracked' => $stmt->rowCount() > 0]);
     }
 
@@ -179,6 +198,23 @@ class AccountDemoController
         $stmt = $pdo->prepare('SELECT token FROM account_demos WHERE lead_id=?');
         $stmt->execute([$leadId]);
         return $stmt->fetchColumn() ?: null;
+    }
+
+    private static function refreshIntentScore(\PDO $pdo, string $token): void
+    {
+        $stmt = $pdo->prepare(
+            'SELECT views, cta_clicks, interaction_count, max_scroll_depth, engaged_seconds
+             FROM account_demos WHERE token=?'
+        );
+        $stmt->execute([$token]);
+        $metrics = $stmt->fetch();
+        if (!$metrics) return;
+        $score = min(20, (int) $metrics['views'] * 7)
+            + min(25, (int) round((int) $metrics['max_scroll_depth'] * .25))
+            + min(25, (int) round((int) $metrics['engaged_seconds'] / 6))
+            + min(20, (int) $metrics['interaction_count'] * 4)
+            + min(10, (int) $metrics['cta_clicks'] * 10);
+        $pdo->prepare('UPDATE account_demos SET intent_score=? WHERE token=?')->execute([min(100, $score), $token]);
     }
 
     private static function draft(string $businessName, array $snapshot): array

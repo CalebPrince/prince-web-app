@@ -36,6 +36,13 @@ function readinessRail(lead) {
     <div class="readiness-label">${readiness.label} · ${readiness.percent}%</div>`;
 }
 
+function intentBadge(demo) {
+  if (!demo || Number(demo.views || 0) === 0) return "";
+  const score = Number(demo.intent_score || 0);
+  const level = score >= 70 ? "hot" : score >= 40 ? "warm" : "watching";
+  return `<span class="intent-badge intent-${level}" title="Account demo engagement score">${score} intent</span>`;
+}
+
 function updateLeadPulse(rows) {
   document.getElementById("lead-total").textContent = rows.length.toLocaleString();
   document.getElementById("lead-priority").textContent = rows.filter(lead => Number(lead.is_high_priority) === 1).length.toLocaleString();
@@ -172,7 +179,7 @@ async function loadLeads() {
         <div class="lead-account">
           <div class="lead-avatar">${escapeHtml(leadInitials(lead.business_name))}</div>
           <div class="min-w-0">
-            <div class="lead-account-name">${Number(lead.is_high_priority) ? '<i class="bi bi-star-fill me-1" style="color:#e6a234" title="High priority"></i>' : ''}${escapeHtml(lead.business_name)}</div>
+            <div class="lead-account-name">${Number(lead.is_high_priority) ? '<i class="bi bi-star-fill me-1" style="color:#e6a234" title="High priority"></i>' : ''}${escapeHtml(lead.business_name)} ${intentBadge(lead.account_demo)}</div>
             ${lead.contact_email ? `<div class="small text-muted-custom lead-contact-line">${escapeHtml(lead.contact_email)}</div>` : ''}
             ${lead.contact_phone ? `<div class="small text-muted-custom lead-contact-line">${escapeHtml(lead.contact_phone)}</div>` : ''}
             ${!lead.contact_email && !lead.contact_phone ? '<div class="small text-muted-custom">Contact not found</div>' : ''}
@@ -936,7 +943,8 @@ function openAccountDemo(lead, demo) {
   const status = document.getElementById("account-demo-status");
   status.textContent = demo.status === "published" ? "Published" : "Draft";
   status.className = `status-pill ${demo.status === "published" ? "sent" : "pending"}`;
-  document.getElementById("account-demo-metrics").textContent = `${Number(demo.views || 0)} views · ${Number(demo.cta_clicks || 0)} CTA clicks`;
+  document.getElementById("account-demo-metrics").textContent =
+    `${Number(demo.intent_score || 0)}/100 intent · ${Number(demo.views || 0)} views · ${Number(demo.max_scroll_depth || 0)}% depth · ${Number(demo.engaged_seconds || 0)}s active · ${Number(demo.interaction_count || 0)} interactions · ${Number(demo.cta_clicks || 0)} CTA clicks`;
   const open = document.getElementById("account-demo-open");
   open.href = demo.url || "#";
   open.classList.toggle("d-none", demo.status !== "published");
