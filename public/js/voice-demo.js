@@ -83,12 +83,29 @@
   }
 
   function speakReply(text) {
-    if (!("speechSynthesis" in window)) {
+    const spoken = cleanForSpeech(text);
+    if (!spoken) {
       finish();
       return;
     }
-    const spoken = cleanForSpeech(text);
-    if (!spoken) {
+    if (window.ElevenLabsTTS) {
+      window.ElevenLabsTTS.stop();
+      window.ElevenLabsTTS.play(spoken, {
+        onstart: function () {
+          setMode("speaking", name + " is speaking", "Speaking");
+          buttonLabel.textContent = "Stop audio";
+          startButton.disabled = false;
+        },
+        onend: finish,
+        onerror: finish
+      }).catch(function () { speakWithBrowser(spoken); });
+      return;
+    }
+    speakWithBrowser(spoken);
+  }
+
+  function speakWithBrowser(spoken) {
+    if (!("speechSynthesis" in window)) {
       finish();
       return;
     }
@@ -176,6 +193,7 @@
       showTypedFallback("Voice input is not available in this browser. Type a question below—the answer will still be spoken aloud.");
       return;
     }
+    if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     recognition = new SR();
     recognition.lang = voice.accent && voice.accent !== "auto" ? voice.accent : "en-GB";
@@ -233,8 +251,10 @@
       recognition.stop();
       return;
     }
-    if (window.speechSynthesis && window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
+    if ((window.ElevenLabsTTS && window.ElevenLabsTTS.isPlaying())
+        || (window.speechSynthesis && window.speechSynthesis.speaking)) {
+      if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
       finish();
       return;
     }

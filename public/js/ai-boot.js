@@ -23,9 +23,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const face = document.createElement("script");
     face.src = "/js/agent-face.js";
     face.onload = () => {
-      const widget = document.createElement("script");
-      widget.src = "/js/ai-widget.js";
-      document.body.appendChild(widget);
+      if (window.ElevenLabsTTS) {
+        const widget = document.createElement("script");
+        widget.src = "/js/ai-widget.js";
+        document.body.appendChild(widget);
+        return;
+      }
+      const naturalVoice = document.createElement("script");
+      naturalVoice.src = "/js/elevenlabs-tts.js";
+      naturalVoice.onload = naturalVoice.onerror = () => {
+        const widget = document.createElement("script");
+        widget.src = "/js/ai-widget.js";
+        document.body.appendChild(widget);
+      };
+      document.body.appendChild(naturalVoice);
     };
     document.body.appendChild(face);
   };

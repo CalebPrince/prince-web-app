@@ -20,6 +20,7 @@ class SettingsController
         'twilio_voice_enabled', 'twilio_voice_number', 'owner_voice_number', 'twilio_voice_tts_voice', 'twilio_regulatory_approved',
         'twilio_conversation_relay_enabled', 'twilio_conversation_relay_url', 'twilio_conversation_relay_secret',
         'twilio_conversation_relay_voice',
+        'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model',
         'twilio_whatsapp_production_approved',
         'integration_api_key', 'notification_email',
         'smtp_gmail_address', 'smtp_app_password', 'smtp_host', 'smtp_port', 'mail_from', 'mail_from_name',
@@ -29,6 +30,7 @@ class SettingsController
         'maintenance_mode',
         'paystack_public_key', 'paystack_secret_key',
         'monthly_revenue_target', 'revenue_target_currency', 'weekly_billable_hours',
+        'external_expense_currency', 'external_service_expenses',
         'booking_enabled', 'booking_days', 'booking_start_time', 'booking_end_time',
         'booking_slot_minutes', 'booking_lead_days', 'booking_min_notice_hours', 'booking_timezone',
         'social_draft_enabled', 'social_draft_frequency', 'social_draft_last_run',
@@ -183,6 +185,12 @@ class SettingsController
                 $value = strtoupper($value);
                 if (!preg_match('/^[A-Z]{3}$/', $value)) {
                     Response::error('Choose a valid three-letter currency.', 422);
+                }
+            }
+            if ($key === 'external_expense_currency') {
+                $value = strtoupper($value);
+                if (!preg_match('/^[A-Z]{3}$/', $value)) {
+                    Response::error('Expense currency must be a three-letter code such as USD or GHS.', 422);
                 }
             }
             $maxLength = str_starts_with($key, 'email_tpl_') ? 20000 : 5000;

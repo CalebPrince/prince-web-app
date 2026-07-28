@@ -158,11 +158,31 @@
 
   function speak(text, btn) {
     const synth = window.speechSynthesis;
-    if (!synth || !text) return;
-    if (speakingBtn === btn) { synth.cancel(); return; }
-    synth.cancel();
+    if (!text) return;
+    if (speakingBtn === btn) {
+      if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
+      if (synth) synth.cancel();
+      setSpeaking(btn, false);
+      return;
+    }
+    if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
+    if (synth) synth.cancel();
     const spoken = stripForSpeech(text);
     if (!spoken) return;
+    if (activeAgent === "lisa" && window.ElevenLabsTTS) {
+      window.ElevenLabsTTS.play(spoken, {
+        onstart: () => setSpeaking(btn, true),
+        onend: () => setSpeaking(btn, false),
+        onerror: () => setSpeaking(btn, false),
+      }).catch(() => speakWithBrowser(spoken, btn));
+      return;
+    }
+    speakWithBrowser(spoken, btn);
+  }
+
+  function speakWithBrowser(spoken, btn) {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
     const u = new SpeechSynthesisUtterance(spoken);
     const gender = (agentSettings[AGENTS[activeAgent].genderKey] || "auto");
     const accent = (agentSettings[AGENTS[activeAgent].accentKey] || "auto");
@@ -195,7 +215,10 @@
         autoSpeak = !autoSpeak;
         sessionStorage.setItem("agent_chat_autospeak", autoSpeak ? "1" : "0");
         renderAutoSpeakButton();
-        if (!autoSpeak && window.speechSynthesis) window.speechSynthesis.cancel();
+        if (!autoSpeak) {
+          if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
+          if (window.speechSynthesis) window.speechSynthesis.cancel();
+        }
       });
     }
   }
@@ -211,7 +234,7 @@
     bubble.className = "agent-bubble " + (role === "user" ? "user" : "agent");
     bubble.textContent = text;
 
-    if (role === "agent" && "speechSynthesis" in window) {
+    if (role === "agent" && (window.ElevenLabsTTS || "speechSynthesis" in window)) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "speak-btn";

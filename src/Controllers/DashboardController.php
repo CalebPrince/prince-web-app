@@ -112,6 +112,7 @@ class DashboardController
         $targetCurrency = strtoupper(Settings::get('revenue_target_currency') ?: (Settings::get('pricing_currency') ?: 'GHS'));
         $targetRaw = Settings::get('monthly_revenue_target') ?: '0';
         $targetAmount = is_numeric($targetRaw) ? (int) round((float) $targetRaw * 100) : 0;
+        $externalExpenses = self::externalExpenses();
 
         // Abuse signal: the rate_limits table already buckets requests per
         // IP/endpoint/hour. Surface the last 24h so spikes and repeat
@@ -150,6 +151,7 @@ class DashboardController
             'webhooks_pending' => $webhooksPending,
             'new_chat_feedback' => $newChatFeedback,
             'rate_limit' => $rateLimit,
+            'external_expenses' => $externalExpenses,
             'payments' => [
                 'revenue_by_currency' => array_map(
                     fn($r) => ['currency' => $r['currency'], 'total' => (int) $r['total']],
@@ -187,6 +189,64 @@ class DashboardController
     private static function moneyRows(array $rows): array
     {
         return array_map(fn($row) => ['currency' => $row['currency'], 'total' => (int) $row['total']], $rows);
+    }
+
+    private static function externalExpenses(): array
+    {
+        $currency = strtoupper(trim((string) Settings::get('external_expense_currency')) ?: 'USD');
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            $currency = 'USD';
+        }
+        $raw = trim((string) Settings::get('external_service_expenses'));
+        if ($raw === '') {
+            $raw = "Fly.io | 3.00 | fixed\nTwilio phone number | 2.50 | fixed\nTwilio calls & relay | 5.00 | usage\nElevenLabs | 6.00 | fixed\nNamecheap hosting | 0.00 | fixed";
+        }
+
+        $items = [];
+        foreach (preg_split('/\R/', $raw) ?: [] as $line) {
+            $parts = array_map('trim', explode('|', $line));
+            if (($parts[0] ?? '') === '') continue;
+            $amount = is_numeric($parts[1] ?? null) ? max(0, (float) $parts[1]) : null;
+            $items[] = [
+                'name' => mb_substr($parts[0], 0, 80),
+                'amount' => $amount === null ? null : (int) round($amount * 100),
+                'type' => strtolower($parts[2] ?? '') === 'usage' ? 'usage' : 'fixed',
+                'connected' => true,
+            ];
+        }
+
+        $connected = [
+            'Twilio' => !empty(Settings::get('twilio_account_sid')),
+            'ElevenLabs' => !empty(Settings::get('elevenlabs_api_key')),
+            'Gemini' => !empty(Settings::get('gemini_api_key')),
+            'OpenRouter' => !empty(Settings::get('openrouter_api_key')),
+            'Groq' => !empty(Settings::get('groq_api_key')),
+            'Serper' => !empty(Settings::get('serper_api_key')),
+            'Hunter.io' => !empty(Settings::get('hunter_api_key')),
+            'Composio' => !empty(Settings::get('composio_api_key')),
+            'Paystack' => !empty(Settings::get('paystack_secret_key')),
+        ];
+        $names = strtolower(implode(' ', array_column($items, 'name')));
+        foreach ($connected as $name => $isConnected) {
+            if ($isConnected && !str_contains($names, strtolower($name))) {
+                $items[] = ['name' => $name, 'amount' => null, 'type' => 'usage', 'connected' => true];
+            }
+        }
+
+        $fixed = 0;
+        $usage = 0;
+        foreach ($items as $item) {
+            if ($item['amount'] === null) continue;
+            if ($item['type'] === 'usage') $usage += $item['amount'];
+            else $fixed += $item['amount'];
+        }
+        return [
+            'currency' => $currency,
+            'fixed_total' => $fixed,
+            'usage_total' => $usage,
+            'monthly_total' => $fixed + $usage,
+            'items' => $items,
+        ];
     }
 
     /** GET /api/v1/admin/notifications — lightweight unread counts for the sidebar badges */

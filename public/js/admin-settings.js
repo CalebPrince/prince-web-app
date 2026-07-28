@@ -111,6 +111,12 @@ async function saveIntegrations(e) {
       openrouter_model: document.getElementById("openrouter-model").value.trim(),
       groq_api_key: document.getElementById("groq-key").value.trim(),
       groq_model: document.getElementById("groq-model").value.trim(),
+      elevenlabs_tts_enabled: document.getElementById("elevenlabs-tts-enabled").checked ? "1" : "0",
+      elevenlabs_api_key: document.getElementById("elevenlabs-api-key").value.trim(),
+      elevenlabs_voice_id: document.getElementById("elevenlabs-voice-id").value.trim(),
+      elevenlabs_tts_model: document.getElementById("elevenlabs-tts-model").value.trim(),
+      external_expense_currency: document.getElementById("external-expense-currency").value.trim().toUpperCase(),
+      external_service_expenses: document.getElementById("external-service-expenses").value.trim(),
       twilio_auth_token: document.getElementById("twilio-auth-token").value.trim(),
       twilio_account_sid: document.getElementById("twilio-account-sid").value.trim(),
       twilio_whatsapp_number: document.getElementById("twilio-whatsapp-number").value.trim(),
@@ -553,6 +559,13 @@ async function testAi() {
     document.getElementById("openrouter-model").value = settings.openrouter_model || "";
     document.getElementById("groq-key").value = settings.groq_api_key || "";
     document.getElementById("groq-model").value = settings.groq_model || "";
+    document.getElementById("elevenlabs-tts-enabled").checked = settings.elevenlabs_tts_enabled === "1";
+    document.getElementById("elevenlabs-api-key").value = settings.elevenlabs_api_key || "";
+    document.getElementById("elevenlabs-voice-id").value = settings.elevenlabs_voice_id || "Xb7hH8MSUJpSbSDYk0k2";
+    document.getElementById("elevenlabs-tts-model").value = settings.elevenlabs_tts_model || "eleven_flash_v2_5";
+    document.getElementById("external-expense-currency").value = settings.external_expense_currency || "USD";
+    document.getElementById("external-service-expenses").value = settings.external_service_expenses
+      || "Fly.io | 3.00 | fixed\nTwilio phone number | 2.50 | fixed\nTwilio calls & relay | 5.00 | usage\nElevenLabs | 6.00 | fixed\nNamecheap hosting | 0.00 | fixed";
     document.getElementById("twilio-auth-token").value = settings.twilio_auth_token || "";
     document.getElementById("twilio-account-sid").value = settings.twilio_account_sid || "";
     document.getElementById("twilio-whatsapp-number").value = settings.twilio_whatsapp_number || "";

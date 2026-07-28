@@ -84,6 +84,7 @@ use App\Controllers\SubscriptionController;
 use App\Controllers\TagController;
 use App\Controllers\TaskController;
 use App\Controllers\TestimonialController;
+use App\Controllers\TextToSpeechController;
 use App\Controllers\UploadController;
 use App\Controllers\UptimeController;
 use App\Controllers\VoiceDemoController;
@@ -137,6 +138,7 @@ $router->get('/api/v1/chat/session/{token}', [LiveChatController::class, 'sessio
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);
 $router->post('/api/v1/voice-demo/message', [VoiceDemoController::class, 'message']);
 $router->post('/api/v1/voice-demo/event', [VoiceDemoController::class, 'event']);
+$router->post('/api/v1/voice/tts', [TextToSpeechController::class, 'speak']);
 $router->post('/api/v1/voice/twilio/incoming', [VoiceDemoController::class, 'incomingCall']);
 $router->post('/api/v1/voice/twilio/outbound', [VoiceDemoController::class, 'outboundCall']);
 $router->post('/api/v1/voice/twilio/turn', [VoiceDemoController::class, 'callTurn']);

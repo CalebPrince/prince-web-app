@@ -207,6 +207,42 @@
               <input type="text" class="form-control" id="groq-model" placeholder="llama-3.3-70b-versatile" autocomplete="off">
               <div class="form-text">Defaults to llama-3.3-70b-versatile if left blank.</div>
             </div>
+            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="elevenlabs-tts-enabled">
+                <label class="form-check-label fw-semibold" for="elevenlabs-tts-enabled">Use ElevenLabs for Lisa on the website</label>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="elevenlabs-api-key">ElevenLabs API key</label>
+                <input type="password" class="form-control" id="elevenlabs-api-key" placeholder="Paste your ElevenLabs API key" autocomplete="new-password">
+                <div class="form-text">Kept on the server. It is never sent to visitors' browsers.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="elevenlabs-voice-id">Lisa's ElevenLabs voice ID</label>
+                <input type="text" class="form-control" id="elevenlabs-voice-id" placeholder="Xb7hH8MSUJpSbSDYk0k2">
+                <div class="form-text">Defaults to Alice, a British female voice. This controls live chat, the homepage voice demo, and Lisa in Talk to Agents.</div>
+              </div>
+              <div class="mb-0">
+                <label class="form-label" for="elevenlabs-tts-model">TTS model</label>
+                <input type="text" class="form-control" id="elevenlabs-tts-model" placeholder="eleven_flash_v2_5">
+                <div class="form-text">Flash v2.5 is the recommended low-latency, lower-cost model for conversational experiences.</div>
+              </div>
+            </div>
+            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line);">
+              <h6 class="mb-1">Monthly external-service expenses</h6>
+              <p class="form-text mt-0">Shown on the Financial dashboard. Enter one service per line as <code>Name | monthly amount | fixed</code> or <code>Name | estimated amount | usage</code>.</p>
+              <div class="row g-2 mb-2">
+                <div class="col-sm-3">
+                  <label class="form-label" for="external-expense-currency">Currency</label>
+                  <input type="text" class="form-control" id="external-expense-currency" maxlength="3" placeholder="USD">
+                </div>
+                <div class="col-sm-9">
+                  <label class="form-label" for="external-service-expenses">Services and monthly costs</label>
+                  <textarea class="form-control" id="external-service-expenses" rows="7" placeholder="Fly.io | 3.00 | fixed&#10;Twilio phone number | 2.50 | fixed&#10;Twilio calls &amp; relay | 5.00 | usage&#10;ElevenLabs | 6.00 | fixed&#10;Namecheap hosting | 0.00 | fixed"></textarea>
+                </div>
+              </div>
+              <div class="form-text">Use your expected monthly amount for usage-based services. Connected services with no saved cost will still appear on the dashboard as “amount needed.”</div>
+            </div>
             <div class="mb-3">
               <label class="form-label">Twilio Auth Token <span class="text-muted-custom fw-normal">(Lisa on WhatsApp)</span></label>
               <input type="password" class="form-control" id="twilio-auth-token" placeholder="Paste your Twilio Auth Token" autocomplete="off">
@@ -886,6 +922,6 @@
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-settings.js?v=20260719"></script>
+<script src="/js/admin-settings.js?v=20260728-expenses"></script>
 </body>
 </html>

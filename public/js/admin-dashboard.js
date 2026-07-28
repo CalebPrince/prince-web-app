@@ -221,6 +221,23 @@ function renderRateLimits(rl) {
   `).join("");
 }
 
+function renderExternalExpenses(expenses) {
+  expenses = expenses || { currency: "USD", fixed_total: 0, usage_total: 0, monthly_total: 0, items: [] };
+  const money = value => formatAmount(Number(value || 0), expenses.currency);
+  document.getElementById("expense-total").textContent = money(expenses.monthly_total);
+  document.getElementById("expense-fixed").textContent = money(expenses.fixed_total);
+  document.getElementById("expense-usage").textContent = money(expenses.usage_total);
+  document.getElementById("expense-services").innerHTML = (expenses.items || []).map(item => `
+    <div class="d-flex justify-content-between align-items-center py-2 border-bottom gap-3">
+      <div class="text-truncate">
+        <strong>${escapeHtml(item.name)}</strong>
+        <span class="status-pill read ms-2">${item.type === "usage" ? "usage estimate" : "fixed"}</span>
+      </div>
+      <strong class="${item.amount === null ? "text-warning" : ""} flex-shrink-0">${item.amount === null ? "Amount needed" : money(item.amount)}</strong>
+    </div>
+  `).join("");
+}
+
 const ATTENTION_ICONS = { Inquiry:'bi-inbox', Chat:'bi-chat-dots', Booking:'bi-calendar-check', Payment:'bi-credit-card', Proposal:'bi-file-earmark-check', Invoice:'bi-receipt', Uptime:'bi-activity', 'Follow-up':'bi-alarm', Task:'bi-check2-square' };
 function renderAttention(items) {
   const priority = { danger: 0, warning: 1, info: 2, success: 3 };
@@ -294,6 +311,7 @@ async function loadScoreboard() {
   renderUpcomingAppointments(data.upcoming_appointments);
   renderRecentPayments(data.recent_payments);
   renderRateLimits(data.rate_limit);
+  renderExternalExpenses(data.external_expenses);
   renderAttention(notifications.items);
   let dashboardMode = localStorage.getItem('admin_dashboard_mode') || 'operational';
   document.querySelectorAll('[data-dashboard-mode]').forEach(button => button.addEventListener('click', () => {

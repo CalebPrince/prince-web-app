@@ -169,12 +169,32 @@
 
   function speak(text, btn) {
     const synth = window.speechSynthesis;
-    if (!synth || !text) return;
+    if (!text) return;
     // Clicking the mic of a message that's already talking stops it.
-    if (speakingBtn === btn) { synth.cancel(); return; }
-    synth.cancel();
+    if (speakingBtn === btn) {
+      if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
+      if (synth) synth.cancel();
+      setSpeaking(btn, false);
+      return;
+    }
+    if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
+    if (synth) synth.cancel();
     const spoken = stripForSpeech(text);
     if (!spoken) return; // nothing but emoji — no words to read
+    if (window.ElevenLabsTTS) {
+      window.ElevenLabsTTS.play(spoken, {
+        onstart: () => setSpeaking(btn, true),
+        onend: () => setSpeaking(btn, false),
+        onerror: () => setSpeaking(btn, false),
+      }).catch(() => speakWithBrowser(spoken, btn));
+      return;
+    }
+    speakWithBrowser(spoken, btn);
+  }
+
+  function speakWithBrowser(spoken, btn) {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
     const u = new SpeechSynthesisUtterance(spoken);
     u.rate = Math.min(2, Math.max(0.5, Number(voiceConfig.rate) || 1));
     u.pitch = Math.min(2, Math.max(0, Number(voiceConfig.pitch) || 1));
@@ -192,7 +212,7 @@
   // Build the read-aloud speaker button for a finished reply and return it so
   // the caller can auto-speak. Null when the browser has no speech synthesis.
   function addSpeakButton(el, text) {
-    if (!("speechSynthesis" in window)) return null;
+    if (!window.ElevenLabsTTS && !("speechSynthesis" in window)) return null;
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ai-speak-btn";
@@ -815,7 +835,10 @@
       autoSpeak = !autoSpeak;
       sessionStorage.setItem("chat_autospeak", autoSpeak ? "1" : "0");
       render();
-      if (!autoSpeak && window.speechSynthesis) window.speechSynthesis.cancel();
+      if (!autoSpeak) {
+        if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      }
     });
   })();
 
