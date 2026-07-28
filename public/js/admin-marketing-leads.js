@@ -159,6 +159,47 @@ function actionButtons(lead) {
   return buttons.join(" ");
 }
 
+function compactActionButtons(lead) {
+  const id = lead.id;
+  const phoneOnly = !lead.contact_email && lead.contact_phone;
+  const canAudit = lead.website_url && (lead.status === "pending" || lead.audit_findings);
+  const canPitch = !lead.website_url || lead.audit_findings;
+  const secondary = [];
+  let primary = "";
+
+  if (lead.pitch_body) {
+    primary = `<button class="btn btn-sm btn-brand review-btn" data-id="${id}">Review &amp; send</button>`;
+  } else if (canPitch) {
+    primary = `<button class="btn btn-sm btn-brand pitch-btn" data-id="${id}">Generate ${phoneOnly ? "call script" : "pitch"}</button>`;
+  } else if (canAudit) {
+    primary = `<button class="btn btn-sm btn-brand audit-btn" data-id="${id}">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`;
+  } else {
+    primary = `<button class="btn btn-sm btn-brand research-btn" data-id="${id}">Research</button>`;
+  }
+
+  if (lead.research_findings) {
+    secondary.push(`<button class="lead-more-item dossier-btn" data-id="${id}"><i class="bi bi-journal-text"></i> View dossier</button>`);
+  } else if (!primary.includes("research-btn")) {
+    secondary.push(`<button class="lead-more-item research-btn" data-id="${id}"><i class="bi bi-search"></i> Research account</button>`);
+  }
+  if (canAudit && !primary.includes("audit-btn")) {
+    secondary.push(`<button class="lead-more-item audit-btn" data-id="${id}"><i class="bi bi-shield-check"></i> ${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`);
+  }
+  if (canPitch && !primary.includes("pitch-btn")) {
+    secondary.push(`<button class="lead-more-item pitch-btn" data-id="${id}"><i class="bi bi-pencil-square"></i> ${lead.pitch_body ? "Regenerate" : "Generate"} ${phoneOnly ? "call script" : "pitch"}</button>`);
+  }
+  secondary.push(`<button class="lead-more-item account-demo-btn" data-id="${id}"><i class="bi bi-window"></i> ${lead.account_demo ? "Open account demo" : "Create account demo"}</button>`);
+  secondary.push(`<button class="lead-more-item remove-btn is-danger" data-id="${id}"><i class="bi bi-trash3"></i> Delete lead</button>`);
+
+  return `
+    <button class="btn btn-sm btn-outline-secondary priority-btn ${Number(lead.is_high_priority) ? "is-priority" : ""}" data-id="${id}" title="${Number(lead.is_high_priority) ? "Remove high priority" : "Mark high priority"}" aria-label="${Number(lead.is_high_priority) ? "Remove high priority" : "Mark high priority"}"><i class="bi bi-star${Number(lead.is_high_priority) ? "-fill" : ""}"></i></button>
+    ${primary}
+    <details class="lead-more-actions">
+      <summary>More <i class="bi bi-chevron-down"></i></summary>
+      <div class="lead-more-panel">${secondary.join("")}</div>
+    </details>`;
+}
+
 async function loadLeads() {
   loadOutreachStats(); // eligible-queue count tracks lead state; refresh alongside
   const response = await api.get("/api/v1/admin/marketing-leads");
@@ -199,11 +240,20 @@ async function loadLeads() {
       <td>${Number(lead.estimated_value) ? `<span class="fw-semibold">${escapeHtml(lead.currency || 'GHS')} ${(Number(lead.estimated_value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>` : '<span class="text-muted-custom small">Not estimated</span>'}</td>
       <td><span class="status-pill ${lead.status}">${lead.status.replace("_", " ")}</span></td>
       <td class="text-end pe-3 lead-actions">
-        <div class="lead-actions-more">${actionButtons(lead)}</div>
+        <div class="lead-actions-more">${compactActionButtons(lead)}</div>
       </td>
     </tr>
     `).join("");
   applyLeadFilters();
+
+  tbody.querySelectorAll(".lead-more-actions").forEach(details => {
+    details.addEventListener("toggle", () => {
+      if (!details.open) return;
+      tbody.querySelectorAll(".lead-more-actions[open]").forEach(other => {
+        if (other !== details) other.open = false;
+      });
+    });
+  });
 
   tbody.querySelectorAll(".row-checkbox").forEach(cb => {
     cb.addEventListener("change", () => {

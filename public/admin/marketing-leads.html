@@ -34,8 +34,8 @@
 .engine-shell{border:1px solid var(--line);border-radius:20px;background:var(--card-bg,#fff);box-shadow:0 12px 35px rgba(16,35,63,.06)}
 .engine-primary{padding:1.2rem 1.3rem}
 .engine-status-dot{width:.65rem;height:.65rem;border-radius:50%;background:#97a1b1;box-shadow:0 0 0 .3rem rgba(151,161,177,.13)}
-.engine-metrics{display:flex;gap:.35rem;flex-wrap:wrap}
-.engine-metric{min-width:6rem;padding:.7rem .85rem;border-radius:12px;background:var(--bg-soft);text-align:left}
+.engine-metrics{display:grid;grid-template-columns:repeat(4,minmax(5.4rem,1fr));gap:.35rem;flex:1;max-width:32rem}
+.engine-metric{min-width:0;padding:.7rem .85rem;border-radius:12px;background:var(--bg-soft);text-align:left}
 .engine-metric strong{display:block;font:800 1.05rem/1 "Plus Jakarta Sans",sans-serif}
 .engine-metric span{font-size:.68rem;color:var(--text-muted,#667085)}
 .discovery-drawer{border-top:1px solid var(--line);padding:1rem 1.3rem;background:linear-gradient(90deg,var(--bg-soft),transparent);border-radius:0 0 20px 20px}
@@ -64,7 +64,17 @@
 .readiness-label{font-size:.68rem;color:var(--text-muted,#667085);white-space:nowrap}
 .lead-actions .btn{border-radius:9px}
 .lead-actions .btn-brand{box-shadow:none}
-.lead-actions-more{display:flex;gap:.3rem;justify-content:flex-end;flex-wrap:wrap;max-width:25rem;margin-left:auto}
+.lead-actions-more{display:flex;gap:.35rem;justify-content:flex-end;align-items:center;white-space:nowrap;margin-left:auto}
+.lead-more-actions{position:relative}
+.lead-more-actions summary{display:flex;align-items:center;gap:.35rem;padding:.38rem .58rem;border:1px solid var(--line-strong,var(--line));border-radius:9px;color:var(--text-muted,#667085);font-size:.75rem;font-weight:650;cursor:pointer;list-style:none}
+.lead-more-actions summary::-webkit-details-marker{display:none}
+.lead-more-actions[open] summary{color:var(--lead-blue);border-color:rgba(36,87,214,.45);background:rgba(36,87,214,.05)}
+.lead-more-actions[open] summary i{transform:rotate(180deg)}
+.lead-more-panel{display:grid;gap:.2rem;min-width:13.5rem;margin-top:.35rem;padding:.4rem;border:1px solid var(--line);border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 12px 30px rgba(16,35,63,.12)}
+.lead-more-item{display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .65rem;border:0;border-radius:8px;background:transparent;color:var(--text,#172033);font-size:.78rem;text-align:left}
+.lead-more-item:hover{background:var(--bg-soft)}
+.lead-more-item i{width:1rem;color:var(--text-muted,#667085)}
+.lead-more-item.is-danger{color:#c13d3d}.lead-more-item.is-danger i{color:inherit}
 .priority-btn{width:2rem}
 .priority-btn.is-priority{color:#9a5b00;border-color:#e6a234;background:#fff7e6}
 .intent-badge{display:inline-flex;vertical-align:middle;margin-left:.35rem;padding:.18rem .38rem;border-radius:6px;font:700 .58rem/1 Inter,sans-serif;text-transform:uppercase;letter-spacing:.04em}
@@ -77,6 +87,7 @@
   .lead-pulse-grid{grid-template-columns:repeat(2,1fr)}
   .lead-table-shell{overflow-x:auto}
   .lead-table-shell table{min-width:1050px}
+  .engine-metrics{order:3;max-width:none;flex-basis:100%}
 }
 @media(max-width:700px){
   .flex-grow-1.p-4{padding:1rem!important}
@@ -85,6 +96,8 @@
   .lead-board-head{align-items:stretch;flex-direction:column}
   .lead-board-controls{margin-left:0;flex-wrap:wrap}
   .lead-search{min-width:100%;flex:1}
+  .engine-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .discovery-drawer .flex-grow-1{min-width:100%!important}
 }
 .account-demo-editor .modal-header{background:linear-gradient(135deg,var(--section-leads-soft),transparent 70%)}
 .account-demo-flow-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;font-weight:700}
@@ -273,7 +286,7 @@
     </div>
 
     <div class="row g-3 mb-1" id="analytics-metrics">
-      <div class="col-sm-6 col-xl-2">
+      <div class="col-sm-6 col-lg-4 col-xxl-2">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-envelope-check"></i></div>
           <div>
@@ -283,7 +296,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-6 col-xl-2">
+      <div class="col-sm-6 col-lg-4 col-xxl-2">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-reply-fill"></i></div>
           <div>
@@ -293,7 +306,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-6 col-xl-2">
+      <div class="col-sm-6 col-lg-4 col-xxl-2">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-emoji-smile"></i></div>
           <div>
@@ -303,7 +316,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-6 col-xl-2">
+      <div class="col-sm-6 col-lg-4 col-xxl-2">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-eye"></i></div>
           <div>
@@ -313,7 +326,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-6 col-xl-2">
+      <div class="col-sm-6 col-lg-4 col-xxl-2">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-graph-up-arrow"></i></div>
           <div>
@@ -323,7 +336,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-6 col-xl-2">
+      <div class="col-sm-6 col-lg-4 col-xxl-2">
         <div class="admin-card stat-card p-3">
           <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-telephone"></i></div>
           <div>
@@ -677,6 +690,6 @@
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-marketing-leads.js?v=20260728-analytics-dashboard"></script>
+<script src="/js/admin-marketing-leads.js?v=20260728-layout-fix"></script>
 </body>
 </html>
