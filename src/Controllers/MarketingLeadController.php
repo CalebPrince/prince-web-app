@@ -519,9 +519,39 @@ class MarketingLeadController
         $stmt = $pdo->prepare('SELECT business_name FROM marketing_leads WHERE id = ?');
         $stmt->execute([$id]);
         $name = $stmt->fetchColumn();
+        if ($name === false) Response::error('Lead not found.', 404);
 
-        $pdo->prepare('DELETE FROM marketing_leads WHERE id = ?')->execute([$id]);
-        ActivityLog::log($user, 'deleted', 'marketing_lead', $id, $name ?: null);
+        try {
+            $pdo->beginTransaction();
+
+            // Keep communication history, but detach it from the lead being
+            // removed. Explicit updates also make deletion work on databases
+            // created before these foreign keys gained ON DELETE SET NULL.
+            $pdo->prepare('UPDATE drip_enrollments SET lead_id = NULL WHERE lead_id = ?')->execute([$id]);
+            $pdo->prepare('UPDATE telephony_calls SET marketing_lead_id = NULL WHERE marketing_lead_id = ?')->execute([$id]);
+
+            // These records belong exclusively to the prospect. Delete them
+            // explicitly so older deployed schemas without cascade actions do
+            // not turn a normal admin delete into an HTTP 500.
+            $pdo->prepare('DELETE FROM account_demos WHERE lead_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM outreach_sends WHERE lead_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM call_log WHERE lead_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM marketing_leads WHERE id = ?')->execute([$id]);
+
+            ActivityLog::log($user, 'deleted', 'marketing_lead', $id, $name ?: null);
+            $pdo->commit();
+        } catch (\PDOException $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $locked = str_contains(strtolower($e->getMessage()), 'locked')
+                || str_contains(strtolower($e->getMessage()), 'busy');
+            error_log('Marketing lead delete failed for ' . $id . ': ' . $e->getMessage());
+            Response::error(
+                $locked
+                    ? 'The lead database is busy with another automation. Wait a few seconds and try deleting again.'
+                    : 'This lead could not be deleted because related records could not be updated.',
+                $locked ? 503 : 409
+            );
+        }
         Response::json(['status' => 'deleted']);
     }
 

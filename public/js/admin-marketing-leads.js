@@ -712,7 +712,11 @@ document.getElementById("bulk-remove-btn").addEventListener("click", async () =>
   const btn = document.getElementById("bulk-remove-btn");
   btn.disabled = true;
   try {
-    await Promise.all(ids.map(id => api.delete(`/api/v1/admin/marketing-leads/${id}`)));
+    // SQLite permits one writer at a time. Delete sequentially instead of
+    // making several PHP workers compete for the database lock.
+    for (const id of ids) {
+      await api.delete(`/api/v1/admin/marketing-leads/${id}`);
+    }
     await loadLeads();
   } catch (err) {
     alert(err.message || "Could not delete selected leads.");
