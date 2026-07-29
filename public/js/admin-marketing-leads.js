@@ -1156,6 +1156,32 @@ function renderAnalyticsMetrics(overview) {
 
   document.getElementById("am-calls-total").textContent = Number(overview.calls_total || 0).toLocaleString();
   document.getElementById("am-calls-connected").textContent = `${overview.calls_connected || 0} connected`;
+
+  // Top-of-page KPI strip mirrors a subset of the same overview figures —
+  // these have their own -hero ids so they don't collide with the ids above.
+  const pct = (num, den) => den > 0 ? `${Math.round((num / den) * 100)}%` : null;
+
+  const demosTotal = Number(overview.demos_total || 0);
+  const demosPublished = Number(overview.demos_published || 0);
+  document.getElementById("am-demos-generated-hero").textContent = demosTotal.toLocaleString();
+  document.getElementById("am-demos-generated-hero-trend").textContent =
+    demosTotal > 0 ? `${pct(demosPublished, demosTotal)} published` : "No demos yet";
+
+  const demoViewsTotal = Number(overview.demo_views_total || 0);
+  document.getElementById("am-demo-views-hero").textContent = demoViewsTotal.toLocaleString();
+  document.getElementById("am-demo-views-hero-trend").textContent =
+    demosTotal > 0 ? `${(demoViewsTotal / demosTotal).toFixed(1)}x views per demo` : "No demos yet";
+
+  const demoClicksTotal = Number(overview.demo_cta_clicks_total || 0);
+  document.getElementById("am-demo-clicks-hero").textContent = demoClicksTotal.toLocaleString();
+  document.getElementById("am-demo-clicks-hero-trend").textContent =
+    demoViewsTotal > 0 ? `${pct(demoClicksTotal, demoViewsTotal)} engagement rate` : "No views yet";
+
+  const callsTotal = Number(overview.calls_total || 0);
+  const callsConnected = Number(overview.calls_connected || 0);
+  document.getElementById("am-calls-total-hero").textContent = callsTotal.toLocaleString();
+  document.getElementById("am-calls-total-hero-trend").textContent =
+    callsTotal > 0 ? `${pct(callsConnected, callsTotal)} connected` : "No calls yet";
 }
 
 function renderSendTrendChart(trend) {
