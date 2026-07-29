@@ -443,7 +443,7 @@ class OutreachController
         CallOutcomeSync::reconcile($pdo);
 
         $rows = $pdo->query(
-            "SELECT ml.id, ml.business_name, ml.contact_phone, ml.website_url, ml.pitch_body,
+            "SELECT ml.id, ml.business_name, ml.contact_name, ml.contact_phone, ml.website_url, ml.pitch_body,
                     (SELECT COUNT(*) FROM call_log cl WHERE cl.lead_id = ml.id) AS attempts,
                     (SELECT cl.outcome FROM call_log cl WHERE cl.lead_id = ml.id ORDER BY cl.called_at DESC, cl.id DESC LIMIT 1) AS last_outcome,
                     (SELECT cl.called_at FROM call_log cl WHERE cl.lead_id = ml.id ORDER BY cl.called_at DESC, cl.id DESC LIMIT 1) AS last_called_at
@@ -483,7 +483,7 @@ class OutreachController
         $pdo = Database::get();
         $leadId = (int) ($params['id'] ?? 0);
         $stmt = $pdo->prepare(
-            "SELECT id, business_name, contact_phone, pitch_body, status, pitch_channel
+            "SELECT id, business_name, contact_name, contact_phone, pitch_body, status, pitch_channel
              FROM marketing_leads WHERE id = ?"
         );
         $stmt->execute([$leadId]);
@@ -771,7 +771,7 @@ class OutreachController
             . ($auditNote !== '' ? '. Issues spotted in the audit: ' . mb_substr($auditNote, 0, 300) : '');
 
         Automations::fire('marketing_pitch_sent', (string) $lead['contact_email'], [
-            'name' => $lead['business_name'] ?: null,
+            'name' => $lead['contact_name'] ?: ($lead['business_name'] ?: null),
             'source' => 'marketing_lead',
             'lead_id' => (int) $lead['id'],
             'last_action' => $lastAction,

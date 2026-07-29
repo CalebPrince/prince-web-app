@@ -317,6 +317,7 @@ class MarketingLeadController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $businessName = trim((string) ($data['business_name'] ?? ''));
+        $contactName = trim((string) ($data['contact_name'] ?? ''));
         $websiteUrl = trim((string) ($data['website_url'] ?? ''));
         $contactEmail = trim((string) ($data['contact_email'] ?? ''));
         $contactPhone = trim((string) ($data['contact_phone'] ?? ''));
@@ -324,6 +325,9 @@ class MarketingLeadController
 
         if ($businessName === '' || mb_strlen($businessName) > 255) {
             Response::error('Business name is required.', 422);
+        }
+        if (mb_strlen($contactName) > 160) {
+            Response::error('Contact name is too long.', 422);
         }
         // No website at all is a valid lead — a business that hasn't built
         // one yet is a real prospect, just pitched differently (see
@@ -341,8 +345,8 @@ class MarketingLeadController
         }
 
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO marketing_leads (business_name, website_url, contact_email, contact_phone, estimated_value, currency) VALUES (?, ?, ?, ?, ?, ?)')
-            ->execute([$businessName, $websiteUrl ?: null, $contactEmail ?: null, $contactPhone ?: null, $estimatedValue, $currency]);
+        $pdo->prepare('INSERT INTO marketing_leads (business_name, contact_name, website_url, contact_email, contact_phone, estimated_value, currency) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$businessName, $contactName ?: null, $websiteUrl ?: null, $contactEmail ?: null, $contactPhone ?: null, $estimatedValue, $currency]);
 
         Response::json(['id' => (int) $pdo->lastInsertId()], 201);
     }
@@ -468,11 +472,14 @@ class MarketingLeadController
 
         $fields = [];
         $values = [];
-        foreach (['business_name', 'website_url', 'contact_email', 'contact_phone', 'pitch_subject', 'pitch_body', 'notes'] as $key) {
+        foreach (['business_name', 'contact_name', 'website_url', 'contact_email', 'contact_phone', 'pitch_subject', 'pitch_body', 'notes'] as $key) {
             if (array_key_exists($key, $data)) {
                 $fields[] = "$key = ?";
                 $values[] = trim((string) $data[$key]) !== '' ? trim((string) $data[$key]) : null;
             }
+        }
+        if (array_key_exists('contact_name', $data) && mb_strlen(trim((string) $data['contact_name'])) > 160) {
+            Response::error('Contact name is too long.', 422);
         }
         if (array_key_exists('status', $data)) {
             if (!in_array($data['status'], self::STATUSES, true)) {
@@ -691,7 +698,7 @@ class MarketingLeadController
                 . ($auditNote !== '' ? '. Issues spotted in the audit: ' . mb_substr($auditNote, 0, 300) : '');
 
             Automations::fire('marketing_pitch_sent', $lead['contact_email'], [
-                'name' => $lead['business_name'] ?: null,
+                'name' => $lead['contact_name'] ?: ($lead['business_name'] ?: null),
                 'source' => 'marketing_lead',
                 'lead_id' => (int) $lead['id'],
                 'last_action' => $lastAction,

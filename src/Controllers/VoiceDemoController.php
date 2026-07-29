@@ -130,7 +130,7 @@ final class VoiceDemoController
 
         $pdo = Database::get();
         $stmt = $pdo->prepare(
-            "SELECT id, business_name, pitch_body FROM marketing_leads
+            "SELECT id, business_name, contact_name, pitch_body FROM marketing_leads
              WHERE id = ? AND status = 'pitch_ready' AND pitch_channel = 'phone'"
         );
         $stmt->execute([$leadId]);
@@ -157,8 +157,10 @@ final class VoiceDemoController
              status = 'in-progress', updated_at = datetime('now') WHERE provider_call_id = ?"
         )->execute([$session['id'], $leadId, $callSid]);
 
+        $contactName = trim((string) ($lead['contact_name'] ?? ''));
+        $nameGreeting = $contactName !== '' ? "Hello, may I speak with {$contactName}? " : 'Hello. ';
         self::twimlGather(
-            "Hi, this is Lisa, Prince Caleb's AI assistant. I'm calling on his behalf with a customer-service "
+            $nameGreeting . "This is Lisa, Prince Caleb's AI assistant. I'm calling on his behalf with a customer-service "
             . "improvement idea prepared for {$lead['business_name']}. Is now a good time for a brief conversation?"
         );
     }
@@ -180,7 +182,7 @@ final class VoiceDemoController
         $pdo = Database::get();
         $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
         $callStmt = $pdo->prepare(
-            "SELECT tc.direction, tc.from_number, ml.id, ml.business_name, ml.website_url, ml.pitch_body
+            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.website_url, ml.pitch_body
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
              WHERE tc.provider_call_id = ?"
@@ -191,6 +193,7 @@ final class VoiceDemoController
         $callContext['is_owner'] = !$isOutbound
             && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
         $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
+        self::captureWhatsAppConsent($pdo, $callSid, $speech, $transcript, $callContext);
         if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
             $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
             $transcript[] = ['role' => 'assistant', 'text' => "Understood. We won't call again. Goodbye."];
@@ -256,7 +259,7 @@ final class VoiceDemoController
         $pdo = Database::get();
         $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
         $callStmt = $pdo->prepare(
-            "SELECT tc.direction, tc.from_number, ml.id, ml.business_name, ml.website_url, ml.pitch_body
+            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.website_url, ml.pitch_body
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
              WHERE tc.provider_call_id = ?"
@@ -267,6 +270,7 @@ final class VoiceDemoController
         $callContext['is_owner'] = !$isOutbound
             && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
         $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
+        self::captureWhatsAppConsent($pdo, $callSid, $speech, $transcript, $callContext);
 
         if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
             $reply = "Understood. We won't call again. Goodbye.";
@@ -336,7 +340,12 @@ final class VoiceDemoController
             $callSid,
         ]);
         $attemptLogged = CallOutcomeSync::record($pdo, $callSid, $callStatus);
-        Response::json(['status' => 'ok', 'attempt_logged' => $attemptLogged]);
+        $followupQueued = $callStatus === 'completed' && self::queueWhatsAppFollowup($pdo, $callSid);
+        Response::json([
+            'status' => 'ok',
+            'attempt_logged' => $attemptLogged,
+            'whatsapp_followup_queued' => $followupQueued,
+        ]);
     }
 
     public static function adminStats(): void
@@ -363,15 +372,30 @@ final class VoiceDemoController
             "SELECT vds.id, vds.token, vds.channel, vds.niche, vds.provider,
                     vds.transcript_json, vds.created_at, vds.updated_at,
                     tc.direction AS call_direction, tc.status AS call_status,
-                    ml.business_name AS call_business_name
+                    tc.provider_call_id, tc.from_number, tc.to_number,
+                    tc.duration_seconds, ml.business_name AS call_business_name
              FROM voice_demo_sessions vds
              LEFT JOIN telephony_calls tc ON tc.session_id = vds.id
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
-             ORDER BY vds.updated_at DESC LIMIT 30"
+             ORDER BY vds.updated_at DESC LIMIT 100"
         )->fetchAll();
         foreach ($recent as &$row) {
             $turns = json_decode((string) $row['transcript_json'], true) ?: [];
             $row['turn_count'] = count($turns);
+            $row['transcript'] = array_values(array_filter(array_map(
+                static function ($turn): ?array {
+                    if (!is_array($turn)) {
+                        return null;
+                    }
+                    $role = ($turn['role'] ?? '') === 'assistant' ? 'assistant' : 'user';
+                    $text = trim((string) ($turn['text'] ?? ''));
+                    return $text === '' ? null : [
+                        'role' => $role,
+                        'text' => mb_substr($text, 0, 4000),
+                    ];
+                },
+                $turns
+            )));
             $row['last_question'] = '';
             foreach (array_reverse($turns) as $turn) {
                 if (($turn['role'] ?? '') === 'user') {
@@ -382,11 +406,12 @@ final class VoiceDemoController
             unset($row['transcript_json'], $row['token']);
         }
         $callLogs = $pdo->query(
-            "SELECT tc.id, tc.provider_call_id, tc.direction, tc.from_number, tc.to_number,
+            "SELECT tc.id, tc.session_id, tc.provider_call_id, tc.direction, tc.from_number, tc.to_number,
                     tc.status, tc.duration_seconds, tc.created_at, tc.updated_at,
-                    ml.business_name AS lead_name
+                    ml.business_name AS lead_name, wf.status AS whatsapp_followup_status
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
+             LEFT JOIN whatsapp_call_followups wf ON wf.telephony_call_id = tc.id
              ORDER BY tc.created_at DESC, tc.id DESC
              LIMIT 100"
         )->fetchAll();
@@ -479,6 +504,7 @@ final class VoiceDemoController
     {
         if ($channel === 'outbound') {
             $business = mb_substr(trim((string) ($context['business_name'] ?? 'the business')), 0, 160);
+            $contactName = mb_substr(trim((string) ($context['contact_name'] ?? '')), 0, 160);
             $website = mb_substr(trim((string) ($context['website_url'] ?? '')), 0, 300);
             $script = mb_substr(trim((string) ($context['pitch_body'] ?? '')), 0, 3000);
             $firstTurn = !empty($context['is_first_turn'])
@@ -492,19 +518,29 @@ final class VoiceDemoController
                 . "not like a script or sales presentation. Respond directly to what the person just said before "
                 . "moving the conversation forward. Usually speak one or two short natural sentences, use contractions, "
                 . "and ask at most one relevant question at a time. Vary your wording; do not repeat the business name, "
+                . "contact name, "
                 . "your identity, the full service list, or a canned closing on every turn. Use no markdown, lists, "
                 . "emoji, or spoken URLs. Immediately respect no, not interested, stop, "
                 . "or a request to call later; do not pressure, argue, or continue pitching. Never hide that you are "
                 . "an AI assistant. Do not collect sensitive information, payment details, passwords, IDs, or health "
-                . "information. You cannot book, transfer, save, or notify anyone yet, so never claim that you did. "
+                . "information. You cannot book, transfer, or save records. You may offer a WhatsApp summary only "
+                . "after the person shows interest. Ask clearly whether Lisa may send it to the number on this call. "
+                . "Never say it was sent during the call; after explicit agreement say it will be sent after the call. "
                 . "First understand whether the person has a repetitive customer-service or operational problem; only "
                 . "then connect one relevant capability to it. Mention the booking or contact option only once, when "
                 . "the person shows interest or asks for a next step. Ground the conversation only in this reviewed "
                 . "context. Always speak as Lisa and refer to Prince Caleb in the third person. The stored call brief "
                 . "may be an older draft containing a first-person Prince introduction; treat that only as background, "
                 . "never repeat it, never say you are Prince, and never imply Prince is personally speaking.\n"
+                . ($contactName !== ''
+                    ? "The intended contact is {$contactName}. Confirm you have reached that person before sharing "
+                        . "business-specific details, then use their first name naturally but sparingly. "
+                    : "No contact name was provided before the call. After stating the reason for calling and receiving "
+                        . "permission to continue, ask the person's name naturally. Do not invent a name or make the "
+                        . "conversation feel like a form. ")
                 . $firstTurn
-                . "Business: {$business}\nWebsite: {$website}\nReviewed call brief:\n{$script}"
+                . "Business: {$business}\nContact name: " . ($contactName !== '' ? $contactName : 'Not provided')
+                . "\nWebsite: {$website}\nReviewed call brief:\n{$script}"
                 . LisaInstructions::promptBlock('approved outbound calls');
         }
         if ($channel === 'phone') {
@@ -522,7 +558,9 @@ final class VoiceDemoController
                 . "the monitored pilot process, implementation versus variable usage costs, and next steps. Be "
                 . "helpful and concise, but never invent prices, availability, client results, or capabilities. "
                 . "This phone integration cannot yet complete bookings or transfer calls, so never claim you "
-                . "booked, saved, transferred, messaged, or notified anyone. If a caller wants to proceed, ask "
+                . "booked, saved, transferred, or notified anyone. You may offer a WhatsApp summary after the caller "
+                . "shows interest. Ask clearly whether Lisa may send it to the number on this call. Never say it was "
+                . "sent during the call; after explicit agreement say it will be sent after the call. If a caller wants to proceed, ask "
                 . "them to use the contact or booking option on princecaleb.dev, or send a WhatsApp message. "
                 . "Do not collect payment details, passwords, government IDs, medical information, or other "
                 . "sensitive data. This is an inbound customer-service line, never a cold-outreach caller."
@@ -583,6 +621,65 @@ final class VoiceDemoController
         if ($number === '') return '';
         $digits = preg_replace('/\D+/', '', $number) ?? '';
         return $digits === '' ? '' : '+' . $digits;
+    }
+
+    private static function captureWhatsAppConsent(
+        \PDO $pdo,
+        string $callSid,
+        string $speech,
+        array $transcript,
+        array $callContext
+    ): void {
+        $explicit = preg_match(
+            '/\b(?:send|message|share)\b.{0,35}\b(?:whatsapp|summary|details)\b|\bwhatsapp\b.{0,35}\b(?:send|message|share)\b/i',
+            $speech
+        ) === 1;
+        $lastAssistant = '';
+        foreach (array_reverse($transcript) as $turn) {
+            if (($turn['role'] ?? '') === 'assistant') {
+                $lastAssistant = (string) ($turn['text'] ?? '');
+                break;
+            }
+        }
+        $acceptedOffer = stripos($lastAssistant, 'whatsapp') !== false
+            && preg_match('/^\s*(?:yes|yeah|sure|okay|ok|please|that(?:\'s| is) fine|go ahead)\b/i', $speech) === 1;
+        if (!$explicit && !$acceptedOffer) return;
+
+        $number = ($callContext['direction'] ?? '') === 'outbound'
+            ? (string) ($callContext['to_number'] ?? '')
+            : (string) ($callContext['from_number'] ?? '');
+        $number = self::normalizePhoneNumber($number);
+        if (!preg_match('/^\+[1-9]\d{7,14}$/', $number)) return;
+        $pdo->prepare(
+            "UPDATE telephony_calls SET whatsapp_followup_consent_at = datetime('now'),
+             whatsapp_followup_number = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
+        )->execute([$number, $callSid]);
+    }
+
+    private static function queueWhatsAppFollowup(\PDO $pdo, string $callSid): bool
+    {
+        if (Settings::get('twilio_whatsapp_post_call_enabled') !== '1') return false;
+        $stmt = $pdo->prepare(
+            "SELECT tc.id, tc.session_id, tc.whatsapp_followup_number, ml.contact_name
+             FROM telephony_calls tc
+             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
+             WHERE tc.provider_call_id = ? AND tc.whatsapp_followup_consent_at IS NOT NULL
+               AND tc.whatsapp_followup_number IS NOT NULL"
+        );
+        $stmt->execute([$callSid]);
+        $call = $stmt->fetch();
+        if (!$call) return false;
+        $pdo->prepare(
+            "INSERT OR IGNORE INTO whatsapp_call_followups
+             (telephony_call_id, session_id, recipient_number, contact_name)
+             VALUES (?, ?, ?, ?)"
+        )->execute([
+            $call['id'],
+            $call['session_id'],
+            $call['whatsapp_followup_number'],
+            trim((string) ($call['contact_name'] ?? '')) ?: null,
+        ]);
+        return true;
     }
 
     private static function callerFinishedConversation(string $speech): bool

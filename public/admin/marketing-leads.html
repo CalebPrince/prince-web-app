@@ -612,6 +612,11 @@ a.demo-link-ai:hover { color: var(--heading-color); }
             <input type="text" class="form-control" id="lead-name" required maxlength="255" placeholder="Business name">
           </div>
           <div class="mb-3">
+            <label class="form-label fw-semibold" for="lead-contact-name">Contact name <span class="text-muted-custom fw-normal">(optional)</span></label>
+            <input type="text" class="form-control" id="lead-contact-name" maxlength="160" autocomplete="name" placeholder="e.g. Ama Mensah">
+            <div class="form-text">Lisa can address this person by name. If left blank, she will ask naturally during the call.</div>
+          </div>
+          <div class="mb-3">
             <label class="form-label fw-semibold" for="lead-url">Website URL <span class="text-muted-custom fw-normal">(optional — leave blank if they don't have one yet)</span></label>
             <input type="url" class="form-control" id="lead-url" placeholder="https://example.com">
           </div>
@@ -657,6 +662,11 @@ a.demo-link-ai:hover { color: var(--heading-color); }
         <div class="mb-3" id="pitch-email-field">
           <label class="form-label fw-semibold">Contact email</label>
           <input type="email" class="form-control" id="pitch-contact-email" maxlength="255" placeholder="contact@example.com">
+        </div>
+        <div class="mb-3" id="pitch-contact-name-field">
+          <label class="form-label fw-semibold" for="pitch-contact-name">Contact name <span class="text-muted-custom fw-normal">(optional)</span></label>
+          <input type="text" class="form-control" id="pitch-contact-name" maxlength="160" autocomplete="name" placeholder="e.g. Ama Mensah">
+          <div class="form-text">Lisa uses this to identify the intended person without repeatedly using their name.</div>
         </div>
         <div class="mb-3" id="pitch-phone-field">
           <label class="form-label fw-semibold">Contact phone</label>
@@ -814,6 +824,6 @@ a.demo-link-ai:hover { color: var(--heading-color); }
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260729-pagination-scroll"></script>
-<script src="/js/admin-marketing-leads.js?v=20260729-client-demos"></script>
+<script src="/js/admin-marketing-leads.js?v=20260729-contact-names"></script>
 </body>
 </html>

@@ -89,6 +89,7 @@ use App\Controllers\TextToSpeechController;
 use App\Controllers\UploadController;
 use App\Controllers\UptimeController;
 use App\Controllers\VoiceDemoController;
+use App\Controllers\WhatsAppTemplateController;
 use App\Router;
 
 $router = new Router();
@@ -151,6 +152,7 @@ $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'view
 $router->post('/api/v1/chat/feedback', [LiveChatController::class, 'feedback']);
 $router->post('/api/v1/chat/inquiry', [LiveChatController::class, 'inquiry']);
 $router->post('/api/v1/whatsapp/webhook', [LiveChatController::class, 'whatsappWebhook']);
+$router->post('/api/v1/whatsapp/status', [WhatsAppTemplateController::class, 'deliveryStatus']);
 $router->get('/api/v1/testimonials', [TestimonialController::class, 'publicList']);
 $router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'getByToken']);
 $router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'submit']);
@@ -203,6 +205,10 @@ $router->delete('/api/v1/admin/chats/{id}', [LiveChatController::class, 'destroy
 $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
 $router->post('/api/v1/admin/settings/test-email', [SettingsController::class, 'sendTestEmail']);
+$router->get('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/refresh', [WhatsAppTemplateController::class, 'refresh']);
+$router->post('/api/v1/admin/whatsapp-template/test', [WhatsAppTemplateController::class, 'test']);
 $router->get('/api/v1/admin/email-template-defaults', [SettingsController::class, 'emailTemplateDefaults']);
 $router->patch('/api/v1/admin/account', [AuthController::class, 'updateAccount']);
 $router->post('/api/v1/admin/account/password', [AuthController::class, 'changePassword']);

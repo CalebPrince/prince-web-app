@@ -420,6 +420,9 @@ $leadColumnNames = array_column($leadColumns, 'name');
 if (!in_array('contact_phone', $leadColumnNames, true)) {
     $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN contact_phone TEXT');
 }
+if (!in_array('contact_name', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN contact_name TEXT');
+}
 if (!in_array('is_high_priority', $leadColumnNames, true)) {
     $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN is_high_priority INTEGER NOT NULL DEFAULT 0');
 }
@@ -447,6 +450,7 @@ foreach ($leadColumns as $col) {
             "CREATE TABLE %s (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 business_name TEXT NOT NULL,
+                contact_name TEXT,
                 website_url TEXT,
                 contact_email TEXT,
                 contact_phone TEXT,
@@ -464,7 +468,7 @@ foreach ($leadColumns as $col) {
                 updated_at TEXT NOT NULL DEFAULT (datetime('now')),
                 sent_at TEXT
             )",
-            'id, business_name, website_url, contact_email, contact_phone, pitch_channel, status,
+            'id, business_name, contact_name, website_url, contact_email, contact_phone, pitch_channel, status,
              audit_findings, research_findings, researched_at, pitch_subject, pitch_body, notes,
              is_high_priority, created_at, updated_at, sent_at',
             ['CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status, created_at)']
@@ -1353,8 +1357,29 @@ $telephonyColumns = array_column($pdo->query('PRAGMA table_info(telephony_calls)
 if (!in_array('marketing_lead_id', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN marketing_lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL');
 if (!in_array('direction', $telephonyColumns, true)) $pdo->exec("ALTER TABLE telephony_calls ADD COLUMN direction TEXT NOT NULL DEFAULT 'inbound'");
 if (!in_array('consent_confirmed_at', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN consent_confirmed_at TEXT');
+if (!in_array('whatsapp_followup_consent_at', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN whatsapp_followup_consent_at TEXT');
+if (!in_array('whatsapp_followup_number', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN whatsapp_followup_number TEXT');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at)');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_marketing_lead ON telephony_calls (marketing_lead_id, created_at)');
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS whatsapp_call_followups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telephony_call_id INTEGER NOT NULL UNIQUE REFERENCES telephony_calls(id) ON DELETE CASCADE,
+        session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+        recipient_number TEXT NOT NULL,
+        contact_name TEXT,
+        summary TEXT,
+        content_sid TEXT,
+        provider_message_sid TEXT,
+        status TEXT NOT NULL DEFAULT 'queued',
+        error_message TEXT,
+        attempts INTEGER NOT NULL DEFAULT 0,
+        processed_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_whatsapp_call_followups_status ON whatsapp_call_followups (status, created_at)');
 
 // Automatic Marketing Leads prospect discovery. It shares the existing cold
 // outreach cron and is daily-gated, so no additional scheduler is required.

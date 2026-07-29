@@ -180,10 +180,10 @@ class ContactsController
             $touch($r['email'], $r['name'], null, 'inquiry', $r['created_at']);
         }
         foreach ($pdo->query(
-            "SELECT business_name, contact_email, contact_phone, created_at FROM marketing_leads "
+            "SELECT business_name, contact_name, contact_email, contact_phone, created_at FROM marketing_leads "
             . "WHERE contact_email IS NOT NULL AND contact_email != ''"
         ) as $r) {
-            $touch($r['contact_email'], $r['business_name'], $r['contact_phone'], 'marketing_lead', $r['created_at']);
+            $touch($r['contact_email'], $r['contact_name'] ?: $r['business_name'], $r['contact_phone'], 'marketing_lead', $r['created_at']);
         }
         foreach ($pdo->query('SELECT name, email, phone, created_at FROM clients') as $r) {
             $touch($r['email'], $r['name'], $r['phone'], 'client', $r['created_at']);

@@ -23,6 +23,8 @@ class SettingsController
         'twilio_conversation_relay_voice',
         'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model',
         'twilio_whatsapp_production_approved',
+        'twilio_whatsapp_post_call_enabled', 'twilio_whatsapp_post_call_content_sid',
+        'twilio_whatsapp_post_call_template_status',
         'integration_api_key', 'notification_email',
         'smtp_gmail_address', 'smtp_app_password', 'smtp_host', 'smtp_port', 'imap_host', 'mail_from', 'mail_from_name',
         'google_client_id',

@@ -1874,3 +1874,32 @@ body > .d-flex {
   .expense-history-bars { gap:.25rem; }
 }
 @media (prefers-reduced-motion:reduce) { .expense-runway-track div,.expense-runway-track i { transition:none; } }
+.voice-conversation-modal-content { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--card-bg); box-shadow: 0 28px 80px rgba(0,0,0,.24); }
+.voice-conversation-header { padding: 1.2rem 1.35rem; border-bottom-color: var(--line); background: var(--bg-soft); }
+.voice-conversation-header .modal-title { color: var(--heading-color); }
+.voice-conversation-meta { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); border-bottom: 1px solid var(--line); background: var(--card-bg); }
+.voice-conversation-meta > div { min-width: 0; padding: .85rem 1rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.voice-conversation-meta > div:nth-child(3n) { border-right: 0; }
+.voice-conversation-meta span,.voice-conversation-meta strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.voice-conversation-meta span { margin-bottom: .2rem; color: var(--muted); font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.voice-conversation-meta strong { color: var(--heading-color); font-size: .76rem; }
+.voice-transcript { display: grid; gap: .9rem; min-height: 250px; padding: 1.3rem; background: var(--bg-soft); }
+.voice-transcript-turn { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: .7rem; max-width: 88%; }
+.voice-transcript-turn.is-lisa { margin-left: auto; grid-template-columns: minmax(0,1fr) 34px; }
+.voice-transcript-turn.is-lisa .voice-transcript-avatar { grid-column: 2; }
+.voice-transcript-turn.is-lisa > div:last-child { grid-column: 1; grid-row: 1; }
+.voice-transcript-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; color: #fff; background: #313947; font-size: .7rem; font-weight: 800; }
+.voice-transcript-turn.is-lisa .voice-transcript-avatar { background: #1768e5; }
+.voice-transcript-turn > div:last-child { min-width: 0; padding: .75rem .85rem; border: 1px solid var(--line); border-radius: 4px 13px 13px 13px; background: var(--card-bg); }
+.voice-transcript-turn.is-lisa > div:last-child { border-color: rgba(23,104,229,.2); border-radius: 13px 4px 13px 13px; background: rgba(23,104,229,.08); }
+.voice-transcript-turn header { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .32rem; }
+.voice-transcript-turn header strong { color: var(--heading-color); font-size: .7rem; }
+.voice-transcript-turn header span { color: var(--muted); font-size: .58rem; }
+.voice-transcript-turn p { margin: 0; color: var(--ink-soft); font-size: .78rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.voice-transcript-empty { display: grid; min-height: 220px; place-content: center; justify-items: center; padding: 2rem; color: var(--muted); text-align: center; }
+.voice-transcript-empty i { margin-bottom: .7rem; font-size: 2rem; }.voice-transcript-empty strong { color: var(--heading-color); }.voice-transcript-empty p { max-width: 42ch; margin: .35rem 0 0; font-size: .76rem; }
+.voice-conversation-footer { justify-content: space-between; border-top-color: var(--line); background: var(--card-bg); }.voice-conversation-footer > span { color: var(--muted); font-size: .68rem; font-weight: 700; }
+@media (max-width: 575.98px) {
+  .voice-conversation-meta { grid-template-columns: 1fr 1fr; }.voice-conversation-meta > div:nth-child(3n) { border-right: 1px solid var(--line); }.voice-conversation-meta > div:nth-child(2n) { border-right: 0; }
+  .voice-transcript { padding: .9rem; }.voice-transcript-turn { max-width: 96%; }.voice-view-conversation { white-space: nowrap; }
+}

@@ -66,7 +66,7 @@ function filteredLeadRows(rows) {
   const search = document.getElementById("lead-search").value.trim().toLowerCase();
   const stage = document.getElementById("lead-status-filter").value;
   return rows.filter(lead => {
-    const haystack = `${lead.business_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase();
+    const haystack = `${lead.business_name || ""} ${lead.contact_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase();
     const matchesSearch = !search || haystack.includes(search);
     const matchesStage = !stage
       || (stage === "priority" ? Number(lead.is_high_priority) === 1 : lead.status === stage);
@@ -272,10 +272,11 @@ async function loadLeads() {
       const demo = lead.account_demo || {};
       
       return `
-    <tr data-lead-row data-search="${escapeHtml(`${lead.business_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase())}" data-status="${escapeHtml(lead.status || "")}" data-priority="${Number(lead.is_high_priority) ? "1" : "0"}">
+    <tr data-lead-row data-search="${escapeHtml(`${lead.business_name || ""} ${lead.contact_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase())}" data-status="${escapeHtml(lead.status || "")}" data-priority="${Number(lead.is_high_priority) ? "1" : "0"}">
       <td class="ps-3"><input type="checkbox" class="form-check-input row-checkbox" data-id="${lead.id}"></td>
       <td>
         <div class="company-pill-ai">${Number(lead.is_high_priority) ? '<i class="bi bi-star-fill me-1" style="color:#e6a234" title="High priority"></i>' : ''}${escapeHtml(lead.business_name)}</div>
+        ${lead.contact_name ? `<span class="demo-link-ai"><i class="bi bi-person me-1"></i>${escapeHtml(lead.contact_name)}</span>` : ""}
         ${demo.url ? `<a href="${escapeHtml(demo.url)}" target="_blank" class="demo-link-ai">${escapeHtml(demo.url.replace(/^https?:\/\//, ""))}</a>` : `<span class="demo-link-ai text-muted-custom">No demo published</span>`}
       </td>
       <td><strong>${Number(demo.views || 0)}</strong></td>
@@ -590,6 +591,7 @@ function openPitchModal(lead) {
   currentLead = lead;
   const channel = lead.pitch_channel || "email";
   document.getElementById("pitch-modal-business").textContent = lead.business_name;
+  document.getElementById("pitch-contact-name").value = lead.contact_name || "";
   document.getElementById("pitch-contact-email").value = lead.contact_email || "";
   document.getElementById("pitch-contact-phone").value = lead.contact_phone || "";
   document.getElementById("pitch-subject").value = lead.pitch_subject || "";
@@ -625,6 +627,7 @@ function openPitchModal(lead) {
 
 async function savePitchEdits() {
   await api.patch(`/api/v1/admin/marketing-leads/${currentLead.id}`, {
+    contact_name: document.getElementById("pitch-contact-name").value.trim(),
     contact_email: document.getElementById("pitch-contact-email").value.trim(),
     contact_phone: document.getElementById("pitch-contact-phone").value.trim(),
     pitch_subject: document.getElementById("pitch-subject").value.trim(),
@@ -717,6 +720,7 @@ document.getElementById("add-lead-form").addEventListener("submit", async (e) =>
   try {
     await api.post("/api/v1/admin/marketing-leads", {
       business_name: document.getElementById("lead-name").value,
+      contact_name: document.getElementById("lead-contact-name").value,
       website_url: document.getElementById("lead-url").value,
       contact_email: document.getElementById("lead-email").value,
       contact_phone: document.getElementById("lead-phone").value,
@@ -896,6 +900,7 @@ async function loadCallList() {
       <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
         <div>
           <div class="fw-semibold">${escapeHtml(row.business_name)}</div>
+          ${row.contact_name ? `<div class="small"><i class="bi bi-person me-1"></i>${escapeHtml(row.contact_name)}</div>` : '<div class="small text-muted-custom">Contact name not provided · Lisa will ask</div>'}
           <div class="small text-muted-custom">${callAttemptLabel(row)}</div>
         </div>
         <a class="btn btn-sm btn-outline-secondary ms-auto" href="tel:${encodeURIComponent(row.contact_phone)}"><i class="bi bi-telephone"></i> Call myself</a>

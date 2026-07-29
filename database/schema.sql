@@ -394,6 +394,7 @@ CREATE INDEX IF NOT EXISTS idx_testimonials_status_sort ON testimonials (status,
 CREATE TABLE IF NOT EXISTS marketing_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   business_name TEXT NOT NULL,
+  contact_name TEXT,
   website_url TEXT,
   contact_email TEXT,
   contact_phone TEXT,
@@ -1015,10 +1016,30 @@ CREATE TABLE IF NOT EXISTS telephony_calls (
   status TEXT NOT NULL DEFAULT 'queued',
   duration_seconds INTEGER NOT NULL DEFAULT 0,
   consent_confirmed_at TEXT,
+  whatsapp_followup_consent_at TEXT,
+  whatsapp_followup_number TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at);
+
+CREATE TABLE IF NOT EXISTS whatsapp_call_followups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  telephony_call_id INTEGER NOT NULL UNIQUE REFERENCES telephony_calls(id) ON DELETE CASCADE,
+  session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
+  recipient_number TEXT NOT NULL,
+  contact_name TEXT,
+  summary TEXT,
+  content_sid TEXT,
+  provider_message_sid TEXT,
+  status TEXT NOT NULL DEFAULT 'queued',
+  error_message TEXT,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  processed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_call_followups_status ON whatsapp_call_followups (status, created_at);
 
 CREATE TABLE IF NOT EXISTS notification_reads (
   notification_key TEXT PRIMARY KEY,
