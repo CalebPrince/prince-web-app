@@ -31,12 +31,109 @@
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "The walkthrough may still be awaiting review.");
 
+    const personalization = data.personalization || {};
+    const template = personalization.template || "professional";
+    const theme = personalization.theme || {};
+    document.querySelector("[data-builder-label]").textContent =
+      `Built by ${personalization.builder_name || "Arch"} · Private outcome walkthrough`;
+    const templateCopy = ({
+      healthcare: {
+        contrast: "From a waiting patient to a guided next step.",
+        before: "Care questions compete for attention.",
+        after: "Patient access keeps moving.",
+        playback: "How one patient request can move with clarity",
+        shift: "Patient access stays responsive",
+        close: "Start with one patient-access workflow. Monitor it with the care team. Expand only where it protects attention and trust.",
+      },
+      hospitality: {
+        contrast: "From a waiting guest to a considered response.",
+        before: "Guest interest waits for a free moment.",
+        after: "Every enquiry receives attention.",
+        playback: "How one guest enquiry becomes a clear next step",
+        shift: "Guest enquiries stay warm",
+        close: "Begin with one guest journey. Tune it around the way your team serves. Expand when the experience feels unmistakably yours.",
+      },
+      finance: {
+        contrast: "From an uncertain enquiry to a controlled handoff.",
+        before: "Routine questions absorb specialist time.",
+        after: "Service moves within clear boundaries.",
+        playback: "How one client request moves without compromising judgment",
+        shift: "Service stays clear and controlled",
+        close: "Start with a bounded service workflow. Keep sensitive decisions human. Expand only with the controls and audit trail your team expects.",
+      },
+      property: {
+        contrast: "From casual property interest to a qualified next step.",
+        before: "Enquiries wait for an available agent.",
+        after: "Viewing intent reaches the right person.",
+        playback: "How one property enquiry moves toward a viewing",
+        shift: "Property interest keeps its momentum",
+        close: "Begin with one enquiry-to-viewing journey. Prove the handoff with your agents. Expand across the portfolio when it earns confidence.",
+      },
+      education: {
+        contrast: "From a broad question to a confident enrolment step.",
+        before: "Repeated questions compete with learner support.",
+        after: "Prospective learners find direction.",
+        playback: "How one learner enquiry moves toward enrolment",
+        shift: "Learner enquiries stay guided",
+        close: "Start with one programme enquiry journey. Review it with admissions. Expand when it consistently gives learners the right next step.",
+      },
+      commerce: {
+        contrast: "From a product question to a purchase-ready next step.",
+        before: "Customer questions interrupt fulfilment.",
+        after: "Buying intent keeps moving.",
+        playback: "How one customer request moves toward fulfilment",
+        shift: "Customer intent stays active",
+        close: "Begin with one customer-service journey. Measure the response and handoff. Expand when it helps the team serve without slowing delivery.",
+      },
+      professional: {
+        contrast: "From a waiting enquiry to an organised next step.",
+        before: "New requests compete with focused work.",
+        after: "Client opportunities stay moving.",
+        playback: "How one client enquiry moves with context",
+        shift: "Client enquiries stay responsive",
+        close: "Start with one controlled client journey. Review it with the team. Expand only when it consistently protects focus and follow-through.",
+      },
+    })[template] || {
+      contrast: "From a waiting enquiry to an organised next step.",
+      before: "New requests compete with focused work.",
+      after: "Client opportunities stay moving.",
+      playback: "How one client enquiry moves with context",
+      shift: "Client enquiries stay responsive",
+      close: "Start with one controlled client journey. Review it with the team. Expand only when it consistently protects focus and follow-through.",
+    };
+    document.body.dataset.template = template;
+    document.body.dataset.variant = String(personalization.variant || 1);
+    const themeVariables = {
+      accent: "--blue",
+      navy: "--navy",
+      paper: "--paper",
+      soft: "--blue-soft",
+      warm: "--amber",
+    };
+    Object.entries(themeVariables).forEach(([key, cssVariable]) => {
+      if (/^#[0-9a-f]{6}$/i.test(theme[key] || "")) {
+        document.documentElement.style.setProperty(cssVariable, theme[key]);
+      }
+    });
+
     const fragment = document.getElementById("demo-template").content.cloneNode(true);
     fragment.querySelector("[data-business]").textContent = data.business_name;
+    fragment.querySelector("[data-client-initials]").textContent = personalization.initials || "PC";
+    fragment.querySelector("[data-industry]").textContent = personalization.industry_label || "Client operations";
+    const domain = fragment.querySelector("[data-domain]");
+    domain.textContent = personalization.website_host || "Private concept";
+    fragment.querySelector("[data-contrast-title]").textContent = templateCopy.contrast;
+    fragment.querySelector("[data-before-title]").textContent = templateCopy.before;
+    fragment.querySelector("[data-after-title]").textContent = templateCopy.after;
+    fragment.querySelector("[data-playback-title]").textContent = templateCopy.playback;
+    fragment.querySelector("[data-shift-label]").textContent = templateCopy.shift;
+    fragment.querySelector("[data-close-line]").textContent = templateCopy.close;
     fragment.querySelector("[data-headline]").textContent = data.headline;
     fragment.querySelector("[data-summary]").textContent = data.outcome_summary;
     fragment.querySelector("[data-friction]").textContent = data.friction_label;
     fragment.querySelector("[data-proof]").textContent = data.proof_note;
+    fragment.querySelector("[data-evidence]").innerHTML = (personalization.evidence_points || [])
+      .map(point => `<li>${escapeHtml(point)}</li>`).join("");
     fragment.querySelector("[data-contrast-before]").textContent = data.friction_label;
     fragment.querySelector("[data-contrast-after]").textContent = data.outcome_summary;
     const contrast = fragment.querySelector("[data-contrast]");

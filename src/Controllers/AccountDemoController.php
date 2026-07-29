@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Agents\Arch;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
@@ -32,6 +33,7 @@ class AccountDemoController
         $research = json_decode((string) ($lead['research_findings'] ?? ''), true) ?: [];
         $snapshot = [
             'business_name' => $lead['business_name'],
+            'industry' => $lead['industry'] ?? null,
             'website_url' => $lead['website_url'],
             'audit' => $audit,
             'research' => $research,
@@ -61,7 +63,13 @@ class AccountDemoController
         ]);
         $pdo->prepare('UPDATE marketing_leads SET is_high_priority=1, updated_at=datetime(\'now\') WHERE id=?')
             ->execute([$lead['id']]);
-        ActivityLog::log($user, 'generated', 'account_demo', (string) $lead['id'], (string) $lead['business_name']);
+        ActivityLog::log(
+            $user,
+            'generated',
+            'account_demo',
+            (string) $lead['id'],
+            Arch::displayName() . ' · ' . (string) $lead['business_name']
+        );
         Response::json(['demo' => self::forLead($pdo, (int) $lead['id'])], 201);
     }
 
@@ -171,6 +179,7 @@ class AccountDemoController
         $row = $stmt->fetch();
         if (!$row) return null;
         $row['workflow'] = json_decode((string) $row['workflow_json'], true) ?: [];
+        $row['personalization'] = self::personalization($row);
         $row['url'] = '/account-demo.html?token=' . $row['token'];
         unset($row['workflow_json'], $row['source_snapshot_json']);
         return $row;
@@ -219,25 +228,20 @@ class AccountDemoController
 
     private static function draft(string $businessName, array $snapshot): array
     {
-        $fallback = [
-            'headline' => "A quieter customer journey for {$businessName}",
-            'outcome_summary' => 'A focused AI assistant can handle routine requests immediately, keep the next step moving, and bring a person in when judgment is needed.',
-            'friction_label' => 'A likely starting point: routine calls and messages compete with the work only your team can do.',
-            'workflow' => [
-                ['label' => 'A request arrives', 'detail' => 'A customer calls or sends a message and receives an immediate, consistent response.', 'actor' => 'Lisa'],
-                ['label' => 'The routine work moves', 'detail' => 'Approved questions, details, and next steps are handled without adding another staff interruption.', 'actor' => 'Lisa'],
-                ['label' => 'Exceptions reach a person', 'detail' => 'Sensitive, urgent, or uncertain requests are handed to the right team member with context.', 'actor' => 'Team'],
-                ['label' => 'The loop closes', 'detail' => 'The customer gets a clear next step while the business keeps a record for follow-up.', 'actor' => 'System'],
-            ],
-            'proof_note' => 'This is a proposed workflow based only on publicly available and audited information. It is not a claim about current internal operations.',
-        ];
+        $profile = self::profile($businessName, $snapshot);
+        $fallback = self::fallbackDraft($businessName, $profile);
+        $builderName = Arch::displayName();
         if (empty(Settings::get('gemini_api_key')) && empty(Settings::get('openrouter_api_key')) && empty(Settings::get('groq_api_key'))) {
             return $fallback;
         }
-        $prompt = "Create structured copy for a private, reviewed outcome walkthrough for {$businessName}. "
+        $prompt = "You are {$builderName}, Prince Caleb's Architecture + AI website-builder agent. "
+            . "Design the content architecture for a private, reviewed demo landing page for {$businessName}, "
+            . "classified from the supplied evidence as {$profile['industry_label']}. "
             . "Use only the evidence JSON below. Do not claim knowledge of internal operations, missed revenue, call "
             . "volume, staff behavior, or results. Frame operational friction as a likely scenario or proposed starting "
-            . "point. Focus on the future the buyer gets, not product features. Return JSON only with headline, "
+            . "point. Make the language unmistakably specific to this business and sector: name the customer/request "
+            . "type, handoff, and outcome that fit the evidence. Avoid generic phrases that could be pasted onto any "
+            . "company. Focus on the future the buyer gets, not product features. Return JSON only with headline, "
             . "outcome_summary, friction_label, proof_note, and workflow (exactly four objects with label, detail, actor; "
             . "actor must be Lisa, Team, or System). Keep every field concise and specific.\n\nEvidence:\n"
             . json_encode($snapshot, JSON_UNESCAPED_SLASHES);
@@ -286,8 +290,191 @@ class AccountDemoController
         return $out;
     }
 
+    private static function profile(string $businessName, array $snapshot): array
+    {
+        $research = is_array($snapshot['research'] ?? null) ? $snapshot['research'] : [];
+        $news = is_array($research['recent_news'] ?? null) ? $research['recent_news'] : [];
+        $haystack = strtolower($businessName . ' ' . (string) ($snapshot['industry'] ?? '') . ' '
+            . (string) ($research['summary'] ?? '') . ' '
+            . implode(' ', array_map(
+                static fn(mixed $item): string => is_array($item) ? (string) ($item['title'] ?? '') : (string) $item,
+                $news
+            )));
+        $profiles = [
+            'healthcare' => ['clinic', 'medical', 'hospital', 'health', 'dental', 'pharmacy', 'doctor', 'care'],
+            'hospitality' => ['hotel', 'restaurant', 'bistro', 'cafe', 'food', 'resort', 'lodge', 'bar '],
+            'finance' => ['bank', 'finance', 'insurance', 'credit', 'investment', 'pay ', 'fintech', 'accounting'],
+            'property' => ['real estate', 'property', 'homes', 'construction', 'architect', 'estate'],
+            'education' => ['school', 'academy', 'college', 'university', 'training', 'education', 'institute'],
+            'commerce' => ['shop', 'store', 'retail', 'market', 'fashion', 'beauty', 'salon', 'logistics'],
+        ];
+        $template = 'professional';
+        foreach ($profiles as $candidate => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (str_contains($haystack, $keyword)) {
+                    $template = $candidate;
+                    break 2;
+                }
+            }
+        }
+        $labels = [
+            'healthcare' => 'Patient access & care',
+            'hospitality' => 'Guest experience',
+            'finance' => 'Client service & trust',
+            'property' => 'Enquiry-to-viewing journey',
+            'education' => 'Learner enquiries & enrolment',
+            'commerce' => 'Customer service & fulfilment',
+            'professional' => 'Client operations',
+        ];
+        return ['template' => $template, 'industry_label' => $labels[$template]];
+    }
+
+    private static function fallbackDraft(string $businessName, array $profile): array
+    {
+        $sector = [
+            'healthcare' => [
+                'headline' => "A calmer patient journey for {$businessName}",
+                'summary' => 'Give patients an immediate first response, capture the reason for contact, and move booking or follow-up forward without interrupting clinical attention.',
+                'friction' => 'A likely pressure point: appointment and service questions arrive while the team is already focused on patient care.',
+                'steps' => [
+                    ['A patient reaches out', 'Calls and messages receive an immediate, reassuring first response.', 'Lisa'],
+                    ['The need is understood', 'Approved questions, service details, and booking information are captured clearly.', 'Lisa'],
+                    ['Clinical judgment stays human', 'Urgent, sensitive, or uncertain requests reach the appropriate team member with context.', 'Team'],
+                    ['Follow-up stays visible', 'The patient receives a next step and the clinic retains a clear follow-up record.', 'System'],
+                ],
+            ],
+            'hospitality' => [
+                'headline' => "A more attentive guest journey for {$businessName}",
+                'summary' => 'Respond to booking and service enquiries while interest is fresh, keep routine questions moving, and hand special requests to the right person.',
+                'friction' => 'A likely pressure point: guest questions and booking enquiries compete with serving the people already on site.',
+                'steps' => [
+                    ['A guest makes an enquiry', 'Availability, location, menu, or service questions receive an immediate first response.', 'Lisa'],
+                    ['The request takes shape', 'Dates, party details, preferences, and the next booking step are captured.', 'Lisa'],
+                    ['Special requests reach staff', 'Exceptions and requests needing discretion move to the team with context.', 'Team'],
+                    ['The guest gets clarity', 'A confirmation or clear next step keeps the experience moving.', 'System'],
+                ],
+            ],
+            'finance' => [
+                'headline' => "A clearer client service journey for {$businessName}",
+                'summary' => 'Triage routine enquiries consistently, collect the right context, and preserve human review wherever trust, identity, or financial judgment matters.',
+                'friction' => 'A likely pressure point: repetitive service enquiries consume time while sensitive decisions still require qualified human review.',
+                'steps' => [
+                    ['A client asks for help', 'The enquiry receives an immediate acknowledgement and clear boundaries.', 'Lisa'],
+                    ['Context is collected', 'Approved service information and the reason for contact are captured consistently.', 'Lisa'],
+                    ['Sensitive work stays human', 'Identity, account, and judgment-based matters are handed to authorised staff.', 'Team'],
+                    ['The next step is recorded', 'The client receives clear direction and the business retains an auditable follow-up trail.', 'System'],
+                ],
+            ],
+            'property' => [
+                'headline' => "Turn property interest into a clear next step for {$businessName}",
+                'summary' => 'Answer initial property questions, qualify viewing intent, and route serious enquiries to an agent with the details already organised.',
+                'friction' => 'A likely pressure point: property enquiries lose momentum when basic questions and viewing details wait for an available agent.',
+                'steps' => [
+                    ['A buyer shows interest', 'The property enquiry receives an immediate response.', 'Lisa'],
+                    ['Intent is qualified', 'Location, budget, timing, and viewing preferences are captured.', 'Lisa'],
+                    ['An agent takes over', 'Negotiation and property-specific judgment reach the team with context.', 'Team'],
+                    ['The viewing moves forward', 'The prospect receives a clear next step and follow-up remains visible.', 'System'],
+                ],
+            ],
+            'education' => [
+                'headline' => "A simpler enquiry-to-enrolment journey for {$businessName}",
+                'summary' => 'Help prospective learners and parents find programme information, capture enrolment intent, and reach admissions staff with the right context.',
+                'friction' => 'A likely pressure point: repeated programme and admissions questions arrive while staff are supporting current learners.',
+                'steps' => [
+                    ['A learner asks a question', 'Programme, schedule, and application enquiries receive an immediate response.', 'Lisa'],
+                    ['Interest is captured', 'The course, timing, and contact details are organised for follow-up.', 'Lisa'],
+                    ['Admissions steps in', 'Eligibility and exception-based questions reach staff with context.', 'Team'],
+                    ['Enrolment stays moving', 'The learner receives the next action and the enquiry remains visible.', 'System'],
+                ],
+            ],
+            'commerce' => [
+                'headline' => "A faster customer journey for {$businessName}",
+                'summary' => 'Handle product and service questions immediately, capture buying intent, and bring staff in for exceptions without losing the customer’s context.',
+                'friction' => 'A likely pressure point: availability, order, and service questions interrupt fulfilment while customers wait for answers.',
+                'steps' => [
+                    ['A customer reaches out', 'Product, availability, delivery, or service questions get a quick first response.', 'Lisa'],
+                    ['Buying intent is captured', 'The requested item, timing, and contact details are organised.', 'Lisa'],
+                    ['Exceptions reach staff', 'Pricing judgment, complaints, and unusual requests move to the team.', 'Team'],
+                    ['The order stays moving', 'The customer receives a next step and follow-up is recorded.', 'System'],
+                ],
+            ],
+            'professional' => [
+                'headline' => "A more responsive client journey for {$businessName}",
+                'summary' => 'Give new enquiries an immediate response, collect the essentials, and route judgment-based work to the right person without losing context.',
+                'friction' => 'A likely pressure point: routine enquiries compete with the focused work only the team can deliver.',
+                'steps' => [
+                    ['A client reaches out', 'A new enquiry receives an immediate, consistent first response.', 'Lisa'],
+                    ['The need is clarified', 'Service interest, timing, and essential details are captured.', 'Lisa'],
+                    ['Judgment stays human', 'Complex, sensitive, or commercial decisions reach the team with context.', 'Team'],
+                    ['Follow-up stays organised', 'The client receives a clear next step and the opportunity remains visible.', 'System'],
+                ],
+            ],
+        ][$profile['template']];
+        return [
+            'headline' => $sector['headline'],
+            'outcome_summary' => $sector['summary'],
+            'friction_label' => $sector['friction'],
+            'workflow' => array_map(static fn(array $step): array => [
+                'label' => $step[0], 'detail' => $step[1], 'actor' => $step[2],
+            ], $sector['steps']),
+            'proof_note' => 'This proposed workflow uses only publicly available and audited information. It is a starting point for review, not a claim about current internal operations.',
+        ];
+    }
+
+    private static function personalization(array $row): array
+    {
+        $snapshot = json_decode((string) ($row['source_snapshot_json'] ?? '{}'), true) ?: [];
+        $profile = self::profile((string) $row['business_name'], $snapshot);
+        $themes = [
+            'healthcare' => ['accent' => '#087f8c', 'navy' => '#103b43', 'paper' => '#f1f8f7', 'soft' => '#d9efeb', 'warm' => '#e89b62'],
+            'hospitality' => ['accent' => '#a4475b', 'navy' => '#40243a', 'paper' => '#fbf5f0', 'soft' => '#f2d9d7', 'warm' => '#d79a4a'],
+            'finance' => ['accent' => '#2455a6', 'navy' => '#142b4a', 'paper' => '#f4f7fa', 'soft' => '#dce6f3', 'warm' => '#c59a42'],
+            'property' => ['accent' => '#b75d31', 'navy' => '#293833', 'paper' => '#f7f5ef', 'soft' => '#e8e1d2', 'warm' => '#d6a84b'],
+            'education' => ['accent' => '#6556b3', 'navy' => '#2f2854', 'paper' => '#f7f5fb', 'soft' => '#e8e2f5', 'warm' => '#e0a146'],
+            'commerce' => ['accent' => '#d0572b', 'navy' => '#28282d', 'paper' => '#faf7f2', 'soft' => '#f2ded2', 'warm' => '#e8a331'],
+            'professional' => ['accent' => '#3157e8', 'navy' => '#101b35', 'paper' => '#f5f7fb', 'soft' => '#dfe6ff', 'warm' => '#e6a234'],
+        ];
+        $audit = is_array($snapshot['audit'] ?? null) ? $snapshot['audit'] : [];
+        $research = is_array($snapshot['research'] ?? null) ? $snapshot['research'] : [];
+        $evidence = [];
+        if (($audit['reachable'] ?? null) === false) {
+            $evidence[] = 'The public website was unreachable during the recorded audit.';
+        }
+        foreach (array_slice(is_array($audit['issues'] ?? null) ? $audit['issues'] : [], 0, 2) as $issue) {
+            $detail = trim((string) (is_array($issue) ? ($issue['detail'] ?? '') : $issue));
+            if ($detail !== '') $evidence[] = $detail;
+        }
+        foreach (array_slice(is_array($research['tech_stack'] ?? null) ? $research['tech_stack'] : [], 0, 2) as $tech) {
+            $signal = trim((string) (is_array($tech) ? ($tech['signal'] ?? '') : $tech));
+            if ($signal !== '') $evidence[] = "Public site signal: {$signal}.";
+        }
+        if (!$evidence) {
+            $evidence[] = empty($snapshot['website_url'])
+                ? 'No public website was on file when this walkthrough was prepared.'
+                : 'The concept is limited to the public website and research evidence reviewed.';
+        }
+        $name = trim((string) $row['business_name']);
+        $words = preg_split('/\s+/', $name) ?: [];
+        $initials = strtoupper(implode('', array_map(
+            static fn(string $word): string => mb_substr($word, 0, 1),
+            array_slice(array_filter($words), 0, 2)
+        )));
+        $host = parse_url((string) ($snapshot['website_url'] ?? ''), PHP_URL_HOST) ?: null;
+        return [
+            'template' => $profile['template'],
+            'variant' => (abs((int) crc32($name)) % 3) + 1,
+            'industry_label' => $profile['industry_label'],
+            'builder_name' => Arch::displayName(),
+            'initials' => $initials ?: 'PC',
+            'website_host' => $host ? preg_replace('/^www\./i', '', (string) $host) : null,
+            'theme' => $themes[$profile['template']],
+            'evidence_points' => array_slice(array_values(array_unique($evidence)), 0, 4),
+        ];
+    }
+
     private static function publicShape(array $row): array
     {
+        $personalization = self::personalization($row);
         return [
             'business_name' => $row['business_name'],
             'headline' => $row['headline'],
@@ -295,6 +482,7 @@ class AccountDemoController
             'friction_label' => $row['friction_label'],
             'workflow' => json_decode((string) $row['workflow_json'], true) ?: [],
             'proof_note' => $row['proof_note'],
+            'personalization' => $personalization,
             'cta_label' => 'Talk through a monitored pilot',
             'cta_url' => '/contact.html?source=account-demo',
         ];

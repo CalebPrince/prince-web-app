@@ -6,13 +6,13 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Private outcome walkthrough | Prince Caleb</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/account-demo.css?v=20260728-intent">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&amp;family=Fraunces:opsz,wght@9..144,600;9..144,700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/account-demo.css?v=20260729-personalized">
 </head>
 <body>
   <header class="demo-nav">
     <a class="demo-brand" href="/" aria-label="Prince Caleb home"><span>PC</span> Prince Caleb</a>
-    <p>Private outcome walkthrough</p>
+    <p data-builder-label>Built by Arch · Private outcome walkthrough</p>
   </header>
 
   <main id="demo-shell" class="demo-shell" aria-live="polite">
@@ -31,28 +31,32 @@
         <a class="demo-cta" data-cta><span data-cta-label></span><i aria-hidden="true">↗</i></a>
       </div>
       <aside class="demo-signal" aria-label="Proposed operating change">
+        <div class="client-identity">
+          <span class="client-initials" data-client-initials></span>
+          <div><b data-industry></b><small data-domain></small></div>
+        </div>
         <span class="signal-label">The shift</span>
         <p data-friction></p>
-        <div class="signal-line"><span></span><b>Routine work stays moving</b></div>
+        <div class="signal-line"><span></span><b data-shift-label>Routine work stays moving</b></div>
       </aside>
     </section>
 
     <section class="demo-contrast" data-engagement-section="comparison" aria-labelledby="contrast-title">
       <header>
         <p class="demo-kicker">Drag to compare</p>
-        <h2 id="contrast-title">From interrupted work to a controlled flow.</h2>
+        <h2 id="contrast-title" data-contrast-title>From interrupted work to a controlled flow.</h2>
         <p>This is a proposed operating concept, not a claim about your current internal process.</p>
       </header>
       <div class="contrast-stage" data-contrast style="--split:50%">
         <article class="contrast-panel contrast-before">
           <span>Likely friction</span>
-          <h3>Requests compete for attention.</h3>
+          <h3 data-before-title>Requests compete for attention.</h3>
           <p data-contrast-before></p>
           <div class="contrast-queue" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         </article>
         <article class="contrast-panel contrast-after">
           <span>Proposed flow</span>
-          <h3>Routine work keeps moving.</h3>
+          <h3 data-after-title>Routine work keeps moving.</h3>
           <p data-contrast-after></p>
           <div class="contrast-flow" aria-hidden="true"><i></i><b></b><i></i><b></b><i></i></div>
         </article>
@@ -64,7 +68,7 @@
     <section class="demo-playback" data-engagement-section="workflow" aria-labelledby="playback-title">
       <header>
         <p class="demo-kicker">One request, followed through</p>
-        <h2 id="playback-title">What a quieter operation can feel like</h2>
+        <h2 id="playback-title" data-playback-title>What a quieter operation can feel like</h2>
       </header>
       <div class="workflow-track" data-workflow></div>
     </section>
@@ -74,15 +78,18 @@
         <p class="demo-kicker">Built around evidence, not assumptions</p>
         <h2>A proposed starting point, ready for human review.</h2>
       </div>
-      <p data-proof></p>
+      <div class="proof-evidence">
+        <p data-proof></p>
+        <ul class="evidence-list" data-evidence></ul>
+      </div>
     </section>
 
     <section class="demo-close">
-      <p>Start with one controlled workflow. Prove it in monitored use. Expand only when it earns trust.</p>
+      <p data-close-line>Start with one controlled workflow. Prove it in monitored use. Expand only when it earns trust.</p>
       <a class="demo-cta demo-cta-light" data-cta><span data-cta-label></span><i aria-hidden="true">↗</i></a>
     </section>
   </template>
 
-  <script src="/js/account-demo.js?v=20260728-intent"></script>
+  <script src="/js/account-demo.js?v=20260729-personalized"></script>
 </body>
 </html>

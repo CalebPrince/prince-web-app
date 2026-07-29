@@ -652,14 +652,26 @@ storage/
     diagnostics and accepts `--force`.
 
     **Account demos** add a reviewed account-based proof layer for the small
-    set of prospects worth deeper work. A lead can be marked high priority,
-    then Marketing Leads generates structured outcome copy from its stored
-    audit and Dossier evidence. The model never writes HTML and must frame
+    set of prospects worth deeper work. **Arch owns the demo build**: Dossier
+    supplies prospect research, the site audit supplies verified evidence,
+    and Arch turns both into the client-specific content architecture and
+    landing-page treatment. Caleb remains the required review and publishing
+    gate. A lead can be marked high priority, then Marketing Leads asks Arch
+    to generate structured outcome copy from the stored evidence. Arch never
+    writes executable HTML and must frame
     unverified operational friction as a likely scenario, not a fact. The
     admin edits four workflow steps, previews the result, and explicitly
     publishes an unguessable `/account-demo.html?token=...` link. Public
-    pages are `noindex`; views and CTA clicks are counted. The published page
-    also includes a grounded before/after process comparison. Aggregate views,
+    pages are `noindex`; views and CTA clicks are counted. Every walkthrough
+    now derives a stable client identity, visual variant, evidence panel, and
+    sector-specific journey from the stored audit and Dossier snapshot.
+    Healthcare, hospitality, finance, property, education, commerce, and
+    professional-service prospects therefore receive distinct compositions,
+    operating language, workflows, and safe fallback drafts instead of one
+    generic blue template. Existing published walkthroughs adopt the visual
+    personalization automatically; regenerate and republish only when fresh
+    sector-specific copy is wanted. The published page also includes a
+    grounded before/after process comparison. Aggregate views,
     maximum scroll depth, active seconds, comparison interactions and CTA
     clicks produce a transparent 0–100 intent score for follow-up. Tracking
     does not fingerprint visitors or invent stakeholder identities. Once published,

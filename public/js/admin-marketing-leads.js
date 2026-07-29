@@ -153,7 +153,7 @@ function actionButtons(lead) {
   if (lead.pitch_body) {
     buttons.push(`<button class="btn btn-sm btn-brand review-btn" data-id="${lead.id}">Review &amp; Send</button>`);
   }
-  buttons.push(`<button class="btn btn-sm btn-outline-secondary account-demo-btn" data-id="${lead.id}">${lead.account_demo ? "Account demo" : "Create demo"}</button>`);
+  buttons.push(`<button class="btn btn-sm btn-outline-secondary account-demo-btn" data-id="${lead.id}">${lead.account_demo ? "Arch demo" : "Ask Arch to build"}</button>`);
   buttons.push(`<button class="btn btn-sm btn-outline-danger remove-btn" data-id="${lead.id}">Delete</button>`);
   return buttons.join(" ");
 }
@@ -187,7 +187,7 @@ function compactActionButtons(lead) {
   if (canPitch && !primary.includes("pitch-btn")) {
     secondary.push(`<button class="lead-more-item pitch-btn" data-id="${id}"><i class="bi bi-pencil-square"></i> ${lead.pitch_body ? "Regenerate" : "Generate"} ${phoneOnly ? "call script" : "pitch"}</button>`);
   }
-  secondary.push(`<button class="lead-more-item account-demo-btn" data-id="${id}"><i class="bi bi-window"></i> ${lead.account_demo ? "Open account demo" : "Create account demo"}</button>`);
+  secondary.push(`<button class="lead-more-item account-demo-btn" data-id="${id}"><i class="bi bi-window"></i> ${lead.account_demo ? "Open Arch demo" : "Ask Arch to build demo"}</button>`);
   secondary.push(`<button class="lead-more-item remove-btn is-danger" data-id="${id}"><i class="bi bi-trash3"></i> Delete lead</button>`);
 
   return `
@@ -1050,6 +1050,9 @@ function openAccountDemo(lead, demo) {
   const status = document.getElementById("account-demo-status");
   status.textContent = demo.status === "published" ? "Published" : "Draft";
   status.className = `status-pill ${demo.status === "published" ? "sent" : "pending"}`;
+  const personalization = demo.personalization || {};
+  document.getElementById("account-demo-template").textContent =
+    `${personalization.builder_name || "Arch"} · ${personalization.industry_label || "Client operations"} · layout ${Number(personalization.variant || 1)}`;
   document.getElementById("account-demo-metrics").textContent =
     `${Number(demo.intent_score || 0)}/100 intent · ${Number(demo.views || 0)} views · ${Number(demo.max_scroll_depth || 0)}% depth · ${Number(demo.engaged_seconds || 0)}s active · ${Number(demo.interaction_count || 0)} interactions · ${Number(demo.cta_clicks || 0)} CTA clicks`;
   const open = document.getElementById("account-demo-open");
@@ -1111,7 +1114,7 @@ document.getElementById("account-demo-regenerate").addEventListener("click", asy
   try {
     const response = await api.post(`/api/v1/admin/marketing-leads/${accountDemoLead.id}/account-demo/generate`, {});
     openAccountDemo(accountDemoLead, response.demo);
-    accountDemoMessage("Regenerated from the latest evidence. Review it before publishing.", true);
+    accountDemoMessage("Arch rebuilt the demo from the latest evidence. Review it before publishing.", true);
     await loadLeads();
   } catch (err) {
     accountDemoMessage(err.message || "Could not regenerate the walkthrough.", false);
