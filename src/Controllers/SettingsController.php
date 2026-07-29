@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\EmailTemplate;
+use App\Support\LisaInstructions;
 use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
@@ -169,6 +170,9 @@ class SettingsController
             }
             if ($key === 'mail_from_name' && preg_match('/[\r\n]/', $value)) {
                 Response::error('Sender name cannot contain line breaks.', 422);
+            }
+            if ($key === 'chat_persona' && mb_strlen($value) > LisaInstructions::MAX_LENGTH) {
+                Response::error('Lisa custom instructions must be 4,000 characters or fewer.', 422);
             }
             if ($key === 'smtp_port' && $value !== ''
                 && (!is_numeric($value) || (int) $value < 1 || (int) $value > 65535)) {

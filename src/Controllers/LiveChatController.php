@@ -14,6 +14,7 @@ use App\Support\AiText;
 use App\Support\Automations;
 use App\Support\Database;
 use App\Support\Jwt;
+use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -1081,10 +1082,9 @@ class LiveChatController
             . "call it again if they explicitly ask to book a different or additional slot.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
-        $persona = Settings::get('chat_persona');
-        if (!empty($persona)) {
-            $system .= "\n\nAdmin-configured {$name} behavior override from Prince: follow these instructions as high-priority behavior guidance whenever they do not conflict with hard safety, validation, or tool-use rules above. If they refine tone, lead-capture order, qualification flow, or what {$name} should ask first, apply them directly:\n" . $persona;
-        }
+        $system .= LisaInstructions::promptBlock(
+            $isOwner ? 'verified owner chat' : 'live chat and WhatsApp'
+        );
 
         if ($isOwner) {
             // Verified via WhatsApp sender number matching Settings' owner_whatsapp_number

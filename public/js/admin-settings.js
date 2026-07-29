@@ -218,6 +218,37 @@ function wireHoursControls() {
   syncHoursEnabledState();
 }
 
+function updateLisaInstructionCount() {
+  const field = document.getElementById("lisa-custom-instructions");
+  const count = document.getElementById("lisa-instructions-count");
+  if (field && count) count.textContent = field.value.length.toLocaleString();
+}
+
+async function saveLisaInstructions(e) {
+  e.preventDefault();
+  const field = document.getElementById("lisa-custom-instructions");
+  try {
+    await api.put("/api/v1/admin/settings", { chat_persona: field.value.trim() });
+    field.value = field.value.trim();
+    updateLisaInstructionCount();
+    showMsg("lisa-instructions-msg", "Lisa updated. These instructions apply from her next response.", true);
+  } catch (err) {
+    showMsg("lisa-instructions-msg", err.message, false);
+  }
+}
+
+async function clearLisaInstructions() {
+  const field = document.getElementById("lisa-custom-instructions");
+  try {
+    await api.put("/api/v1/admin/settings", { chat_persona: "" });
+    field.value = "";
+    updateLisaInstructionCount();
+    showMsg("lisa-instructions-msg", "Custom instructions cleared. Lisa is using her standard behaviour.", true);
+  } catch (err) {
+    showMsg("lisa-instructions-msg", err.message, false);
+  }
+}
+
 async function saveChatHours(e) {
   e.preventDefault();
   const days = [...document.querySelectorAll(".hours-day:checked")].map(el => el.value);
@@ -548,6 +579,9 @@ async function testAi() {
   document.getElementById("widgets-form").addEventListener("submit", saveWidgets);
   document.getElementById("booking-form").addEventListener("submit", saveBooking);
   document.getElementById("chat-hours-form").addEventListener("submit", saveChatHours);
+  document.getElementById("lisa-instructions-form").addEventListener("submit", saveLisaInstructions);
+  document.getElementById("lisa-custom-instructions").addEventListener("input", updateLisaInstructionCount);
+  document.getElementById("lisa-instructions-clear").addEventListener("click", clearLisaInstructions);
   document.getElementById("appearance-form").addEventListener("submit", saveAppearance);
   document.getElementById("social-draft-form").addEventListener("submit", saveSocialDraft);
   try {
@@ -581,6 +615,8 @@ async function testAi() {
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
+    document.getElementById("lisa-custom-instructions").value = settings.chat_persona || "";
+    updateLisaInstructionCount();
     document.getElementById("smtp-host").value = settings.smtp_host || "";
     document.getElementById("smtp-port").value = settings.smtp_port || "";
     document.getElementById("imap-host").value = settings.imap_host || "";

@@ -172,6 +172,32 @@
 
     <div class="settings-group-label"><i class="bi bi-robot"></i>AI & Automation</div>
     <div class="row g-4">
+      <div class="col-12">
+        <div class="admin-card p-4" style="border-left:4px solid var(--section-system);">
+          <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+            <div>
+              <p class="small text-uppercase fw-semibold mb-1" style="color:var(--section-system);letter-spacing:.12em;">Lisa instruction desk</p>
+              <h5 class="mb-1">Custom instructions</h5>
+              <p class="text-muted-custom small mb-0">Change how Lisa speaks and handles conversations without editing code. Saved instructions apply to her next live-chat, WhatsApp, phone, voice-demo, and approved outbound-call response.</p>
+            </div>
+            <span class="status-pill sent">Applies everywhere</span>
+          </div>
+          <form id="lisa-instructions-form">
+            <label class="form-label fw-semibold" for="lisa-custom-instructions">What should Lisa do?</label>
+            <textarea class="form-control" id="lisa-custom-instructions" rows="7" maxlength="4000" placeholder="Example: On outbound calls, explain the reason for calling before asking conversational questions. Keep replies warm and concise. When someone is interested, confirm the best next step before ending the conversation."></textarea>
+            <div class="d-flex flex-wrap justify-content-between gap-2 mt-2">
+              <div class="form-text mt-0">Use plain instructions. Safety, privacy, consent, verified facts, and human-approval rules always remain in force.</div>
+              <span class="small text-muted-custom"><span id="lisa-instructions-count">0</span>/4,000</span>
+            </div>
+            <div id="lisa-instructions-msg" class="alert py-2 small d-none mt-3"></div>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <button type="submit" class="btn-brand">Update Lisa</button>
+              <button type="button" class="btn btn-outline-secondary" id="lisa-instructions-clear">Clear instructions</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div class="col-lg-6">
         <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-plug me-2" style="color: var(--section-system);"></i>Integrations</h5>
@@ -912,6 +938,6 @@
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-settings.js?v=20260728-expenses"></script>
+<script src="/js/admin-settings.js?v=20260729-lisa-instructions"></script>
 </body>
 </html>

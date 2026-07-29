@@ -695,13 +695,25 @@ storage/
     answering-machine detection: it can hold the answer webhook while a real
     person hears silence. Lisa's disclosure now plays first as a standalone
     `<Say>`, followed by a six-second speech `<Gather>`, so an answered call
-    always receives the opening before the system begins listening.
+    always receives the opening before the system begins listening. The
+    outbound opening now front-loads Lisa's identity and the reason for the
+    call before small talk. If Conversation Relay is interrupted by an early
+    "hello", the first generated turn repeats that disclosure once and moves
+    directly into the reviewed, lead-specific reason for calling.
     Phone dialogue allows about twenty exchanges (`MAX_TURNS = 40` transcript
     messages), waits ten seconds for the caller to begin speaking, responds to
     what they said before asking one question, and avoids repeating identity,
     service lists, and canned closings. Settings also exposes Twilio's UK
     female `Polly.Amy-Generative` voice as an optional public-beta upgrade;
     standard Emma remains available for lower-cost/stable operation.
+    **Lisa instruction desk** in Admin Settings stores one owner-controlled
+    instruction layer (`chat_persona`) for Lisa. Changes apply from her next
+    response across public live chat, WhatsApp, verified-owner chat, Talk to
+    Agents, inbound phone calls, approved outbound calls, and website voice
+    demos. The same field remains visible under Site Content for continuity.
+    Custom guidance can refine tone, openings, questions, qualification, and
+    handoffs, but cannot override verified facts, channel limitations, consent,
+    opt-outs, privacy, safety, tool validation, or human-approval requirements.
     The Review modal swaps
     Subject/email fields out for a phone field and relabels the body
     "Call script"; the send button becomes "Mark as called" and opens a

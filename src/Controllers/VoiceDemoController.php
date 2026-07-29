@@ -9,6 +9,7 @@ use App\Middleware\RateLimitMiddleware;
 use App\Support\AiAgentEngine;
 use App\Support\CallOutcomeSync;
 use App\Support\Database;
+use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -157,8 +158,8 @@ final class VoiceDemoController
         )->execute([$session['id'], $leadId, $callSid]);
 
         self::twimlGather(
-            "Hi, this is Lisa, Prince Caleb's AI assistant. Thanks for taking my call. "
-            . "Is now still a good time to chat for a minute?"
+            "Hi, this is Lisa, Prince Caleb's AI assistant. I'm calling on his behalf with a customer-service "
+            . "improvement idea prepared for {$lead['business_name']}. Is now a good time for a brief conversation?"
         );
     }
 
@@ -449,6 +450,13 @@ final class VoiceDemoController
     /** @return array{reply:string,provider:?string,mode:string} */
     private static function reply(array $transcript, string $channel = 'web', ?array $context = null): array
     {
+        if ($channel === 'outbound') {
+            $context ??= [];
+            $context['is_first_turn'] = !array_filter(
+                $transcript,
+                static fn(mixed $turn): bool => is_array($turn) && ($turn['role'] ?? '') === 'assistant'
+            );
+        }
         $systemPrompt = self::prompt($channel, $context);
 
         $result = AiAgentEngine::runLowLatency(
@@ -473,6 +481,12 @@ final class VoiceDemoController
             $business = mb_substr(trim((string) ($context['business_name'] ?? 'the business')), 0, 160);
             $website = mb_substr(trim((string) ($context['website_url'] ?? '')), 0, 300);
             $script = mb_substr(trim((string) ($context['pitch_body'] ?? '')), 0, 3000);
+            $firstTurn = !empty($context['is_first_turn'])
+                ? "This is the first response after the recipient spoke. The welcome greeting may have been "
+                    . "interrupted. Before any small talk or question, briefly say you are Lisa, Prince Caleb's AI "
+                    . "assistant, and state the specific reason for calling from the reviewed brief. Do not merely "
+                    . "say hello or ask how they are. Then ask whether they have a moment to continue. "
+                : '';
             return "You are Lisa, Prince Caleb's disclosed AI outreach assistant on a single human-approved outbound "
                 . "call. The recipient requested or consented to this call. Sound warm, curious, and conversational, "
                 . "not like a script or sales presentation. Respond directly to what the person just said before "
@@ -489,7 +503,9 @@ final class VoiceDemoController
                 . "context. Always speak as Lisa and refer to Prince Caleb in the third person. The stored call brief "
                 . "may be an older draft containing a first-person Prince introduction; treat that only as background, "
                 . "never repeat it, never say you are Prince, and never imply Prince is personally speaking.\n"
-                . "Business: {$business}\nWebsite: {$website}\nReviewed call brief:\n{$script}";
+                . $firstTurn
+                . "Business: {$business}\nWebsite: {$website}\nReviewed call brief:\n{$script}"
+                . LisaInstructions::promptBlock('approved outbound calls');
         }
         if ($channel === 'phone') {
             $ownerContext = !empty($context['is_owner'])
@@ -509,7 +525,8 @@ final class VoiceDemoController
                 . "booked, saved, transferred, messaged, or notified anyone. If a caller wants to proceed, ask "
                 . "them to use the contact or booking option on princecaleb.dev, or send a WhatsApp message. "
                 . "Do not collect payment details, passwords, government IDs, medical information, or other "
-                . "sensitive data. This is an inbound customer-service line, never a cold-outreach caller.";
+                . "sensitive data. This is an inbound customer-service line, never a cold-outreach caller."
+                . LisaInstructions::promptBlock('inbound phone calls');
         }
 
         return "You are Lisa, Prince Caleb's clinic voice-agent demonstration. You are speaking aloud, so answer in "
@@ -521,7 +538,8 @@ final class VoiceDemoController
             . "or collect sensitive medical details. For any clinical, urgent, distressed, or ambiguous health question, "
             . "say you cannot provide medical guidance and direct the caller to clinic staff or local emergency services. "
             . "Do not ask for a real name, phone, email, patient number, symptoms, or health history. "
-            . "You may answer questions about implementation, privacy-by-design, human handoff, and Prince's services.";
+            . "You may answer questions about implementation, privacy-by-design, human handoff, and Prince's services."
+            . LisaInstructions::promptBlock('website voice demos');
     }
 
     private static function session(\PDO $pdo, string $token, string $channel, string $niche): array
