@@ -12,6 +12,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
 <link href="/css/admin.css" rel="stylesheet">
+<link href="/css/admin-pro.css?v=20260729" rel="stylesheet">
 </head>
 <body>
 
@@ -72,15 +73,13 @@
   </div>
 
   <div class="flex-grow-1 p-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-blue-soft); color: var(--section-blue);"><i class="bi bi-bar-chart-line"></i></div>
-        <div>
-          <h3 class="mb-0">Reports</h3>
-          <p class="mb-0 small text-muted-custom">Revenue, pipeline, bookings and website traffic — your business at a glance.</p>
-        </div>
+    <section class="admin-hero mb-4">
+      <div class="admin-hero-body">
+        <div class="admin-hero-kicker mb-2">Business at a glance</div>
+        <h1 class="mb-2 text-white">Reports</h1>
+        <p class="admin-hero-copy mb-0">Revenue, pipeline, bookings and website traffic — your business at a glance.</p>
       </div>
-    </div>
+    </section>
 
     <div id="reports-error" class="alert alert-danger py-2 small d-none"></div>
 
@@ -118,75 +117,45 @@
 
     <!-- ===== KEY METRICS (selected period) ===== -->
     <h5 class="text-uppercase small fw-bold text-muted-custom mt-4 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Key metrics · selected period</h5>
-    <div class="row g-3 mb-4">
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-cash-coin"></i></div>
-          <div>
-            <div class="stat-label">Revenue</div>
-            <div class="stat-value" id="kpi-revenue">–</div>
-            <div class="stat-sub" id="kpi-revenue-trend"></div>
-          </div>
-        </div>
+    <div class="metric-grid">
+      <div class="metric-tile">
+        <h3>Revenue</h3>
+        <div class="value" id="kpi-revenue">–</div>
+        <div class="trend" id="kpi-revenue-trend"></div>
       </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-percent"></i></div>
-          <div>
-            <div class="stat-label">Gross margin <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal d-none" id="kpi-margin-badge" title="No project with a contract value was created in this period, so this falls back to a flat estimate">est.</span></div>
-            <div class="stat-value" id="kpi-margin">–</div>
-            <div class="stat-sub" id="kpi-margin-sub">no cost data tracked yet</div>
-          </div>
-        </div>
+      <div class="metric-tile">
+        <h3>Gross margin <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal d-none" id="kpi-margin-badge" title="No project with a contract value was created in this period, so this falls back to a flat estimate">est.</span></h3>
+        <div class="value" id="kpi-margin">–</div>
+        <div class="trend" id="kpi-margin-sub">no cost data tracked yet</div>
       </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-briefcase"></i></div>
-          <div>
-            <div class="stat-label">Average project</div>
-            <div class="stat-value" id="kpi-avg-project">–</div>
-            <div class="stat-sub" id="kpi-avg-project-trend"></div>
-          </div>
-        </div>
+      <div class="metric-tile">
+        <h3>Average project</h3>
+        <div class="value" id="kpi-avg-project">–</div>
+        <div class="trend" id="kpi-avg-project-trend"></div>
       </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-speedometer"></i></div>
-          <div>
-            <div class="stat-label">Utilization <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal d-none" id="kpi-utilization-badge" title="Set your weekly billable hours below for a real figure">est.</span></div>
-            <div class="stat-value" id="kpi-utilization">–</div>
-            <div class="stat-sub" id="kpi-utilization-sub">no hours data tracked yet</div>
-            <form id="capacity-form" class="d-flex gap-1 mt-2">
-              <input type="number" min="1" step="1" class="form-control form-control-sm" id="weekly-billable-hours" placeholder="Hrs/week" style="max-width:6.5rem;" title="Weekly billable hours — the denominator for utilization">
-              <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
-            </form>
-          </div>
-        </div>
+      <div class="metric-tile">
+        <h3>Utilization <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal d-none" id="kpi-utilization-badge" title="Set your weekly billable hours below for a real figure">est.</span></h3>
+        <div class="value" id="kpi-utilization">–</div>
+        <div class="trend" id="kpi-utilization-sub">no hours data tracked yet</div>
+        <form id="capacity-form" class="d-flex gap-1 mt-2">
+          <input type="number" min="1" step="1" class="form-control form-control-sm" id="weekly-billable-hours" placeholder="Hrs/week" style="max-width:6.5rem;" title="Weekly billable hours — the denominator for utilization">
+          <button type="submit" class="btn btn-sm btn-outline-secondary">Set</button>
+        </form>
       </div>
     </div>
 
     <!-- ===== REVENUE ===== -->
     <h5 class="text-uppercase small fw-bold text-muted-custom mt-5 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Revenue</h5>
-    <div class="row g-3 mb-3">
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-cash-stack"></i></div>
-          <div>
-            <div class="stat-label">Revenue (all time)</div>
-            <div class="stat-value" id="stat-revenue-total">–</div>
-            <div class="stat-sub" id="stat-revenue-month-sub"></div>
-          </div>
-        </div>
+    <div class="metric-grid">
+      <div class="metric-tile">
+        <h3>Revenue (all time)</h3>
+        <div class="value" id="stat-revenue-total">–</div>
+        <div class="trend" id="stat-revenue-month-sub"></div>
       </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-money-soft); color: var(--section-money);"><i class="bi bi-calendar3"></i></div>
-          <div>
-            <div class="stat-label">Revenue · last 30 days</div>
-            <div class="stat-value" id="stat-revenue-30">–</div>
-            <div class="stat-sub">successful payments</div>
-          </div>
-        </div>
+      <div class="metric-tile">
+        <h3>Revenue · last 30 days</h3>
+        <div class="value" id="stat-revenue-30">–</div>
+        <div class="trend">successful payments</div>
       </div>
     </div>
 
@@ -237,26 +206,16 @@
 
     <!-- ===== SALES & PIPELINE ===== -->
     <h5 class="text-uppercase small fw-bold text-muted-custom mt-5 mb-3 pb-2 border-bottom" style="letter-spacing: .06em;">Sales &amp; pipeline</h5>
-    <div class="row g-3 mb-3">
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-trophy"></i></div>
-          <div>
-            <div class="stat-label">Win rate</div>
-            <div class="stat-value" id="stat-win-rate">–</div>
-            <div class="stat-sub" id="stat-win-rate-sub"></div>
-          </div>
-        </div>
+    <div class="metric-grid">
+      <div class="metric-tile">
+        <h3>Win rate</h3>
+        <div class="value" id="stat-win-rate">–</div>
+        <div class="trend" id="stat-win-rate-sub"></div>
       </div>
-      <div class="col-sm-6 col-xl-3">
-        <div class="admin-card stat-card p-3">
-          <div class="icon-chip" style="background: var(--section-leads-soft); color: var(--section-leads);"><i class="bi bi-people"></i></div>
-          <div>
-            <div class="stat-label">Paying clients</div>
-            <div class="stat-value" id="stat-paying">–</div>
-            <div class="stat-sub" id="stat-avg-deal"></div>
-          </div>
-        </div>
+      <div class="metric-tile">
+        <h3>Paying clients</h3>
+        <div class="value" id="stat-paying">–</div>
+        <div class="trend" id="stat-avg-deal"></div>
       </div>
     </div>
 
@@ -279,7 +238,9 @@
     <div class="row g-4 mt-1 mb-1">
       <div class="col-12">
         <div class="admin-card p-4">
-          <h5 class="mb-3"><i class="bi bi-star me-2" style="color: var(--section-money);"></i>Top clients by revenue</h5>
+          <div class="pro-panel-head">
+            <h2 class="mb-0"><i class="bi bi-star me-2" style="color: var(--section-money);"></i>Top clients by revenue</h2>
+          </div>
           <div class="table-responsive">
             <table class="table mb-0 align-middle">
               <thead>
@@ -301,7 +262,9 @@
     <div class="row g-4 mb-1">
       <div class="col-12">
         <div class="admin-card p-4">
-          <h5 class="mb-3"><i class="bi bi-diagram-3 me-2" style="color: var(--section-leads);"></i>Email automation performance</h5>
+          <div class="pro-panel-head">
+            <h2 class="mb-0"><i class="bi bi-diagram-3 me-2" style="color: var(--section-leads);"></i>Email automation performance</h2>
+          </div>
           <div class="table-responsive">
             <table class="table mb-0 align-middle">
               <thead>
@@ -407,8 +370,10 @@
 
     <div class="row g-4 mb-2">
       <div class="col-lg-6">
-        <div class="admin-card p-0">
-          <div class="p-3 border-bottom"><h6 class="mb-0"><i class="bi bi-file-earmark-text me-2" style="color: var(--section-blue);"></i>Top pages</h6></div>
+        <div class="admin-card p-4">
+          <div class="pro-panel-head">
+            <h2 class="mb-0"><i class="bi bi-file-earmark-text me-2" style="color: var(--section-blue);"></i>Top pages</h2>
+          </div>
           <table class="table mb-0 align-middle">
             <thead><tr><th class="ps-3">Path</th><th class="text-end pe-3">Views</th></tr></thead>
             <tbody id="top-pages-tbody"></tbody>
@@ -416,8 +381,10 @@
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="admin-card p-0">
-          <div class="p-3 border-bottom"><h6 class="mb-0"><i class="bi bi-lightning-charge me-2" style="color: var(--section-leads);"></i>Top funnel events</h6></div>
+        <div class="admin-card p-4">
+          <div class="pro-panel-head">
+            <h2 class="mb-0"><i class="bi bi-lightning-charge me-2" style="color: var(--section-leads);"></i>Top funnel events</h2>
+          </div>
           <table class="table mb-0 align-middle">
             <thead><tr><th class="ps-3">Event</th><th class="text-end pe-3">Count</th></tr></thead>
             <tbody id="top-events-tbody"></tbody>
@@ -425,8 +392,10 @@
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="admin-card p-0">
-          <div class="p-3 border-bottom"><h6 class="mb-0"><i class="bi bi-share me-2" style="color: var(--section-blue);"></i>Top referrers</h6></div>
+        <div class="admin-card p-4">
+          <div class="pro-panel-head">
+            <h2 class="mb-0"><i class="bi bi-share me-2" style="color: var(--section-blue);"></i>Top referrers</h2>
+          </div>
           <table class="table mb-0 align-middle">
             <thead><tr><th class="ps-3">Referrer</th><th class="text-end pe-3">Views</th></tr></thead>
             <tbody id="top-referrers-tbody"></tbody>

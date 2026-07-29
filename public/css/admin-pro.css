@@ -1,0 +1,71 @@
+/* Shared "pro" admin components — extracted from marketing-leads.html's
+   upgraded UI (hero banner, metric tiles, upgraded table/panel) so other
+   list-style admin pages can reuse the same look. The hero stays a fixed
+   dark surface, exactly as it already was on marketing-leads.html; every
+   other component uses the app's existing --card-bg/--line/--heading-color/
+   --muted tokens so it matches the monochrome editorial system already in
+   force elsewhere in admin.css, instead of introducing a clashing palette. */
+
+/* ---- Hero banner ---- */
+.admin-hero{position:relative;overflow:hidden;padding:1.5rem;border:1px solid rgba(36,87,214,.18);border-radius:24px;background:linear-gradient(118deg,#10233f 0%,#17335a 67%,#2457d6 140%);color:#fff;box-shadow:0 22px 55px rgba(16,35,63,.14)}
+.admin-hero::after{content:"";position:absolute;width:18rem;height:18rem;right:-7rem;top:-10rem;border:3rem solid rgba(255,255,255,.055);border-radius:50%;pointer-events:none}
+.admin-hero-body{position:relative;z-index:1}
+.admin-hero-kicker{font:700 .7rem/1 Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8dd9e9}
+.admin-hero h1{font-family:"Plus Jakarta Sans",sans-serif;font-size:clamp(1.75rem,3vw,2.7rem);letter-spacing:-.05em;color:#fff}
+.admin-hero-copy{max-width:48rem;color:rgba(255,255,255,.7);line-height:1.65;margin-bottom:0}
+.admin-hero .btn-outline-light{border-color:rgba(255,255,255,.32)}
+.admin-hero-pulse-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;margin-top:1rem}
+.admin-hero-pulse{padding:1rem 1.1rem;border:1px solid rgba(255,255,255,.11);border-radius:16px;background:rgba(255,255,255,.065);backdrop-filter:blur(8px)}
+.admin-hero-pulse strong{display:block;font:800 1.35rem/1.1 "Plus Jakarta Sans",sans-serif;letter-spacing:-.04em}
+.admin-hero-pulse span{display:block;margin-top:.35rem;color:rgba(255,255,255,.6);font-size:.72rem}
+[data-theme="dark"] .admin-hero{border-color:rgba(90,137,255,.28)}
+@media(max-width:700px){
+  .admin-hero{padding:1.15rem;border-radius:18px}
+  .admin-hero-pulse-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ---- Metric tile grid ---- */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.metric-tile{background:var(--card-bg,#fff);padding:20px;border-radius:12px;border:1px solid var(--line);box-shadow:0 12px 35px rgba(16,35,63,.06)}
+.metric-tile h3{font-size:.8rem;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:8px}
+.metric-tile .value{font-size:1.9rem;font-weight:700;color:var(--heading-color)}
+.metric-tile .trend{font-size:.8rem;margin-top:6px;font-weight:600;color:var(--muted)}
+.metric-tile .trend.is-up{color:#166534}
+.metric-tile .trend.is-down{color:#991b1b}
+[data-theme="dark"] .metric-tile .trend.is-up{color:#4ade80}
+[data-theme="dark"] .metric-tile .trend.is-down{color:#f87171}
+
+/* ---- Panel head: title + count + controls, used inside an existing .admin-card ---- */
+.pro-panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--line)}
+.pro-panel-head h2,.pro-panel-head h5{margin:0;font-weight:700;font-size:1.1rem}
+.pro-panel-controls{display:flex;gap:.55rem;flex-wrap:wrap;margin-left:auto}
+.pro-search{position:relative;min-width:15rem}
+.pro-search i{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--muted)}
+.pro-search input{padding-left:2.3rem}
+@media(max-width:700px){
+  .pro-panel-head{align-items:stretch;flex-direction:column}
+  .pro-panel-controls{margin-left:0;flex-wrap:wrap}
+  .pro-search{min-width:100%;flex:1}
+}
+
+/* ---- Row identity + actions, used inside .table/.admin-data-table rows ---- */
+.pro-avatar{display:grid;place-items:center;flex:0 0 2.35rem;height:2.35rem;border-radius:12px;background:var(--bg-soft);color:var(--heading-color);font:800 .8rem "Plus Jakarta Sans",sans-serif}
+.pro-identity{display:flex;gap:.75rem;align-items:flex-start;min-width:13rem}
+.pro-identity .min-w-0{min-width:0}
+.pro-identity-name{font-weight:750;color:var(--heading-color)}
+
+.pro-more-actions{position:relative}
+.pro-more-actions summary{display:flex;align-items:center;gap:.35rem;padding:.38rem .58rem;border:1px solid var(--line-strong,var(--line));border-radius:9px;color:var(--muted);font-size:.75rem;font-weight:650;cursor:pointer;list-style:none}
+.pro-more-actions summary::-webkit-details-marker{display:none}
+.pro-more-actions[open] summary{color:var(--heading-color);border-color:var(--line-strong);background:var(--bg-soft)}
+.pro-more-actions[open] summary i{transform:rotate(180deg)}
+.pro-more-panel{display:grid;gap:.2rem;min-width:13.5rem;margin-top:.35rem;padding:.4rem;border:1px solid var(--line);border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 12px 30px rgba(16,35,63,.12);position:absolute;right:0;z-index:5}
+.pro-more-item{display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .65rem;border:0;border-radius:8px;background:transparent;color:var(--ink);font-size:.78rem;text-align:left}
+.pro-more-item:hover{background:var(--bg-soft)}
+.pro-more-item i{width:1rem;color:var(--muted)}
+.pro-more-item.is-danger{color:#c13d3d}
+.pro-more-item.is-danger i{color:inherit}
+
+.pro-flag-btn{width:2rem}
+.pro-flag-btn.is-flagged{color:#92400e;border-color:#f59e0b;background:#fef3c7}
+[data-theme="dark"] .pro-flag-btn.is-flagged{color:#fbbf24;border-color:#d97706;background:rgba(217,119,6,.18)}

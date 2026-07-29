@@ -219,31 +219,73 @@ async function loadLeads() {
   }
   empty.classList.add("d-none");
 
+  const renderHighIntentLeads = (leads) => {
+    const container = document.getElementById("high-intent-leads-container");
+    if (!container) return;
+
+    let hotLeads = leads.filter(l => (l.account_demo && l.account_demo.views > 0) || Number(l.is_high_priority));
+    hotLeads.sort((a, b) => {
+       const aScore = (a.account_demo ? (a.account_demo.views * 10 + (a.account_demo.cta_clicks || 0) * 5) : 0) + (Number(a.is_high_priority) ? 50 : 0);
+       const bScore = (b.account_demo ? (b.account_demo.views * 10 + (b.account_demo.cta_clicks || 0) * 5) : 0) + (Number(b.is_high_priority) ? 50 : 0);
+       return bScore - aScore;
+    });
+
+    hotLeads = hotLeads.slice(0, 5); // top 5
+
+    if (hotLeads.length === 0) {
+       container.innerHTML = `<div class="text-muted-custom small text-center py-3">No high-intent leads detected yet.</div>`;
+       return;
+    }
+
+    container.innerHTML = hotLeads.map(lead => {
+       const demo = lead.account_demo || {};
+       const score = Math.min(100, (demo.views || 0) * 10 + (demo.cta_clicks || 0) * 5 + (Number(lead.is_high_priority) ? 50 : 0) + 10);
+       let detailsHtml = '';
+       if (demo.views > 0) detailsHtml += `• Opened demo ${demo.views} times<br>`;
+       if (demo.cta_clicks > 0) detailsHtml += `• Clicked CTA ${demo.cta_clicks} times<br>`;
+       if (demo.engaged_seconds > 0) detailsHtml += `• Viewed for ${Math.floor(demo.engaged_seconds / 60)}m ${demo.engaged_seconds % 60}s<br>`;
+       if (!detailsHtml) detailsHtml = '• Matching target profile<br>• Ready for initial outreach';
+
+       return `
+        <div class="intelligence-item">
+            <div class="intel-header">
+                <span class="intel-company">${escapeHtml(lead.business_name)}</span>
+                <span class="intel-score">${score}/100 Intent</span>
+            </div>
+            <div class="intel-details">
+                ${detailsHtml}
+            </div>
+            <button class="btn btn-sm btn-primary w-100 mt-2 fw-semibold" onclick="document.querySelector('.row-checkbox[data-id=\\'${lead.id}\\']')?.closest('tr').querySelector('.lead-more-actions')?.click()">View Lead Options</button>
+        </div>
+       `;
+    }).join('');
+  };
+  renderHighIntentLeads(rows);
+
   const renderPage = pageRows => {
-    tbody.innerHTML = pageRows.map(lead => `
+    tbody.innerHTML = pageRows.map(lead => {
+      let statusClass = "status-pending-ai";
+      if (lead.status === "sent" || lead.status === "replied") statusClass = "status-active-ai";
+      else if (lead.status === "rejected") statusClass = "status-hot-ai";
+      const demo = lead.account_demo || {};
+      
+      return `
     <tr data-lead-row data-search="${escapeHtml(`${lead.business_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase())}" data-status="${escapeHtml(lead.status || "")}" data-priority="${Number(lead.is_high_priority) ? "1" : "0"}">
       <td class="ps-3"><input type="checkbox" class="form-check-input row-checkbox" data-id="${lead.id}"></td>
       <td>
-        <div class="lead-account">
-          <div class="lead-avatar">${escapeHtml(leadInitials(lead.business_name))}</div>
-          <div class="min-w-0">
-            <div class="lead-account-name">${Number(lead.is_high_priority) ? '<i class="bi bi-star-fill me-1" style="color:#e6a234" title="High priority"></i>' : ''}${escapeHtml(lead.business_name)} ${intentBadge(lead.account_demo)}</div>
-            ${lead.contact_email ? `<div class="small text-muted-custom lead-contact-line">${escapeHtml(lead.contact_email)}</div>` : ''}
-            ${lead.contact_phone ? `<div class="small text-muted-custom lead-contact-line">${escapeHtml(lead.contact_phone)}</div>` : ''}
-            ${!lead.contact_email && !lead.contact_phone ? '<div class="small text-muted-custom">Contact not found</div>' : ''}
-            ${lead.website_url ? `<a class="small lead-contact-line d-block" href="${escapeHtml(lead.website_url)}" target="_blank" rel="noopener">${escapeHtml(lead.website_url.replace(/^https?:\/\//, ""))}</a>` : '<span class="small text-muted-custom">No website</span>'}
-          </div>
-        </div>
+        <div class="company-pill-ai">${Number(lead.is_high_priority) ? '<i class="bi bi-star-fill me-1" style="color:#e6a234" title="High priority"></i>' : ''}${escapeHtml(lead.business_name)}</div>
+        ${demo.url ? `<a href="${escapeHtml(demo.url)}" target="_blank" class="demo-link-ai">${escapeHtml(demo.url.replace(/^https?:\\/\\//, ""))}</a>` : `<span class="demo-link-ai text-muted-custom">No demo published</span>`}
       </td>
-      <td>${opportunityBadge(lead)}</td>
-      <td>${readinessRail(lead)}</td>
-      <td>${Number(lead.estimated_value) ? `<span class="fw-semibold">${escapeHtml(lead.currency || 'GHS')} ${(Number(lead.estimated_value) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>` : '<span class="text-muted-custom small">Not estimated</span>'}</td>
-      <td><span class="status-pill ${lead.status}">${lead.status.replace("_", " ")}</span></td>
+      <td><strong>${Number(demo.views || 0)}</strong></td>
+      <td>${Number(demo.cta_clicks || 0)} Clicks</td>
+      <td>${Number(demo.engaged_seconds || 0)}s</td>
+      <td><span class="status-pill-ai ${statusClass}">${escapeHtml(lead.status.replace("_", " "))}</span></td>
       <td class="text-end pe-3 lead-actions">
         <div class="lead-actions-more">${compactActionButtons(lead)}</div>
       </td>
     </tr>
-    `).join("");
+    `;
+    }).join("");
   applyLeadFilters();
 
   tbody.querySelectorAll(".lead-more-actions").forEach(details => {
