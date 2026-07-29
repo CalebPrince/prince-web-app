@@ -227,6 +227,17 @@
             start,
           });
           this.renderControls(id, totalItems, pageSize, renderPage, rows, options);
+          const scrollTarget = typeof options.scrollTarget === "string"
+            ? document.querySelector(options.scrollTarget)
+            : options.scrollTarget;
+          if (scrollTarget) {
+            requestAnimationFrame(() => {
+              scrollTarget.scrollIntoView({
+                behavior: options.scrollBehavior || "smooth",
+                block: options.scrollBlock || "start",
+              });
+            });
+          }
         });
       });
     },

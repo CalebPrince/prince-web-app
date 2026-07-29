@@ -403,7 +403,10 @@ async function loadLeads() {
   });
   };
 
-  AdminPagination.page('marketing-leads', rows, renderPage, { anchor: document.getElementById('pagination') });
+  AdminPagination.page('marketing-leads', rows, renderPage, {
+    anchor: document.getElementById('pagination'),
+    scrollTarget: document.getElementById('lead-tracker'),
+  });
 }
 
 function renderDiscoverResults() {

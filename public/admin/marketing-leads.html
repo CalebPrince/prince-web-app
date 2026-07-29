@@ -57,7 +57,9 @@
 .lead-more-actions summary::-webkit-details-marker{display:none}
 .lead-more-actions[open] summary{color:var(--lead-blue);border-color:rgba(36,87,214,.45);background:rgba(36,87,214,.05)}
 .lead-more-actions[open] summary i{transform:rotate(180deg)}
-.lead-more-panel{display:grid;gap:.2rem;min-width:13.5rem;margin-top:.35rem;padding:.4rem;border:1px solid var(--line);border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 12px 30px rgba(16,35,63,.12)}
+.lead-more-panel{position:absolute;right:0;z-index:5;display:grid;gap:.2rem;min-width:13.5rem;margin-top:.35rem;padding:.4rem;border:1px solid var(--line);border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 12px 30px rgba(16,35,63,.12)}
+.tracker-card{overflow:visible;scroll-margin-top:1rem}
+.tracker-table-ai tr[data-lead-row]:has(.row-checkbox:checked){background:var(--section-leads-soft)}
 .lead-more-item{display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .65rem;border:0;border-radius:8px;background:transparent;color:var(--text,#172033);font-size:.78rem;text-align:left}
 .lead-more-item:hover{background:var(--bg-soft)}
 .lead-more-item i{width:1rem;color:var(--text-muted,#667085)}
@@ -305,7 +307,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
     <div class="dashboard-grid-ai">
         <!-- Left Column -->
         <div class="d-flex flex-column gap-4">
-            <div class="admin-card p-4 mb-0">
+            <div class="admin-card p-4 mb-0 tracker-card" id="lead-tracker">
                 <div class="pro-panel-head">
                   <div>
                     <h2 class="mb-0 border-bottom-0 pb-0 d-inline-block me-3">Live Prospect Demo Tracker</h2>
@@ -810,7 +812,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
 <script src="/js/api.js?v=20260719"></script>
 <script src="/js/theme.js?v=20260719"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
-<script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-marketing-leads.js?v=20260728-delete-fix"></script>
+<script src="/js/admin-nav-badges.js?v=20260729-pagination-scroll"></script>
+<script src="/js/admin-marketing-leads.js?v=20260729-pagination-scroll"></script>
 </body>
 </html>
