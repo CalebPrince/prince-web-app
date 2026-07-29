@@ -149,9 +149,14 @@
     border-bottom: 1px solid var(--line);
     color: var(--ink);
 }
-.tracker-table-ai tr:last-child td { border-bottom: none; }
-.company-pill-ai { font-weight: 600; color: #6366f1; }
-.demo-link-ai { font-size: 0.8rem; color: #06b6d4; text-decoration: none; display: block; }
+.tracker-table-ai tr:last-child td { border-bottom: none; vertical-align: top; }
+.tracker-table-ai td { vertical-align: top; }
+.tracker-table-ai th:nth-child(2), .tracker-table-ai td:nth-child(2) { min-width: 200px; }
+.tracker-table-ai th:nth-child(5) { white-space: nowrap; }
+.company-pill-ai { font-weight: 600; color: var(--heading-color); }
+.demo-link-ai { font-size: 0.8rem; text-decoration: none; display: block; color: var(--muted); margin-top: .2rem; }
+a.demo-link-ai { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+a.demo-link-ai:hover { color: var(--heading-color); }
 .status-pill-ai { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
 .status-hot-ai { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 .status-active-ai { background: rgba(16, 185, 129, 0.15); color: #10b981; }
