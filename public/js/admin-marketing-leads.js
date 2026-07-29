@@ -7,6 +7,7 @@ let accountDemoLead = null;
 const selectedIds = new Set();
 let sendTrendChart = null;
 let replyBreakdownChart = null;
+let leadFilterTimer = null;
 
 if (window.Chart) {
   Chart.defaults.color = "#8b93a7";
@@ -61,18 +62,16 @@ function updateLeadPulse(rows) {
     : `${currencies[0] || "GHS"} ${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
-function applyLeadFilters() {
+function filteredLeadRows(rows) {
   const search = document.getElementById("lead-search").value.trim().toLowerCase();
   const stage = document.getElementById("lead-status-filter").value;
-  let visible = 0;
-  document.querySelectorAll("#leads-tbody tr[data-lead-row]").forEach(row => {
-    const matchesSearch = !search || row.dataset.search.includes(search);
-    const matchesStage = !stage || (stage === "priority" ? row.dataset.priority === "1" : row.dataset.status === stage);
-    const show = matchesSearch && matchesStage;
-    row.classList.toggle("d-none", !show);
-    if (show) visible += 1;
+  return rows.filter(lead => {
+    const haystack = `${lead.business_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase();
+    const matchesSearch = !search || haystack.includes(search);
+    const matchesStage = !stage
+      || (stage === "priority" ? Number(lead.is_high_priority) === 1 : lead.status === stage);
+    return matchesSearch && matchesStage;
   });
-  document.getElementById("lead-result-count").textContent = `${visible} account${visible === 1 ? "" : "s"} shown on this page`;
 }
 
 function updateBulkToolbar() {
@@ -261,9 +260,12 @@ async function loadLeads() {
     }).join('');
   };
   renderHighIntentLeads(rows);
+  const filteredRows = filteredLeadRows(rows);
+  document.getElementById("lead-result-count").textContent =
+    `${filteredRows.length} account${filteredRows.length === 1 ? "" : "s"} found`;
 
   const renderPage = pageRows => {
-    tbody.innerHTML = pageRows.map(lead => {
+    tbody.innerHTML = pageRows.length ? pageRows.map(lead => {
       let statusClass = "status-pending-ai";
       if (lead.status === "sent" || lead.status === "replied") statusClass = "status-active-ai";
       else if (lead.status === "rejected") statusClass = "status-hot-ai";
@@ -285,8 +287,7 @@ async function loadLeads() {
       </td>
     </tr>
     `;
-    }).join("");
-  applyLeadFilters();
+    }).join("") : '<tr><td colspan="7" class="text-center text-muted-custom py-5">No accounts match this search or stage.</td></tr>';
 
   tbody.querySelectorAll(".lead-more-actions").forEach(details => {
     details.addEventListener("toggle", () => {
@@ -403,7 +404,7 @@ async function loadLeads() {
   });
   };
 
-  AdminPagination.page('marketing-leads', rows, renderPage, {
+  AdminPagination.page('marketing-leads', filteredRows, renderPage, {
     anchor: document.getElementById('pagination'),
     scrollTarget: document.getElementById('lead-tracker'),
   });
@@ -1361,8 +1362,17 @@ async function loadAnalytics() {
   discoverModal = new bootstrap.Modal(document.getElementById("discover-modal"));
   dossierModal = new bootstrap.Modal(document.getElementById("dossier-modal"));
   accountDemoModal = new bootstrap.Modal(document.getElementById("account-demo-modal"));
-  document.getElementById("lead-search").addEventListener("input", applyLeadFilters);
-  document.getElementById("lead-status-filter").addEventListener("change", applyLeadFilters);
+  document.getElementById("lead-search").addEventListener("input", () => {
+    clearTimeout(leadFilterTimer);
+    leadFilterTimer = setTimeout(() => {
+      AdminPagination.state.set("marketing-leads", 1);
+      loadLeads();
+    }, 180);
+  });
+  document.getElementById("lead-status-filter").addEventListener("change", () => {
+    AdminPagination.state.set("marketing-leads", 1);
+    loadLeads();
+  });
   wireOutreachPanel();
   await loadLeads();
   await loadAnalytics();
