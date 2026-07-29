@@ -263,7 +263,12 @@
             <button type="button" class="btn btn-light btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#add-lead-modal"><i class="bi bi-plus-lg me-1"></i> Add lead</button>
           </div>
         </div>
-
+        <div class="admin-hero-pulse-grid">
+          <div class="admin-hero-pulse"><strong id="lead-total">0</strong><span>accounts in pipeline</span></div>
+          <div class="admin-hero-pulse"><strong id="lead-priority">0</strong><span>high-priority accounts</span></div>
+          <div class="admin-hero-pulse"><strong id="lead-ready">0</strong><span>ready for outreach</span></div>
+          <div class="admin-hero-pulse"><strong id="lead-pipeline-value">GHS 0</strong><span>estimated pipeline value</span></div>
+        </div>
       </div>
     </section>
 
@@ -386,7 +391,7 @@
                                 <input class="form-check-input" type="checkbox" role="switch" id="oe-discovery-enabled">
                             </div>
                             <div class="flex-grow-1">
-                                <div class="feature-title-ai">Daily Prospect Discovery</div>
+                                <div class="feature-title-ai">Daily Prospect Discovery <span class="small text-muted-custom" id="oe-discovery-enabled-label">Off</span></div>
                                 <div class="feature-desc-ai" id="oe-discovery-status">Waiting for its first run.</div>
                                 
                                 <div class="d-flex gap-3 mt-2 align-items-end">
@@ -410,7 +415,7 @@
                         <i class="bi bi-telephone"></i> Call list (<span id="oe-call-queue">0</span>)
                     </button>
                     <div class="small text-muted-custom">
-                        <span id="oe-sent-total">0</span> total sends · <span id="oe-suppressed">0</span> unsubscribed
+                        <span id="oe-calls-today">0</span> calls today · <span id="oe-sent-total">0</span> total sends · <span id="oe-suppressed">0</span> unsubscribed
                     </div>
                 </div>
                 <div id="oe-msg" class="alert py-2 small mb-0 mt-3 d-none"></div>

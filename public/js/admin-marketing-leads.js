@@ -274,7 +274,7 @@ async function loadLeads() {
       <td class="ps-3"><input type="checkbox" class="form-check-input row-checkbox" data-id="${lead.id}"></td>
       <td>
         <div class="company-pill-ai">${Number(lead.is_high_priority) ? '<i class="bi bi-star-fill me-1" style="color:#e6a234" title="High priority"></i>' : ''}${escapeHtml(lead.business_name)}</div>
-        ${demo.url ? `<a href="${escapeHtml(demo.url)}" target="_blank" class="demo-link-ai">${escapeHtml(demo.url.replace(/^https?:\\/\\//, ""))}</a>` : `<span class="demo-link-ai text-muted-custom">No demo published</span>`}
+        ${demo.url ? `<a href="${escapeHtml(demo.url)}" target="_blank" class="demo-link-ai">${escapeHtml(demo.url.replace(/^https?:\/\//, ""))}</a>` : `<span class="demo-link-ai text-muted-custom">No demo published</span>`}
       </td>
       <td><strong>${Number(demo.views || 0)}</strong></td>
       <td>${Number(demo.cta_clicks || 0)} Clicks</td>
