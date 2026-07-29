@@ -129,6 +129,11 @@ foreach ($pricingOfferUpdates as $name => [$oldValue, $newValue]) {
 }
 $pricingInsertStmt = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value) VALUES (?, ?)');
 $pricingInsertStmt->execute(['contact_phone', '+233 20 804 9962']);
+$pricingInsertStmt->execute(['ai_voice_public_number', '+44 7462 190814']);
+$pricingInsertStmt->execute(['social_whatsapp', 'https://wa.me/233535801359']);
+$pricingInsertStmt->execute(['twilio_whatsapp_number', 'whatsapp:+233535801359']);
+$pricingUpdateStmt->execute(['https://wa.me/233535801359', 'social_whatsapp', 'https://wa.me/447462190814']);
+$pricingUpdateStmt->execute(['whatsapp:+233535801359', 'twilio_whatsapp_number', 'whatsapp:+447462190814']);
 foreach ($pricingOfferInserts as $name => $value) {
     $pricingInsertStmt->execute([$name, $value]);
 }

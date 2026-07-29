@@ -714,6 +714,12 @@ storage/
     Custom guidance can refine tone, openings, questions, qualification, and
     handoffs, but cannot override verified facts, channel limitations, consent,
     opt-outs, privacy, safety, tool validation, or human-approval requirements.
+    Lisa's shared contact grounding also assigns each public number one job:
+    `+233 53 580 1359` is the Ghana business WhatsApp contact,
+    `+233 20 804 9962` is Prince Caleb's direct Ghana phone, and
+    `+44 7462 190814` is Lisa's UK AI voice line. Exact legacy UK WhatsApp
+    settings are migrated to the Ghana sender; later Site Content changes
+    remain authoritative.
     The Review modal swaps
     Subject/email fields out for a phone field and relabels the body
     "Call script"; the send button becomes "Mark as called" and opens a

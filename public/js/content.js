@@ -43,7 +43,7 @@
     const number = el.querySelector("[data-voice-phone-number]");
     if (number) number.textContent = voiceNumber;
   });
-  const businessWhatsApp = content.social_whatsapp || "https://wa.me/447462190814";
+  const businessWhatsApp = content.social_whatsapp || "https://wa.me/233535801359";
   document.querySelectorAll("[data-business-whatsapp-link]").forEach(el => {
     el.href = businessWhatsApp;
   });
