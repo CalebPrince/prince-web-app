@@ -1018,6 +1018,8 @@ CREATE TABLE IF NOT EXISTS telephony_calls (
   consent_confirmed_at TEXT,
   whatsapp_followup_consent_at TEXT,
   whatsapp_followup_number TEXT,
+  email_followup_consent_at TEXT,
+  email_followup_address TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -1028,11 +1030,14 @@ CREATE TABLE IF NOT EXISTS whatsapp_call_followups (
   telephony_call_id INTEGER NOT NULL UNIQUE REFERENCES telephony_calls(id) ON DELETE CASCADE,
   session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
   recipient_number TEXT NOT NULL,
+  recipient_email TEXT,
   contact_name TEXT,
   summary TEXT,
   content_sid TEXT,
   provider_message_sid TEXT,
   status TEXT NOT NULL DEFAULT 'queued',
+  email_status TEXT NOT NULL DEFAULT 'not_requested',
+  email_sent_at TEXT,
   error_message TEXT,
   attempts INTEGER NOT NULL DEFAULT 0,
   processed_at TEXT,

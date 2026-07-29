@@ -182,7 +182,7 @@ final class VoiceDemoController
         $pdo = Database::get();
         $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
         $callStmt = $pdo->prepare(
-            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.website_url, ml.pitch_body
+            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.contact_email, ml.website_url, ml.pitch_body
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
              WHERE tc.provider_call_id = ?"
@@ -194,6 +194,7 @@ final class VoiceDemoController
             && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
         $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
         self::captureWhatsAppConsent($pdo, $callSid, $speech, $transcript, $callContext);
+        self::captureEmailConsent($pdo, $callSid, $speech, $transcript, $callContext);
         if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
             $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
             $transcript[] = ['role' => 'assistant', 'text' => "Understood. We won't call again. Goodbye."];
@@ -259,7 +260,7 @@ final class VoiceDemoController
         $pdo = Database::get();
         $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
         $callStmt = $pdo->prepare(
-            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.website_url, ml.pitch_body
+            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.contact_email, ml.website_url, ml.pitch_body
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
              WHERE tc.provider_call_id = ?"
@@ -271,6 +272,7 @@ final class VoiceDemoController
             && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
         $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
         self::captureWhatsAppConsent($pdo, $callSid, $speech, $transcript, $callContext);
+        self::captureEmailConsent($pdo, $callSid, $speech, $transcript, $callContext);
 
         if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
             $reply = "Understood. We won't call again. Goodbye.";
@@ -340,7 +342,7 @@ final class VoiceDemoController
             $callSid,
         ]);
         $attemptLogged = CallOutcomeSync::record($pdo, $callSid, $callStatus);
-        $followupQueued = $callStatus === 'completed' && self::queueWhatsAppFollowup($pdo, $callSid);
+        $followupQueued = $callStatus === 'completed' && self::queuePostCallFollowup($pdo, $callSid);
         Response::json([
             'status' => 'ok',
             'attempt_logged' => $attemptLogged,
@@ -408,7 +410,8 @@ final class VoiceDemoController
         $callLogs = $pdo->query(
             "SELECT tc.id, tc.session_id, tc.provider_call_id, tc.direction, tc.from_number, tc.to_number,
                     tc.status, tc.duration_seconds, tc.created_at, tc.updated_at,
-                    ml.business_name AS lead_name, wf.status AS whatsapp_followup_status
+                    ml.business_name AS lead_name, wf.status AS whatsapp_followup_status,
+                    wf.email_status AS email_followup_status
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
              LEFT JOIN whatsapp_call_followups wf ON wf.telephony_call_id = tc.id
@@ -523,8 +526,10 @@ final class VoiceDemoController
                 . "emoji, or spoken URLs. Immediately respect no, not interested, stop, "
                 . "or a request to call later; do not pressure, argue, or continue pitching. Never hide that you are "
                 . "an AI assistant. Do not collect sensitive information, payment details, passwords, IDs, or health "
-                . "information. You cannot book, transfer, or save records. You may offer a WhatsApp summary only "
-                . "after the person shows interest. Ask clearly whether Lisa may send it to the number on this call. "
+                . "information. You cannot book, transfer, or save records. You may offer a WhatsApp or email summary "
+                . "after the person shows interest. Ask clearly which channel they permit. Only offer email when the "
+                . "reviewed lead has an email on file; never ask someone to spell an email address aloud. "
+                . "For WhatsApp, ask whether Lisa may send it to the number on this call. "
                 . "Never say it was sent during the call; after explicit agreement say it will be sent after the call. "
                 . "First understand whether the person has a repetitive customer-service or operational problem; only "
                 . "then connect one relevant capability to it. Mention the booking or contact option only once, when "
@@ -559,7 +564,9 @@ final class VoiceDemoController
                 . "helpful and concise, but never invent prices, availability, client results, or capabilities. "
                 . "This phone integration cannot yet complete bookings or transfer calls, so never claim you "
                 . "booked, saved, transferred, or notified anyone. You may offer a WhatsApp summary after the caller "
-                . "shows interest. Ask clearly whether Lisa may send it to the number on this call. Never say it was "
+                . "shows interest. Ask clearly whether Lisa may send it to the number on this call. Email summaries "
+                . "are only available when a reviewed outbound lead already has a valid email on file. Never ask an "
+                . "inbound caller to spell an email address aloud. Never say a follow-up was "
                 . "sent during the call; after explicit agreement say it will be sent after the call. If a caller wants to proceed, ask "
                 . "them to use the contact or booking option on princecaleb.dev, or send a WhatsApp message. "
                 . "Do not collect payment details, passwords, government IDs, medical information, or other "
@@ -630,6 +637,7 @@ final class VoiceDemoController
         array $transcript,
         array $callContext
     ): void {
+        if (preg_match('/\b(?:do not|don\'t|no|not)\b.{0,25}\bwhatsapp\b/i', $speech)) return;
         $explicit = preg_match(
             '/\b(?:send|message|share)\b.{0,35}\b(?:whatsapp|summary|details)\b|\bwhatsapp\b.{0,35}\b(?:send|message|share)\b/i',
             $speech
@@ -656,28 +664,62 @@ final class VoiceDemoController
         )->execute([$number, $callSid]);
     }
 
-    private static function queueWhatsAppFollowup(\PDO $pdo, string $callSid): bool
+    private static function captureEmailConsent(
+        \PDO $pdo,
+        string $callSid,
+        string $speech,
+        array $transcript,
+        array $callContext
+    ): void {
+        $email = trim((string) ($callContext['contact_email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return;
+        if (preg_match('/\b(?:do not|don\'t|no|not)\b.{0,25}\bemail\b/i', $speech)) return;
+        $explicit = preg_match(
+            '/\b(?:send|message|share|email)\b.{0,35}\b(?:email|summary|details)\b/i',
+            $speech
+        ) === 1;
+        $lastAssistant = '';
+        foreach (array_reverse($transcript) as $turn) {
+            if (($turn['role'] ?? '') === 'assistant') {
+                $lastAssistant = (string) ($turn['text'] ?? '');
+                break;
+            }
+        }
+        $acceptedOffer = stripos($lastAssistant, 'email') !== false
+            && preg_match('/^\s*(?:yes|yeah|sure|okay|ok|please|that(?:\'s| is) fine|go ahead)\b/i', $speech) === 1;
+        if (!$explicit && !$acceptedOffer) return;
+        $pdo->prepare(
+            "UPDATE telephony_calls SET email_followup_consent_at = datetime('now'),
+             email_followup_address = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
+        )->execute([$email, $callSid]);
+    }
+
+    private static function queuePostCallFollowup(\PDO $pdo, string $callSid): bool
     {
-        if (Settings::get('twilio_whatsapp_post_call_enabled') !== '1') return false;
         $stmt = $pdo->prepare(
-            "SELECT tc.id, tc.session_id, tc.whatsapp_followup_number, ml.contact_name
+            "SELECT tc.id, tc.session_id, tc.from_number, tc.to_number, tc.whatsapp_followup_number,
+                    tc.whatsapp_followup_consent_at, tc.email_followup_address,
+                    tc.email_followup_consent_at, ml.contact_name
              FROM telephony_calls tc
              LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
-             WHERE tc.provider_call_id = ? AND tc.whatsapp_followup_consent_at IS NOT NULL
-               AND tc.whatsapp_followup_number IS NOT NULL"
+             WHERE tc.provider_call_id = ?
+               AND (tc.whatsapp_followup_consent_at IS NOT NULL OR tc.email_followup_consent_at IS NOT NULL)"
         );
         $stmt->execute([$callSid]);
         $call = $stmt->fetch();
         if (!$call) return false;
         $pdo->prepare(
             "INSERT OR IGNORE INTO whatsapp_call_followups
-             (telephony_call_id, session_id, recipient_number, contact_name)
-             VALUES (?, ?, ?, ?)"
+             (telephony_call_id, session_id, recipient_number, recipient_email, contact_name, status, email_status)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
         )->execute([
             $call['id'],
             $call['session_id'],
-            $call['whatsapp_followup_number'],
+            $call['whatsapp_followup_number'] ?: ($call['to_number'] ?: $call['from_number']),
+            $call['email_followup_address'],
             trim((string) ($call['contact_name'] ?? '')) ?: null,
+            !empty($call['whatsapp_followup_consent_at']) ? 'queued' : 'not_requested',
+            !empty($call['email_followup_consent_at']) ? 'queued' : 'not_requested',
         ]);
         return true;
     }

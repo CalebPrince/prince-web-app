@@ -1359,6 +1359,8 @@ if (!in_array('direction', $telephonyColumns, true)) $pdo->exec("ALTER TABLE tel
 if (!in_array('consent_confirmed_at', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN consent_confirmed_at TEXT');
 if (!in_array('whatsapp_followup_consent_at', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN whatsapp_followup_consent_at TEXT');
 if (!in_array('whatsapp_followup_number', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN whatsapp_followup_number TEXT');
+if (!in_array('email_followup_consent_at', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN email_followup_consent_at TEXT');
+if (!in_array('email_followup_address', $telephonyColumns, true)) $pdo->exec('ALTER TABLE telephony_calls ADD COLUMN email_followup_address TEXT');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_created ON telephony_calls (created_at)');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_telephony_calls_marketing_lead ON telephony_calls (marketing_lead_id, created_at)');
 $pdo->exec(
@@ -1367,11 +1369,14 @@ $pdo->exec(
         telephony_call_id INTEGER NOT NULL UNIQUE REFERENCES telephony_calls(id) ON DELETE CASCADE,
         session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
         recipient_number TEXT NOT NULL,
+        recipient_email TEXT,
         contact_name TEXT,
         summary TEXT,
         content_sid TEXT,
         provider_message_sid TEXT,
         status TEXT NOT NULL DEFAULT 'queued',
+        email_status TEXT NOT NULL DEFAULT 'not_requested',
+        email_sent_at TEXT,
         error_message TEXT,
         attempts INTEGER NOT NULL DEFAULT 0,
         processed_at TEXT,
@@ -1379,6 +1384,10 @@ $pdo->exec(
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )"
 );
+$whatsappFollowupColumns = array_column($pdo->query('PRAGMA table_info(whatsapp_call_followups)')->fetchAll(), 'name');
+if (!in_array('recipient_email', $whatsappFollowupColumns, true)) $pdo->exec('ALTER TABLE whatsapp_call_followups ADD COLUMN recipient_email TEXT');
+if (!in_array('email_status', $whatsappFollowupColumns, true)) $pdo->exec("ALTER TABLE whatsapp_call_followups ADD COLUMN email_status TEXT NOT NULL DEFAULT 'not_requested'");
+if (!in_array('email_sent_at', $whatsappFollowupColumns, true)) $pdo->exec('ALTER TABLE whatsapp_call_followups ADD COLUMN email_sent_at TEXT');
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_whatsapp_call_followups_status ON whatsapp_call_followups (status, created_at)');
 
 // Automatic Marketing Leads prospect discovery. It shares the existing cold

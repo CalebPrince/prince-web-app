@@ -29,6 +29,7 @@
         <td><a class="voice-phone-number" href="tel:${esc(row.from_number || "")}">${esc(row.from_number || "Unknown")}</a></td>
         <td><a class="voice-phone-number" href="tel:${esc(row.to_number || "")}">${esc(row.to_number || "Unknown")}</a></td>
         <td>${callStatus(row.status)}</td>
+        <td>${row.email_followup_status && row.email_followup_status !== "not_requested" ? callStatus(row.email_followup_status) : '<span class="text-muted-custom small">Not requested</span>'}</td>
         <td>${row.whatsapp_followup_status ? callStatus(row.whatsapp_followup_status) : '<span class="text-muted-custom small">Not requested</span>'}</td>
         <td>${duration(row.duration_seconds)}</td>
         <td>${esc(row.lead_name || (outbound ? "Manual / unlinked" : "Caller"))}</td>
