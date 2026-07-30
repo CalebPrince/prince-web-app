@@ -27,7 +27,6 @@
   // half-themed.
   var isAdminContext = !!document.querySelector('link[href*="/css/admin.css"]');
   var THEMES = isAdminContext ? ALL_THEMES.filter(t => t.id === "light" || t.id === "dark") : ALL_THEMES;
-  var VALID_IDS = THEMES.map(t => t.id);
 
   function applyCanvas(theme) {
     var backgrounds = {
@@ -132,23 +131,10 @@
     if (menu && menu.classList.contains("open") && openBtn) positionMenu(openBtn);
   });
 
-  // No explicit visitor choice yet — let the admin's site-wide default (if
-  // set to something other than "match visitor's system") override the
-  // OS-preference guess the inline head script made.
-  if (!localStorage.getItem("theme")) {
-    api.get("/api/v1/content")
-      .then(content => {
-        // Re-check: the visitor may have already picked a theme while this
-        // request was in flight (more likely on a slow mobile connection,
-        // which widens the window) — don't clobber an explicit choice they
-        // made in the meantime.
-        if (localStorage.getItem("theme")) return;
-        if (VALID_IDS.indexOf(content.default_theme) !== -1) {
-          applyTheme(content.default_theme);
-        }
-      })
-      .catch(() => {});
-  }
+  // The inline head bootstrap has already resolved either the visitor's
+  // saved choice or their OS preference before first paint. Do not replace
+  // that decision with an asynchronous content request: doing so changes
+  // the canvas after navigation and creates a visible light/dark flash.
 
   document.querySelectorAll(".theme-toggle").forEach(btn => {
     btn.innerHTML = ICON_APPEARANCE;
