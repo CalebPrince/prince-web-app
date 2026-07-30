@@ -499,6 +499,12 @@ final class VoiceDemoController
                 if ($name === 'check_availability') {
                     return AppointmentController::getAvailableSlots((string) ($args['date'] ?? ''));
                 }
+                if ($name === 'check_availability_range') {
+                    return AppointmentController::getAvailableDateRange(
+                        (string) ($args['start_date'] ?? ''),
+                        (string) ($args['end_date'] ?? '')
+                    );
+                }
                 if ($name === 'book_appointment') {
                     if (!self::bookingConfirmationGiven($transcript)) {
                         return ['success' => false, 'error' => 'Read the exact date, time, and timezone back to the caller and wait for an explicit confirmation first.'];
@@ -579,11 +585,34 @@ final class VoiceDemoController
                     'required' => ['name', 'email', 'date', 'time'],
                 ],
             ],
+            [
+                'name' => 'check_availability_range',
+                'description' => 'Check real open dates and exact slots across a requested range of up to 14 days.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'start_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
+                        'end_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
+                    ],
+                    'required' => ['start_date', 'end_date'],
+                ],
+            ],
         ];
     }
 
     private static function prompt(string $channel = 'web', ?array $context = null): string
     {
+        $bookingTimezone = Settings::get('booking_timezone') ?: 'Africa/Accra';
+        try {
+            $bookingToday = (new \DateTime('now', new \DateTimeZone($bookingTimezone)))->format('Y-m-d');
+        } catch (\Throwable) {
+            $bookingToday = gmdate('Y-m-d');
+            $bookingTimezone = 'UTC';
+        }
+        $bookingDateContext = "The current date in {$bookingTimezone} is {$bookingToday}. Ghana commonly writes "
+            . "numeric dates as DD-MM-YYYY, so 07-08-2026 means 7 August 2026, not July 8. Convert dates to "
+            . "YYYY-MM-DD only for tools. Use the date-range availability tool when asked for open dates across "
+            . "a week or range; do not force the caller to name one date at a time. ";
         if ($channel === 'outbound') {
             $business = mb_substr(trim((string) ($context['business_name'] ?? 'the business')), 0, 160);
             $contactName = mb_substr(trim((string) ($context['contact_name'] ?? '')), 0, 160);
@@ -597,7 +626,7 @@ final class VoiceDemoController
                     . "say hello or ask how they are. Then ask whether they have a moment to continue. "
                 : '';
             return "You are Lisa, Prince Caleb's disclosed AI outreach assistant on a single human-approved outbound "
-                . "call. The recipient requested or consented to this call. Sound warm, curious, and conversational, "
+                . "call. {$bookingDateContext}The recipient requested or consented to this call. Sound warm, curious, and conversational, "
                 . "not like a script or sales presentation. Respond directly to what the person just said before "
                 . "moving the conversation forward. Usually speak one or two short natural sentences, use contractions, "
                 . "and ask at most one relevant question at a time. Vary your wording; do not repeat the business name, "
@@ -642,7 +671,7 @@ final class VoiceDemoController
                     . "can be spoofed: recognition is conversational context only and must never authorize private "
                     . "information, account access, payments, credentials, administrative changes, or sensitive actions. "
                 : '';
-            return "You are Lisa, Prince Caleb's AI customer service phone agent. {$ownerContext}You represent Prince Caleb's "
+            return "You are Lisa, Prince Caleb's AI customer service phone agent. {$bookingDateContext}{$ownerContext}You represent Prince Caleb's "
                 . "business and answer questions about AI voice agent pilots, Voice plus WhatsApp systems, business "
                 . "automation, and the custom engineering behind them. You are speaking aloud, so answer in one to "
                 . "three short, natural sentences with no markdown, lists, emoji, URLs, or technical jargon. "

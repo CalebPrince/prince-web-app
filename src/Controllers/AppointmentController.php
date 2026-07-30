@@ -127,6 +127,40 @@ class AppointmentController
         return ['enabled' => true, 'slots' => $slots, 'timezone' => $cfg['timezone']];
     }
 
+    /** @return array{enabled:bool,dates:array<int,array{date:string,day:string,slots:array<int,string>}>,timezone?:string,error?:string} */
+    public static function getAvailableDateRange(string $startDate, string $endDate): array
+    {
+        $cfg = self::config();
+        if (!$cfg['enabled']) return ['enabled' => false, 'dates' => []];
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)
+            || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) {
+            return ['enabled' => true, 'dates' => [], 'error' => 'Dates must use YYYY-MM-DD.'];
+        }
+        try {
+            $tz = new \DateTimeZone($cfg['timezone']);
+            $start = new \DateTime($startDate, $tz);
+            $end = new \DateTime($endDate, $tz);
+        } catch (\Throwable) {
+            return ['enabled' => true, 'dates' => [], 'error' => 'Invalid date range.'];
+        }
+        if ($end < $start || (int) $start->diff($end)->format('%a') > 14) {
+            return ['enabled' => true, 'dates' => [], 'error' => 'Choose a date range of 14 days or fewer.'];
+        }
+        $dates = [];
+        for ($cursor = clone $start; $cursor <= $end; $cursor->modify('+1 day')) {
+            $date = $cursor->format('Y-m-d');
+            $availability = self::getAvailableSlots($date);
+            if (!empty($availability['slots'])) {
+                $dates[] = [
+                    'date' => $date,
+                    'day' => $cursor->format('l'),
+                    'slots' => $availability['slots'],
+                ];
+            }
+        }
+        return ['enabled' => true, 'dates' => $dates, 'timezone' => $cfg['timezone']];
+    }
+
     /** POST /api/v1/appointments/book — public, honeypot + rate-limited */
     public static function book(): void
     {

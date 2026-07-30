@@ -370,6 +370,22 @@ class SharedAgentTools
         ];
     }
 
+    public static function checkAvailabilityRangeToolDeclaration(): array
+    {
+        return [
+            'name' => 'check_availability_range',
+            'description' => 'Check real available dates and exact call slots across a requested date range of up to 14 days.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'start_date' => ['type' => 'STRING', 'description' => 'First date in YYYY-MM-DD format.'],
+                    'end_date' => ['type' => 'STRING', 'description' => 'Last date in YYYY-MM-DD format.'],
+                ],
+                'required' => ['start_date', 'end_date'],
+            ],
+        ];
+    }
+
     /**
      * Blocks anything that isn't a plain public http(s) host — no
      * loopback/private/reserved targets (SSRF protection). A domain that

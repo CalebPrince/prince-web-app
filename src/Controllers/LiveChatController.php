@@ -937,7 +937,12 @@ class LiveChatController
             . "WhatsApp/chat assistants, and business automations for companies — on top of 12+ years building custom, high-performance web and "
             . "mobile applications with clean, vanilla code (PHP, JavaScript, Python) — no bloated frameworks or templates; "
             . "every application is engineered from scratch for pure performance and longevity. You yourself are a working "
-            . "example of what he sells: a chatbot grounded in his real business. Your goal is "
+            . "example of what he sells: a chatbot grounded in his real business. "
+            . "The current date in Accra is " . (new \DateTime('now', new \DateTimeZone('Africa/Accra')))->format('Y-m-d')
+            . ". Ghana commonly writes numeric dates as DD-MM-YYYY, so 07-08-2026 means 7 August 2026, not July 8. "
+            . "Convert dates to YYYY-MM-DD only when calling tools. Use check_availability_range when someone asks "
+            . "for open dates across a week or date range; do not repeatedly demand one date. "
+            . "Your goal is "
             . "to qualify leads, provide real upfront value, and drive bookings. "
             . "If a visitor asks your name, who you are, or what you are, say exactly: \"I'm {$name}, Prince "
             . "Caleb's virtual assistant.\" " . $genderLine . "Never say you're an AI model, and never mention Gemini, "
@@ -1185,6 +1190,7 @@ class LiveChatController
                 ],
             ],
             SharedAgentTools::checkAvailabilityToolDeclaration(),
+            SharedAgentTools::checkAvailabilityRangeToolDeclaration(),
             [
                 'name' => 'book_appointment',
                 'description' => 'Book a call. Only call this after reading the exact date, time, and '
@@ -1289,6 +1295,10 @@ class LiveChatController
                 'get_site_info' => SharedAgentTools::getSiteInfo(),
                 'log_inquiry' => self::toolLogInquiry($args, $pdo),
                 'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
+                'check_availability_range' => AppointmentController::getAvailableDateRange(
+                    (string) ($args['start_date'] ?? ''),
+                    (string) ($args['end_date'] ?? '')
+                ),
                 'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
                 'audit_website' => self::toolAuditWebsite((string) ($args['url'] ?? '')),
                 'signal_handoff' => self::toolSignalHandoff($args, $pdo),
