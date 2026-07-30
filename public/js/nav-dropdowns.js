@@ -37,12 +37,12 @@
   ensureSystemsLabel(desktopLinks);
   ensureSystemsLabel(document.querySelector("#nav-drawer .offcanvas-body"));
 
-  // The opening sequence already hands directly into Home, so Home does not
-  // add a second loading sequence. Every other standard public page gets the
-  // shared Builder OS transition from this single navigation controller.
-  if (location.pathname !== "/home.html" && !window.__cinematicNavReady) {
+  // Loading the controller does not display a sequence by itself; it only
+  // prepares the next navigation. Keep it active on Home as well so returning
+  // there does not disable cinematic transitions for the visitor's next click.
+  if (!window.__cinematicNavReady) {
     var transitionScript = document.createElement("script");
-    transitionScript.src = "/js/cinematic-nav.js?v=20260730-all-menus";
+    transitionScript.src = "/js/cinematic-nav.js?v=20260730-home-return";
     document.head.appendChild(transitionScript);
   }
 
