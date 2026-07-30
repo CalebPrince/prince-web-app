@@ -48,6 +48,7 @@
       <a href="/home.html" class="nav-link">Home</a>
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
+      <a href="/builder-os.html" class="nav-link">Builder OS</a>
       <a href="/projects.html" class="nav-link active">Projects</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
@@ -65,6 +66,7 @@
     <a href="/home.html" class="nav-link">Home</a>
     <a href="/about.html" class="nav-link">About</a>
     <a href="/services.html" class="nav-link">Services</a>
+    <a href="/builder-os.html" class="nav-link">Builder OS</a>
     <a href="/projects.html" class="nav-link">Projects</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
@@ -74,10 +76,10 @@
 
 <header class="hero agency-hero" id="main-content">
   <div class="container">
-    <p class="eyebrow mb-3 hero-animate hero-animate-1">// Production Logs</p>
-    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Deployment registry.</h1>
+    <p class="eyebrow mb-3 hero-animate hero-animate-1">// Builder OS · System Registry</p>
+    <h1 class="display-1 mb-3 hero-animate hero-animate-2">Systems, not screenshots.</h1>
     <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width: 60ch;">
-      A scannable index of shipped systems, core architecture choices, technology keywords, and measurable delivery signals.
+      Inspect what each deployment solves, how it operates, which channels it connects, and the engineering behind it.
     </p>
     <div id="tag-filters" class="d-flex flex-wrap gap-2 hero-animate hero-animate-4">
       <button class="filter-pill active" data-tag="">All</button>
@@ -239,17 +241,19 @@ function renderGrid(projects) {
 
   empty.classList.add('d-none');
   grid.innerHTML = projects.map((p, i) => `
-    <article class="production-log-entry reveal reveal-on-scroll reveal-delay-${(i % 4) + 1}">
+    <article class="production-log-entry system-registry-entry reveal reveal-on-scroll reveal-delay-${(i % 4) + 1}">
       <div>
-        <span class="production-id">LOG ${String(i + 1).padStart(2, '0')}</span>
-        <div class="production-status mt-2">${p.is_featured ? 'Featured deployment' : esc(p.category || 'Live system')}</div>
+        <span class="production-id">SYS ${String(i + 1).padStart(2, '0')}</span>
+        <div class="production-status mt-2"><i></i> STATUS: LIVE</div>
       </div>
       <div>
+        <span class="system-registry-type">${esc(p.category || 'Deployed system')}</span>
         <h2 class="h3 production-title"><a href="/project.html?slug=${esc(p.slug)}">${esc(p.title)}</a></h2>
         <p class="production-summary">${esc(p.summary)}</p>
+        <div class="system-registry-signals"><span><small>CHANNELS</small>${techFor(p).slice(0, 2).map(esc).join(' / ')}</span><span><small>MODE</small>${p.is_embeddable ? 'INTERACTIVE / LIVE' : 'DEPLOYED / MONITORED'}</span></div>
         <div class="production-tech">${techFor(p).map(name => `<span class="mono-badge">${esc(name)}</span>`).join('')}</div>
         <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
-          <a href="/project.html?slug=${esc(p.slug)}" class="production-link mt-0">Inspect architecture summary</a>
+          <a href="/project.html?slug=${esc(p.slug)}" class="production-link mt-0">View System →</a>
           ${p.is_embeddable && p.live_url ? `<button type="button" class="btn-brand-outline btn-sm live-demo-card-btn" data-url="${attr(p.live_url)}" data-title="${attr(p.title)}">Live Demo</button>` : ''}
         </div>
       </div>

@@ -101,6 +101,7 @@ $router->get('/api/v1/projects/{slug}', [ProjectController::class, 'show']);
 $router->get('/api/v1/tags', [TagController::class, 'index']);
 $router->get('/api/v1/content', [SettingsController::class, 'publicContent']);
 $router->get('/api/v1/health', [DashboardController::class, 'health']);
+$router->get('/api/v1/builder-os/team', [TeamController::class, 'publicSystemStatus']);
 $router->get('/api/v1/exchange-rate', [DashboardController::class, 'publicExchangeRate']);
 $router->get('/api/v1/blog', [BlogController::class, 'index']);
 $router->get('/api/v1/blog/{slug}', [BlogController::class, 'show']);

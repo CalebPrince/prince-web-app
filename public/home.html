@@ -136,6 +136,7 @@
       <a href="/home.html" class="nav-link active">Home</a>
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
+      <a href="/builder-os.html" class="nav-link">Builder OS</a>
       <a href="/projects.html" class="nav-link">Projects</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
@@ -153,6 +154,7 @@
     <a href="/home.html" class="nav-link">Home</a>
     <a href="/about.html" class="nav-link">About</a>
     <a href="/services.html" class="nav-link">Services</a>
+    <a href="/builder-os.html" class="nav-link">Builder OS</a>
     <a href="/projects.html" class="nav-link">Projects</a>
     <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
@@ -239,6 +241,35 @@
     </div>
   </div>
 </header>
+
+<section class="home-os-conversion" aria-labelledby="home-os-title">
+  <div class="container">
+    <div class="home-os-status">
+      <div class="home-os-status-head"><div><span>BUILDER OS</span><strong id="home-os-title"><i></i> Online</strong></div><a href="/builder-os.html">Inspect full system →</a></div>
+      <div class="home-os-agent-rail" id="home-os-agent-rail" aria-live="polite"><span>Connecting to the configured team…</span></div>
+    </div>
+
+    <div class="home-decision">
+      <header><p class="eyebrow">// Choose your starting point</p><h2>What should the system improve first?</h2></header>
+      <div class="home-decision-grid">
+        <button type="button" data-path="agent"><span>01</span><strong>I need an AI agent</strong><small>Handle calls, WhatsApp, support, and bookings.</small></button>
+        <button type="button" data-path="automation"><span>02</span><strong>I need automation</strong><small>Connect repetitive work across the tools you already use.</small></button>
+        <button type="button" data-path="platform"><span>03</span><strong>I need a custom platform</strong><small>Build the website, application, dashboard, or portal around the workflow.</small></button>
+      </div>
+      <div class="home-decision-detail" id="home-decision-detail" aria-live="polite"></div>
+    </div>
+
+    <div class="system-recommender" id="system-recommender">
+      <div class="system-recommender-copy"><p class="eyebrow">// Try Builder OS</p><h2>Describe the work that keeps slipping.</h2><p>Enter one real situation. The system will map the smallest useful combination of agents, automation, and software.</p></div>
+      <form id="system-recommender-form">
+        <label for="system-recommender-input">Your business situation</label>
+        <textarea id="system-recommender-input" maxlength="600" required placeholder="I run a dental clinic and miss calls after 5pm."></textarea>
+        <button class="btn-brand" type="submit">Recommend a system</button>
+      </form>
+      <article class="system-recommendation d-none" id="system-recommendation" aria-live="polite"></article>
+    </div>
+  </div>
+</section>
 
 <div class="agency-marquee" aria-hidden="true">
   <div class="agency-marquee-track">
@@ -851,7 +882,7 @@
 <script src="/js/currency-switcher.js?v=20260728"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/hero-3d.js" defer></script>
-<script src="/js/home.js"></script>
+<script src="/js/home.js?v=20260730-builder-os"></script>
 <script src="/js/elevenlabs-tts.js?v=20260728-consistent"></script>
 <script src="/js/voice-demo.js?v=20260728-elevenlabs-consistent"></script>
 <script src="/js/ai-boot.js?v=20260728-elevenlabs-consistent"></script>

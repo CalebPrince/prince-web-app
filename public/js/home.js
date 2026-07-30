@@ -279,4 +279,59 @@
         </div>`).join("");
     })();
   }
+
+  // --- Builder OS conversion layer ----------------------------------------
+  const agentRail = document.getElementById("home-os-agent-rail");
+  let builderAgents = [];
+  if (agentRail) {
+    api.get("/api/v1/builder-os/team").then(data => {
+      builderAgents = data.agents || [];
+      agentRail.innerHTML = builderAgents.slice(0, 4).map(agent => `
+        <div><i data-state="${escText(agent.status)}"></i><span>${escText(agent.name)}</span><small>${escText(agent.role)} · ${escText(agent.status)}</small></div>
+      `).join("");
+    }).catch(() => {
+      agentRail.innerHTML = "<span>Live registry reconnecting. Lisa remains available through voice, WhatsApp, and web chat.</span>";
+    });
+  }
+
+  const decisionDetail = document.getElementById("home-decision-detail");
+  const decisionData = {
+    agent: { title: "Deploy a customer-facing specialist", outcome: "Answer enquiries, qualify intent, book appointments, follow up, and escalate with context.", example: "Lisa · Voice + WhatsApp + bookings", range: "From GHS 3,500", action: "Explore AI agent systems" },
+    automation: { title: "Remove the handoffs people forget", outcome: "Move information between inboxes, calendars, CRM, Slack, email, and operational records.", example: "Trigger → decision → action → owner alert", range: "From GHS 2,500", action: "Map an automation" },
+    platform: { title: "Build the operating surface", outcome: "Give customers or staff a purpose-built website, portal, dashboard, or mobile application.", example: "Custom interface + workflows + integrations", range: "From GHS 6,000", action: "Scope a platform" },
+  };
+  document.querySelectorAll(".home-decision-grid button").forEach(button => button.addEventListener("click", () => {
+    const item = decisionData[button.dataset.path];
+    document.querySelectorAll(".home-decision-grid button").forEach(node => node.classList.toggle("active", node === button));
+    decisionDetail.innerHTML = `<div><span>OUTCOME</span><strong>${item.title}</strong><p>${item.outcome}</p></div><div><span>EXAMPLE SYSTEM</span><strong>${item.example}</strong><small>${item.range}</small></div><a href="/contact.html?system=${encodeURIComponent(button.dataset.path)}">${item.action} →</a>`;
+    decisionDetail.classList.add("show");
+  }));
+
+  const recommenderForm = document.getElementById("system-recommender-form");
+  if (recommenderForm) {
+    recommenderForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const input = document.getElementById("system-recommender-input").value.trim();
+      const lower = input.toLowerCase();
+      const lisa = builderAgents.find(agent => agent.key === "lisa")?.name || "Lisa";
+      const arch = builderAgents.find(agent => agent.key === "arch")?.name || "Arch";
+      const isCall = /call|phone|miss|booking|appointment|whatsapp|customer|support|clinic|restaurant/.test(lower);
+      const isPlatform = /website|app|portal|dashboard|platform|store|ecommerce/.test(lower);
+      const lead = isCall ? lisa : isPlatform ? arch : "Builder OS";
+      const title = isCall ? `${lisa} Customer Response System` : isPlatform ? `${arch} Custom Platform System` : "Connected Workflow System";
+      const actions = isCall
+        ? ["Answers and qualifies incoming requests", "Books or captures the next action", "Sends confirmations and structured follow-up", "Escalates sensitive cases to a person"]
+        : isPlatform
+          ? ["Creates a purpose-built customer or staff interface", "Connects forms, records, payments, and notifications", "Keeps operational progress visible", "Routes exceptions to the right person"]
+          : ["Captures the trigger and required context", "Moves work between connected tools", "Records each completed action", "Alerts the owner when judgment is required"];
+      const output = document.getElementById("system-recommendation");
+      output.innerHTML = `<header><span>RECOMMENDED SYSTEM</span><strong>${escText(title)}</strong><small>Lead specialist: ${escText(lead)}</small></header><p>${escText(input)}</p><ul>${actions.map(action => `<li>${escText(action)}</li>`).join("")}</ul><div><span><small>ESTIMATED IMPLEMENTATION</small><strong>${isPlatform ? "4–8 weeks" : "2–3 weeks"}</strong></span><a href="/builder-os.html">See the workflow</a><a href="#" onclick="document.getElementById('ai-widget-toggle')?.click();return false;">Talk to ${escText(lisa)}</a><a class="btn-brand" href="/contact.html?brief=${encodeURIComponent(input)}">Request this system</a></div>`;
+      output.classList.remove("d-none");
+      output.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+    });
+  }
+
+  function escText(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+  }
 })();

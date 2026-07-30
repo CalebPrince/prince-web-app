@@ -24,6 +24,32 @@ use App\Support\Settings;
  */
 class TeamController
 {
+    /** Public, non-sensitive roster used by the Builder OS experience. */
+    public static function publicSystemStatus(): void
+    {
+        $pdo = Database::get();
+        $nurturerActive = (int) $pdo->query(
+            "SELECT COUNT(*) FROM automations WHERE nurturer_enabled = 1 AND is_active = 1"
+        )->fetchColumn() > 0;
+        $chiefActive = Chief::briefsWritten($pdo) > 0;
+        $agents = [
+            ['key' => 'lisa', 'name' => Settings::get('chat_assistant_name') ?: 'Lisa', 'role' => 'Voice, WhatsApp & customer service', 'status' => 'available', 'capabilities' => ['Voice calls', 'WhatsApp', 'Bookings']],
+            ['key' => 'beacon', 'name' => Settings::get('beacon_assistant_name') ?: 'Joan', 'role' => 'Lead discovery', 'status' => (string) Settings::get('beacon_discovery_enabled') === '1' ? 'active' : 'standby', 'capabilities' => ['Prospecting', 'Opportunity detection', 'Lead sourcing']],
+            ['key' => 'dossier', 'name' => Settings::get('dossier_assistant_name') ?: 'Sharon', 'role' => 'Research intelligence', 'status' => 'on demand', 'capabilities' => ['Research', 'Intelligence', 'Lead briefs']],
+            ['key' => 'nurturer', 'name' => Settings::get('nurturer_assistant_name') ?: 'Jason', 'role' => 'Email follow-up', 'status' => $nurturerActive ? 'active' : 'standby', 'capabilities' => ['Email sequences', 'Reply tracking', 'Follow-up']],
+            ['key' => 'proposal', 'name' => Settings::get('proposal_assistant_name') ?: 'Ledger', 'role' => 'Proposals & commercial workflows', 'status' => 'on demand', 'capabilities' => ['Proposals', 'Scope', 'Payment milestones']],
+            ['key' => 'arch', 'name' => Settings::get('arch_assistant_name') ?: 'Arch', 'role' => 'AI website builder', 'status' => 'building', 'capabilities' => ['Websites', 'CMS', 'Deployments']],
+            ['key' => 'ada', 'name' => Settings::get('ada_assistant_name') ?: 'Ada', 'role' => 'Document review', 'status' => 'on demand', 'capabilities' => ['Invoices', 'Statements', 'Document checks']],
+            ['key' => 'chief', 'name' => Settings::get('chief_assistant_name') ?: 'Chief', 'role' => 'Private operations intelligence', 'status' => $chiefActive ? 'active' : 'standby', 'capabilities' => ['Reporting', 'Monitoring', 'Owner alerts']],
+        ];
+
+        Response::json([
+            'system' => 'Builder OS',
+            'status' => 'online',
+            'agents' => $agents,
+        ]);
+    }
+
     /** GET /api/v1/admin/team */
     public static function index(): void
     {
