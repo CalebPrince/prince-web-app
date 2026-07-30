@@ -12,13 +12,13 @@
     configuredAgents = agents;
     document.getElementById("os-agent-count").textContent = `${agents.length} configured specialists connected`;
     grid.innerHTML = agents.map((agent, index) => `
-      <article class="os-agent-node" data-agent="${esc(agent.key)}" style="--node-index:${index}">
+      <a class="os-agent-node" href="/agent.html?agent=${encodeURIComponent(agent.key)}" data-agent="${esc(agent.key)}" style="--node-index:${index}" aria-label="Inspect ${esc(agent.name)}">
         <header><span>${esc(agent.key).toUpperCase()}</span><i data-state="${esc(agent.status)}"></i></header>
         <h3>${esc(agent.name)}</h3>
         <p>${esc(agent.role)}</p>
         <div>${(agent.capabilities || []).map(item => `<small>${esc(item)}</small>`).join("")}</div>
-        <footer>STATUS: ${esc(agent.status).toUpperCase()}</footer>
-      </article>`).join("");
+        <footer><span>STATUS: ${esc(agent.status).toUpperCase()}</span><b>INSPECT →</b></footer>
+      </a>`).join("");
     observeTopology();
   }
 

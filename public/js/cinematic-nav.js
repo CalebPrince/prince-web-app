@@ -13,6 +13,7 @@
     "/builder-os.html": "Loading Builder OS topology…",
     "/projects.html": "Opening system registry…",
     "/project.html": "Inspecting deployed system…",
+    "/agent.html": "Opening agent dossier…",
     "/services.html": "Loading capabilities…",
     "/contact.html": "Opening workflow request…",
   };

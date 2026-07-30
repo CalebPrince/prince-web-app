@@ -771,8 +771,9 @@ final class VoiceDemoController
             $lastUser
         ) === 1;
         $readBack = preg_match('/\b(?:confirm|book)\b/i', $previousAssistant) === 1
-            && stripos($previousAssistant, 'email') !== false
-            && preg_match('/\b(?:am|pm|GMT|Africa\/Accra|\d{1,2}:\d{2})\b/i', $previousAssistant) === 1;
+            && preg_match('/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/i', $previousAssistant) === 1
+            && preg_match('/\b(?:Africa\/Accra|GMT|UTC|time(?:zone)?)\b/i', $previousAssistant) === 1
+            && preg_match('/\b(?:20\d{2}|\d{4}-\d{2}-\d{2})\b/', $previousAssistant) === 1;
         return $explicitYes && $readBack;
     }
 
@@ -796,7 +797,8 @@ final class VoiceDemoController
             array_filter($transcript, 'is_array')
         ));
         $hasEmail = filter_var(trim((string) ($context['contact_email'] ?? '')), FILTER_VALIDATE_EMAIL)
-            || preg_match('/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i', $userText) === 1;
+            || preg_match('/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i', $userText) === 1
+            || self::confirmedEmailInTranscript($transcript);
         $hasName = trim((string) ($context['contact_name'] ?? '')) !== ''
             || preg_match('/\b(?:my name is|this is|I am|I\'m)\s+([a-z][a-z .\'-]{1,80})/i', $userText) === 1;
         if ($hasName && $hasEmail) return null;
@@ -811,6 +813,40 @@ final class VoiceDemoController
             return 'Before I check and confirm the booking, may I have your full name?';
         }
         return 'Before I check and confirm the booking, may I have your email address? Please spell it slowly so I can repeat it back accurately.';
+    }
+
+    /**
+     * Spoken email addresses often arrive across several transcription turns.
+     * Accept the normalized address only when Lisa read a syntactically valid
+     * address back and the caller explicitly confirmed that immediately after.
+     */
+    private static function confirmedEmailInTranscript(array $transcript): bool
+    {
+        $pendingEmail = false;
+        foreach ($transcript as $turn) {
+            if (!is_array($turn)) continue;
+            $role = (string) ($turn['role'] ?? '');
+            $text = trim((string) ($turn['text'] ?? ''));
+
+            if ($role === 'assistant') {
+                $pendingEmail = preg_match(
+                    '/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i',
+                    $text
+                ) === 1;
+                continue;
+            }
+
+            if ($role === 'user' && $pendingEmail) {
+                if (preg_match(
+                    '/^\s*(?:yes|yes please|correct|confirmed|that(?:\'s| is) right|that(?:\'s| is) correct|right)\b/i',
+                    $text
+                ) === 1) {
+                    return true;
+                }
+                $pendingEmail = false;
+            }
+        }
+        return false;
     }
 
     private static function callPartyNumber(array $context): string
