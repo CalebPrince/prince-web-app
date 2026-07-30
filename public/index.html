@@ -469,7 +469,7 @@
       transform: translateX(120%);
     }
 
-    .enter-button span {
+    .enter-button > span {
       position: relative;
       z-index: 1;
     }
@@ -483,6 +483,34 @@
 
     @keyframes readyPulse {
       50% { transform: translateY(-1px) scale(1.02); box-shadow: 0 0 48px rgba(0,255,106,.26); }
+    }
+
+
+    .button-cursor {
+      display: inline-block;
+      width: .52em;
+      height: 1em;
+      margin-left: .38rem;
+      border-radius: 1px;
+      background: currentColor;
+      box-shadow: 0 0 10px rgba(0, 255, 106, .65);
+      vertical-align: -0.12em;
+      animation: buttonCursorBlink .78s steps(1, end) infinite;
+      flex: 0 0 auto;
+    }
+
+    @keyframes buttonCursorBlink {
+      0%, 48% { opacity: 1; }
+      49%, 100% { opacity: 0; }
+    }
+
+    .enter-button #enterLabel {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
     }
 
     .skip-button {
@@ -519,6 +547,33 @@
       0% { opacity: 0; }
       22% { opacity: .42; }
       100% { opacity: 0; }
+    }
+
+
+    #transitionOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      background: #010201;
+      opacity: 0;
+      transition: opacity .7s cubic-bezier(.22,.8,.24,1);
+    }
+
+    #transitionOverlay.show {
+      opacity: 1;
+    }
+
+    .terminal.exit {
+      animation: terminalExit .62s cubic-bezier(.22,.8,.24,1) forwards;
+    }
+
+    @keyframes terminalExit {
+      to {
+        opacity: 0;
+        transform: translateY(10px) scale(.94);
+        filter: blur(4px);
+      }
     }
 
     @media (max-width: 700px) {
@@ -573,6 +628,8 @@
 
 <body>
   <main class="experience" aria-label="Prince Caleb terminal intro">
+<div style="position:absolute;inset:0;display:grid;place-items:center;font:900 12vw Inter,Arial,sans-serif;
+opacity:.02;letter-spacing:.2em;color:#fff;pointer-events:none;user-select:none;">BUILDER&nbsp;OS</div>
     <div class="aurora"></div>
     <div class="grid"></div>
     <div class="sweep"></div>
@@ -580,6 +637,7 @@
     <div class="noise"></div>
     <div class="vignette"></div>
     <div class="flash" id="flash"></div>
+    <div id="transitionOverlay" aria-hidden="true"></div>
 
     <div class="hud" aria-hidden="true">
       <div class="hud-top">
@@ -611,15 +669,14 @@
             <div class="reveal" id="reveal">
               <p class="kicker">System ready</p>
               <h1 class="brand" data-text="PRINCE CALEB">Prince Caleb</h1>
-              <p class="tagline">The operating system behind everything I build.</p>
+              <p class="tagline">Builder. Engineer. AI Architect.<br>The operating system behind everything I build.</p>
             </div>
           </div>
         </div>
 
         <div class="actions" style="margin-top:1rem;">
           <a class="enter-button" id="enterButton" href="/home.html" aria-label="Enter PrinceCaleb.dev">
-            <span id="enterLabel">Enter the system</span>
-            <span aria-hidden="true">→</span>
+            <span id="enterLabel">&gt; ENTER THE SYSTEM<span class="button-cursor" aria-hidden="true"></span></span>
           </a>
           <button class="skip-button" id="skipButton" type="button">Skip initialization</button>
         </div>
@@ -631,6 +688,8 @@
     "use strict";
 
     const lines = [
+      { type: "muted", text: "Visitor detected...", delay: 120 },
+      { type: "muted", text: "Preparing workspace...", delay: 180 },
       { type: "command", prompt: "prince@builder-os:~$", text: "initialize builder_os", delay: 300, speed: 22 },
       { type: "output", text: "Memory check....................OK", delay: 220 },
       { type: "output", text: "AI Core.........................OK", delay: 200 },
@@ -639,7 +698,11 @@
       { type: "status", text: "LEDGER......................ONLINE", delay: 190 },
       { type: "status", text: "RADAR.......................ACTIVE", delay: 220 },
       { type: "muted", text: "One connected system.", delay: 260 },
-      { type: "output", text: "ACCESS GRANTED", delay: 300 }
+      { type: "output", text: "ACCESS GRANTED", delay: 260 },
+      { type: "muted", text: "Heartbeat.......................18ms", delay: 180 },
+      { type: "muted", text: "Voice Engine....................Connected", delay: 180 },
+      { type: "muted", text: "Agent Network...................Synchronized", delay: 180 },
+      { type: "muted", text: "Ready.", delay: 220 }
     ];
     const output = document.getElementById("terminalOutput");
     const reveal = document.getElementById("reveal");
@@ -728,7 +791,40 @@
       showReveal();
     }
 
+
     skipButton.addEventListener("click", skipSequence);
+
+    enterButton.addEventListener("click", async event => {
+      event.preventDefault();
+
+      const destination = enterButton.getAttribute("href") || "/home.html";
+      enterButton.style.pointerEvents = "none";
+      enterButton.classList.remove("ready");
+
+      const label = document.getElementById("enterLabel");
+      label.textContent = "AUTHENTICATING...";
+
+      const authLines = [
+        "Identity verified.",
+        "Initializing workspace...",
+        "Synchronizing AI services...",
+        "Access granted."
+      ];
+
+      for (const text of authLines) {
+        await wait(220);
+        const line = makeLine(text === "Access granted." ? "success" : "muted");
+        line.textContent = text;
+      }
+
+      await wait(260);
+      document.querySelector(".terminal")?.classList.add("exit");
+      document.getElementById("transitionOverlay")?.classList.add("show");
+
+      await wait(720);
+      window.location.href = destination;
+    });
+
 
     window.addEventListener("load", () => {
       runSequence().catch(() => {
