@@ -7,6 +7,21 @@
   <meta name="description" content="PrinceCaleb.dev cinematic terminal intro." />
   <title>Prince Caleb — System Online</title>
 
+  <script>
+    (() => {
+      const introKey = "princecaleb_intro_seen_this_tab";
+      try {
+        if (sessionStorage.getItem(introKey) === "1") {
+          window.location.replace("/home.html");
+          return;
+        }
+        sessionStorage.setItem(introKey, "1");
+      } catch (_) {
+        // If storage is unavailable, keep the intro usable instead of blocking the site.
+      }
+    })();
+  </script>
+
   <style>
     :root {
       --bg: #020403;
