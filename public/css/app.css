@@ -19,11 +19,11 @@
   --nav-bg: rgba(251, 251, 250, 0.85);
   --line: rgba(10, 11, 13, 0.09);
   --line-strong: rgba(10, 11, 13, 0.28);
-  /* Monochrome accent: interactive states use ink, not a hue — the only
-     color on the page comes from project imagery and status semantics */
-  --accent: #17181c;
-  --accent-strong: #000000;
-  --accent-soft: rgba(10, 11, 13, 0.06);
+  /* Builder OS signal green: used for navigation, interaction, and small
+     system details while long-form reading text stays neutral. */
+  --accent: #08783c;
+  --accent-strong: #055d2f;
+  --accent-soft: rgba(8, 120, 60, 0.09);
   --navy: #0b0c0e;
   --navy-soft: #121418;
   --radius: 12px;
@@ -48,9 +48,9 @@
   --nav-bg: rgba(11, 12, 14, 0.8);
   --line: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.26);
-  --accent: #e8eaed;
-  --accent-strong: #ffffff;
-  --accent-soft: rgba(255, 255, 255, 0.08);
+  --accent: #62ff98;
+  --accent-strong: #8dffb4;
+  --accent-soft: rgba(98, 255, 152, 0.1);
   --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
   /* Bootstrap utilities otherwise retain light-theme charcoal values and
@@ -78,9 +78,9 @@
   --nav-bg: rgba(6, 10, 20, 0.82);
   --line: rgba(150, 180, 255, 0.12);
   --line-strong: rgba(150, 180, 255, 0.3);
-  --accent: #eef3ff;
-  --accent-strong: #ffffff;
-  --accent-soft: rgba(150, 180, 255, 0.1);
+  --accent: #62ff98;
+  --accent-strong: #8dffb4;
+  --accent-soft: rgba(98, 255, 152, 0.1);
   --shadow: 0 2px 16px rgba(0, 0, 10, 0.5);
   --shadow-lg: 0 16px 40px rgba(0, 0, 10, 0.6);
   --bs-body-color: var(--ink-soft);
@@ -106,9 +106,9 @@
   --nav-bg: rgba(245, 239, 224, 0.85);
   --line: rgba(43, 38, 32, 0.12);
   --line-strong: rgba(43, 38, 32, 0.3);
-  --accent: #1a1611;
-  --accent-strong: #000000;
-  --accent-soft: rgba(43, 38, 32, 0.07);
+  --accent: #116b3b;
+  --accent-strong: #0a512c;
+  --accent-soft: rgba(17, 107, 59, 0.09);
   --shadow: 0 2px 16px rgba(60, 50, 30, 0.08);
   --shadow-lg: 0 16px 40px rgba(60, 50, 30, 0.14);
 }
@@ -4517,7 +4517,7 @@ body.site-search-open { overflow: hidden; }
 }
 /* Builder OS conversion layer */
 .builder-os-page { background:#07100b; color:#e9fff0; }
-.builder-os-page .site-nav { --accent:#e8eaed; --ink-soft:#d7dbe0; background:rgba(7,16,11,.88); border-color:rgba(94,255,145,.13); }
+.builder-os-page .site-nav { --ink-soft:#d7dbe0; background:rgba(7,16,11,.88); border-color:rgba(94,255,145,.13); }
 .os-map-hero { padding:8rem 0 5rem; overflow:hidden; background:radial-gradient(circle at 74% 34%,rgba(36,255,113,.1),transparent 30%),linear-gradient(#07100b,#09150e); border-bottom:1px solid rgba(98,255,152,.14); }
 .os-command { margin-bottom:3rem; color:#62ff98; font:600 .75rem/1.4 "Fira Code",ui-monospace,monospace; letter-spacing:.06em; }
 .os-hero-grid { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(240px,.5fr); gap:5rem; align-items:end; }
