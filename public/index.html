@@ -1,808 +1,2004 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="/js/error-log.js"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0b0c0e">
-<link rel="icon" type="image/png" href="/icons/icon-32.png">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);})();</script>
-<title>Prince Caleb — AI Voice Agents, Chatbots &amp; Automation</title>
-<meta name="description" content="Prince Caleb builds AI voice agents that answer business calls, chatbots, and workflow automations — engineered on 12+ years of custom web &amp; mobile development.">
-<meta name="keywords" content="AI voice agents, AI chatbots, business automation, AI agents, custom software developer Ghana, web developer Accra, mobile app developer Ghana">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://princecaleb.dev/">
-<link rel="alternate" type="application/rss+xml" title="Prince Caleb — Technical Archive" href="https://princecaleb.dev/feed.xml">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Prince Caleb">
-<meta property="og:title" content="Prince Caleb — AI Voice Agents, Chatbots &amp; Automation">
-<meta property="og:description" content="AI voice agents that answer business calls, chatbots, and workflow automations — engineered on 12+ years of custom web &amp; mobile development.">
-<meta property="og:url" content="https://princecaleb.dev/">
-<meta property="og:image" content="https://princecaleb.dev/uploads/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Prince Caleb — AI Voice Agents, Chatbots &amp; Automation">
-<meta name="twitter:description" content="AI voice agents that answer business calls, chatbots, and workflow automations — engineered on 12+ years of custom web &amp; mobile development.">
-<meta name="twitter:image" content="https://princecaleb.dev/uploads/og-image.png">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ProfessionalService",
-  "name": "Prince Caleb",
-  "url": "https://princecaleb.dev/",
-  "image": "https://princecaleb.dev/uploads/og-image.png",
-  "description": "AI voice agents that answer business calls, chatbots, and workflow automations — engineered on 12+ years of custom web & mobile development.",
-  "areaServed": "Accra, Ghana",
-  "sameAs": []
-}
-</script>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="/css/app.css" rel="stylesheet">
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="PrinceCaleb.dev — an interactive cinematic introduction to an AI-powered development ecosystem."
+    >
+
+    <title>Prince Caleb — System Online</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --background: #030504;
+            --background-soft: #07100a;
+            --green: #00ff66;
+            --green-soft: #8affb2;
+            --cyan: #00f7ff;
+            --purple: #b300ff;
+            --red: #ff3158;
+            --white: #f5fff8;
+            --muted: rgba(214, 255, 226, 0.55);
+            --border: rgba(0, 255, 102, 0.22);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background:
+                radial-gradient(
+                    circle at 50% 35%,
+                    rgba(0, 255, 102, 0.08),
+                    transparent 32%
+                ),
+                linear-gradient(
+                    180deg,
+                    #020302 0%,
+                    var(--background) 55%,
+                    #010201 100%
+                );
+        }
+
+        body {
+            color: var(--green);
+            font-family: "Fira Code", monospace;
+        }
+
+        button,
+        a {
+            font: inherit;
+        }
+
+        button:focus-visible,
+        a:focus-visible {
+            outline: 2px solid var(--green);
+            outline-offset: 4px;
+        }
+
+        .trailer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            isolation: isolate;
+            overflow: hidden;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            inset: -30%;
+            z-index: -8;
+            background:
+                radial-gradient(
+                    circle at 20% 30%,
+                    rgba(0, 247, 255, 0.08),
+                    transparent 24%
+                ),
+                radial-gradient(
+                    circle at 80% 60%,
+                    rgba(179, 0, 255, 0.07),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 50% 50%,
+                    rgba(0, 255, 102, 0.08),
+                    transparent 35%
+                );
+            animation: ambientMove 14s ease-in-out infinite alternate;
+        }
+
+        @keyframes ambientMove {
+            0% {
+                transform: translate3d(-2%, -2%, 0) scale(1);
+            }
+
+            100% {
+                transform: translate3d(2%, 2%, 0) scale(1.08);
+            }
+        }
+
+        .grid-background {
+            position: absolute;
+            inset: 0;
+            z-index: -7;
+            opacity: 0.14;
+            background-image:
+                linear-gradient(
+                    rgba(0, 255, 102, 0.14) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(0, 255, 102, 0.14) 1px,
+                    transparent 1px
+                );
+            background-size: 48px 48px;
+            transform: perspective(700px) rotateX(62deg) scale(1.5);
+            transform-origin: center bottom;
+            mask-image: linear-gradient(
+                to top,
+                rgba(0, 0, 0, 0.85),
+                transparent 72%
+            );
+        }
+
+        .noise {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0.045;
+            background-image:
+                repeating-radial-gradient(
+                    circle at 0 0,
+                    rgba(255, 255, 255, 0.4) 0,
+                    rgba(255, 255, 255, 0.4) 1px,
+                    transparent 1px,
+                    transparent 3px
+                );
+            background-size: 5px 5px;
+            animation: noiseShift 0.2s steps(2) infinite;
+        }
+
+        @keyframes noiseShift {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            25% {
+                transform: translate(-1%, 1%);
+            }
+
+            50% {
+                transform: translate(1%, -1%);
+            }
+
+            75% {
+                transform: translate(1%, 1%);
+            }
+
+            100% {
+                transform: translate(-1%, -1%);
+            }
+        }
+
+        .vignette {
+            position: absolute;
+            inset: 0;
+            z-index: 15;
+            pointer-events: none;
+            box-shadow: inset 0 0 160px rgba(0, 0, 0, 0.95);
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            z-index: 12;
+            pointer-events: none;
+            opacity: 0.2;
+            background:
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent 0,
+                    transparent 3px,
+                    rgba(0, 255, 102, 0.045) 4px
+                );
+        }
+
+        .scanline {
+            position: absolute;
+            left: 0;
+            bottom: 110%;
+            z-index: 13;
+            width: 100%;
+            height: 120px;
+            pointer-events: none;
+            opacity: 0.18;
+            background: linear-gradient(
+                to bottom,
+                transparent,
+                rgba(0, 255, 102, 0.22),
+                transparent
+            );
+            animation: scanlineMove 6s linear infinite;
+        }
+
+        @keyframes scanlineMove {
+            from {
+                bottom: 110%;
+            }
+
+            to {
+                bottom: -30%;
+            }
+        }
+
+        .scene {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 1.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(1.025);
+            transition:
+                opacity 900ms ease,
+                transform 1200ms ease,
+                visibility 900ms;
+        }
+
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        .scene-content {
+            width: min(1100px, 100%);
+            text-align: center;
+        }
+
+        .eyebrow {
+            margin-bottom: 1.25rem;
+            color: var(--muted);
+            font-size: clamp(0.66rem, 1.2vw, 0.8rem);
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+        }
+
+        .cinematic-title {
+            margin: 0;
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+            font-size: clamp(2.25rem, 7vw, 6.6rem);
+            font-weight: 800;
+            line-height: 0.98;
+            letter-spacing: -0.055em;
+            text-wrap: balance;
+        }
+
+        .cinematic-title .accent {
+            color: var(--green);
+            text-shadow:
+                0 0 12px rgba(0, 255, 102, 0.7),
+                0 0 36px rgba(0, 255, 102, 0.25);
+        }
+
+        .subtitle {
+            max-width: 820px;
+            margin: 1.5rem auto 0;
+            color: var(--muted);
+            font-family: "Inter", sans-serif;
+            font-size: clamp(1rem, 2vw, 1.35rem);
+            line-height: 1.7;
+            text-wrap: balance;
+        }
+
+        .terminal-window {
+            width: min(850px, 100%);
+            margin: 0 auto;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(9, 18, 12, 0.92),
+                    rgba(2, 5, 3, 0.95)
+                );
+            box-shadow:
+                0 30px 100px rgba(0, 0, 0, 0.65),
+                0 0 60px rgba(0, 255, 102, 0.07);
+            backdrop-filter: blur(16px);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 48px;
+            padding: 0 1rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 0.48rem;
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .terminal-dot:nth-child(1) {
+            background: #ff5f57;
+        }
+
+        .terminal-dot:nth-child(2) {
+            background: #febc2e;
+        }
+
+        .terminal-dot:nth-child(3) {
+            background: #28c840;
+        }
+
+        .terminal-label {
+            color: rgba(255, 255, 255, 0.34);
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+        }
+
+        .terminal-body {
+            min-height: 300px;
+            padding: clamp(1.4rem, 4vw, 3rem);
+            text-align: left;
+        }
+
+        .terminal-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin: 0 0 1rem;
+            color: var(--green-soft);
+            font-size: clamp(0.82rem, 2vw, 1.08rem);
+            line-height: 1.7;
+        }
+
+        .prompt {
+            color: var(--cyan);
+        }
+
+        .command {
+            color: var(--white);
+        }
+
+        .output {
+            color: var(--green);
+        }
+
+        .muted {
+            color: rgba(214, 255, 226, 0.42);
+        }
+
+        .typing-line {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 2px solid var(--green);
+            width: 0;
+        }
+
+        .scene.active .typing-line {
+            animation:
+                typeLine var(--typing-duration, 2.3s)
+                steps(var(--typing-steps, 32), end)
+                var(--typing-delay, 0.2s)
+                forwards,
+                cursorBlink 0.8s step-end infinite;
+        }
+
+        @keyframes typeLine {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: var(--typing-width, 100%);
+            }
+        }
+
+        @keyframes cursorBlink {
+            0%,
+            100% {
+                border-color: transparent;
+            }
+
+            50% {
+                border-color: var(--green);
+            }
+        }
+
+        .glitch {
+            position: relative;
+            display: inline-block;
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+            font-size: clamp(2.6rem, 9vw, 8.5rem);
+            font-weight: 800;
+            line-height: 0.92;
+            letter-spacing: -0.06em;
+            text-transform: uppercase;
+            text-shadow:
+                0 0 24px rgba(255, 255, 255, 0.12),
+                0 0 50px rgba(0, 255, 102, 0.12);
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .glitch::before {
+            color: var(--cyan);
+            transform: translateX(2px);
+            clip-path: inset(20% 0 55% 0);
+            animation: glitchBefore 2.8s infinite steps(1);
+            opacity: 0.75;
+        }
+
+        .glitch::after {
+            color: var(--red);
+            transform: translateX(-2px);
+            clip-path: inset(65% 0 10% 0);
+            animation: glitchAfter 2.1s infinite steps(1);
+            opacity: 0.65;
+        }
+
+        @keyframes glitchBefore {
+            0%,
+            86%,
+            100% {
+                transform: translate(0);
+                clip-path: inset(0 0 100% 0);
+            }
+
+            87% {
+                transform: translate(-6px, 2px);
+                clip-path: inset(14% 0 61% 0);
+            }
+
+            90% {
+                transform: translate(5px, -2px);
+                clip-path: inset(51% 0 27% 0);
+            }
+
+            93% {
+                transform: translate(-3px, 1px);
+                clip-path: inset(77% 0 6% 0);
+            }
+        }
+
+        @keyframes glitchAfter {
+            0%,
+            80%,
+            100% {
+                transform: translate(0);
+                clip-path: inset(100% 0 0 0);
+            }
+
+            82% {
+                transform: translate(5px, 1px);
+                clip-path: inset(65% 0 11% 0);
+            }
+
+            86% {
+                transform: translate(-5px, -2px);
+                clip-path: inset(28% 0 49% 0);
+            }
+
+            90% {
+                transform: translate(3px, 2px);
+                clip-path: inset(8% 0 76% 0);
+            }
+        }
+
+        .chaos-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            width: min(880px, 100%);
+            margin: 2.5rem auto 0;
+        }
+
+        .chaos-card {
+            padding: 1.4rem;
+            border: 1px solid rgba(255, 49, 88, 0.2);
+            border-radius: 14px;
+            background: rgba(255, 49, 88, 0.035);
+            color: rgba(255, 255, 255, 0.65);
+            text-align: left;
+            transform: translateY(18px);
+            opacity: 0;
+        }
+
+        .scene.active .chaos-card {
+            animation: cardReveal 700ms ease forwards;
+        }
+
+        .scene.active .chaos-card:nth-child(2) {
+            animation-delay: 180ms;
+        }
+
+        .scene.active .chaos-card:nth-child(3) {
+            animation-delay: 360ms;
+        }
+
+        .scene.active .chaos-card:nth-child(4) {
+            animation-delay: 540ms;
+        }
+
+        @keyframes cardReveal {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .chaos-card strong {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: var(--red);
+            font-size: 0.76rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .word-sequence {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sequence-word {
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+            font-size: clamp(3.5rem, 12vw, 10rem);
+            font-weight: 800;
+            line-height: 0.9;
+            letter-spacing: -0.075em;
+            opacity: 0;
+            transform: scale(0.88) translateY(30px);
+        }
+
+        .scene.active .sequence-word {
+            animation: wordReveal 850ms cubic-bezier(.17, .67, .32, 1.2) forwards;
+        }
+
+        .scene.active .sequence-word:nth-child(2) {
+            animation-delay: 500ms;
+        }
+
+        .scene.active .sequence-word:nth-child(3) {
+            animation-delay: 1000ms;
+        }
+
+        @keyframes wordReveal {
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            width: min(920px, 100%);
+            margin: 2.5rem auto 0;
+        }
+
+        .agent-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 150px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(0, 255, 102, 0.06),
+                    rgba(255, 255, 255, 0.015)
+                );
+            text-align: left;
+            opacity: 0;
+            transform: translateY(24px) scale(0.98);
+        }
+
+        .scene.active .agent-card {
+            animation: agentOnline 700ms ease forwards;
+        }
+
+        .scene.active .agent-card:nth-child(2) {
+            animation-delay: 180ms;
+        }
+
+        .scene.active .agent-card:nth-child(3) {
+            animation-delay: 360ms;
+        }
+
+        .scene.active .agent-card:nth-child(4) {
+            animation-delay: 540ms;
+        }
+
+        @keyframes agentOnline {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .agent-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -30% -80% auto;
+            width: 180px;
+            height: 180px;
+            border-radius: 999px;
+            background: rgba(0, 255, 102, 0.12);
+            filter: blur(35px);
+        }
+
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.2rem;
+            color: var(--green);
+            font-size: 0.69rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 14px var(--green);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: 0.35;
+                transform: scale(0.8);
+            }
+        }
+
+        .agent-name {
+            position: relative;
+            z-index: 2;
+            margin: 0;
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+            font-size: 1.7rem;
+            font-weight: 750;
+        }
+
+        .agent-role {
+            position: relative;
+            z-index: 2;
+            margin: 0.55rem 0 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .system-map {
+            position: relative;
+            width: min(850px, 92vw);
+            aspect-ratio: 16 / 8;
+            margin: 2rem auto 0;
+        }
+
+        .system-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: grid;
+            place-items: center;
+            width: clamp(120px, 18vw, 180px);
+            aspect-ratio: 1;
+            border: 1px solid rgba(0, 255, 102, 0.45);
+            border-radius: 999px;
+            background: rgba(0, 255, 102, 0.08);
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+            font-weight: 800;
+            transform: translate(-50%, -50%);
+            box-shadow:
+                0 0 35px rgba(0, 255, 102, 0.18),
+                inset 0 0 35px rgba(0, 255, 102, 0.09);
+            animation: corePulse 2.3s ease-in-out infinite;
+        }
+
+        @keyframes corePulse {
+            50% {
+                box-shadow:
+                    0 0 60px rgba(0, 255, 102, 0.34),
+                    inset 0 0 45px rgba(0, 255, 102, 0.16);
+            }
+        }
+
+        .system-node {
+            position: absolute;
+            min-width: 120px;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(2, 8, 4, 0.86);
+            color: var(--green-soft);
+            font-size: clamp(0.66rem, 1.4vw, 0.8rem);
+            text-align: center;
+            opacity: 0;
+        }
+
+        .scene.active .system-node {
+            animation: nodeReveal 600ms ease forwards;
+        }
+
+        .system-node:nth-child(2) {
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-delay: 150ms;
+        }
+
+        .system-node:nth-child(3) {
+            top: 35%;
+            right: 2%;
+            animation-delay: 300ms;
+        }
+
+        .system-node:nth-child(4) {
+            right: 15%;
+            bottom: 5%;
+            animation-delay: 450ms;
+        }
+
+        .system-node:nth-child(5) {
+            bottom: 5%;
+            left: 15%;
+            animation-delay: 600ms;
+        }
+
+        .system-node:nth-child(6) {
+            top: 35%;
+            left: 2%;
+            animation-delay: 750ms;
+        }
+
+        @keyframes nodeReveal {
+            from {
+                opacity: 0;
+                filter: blur(8px);
+            }
+
+            to {
+                opacity: 1;
+                filter: blur(0);
+            }
+        }
+
+        .system-orbit {
+            position: absolute;
+            inset: 12% 23%;
+            border: 1px dashed rgba(0, 255, 102, 0.16);
+            border-radius: 999px;
+            animation: orbitSpin 16s linear infinite;
+        }
+
+        @keyframes orbitSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .reveal-lines {
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .reveal-line {
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+            font-size: clamp(1.6rem, 5vw, 4.4rem);
+            font-weight: 750;
+            line-height: 1.08;
+            letter-spacing: -0.045em;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .scene.active .reveal-line {
+            animation: revealText 800ms ease forwards;
+        }
+
+        .scene.active .reveal-line:nth-child(2) {
+            animation-delay: 850ms;
+        }
+
+        .scene.active .reveal-line:nth-child(3) {
+            animation-delay: 1700ms;
+        }
+
+        @keyframes revealText {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .final-logo {
+            margin: 0;
+            color: var(--white);
+            font-family: "Inter", sans-serif;
+            font-size: clamp(2.7rem, 9vw, 8rem);
+            font-weight: 800;
+            line-height: 0.95;
+            letter-spacing: -0.07em;
+            text-transform: uppercase;
+            text-shadow:
+                0 0 20px rgba(255, 255, 255, 0.12),
+                0 0 60px rgba(0, 255, 102, 0.16);
+        }
+
+        .final-url {
+            margin-top: 1.25rem;
+            color: var(--green);
+            font-size: clamp(0.9rem, 2vw, 1.3rem);
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        .final-tagline {
+            margin-top: 2.1rem;
+            color: rgba(255, 255, 255, 0.58);
+            font-family: "Inter", sans-serif;
+            font-size: clamp(1rem, 2vw, 1.28rem);
+        }
+
+        .enter-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem;
+            margin-top: 2.5rem;
+            padding: 0.95rem 1.4rem;
+            border: 1px solid rgba(0, 255, 102, 0.4);
+            border-radius: 999px;
+            background: rgba(0, 255, 102, 0.08);
+            color: var(--green-soft);
+            text-decoration: none;
+            transition:
+                transform 180ms ease,
+                background 180ms ease,
+                border-color 180ms ease;
+        }
+
+        .enter-button:hover {
+            transform: translateY(-2px);
+            border-color: var(--green);
+            background: rgba(0, 255, 102, 0.14);
+        }
+
+        .hud {
+            position: absolute;
+            inset: 0;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .topbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 1.2rem 1.5rem;
+            color: rgba(214, 255, 226, 0.45);
+            font-size: 0.67rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .system-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .system-indicator::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 12px var(--green);
+        }
+
+        .progress-track {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            background: var(--green);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.7);
+            transition: width 150ms linear;
+        }
+
+        .controls {
+            position: absolute;
+            right: 1.2rem;
+            bottom: 1.2rem;
+            z-index: 40;
+            display: flex;
+            gap: 0.55rem;
+        }
+
+        .control-button {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(2, 8, 4, 0.72);
+            color: var(--green-soft);
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition:
+                transform 180ms ease,
+                background 180ms ease,
+                border-color 180ms ease;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 255, 102, 0.65);
+            background: rgba(0, 255, 102, 0.1);
+        }
+
+        .control-button svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .scene-number {
+            position: absolute;
+            bottom: 1.45rem;
+            left: 1.5rem;
+            z-index: 40;
+            color: rgba(214, 255, 226, 0.36);
+            font-size: 0.68rem;
+            letter-spacing: 0.18em;
+        }
+
+        .flash {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.75);
+            opacity: 0;
+        }
+
+        .flash.active {
+            animation: flashEffect 280ms ease-out;
+        }
+
+        @keyframes flashEffect {
+            0% {
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 0.45;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .scene {
+                padding: 5rem 1rem;
+            }
+
+            .chaos-grid,
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chaos-card,
+            .agent-card {
+                min-height: auto;
+                padding: 1.1rem;
+            }
+
+            .terminal-body {
+                min-height: 250px;
+            }
+
+            .system-map {
+                aspect-ratio: 5 / 7;
+            }
+
+            .system-orbit {
+                inset: 19% 8%;
+            }
+
+            .system-node:nth-child(2) {
+                top: 1%;
+            }
+
+            .system-node:nth-child(3) {
+                top: 25%;
+                right: 0;
+            }
+
+            .system-node:nth-child(4) {
+                right: 2%;
+                bottom: 12%;
+            }
+
+            .system-node:nth-child(5) {
+                bottom: 12%;
+                left: 2%;
+            }
+
+            .system-node:nth-child(6) {
+                top: 25%;
+                left: 0;
+            }
+
+            .topbar {
+                padding: 1rem;
+            }
+
+            .topbar span:last-child {
+                display: none;
+            }
+
+            .scene-number {
+                left: 1rem;
+            }
+
+            .controls {
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
-<body class="home-page">
-<div class="splash" id="splash" aria-hidden="true"><span class="brand-logo"><span class="brand-mark">P</span><span class="splash-text-mask"><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span></span></div>
-<script>(function(){var s=document.getElementById("splash");if(!s)return;try{if(sessionStorage.getItem("splashShown")){s.remove();return;}sessionStorage.setItem("splashShown","1");}catch(e){}if(matchMedia("(prefers-reduced-motion: reduce)").matches){s.remove();return;}s.addEventListener("animationend",function(e){if(e.target===s)s.remove();});})();</script>
-<a href="#main-content" class="skip-link">Skip to main content</a>
 
-<nav class="site-nav">
-  <div class="container d-flex align-items-center justify-content-between py-3">
-    <a href="/" class="brand-logo text-decoration-none"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></a>
-    <div class="utility-dock">
-      <button type="button" class="utility-tab" aria-expanded="false" aria-controls="utility-tray" aria-label="Quick actions"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="utility-tray" id="utility-tray">
-        <button type="button" class="theme-toggle" aria-label="Toggle dark mode"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
-        <a href="/search.html" class="nav-search-btn" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
-        <a href="/client/login.html" class="nav-login-btn" aria-label="Client portal login" title="Client portal"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
-        <a href="/admin/login.html" class="nav-login-btn" aria-label="Admin login" title="Admin login"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></a>
-      </div>
-    </div>
-    <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-    <div class="d-none d-md-flex gap-1">
-      <a href="/" class="nav-link active">Home</a>
-      <a href="/about.html" class="nav-link">About</a>
-      <a href="/services.html" class="nav-link">Services</a>
-      <a href="/projects.html" class="nav-link">Projects</a>
-      <a href="/pricing.html" class="nav-link">Pricing</a>
-      <a href="/contact.html" class="nav-link">Contact</a>
-    </div>
-    <a href="#estimator" class="btn-brand btn-sm d-none d-md-inline-block">Get estimate</a>
-  </div>
-</nav>
+<body>
 
-<div class="offcanvas offcanvas-end nav-drawer" tabindex="-1" id="nav-drawer">
-  <div class="offcanvas-header">
-    <span class="brand-logo"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body d-flex flex-column">
-    <a href="/" class="nav-link">Home</a>
-    <a href="/about.html" class="nav-link">About</a>
-    <a href="/services.html" class="nav-link">Services</a>
-    <a href="/projects.html" class="nav-link">Projects</a>
-    <a href="/pricing.html" class="nav-link">Pricing</a>
-    <a href="/contact.html" class="nav-link">Contact</a>
-    <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
-  </div>
-</div>
+    <script>
+        // Placeholder resolved once we settled on where the real homepage
+        // lives after this trailer took over the root — see public/home.html.
+        const PC_MAIN_SITE_URL = "/home.html";
 
-<header class="hero agency-hero" id="main-content">
-  <div class="hero-video-panel d-none" id="hero-video-panel" aria-hidden="true"></div>
-  <div class="container">
-    <span class="availability-pill d-none mb-3 hero-animate hero-animate-1" data-content="availability_badge"></span>
-    <p class="eyebrow mb-3 hero-animate hero-animate-1" data-content="hero_eyebrow">// AI Voice Agents · Chatbots · Automation</p>
-    <h1 class="display-1 mb-4 hero-animate hero-animate-2" data-content="hero_title">AI voice agents that answer every call. Automations that run the rest.</h1>
-    <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" data-content="hero_subtitle">
-      Voice agents that pick up your business line, chatbots that know your
-      business, and workflow automations that kill the busywork — engineered
-      from scratch on 12+ years of custom web &amp; mobile development.
-    </p>
-    <div class="d-flex flex-wrap align-items-center gap-3 hero-animate hero-animate-4">
-      <a href="#estimator" class="btn-brand">Scope your project</a>
-      <a href="/projects.html" class="btn-brand-outline">View my work</a>
-      <a href="/testimonials.html" id="hero-rating" class="rating-pill d-none"></a>
-    </div>
-    <div class="live-channel-rail hero-animate hero-animate-4" aria-label="Talk to Lisa now">
-      <span class="live-channel-status"><i aria-hidden="true"></i> Lisa is live</span>
-      <a href="tel:+447462190814" data-voice-phone-link><strong>Call the AI line</strong><small data-voice-phone-number>+44 7462 190814</small></a>
-      <a href="https://wa.me/233535801359" data-business-whatsapp-link target="_blank" rel="noopener"><strong>Message on WhatsApp</strong><small>Replies from the same assistant</small></a>
-    </div>
-    <div class="hero-proof-line d-flex flex-wrap align-items-center gap-2 gap-sm-3 mt-3 small text-muted-custom hero-animate hero-animate-4">
-      <span><strong id="hero-years-value" style="color: var(--ink);">12+</strong> yrs building software</span>
-      <span aria-hidden="true">&middot;</span>
-      <span><strong style="color: var(--ink);">30+</strong> projects shipped</span>
-      <span aria-hidden="true">&middot;</span>
-      <span><strong style="color: var(--ink);">98%</strong> client satisfaction</span>
-      <span aria-hidden="true">&middot;</span>
-      <a href="#" class="text-decoration-none d-inline-flex align-items-center gap-1" onclick="document.getElementById('ai-widget-toggle')?.click(); return false;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-        Ask the live AI assistant
-      </a>
-    </div>
-    <div class="hero-side-stack hero-animate hero-animate-4">
-      <article class="hero-call-mockup" aria-label="Mockup of an AI voice agent handling a live booking call">
-        <header class="system-window-bar">
-          <span class="system-window-title"><span class="status-dot is-live" id="voice-demo-dot"></span> <span id="voice-demo-status">Voice demo ready</span></span>
-          <span class="system-time" id="voice-demo-timer">00:00</span>
-        </header>
-        <div class="hero-call-body">
-          <div class="call-contact">
-            <span class="call-avatar" id="voice-demo-avatar">PC</span>
-            <div>
-              <strong id="voice-demo-name">Prince's Assistant</strong>
-              <small id="voice-demo-subtitle">Ask about services, pricing, or a project</small>
+        // Once-per-visitor gate: a returning visitor skips straight to the
+        // homepage instead of sitting through the trailer again.
+        if (localStorage.getItem("pc_intro_seen_v1")) {
+            location.replace(PC_MAIN_SITE_URL);
+        }
+    </script>
+
+    <main
+        class="trailer"
+        id="trailer"
+        aria-label="Prince Caleb cinematic website introduction"
+    >
+        <div class="ambient-glow"></div>
+        <div class="grid-background"></div>
+        <div class="scanline"></div>
+        <div class="scanlines"></div>
+        <div class="noise"></div>
+        <div class="vignette"></div>
+        <div class="flash" id="flash"></div>
+
+        <audio id="narration" src="narration.mp3" preload="auto"></audio>
+
+        <div class="hud" aria-hidden="true">
+            <div class="topbar">
+                <div class="system-indicator">
+                    PrinceCaleb.dev
+                </div>
+
+                <span>Builder System // Cinematic Archive</span>
             </div>
-            <span class="call-state" id="voice-demo-state">Ready</span>
-          </div>
-          <div class="voice-wave is-idle" id="voice-demo-wave" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-          </div>
-          <div class="transcript-line">
-            <span id="voice-demo-speaker">Voice agent</span>
-            <p id="voice-demo-transcript" aria-live="polite">Tap “Start voice demo,” then ask me what an AI voice agent could handle for your business.</p>
-          </div>
-          <div class="system-outcome" id="voice-demo-outcome">
-            <span>✓</span>
-            <div>
-              <strong>Uses the real site assistant</strong>
-              <small>Your question is answered from Prince’s actual services and business information.</small>
+
+            <div class="progress-track">
+                <div
+                    class="progress-bar"
+                    id="progressBar"
+                ></div>
             </div>
-          </div>
-          <form class="hero-demo-fallback d-none" id="voice-demo-form">
-            <label class="visually-hidden" for="voice-demo-input">Type your question</label>
-            <input type="text" id="voice-demo-input" maxlength="500" placeholder="Type your question instead…" autocomplete="off">
-            <button type="submit">Ask</button>
-          </form>
         </div>
-        <footer class="hero-call-footer">
-          <button type="button" class="hero-demo-button" id="voice-demo-start">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/></svg>
-            <span>Start voice demo</span>
-          </button>
-          <span class="hero-demo-privacy">Microphone activates only after you tap.</span>
-        </footer>
-      </article>
-    </div>
-  </div>
-</header>
 
-<div class="agency-marquee" aria-hidden="true">
-  <div class="agency-marquee-track">
-    <span>AI voice agents</span><span>/</span><span>AI chatbots</span><span>/</span><span>Business automations</span><span>/</span><span>Autonomous AI agents</span><span>/</span><span>AI systems engineering</span><span>/</span>
-    <span>AI voice agents</span><span>/</span><span>AI chatbots</span><span>/</span><span>Business automations</span><span>/</span><span>Autonomous AI agents</span><span>/</span><span>AI systems engineering</span><span>/</span>
-  </div>
-</div>
+        <!-- Scene 1 -->
+        <section
+            class="scene active"
+            data-duration="5306"
+            aria-label="Opening statement"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">Archive transmission initiated</p>
 
-<div class="metric-strip agency-proof-strip">
-  <div class="container">
-    <div class="row g-4">
-      <div class="col-6 col-md-3">
-        <div class="stat-item reveal">
-          <div class="stat-value" id="stat-years-count" data-count-to="12" data-count-suffix="+">0</div>
-          <div class="stat-label">Years building software</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-item reveal reveal-delay-1">
-          <div class="stat-value" data-count-to="30" data-count-suffix="+">0</div>
-          <div class="stat-label">Projects shipped</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-item reveal reveal-delay-2">
-          <div class="stat-value" data-count-to="98" data-count-suffix="%">0</div>
-          <div class="stat-label">Client satisfaction</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-item reveal reveal-delay-3">
-          <div class="stat-value" data-count-to="48" data-count-prefix="&lt;" data-count-suffix="h">0</div>
-          <div class="stat-label">Average response time</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot"></span>
+                            <span class="terminal-dot"></span>
+                            <span class="terminal-dot"></span>
+                        </div>
 
-<section class="section product-proof-section">
-  <div class="container">
-    <div class="proof-heading reveal">
-      <div>
-        <p class="eyebrow mb-3">// Systems, not slides</p>
-        <h2 class="display-5 mb-0">See the work while it works.</h2>
-      </div>
-      <p class="text-muted-custom mb-0">A call gets answered, the right details reach your team, and the follow-up is already moving—without another tab to babysit.</p>
-    </div>
+                        <span class="terminal-label">
+                            prince@builder-os:~
+                        </span>
 
-    <div class="system-stage reveal" aria-label="Mockups of an AI voice agent, sales agent queue, and business automation">
-      <article class="system-window system-window-call">
-        <header class="system-window-bar">
-          <span class="system-window-title"><span class="status-dot is-live"></span> Voice agent · live call</span>
-          <span class="system-time">02:14</span>
-        </header>
-        <div class="call-contact">
-          <span class="call-avatar">AM</span>
-          <div><strong>Akosua Mensah</strong><small>New booking enquiry</small></div>
-          <span class="call-state">Speaking</span>
-        </div>
-        <div class="voice-wave" aria-hidden="true">
-          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-        </div>
-        <div class="transcript-line"><span>Agent</span><p>I can book that for Thursday at 10:30. Should I send the confirmation to this number?</p></div>
-        <div class="system-outcome"><span>✓</span><div><strong>Appointment held</strong><small>Calendar slot reserved for 5 minutes</small></div></div>
-      </article>
+                        <span></span>
+                    </div>
 
-      <article class="system-window system-window-agents">
-        <header class="system-window-bar">
-          <span class="system-window-title">Agent work queue</span>
-          <span class="window-chip">4 active</span>
-        </header>
-        <div class="agent-task"><span class="task-icon">01</span><div><strong>Qualify new lead</strong><small>Beacon · completed 1m ago</small></div><span class="task-check">✓</span></div>
-        <div class="agent-task"><span class="task-icon">02</span><div><strong>Research company</strong><small>Dossier · working now</small></div><span class="task-pulse"></span></div>
-        <div class="agent-task"><span class="task-icon">03</span><div><strong>Draft first response</strong><small>Nurturer · queued</small></div><span class="task-wait">•••</span></div>
-        <div class="queue-footer"><span>Next daily report</span><strong>17:00 GMT</strong></div>
-      </article>
+                    <div class="terminal-body">
+                        <p class="terminal-line">
+                            <span class="prompt">prince@builder-os:~$</span>
 
-      <article class="system-window system-window-flow">
-        <header class="system-window-bar">
-          <span class="system-window-title">Booking workflow</span>
-          <span class="window-chip is-success">Run complete</span>
-        </header>
-        <div class="flow-track">
-          <div class="flow-node"><span>01</span><div><strong>Call captured</strong><small>Voice agent</small></div></div>
-          <div class="flow-node"><span>02</span><div><strong>CRM updated</strong><small>Contact + notes</small></div></div>
-          <div class="flow-node"><span>03</span><div><strong>Confirmation sent</strong><small>WhatsApp + email</small></div></div>
-        </div>
-        <div class="run-meta"><span>Last run</span><strong>8 seconds · no errors</strong></div>
-      </article>
-    </div>
+                            <span
+                                class="typing-line command"
+                                style="
+                                    --typing-width: 22ch;
+                                    --typing-steps: 22;
+                                    --typing-duration: 1.8s;
+                                "
+                            >
+                                initiate transmission
+                            </span>
+                        </p>
 
-    <div class="proof-caption reveal">
-      <span>One connected system</span>
-      <span>Built around your actual workflow</span>
-      <a href="/services.html">Explore the system <span aria-hidden="true">↗</span></a>
-    </div>
-  </div>
-</section>
+                        <p class="terminal-line output">
+                            The web was built to display information.
+                        </p>
 
-<section class="section">
-  <div class="container reveal">
-    <p class="eyebrow text-center mb-3">// What I build</p>
-    <div class="service-columns">
-        <div class="deck-card">
-          <div class="service-icon mono">01</div>
-          <h3 class="h4 mb-3" data-content="service_1_title">AI Voice Agents</h3>
-          <p class="text-muted-custom mb-4" data-content="service_1_summary">Voice agents that answer your business line 24/7 — book appointments, qualify callers, and hand off to a human the moment it matters. Every missed call is a customer someone else answered.</p>
-          <a href="/ai-voice-agents-for-clinics.html" class="deck-cta">See the clinic solution <span class="cta-arrow">&rarr;</span></a>
-          <div class="service-live-links">
-            <a href="tel:+447462190814" data-voice-phone-link>Call Lisa</a>
-            <a href="https://wa.me/233535801359" data-business-whatsapp-link target="_blank" rel="noopener">WhatsApp Lisa</a>
-          </div>
-        </div>
-        <div class="deck-card">
-          <div class="service-icon mono">02</div>
-          <h3 class="h4 mb-3" data-content="service_2_title">Autonomous AI Agents</h3>
-          <p class="text-muted-custom mb-4" data-content="service_2_summary">Agents that scout leads, write follow-ups, draft proposals, and report daily — this site's own sales engine runs on agents I built. I build the same for your business.</p>
-          <a href="/services.html#track-02" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
-        </div>
-        <div class="deck-card">
-          <div class="service-icon mono">03</div>
-          <h3 class="h4 mb-3" data-content="service_3_title">Business Automations</h3>
-          <p class="text-muted-custom mb-4" data-content="service_3_summary">Connect the tools you already use and kill the manual work between them — enquiries into your CRM, bookings into invoices, events into email, running quietly on schedule.</p>
-          <a href="/services.html#track-03" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
-        </div>
-        <div class="deck-card">
-          <div class="service-icon mono">04</div>
-          <h3 class="h4 mb-3">AI Chatbots &amp; Live Assistants</h3>
-          <p class="text-muted-custom mb-4">24/7 chat that actually knows your business — trained on your real content, with clean human handoff. The live chat on this site is a working example, not a demo.</p>
-          <a href="/services.html#track-04" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
-        </div>
-        <div class="deck-card">
-          <div class="service-icon mono">05</div>
-          <h3 class="h4 mb-3">Custom Websites &amp; Mobile Apps</h3>
-          <p class="text-muted-custom mb-4">Business websites, custom web platforms, and iOS or Android apps — built as standalone products or as the interface for your AI agents and automations.</p>
-          <a href="/services.html#track-05" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
-        </div>
-    </div>
-  </div>
-</section>
-
-<section id="estimator" class="section">
-  <div class="container reveal">
-    <div class="planner-shell">
-      <div class="row g-5">
-        <div class="col-lg-7">
-          <h2 class="mb-4">Project scope planner</h2>
-
-          <div class="mb-4">
-            <label class="planner-label d-block mb-2">Select platforms</label>
-            <div class="form-check mb-2">
-              <input class="form-check-input" type="checkbox" id="check-web" checked>
-              <label class="form-check-label" for="check-web">Web platform architecture</label>
+                        <p class="terminal-line muted">
+                            But information alone was never enough.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="form-check mb-2">
-              <input class="form-check-input" type="checkbox" id="check-mobile">
-              <label class="form-check-label" for="check-mobile">Mobile application suite</label>
+        </section>
+
+        <!-- Scene 2 -->
+        <section
+            class="scene"
+            data-duration="2285"
+            aria-label="The problem"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">System diagnosis</p>
+
+                <h1
+                    class="glitch"
+                    data-text="TRAPPED IN TEMPLATES"
+                >
+                    Trapped in Templates
+                </h1>
+
+                <div class="chaos-grid">
+                    <article class="chaos-card">
+                        <strong>01 // Communication</strong>
+                        Missed calls. Unanswered messages. Lost opportunities.
+                    </article>
+
+                    <article class="chaos-card">
+                        <strong>02 // Operations</strong>
+                        Disconnected tools, repetitive tasks and manual work.
+                    </article>
+
+                    <article class="chaos-card">
+                        <strong>03 // Intelligence</strong>
+                        Valuable data buried inside dashboards nobody checks.
+                    </article>
+
+                    <article class="chaos-card">
+                        <strong>04 // Growth</strong>
+                        Websites that exist, but never actively help the business.
+                    </article>
+                </div>
             </div>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="check-cloud">
-              <label class="form-check-label" for="check-cloud">Cloud backend / APIs</label>
+        </section>
+
+        <!-- Scene 3 -->
+        <section
+            class="scene"
+            data-duration="3778"
+            aria-label="System initialization"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">A new architecture</p>
+
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot"></span>
+                            <span class="terminal-dot"></span>
+                            <span class="terminal-dot"></span>
+                        </div>
+
+                        <span class="terminal-label">
+                            builder-os initialization
+                        </span>
+
+                        <span></span>
+                    </div>
+
+                    <div class="terminal-body">
+                        <p class="terminal-line">
+                            <span class="prompt">root@princecaleb:~#</span>
+
+                            <span
+                                class="typing-line command"
+                                style="
+                                    --typing-width: 46ch;
+                                    --typing-steps: 46;
+                                    --typing-duration: 2.8s;
+                                "
+                            >
+                                initialize builder_os --mode intelligent
+                            </span>
+                        </p>
+
+                        <p class="terminal-line output">
+                            [OK] Connecting systems...
+                        </p>
+
+                        <p class="terminal-line output">
+                            [OK] Activating autonomous agents...
+                        </p>
+
+                        <p class="terminal-line output">
+                            [OK] Synchronizing intelligence...
+                        </p>
+
+                        <p class="terminal-line">
+                            <span class="output">STATUS:</span>
+                            <span class="command">ONLINE</span>
+                        </p>
+                    </div>
+                </div>
             </div>
-          </div>
+        </section>
 
-          <div class="mb-4">
-            <label for="complexity-range" class="planner-label d-block mb-2">Project complexity</label>
-            <input type="range" class="form-range" min="1" max="3" value="1" id="complexity-range">
-            <div class="d-flex justify-content-between text-muted-custom small">
-              <span>MVP prototype</span>
-              <span>Standard build</span>
-              <span>Scale infrastructure</span>
+        <!-- Scene 4 -->
+        <section
+            class="scene"
+            data-duration="4019"
+            aria-label="Intelligent websites"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">What if a website could</p>
+
+                <div class="word-sequence">
+                    <div class="sequence-word">Listen.</div>
+                    <div class="sequence-word">Think.</div>
+                    <div class="sequence-word">
+                        <span style="color: var(--green);">Operate.</span>
+                    </div>
+                </div>
             </div>
-          </div>
+        </section>
 
-          <div class="planner-lead" id="planner-lead">
-            <form id="planner-lead-form" class="row g-2 pt-3" style="border-top: 1px solid var(--line);">
-              <p class="small text-muted-custom mb-1">Want this estimate in writing? I'll follow up within 48 hours.</p>
-              <div class="col-sm-4"><input type="text" class="form-control" id="lead-name" placeholder="Your name" required></div>
-              <div class="col-sm-4"><input type="email" class="form-control" id="lead-email" placeholder="Email address" required></div>
-              <input type="text" name="website" id="lead-website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true">
-              <div class="col-sm-4"><button type="submit" class="btn-brand w-100" id="lead-submit">Send me this estimate</button></div>
-              <div class="col-12"><p class="small mb-0 d-none" id="lead-status"></p></div>
-            </form>
-          </div>
+        <!-- Scene 5 -->
+        <section
+            class="scene"
+            data-duration="2969"
+            aria-label="AI agents online"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">The team is online</p>
 
-          <!-- Social proof beside the estimate CTA — revealed by content.js only
-               when a testimonial is configured, so it never shows an empty quote. -->
-          <div class="planner-social mt-4 d-none" id="planner-social">
-            <div class="d-flex align-items-start gap-2">
-              <span aria-hidden="true" style="font-size:1.75rem;line-height:0.8;color:var(--accent);">&ldquo;</span>
-              <div>
-                <p class="mb-1 small fst-italic" data-content="testimonial_1_quote"></p>
-                <p class="mb-0 small text-muted-custom">&mdash; <strong data-content="testimonial_1_name"></strong><span data-content="testimonial_1_role" class="ms-1"></span></p>
-              </div>
+                <h2 class="cinematic-title">
+                    Intelligence with
+                    <span class="accent">a job to do.</span>
+                </h2>
+
+                <div class="agents-grid">
+                    <article class="agent-card">
+                        <div class="agent-status">
+                            <span class="status-dot"></span>
+                            Communication online
+                        </div>
+
+                        <h3 class="agent-name">Lisa</h3>
+
+                        <p class="agent-role">
+                            Answers calls, qualifies leads and creates meaningful
+                            customer conversations.
+                        </p>
+                    </article>
+
+                    <article class="agent-card">
+                        <div class="agent-status">
+                            <span class="status-dot"></span>
+                            Operations online
+                        </div>
+
+                        <h3 class="agent-name">Q1</h3>
+
+                        <p class="agent-role">
+                            Coordinates projects, priorities, missions and daily
+                            execution.
+                        </p>
+                    </article>
+
+                    <article class="agent-card">
+                        <div class="agent-status">
+                            <span class="status-dot"></span>
+                            Finance online
+                        </div>
+
+                        <h3 class="agent-name">Ledger</h3>
+
+                        <p class="agent-role">
+                            Tracks financial health, forecasts decisions and
+                            protects profitability.
+                        </p>
+                    </article>
+
+                    <article class="agent-card">
+                        <div class="agent-status">
+                            <span class="status-dot"></span>
+                            Monitoring active
+                        </div>
+
+                        <h3 class="agent-name">Radar</h3>
+
+                        <p class="agent-role">
+                            Observes signals, captures changes and surfaces what
+                            matters.
+                        </p>
+                    </article>
+                </div>
             </div>
-          </div>
-        </div>
+        </section>
 
-        <div class="col-lg-5 d-flex align-items-stretch">
-          <div class="planner-result w-100">
-            <div>
-              <span class="planner-label d-block mb-2">Engineering timeline estimate</span>
-              <div class="planner-hours" id="planner-hours">45 hours</div>
-              <p class="text-muted-custom small mt-1">Approximate development lifecycle range</p>
+        <!-- Scene 6 -->
+        <section
+            class="scene"
+            data-duration="3963"
+            aria-label="Connected ecosystem"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">One connected ecosystem</p>
+
+                <h2 class="cinematic-title">
+                    Not isolated tools.
+                    <span class="accent">One system.</span>
+                </h2>
+
+                <div class="system-map">
+                    <div class="system-orbit"></div>
+
+                    <div class="system-core">
+                        BUILDER OS
+                    </div>
+
+                    <div class="system-node">AI Voice</div>
+                    <div class="system-node">Automation</div>
+                    <div class="system-node">Finance</div>
+                    <div class="system-node">Operations</div>
+                    <div class="system-node">Intelligence</div>
+                </div>
             </div>
-            <div style="border-top: 1px solid var(--line);" class="pt-3">
-              <div class="planner-phase"><span>Phase 1: Architecture blueprint</span> <strong id="planner-blueprint">1 wk</strong></div>
-              <div class="planner-phase"><span>Phase 2: Alpha environment launch</span> <strong id="planner-launch">2–3 wks</strong></div>
+        </section>
+
+        <!-- Scene 7 -->
+        <section
+            class="scene"
+            data-duration="6303"
+            aria-label="The reveal"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">Access granted</p>
+
+                <div class="reveal-lines">
+                    <div class="reveal-line">
+                        You thought you were opening a portfolio.
+                    </div>
+
+                    <div class="reveal-line">
+                        You entered a company.
+                    </div>
+
+                    <div
+                        class="reveal-line"
+                        style="color: var(--green);"
+                    >
+                        You activated an operating system.
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+        </section>
 
-<section class="section" data-currency-zone>
-  <div class="container">
-    <div class="row mb-4 reveal reveal-on-scroll">
-      <div class="col-lg-7">
-        <span class="eyebrow d-block mb-2" data-content="home_pricing_eyebrow">// Pricing</span>
-        <h2 class="display-5" data-content="home_pricing_title">Start with one workflow. Expand after it works.</h2>
-      </div>
-    </div>
-    <div class="row g-4 justify-content-center">
-      <div class="col-md-6">
-        <div class="pricing-card service-card reveal">
-          <span class="eyebrow d-block mb-2" data-content="pricing_tier_1_name">AI Voice Agent Pilot</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_1_price">From GHS 5,000</div>
-          <p class="text-muted-custom mb-3" data-content="pricing_tier_1_tagline">One focused call flow, trained on your approved information and tested before it reaches customers.</p>
-          <ul class="mb-4" data-content-list="pricing_tier_1_features">
-            <li>One inbound call flow</li>
-            <li>Approved FAQ and handoff rules</li>
-            <li>Call logs and staff summaries</li>
-            <li>Monitored launch review</li>
-          </ul>
-          <a href="/request.html" class="btn-brand-outline w-100 text-center">Get a quote</a>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="pricing-card featured service-card reveal reveal-delay-1">
-          <span class="pricing-badge">Most requested</span>
-          <span class="eyebrow d-block mb-2" data-content="pricing_tier_2_name">Voice + WhatsApp</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_2_price">From GHS 15,000</div>
-          <p class="text-muted-custom mb-3" data-content="pricing_tier_2_tagline">A connected assistant that carries context across calls, WhatsApp, bookings, and staff handoffs.</p>
-          <ul class="mb-4" data-content-list="pricing_tier_2_features">
-            <li>AI voice and WhatsApp assistant</li>
-            <li>Calendar or CRM integration</li>
-            <li>Human escalation and notifications</li>
-            <li>Reporting and audit trail</li>
-          </ul>
-          <a href="/request.html" class="btn-brand w-100 text-center">Get a quote</a>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="pricing-card service-card reveal reveal-delay-2">
-          <span class="eyebrow d-block mb-2" data-content="pricing_tier_3_name">AI Operations System</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_3_price">From GHS 25,000</div>
-          <p class="text-muted-custom mb-3" data-content="pricing_tier_3_tagline">Multiple agents and automations working across service, sales, follow-up, reporting, and operations.</p>
-          <ul class="mb-4" data-content-list="pricing_tier_3_features">
-            <li>Multiple agent workflows</li>
-            <li>Custom dashboards and integrations</li>
-            <li>Permissions and safeguards</li>
-            <li>Ongoing optimisation and support</li>
-          </ul>
-          <a href="/request.html" class="btn-brand-outline w-100 text-center">Get a quote</a>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="pricing-card service-card reveal reveal-delay-3">
-          <span class="eyebrow d-block mb-2" data-content="pricing_tier_4_name">Custom Websites &amp; Mobile Apps</span>
-          <div class="pricing-price mb-1" data-content="pricing_tier_4_price">Websites from GHS 5,000</div>
-          <p class="text-muted-custom mb-3" data-content="pricing_tier_4_tagline">Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.</p>
-          <ul class="mb-4" data-content-list="pricing_tier_4_features">
-            <li>Business and e-commerce websites</li>
-            <li>Custom web applications from GHS 15,000</li>
-            <li>iOS and Android mobile app MVPs from GHS 35,000</li>
-            <li>APIs, payments, and integrations</li>
-          </ul>
-          <a href="/request.html" class="btn-brand-outline w-100 text-center">Get a quote</a>
-        </div>
-      </div>
-    </div>
-    <div class="text-center mt-5 reveal reveal-on-scroll">
-      <p class="text-muted-custom mb-3" data-content="home_pricing_note">AI usage, calls, and messages are shown separately from implementation costs, so you can see what scales with activity.</p>
-      <a href="/pricing.html" class="btn-brand-outline">View full pricing page</a>
-    </div>
-  </div>
-</section>
+        <!-- Scene 8 -->
+        <section
+            class="scene"
+            data-duration="9646"
+            aria-label="Prince Caleb final title"
+        >
+            <div class="scene-content">
+                <p class="eyebrow">System ready</p>
 
-<section class="section">
-  <div class="container">
-    <div class="row mb-4 reveal reveal-on-scroll">
-      <div class="col-lg-7">
-        <span class="eyebrow d-block mb-2" data-content="archive_eyebrow">// Technical Archive</span>
-        <h2 class="display-5" data-content="archive_title">Engineering deep-dives, not generic posts.</h2>
-      </div>
-    </div>
-    <!-- home.js replaces these entries with the 3 newest archive posts from
-         the blog API; the hardcoded articles below are the API-down fallback. -->
-    <div class="archive-list" id="archive-latest">
-      <article class="archive-entry reveal reveal-on-scroll">
-        <div>
-          <span class="archive-domain" data-content="archive_1_domain">[SYSTEM ARCHITECTURE]</span>
-          <div class="small text-muted-custom mt-2" data-content="archive_1_meta">6 min technical read</div>
-        </div>
-        <div>
-          <h3 class="h3 archive-title"><a href="/archive.html" data-content="archive_1_title">Designing role-based admin systems without framework overhead</a></h3>
-          <p class="archive-meta" data-content="archive_1_desc">A breakdown of how lean PHP controllers, SQLite-backed state, and Bootstrap utilities can ship controlled admin workflows without platform bloat.</p>
-          <a href="/archive.html" class="archive-link" data-content="archive_1_link">Open technical archive</a>
-        </div>
-        <div class="archive-metric">
-          <strong data-content="archive_1_metric">Sub-2s</strong>
-          <span data-content="archive_1_metric_label">Target interaction budget</span>
-        </div>
-      </article>
-      <article class="archive-entry reveal reveal-on-scroll reveal-delay-1">
-        <div>
-          <span class="archive-domain" data-content="archive_2_domain">[DATA INGESTION]</span>
-          <div class="small text-muted-custom mt-2" data-content="archive_2_meta">8 min technical read</div>
-        </div>
-        <div>
-          <h3 class="h3 archive-title"><a href="/archive.html" data-content="archive_2_title">Building asynchronous intake pipelines for real client requests</a></h3>
-          <p class="archive-meta" data-content="archive_2_desc">A practical record of form validation, webhook routing, activity logs, and notification flows built with vanilla code and measurable failure states.</p>
-          <a href="/archive.html" class="archive-link" data-content="archive_2_link">Read implementation notes</a>
-        </div>
-        <div class="archive-metric">
-          <strong data-content="archive_2_metric">48h</strong>
-          <span data-content="archive_2_metric_label">Follow-up service level</span>
-        </div>
-      </article>
-      <article class="archive-entry reveal reveal-on-scroll reveal-delay-2">
-        <div>
-          <span class="archive-domain" data-content="archive_3_domain">[AI OPERATIONS]</span>
-          <div class="small text-muted-custom mt-2" data-content="archive_3_meta">5 min technical read</div>
-        </div>
-        <div>
-          <h3 class="h3 archive-title"><a href="/archive.html" data-content="archive_3_title">Routing live AI conversations into useful project context</a></h3>
-          <p class="archive-meta" data-content="archive_3_desc">How the site assistant captures scope, answers stack questions, and hands qualified leads into scheduling without adding a heavy frontend runtime.</p>
-          <a href="/archive.html" class="archive-link" data-content="archive_3_link">Inspect the breakdown</a>
-        </div>
-        <div class="archive-metric">
-          <strong data-content="archive_3_metric">1.5s</strong>
-          <span data-content="archive_3_metric_label">Response overhead target</span>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
+                <h1
+                    class="final-logo glitch"
+                    data-text="PRINCE CALEB"
+                >
+                    Prince Caleb
+                </h1>
 
-<section class="section">
-  <div class="container">
-    <div class="row mb-4 reveal reveal-on-scroll">
-      <div class="col-lg-7">
-        <span class="eyebrow d-block mb-2" data-content="production_eyebrow">// Production Logs</span>
-        <h2 class="display-5" data-content="production_title">A registry of shipped systems.</h2>
-      </div>
-    </div>
+                <div class="final-url">
+                    princecaleb.dev
+                </div>
 
-    <div id="case-rows">
-      <div class="case-row">
-        <div class="row g-5 align-items-center">
-          <div class="col-lg-6"><div class="skeleton" style="height: 220px;"></div></div>
-          <div class="col-lg-5 offset-lg-1"><div class="skeleton" style="height: 220px;"></div></div>
-        </div>
-      </div>
-    </div>
+                <p class="final-tagline">
+                    This is not a portfolio. It is the operating system behind
+                    what I build.
+                </p>
 
-    <div class="mt-5 reveal">
-      <a href="/projects.html" class="btn-brand-outline">See all projects <span class="cta-arrow">→</span></a>
-    </div>
-  </div>
-</section>
-
-<section id="prototype-cta" class="section">
-  <div class="container reveal reveal-on-scroll">
-    <div class="proto-cta-panel">
-      <div class="row g-5 align-items-center">
-        <div class="col-lg-6">
-          <span class="eyebrow d-block mb-2">// Instant prototype</span>
-          <h2 class="mb-3">Describe your idea. Watch it built in about a minute.</h2>
-          <p class="text-muted-custom mb-4">Tell the AI what you want — a website or an app — in a sentence or two, and get a live, clickable concept prototype you can preview, tweak in plain English, and send straight to me. No account, no cost, no waiting on a quote.</p>
-          <ul class="proto-cta-points">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Free and instant — no sign-up required</span>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>A real, previewable prototype in about 60 seconds</span>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Refine it, then hand it to me to build for real</span>
-            </li>
-          </ul>
-          <a href="/chat.html" class="btn-brand mt-2">Build my prototype <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="col-lg-6">
-          <div class="proto-cta-mock">
-            <div class="proto-cta-mock-label">// Prototype generator</div>
-            <div class="proto-cta-mock-title">What do you want to build?</div>
-            <a href="/chat.html" class="proto-cta-mock-input" aria-label="Open the prototype generator">
-              <span class="proto-cta-mock-placeholder" id="proto-cta-placeholder">A booking site for my hair salon, with online payments…</span>
-              <span class="proto-cta-mock-send" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              </span>
-            </a>
-            <div class="proto-cta-mock-chips">
-              <a href="/chat.html?idea=A%20portfolio%20site%20for%20a%20photographer" class="proto-cta-chip">Photographer portfolio</a>
-              <a href="/chat.html?idea=An%20online%20store%20for%20handmade%20jewelry" class="proto-cta-chip">Handmade jewelry store</a>
-              <a href="/chat.html?idea=A%20booking%20app%20for%20a%20fitness%20studio" class="proto-cta-chip">Fitness studio booking</a>
+                <a
+                    class="enter-button"
+                    id="enterButton"
+                    href="/home.html"
+                    aria-label="Enter Prince Caleb website"
+                >
+                    Enter the system
+                    <span aria-hidden="true">→</span>
+                </a>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+        </section>
 
-<section id="ai-booking" class="section">
-  <div class="container reveal reveal-on-scroll">
-    <div class="ai-booking-panel">
-      <div class="row g-5 align-items-center">
-        <div class="col-lg-5">
-          <span class="eyebrow d-block mb-2" data-content="live_demo_eyebrow">// Live Demonstration Arena</span>
-          <h2 class="mb-4" data-content="live_demo_title">AI context canvas plus direct scheduling.</h2>
-          <p class="text-muted-custom mb-4" data-content="live_demo_desc">A live interface for technical questions, scope capture, and booking handoff, so the client can inspect the system instead of only reading claims.</p>
-          <div class="ai-booking-metric">
-            <small class="d-block mb-1" style="color: var(--text-primary);" data-content="live_demo_metric_label">Engineering Metric</small>
-            <span class="text-muted-custom small" data-content="live_demo_metric_text">Designed for streaming requests with less than 1.5s overhead response delay.</span>
-          </div>
+        <div
+            class="scene-number"
+            id="sceneNumber"
+            aria-live="polite"
+        >
+            01 / 08
         </div>
-        <div class="col-lg-7">
-          <div class="ai-booking-console">
-            <div class="w-100">
-              <div class="media-video-frame mb-3 d-none" id="ai-demo-video-panel" aria-hidden="true"></div>
-              <span class="eyebrow d-block mb-3" data-content="live_demo_console_label">AI context canvas &amp; booking engine</span>
-              <a href="/book.html" class="btn-brand">Open booking flow</a>
-              <button type="button" class="btn-brand-outline ms-sm-2 mt-2 mt-sm-0" onclick="document.getElementById('ai-widget-toggle')?.click()">Open live chat</button>
-            </div>
-          </div>
+
+        <div class="controls">
+            <button
+                class="control-button"
+                id="soundButton"
+                type="button"
+                aria-label="Enable sound"
+                title="Enable sound"
+            >
+                <svg
+                    id="soundOffIcon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <path d="M16.5 12A4.5 4.5 0 0 0 14 8v1.9l2.4 2.4c.06-.1.1-.2.1-.3ZM19 12c0 .94-.2 1.82-.54 2.63l1.51 1.51A8.9 8.9 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06A7 7 0 0 1 19 12ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L18.73 21 20 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z"/>
+                </svg>
+
+                <svg
+                    id="soundOnIcon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    style="display: none;"
+                >
+                    <path d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.47 4.47 0 0 0 2.5-4Zm2.5 0c0 2.09-.94 3.97-2.42 5.24l1.42 1.42A8.97 8.97 0 0 0 21 12a8.97 8.97 0 0 0-2.5-6.66l-1.42 1.42A6.97 6.97 0 0 1 19 12Z"/>
+                </svg>
+            </button>
+
+            <button
+                class="control-button"
+                id="previousButton"
+                type="button"
+                aria-label="Previous scene"
+                title="Previous scene"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15.5 5.5 9 12l6.5 6.5-1.4 1.4L6.2 12l7.9-7.9 1.4 1.4Z"/>
+                </svg>
+            </button>
+
+            <button
+                class="control-button"
+                id="playPauseButton"
+                type="button"
+                aria-label="Pause trailer"
+                title="Pause trailer"
+            >
+                <svg
+                    id="pauseIcon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z"/>
+                </svg>
+
+                <svg
+                    id="playIcon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    style="display: none;"
+                >
+                    <path d="m8 5 11 7-11 7V5Z"/>
+                </svg>
+            </button>
+
+            <button
+                class="control-button"
+                id="nextButton"
+                type="button"
+                aria-label="Next scene"
+                title="Next scene"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m8.5 18.5 6.5-6.5-6.5-6.5 1.4-1.4 7.9 7.9-7.9 7.9-1.4-1.4Z"/>
+                </svg>
+            </button>
+
+            <button
+                class="control-button"
+                id="restartButton"
+                type="button"
+                aria-label="Restart trailer"
+                title="Restart trailer"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5a7 7 0 1 1-6.65 9.2H3.27A9 9 0 1 0 5.64 5.64L3 3v7h7L7.08 7.08A6.96 6.96 0 0 1 12 5Z"/>
+                </svg>
+            </button>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+    </main>
 
-<section class="section">
-  <div class="container reveal">
-    <div class="capability-panel">
-      <div class="row g-4 align-items-start">
-        <div class="col-lg-4">
-          <span class="eyebrow d-block mb-2">// Capability layer</span>
-          <h2 class="h3 mb-3">The engineering behind reliable agents</h2>
-          <p class="text-muted-custom small mb-4">Inspect the infrastructure that turns an AI demo into dependable daily operations.</p>
-          <div class="d-flex flex-column gap-2" id="track-selector">
-            <button type="button" class="track-btn active" data-track="web">Agent interface</button>
-            <button type="button" class="track-btn" data-track="mobile">Human handoff</button>
-            <button type="button" class="track-btn" data-track="cloud">Integrations &amp; APIs</button>
-          </div>
-        </div>
-        <div class="col-lg-7 offset-lg-1">
-          <div class="track-pane" data-pane="web">
-            <div class="service-card">
-              <h3 class="h5 mb-3">Lean-first delivery</h3>
-              <p class="text-muted-custom mb-4">Purpose-built stacks over massive framework dependencies — fast, ultra-performant interfaces backed by clean PHP and JavaScript cores.</p>
-              <div class="d-flex flex-wrap gap-2">
-                <span class="mono-badge">PHP</span>
-                <span class="mono-badge">JavaScript ES6+</span>
-                <span class="mono-badge">React</span>
-                <span class="mono-badge">CSS Variables</span>
-                <span class="mono-badge">Bootstrap Utilities</span>
-              </div>
-            </div>
-          </div>
-          <div class="track-pane d-none" data-pane="mobile">
-            <div class="service-card">
-              <h3 class="h5 mb-3">Cross-platform native core</h3>
-              <p class="text-muted-custom mb-4">Clean code structures deployed across iOS and Android while using local device hardware efficiently.</p>
-              <div class="d-flex flex-wrap gap-2">
-                <span class="mono-badge">React Native</span>
-                <span class="mono-badge">Native API Integrations</span>
-                <span class="mono-badge">Offline Asset Storage</span>
-                <span class="mono-badge">Push Pipelines</span>
-              </div>
-            </div>
-          </div>
-          <div class="track-pane d-none" data-pane="cloud">
-            <div class="service-card">
-              <h3 class="h5 mb-3">High-performance asynchronous data</h3>
-              <p class="text-muted-custom mb-4">REST API environments engineered to route complex data flows seamlessly — with role-based access control baked in.</p>
-              <div class="d-flex flex-wrap gap-2">
-                <span class="mono-badge">REST APIs</span>
-                <span class="mono-badge">MySQL / PostgreSQL</span>
-                <span class="mono-badge">Role-Based Access Control</span>
-                <span class="mono-badge">Webhooks &amp; Automation</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    <script>
+        "use strict";
 
-<section class="section">
-  <div class="container">
-    <div class="row mb-4 reveal">
-      <div class="col-lg-7">
-        <span class="eyebrow d-block mb-2">// Client signals</span>
-        <h2 class="display-6">What clients say.</h2>
-      </div>
-    </div>
-    <div class="row g-4" id="testimonial-grid">
-      <div class="col-md-4">
-        <div class="testimonial-card reveal">
-          <p class="testimonial-quote">"Prince took a vague idea and turned it into a real product in weeks, not months. He asked the right questions upfront so we never had to backtrack."</p>
-          <div class="d-flex align-items-center gap-3 mt-4">
-            <div class="testimonial-avatar">A</div>
-            <div>
-              <div class="fw-semibold" style="color: var(--ink);">Amara K.</div>
-              <div class="small text-muted-custom">Founder, boutique retail brand</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="testimonial-card reveal reveal-delay-1">
-          <p class="testimonial-quote">"The performance difference was night and day. Our old site felt sluggish everywhere; the new one just feels instant, even on mobile."</p>
-          <div class="d-flex align-items-center gap-3 mt-4">
-            <div class="testimonial-avatar">D</div>
-            <div>
-              <div class="fw-semibold" style="color: var(--ink);">David O.</div>
-              <div class="small text-muted-custom">Operations Lead, accounting firm</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="testimonial-card reveal reveal-delay-2">
-          <p class="testimonial-quote">"Clear communication the entire way through, and the app has needed almost zero maintenance since launch. Exactly what we needed."</p>
-          <div class="d-flex align-items-center gap-3 mt-4">
-            <div class="testimonial-avatar">M</div>
-            <div>
-              <div class="fw-semibold" style="color: var(--ink);">Maya T.</div>
-              <div class="small text-muted-custom">Studio Owner, wellness &amp; bookings</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="mt-4 reveal">
-      <a href="/testimonials.html" class="btn-brand-outline">Read more reviews <span class="cta-arrow">→</span></a>
-    </div>
-  </div>
-</section>
+        const scenes = Array.from(document.querySelectorAll(".scene"));
+        const progressBar = document.getElementById("progressBar");
+        const sceneNumber = document.getElementById("sceneNumber");
+        const flash = document.getElementById("flash");
 
-<section class="section text-center" style="border-top: 1px solid var(--line);">
-  <div class="container reveal">
-    <h2 class="display-6 mb-3">Have a project in mind?</h2>
-    <p class="fs-5 text-muted-custom mb-4">Let's talk about what you're building and how to make it fast, secure, and maintainable.</p>
-    <div class="d-flex flex-wrap gap-3 justify-content-center">
-      <a href="/book.html" class="btn-brand">Book a discovery call</a>
-      <a href="/contact.html" class="btn-brand-outline">Send a message</a>
-    </div>
-  </div>
-</section>
+        const previousButton = document.getElementById("previousButton");
+        const nextButton = document.getElementById("nextButton");
+        const playPauseButton = document.getElementById("playPauseButton");
+        const restartButton = document.getElementById("restartButton");
 
-<footer class="site-footer">
-  <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-    <span class="brand-logo" style="color:#fff;"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span>
-    <div class="d-flex gap-4">
-      <a href="/about.html">About</a>
-      <a href="/services.html">Services</a>
-      <a href="/projects.html">Projects</a>
-      <a href="/archive.html">Archive</a>
-      <a href="/pricing.html">Pricing</a>
-      <a href="/contact.html">Contact</a>
-    </div>
-  </div>
-  <div class="container mt-3 d-flex flex-column align-items-center align-items-sm-start gap-2">
-    <small>&copy; 2026 Prince Caleb. All rights reserved.</small>
-    <div class="d-flex gap-3">
-      <a href="/privacy.html" class="small">Privacy Policy</a>
-      <a href="/cookies.html" class="small">Cookie Policy</a>
-      <a href="/terms.html" class="small">Terms of Service</a>
-    </div>
-  </div>
-</footer>
+        const pauseIcon = document.getElementById("pauseIcon");
+        const playIcon = document.getElementById("playIcon");
 
-<a href="#" id="whatsapp-float-btn" class="d-none" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-  <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm5.8 14.09c-.24.68-1.4 1.32-1.93 1.4-.5.08-1.13.11-1.82-.11-.42-.13-.96-.31-1.65-.61-2.9-1.25-4.8-4.17-4.94-4.36-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.41.27-.29.58-.36.78-.36h.56c.18 0 .42-.03.65.5.24.55.8 1.9.87 2.04.07.14.12.3.02.49-.09.19-.14.3-.28.46-.14.16-.29.36-.42.48-.14.14-.29.29-.12.57.16.28.72 1.19 1.55 1.93 1.07.95 1.97 1.24 2.25 1.38.28.14.44.12.6-.07.16-.19.68-.79.86-1.06.19-.28.37-.23.62-.14.26.09 1.63.77 1.9.91.28.14.46.21.53.33.07.12.07.66-.17 1.34z"/></svg>
-</a>
+        let currentSceneIndex = 0;
+        let sceneStartedAt = performance.now();
+        let elapsedBeforePause = 0;
+        let isPlaying = true;
+        let animationFrameId = null;
 
-<button type="button" id="ai-widget-toggle" aria-label="Open live chat" aria-expanded="false">
-  <svg class="ai-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-  <span class="ai-toggle-badge" id="ai-widget-badge" aria-hidden="true">1</span>
-  <span class="visually-hidden">1 unread message</span>
-</button>
+        const narration = document.getElementById("narration");
+        const soundButton = document.getElementById("soundButton");
+        const soundOffIcon = document.getElementById("soundOffIcon");
+        const soundOnIcon = document.getElementById("soundOnIcon");
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/api.js"></script>
-<script src="/js/theme.js"></script>
-<script src="/js/utility-dock.js"></script>
-<script src="/js/nav-dropdowns.js"></script>
-<script src="/js/mobile-nav.js"></script>
-<script src="/js/content.js"></script>
-<script src="/js/currency-switcher.js?v=20260728"></script>
-<script src="/js/animations.js"></script>
-<script src="/js/hero-3d.js" defer></script>
-<script src="/js/home.js"></script>
-<script src="/js/elevenlabs-tts.js?v=20260728-consistent"></script>
-<script src="/js/voice-demo.js?v=20260728-elevenlabs-consistent"></script>
-<script src="/js/ai-boot.js?v=20260728-elevenlabs-consistent"></script>
-<script src="/js/analytics.js"></script>
-<script src="/js/pwa-register.js"></script>
-<script>
-// Keeps the hero proof-line "years" figure in sync with the metric-strip
-// counter, so it never has to be hand-edited in two places again. Reads the
-// value once on load, then watches for any future change to data-count-to
-// (in case the backend/CMS updates it dynamically after page load).
-(function () {
-  var src = document.getElementById('stat-years-count');
-  var dest = document.getElementById('hero-years-value');
-  if (!src || !dest) return;
-  function sync() {
-    var val = src.getAttribute('data-count-to');
-    var prefix = src.getAttribute('data-count-prefix') || '';
-    var suffix = src.getAttribute('data-count-suffix') || '';
-    if (val) dest.textContent = prefix + val + suffix;
-  }
-  sync();
-  new MutationObserver(sync).observe(src, { attributes: true, attributeFilter: ['data-count-to'] });
-})();
-</script>
+        let audioEnabled = false;
+
+        function markIntroSeen() {
+            try {
+                localStorage.setItem("pc_intro_seen_v1", "1");
+            } catch (error) {}
+        }
+
+        // Cue point (in seconds) where each scene's narration line begins.
+        // Derived from the scenes' own data-duration values, so it stays in
+        // sync if those are ever retimed again.
+        const sceneAudioStarts = (() => {
+            let elapsedMs = 0;
+
+            return scenes.map((scene, index) => {
+                const start = elapsedMs;
+                elapsedMs += getSceneDuration(index);
+                return start / 1000;
+            });
+        })();
+
+        // Setting .currentTime before the browser has loaded metadata is
+        // unreliable (silently ignored in some engines), which is how a
+        // seek-then-play could end up starting from 0 anyway. Wait for
+        // metadata when it isn't ready yet instead of assuming the seek took.
+        function seekNarrationTo(seconds) {
+            if (narration.readyState >= 1) {
+                narration.currentTime = seconds;
+            } else {
+                narration.addEventListener("loadedmetadata", () => {
+                    narration.currentTime = seconds;
+                }, { once: true });
+            }
+        }
+
+        function updateSoundUI() {
+            soundOffIcon.style.display = audioEnabled ? "none" : "block";
+            soundOnIcon.style.display = audioEnabled ? "block" : "none";
+
+            soundButton.setAttribute(
+                "aria-label",
+                audioEnabled ? "Mute" : "Enable sound"
+            );
+
+            soundButton.title = audioEnabled ? "Mute" : "Enable sound";
+        }
+
+        function toggleSound() {
+            audioEnabled = !audioEnabled;
+
+            if (audioEnabled) {
+                seekNarrationTo(sceneAudioStarts[currentSceneIndex]);
+
+                if (isPlaying) {
+                    narration.play().catch(() => {});
+                }
+            } else {
+                narration.pause();
+            }
+
+            updateSoundUI();
+        }
+
+        // Browsers block unmuted autoplay for a first-time visitor with no
+        // prior interaction — that's a deliberate policy, not something the
+        // page can override. Rather than making visitors hunt for the small
+        // sound icon specifically, the first interaction with the page at
+        // all (click, key press, tap) unlocks sound, same as the button.
+        function enableSoundFromFirstGesture(event) {
+            // The sound button already has its own click handler
+            // (toggleSound) — let that run alone, or a gesture on it would
+            // enable sound here and immediately toggle it back off.
+            if (audioEnabled || soundButton.contains(event.target)) {
+                return;
+            }
+
+            audioEnabled = true;
+            seekNarrationTo(sceneAudioStarts[currentSceneIndex]);
+
+            if (isPlaying) {
+                narration.play().catch(() => {});
+            }
+
+            updateSoundUI();
+        }
+
+        ["pointerdown", "keydown", "touchstart"].forEach(eventName => {
+            document.addEventListener(
+                eventName,
+                enableSoundFromFirstGesture,
+                { once: true, passive: true }
+            );
+        });
+
+        function getSceneDuration(index) {
+            const scene = scenes[index];
+            const duration = Number(scene.dataset.duration);
+
+            return Number.isFinite(duration) ? duration : 4500;
+        }
+
+        function formatSceneNumber(index) {
+            const current = String(index + 1).padStart(2, "0");
+            const total = String(scenes.length).padStart(2, "0");
+
+            return `${current} / ${total}`;
+        }
+
+        function triggerFlash() {
+            flash.classList.remove("active");
+
+            void flash.offsetWidth;
+
+            flash.classList.add("active");
+        }
+
+        function restartSceneAnimations(scene) {
+            scene.classList.remove("active");
+
+            void scene.offsetWidth;
+
+            scene.classList.add("active");
+        }
+
+        function showScene(index, options = {}) {
+            const {
+                flashTransition = true,
+                resetTimer = true
+            } = options;
+
+            const safeIndex =
+                ((index % scenes.length) + scenes.length) % scenes.length;
+
+            scenes.forEach((scene, sceneIndex) => {
+                scene.classList.toggle(
+                    "active",
+                    sceneIndex === safeIndex
+                );
+            });
+
+            currentSceneIndex = safeIndex;
+            sceneNumber.textContent = formatSceneNumber(currentSceneIndex);
+
+            if (resetTimer) {
+                sceneStartedAt = performance.now();
+                elapsedBeforePause = 0;
+                progressBar.style.width = "0%";
+            }
+
+            restartSceneAnimations(scenes[currentSceneIndex]);
+
+            if (flashTransition) {
+                triggerFlash();
+            }
+
+            // Narration is never reseeked here on scene transitions — only
+            // paused/resumed. It plays through on its own once started
+            // (autoplay, sound-button, or restart), since the total
+            // narration length already matches the sum of all scene
+            // durations; forcing a seek on every transition was the cause
+            // of audible restarts.
+            if (audioEnabled) {
+                if (isPlaying) {
+                    if (narration.paused) {
+                        narration.play().catch(() => {});
+                    }
+                } else {
+                    narration.pause();
+                }
+            }
+        }
+
+        function goToMainSite() {
+            markIntroSeen();
+            location.href = PC_MAIN_SITE_URL;
+        }
+
+        function finishTrailer() {
+            // Narration is never reseeked mid-trailer (that's what caused
+            // audible restarts), so if it started late — e.g. sound was
+            // enabled partway through — it can still be lagging behind the
+            // visual timeline when the last scene's own duration ends. Let
+            // it finish rather than cutting it off, but cap the wait so a
+            // stalled or broken audio element can't strand the visitor here.
+            if (audioEnabled && !narration.paused && !narration.ended) {
+                const maxWaitMs = 6000;
+                const timeoutId = setTimeout(goToMainSite, maxWaitMs);
+
+                narration.addEventListener("ended", () => {
+                    clearTimeout(timeoutId);
+                    goToMainSite();
+                }, { once: true });
+            } else {
+                goToMainSite();
+            }
+        }
+
+        function nextScene() {
+            if (currentSceneIndex >= scenes.length - 1) {
+                finishTrailer();
+                return;
+            }
+
+            showScene(currentSceneIndex + 1);
+        }
+
+        function previousScene() {
+            showScene(currentSceneIndex - 1);
+        }
+
+        function updatePlayPauseInterface() {
+            pauseIcon.style.display = isPlaying ? "block" : "none";
+            playIcon.style.display = isPlaying ? "none" : "block";
+
+            playPauseButton.setAttribute(
+                "aria-label",
+                isPlaying ? "Pause trailer" : "Play trailer"
+            );
+
+            playPauseButton.title =
+                isPlaying ? "Pause trailer" : "Play trailer";
+        }
+
+        function pauseTrailer() {
+            if (!isPlaying) {
+                return;
+            }
+
+            elapsedBeforePause +=
+                performance.now() - sceneStartedAt;
+
+            isPlaying = false;
+
+            if (audioEnabled) {
+                narration.pause();
+            }
+
+            updatePlayPauseInterface();
+        }
+
+        function playTrailer() {
+            if (isPlaying) {
+                return;
+            }
+
+            sceneStartedAt = performance.now();
+            isPlaying = true;
+
+            if (audioEnabled) {
+                narration.play().catch(() => {});
+            }
+
+            updatePlayPauseInterface();
+        }
+
+        function togglePlayPause() {
+            if (isPlaying) {
+                pauseTrailer();
+            } else {
+                playTrailer();
+            }
+        }
+
+        function restartTrailer() {
+            isPlaying = true;
+            updatePlayPauseInterface();
+
+            if (audioEnabled) {
+                seekNarrationTo(0);
+                narration.play().catch(() => {});
+            }
+
+            showScene(0);
+        }
+
+        function animate(timestamp) {
+            if (isPlaying) {
+                const duration = getSceneDuration(currentSceneIndex);
+
+                const elapsed =
+                    elapsedBeforePause +
+                    (timestamp - sceneStartedAt);
+
+                const progress = Math.min(
+                    (elapsed / duration) * 100,
+                    100
+                );
+
+                progressBar.style.width = `${progress}%`;
+
+                if (elapsed >= duration) {
+                    nextScene();
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        soundButton.addEventListener("click", toggleSound);
+        previousButton.addEventListener("click", previousScene);
+        nextButton.addEventListener("click", nextScene);
+        playPauseButton.addEventListener("click", togglePlayPause);
+        restartButton.addEventListener("click", restartTrailer);
+        document.getElementById("enterButton").addEventListener("click", markIntroSeen);
+
+        document.addEventListener("keydown", event => {
+            const key = event.key.toLowerCase();
+
+            if (key === "arrowright") {
+                nextScene();
+            }
+
+            if (key === "arrowleft") {
+                previousScene();
+            }
+
+            if (key === " " || key === "k") {
+                event.preventDefault();
+                togglePlayPause();
+            }
+
+            if (key === "r") {
+                restartTrailer();
+            }
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && isPlaying) {
+                pauseTrailer();
+            }
+        });
+
+        showScene(0, {
+            flashTransition: false
+        });
+
+        updatePlayPauseInterface();
+
+        // Autoplay-with-fallback: try to start narration with sound
+        // immediately; browsers that block unmuted autoplay reject the
+        // promise, so we quietly fall back to the muted state with the
+        // existing manual "Enable sound" button as the way in.
+        seekNarrationTo(sceneAudioStarts[currentSceneIndex]);
+
+        narration.play().then(() => {
+            audioEnabled = true;
+            soundOffIcon.style.display = "none";
+            soundOnIcon.style.display = "block";
+            soundButton.setAttribute("aria-label", "Mute");
+            soundButton.title = "Mute";
+        }).catch(() => {
+            audioEnabled = false;
+        });
+
+        animationFrameId = requestAnimationFrame(animate);
+
+        window.addEventListener("beforeunload", () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        });
+    </script>
 </body>
 </html>
