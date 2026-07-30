@@ -421,9 +421,7 @@ final class VoiceDemoController
         $callQueue = (int) $pdo->query(
             "SELECT COUNT(*) FROM marketing_leads
              WHERE status = 'pitch_ready' AND pitch_channel = 'phone'
-               AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''
-               AND (contact_email IS NULL OR trim(contact_email) = ''
-                    OR contact_email NOT LIKE '%_@_%.__%')"
+               AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''"
         )->fetchColumn();
         $callsToday = (int) $pdo->query(
             "SELECT COUNT(*) FROM call_log WHERE date(called_at) = date('now')"

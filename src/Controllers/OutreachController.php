@@ -264,9 +264,7 @@ class OutreachController
             'call_queue' => (int) $pdo->query(
                 "SELECT COUNT(*) FROM marketing_leads
                  WHERE status = 'pitch_ready' AND pitch_channel = 'phone'
-                   AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''
-                   AND (contact_email IS NULL OR trim(contact_email) = ''
-                        OR contact_email NOT LIKE '%_@_%.__%')"
+                   AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''"
             )->fetchColumn(),
             'calls_today' => self::callsToday($pdo),
             'ai_calls_today' => self::aiCallsToday($pdo),
@@ -451,8 +449,6 @@ class OutreachController
              WHERE ml.status = 'pitch_ready'
                AND ml.pitch_channel = 'phone'
                AND ml.contact_phone IS NOT NULL AND trim(ml.contact_phone) <> ''
-               AND (ml.contact_email IS NULL OR trim(ml.contact_email) = ''
-                    OR ml.contact_email NOT LIKE '%_@_%.__%')
              ORDER BY last_called_at IS NOT NULL, last_called_at ASC, ml.created_at ASC"
         )->fetchAll();
 
