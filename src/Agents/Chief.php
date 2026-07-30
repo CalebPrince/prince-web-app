@@ -314,12 +314,92 @@ class Chief
             'generated_at' => date('Y-m-d H:i:s'),
             'agents' => $agents,
             'command_center' => $wantsCommandCenter ? self::commandCenterActivity($pdo, $since) : [],
+            'private_finance' => $only === null ? self::privateFinanceSnapshot($pdo) : [],
             'waiting_on_you' => $only === null ? self::waitingOnYou($pdo) : [],
             'totals' => [
                 'actions' => array_sum(array_column($agents, 'actions')),
                 'agents_that_worked' => count(array_filter($agents, static fn ($a) => $a['actions'] > 0)),
                 'agents_total' => count($agents),
             ],
+        ];
+    }
+
+    /**
+     * Owner-only financial context for Chief's dashboard and daily brief.
+     * This data must never be copied into Lisa's public or client context.
+     *
+     * All money values are integer subunits in the stated currency.
+     *
+     * @return array<string,mixed>
+     */
+    private static function privateFinanceSnapshot(PDO $pdo): array
+    {
+        $currency = strtoupper(trim((string) Settings::get('external_expense_currency')) ?: 'USD');
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+            $currency = 'USD';
+        }
+
+        $items = [];
+        $raw = trim((string) Settings::get('external_service_expenses'));
+        if ($raw === '') {
+            $raw = "Fly.io | 3.00 | fixed\nTwilio phone number | 2.50 | fixed\nTwilio calls & relay | 5.00 | usage\nElevenLabs | 6.00 | fixed\nNamecheap hosting | 0.00 | fixed";
+        }
+        foreach (preg_split('/\R/', $raw) ?: [] as $line) {
+            $parts = array_map('trim', explode('|', $line));
+            if (($parts[0] ?? '') === '' || !is_numeric($parts[1] ?? null)) {
+                continue;
+            }
+            $items[] = [
+                'name' => mb_substr($parts[0], 0, 80),
+                'amount' => (int) round(max(0, (float) $parts[1]) * 100),
+                'type' => strtolower($parts[2] ?? '') === 'usage' ? 'usage' : 'fixed',
+            ];
+        }
+
+        $monthlyTotal = array_sum(array_column($items, 'amount'));
+        usort($items, static fn ($a, $b) => $b['amount'] <=> $a['amount']);
+        $largest = $items[0] ?? null;
+        $budgetRaw = Settings::get('external_expense_monthly_budget') ?: '0';
+        $budget = is_numeric($budgetRaw) ? (int) round(max(0, (float) $budgetRaw) * 100) : 0;
+
+        $revenueStatement = $pdo->prepare(
+            "SELECT COALESCE(SUM(amount), 0) FROM (
+                SELECT amount FROM payments
+                WHERE status = 'success' AND currency = ?
+                  AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+                UNION ALL
+                SELECT amount FROM subscription_charges
+                WHERE currency = ? AND strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')
+            )"
+        );
+        $revenueStatement->execute([$currency, $currency]);
+        $revenue = (int) $revenueStatement->fetchColumn();
+
+        $previousStatement = $pdo->prepare(
+            "SELECT total FROM external_expense_history
+             WHERE currency = ? AND period_month = strftime('%Y-%m', 'now', '-1 month')
+             LIMIT 1"
+        );
+        $previousStatement->execute([$currency]);
+        $previous = $previousStatement->fetchColumn();
+
+        return [
+            'visibility' => 'owner_only',
+            'currency' => $currency,
+            'monthly_expenses' => $monthlyTotal,
+            'monthly_budget' => $budget,
+            'budget_used_percent' => $budget > 0 ? round($monthlyTotal / $budget * 100, 1) : null,
+            'budget_remaining' => $budget > 0 ? $budget - $monthlyTotal : null,
+            'largest_service' => $largest ? [
+                'name' => $largest['name'],
+                'amount' => $largest['amount'],
+                'share_percent' => $monthlyTotal > 0 ? round($largest['amount'] / $monthlyTotal * 100, 1) : 0,
+                'type' => $largest['type'],
+            ] : null,
+            'confirmed_revenue' => $revenue,
+            'net_position' => $revenue - $monthlyTotal,
+            'previous_month_expenses' => $previous === false ? null : (int) $previous,
+            'month_over_month_change' => $previous === false ? null : $monthlyTotal - (int) $previous,
         ];
     }
 
@@ -486,6 +566,11 @@ class Chief
             . "agent gets credit for — Caleb's own actions logged automatically across the app "
             . "(edits, deletes, approvals), a Paystack payment that cleared with no admin action, "
             . "or a new contact/quote inquiry landing from the site. Write that day's brief.\n\n"
+            . "private_finance is Caleb's confidential operating-finance snapshot. Treat it as "
+            . "owner-only information: use it to flag budget pressure, service concentration, "
+            . "cost movement, or a negative net position in this private brief, but never disclose "
+            . "it to a client, lead, public visitor, Lisa conversation, proposal, or outreach message. "
+            . "Do not infer missing amounts or combine currencies.\n\n"
             . "Absolute rule: every number and fact you state must come from the JSON. Never "
             . "estimate, never round into vagueness, never mention an agent doing something "
             . "the JSON does not show — and never credit command_center activity to an agent, "
@@ -577,6 +662,43 @@ class Chief
             }
         }
 
+        $finance = $snapshot['private_finance'] ?? [];
+        if ($finance) {
+            $currency = (string) ($finance['currency'] ?? 'USD');
+            $monthly = (int) ($finance['monthly_expenses'] ?? 0);
+            $budget = (int) ($finance['monthly_budget'] ?? 0);
+            $lines[] = '';
+            $lines[] = 'Private finance check:';
+            $lines[] = '- Monthly operating expenses: ' . self::formatMoney($monthly, $currency) . '.';
+            if ($budget > 0) {
+                $used = (float) ($finance['budget_used_percent'] ?? 0);
+                $remaining = (int) ($finance['budget_remaining'] ?? 0);
+                $lines[] = $remaining >= 0
+                    ? '- Budget used: ' . rtrim(rtrim(number_format($used, 1), '0'), '.') . '%. '
+                        . self::formatMoney($remaining, $currency) . ' remains.'
+                    : '- Budget exceeded by ' . self::formatMoney(abs($remaining), $currency) . '.';
+            }
+            if (!empty($finance['largest_service'])) {
+                $largest = $finance['largest_service'];
+                $lines[] = '- Largest service: ' . $largest['name'] . ' at '
+                    . self::formatMoney((int) $largest['amount'], $currency) . ' ('
+                    . rtrim(rtrim(number_format((float) $largest['share_percent'], 1), '0'), '.')
+                    . '% of monthly expenses).';
+            }
+            if ((int) ($finance['net_position'] ?? 0) < 0) {
+                $lines[] = '- Confirmed revenue is currently '
+                    . self::formatMoney(abs((int) $finance['net_position']), $currency)
+                    . ' below operating expenses.';
+            }
+            if ($finance['month_over_month_change'] !== null) {
+                $change = (int) $finance['month_over_month_change'];
+                $lines[] = $change === 0
+                    ? '- Monthly expenses are unchanged from last month.'
+                    : '- Monthly expenses are ' . self::formatMoney(abs($change), $currency)
+                        . ($change > 0 ? ' higher' : ' lower') . ' than last month.';
+            }
+        }
+
         $lines[] = '';
         $lines[] = 'Written without an AI provider — these are the raw counts.';
 
@@ -585,6 +707,11 @@ class Chief
             'body' => implode("\n", $lines),
             'provider' => null,
         ];
+    }
+
+    private static function formatMoney(int $subunits, string $currency): string
+    {
+        return $currency . ' ' . number_format($subunits / 100, 2);
     }
 
     private static function plainHeadline(array $snapshot): string

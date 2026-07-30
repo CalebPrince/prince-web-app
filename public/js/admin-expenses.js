@@ -155,6 +155,7 @@
     const net = revenue - total;
     const margin = revenue > 0 ? Math.round((net / revenue) * 100) : null;
     const coverage = hasComparableRevenue && total > 0 ? revenue / total : null;
+    const largestShare = largest && total > 0 ? Math.round((largest.amount / total) * 100) : 0;
 
     document.getElementById("expense-monthly-total").textContent = amount(total, currency);
     document.getElementById("expense-fixed-total").textContent = amount(fixed, currency);
@@ -215,6 +216,26 @@
     varianceEl.classList.toggle("text-danger", budget > 0 && variance < 0);
     document.getElementById("expense-variance-note").textContent = !budget ? "Add a monthly ceiling" : variance >= 0 ? "remaining in budget" : "over monthly budget";
     document.getElementById("expense-budget-note").textContent = !budget ? "Set a budget to measure headroom." : variance >= 0 ? `${amount(variance, currency)} headroom remains.` : `${amount(Math.abs(variance), currency)} above budget.`;
+
+    const largestInsight = document.getElementById("expense-largest-insight");
+    largestInsight.dataset.tone = largestShare >= 50 ? "watch" : "neutral";
+    largestInsight.querySelector("p").textContent = largest
+      ? `${largest.name} accounts for ${largestShare}% of your monthly operating expenses.${largest.type === "usage" ? " Because it is usage-based, watch it as activity grows." : " This is a fixed monthly commitment."}`
+      : "Chief is waiting for your service costs.";
+
+    const budgetInsight = document.getElementById("expense-budget-insight");
+    if (!budget) {
+      budgetInsight.dataset.tone = "neutral";
+      budgetInsight.querySelector("p").textContent = "Set a monthly budget so Chief can assess your spending pace.";
+    } else {
+      const utilization = Math.round(total / budget * 100);
+      budgetInsight.dataset.tone = utilization > 100 ? "action" : utilization >= 80 ? "watch" : "good";
+      budgetInsight.querySelector("p").textContent = utilization > 100
+        ? `You are ${utilization - 100}% over your monthly budget. Reduce or reclassify ${amount(Math.abs(variance), currency)} of planned spend.`
+        : utilization >= 80
+          ? `You are using ${utilization}% of your monthly budget. ${amount(variance, currency)} remains, so new recurring costs need scrutiny.`
+          : `You are using ${utilization}% of your monthly budget. At this pace, ${amount(variance, currency)} remains within your plan.`;
+    }
     renderExpenseTrends(total, currency);
 
     const missing = namedItems.filter(i => i.amount === null);
