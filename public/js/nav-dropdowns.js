@@ -6,7 +6,26 @@
 // client-side — pages only include this script, no per-page nav markup.
 (function () {
   var nav = document.querySelector(".site-nav");
-  var desktopLinks = nav && nav.querySelector(".d-md-flex");
+  if (!nav) return;
+  var desktopLinks = nav.querySelector(".d-md-flex");
+
+  function ensureBuilderOsLink(container) {
+    if (!container || container.querySelector('a[href="/builder-os.html"]')) return;
+    var link = document.createElement("a");
+    link.href = "/builder-os.html";
+    link.className = "nav-link";
+    link.textContent = "Builder OS";
+    if (location.pathname === "/builder-os.html") link.classList.add("active");
+    var projects = container.querySelector('a[href="/projects.html"]');
+    if (projects) container.insertBefore(link, projects);
+    else container.appendChild(link);
+  }
+
+  // One shared source of truth keeps the public navigation consistent across
+  // every marketing page that loads this controller.
+  ensureBuilderOsLink(desktopLinks);
+  ensureBuilderOsLink(document.querySelector("#nav-drawer .offcanvas-body"));
+
   if (!desktopLinks || typeof api === "undefined") return;
 
   function esc(s) {

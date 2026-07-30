@@ -48,6 +48,7 @@
       <a href="/home.html" class="nav-link">Home</a>
       <a href="/about.html" class="nav-link">About</a>
       <a href="/services.html" class="nav-link">Services</a>
+      <a href="/builder-os.html" class="nav-link">Builder OS</a>
       <a href="/projects.html" class="nav-link active">Projects</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
@@ -65,6 +66,7 @@
     <a href="/home.html" class="nav-link">Home</a>
     <a href="/about.html" class="nav-link">About</a>
     <a href="/services.html" class="nav-link">Services</a>
+    <a href="/builder-os.html" class="nav-link">Builder OS</a>
     <a href="/projects.html" class="nav-link">Projects</a>
       <a href="/pricing.html" class="nav-link">Pricing</a>
     <a href="/contact.html" class="nav-link">Contact</a>
@@ -134,6 +136,7 @@
 <script src="/js/mobile-nav.js"></script>
 <script src="/js/content.js"></script>
 <script src="/js/animations.js"></script>
+<script src="/js/cinematic-nav.js?v=20260730"></script>
 <script src="/js/ai-boot.js"></script>
 <script>
 (async function () {
@@ -149,6 +152,15 @@
       .replaceAll("'", '&#39;');
   }
 
+  function safeExternalUrl(value) {
+    try {
+      const url = new URL(String(value || ''), window.location.origin);
+      return ['http:', 'https:'].includes(url.protocol) ? escapeHtml(url.href) : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   if (!slug) {
     window.location.href = '/projects.html';
     return;
@@ -158,7 +170,8 @@
     const p = await api.get(`/api/v1/projects/${encodeURIComponent(slug)}`);
     const pageTitle = `${p.title} — Prince Caleb`;
     const canonicalUrl = `https://princecaleb.dev/project.html?slug=${encodeURIComponent(slug)}`;
-    const imageUrl = p.cover_image_path.startsWith('http') ? p.cover_image_path : `https://princecaleb.dev${p.cover_image_path}`;
+    const coverPath = String(p.cover_image_path || '');
+    const imageUrl = coverPath ? (coverPath.startsWith('http') ? coverPath : `https://princecaleb.dev${coverPath}`) : 'https://princecaleb.dev/uploads/og-image.png';
     document.getElementById('page-title').textContent = pageTitle;
     document.getElementById('page-description')?.setAttribute('content', p.summary);
     document.getElementById('page-canonical')?.setAttribute('href', canonicalUrl);
@@ -170,66 +183,97 @@
     document.getElementById('twitter-description')?.setAttribute('content', p.summary);
     document.getElementById('twitter-image')?.setAttribute('content', imageUrl);
 
+    const liveUrl = safeExternalUrl(p.live_url);
+    const repoUrl = safeExternalUrl(p.repo_url);
     const links = [];
-    if (p.is_embeddable && p.live_url) {
+    if (p.is_embeddable && liveUrl) {
       links.push(`<button type="button" class="btn-brand" id="live-demo-btn">▶ Live Demo</button>`);
     }
-    if (p.live_url) links.push(`<a href="${p.live_url}" target="_blank" rel="noopener" class="btn-brand-outline">View live site <span class="cta-arrow">→</span></a>`);
-    if (p.repo_url) links.push(`<a href="${p.repo_url}" target="_blank" rel="noopener" class="btn-brand-outline">View repository</a>`);
+    if (liveUrl) links.push(`<a href="${liveUrl}" target="_blank" rel="noopener" class="btn-brand-outline">View live site <span class="cta-arrow">→</span></a>`);
+    if (repoUrl) links.push(`<a href="${repoUrl}" target="_blank" rel="noopener" class="btn-brand-outline">View repository</a>`);
+
+    const tags = (p.tags || []).map(tag => tag.name).filter(Boolean);
+    const signals = String(p.outcome_metrics || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    const gallery = (p.gallery || []).filter(Boolean);
+    const isAgentSystem = /ai|agent|voice|chat|automation|workflow/i.test(`${p.category} ${tags.join(' ')} ${p.summary}`);
+    const workflow = isAgentSystem
+      ? [
+          ['01', 'Request enters', 'A customer or operational trigger reaches the system through its configured channel.'],
+          ['02', 'Context is structured', 'The system identifies what happened, what is known, and which action is permitted.'],
+          ['03', 'The workflow executes', 'Automation, an AI specialist, or the application completes the bounded task.'],
+          ['04', 'Human control remains', 'Exceptions, judgment calls, and sensitive decisions are handed to a person with context.'],
+        ]
+      : [
+          ['01', 'User intent', 'The interface makes the next useful action clear for the customer or team member.'],
+          ['02', 'Application logic', 'Validated data moves through the business rules and connected services.'],
+          ['03', 'System response', 'The platform returns the result, record, notification, or next action.'],
+          ['04', 'Operational visibility', 'The team can inspect progress, exceptions, and outcomes without chasing updates.'],
+        ];
 
     container.innerHTML = `
-      <header class="hero agency-hero pb-0">
+      <header class="system-detail-hero">
         <div class="container">
-          <p class="eyebrow mb-3 hero-animate hero-animate-1">${p.category.replace('_', ' ')}</p>
-          <h1 class="detail-title mb-3 hero-animate hero-animate-2">${p.title}</h1>
-          <p class="fs-5 text-muted-custom mb-4 hero-animate hero-animate-3" style="max-width:65ch;">${p.summary}</p>
-          <div class="mb-4 hero-animate hero-animate-3">${p.tags.map(t => `<span class="tag-chip">${t.name}</span>`).join('')}</div>
-          <div class="d-flex flex-wrap gap-3 mb-4 hero-animate hero-animate-4">${links.join('')}</div>
-        </div>
-      </header>
-      <div class="container pb-5">
-        <div class="archive-list mb-5 reveal reveal-on-scroll">
-          <article class="archive-entry">
-            <div><span class="archive-domain">[ARCHITECTURE]</span></div>
+          <div class="system-detail-command">builder@princecaleb:~$ inspect ${escapeHtml(p.slug)}</div>
+          <div class="system-detail-heading">
             <div>
-              <h2 class="h4 archive-title">Implementation summary</h2>
-              <p class="archive-meta">${p.summary}</p>
+              <p class="eyebrow mb-3">${escapeHtml(String(p.category || 'deployed system').replaceAll('_', ' '))}</p>
+              <h1>${escapeHtml(p.title)}</h1>
+              <p>${escapeHtml(p.summary)}</p>
+              <div class="d-flex flex-wrap gap-3 mt-4">${links.join('')}</div>
             </div>
-            <div class="archive-metric">
-              <strong>${p.outcome_metrics ? escapeHtml(String(p.outcome_metrics).split(/\\r?\\n/).filter(Boolean)[0]) : 'Live'}</strong>
-              <span>Build signal</span>
-            </div>
-          </article>
-        </div>
-        <div class="row">
-          <div class="col-lg-8 reveal">
-            <h3 class="mb-3">The case study</h3>
-            <p class="text-muted-custom" style="white-space: pre-line;">${p.case_study_body || 'Case study details coming soon.'}</p>
-            ${p.outcome_metrics ? `
-              <h3 class="mb-3 mt-4">Results</h3>
-              <p class="text-muted-custom" style="white-space: pre-line;">${p.outcome_metrics}</p>
-            ` : ''}
-            ${p.testimonial ? `
-              <blockquote class="contact-card mt-4 mb-0">
-                <p class="fs-5 mb-3" style="font-style: italic;">&ldquo;${escapeHtml(p.testimonial.quote)}&rdquo;</p>
-                <footer class="text-muted-custom">— ${escapeHtml(p.testimonial.client_name)}${p.testimonial.rating ? ` &middot; ${'★'.repeat(p.testimonial.rating)}` : ''}</footer>
-              </blockquote>
-            ` : ''}
+            <aside>
+              <div><span>STATUS</span><strong><i></i> LIVE</strong></div>
+              <div><span>TYPE</span><strong>${isAgentSystem ? 'CONNECTED INTELLIGENCE' : 'CUSTOM PLATFORM'}</strong></div>
+              <div><span>CHANNELS / STACK</span><strong>${escapeHtml(tags.slice(0, 3).join(' / ') || 'CUSTOM ENGINEERING')}</strong></div>
+            </aside>
           </div>
         </div>
-        <div class="text-center mt-5 pt-4 border-top reveal">
-          <h4 class="mb-3">Want something like this?</h4>
-          <a href="/contact.html?project=${p.id}" class="btn-brand">Let's talk about your project <span class="cta-arrow">→</span></a>
+      </header>
+      <div class="system-detail-body">
+        <div class="container">
+          <section class="system-inspection-grid">
+            <div><span>01 / BUSINESS PROBLEM</span><h2>What the system had to change.</h2></div>
+            <p>${escapeHtml(p.summary)}</p>
+          </section>
+
+          <section class="system-architecture">
+            <header><span>02 / SYSTEM ARCHITECTURE</span><h2>How the work moves.</h2></header>
+            <ol>${workflow.map(step => `<li><span>${step[0]}</span><div><strong>${step[1]}</strong><p>${step[2]}</p></div></li>`).join('')}</ol>
+          </section>
+
+          <section class="system-case-study">
+            <header><span>03 / ENGINEERING RECORD</span><h2>Why it was built this way.</h2></header>
+            <div class="system-case-copy"><p>${escapeHtml(p.case_study_body || 'The full engineering record is being prepared.').replaceAll('\n', '</p><p>')}</p></div>
+          </section>
+
+          ${gallery.length || coverPath ? `<section class="system-visuals"><header><span>04 / LIVE INTERFACES</span><h2>The operating surfaces.</h2></header><div>${[coverPath, ...gallery].filter(Boolean).slice(0, 4).map((image, index) => `<figure><img src="${escapeHtml(image)}" alt="${escapeHtml(p.title)} interface ${index + 1}" loading="lazy"></figure>`).join('')}</div></section>` : ''}
+
+          <section class="system-results">
+            <header><span>05 / MEASURABLE RESULT</span><h2>What changed after deployment.</h2></header>
+            <div>${signals.length ? signals.map((signal, index) => `<article><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(signal)}</strong></article>`).join('') : '<article><span>01</span><strong>Live system deployed and available for inspection.</strong></article>'}</div>
+          </section>
+
+          ${p.testimonial ? `
+            <blockquote class="system-testimonial">
+              <p>&ldquo;${escapeHtml(p.testimonial.quote)}&rdquo;</p>
+              <footer>${escapeHtml(p.testimonial.client_name)}${p.testimonial.rating ? ` · ${'★'.repeat(p.testimonial.rating)}` : ''}</footer>
+            </blockquote>
+          ` : ''}
+
+          <div class="system-detail-cta">
+            <div><span>NEXT DEPLOYMENT</span><h2>What should your system do?</h2></div>
+            <a href="/contact.html?project=${p.id}" class="btn-brand">Map a similar workflow →</a>
+          </div>
         </div>
       </div>
     `;
 
-    if (p.is_embeddable && p.live_url) {
+    if (p.is_embeddable && liveUrl) {
       const demoModalEl = document.getElementById('live-demo-modal');
       const demoModal = new bootstrap.Modal(demoModalEl);
       document.getElementById('live-demo-title').textContent = `Live Demo — ${p.title}`;
       document.getElementById('live-demo-btn').addEventListener('click', () => {
-        document.getElementById('live-demo-frame').src = p.live_url;
+        document.getElementById('live-demo-frame').src = liveUrl;
         demoModal.show();
       });
       demoModalEl.addEventListener('hidden.bs.modal', () => {
