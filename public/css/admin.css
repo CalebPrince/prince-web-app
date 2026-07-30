@@ -1796,6 +1796,8 @@ body > .d-flex {
 .expense-metrics span { color:var(--text-muted); font-size:.76rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
 .expense-metrics strong { color:var(--heading-color); margin:auto 0 .25rem; font:800 1.35rem/1.2 "Plus Jakarta Sans",sans-serif; overflow-wrap:anywhere; }
 .expense-metrics small { color:var(--text-muted); }
+.expense-metrics .expense-metric-compact { justify-content:flex-start; }
+.expense-metrics .expense-metric-compact strong { margin:1.15rem 0 .25rem; }
 .chief-finance-insight { display:grid; grid-template-columns:24px minmax(0,1fr); gap:.6rem; align-items:start; margin-top:1rem; padding-top:.85rem; border-top:1px solid var(--line); }
 .chief-finance-insight b { display:grid; place-items:center; width:24px; height:24px; border-radius:7px; color:#3857d6; background:rgba(56,87,214,.11); font-size:.68rem; font-weight:850; }
 .chief-finance-insight p { margin:0; color:var(--text-muted); font-size:.75rem; line-height:1.55; }
