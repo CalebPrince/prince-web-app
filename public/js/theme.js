@@ -27,6 +27,7 @@
   // half-themed.
   var isAdminContext = !!document.querySelector('link[href*="/css/admin.css"]');
   var THEMES = isAdminContext ? ALL_THEMES.filter(t => t.id === "light" || t.id === "dark") : ALL_THEMES;
+  var VALID_IDS = THEMES.map(t => t.id);
 
   function applyCanvas(theme) {
     var backgrounds = {
@@ -131,10 +132,26 @@
     if (menu && menu.classList.contains("open") && openBtn) positionMenu(openBtn);
   });
 
-  // The inline head bootstrap has already resolved either the visitor's
-  // saved choice or their OS preference before first paint. Do not replace
-  // that decision with an asynchronous content request: doing so changes
-  // the canvas after navigation and creates a visible light/dark flash.
+  // Cache the admin-selected public default locally after the first content
+  // response. Every following page can then apply it in the inline head
+  // bootstrap before paint. A visitor's explicit picker choice remains the
+  // highest-priority value.
+  if (!isAdminContext && !localStorage.getItem("theme") && typeof api !== "undefined") {
+    api.get("/api/v1/content")
+      .then(function (content) {
+        if (localStorage.getItem("theme")) return;
+        var configured = String(content.default_theme || "");
+        if (VALID_IDS.indexOf(configured) !== -1) {
+          localStorage.setItem("site_default_theme", configured);
+          if (currentTheme() !== configured) applyTheme(configured);
+        } else {
+          localStorage.removeItem("site_default_theme");
+          var systemTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          if (currentTheme() !== systemTheme) applyTheme(systemTheme);
+        }
+      })
+      .catch(function () {});
+  }
 
   document.querySelectorAll(".theme-toggle").forEach(btn => {
     btn.innerHTML = ICON_APPEARANCE;

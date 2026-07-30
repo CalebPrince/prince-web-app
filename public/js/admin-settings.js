@@ -191,11 +191,17 @@ async function saveBooking(e) {
 async function saveAppearance(e) {
   e.preventDefault();
   try {
+    const configuredTheme = document.getElementById("default_theme").value;
     await api.put("/api/v1/admin/settings", {
-      default_theme: document.getElementById("default_theme").value,
+      default_theme: configuredTheme,
       splash_screen_enabled: document.getElementById("splash_screen_enabled").value,
       animation_style: document.getElementById("animation_style").value,
     });
+    if (configuredTheme) {
+      localStorage.setItem("site_default_theme", configuredTheme);
+    } else {
+      localStorage.removeItem("site_default_theme");
+    }
     showMsg("appearance-msg", "Saved — the public site reflects your changes immediately.", true);
   } catch (err) {
     showMsg("appearance-msg", err.message, false);
