@@ -29,8 +29,21 @@
   var THEMES = isAdminContext ? ALL_THEMES.filter(t => t.id === "light" || t.id === "dark") : ALL_THEMES;
   var VALID_IDS = THEMES.map(t => t.id);
 
+  function applyCanvas(theme) {
+    var backgrounds = {
+      light: "#fbfbfa",
+      dark: "#0b0c0e",
+      midnight: "#060a14",
+      paper: "#f5efe0",
+    };
+    document.documentElement.style.backgroundColor = backgrounds[theme] || backgrounds.light;
+    document.documentElement.style.setProperty("--bs-body-bg", backgrounds[theme] || backgrounds.light);
+    document.documentElement.style.colorScheme = theme === "dark" || theme === "midnight" ? "dark" : "light";
+  }
+
   function applyTheme(theme) {
     document.documentElement.setAttribute("data-theme", theme);
+    applyCanvas(theme);
     updateMenuChecks();
   }
 
