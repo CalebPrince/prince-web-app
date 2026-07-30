@@ -26,6 +26,26 @@
   ensureBuilderOsLink(desktopLinks);
   ensureBuilderOsLink(document.querySelector("#nav-drawer .offcanvas-body"));
 
+  function ensureSystemsLabel(container) {
+    if (!container) return;
+    var link = container.querySelector('a[href="/projects.html"]');
+    if (!link) return;
+    // Run before dropdown carets are attached so only the text label changes.
+    link.textContent = "Systems";
+  }
+
+  ensureSystemsLabel(desktopLinks);
+  ensureSystemsLabel(document.querySelector("#nav-drawer .offcanvas-body"));
+
+  // The opening sequence already hands directly into Home, so Home does not
+  // add a second loading sequence. Every other standard public page gets the
+  // shared Builder OS transition from this single navigation controller.
+  if (location.pathname !== "/home.html" && !window.__cinematicNavReady) {
+    var transitionScript = document.createElement("script");
+    transitionScript.src = "/js/cinematic-nav.js?v=20260730-all-menus";
+    document.head.appendChild(transitionScript);
+  }
+
   if (!desktopLinks || typeof api === "undefined") return;
 
   function esc(s) {
@@ -204,7 +224,7 @@
   }
   window.navPlatformOf = platformOf;
 
-  var projects = makeDropdown("/projects.html", "Projects");
+  var projects = makeDropdown("/projects.html", "Systems");
   if (projects) {
     api.get("/api/v1/projects").then(function (list) {
       list = list || [];
@@ -213,7 +233,7 @@
       var counts = { ecommerce: 0, webapp: 0, mobile: 0 };
       list.forEach(function (p) { counts[platformOf(p)]++; });
       var platformRows = [
-        { label: "All projects", href: "/projects.html", count: list.length },
+        { label: "All systems", href: "/projects.html", count: list.length },
         { label: "E-commerce", href: "/projects.html?platform=ecommerce", count: counts.ecommerce },
         { label: "Web apps", href: "/projects.html?platform=webapp", count: counts.webapp },
         { label: "Mobile apps", href: "/projects.html?platform=mobile", count: counts.mobile },
@@ -231,14 +251,14 @@
       var star = list.find(function (p) { return p.is_featured; }) || list[0];
       projects.panel.innerHTML =
         '<div class="container mega-grid">'
-        + col("PLATFORMS", platformRows)
-        + col("PRODUCTION LOGS", '<div class="mega-items">' + items + "</div>")
+        + col("SYSTEM TYPES", platformRows)
+        + col("DEPLOYED SYSTEMS", '<div class="mega-items">' + items + "</div>")
         + col("HAVE YOU SEEN",
             featured(
               "/project.html?slug=" + encodeURIComponent(star.slug),
               star.title,
               String(star.summary || "").slice(0, 140),
-              "View case study"))
+              "Inspect system"))
         + "</div>";
     }).catch(function () { remove(projects); });
   }

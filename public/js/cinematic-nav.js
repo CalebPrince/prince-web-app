@@ -1,4 +1,6 @@
 (function () {
+  if (window.__cinematicNavReady) return;
+  window.__cinematicNavReady = true;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const overlay = document.createElement("div");
   overlay.className = "system-page-transition";
@@ -21,6 +23,7 @@
     if (link.target || link.hasAttribute("download")) return;
     const url = new URL(link.href, location.href);
     if (url.origin !== location.origin || url.href === location.href || url.hash && url.pathname === location.pathname) return;
+    if (url.pathname === "/home.html") return;
     if (!/\.html$/.test(url.pathname)) return;
     event.preventDefault();
     document.getElementById("system-transition-label").textContent = labels[url.pathname] || "Loading next system…";
