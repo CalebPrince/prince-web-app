@@ -15,8 +15,8 @@ use App\Support\Settings;
 
 /**
  * Side-effect-free clinic web demo plus the Twilio customer-service front door.
- * Unlike LiveChatController, this surface has no tools: it cannot book,
- * create inquiries, notify staff, or mutate business data.
+ * Browser demos remain read-only. Verified Twilio calls receive a narrowly
+ * scoped action set for availability and confirmed bookings.
  */
 final class VoiceDemoController
 {
@@ -487,13 +487,59 @@ final class VoiceDemoController
         }
         $systemPrompt = self::prompt($channel, $context);
 
+        $bookingResult = null;
+        $voiceToolsEnabled = in_array($channel, ['phone', 'outbound'], true);
+        $tools = $voiceToolsEnabled ? self::voiceToolDeclarations() : [];
+        $toolExecutor = static function (string $name, array $args) use (
+            &$bookingResult,
+            $transcript,
+            $context
+        ): array {
+            try {
+                if ($name === 'check_availability') {
+                    return AppointmentController::getAvailableSlots((string) ($args['date'] ?? ''));
+                }
+                if ($name === 'book_appointment') {
+                    if (!self::bookingConfirmationGiven($transcript)) {
+                        return ['success' => false, 'error' => 'Read the exact date, time, and timezone back to the caller and wait for an explicit confirmation first.'];
+                    }
+                    $args['phone'] = trim((string) ($args['phone'] ?? '')) ?: self::callPartyNumber($context ?? []);
+                    $args['name'] = trim((string) ($args['name'] ?? ''))
+                        ?: trim((string) (($context ?? [])['contact_name'] ?? ''));
+                    $args['email'] = trim((string) ($args['email'] ?? ''))
+                        ?: trim((string) (($context ?? [])['contact_email'] ?? ''));
+                    $bookingResult = AppointmentController::createBooking($args);
+                    return $bookingResult;
+                }
+                return ['error' => 'Unknown phone action.'];
+            } catch (\Throwable $e) {
+                error_log(sprintf('Voice Lisa tool "%s" failed: %s', $name, $e->getMessage()));
+                return ['error' => 'The action could not be completed.'];
+            }
+        };
         $result = AiAgentEngine::runLowLatency(
             $systemPrompt,
-            [],
-            static fn (string $name, array $args): array => ['error' => 'Tools are disabled in this demonstration.'],
+            $tools,
+            $toolExecutor,
             $transcript,
-            1
+            $voiceToolsEnabled ? 2 : 1
         );
+        if (is_array($bookingResult) && !empty($bookingResult['success'])) {
+            $result['reply'] = sprintf(
+                'Your booking is confirmed for %s at %s, %s. A confirmation email is on its way, and the calendar and team notifications have been created.',
+                (string) $bookingResult['date'],
+                (string) $bookingResult['time'],
+                (string) $bookingResult['timezone']
+            );
+        } elseif ($voiceToolsEnabled && ($identityPrompt = self::requiredBookingIdentityPrompt(
+            $transcript,
+            $context ?? [],
+            (string) ($result['reply'] ?? '')
+        )) !== null) {
+            $result['reply'] = $identityPrompt;
+        } elseif ($voiceToolsEnabled && self::containsUnverifiedActionClaim((string) ($result['reply'] ?? ''))) {
+            $result['reply'] = 'I have your preferred time, but it is not booked or confirmed yet. I need your name, email, an available exact time, and your clear confirmation before I can create the booking.';
+        }
         if (!is_string($result['reply']) || trim($result['reply']) === '') {
             $result['reply'] = in_array($channel, ['phone', 'outbound'], true)
                 ? "The customer service assistant is temporarily unavailable. Please use the contact or booking option on princecaleb.dev."
@@ -503,11 +549,45 @@ final class VoiceDemoController
         return ['reply' => trim($result['reply']), 'provider' => $result['provider'], 'mode' => $result['mode']];
     }
 
+    private static function voiceToolDeclarations(): array
+    {
+        return [
+            [
+                'name' => 'check_availability',
+                'description' => 'Check real appointment availability for one exact date before offering times.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'date' => ['type' => 'STRING', 'description' => 'Date in YYYY-MM-DD format.'],
+                    ],
+                    'required' => ['date'],
+                ],
+            ],
+            [
+                'name' => 'book_appointment',
+                'description' => 'Create a real booking only after the caller has supplied a real name and email, selected an exact returned slot, heard the exact date/time/timezone read back, and explicitly confirmed it.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'name' => ['type' => 'STRING'],
+                        'email' => ['type' => 'STRING'],
+                        'phone' => ['type' => 'STRING'],
+                        'date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
+                        'time' => ['type' => 'STRING', 'description' => 'Exact HH:MM value returned by check_availability.'],
+                        'topic' => ['type' => 'STRING'],
+                    ],
+                    'required' => ['name', 'email', 'date', 'time'],
+                ],
+            ],
+        ];
+    }
+
     private static function prompt(string $channel = 'web', ?array $context = null): string
     {
         if ($channel === 'outbound') {
             $business = mb_substr(trim((string) ($context['business_name'] ?? 'the business')), 0, 160);
             $contactName = mb_substr(trim((string) ($context['contact_name'] ?? '')), 0, 160);
+            $contactEmail = mb_substr(trim((string) ($context['contact_email'] ?? '')), 0, 254);
             $website = mb_substr(trim((string) ($context['website_url'] ?? '')), 0, 300);
             $script = mb_substr(trim((string) ($context['pitch_body'] ?? '')), 0, 3000);
             $firstTurn = !empty($context['is_first_turn'])
@@ -526,7 +606,13 @@ final class VoiceDemoController
                 . "emoji, or spoken URLs. Immediately respect no, not interested, stop, "
                 . "or a request to call later; do not pressure, argue, or continue pitching. Never hide that you are "
                 . "an AI assistant. Do not collect sensitive information, payment details, passwords, IDs, or health "
-                . "information. You cannot book, transfer, or save records. You may offer a WhatsApp or email summary "
+                . "information. You can check real availability and create a real booking using your tools. Never "
+                . "claim a booking, email, calendar event, Slack alert, saved note, or notification succeeded unless "
+                . "the booking tool returned success. Before booking, obtain a real name and email, check availability, "
+                . "offer only exact returned slots, read the chosen date, exact time, and timezone back, then wait for "
+                . "an explicit yes. A vague response does not confirm a slot. When a reviewed email is provided below, "
+                . "ask the person to confirm it is still the right email; never read the full address aloud first. "
+                . "You may offer a WhatsApp or email summary "
                 . "after the person shows interest. Ask clearly which channel they permit. Only offer email when the "
                 . "reviewed lead has an email on file; never ask someone to spell an email address aloud. "
                 . "For WhatsApp, ask whether Lisa may send it to the number on this call. "
@@ -545,6 +631,7 @@ final class VoiceDemoController
                         . "conversation feel like a form. ")
                 . $firstTurn
                 . "Business: {$business}\nContact name: " . ($contactName !== '' ? $contactName : 'Not provided')
+                . "\nReviewed contact email: " . ($contactEmail !== '' ? $contactEmail : 'Not provided')
                 . "\nWebsite: {$website}\nReviewed call brief:\n{$script}"
                 . LisaInstructions::promptBlock('approved outbound calls');
         }
@@ -562,8 +649,13 @@ final class VoiceDemoController
                 . "Help callers identify a repetitive workflow, suitable starting channel, human handoff points, "
                 . "the monitored pilot process, implementation versus variable usage costs, and next steps. Be "
                 . "helpful and concise, but never invent prices, availability, client results, or capabilities. "
-                . "This phone integration cannot yet complete bookings or transfer calls, so never claim you "
-                . "booked, saved, transferred, or notified anyone. You may offer a WhatsApp summary after the caller "
+                . "You can check real availability and create a real booking using your tools. Never claim a booking, "
+                . "email, calendar event, Slack alert, saved note, or notification succeeded unless the booking tool "
+                . "returned success. Before booking, collect a real name and email, check availability, offer only "
+                . "exact returned slots, read the chosen date, exact time, and timezone back, then wait for an explicit "
+                . "yes. Ask the caller to spell their email, repeat it back carefully, and obtain confirmation before "
+                . "using it. A vague answer such as right, okay, or go ahead after multiple options is not confirmation. "
+                . "You cannot transfer calls. You may offer a WhatsApp summary after the caller "
                 . "shows interest. Ask clearly whether Lisa may send it to the number on this call. Email summaries "
                 . "are only available when a reviewed outbound lead already has a valid email on file. Never ask an "
                 . "inbound caller to spell an email address aloud. Never say a follow-up was "
@@ -628,6 +720,90 @@ final class VoiceDemoController
         if ($number === '') return '';
         $digits = preg_replace('/\D+/', '', $number) ?? '';
         return $digits === '' ? '' : '+' . $digits;
+    }
+
+    private static function bookingConfirmationGiven(array $transcript): bool
+    {
+        $lastUser = '';
+        $previousAssistant = '';
+        foreach (array_reverse($transcript) as $turn) {
+            if ($lastUser === '' && ($turn['role'] ?? '') === 'user') {
+                $lastUser = trim((string) ($turn['text'] ?? ''));
+                continue;
+            }
+            if ($lastUser !== '' && ($turn['role'] ?? '') === 'assistant') {
+                $previousAssistant = trim((string) ($turn['text'] ?? ''));
+                break;
+            }
+        }
+        $explicitYes = preg_match(
+            '/^\s*(?:yes|yes please|correct|confirmed|I confirm|that(?:\'s| is) correct|please book it)\b/i',
+            $lastUser
+        ) === 1;
+        $readBack = preg_match('/\b(?:confirm|book)\b/i', $previousAssistant) === 1
+            && stripos($previousAssistant, 'email') !== false
+            && preg_match('/\b(?:am|pm|GMT|Africa\/Accra|\d{1,2}:\d{2})\b/i', $previousAssistant) === 1;
+        return $explicitYes && $readBack;
+    }
+
+    private static function requiredBookingIdentityPrompt(
+        array $transcript,
+        array $context,
+        string $proposedReply
+    ): ?string {
+        $allText = strtolower(implode(' ', array_map(
+            static fn(array $turn): string => (string) ($turn['text'] ?? ''),
+            array_filter($transcript, 'is_array')
+        )));
+        if (!preg_match('/\b(?:book|booking|appointment|schedule|follow-up call|call back|callback)\b/i', $allText)) {
+            return null;
+        }
+
+        $userText = implode(' ', array_map(
+            static fn(array $turn): string => ($turn['role'] ?? '') === 'user'
+                ? (string) ($turn['text'] ?? '')
+                : '',
+            array_filter($transcript, 'is_array')
+        ));
+        $hasEmail = filter_var(trim((string) ($context['contact_email'] ?? '')), FILTER_VALIDATE_EMAIL)
+            || preg_match('/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i', $userText) === 1;
+        $hasName = trim((string) ($context['contact_name'] ?? '')) !== ''
+            || preg_match('/\b(?:my name is|this is|I am|I\'m)\s+([a-z][a-z .\'-]{1,80})/i', $userText) === 1;
+        if ($hasName && $hasEmail) return null;
+
+        $replyAlreadyAsks = (!$hasName && preg_match('/\b(?:your|full)\s+name\b/i', $proposedReply))
+            || (!$hasEmail && stripos($proposedReply, 'email') !== false);
+        if ($replyAlreadyAsks) return null;
+        if (!$hasName && !$hasEmail) {
+            return 'Before I check and confirm a booking, may I have your full name and email address? Please spell the email slowly so I can repeat it back accurately.';
+        }
+        if (!$hasName) {
+            return 'Before I check and confirm the booking, may I have your full name?';
+        }
+        return 'Before I check and confirm the booking, may I have your email address? Please spell it slowly so I can repeat it back accurately.';
+    }
+
+    private static function callPartyNumber(array $context): string
+    {
+        $number = ($context['direction'] ?? '') === 'outbound'
+            ? (string) ($context['to_number'] ?? '')
+            : (string) ($context['from_number'] ?? '');
+        return self::normalizePhoneNumber($number);
+    }
+
+    private static function containsUnverifiedActionClaim(string $reply): bool
+    {
+        if ($reply === '') return false;
+        if (preg_match('/\b(?:not|isn\'t|is not|cannot|can\'t)\s+(?:yet\s+)?(?:booked|confirmed|scheduled|sent|saved)\b/i', $reply)) {
+            return false;
+        }
+        return preg_match(
+            '/\b(?:is|has been|you(?:\'re| are))\s+(?:booked|confirmed|scheduled)\b|'
+            . '\bI(?:\'ll| will)\s+(?:make a note|let Prince Caleb know|schedule|book|notify)\b|'
+            . '\bPrince Caleb will reach out\b|'
+            . '\b(?:confirmation email|calendar invite|Slack alert)\s+(?:is|has been|was)\s+(?:sent|created)\b/i',
+            $reply
+        ) === 1;
     }
 
     private static function captureWhatsAppConsent(

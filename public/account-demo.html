@@ -7,7 +7,7 @@
   <title>Private outcome walkthrough | Prince Caleb</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&amp;family=Fraunces:opsz,wght@9..144,600;9..144,700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/account-demo.css?v=20260729-personalized">
+  <link rel="stylesheet" href="/css/account-demo.css?v=20260730-working-preview">
 </head>
 <body>
   <header class="demo-nav">
@@ -73,6 +73,35 @@
       <div class="workflow-track" data-workflow></div>
     </section>
 
+    <section class="demo-working-preview" data-engagement-section="working-preview" aria-labelledby="working-preview-title">
+      <header class="preview-heading">
+        <div>
+          <p class="demo-kicker">A working preview for <strong data-preview-business></strong></p>
+          <h2 id="working-preview-title">See the request move, not just the promise.</h2>
+        </div>
+        <p>This example uses a realistic customer situation for your sector. Every action remains reviewable, and judgment stays with your team.</p>
+      </header>
+      <div class="preview-grid">
+        <article class="conversation-mockup">
+          <header><span class="lisa-avatar">L</span><div><b>Lisa</b><small>AI customer-service assistant</small></div><i>Online</i></header>
+          <div class="conversation-body">
+            <div class="message customer-message"><small data-preview-contact></small><p data-preview-request></p></div>
+            <div class="message lisa-message"><small>Lisa</small><p data-preview-reply></p><time>Just now</time></div>
+          </div>
+          <footer><span>Reply prepared</span><button type="button" data-preview-interaction>Review handoff</button></footer>
+        </article>
+        <article class="activity-mockup">
+          <header><div><span>Live activity</span><b data-preview-intent></b></div><i class="activity-live">In progress</i></header>
+          <ol data-preview-activities></ol>
+          <footer><span>Human checkpoint</span><strong data-preview-handoff></strong></footer>
+        </article>
+      </div>
+      <div class="integration-rail">
+        <div class="integration-origin"><span class="lisa-avatar">L</span><div><b>Lisa coordinates the flow</b><small>One conversation, connected follow-through</small></div></div>
+        <div class="integration-tools" data-preview-integrations></div>
+      </div>
+    </section>
+
     <section class="demo-proof" data-engagement-section="evidence">
       <div>
         <p class="demo-kicker">Built around evidence, not assumptions</p>
@@ -90,6 +119,6 @@
     </section>
   </template>
 
-  <script src="/js/account-demo.js?v=20260729-personalized"></script>
+  <script src="/js/account-demo.js?v=20260730-working-preview"></script>
 </body>
 </html>

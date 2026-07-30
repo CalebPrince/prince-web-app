@@ -469,7 +469,78 @@ class AccountDemoController
             'website_host' => $host ? preg_replace('/^www\./i', '', (string) $host) : null,
             'theme' => $themes[$profile['template']],
             'evidence_points' => array_slice(array_values(array_unique($evidence)), 0, 4),
+            'working_preview' => self::workingPreview($profile['template'], $name),
         ];
+    }
+
+    private static function workingPreview(string $template, string $businessName): array
+    {
+        $previews = [
+            'healthcare' => [
+                'request' => 'I would like to book a general consultation for tomorrow afternoon.',
+                'reply' => "I can help with that. I’ll collect the preferred time and contact details, then send the request to {$businessName} for confirmation.",
+                'contact' => 'Ama Mensah',
+                'intent' => 'General consultation',
+                'handoff' => 'Booking request ready for clinic review',
+                'activities' => ['Patient request captured', 'Preferred time recorded', 'Clinic calendar checked', 'Confirmation queued'],
+                'integrations' => [['WhatsApp', 'Patient conversation'], ['Google Calendar', 'Availability'], ['Clinic CRM', 'Patient follow-up'], ['Email', 'Confirmation']],
+            ],
+            'hospitality' => [
+                'request' => 'Do you have a table for four this Friday around 7 PM?',
+                'reply' => "I’ll check the preferred time, note the party size, and send the reservation request to {$businessName}.",
+                'contact' => 'Kwame Boateng',
+                'intent' => 'Table for four',
+                'handoff' => 'Reservation ready for host confirmation',
+                'activities' => ['Guest enquiry answered', 'Party details captured', 'Reservation calendar checked', 'Host notified'],
+                'integrations' => [['WhatsApp', 'Guest conversation'], ['Google Calendar', 'Reservations'], ['Guest CRM', 'Preferences'], ['Slack', 'Special requests']],
+            ],
+            'finance' => [
+                'request' => 'I need to understand which service is right for my business account.',
+                'reply' => "I can collect the reason for your enquiry and route it to an authorised {$businessName} adviser without requesting sensitive account information.",
+                'contact' => 'Nana Owusu',
+                'intent' => 'Business account enquiry',
+                'handoff' => 'Qualified enquiry awaiting authorised adviser',
+                'activities' => ['Service need identified', 'Sensitive-data boundary applied', 'Adviser route selected', 'Follow-up recorded'],
+                'integrations' => [['Voice', 'Client enquiry'], ['Secure CRM', 'Case record'], ['Email', 'Approved follow-up'], ['Teams', 'Adviser handoff']],
+            ],
+            'property' => [
+                'request' => 'Is the two-bedroom apartment still available, and can I view it this weekend?',
+                'reply' => "I’ll capture your preferred viewing time and send the qualified enquiry to the {$businessName} property team.",
+                'contact' => 'Esi Addo',
+                'intent' => 'Two-bedroom viewing',
+                'handoff' => 'Viewing request ready for assigned agent',
+                'activities' => ['Property matched', 'Viewing intent captured', 'Agent availability checked', 'Viewing follow-up queued'],
+                'integrations' => [['WhatsApp', 'Buyer enquiry'], ['Property CRM', 'Lead record'], ['Google Calendar', 'Viewings'], ['Slack', 'Agent alert']],
+            ],
+            'education' => [
+                'request' => 'When does the next intake start, and what do I need to apply?',
+                'reply' => "I can explain the approved application steps and send your programme interest to {$businessName} admissions.",
+                'contact' => 'Adwoa Kusi',
+                'intent' => 'Next-intake application',
+                'handoff' => 'Prospective learner ready for admissions',
+                'activities' => ['Programme question answered', 'Intake preference captured', 'Application checklist shared', 'Admissions follow-up created'],
+                'integrations' => [['Live chat', 'Learner enquiry'], ['Admissions CRM', 'Applicant record'], ['Email', 'Application steps'], ['Calendar', 'Admissions call']],
+            ],
+            'commerce' => [
+                'request' => 'Is this item available, and can it be delivered to Tema tomorrow?',
+                'reply' => "I’ll check the approved availability information, capture the delivery area, and send the order enquiry to {$businessName}.",
+                'contact' => 'Kojo Asare',
+                'intent' => 'Product and delivery enquiry',
+                'handoff' => 'Purchase-ready enquiry sent to fulfilment',
+                'activities' => ['Product question answered', 'Delivery area captured', 'Availability checked', 'Fulfilment team notified'],
+                'integrations' => [['WhatsApp', 'Customer enquiry'], ['Inventory', 'Availability'], ['CRM', 'Customer record'], ['Slack', 'Fulfilment alert']],
+            ],
+            'professional' => [
+                'request' => 'I need help with a new project and would like to know the best next step.',
+                'reply' => "I’ll clarify the project type, timing, and decision stage, then prepare a concise brief for {$businessName}.",
+                'contact' => 'Akosua Darko',
+                'intent' => 'New project enquiry',
+                'handoff' => 'Qualified brief ready for consultant review',
+                'activities' => ['Service need clarified', 'Timeline captured', 'Lead qualified', 'Consultant follow-up created'],
+                'integrations' => [['Website chat', 'Client enquiry'], ['CRM', 'Opportunity record'], ['Google Calendar', 'Consultation'], ['Email', 'Summary and next steps']],
+            ],
+        ];
+        return $previews[$template] ?? $previews['professional'];
     }
 
     private static function publicShape(array $row): array

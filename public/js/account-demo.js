@@ -136,6 +136,29 @@
       .map(point => `<li>${escapeHtml(point)}</li>`).join("");
     fragment.querySelector("[data-contrast-before]").textContent = data.friction_label;
     fragment.querySelector("[data-contrast-after]").textContent = data.outcome_summary;
+    const preview = personalization.working_preview || {};
+    fragment.querySelector("[data-preview-business]").textContent = data.business_name;
+    fragment.querySelector("[data-preview-contact]").textContent = preview.contact || "Prospective customer";
+    fragment.querySelector("[data-preview-request]").textContent = preview.request || "I have a question and would like help with the next step.";
+    fragment.querySelector("[data-preview-reply]").textContent = preview.reply || `I’ll collect the essential details and prepare a clear handoff for ${data.business_name}.`;
+    fragment.querySelector("[data-preview-intent]").textContent = preview.intent || "New customer enquiry";
+    fragment.querySelector("[data-preview-handoff]").textContent = preview.handoff || "Ready for team review";
+    fragment.querySelector("[data-preview-activities]").innerHTML = (preview.activities || []).map((activity, index) => `
+      <li class="${index < 3 ? "is-complete" : "is-current"}">
+        <i>${index < 3 ? "✓" : ""}</i>
+        <div><b>${escapeHtml(activity)}</b><small>${index < 3 ? "Completed by Lisa" : "Waiting for team confirmation"}</small></div>
+        <time>${index < 3 ? `${index + 1}m` : "Now"}</time>
+      </li>`).join("");
+    fragment.querySelector("[data-preview-integrations]").innerHTML = (preview.integrations || []).map((integration, index) => `
+      <article style="--tool-index:${index}">
+        <span>${escapeHtml(String(integration[0] || "Tool").slice(0, 2).toUpperCase())}</span>
+        <div><b>${escapeHtml(integration[0] || "Connected tool")}</b><small>${escapeHtml(integration[1] || "Workflow step")}</small></div>
+      </article>`).join("");
+    fragment.querySelector("[data-preview-interaction]").addEventListener("click", event => {
+      event.currentTarget.textContent = "Handoff reviewed";
+      event.currentTarget.closest(".conversation-mockup").classList.add("is-reviewed");
+      track("interaction");
+    });
     const contrast = fragment.querySelector("[data-contrast]");
     const contrastRange = fragment.querySelector("[data-contrast-range]");
     contrastRange.addEventListener("input", () => contrast.style.setProperty("--split", `${contrastRange.value}%`));
