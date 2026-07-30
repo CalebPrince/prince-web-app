@@ -61,6 +61,30 @@
         <li><span>03</span><div><strong>The right specialist acts</strong><p>A configured agent handles research, follow-up, proposals, or document work.</p></div></li>
         <li><span>04</span><div><strong>The owner stays in control</strong><p>Chief watches the private command centre and flags decisions that need Prince Caleb.</p></div></li>
       </ol>
+
+      <div class="os-simulator" id="os-simulator">
+        <header>
+          <div><p class="eyebrow">// Interactive workflow playback</p><h3>Run a request through Builder OS.</h3></div>
+          <span class="os-simulator-state" id="os-simulator-state"><i></i> READY</span>
+        </header>
+        <div class="os-scenario-tabs" role="group" aria-label="Choose a workflow scenario">
+          <button type="button" class="active" data-scenario="clinic">After-hours clinic call</button>
+          <button type="button" data-scenario="lead">New business enquiry</button>
+          <button type="button" data-scenario="document">Invoice needs review</button>
+        </div>
+        <div class="os-simulator-stage">
+          <div class="os-request-card">
+            <span>INCOMING REQUEST</span>
+            <blockquote id="os-scenario-request">“I need to book an appointment, but the clinic is closed.”</blockquote>
+            <button type="button" class="btn-brand" id="os-run-simulation">Run simulation</button>
+          </div>
+          <div class="os-execution-console">
+            <div class="os-console-bar"><span>builder-os / execution-log</span><small id="os-run-id">WAITING</small></div>
+            <ol id="os-execution-log" aria-live="polite"><li class="is-muted">Choose a scenario, then run the workflow.</li></ol>
+          </div>
+        </div>
+        <footer><span>No client data is used. This simulation demonstrates routing and handoffs only.</span><a href="/contact.html">Build this workflow →</a></footer>
+      </div>
     </div>
   </section>
 
@@ -70,7 +94,7 @@
 <footer class="site-footer"><div class="container d-flex justify-content-between"><span>Prince Caleb · Builder OS</span><a href="/home.html">Return home</a></div></footer>
 <script src="/js/api.js"></script>
 <script src="/js/theme.js"></script>
-<script src="/js/builder-os.js?v=20260730"></script>
+<script src="/js/builder-os.js?v=20260730-cinematic"></script>
 <script src="/js/analytics.js"></script>
 </body>
 </html>
