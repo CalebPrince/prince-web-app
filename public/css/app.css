@@ -1,9 +1,3 @@
-/* Smoother cross-page navigation in browsers that support it (Chrome 126+);
-   silently ignored elsewhere — zero cost, zero JS. */
-@view-transition {
-  navigation: auto;
-}
-
 /* --- Editorial design system -------------------------------------------
    Near-black premium dark theme + matching paper-white light theme.
    Monochrome surfaces, razor hairline borders, accent used sparingly.
