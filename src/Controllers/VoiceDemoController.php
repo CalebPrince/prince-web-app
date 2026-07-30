@@ -560,7 +560,7 @@ final class VoiceDemoController
         return [
             [
                 'name' => 'check_availability',
-                'description' => 'Check real appointment availability for one exact date before offering times.',
+                'description' => 'Check real appointment availability for one exact date before offering times. If more than four slots are returned, ask for a morning or afternoon preference and offer at most four exact times.',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [
@@ -587,7 +587,7 @@ final class VoiceDemoController
             ],
             [
                 'name' => 'check_availability_range',
-                'description' => 'Check real open dates and exact slots across a requested range of up to 14 days.',
+                'description' => 'Check real open dates and exact slots across a requested range of up to 14 days. Summarize dates first and never read every time across every day.',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [
@@ -611,8 +611,11 @@ final class VoiceDemoController
         }
         $bookingDateContext = "The current date in {$bookingTimezone} is {$bookingToday}. Ghana commonly writes "
             . "numeric dates as DD-MM-YYYY, so 07-08-2026 means 7 August 2026, not July 8. Convert dates to "
-            . "YYYY-MM-DD only for tools. Use the date-range availability tool when asked for open dates across "
-            . "a week or range; do not force the caller to name one date at a time. ";
+            . "YYYY-MM-DD only for tools. In every spoken reply, say the date as day, month, and four-digit year "
+            . "using numbers in that order; never say the month or year in words. Use the date-range availability "
+            . "tool when asked for open dates across "
+            . "a week or range; do not force the caller to name one date at a time. Summarize open dates first. "
+            . "If a chosen day has more than four slots, ask morning or afternoon, then offer at most four exact times. ";
         if ($channel === 'outbound') {
             $business = mb_substr(trim((string) ($context['business_name'] ?? 'the business')), 0, 160);
             $contactName = mb_substr(trim((string) ($context['contact_name'] ?? '')), 0, 160);

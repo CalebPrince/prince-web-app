@@ -124,7 +124,14 @@ class AppointmentController
             $slots = array_values(array_diff($slots, $booked));
         }
 
-        return ['enabled' => true, 'slots' => $slots, 'timezone' => $cfg['timezone']];
+        return [
+            'enabled' => true,
+            'slots' => $slots,
+            'timezone' => $cfg['timezone'],
+            'presentation_instruction' => count($slots) > 4
+                ? 'Display the date as DD-MM-YYYY, not written-out words. Do not list every slot. Ask whether the client prefers morning or afternoon, then offer at most four exact slots from that period.'
+                : 'Display the date as DD-MM-YYYY and offer only these exact slots.',
+        ];
     }
 
     /** @return array{enabled:bool,dates:array<int,array{date:string,day:string,slots:array<int,string>}>,timezone?:string,error?:string} */
@@ -158,7 +165,14 @@ class AppointmentController
                 ];
             }
         }
-        return ['enabled' => true, 'dates' => $dates, 'timezone' => $cfg['timezone']];
+        return [
+            'enabled' => true,
+            'dates' => $dates,
+            'timezone' => $cfg['timezone'],
+            'presentation_instruction' => count($dates) > 1
+                ? 'Display every date as DD-MM-YYYY. First summarize the available dates and ask the client to choose a date. Do not list every time across every day.'
+                : 'Display the date as DD-MM-YYYY. If it has more than four slots, ask for a morning or afternoon preference before offering times.',
+        ];
     }
 
     /** POST /api/v1/appointments/book — public, honeypot + rate-limited */

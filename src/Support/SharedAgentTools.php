@@ -359,7 +359,8 @@ class SharedAgentTools
         return [
             'name' => 'check_availability',
             'description' => 'Check real bookable call slots for a given date, so you can offer an '
-                . 'actual time instead of guessing.',
+                . 'actual time instead of guessing. If more than four are returned, ask for a morning or '
+                . 'afternoon preference and offer at most four exact slots.',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
@@ -374,7 +375,8 @@ class SharedAgentTools
     {
         return [
             'name' => 'check_availability_range',
-            'description' => 'Check real available dates and exact call slots across a requested date range of up to 14 days.',
+            'description' => 'Check real available dates and exact call slots across a requested date range of up to 14 days. '
+                . 'Summarize the available dates first; do not read every time across every day.',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
