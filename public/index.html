@@ -1,2004 +1,725 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="description"
-        content="PrinceCaleb.dev — an interactive cinematic introduction to an AI-powered development ecosystem."
-    >
-
-    <title>Prince Caleb — System Online</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
-
-    <style>
-        :root {
-            --background: #030504;
-            --background-soft: #07100a;
-            --green: #00ff66;
-            --green-soft: #8affb2;
-            --cyan: #00f7ff;
-            --purple: #b300ff;
-            --red: #ff3158;
-            --white: #f5fff8;
-            --muted: rgba(214, 255, 226, 0.55);
-            --border: rgba(0, 255, 102, 0.22);
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            width: 100%;
-            min-height: 100%;
-            margin: 0;
-            overflow: hidden;
-            background:
-                radial-gradient(
-                    circle at 50% 35%,
-                    rgba(0, 255, 102, 0.08),
-                    transparent 32%
-                ),
-                linear-gradient(
-                    180deg,
-                    #020302 0%,
-                    var(--background) 55%,
-                    #010201 100%
-                );
-        }
-
-        body {
-            color: var(--green);
-            font-family: "Fira Code", monospace;
-        }
-
-        button,
-        a {
-            font: inherit;
-        }
-
-        button:focus-visible,
-        a:focus-visible {
-            outline: 2px solid var(--green);
-            outline-offset: 4px;
-        }
-
-        .trailer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            isolation: isolate;
-            overflow: hidden;
-        }
-
-        .ambient-glow {
-            position: absolute;
-            inset: -30%;
-            z-index: -8;
-            background:
-                radial-gradient(
-                    circle at 20% 30%,
-                    rgba(0, 247, 255, 0.08),
-                    transparent 24%
-                ),
-                radial-gradient(
-                    circle at 80% 60%,
-                    rgba(179, 0, 255, 0.07),
-                    transparent 28%
-                ),
-                radial-gradient(
-                    circle at 50% 50%,
-                    rgba(0, 255, 102, 0.08),
-                    transparent 35%
-                );
-            animation: ambientMove 14s ease-in-out infinite alternate;
-        }
-
-        @keyframes ambientMove {
-            0% {
-                transform: translate3d(-2%, -2%, 0) scale(1);
-            }
-
-            100% {
-                transform: translate3d(2%, 2%, 0) scale(1.08);
-            }
-        }
-
-        .grid-background {
-            position: absolute;
-            inset: 0;
-            z-index: -7;
-            opacity: 0.14;
-            background-image:
-                linear-gradient(
-                    rgba(0, 255, 102, 0.14) 1px,
-                    transparent 1px
-                ),
-                linear-gradient(
-                    90deg,
-                    rgba(0, 255, 102, 0.14) 1px,
-                    transparent 1px
-                );
-            background-size: 48px 48px;
-            transform: perspective(700px) rotateX(62deg) scale(1.5);
-            transform-origin: center bottom;
-            mask-image: linear-gradient(
-                to top,
-                rgba(0, 0, 0, 0.85),
-                transparent 72%
-            );
-        }
-
-        .noise {
-            position: absolute;
-            inset: 0;
-            z-index: 20;
-            pointer-events: none;
-            opacity: 0.045;
-            background-image:
-                repeating-radial-gradient(
-                    circle at 0 0,
-                    rgba(255, 255, 255, 0.4) 0,
-                    rgba(255, 255, 255, 0.4) 1px,
-                    transparent 1px,
-                    transparent 3px
-                );
-            background-size: 5px 5px;
-            animation: noiseShift 0.2s steps(2) infinite;
-        }
-
-        @keyframes noiseShift {
-            0% {
-                transform: translate(0, 0);
-            }
-
-            25% {
-                transform: translate(-1%, 1%);
-            }
-
-            50% {
-                transform: translate(1%, -1%);
-            }
-
-            75% {
-                transform: translate(1%, 1%);
-            }
-
-            100% {
-                transform: translate(-1%, -1%);
-            }
-        }
-
-        .vignette {
-            position: absolute;
-            inset: 0;
-            z-index: 15;
-            pointer-events: none;
-            box-shadow: inset 0 0 160px rgba(0, 0, 0, 0.95);
-        }
-
-        .scanlines {
-            position: absolute;
-            inset: 0;
-            z-index: 12;
-            pointer-events: none;
-            opacity: 0.2;
-            background:
-                repeating-linear-gradient(
-                    to bottom,
-                    transparent 0,
-                    transparent 3px,
-                    rgba(0, 255, 102, 0.045) 4px
-                );
-        }
-
-        .scanline {
-            position: absolute;
-            left: 0;
-            bottom: 110%;
-            z-index: 13;
-            width: 100%;
-            height: 120px;
-            pointer-events: none;
-            opacity: 0.18;
-            background: linear-gradient(
-                to bottom,
-                transparent,
-                rgba(0, 255, 102, 0.22),
-                transparent
-            );
-            animation: scanlineMove 6s linear infinite;
-        }
-
-        @keyframes scanlineMove {
-            from {
-                bottom: 110%;
-            }
-
-            to {
-                bottom: -30%;
-            }
-        }
-
-        .scene {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6rem 1.5rem;
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(1.025);
-            transition:
-                opacity 900ms ease,
-                transform 1200ms ease,
-                visibility 900ms;
-        }
-
-        .scene.active {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1);
-        }
-
-        .scene-content {
-            width: min(1100px, 100%);
-            text-align: center;
-        }
-
-        .eyebrow {
-            margin-bottom: 1.25rem;
-            color: var(--muted);
-            font-size: clamp(0.66rem, 1.2vw, 0.8rem);
-            letter-spacing: 0.32em;
-            text-transform: uppercase;
-        }
-
-        .cinematic-title {
-            margin: 0;
-            color: var(--white);
-            font-family: "Inter", sans-serif;
-            font-size: clamp(2.25rem, 7vw, 6.6rem);
-            font-weight: 800;
-            line-height: 0.98;
-            letter-spacing: -0.055em;
-            text-wrap: balance;
-        }
-
-        .cinematic-title .accent {
-            color: var(--green);
-            text-shadow:
-                0 0 12px rgba(0, 255, 102, 0.7),
-                0 0 36px rgba(0, 255, 102, 0.25);
-        }
-
-        .subtitle {
-            max-width: 820px;
-            margin: 1.5rem auto 0;
-            color: var(--muted);
-            font-family: "Inter", sans-serif;
-            font-size: clamp(1rem, 2vw, 1.35rem);
-            line-height: 1.7;
-            text-wrap: balance;
-        }
-
-        .terminal-window {
-            width: min(850px, 100%);
-            margin: 0 auto;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            background:
-                linear-gradient(
-                    180deg,
-                    rgba(9, 18, 12, 0.92),
-                    rgba(2, 5, 3, 0.95)
-                );
-            box-shadow:
-                0 30px 100px rgba(0, 0, 0, 0.65),
-                0 0 60px rgba(0, 255, 102, 0.07);
-            backdrop-filter: blur(16px);
-        }
-
-        .terminal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            min-height: 48px;
-            padding: 0 1rem;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.025);
-        }
-
-        .terminal-dots {
-            display: flex;
-            gap: 0.48rem;
-        }
-
-        .terminal-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .terminal-dot:nth-child(1) {
-            background: #ff5f57;
-        }
-
-        .terminal-dot:nth-child(2) {
-            background: #febc2e;
-        }
-
-        .terminal-dot:nth-child(3) {
-            background: #28c840;
-        }
-
-        .terminal-label {
-            color: rgba(255, 255, 255, 0.34);
-            font-size: 0.72rem;
-            letter-spacing: 0.08em;
-        }
-
-        .terminal-body {
-            min-height: 300px;
-            padding: clamp(1.4rem, 4vw, 3rem);
-            text-align: left;
-        }
-
-        .terminal-line {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.7rem;
-            margin: 0 0 1rem;
-            color: var(--green-soft);
-            font-size: clamp(0.82rem, 2vw, 1.08rem);
-            line-height: 1.7;
-        }
-
-        .prompt {
-            color: var(--cyan);
-        }
-
-        .command {
-            color: var(--white);
-        }
-
-        .output {
-            color: var(--green);
-        }
-
-        .muted {
-            color: rgba(214, 255, 226, 0.42);
-        }
-
-        .typing-line {
-            display: inline-block;
-            max-width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-            border-right: 2px solid var(--green);
-            width: 0;
-        }
-
-        .scene.active .typing-line {
-            animation:
-                typeLine var(--typing-duration, 2.3s)
-                steps(var(--typing-steps, 32), end)
-                var(--typing-delay, 0.2s)
-                forwards,
-                cursorBlink 0.8s step-end infinite;
-        }
-
-        @keyframes typeLine {
-            from {
-                width: 0;
-            }
-
-            to {
-                width: var(--typing-width, 100%);
-            }
-        }
-
-        @keyframes cursorBlink {
-            0%,
-            100% {
-                border-color: transparent;
-            }
-
-            50% {
-                border-color: var(--green);
-            }
-        }
-
-        .glitch {
-            position: relative;
-            display: inline-block;
-            color: var(--white);
-            font-family: "Inter", sans-serif;
-            font-size: clamp(2.6rem, 9vw, 8.5rem);
-            font-weight: 800;
-            line-height: 0.92;
-            letter-spacing: -0.06em;
-            text-transform: uppercase;
-            text-shadow:
-                0 0 24px rgba(255, 255, 255, 0.12),
-                0 0 50px rgba(0, 255, 102, 0.12);
-        }
-
-        .glitch::before,
-        .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-        }
-
-        .glitch::before {
-            color: var(--cyan);
-            transform: translateX(2px);
-            clip-path: inset(20% 0 55% 0);
-            animation: glitchBefore 2.8s infinite steps(1);
-            opacity: 0.75;
-        }
-
-        .glitch::after {
-            color: var(--red);
-            transform: translateX(-2px);
-            clip-path: inset(65% 0 10% 0);
-            animation: glitchAfter 2.1s infinite steps(1);
-            opacity: 0.65;
-        }
-
-        @keyframes glitchBefore {
-            0%,
-            86%,
-            100% {
-                transform: translate(0);
-                clip-path: inset(0 0 100% 0);
-            }
-
-            87% {
-                transform: translate(-6px, 2px);
-                clip-path: inset(14% 0 61% 0);
-            }
-
-            90% {
-                transform: translate(5px, -2px);
-                clip-path: inset(51% 0 27% 0);
-            }
-
-            93% {
-                transform: translate(-3px, 1px);
-                clip-path: inset(77% 0 6% 0);
-            }
-        }
-
-        @keyframes glitchAfter {
-            0%,
-            80%,
-            100% {
-                transform: translate(0);
-                clip-path: inset(100% 0 0 0);
-            }
-
-            82% {
-                transform: translate(5px, 1px);
-                clip-path: inset(65% 0 11% 0);
-            }
-
-            86% {
-                transform: translate(-5px, -2px);
-                clip-path: inset(28% 0 49% 0);
-            }
-
-            90% {
-                transform: translate(3px, 2px);
-                clip-path: inset(8% 0 76% 0);
-            }
-        }
-
-        .chaos-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
-            width: min(880px, 100%);
-            margin: 2.5rem auto 0;
-        }
-
-        .chaos-card {
-            padding: 1.4rem;
-            border: 1px solid rgba(255, 49, 88, 0.2);
-            border-radius: 14px;
-            background: rgba(255, 49, 88, 0.035);
-            color: rgba(255, 255, 255, 0.65);
-            text-align: left;
-            transform: translateY(18px);
-            opacity: 0;
-        }
-
-        .scene.active .chaos-card {
-            animation: cardReveal 700ms ease forwards;
-        }
-
-        .scene.active .chaos-card:nth-child(2) {
-            animation-delay: 180ms;
-        }
-
-        .scene.active .chaos-card:nth-child(3) {
-            animation-delay: 360ms;
-        }
-
-        .scene.active .chaos-card:nth-child(4) {
-            animation-delay: 540ms;
-        }
-
-        @keyframes cardReveal {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .chaos-card strong {
-            display: block;
-            margin-bottom: 0.4rem;
-            color: var(--red);
-            font-size: 0.76rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-        }
-
-        .word-sequence {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .sequence-word {
-            color: var(--white);
-            font-family: "Inter", sans-serif;
-            font-size: clamp(3.5rem, 12vw, 10rem);
-            font-weight: 800;
-            line-height: 0.9;
-            letter-spacing: -0.075em;
-            opacity: 0;
-            transform: scale(0.88) translateY(30px);
-        }
-
-        .scene.active .sequence-word {
-            animation: wordReveal 850ms cubic-bezier(.17, .67, .32, 1.2) forwards;
-        }
-
-        .scene.active .sequence-word:nth-child(2) {
-            animation-delay: 500ms;
-        }
-
-        .scene.active .sequence-word:nth-child(3) {
-            animation-delay: 1000ms;
-        }
-
-        @keyframes wordReveal {
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .agents-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
-            width: min(920px, 100%);
-            margin: 2.5rem auto 0;
-        }
-
-        .agent-card {
-            position: relative;
-            overflow: hidden;
-            min-height: 150px;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            background:
-                linear-gradient(
-                    145deg,
-                    rgba(0, 255, 102, 0.06),
-                    rgba(255, 255, 255, 0.015)
-                );
-            text-align: left;
-            opacity: 0;
-            transform: translateY(24px) scale(0.98);
-        }
-
-        .scene.active .agent-card {
-            animation: agentOnline 700ms ease forwards;
-        }
-
-        .scene.active .agent-card:nth-child(2) {
-            animation-delay: 180ms;
-        }
-
-        .scene.active .agent-card:nth-child(3) {
-            animation-delay: 360ms;
-        }
-
-        .scene.active .agent-card:nth-child(4) {
-            animation-delay: 540ms;
-        }
-
-        @keyframes agentOnline {
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .agent-card::after {
-            content: "";
-            position: absolute;
-            inset: auto -30% -80% auto;
-            width: 180px;
-            height: 180px;
-            border-radius: 999px;
-            background: rgba(0, 255, 102, 0.12);
-            filter: blur(35px);
-        }
-
-        .agent-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.2rem;
-            color: var(--green);
-            font-size: 0.69rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 999px;
-            background: var(--green);
-            box-shadow: 0 0 14px var(--green);
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            50% {
-                opacity: 0.35;
-                transform: scale(0.8);
-            }
-        }
-
-        .agent-name {
-            position: relative;
-            z-index: 2;
-            margin: 0;
-            color: var(--white);
-            font-family: "Inter", sans-serif;
-            font-size: 1.7rem;
-            font-weight: 750;
-        }
-
-        .agent-role {
-            position: relative;
-            z-index: 2;
-            margin: 0.55rem 0 0;
-            color: var(--muted);
-            font-size: 0.8rem;
-            line-height: 1.5;
-        }
-
-        .system-map {
-            position: relative;
-            width: min(850px, 92vw);
-            aspect-ratio: 16 / 8;
-            margin: 2rem auto 0;
-        }
-
-        .system-core {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            display: grid;
-            place-items: center;
-            width: clamp(120px, 18vw, 180px);
-            aspect-ratio: 1;
-            border: 1px solid rgba(0, 255, 102, 0.45);
-            border-radius: 999px;
-            background: rgba(0, 255, 102, 0.08);
-            color: var(--white);
-            font-family: "Inter", sans-serif;
-            font-weight: 800;
-            transform: translate(-50%, -50%);
-            box-shadow:
-                0 0 35px rgba(0, 255, 102, 0.18),
-                inset 0 0 35px rgba(0, 255, 102, 0.09);
-            animation: corePulse 2.3s ease-in-out infinite;
-        }
-
-        @keyframes corePulse {
-            50% {
-                box-shadow:
-                    0 0 60px rgba(0, 255, 102, 0.34),
-                    inset 0 0 45px rgba(0, 255, 102, 0.16);
-            }
-        }
-
-        .system-node {
-            position: absolute;
-            min-width: 120px;
-            padding: 0.8rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            background: rgba(2, 8, 4, 0.86);
-            color: var(--green-soft);
-            font-size: clamp(0.66rem, 1.4vw, 0.8rem);
-            text-align: center;
-            opacity: 0;
-        }
-
-        .scene.active .system-node {
-            animation: nodeReveal 600ms ease forwards;
-        }
-
-        .system-node:nth-child(2) {
-            top: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            animation-delay: 150ms;
-        }
-
-        .system-node:nth-child(3) {
-            top: 35%;
-            right: 2%;
-            animation-delay: 300ms;
-        }
-
-        .system-node:nth-child(4) {
-            right: 15%;
-            bottom: 5%;
-            animation-delay: 450ms;
-        }
-
-        .system-node:nth-child(5) {
-            bottom: 5%;
-            left: 15%;
-            animation-delay: 600ms;
-        }
-
-        .system-node:nth-child(6) {
-            top: 35%;
-            left: 2%;
-            animation-delay: 750ms;
-        }
-
-        @keyframes nodeReveal {
-            from {
-                opacity: 0;
-                filter: blur(8px);
-            }
-
-            to {
-                opacity: 1;
-                filter: blur(0);
-            }
-        }
-
-        .system-orbit {
-            position: absolute;
-            inset: 12% 23%;
-            border: 1px dashed rgba(0, 255, 102, 0.16);
-            border-radius: 999px;
-            animation: orbitSpin 16s linear infinite;
-        }
-
-        @keyframes orbitSpin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .reveal-lines {
-            display: grid;
-            gap: 0.45rem;
-        }
-
-        .reveal-line {
-            color: var(--white);
-            font-family: "Inter", sans-serif;
-            font-size: clamp(1.6rem, 5vw, 4.4rem);
-            font-weight: 750;
-            line-height: 1.08;
-            letter-spacing: -0.045em;
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        .scene.active .reveal-line {
-            animation: revealText 800ms ease forwards;
-        }
-
-        .scene.active .reveal-line:nth-child(2) {
-            animation-delay: 850ms;
-        }
-
-        .scene.active .reveal-line:nth-child(3) {
-            animation-delay: 1700ms;
-        }
-
-        @keyframes revealText {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .final-logo {
-            margin: 0;
-            color: var(--white);
-            font-family: "Inter", sans-serif;
-            font-size: clamp(2.7rem, 9vw, 8rem);
-            font-weight: 800;
-            line-height: 0.95;
-            letter-spacing: -0.07em;
-            text-transform: uppercase;
-            text-shadow:
-                0 0 20px rgba(255, 255, 255, 0.12),
-                0 0 60px rgba(0, 255, 102, 0.16);
-        }
-
-        .final-url {
-            margin-top: 1.25rem;
-            color: var(--green);
-            font-size: clamp(0.9rem, 2vw, 1.3rem);
-            letter-spacing: 0.22em;
-            text-transform: uppercase;
-        }
-
-        .final-tagline {
-            margin-top: 2.1rem;
-            color: rgba(255, 255, 255, 0.58);
-            font-family: "Inter", sans-serif;
-            font-size: clamp(1rem, 2vw, 1.28rem);
-        }
-
-        .enter-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.65rem;
-            margin-top: 2.5rem;
-            padding: 0.95rem 1.4rem;
-            border: 1px solid rgba(0, 255, 102, 0.4);
-            border-radius: 999px;
-            background: rgba(0, 255, 102, 0.08);
-            color: var(--green-soft);
-            text-decoration: none;
-            transition:
-                transform 180ms ease,
-                background 180ms ease,
-                border-color 180ms ease;
-        }
-
-        .enter-button:hover {
-            transform: translateY(-2px);
-            border-color: var(--green);
-            background: rgba(0, 255, 102, 0.14);
-        }
-
-        .hud {
-            position: absolute;
-            inset: 0;
-            z-index: 30;
-            pointer-events: none;
-        }
-
-        .topbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 1.2rem 1.5rem;
-            color: rgba(214, 255, 226, 0.45);
-            font-size: 0.67rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-        }
-
-        .system-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.55rem;
-        }
-
-        .system-indicator::before {
-            content: "";
-            width: 7px;
-            height: 7px;
-            border-radius: 999px;
-            background: var(--green);
-            box-shadow: 0 0 12px var(--green);
-        }
-
-        .progress-track {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .progress-bar {
-            width: 0;
-            height: 100%;
-            background: var(--green);
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.7);
-            transition: width 150ms linear;
-        }
-
-        .controls {
-            position: absolute;
-            right: 1.2rem;
-            bottom: 1.2rem;
-            z-index: 40;
-            display: flex;
-            gap: 0.55rem;
-        }
-
-        .control-button {
-            display: grid;
-            place-items: center;
-            width: 42px;
-            height: 42px;
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            background: rgba(2, 8, 4, 0.72);
-            color: var(--green-soft);
-            cursor: pointer;
-            backdrop-filter: blur(12px);
-            transition:
-                transform 180ms ease,
-                background 180ms ease,
-                border-color 180ms ease;
-        }
-
-        .control-button:hover {
-            transform: translateY(-2px);
-            border-color: rgba(0, 255, 102, 0.65);
-            background: rgba(0, 255, 102, 0.1);
-        }
-
-        .control-button svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-        }
-
-        .scene-number {
-            position: absolute;
-            bottom: 1.45rem;
-            left: 1.5rem;
-            z-index: 40;
-            color: rgba(214, 255, 226, 0.36);
-            font-size: 0.68rem;
-            letter-spacing: 0.18em;
-        }
-
-        .flash {
-            position: absolute;
-            inset: 0;
-            z-index: 50;
-            pointer-events: none;
-            background: rgba(255, 255, 255, 0.75);
-            opacity: 0;
-        }
-
-        .flash.active {
-            animation: flashEffect 280ms ease-out;
-        }
-
-        @keyframes flashEffect {
-            0% {
-                opacity: 0;
-            }
-
-            20% {
-                opacity: 0.45;
-            }
-
-            100% {
-                opacity: 0;
-            }
-        }
-
-        @media (max-width: 700px) {
-            .scene {
-                padding: 5rem 1rem;
-            }
-
-            .chaos-grid,
-            .agents-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chaos-card,
-            .agent-card {
-                min-height: auto;
-                padding: 1.1rem;
-            }
-
-            .terminal-body {
-                min-height: 250px;
-            }
-
-            .system-map {
-                aspect-ratio: 5 / 7;
-            }
-
-            .system-orbit {
-                inset: 19% 8%;
-            }
-
-            .system-node:nth-child(2) {
-                top: 1%;
-            }
-
-            .system-node:nth-child(3) {
-                top: 25%;
-                right: 0;
-            }
-
-            .system-node:nth-child(4) {
-                right: 2%;
-                bottom: 12%;
-            }
-
-            .system-node:nth-child(5) {
-                bottom: 12%;
-                left: 2%;
-            }
-
-            .system-node:nth-child(6) {
-                top: 25%;
-                left: 0;
-            }
-
-            .topbar {
-                padding: 1rem;
-            }
-
-            .topbar span:last-child {
-                display: none;
-            }
-
-            .scene-number {
-                left: 1rem;
-            }
-
-            .controls {
-                right: 1rem;
-                bottom: 1rem;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                scroll-behavior: auto !important;
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#020403" />
+  <meta name="description" content="PrinceCaleb.dev cinematic terminal intro." />
+  <title>Prince Caleb — System Online</title>
+
+  <style>
+    :root {
+      --bg: #020403;
+      --panel: rgba(5, 12, 8, 0.82);
+      --panel-strong: rgba(4, 10, 7, 0.96);
+      --green: #00ff6a;
+      --green-soft: #9affbd;
+      --cyan: #00eaff;
+      --white: #f3fff7;
+      --muted: rgba(222, 255, 232, 0.46);
+      --line: rgba(0, 255, 106, 0.18);
+      --danger: #ff4060;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--green);
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      overflow: hidden;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .experience {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(0, 255, 106, 0.08), transparent 28%),
+        radial-gradient(circle at 18% 20%, rgba(0, 234, 255, 0.06), transparent 22%),
+        linear-gradient(180deg, #010201 0%, #020403 50%, #010201 100%);
+    }
+
+    .aurora,
+    .grid,
+    .scanlines,
+    .noise,
+    .vignette,
+    .sweep {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .aurora {
+      inset: -30%;
+      z-index: -7;
+      background:
+        radial-gradient(circle at 30% 35%, rgba(0, 255, 106, 0.08), transparent 23%),
+        radial-gradient(circle at 75% 55%, rgba(0, 234, 255, 0.06), transparent 26%);
+      filter: blur(30px);
+      animation: aurora 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes aurora {
+      from { transform: translate3d(-2%, -2%, 0) scale(1); }
+      to { transform: translate3d(2%, 2%, 0) scale(1.12); }
+    }
+
+    .grid {
+      z-index: -6;
+      opacity: 0.16;
+      background-image:
+        linear-gradient(rgba(0, 255, 106, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 106, 0.12) 1px, transparent 1px);
+      background-size: 52px 52px;
+      transform: perspective(800px) rotateX(68deg) scale(1.55) translateY(18%);
+      transform-origin: center bottom;
+      -webkit-mask-image: linear-gradient(to top, #000, transparent 75%);
+      mask-image: linear-gradient(to top, #000, transparent 75%);
+    }
+
+    .scanlines {
+      z-index: 20;
+      opacity: 0.18;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 3px,
+        rgba(0, 255, 106, 0.045) 4px
+      );
+    }
+
+    .noise {
+      z-index: 22;
+      opacity: 0.035;
+      background-image: repeating-radial-gradient(
+        circle at 0 0,
+        rgba(255, 255, 255, 0.7) 0,
+        rgba(255, 255, 255, 0.7) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      background-size: 5px 5px;
+      animation: staticShift .18s steps(2) infinite;
+    }
+
+    @keyframes staticShift {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(-1%, 1%); }
+      50% { transform: translate(1%, -1%); }
+      75% { transform: translate(1%, 1%); }
+      100% { transform: translate(-1%, -1%); }
+    }
+
+    .vignette {
+      z-index: 23;
+      box-shadow: inset 0 0 190px rgba(0, 0, 0, 0.96);
+    }
+
+    .sweep {
+      z-index: 21;
+      top: -35%;
+      height: 22%;
+      background: linear-gradient(to bottom, transparent, rgba(0, 255, 106, 0.16), transparent);
+      opacity: 0.42;
+      animation: sweep 7s linear infinite;
+    }
+
+    @keyframes sweep {
+      from { transform: translateY(-100%); }
+      to { transform: translateY(650%); }
+    }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      pointer-events: none;
+    }
+
+    .hud-top,
+    .hud-bottom {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      color: rgba(222, 255, 232, 0.38);
+      font-size: .68rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .hud-top { top: 0; }
+    .hud-bottom { bottom: 0; }
+
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: .55rem;
+    }
+
+    .live::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: .28; transform: scale(.78); }
+    }
+
+    .stage {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 4.2rem 1rem 4.6rem;
+    }
+
+    .shell {
+      width: min(720px, 100%);
+      opacity: 0;
+      transform: translateY(18px) scale(.985);
+      animation: shellIn 900ms ease forwards 180ms;
+    }
+
+    @keyframes shellIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .terminal {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(7, 16, 10, 0.94), rgba(2, 6, 4, 0.96));
+      box-shadow:
+        0 36px 120px rgba(0, 0, 0, .65),
+        0 0 70px rgba(0, 255, 106, .07),
+        inset 0 0 50px rgba(0, 255, 106, .025);
+      backdrop-filter: blur(20px);
+    }
+
+    .terminal::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, transparent 0 44%, rgba(255,255,255,.025) 47%, transparent 50%);
+      transform: translateX(-120%);
+      animation: terminalSheen 8s ease-in-out infinite 2s;
+      pointer-events: none;
+    }
+
+    @keyframes terminalSheen {
+      0%, 75% { transform: translateX(-120%); }
+      100% { transform: translateX(120%); }
+    }
+
+    .terminal-head {
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 1rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.018);
+    }
+
+    .dots {
+      display: flex;
+      gap: .48rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.2);
+    }
+
+    .dot:nth-child(1) { background: #ff5f57; }
+    .dot:nth-child(2) { background: #febc2e; }
+    .dot:nth-child(3) { background: #28c840; }
+
+    .terminal-title {
+      color: rgba(255,255,255,.32);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-align: center;
+    }
+
+    .terminal-body {
+      min-height: 0;
+      height: min(390px, 54vh);
+      padding: clamp(1rem, 3vw, 1.7rem);
+      overflow: hidden;
+    }
+
+    .line {
+      min-height: 1.65rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .7rem;
+      margin: 0 0 .72rem;
+      color: var(--green-soft);
+      font-size: clamp(.78rem, 1.8vw, 1rem);
+      line-height: 1.65;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: lineIn .35s ease forwards;
+    }
+
+    @keyframes lineIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .prompt { color: var(--cyan); }
+    .command { color: var(--white); }
+    .success { color: var(--green); }
+    .muted { color: var(--muted); }
+    .warn { color: #ffd166; }
+
+    .cursor {
+      display: inline-block;
+      width: .62em;
+      height: 1.05em;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(0, 255, 106, .7);
+      vertical-align: -0.15em;
+      animation: cursorBlink .75s steps(1) infinite;
+    }
+
+    @keyframes cursorBlink {
+      50% { opacity: 0; }
+    }
+
+    .reveal {
+      display: block;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+    .reveal.show {
+      display: block;
+      animation: revealIn 900ms cubic-bezier(.16,.8,.24,1) forwards;
+    }
+
+    @keyframes revealIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .kicker {
+      margin: 0 0 .9rem;
+      color: rgba(222,255,232,.45);
+      font-size: .68rem;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+    }
+
+    .brand {
+      position: relative;
+      display: inline-block;
+      margin: 0;
+      color: var(--white);
+      font-family: Inter, Arial, sans-serif;
+      font-size: clamp(2rem, 6vw, 4.3rem);
+      line-height: .94;
+      letter-spacing: -.07em;
+      text-transform: uppercase;
+      text-shadow: 0 0 34px rgba(255,255,255,.1), 0 0 70px rgba(0,255,106,.13);
+    }
+
+    .brand::before,
+    .brand::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .brand::before {
+      color: var(--cyan);
+      clip-path: inset(18% 0 61% 0);
+      transform: translateX(2px);
+      animation: glitchA 3s steps(1) infinite;
+      opacity: .55;
+    }
+
+    .brand::after {
+      color: var(--danger);
+      clip-path: inset(68% 0 9% 0);
+      transform: translateX(-2px);
+      animation: glitchB 2.25s steps(1) infinite;
+      opacity: .5;
+    }
+
+    @keyframes glitchA {
+      0%, 88%, 100% { transform: translate(0); clip-path: inset(100% 0 0 0); }
+      89% { transform: translate(-5px, 1px); clip-path: inset(18% 0 61% 0); }
+      92% { transform: translate(4px, -1px); clip-path: inset(54% 0 26% 0); }
+      95% { transform: translate(-2px, 0); clip-path: inset(78% 0 5% 0); }
+    }
+
+    @keyframes glitchB {
+      0%, 84%, 100% { transform: translate(0); clip-path: inset(0 0 100% 0); }
+      85% { transform: translate(5px, 1px); clip-path: inset(68% 0 9% 0); }
+      89% { transform: translate(-4px, -1px); clip-path: inset(26% 0 50% 0); }
+      93% { transform: translate(3px, 1px); clip-path: inset(7% 0 76% 0); }
+    }
+
+    .tagline {
+      max-width: 680px;
+      margin: .75rem auto 0;
+      color: rgba(255,255,255,.58);
+      font-family: Inter, Arial, sans-serif;
+      font-size: clamp(.98rem, 2.1vw, 1.2rem);
+      line-height: 1.7;
+      text-wrap: balance;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: .9rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .enter-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .72rem;
+      min-width: 205px;
+      padding: .9rem 1.35rem;
+      border: 1px solid rgba(0, 255, 106, .45);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(0,255,106,.12), rgba(0,255,106,.06));
+      color: var(--green-soft);
+      text-decoration: none;
+      letter-spacing: .04em;
+      box-shadow: 0 0 0 rgba(0,255,106,0);
+      overflow: hidden;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .enter-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,.18), transparent 80%);
+      transform: translateX(-120%);
+      transition: transform .55s ease;
+    }
+
+    .enter-button:hover {
+      transform: translateY(-2px);
+      border-color: var(--green);
+      background: linear-gradient(180deg, rgba(0,255,106,.18), rgba(0,255,106,.09));
+      box-shadow: 0 0 36px rgba(0,255,106,.15);
+    }
+
+    .enter-button:hover::before {
+      transform: translateX(120%);
+    }
+
+    .enter-button span {
+      position: relative;
+      z-index: 1;
+    }
+
+
+    .enter-button.ready {
+      border-color: var(--green);
+      box-shadow: 0 0 34px rgba(0,255,106,.18);
+      animation: readyPulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes readyPulse {
+      50% { transform: translateY(-1px) scale(1.02); box-shadow: 0 0 48px rgba(0,255,106,.26); }
+    }
+
+    .skip-button {
+      border: 0;
+      background: transparent;
+      color: rgba(222,255,232,.42);
+      cursor: pointer;
+      padding: .8rem 1rem;
+      transition: color .2s ease;
+    }
+
+    .skip-button:hover { color: var(--green-soft); }
+
+    .mini-status {
+      margin-top: 1.15rem;
+      color: rgba(222,255,232,.32);
+      font-size: .7rem;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .flash {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      background: rgba(255,255,255,.75);
+      opacity: 0;
+    }
+
+    .flash.run { animation: flash .28s ease-out; }
+
+    @keyframes flash {
+      0% { opacity: 0; }
+      22% { opacity: .42; }
+      100% { opacity: 0; }
+    }
+
+    @media (max-width: 700px) {
+      .hud-top,
+      .hud-bottom {
+        padding: 1rem;
+      }
+
+      .hud-top span:last-child,
+      .hud-bottom span:last-child {
+        display: none;
+      }
+
+      .stage {
+        padding: 3.8rem .7rem 4.2rem;
+      }
+
+      .terminal {
+        border-radius: 17px;
+      }
+
+      .terminal-body {
+        height: min(360px, 58vh);
+        min-height: 0;
+        padding: .9rem;
+      }
+
+      .terminal-title {
+        font-size: .64rem;
+      }
+
+      .line {
+        font-size: .68rem;
+        line-height: 1.42;
+        margin-bottom: .42rem;
+      }
+
+      .brand {
+        font-size: clamp(2.15rem, 13vw, 4rem);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <main class="experience" aria-label="Prince Caleb terminal intro">
+    <div class="aurora"></div>
+    <div class="grid"></div>
+    <div class="sweep"></div>
+    <div class="scanlines"></div>
+    <div class="noise"></div>
+    <div class="vignette"></div>
+    <div class="flash" id="flash"></div>
 
-    <script>
-        // Placeholder resolved once we settled on where the real homepage
-        // lives after this trailer took over the root — see public/home.html.
-        const PC_MAIN_SITE_URL = "/home.html";
+    <div class="hud" aria-hidden="true">
+      <div class="hud-top">
+        <span class="live">System online</span>
+        <span>PrinceCaleb.dev // Access Gateway</span>
+      </div>
+      <div class="hud-bottom">
+        <span>Builder OS v1.0</span>
+        <span>Encrypted session</span>
+      </div>
+    </div>
 
-        // Once-per-visitor gate: a returning visitor skips straight to the
-        // homepage instead of sitting through the trailer again.
-        if (localStorage.getItem("pc_intro_seen_v1")) {
-            location.replace(PC_MAIN_SITE_URL);
-        }
-    </script>
-
-    <main
-        class="trailer"
-        id="trailer"
-        aria-label="Prince Caleb cinematic website introduction"
-    >
-        <div class="ambient-glow"></div>
-        <div class="grid-background"></div>
-        <div class="scanline"></div>
-        <div class="scanlines"></div>
-        <div class="noise"></div>
-        <div class="vignette"></div>
-        <div class="flash" id="flash"></div>
-
-        <audio id="narration" src="narration.mp3" preload="auto"></audio>
-
-        <div class="hud" aria-hidden="true">
-            <div class="topbar">
-                <div class="system-indicator">
-                    PrinceCaleb.dev
-                </div>
-
-                <span>Builder System // Cinematic Archive</span>
+    <section class="stage">
+      <div class="shell">
+        <div class="terminal">
+          <header class="terminal-head">
+            <div class="dots" aria-hidden="true">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
             </div>
+            <div class="terminal-title">prince@builder-os:~</div>
+            <div></div>
+          </header>
 
-            <div class="progress-track">
-                <div
-                    class="progress-bar"
-                    id="progressBar"
-                ></div>
+          <div class="terminal-body" id="terminalBody" aria-live="polite">
+            <div id="terminalOutput"></div>
+
+            <div class="reveal" id="reveal">
+              <p class="kicker">System ready</p>
+              <h1 class="brand" data-text="PRINCE CALEB">Prince Caleb</h1>
+              <p class="tagline">The operating system behind everything I build.</p>
             </div>
+          </div>
         </div>
 
-        <!-- Scene 1 -->
-        <section
-            class="scene active"
-            data-duration="5306"
-            aria-label="Opening statement"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">Archive transmission initiated</p>
-
-                <div class="terminal-window">
-                    <div class="terminal-header">
-                        <div class="terminal-dots">
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                        </div>
-
-                        <span class="terminal-label">
-                            prince@builder-os:~
-                        </span>
-
-                        <span></span>
-                    </div>
-
-                    <div class="terminal-body">
-                        <p class="terminal-line">
-                            <span class="prompt">prince@builder-os:~$</span>
-
-                            <span
-                                class="typing-line command"
-                                style="
-                                    --typing-width: 22ch;
-                                    --typing-steps: 22;
-                                    --typing-duration: 1.8s;
-                                "
-                            >
-                                initiate transmission
-                            </span>
-                        </p>
-
-                        <p class="terminal-line output">
-                            The web was built to display information.
-                        </p>
-
-                        <p class="terminal-line muted">
-                            But information alone was never enough.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Scene 2 -->
-        <section
-            class="scene"
-            data-duration="2285"
-            aria-label="The problem"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">System diagnosis</p>
-
-                <h1
-                    class="glitch"
-                    data-text="TRAPPED IN TEMPLATES"
-                >
-                    Trapped in Templates
-                </h1>
-
-                <div class="chaos-grid">
-                    <article class="chaos-card">
-                        <strong>01 // Communication</strong>
-                        Missed calls. Unanswered messages. Lost opportunities.
-                    </article>
-
-                    <article class="chaos-card">
-                        <strong>02 // Operations</strong>
-                        Disconnected tools, repetitive tasks and manual work.
-                    </article>
-
-                    <article class="chaos-card">
-                        <strong>03 // Intelligence</strong>
-                        Valuable data buried inside dashboards nobody checks.
-                    </article>
-
-                    <article class="chaos-card">
-                        <strong>04 // Growth</strong>
-                        Websites that exist, but never actively help the business.
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <!-- Scene 3 -->
-        <section
-            class="scene"
-            data-duration="3778"
-            aria-label="System initialization"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">A new architecture</p>
-
-                <div class="terminal-window">
-                    <div class="terminal-header">
-                        <div class="terminal-dots">
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                            <span class="terminal-dot"></span>
-                        </div>
-
-                        <span class="terminal-label">
-                            builder-os initialization
-                        </span>
-
-                        <span></span>
-                    </div>
-
-                    <div class="terminal-body">
-                        <p class="terminal-line">
-                            <span class="prompt">root@princecaleb:~#</span>
-
-                            <span
-                                class="typing-line command"
-                                style="
-                                    --typing-width: 46ch;
-                                    --typing-steps: 46;
-                                    --typing-duration: 2.8s;
-                                "
-                            >
-                                initialize builder_os --mode intelligent
-                            </span>
-                        </p>
-
-                        <p class="terminal-line output">
-                            [OK] Connecting systems...
-                        </p>
-
-                        <p class="terminal-line output">
-                            [OK] Activating autonomous agents...
-                        </p>
-
-                        <p class="terminal-line output">
-                            [OK] Synchronizing intelligence...
-                        </p>
-
-                        <p class="terminal-line">
-                            <span class="output">STATUS:</span>
-                            <span class="command">ONLINE</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Scene 4 -->
-        <section
-            class="scene"
-            data-duration="4019"
-            aria-label="Intelligent websites"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">What if a website could</p>
-
-                <div class="word-sequence">
-                    <div class="sequence-word">Listen.</div>
-                    <div class="sequence-word">Think.</div>
-                    <div class="sequence-word">
-                        <span style="color: var(--green);">Operate.</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Scene 5 -->
-        <section
-            class="scene"
-            data-duration="2969"
-            aria-label="AI agents online"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">The team is online</p>
-
-                <h2 class="cinematic-title">
-                    Intelligence with
-                    <span class="accent">a job to do.</span>
-                </h2>
-
-                <div class="agents-grid">
-                    <article class="agent-card">
-                        <div class="agent-status">
-                            <span class="status-dot"></span>
-                            Communication online
-                        </div>
-
-                        <h3 class="agent-name">Lisa</h3>
-
-                        <p class="agent-role">
-                            Answers calls, qualifies leads and creates meaningful
-                            customer conversations.
-                        </p>
-                    </article>
-
-                    <article class="agent-card">
-                        <div class="agent-status">
-                            <span class="status-dot"></span>
-                            Operations online
-                        </div>
-
-                        <h3 class="agent-name">Q1</h3>
-
-                        <p class="agent-role">
-                            Coordinates projects, priorities, missions and daily
-                            execution.
-                        </p>
-                    </article>
-
-                    <article class="agent-card">
-                        <div class="agent-status">
-                            <span class="status-dot"></span>
-                            Finance online
-                        </div>
-
-                        <h3 class="agent-name">Ledger</h3>
-
-                        <p class="agent-role">
-                            Tracks financial health, forecasts decisions and
-                            protects profitability.
-                        </p>
-                    </article>
-
-                    <article class="agent-card">
-                        <div class="agent-status">
-                            <span class="status-dot"></span>
-                            Monitoring active
-                        </div>
-
-                        <h3 class="agent-name">Radar</h3>
-
-                        <p class="agent-role">
-                            Observes signals, captures changes and surfaces what
-                            matters.
-                        </p>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <!-- Scene 6 -->
-        <section
-            class="scene"
-            data-duration="3963"
-            aria-label="Connected ecosystem"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">One connected ecosystem</p>
-
-                <h2 class="cinematic-title">
-                    Not isolated tools.
-                    <span class="accent">One system.</span>
-                </h2>
-
-                <div class="system-map">
-                    <div class="system-orbit"></div>
-
-                    <div class="system-core">
-                        BUILDER OS
-                    </div>
-
-                    <div class="system-node">AI Voice</div>
-                    <div class="system-node">Automation</div>
-                    <div class="system-node">Finance</div>
-                    <div class="system-node">Operations</div>
-                    <div class="system-node">Intelligence</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Scene 7 -->
-        <section
-            class="scene"
-            data-duration="6303"
-            aria-label="The reveal"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">Access granted</p>
-
-                <div class="reveal-lines">
-                    <div class="reveal-line">
-                        You thought you were opening a portfolio.
-                    </div>
-
-                    <div class="reveal-line">
-                        You entered a company.
-                    </div>
-
-                    <div
-                        class="reveal-line"
-                        style="color: var(--green);"
-                    >
-                        You activated an operating system.
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Scene 8 -->
-        <section
-            class="scene"
-            data-duration="9646"
-            aria-label="Prince Caleb final title"
-        >
-            <div class="scene-content">
-                <p class="eyebrow">System ready</p>
-
-                <h1
-                    class="final-logo glitch"
-                    data-text="PRINCE CALEB"
-                >
-                    Prince Caleb
-                </h1>
-
-                <div class="final-url">
-                    princecaleb.dev
-                </div>
-
-                <p class="final-tagline">
-                    This is not a portfolio. It is the operating system behind
-                    what I build.
-                </p>
-
-                <a
-                    class="enter-button"
-                    id="enterButton"
-                    href="/home.html"
-                    aria-label="Enter Prince Caleb website"
-                >
-                    Enter the system
-                    <span aria-hidden="true">→</span>
-                </a>
-            </div>
-        </section>
-
-        <div
-            class="scene-number"
-            id="sceneNumber"
-            aria-live="polite"
-        >
-            01 / 08
+        <div class="actions" style="margin-top:1rem;">
+          <a class="enter-button" id="enterButton" href="/home.html" aria-label="Enter PrinceCaleb.dev">
+            <span id="enterLabel">Enter the system</span>
+            <span aria-hidden="true">→</span>
+          </a>
+          <button class="skip-button" id="skipButton" type="button">Skip initialization</button>
         </div>
+      </div>
+    </section>
+  </main>
 
-        <div class="controls">
-            <button
-                class="control-button"
-                id="soundButton"
-                type="button"
-                aria-label="Enable sound"
-                title="Enable sound"
-            >
-                <svg
-                    id="soundOffIcon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
-                    <path d="M16.5 12A4.5 4.5 0 0 0 14 8v1.9l2.4 2.4c.06-.1.1-.2.1-.3ZM19 12c0 .94-.2 1.82-.54 2.63l1.51 1.51A8.9 8.9 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06A7 7 0 0 1 19 12ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L18.73 21 20 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z"/>
-                </svg>
+  <script>
+    "use strict";
 
-                <svg
-                    id="soundOnIcon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    style="display: none;"
-                >
-                    <path d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.47 4.47 0 0 0 2.5-4Zm2.5 0c0 2.09-.94 3.97-2.42 5.24l1.42 1.42A8.97 8.97 0 0 0 21 12a8.97 8.97 0 0 0-2.5-6.66l-1.42 1.42A6.97 6.97 0 0 1 19 12Z"/>
-                </svg>
-            </button>
+    const lines = [
+      { type: "command", prompt: "prince@builder-os:~$", text: "initialize builder_os", delay: 300, speed: 22 },
+      { type: "output", text: "Memory check....................OK", delay: 220 },
+      { type: "output", text: "AI Core.........................OK", delay: 200 },
+      { type: "status", text: "LISA........................ONLINE", delay: 190 },
+      { type: "status", text: "Q1..........................ONLINE", delay: 190 },
+      { type: "status", text: "LEDGER......................ONLINE", delay: 190 },
+      { type: "status", text: "RADAR.......................ACTIVE", delay: 220 },
+      { type: "muted", text: "One connected system.", delay: 260 },
+      { type: "output", text: "ACCESS GRANTED", delay: 300 }
+    ];
+    const output = document.getElementById("terminalOutput");
+    const reveal = document.getElementById("reveal");
+    const skipButton = document.getElementById("skipButton");
+    const flash = document.getElementById("flash");
+    const enterButton = document.getElementById("enterButton");
 
-            <button
-                class="control-button"
-                id="previousButton"
-                type="button"
-                aria-label="Previous scene"
-                title="Previous scene"
-            >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M15.5 5.5 9 12l6.5 6.5-1.4 1.4L6.2 12l7.9-7.9 1.4 1.4Z"/>
-                </svg>
-            </button>
+    let cancelled = false;
 
-            <button
-                class="control-button"
-                id="playPauseButton"
-                type="button"
-                aria-label="Pause trailer"
-                title="Pause trailer"
-            >
-                <svg
-                    id="pauseIcon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
-                    <path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z"/>
-                </svg>
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-                <svg
-                    id="playIcon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    style="display: none;"
-                >
-                    <path d="m8 5 11 7-11 7V5Z"/>
-                </svg>
-            </button>
+    function makeLine(className = "") {
+      const line = document.createElement("p");
+      line.className = `line ${className}`.trim();
+      line.style.animationDelay = "0ms";
+      output.appendChild(line);
+      return line;
+    }
 
-            <button
-                class="control-button"
-                id="nextButton"
-                type="button"
-                aria-label="Next scene"
-                title="Next scene"
-            >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="m8.5 18.5 6.5-6.5-6.5-6.5 1.4-1.4 7.9 7.9-7.9 7.9-1.4-1.4Z"/>
-                </svg>
-            </button>
+    async function typeText(element, text, speed = 28) {
+      for (const character of text) {
+        if (cancelled) return;
+        element.textContent += character;
+        await wait(speed + Math.random() * 18);
+      }
+    }
 
-            <button
-                class="control-button"
-                id="restartButton"
-                type="button"
-                aria-label="Restart trailer"
-                title="Restart trailer"
-            >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 5a7 7 0 1 1-6.65 9.2H3.27A9 9 0 1 0 5.64 5.64L3 3v7h7L7.08 7.08A6.96 6.96 0 0 1 12 5Z"/>
-                </svg>
-            </button>
-        </div>
-    </main>
+    function triggerFlash() {
+      flash.classList.remove("run");
+      void flash.offsetWidth;
+      flash.classList.add("run");
+    }
 
-    <script>
-        "use strict";
+    async function runSequence() {
+      for (const item of lines) {
+        if (cancelled) return;
+        await wait(item.delay || 250);
 
-        const scenes = Array.from(document.querySelectorAll(".scene"));
-        const progressBar = document.getElementById("progressBar");
-        const sceneNumber = document.getElementById("sceneNumber");
-        const flash = document.getElementById("flash");
+        if (item.type === "command") {
+          const line = makeLine();
+          const prompt = document.createElement("span");
+          prompt.className = "prompt";
+          prompt.textContent = item.prompt;
 
-        const previousButton = document.getElementById("previousButton");
-        const nextButton = document.getElementById("nextButton");
-        const playPauseButton = document.getElementById("playPauseButton");
-        const restartButton = document.getElementById("restartButton");
+          const command = document.createElement("span");
+          command.className = "command";
 
-        const pauseIcon = document.getElementById("pauseIcon");
-        const playIcon = document.getElementById("playIcon");
+          const cursor = document.createElement("span");
+          cursor.className = "cursor";
+          cursor.setAttribute("aria-hidden", "true");
 
-        let currentSceneIndex = 0;
-        let sceneStartedAt = performance.now();
-        let elapsedBeforePause = 0;
-        let isPlaying = true;
-        let animationFrameId = null;
+          line.append(prompt, command, cursor);
+          await typeText(command, item.text, item.speed || 28);
+          cursor.remove();
+        } else {
+          const classMap = {
+            output: "success",
+            status: "success",
+            muted: "muted"
+          };
 
-        const narration = document.getElementById("narration");
-        const soundButton = document.getElementById("soundButton");
-        const soundOffIcon = document.getElementById("soundOffIcon");
-        const soundOnIcon = document.getElementById("soundOnIcon");
-
-        let audioEnabled = false;
-
-        function markIntroSeen() {
-            try {
-                localStorage.setItem("pc_intro_seen_v1", "1");
-            } catch (error) {}
+          const line = makeLine(classMap[item.type] || "");
+          line.textContent = item.text;
         }
-
-        // Cue point (in seconds) where each scene's narration line begins.
-        // Derived from the scenes' own data-duration values, so it stays in
-        // sync if those are ever retimed again.
-        const sceneAudioStarts = (() => {
-            let elapsedMs = 0;
-
-            return scenes.map((scene, index) => {
-                const start = elapsedMs;
-                elapsedMs += getSceneDuration(index);
-                return start / 1000;
-            });
-        })();
-
-        // Setting .currentTime before the browser has loaded metadata is
-        // unreliable (silently ignored in some engines), which is how a
-        // seek-then-play could end up starting from 0 anyway. Wait for
-        // metadata when it isn't ready yet instead of assuming the seek took.
-        function seekNarrationTo(seconds) {
-            if (narration.readyState >= 1) {
-                narration.currentTime = seconds;
-            } else {
-                narration.addEventListener("loadedmetadata", () => {
-                    narration.currentTime = seconds;
-                }, { once: true });
-            }
-        }
-
-        function updateSoundUI() {
-            soundOffIcon.style.display = audioEnabled ? "none" : "block";
-            soundOnIcon.style.display = audioEnabled ? "block" : "none";
-
-            soundButton.setAttribute(
-                "aria-label",
-                audioEnabled ? "Mute" : "Enable sound"
-            );
-
-            soundButton.title = audioEnabled ? "Mute" : "Enable sound";
-        }
-
-        function toggleSound() {
-            audioEnabled = !audioEnabled;
-
-            if (audioEnabled) {
-                seekNarrationTo(sceneAudioStarts[currentSceneIndex]);
-
-                if (isPlaying) {
-                    narration.play().catch(() => {});
-                }
-            } else {
-                narration.pause();
-            }
-
-            updateSoundUI();
-        }
-
-        // Browsers block unmuted autoplay for a first-time visitor with no
-        // prior interaction — that's a deliberate policy, not something the
-        // page can override. Rather than making visitors hunt for the small
-        // sound icon specifically, the first interaction with the page at
-        // all (click, key press, tap) unlocks sound, same as the button.
-        function enableSoundFromFirstGesture(event) {
-            // The sound button already has its own click handler
-            // (toggleSound) — let that run alone, or a gesture on it would
-            // enable sound here and immediately toggle it back off.
-            if (audioEnabled || soundButton.contains(event.target)) {
-                return;
-            }
-
-            audioEnabled = true;
-            seekNarrationTo(sceneAudioStarts[currentSceneIndex]);
-
-            if (isPlaying) {
-                narration.play().catch(() => {});
-            }
-
-            updateSoundUI();
-        }
-
-        ["pointerdown", "keydown", "touchstart"].forEach(eventName => {
-            document.addEventListener(
-                eventName,
-                enableSoundFromFirstGesture,
-                { once: true, passive: true }
-            );
-        });
-
-        function getSceneDuration(index) {
-            const scene = scenes[index];
-            const duration = Number(scene.dataset.duration);
-
-            return Number.isFinite(duration) ? duration : 4500;
-        }
-
-        function formatSceneNumber(index) {
-            const current = String(index + 1).padStart(2, "0");
-            const total = String(scenes.length).padStart(2, "0");
-
-            return `${current} / ${total}`;
-        }
-
-        function triggerFlash() {
-            flash.classList.remove("active");
-
-            void flash.offsetWidth;
-
-            flash.classList.add("active");
-        }
-
-        function restartSceneAnimations(scene) {
-            scene.classList.remove("active");
-
-            void scene.offsetWidth;
-
-            scene.classList.add("active");
-        }
-
-        function showScene(index, options = {}) {
-            const {
-                flashTransition = true,
-                resetTimer = true
-            } = options;
-
-            const safeIndex =
-                ((index % scenes.length) + scenes.length) % scenes.length;
-
-            scenes.forEach((scene, sceneIndex) => {
-                scene.classList.toggle(
-                    "active",
-                    sceneIndex === safeIndex
-                );
-            });
-
-            currentSceneIndex = safeIndex;
-            sceneNumber.textContent = formatSceneNumber(currentSceneIndex);
-
-            if (resetTimer) {
-                sceneStartedAt = performance.now();
-                elapsedBeforePause = 0;
-                progressBar.style.width = "0%";
-            }
-
-            restartSceneAnimations(scenes[currentSceneIndex]);
-
-            if (flashTransition) {
-                triggerFlash();
-            }
-
-            // Narration is never reseeked here on scene transitions — only
-            // paused/resumed. It plays through on its own once started
-            // (autoplay, sound-button, or restart), since the total
-            // narration length already matches the sum of all scene
-            // durations; forcing a seek on every transition was the cause
-            // of audible restarts.
-            if (audioEnabled) {
-                if (isPlaying) {
-                    if (narration.paused) {
-                        narration.play().catch(() => {});
-                    }
-                } else {
-                    narration.pause();
-                }
-            }
-        }
-
-        function goToMainSite() {
-            markIntroSeen();
-            location.href = PC_MAIN_SITE_URL;
-        }
-
-        function finishTrailer() {
-            // Narration is never reseeked mid-trailer (that's what caused
-            // audible restarts), so if it started late — e.g. sound was
-            // enabled partway through — it can still be lagging behind the
-            // visual timeline when the last scene's own duration ends. Let
-            // it finish rather than cutting it off, but cap the wait so a
-            // stalled or broken audio element can't strand the visitor here.
-            if (audioEnabled && !narration.paused && !narration.ended) {
-                const maxWaitMs = 6000;
-                const timeoutId = setTimeout(goToMainSite, maxWaitMs);
-
-                narration.addEventListener("ended", () => {
-                    clearTimeout(timeoutId);
-                    goToMainSite();
-                }, { once: true });
-            } else {
-                goToMainSite();
-            }
-        }
-
-        function nextScene() {
-            if (currentSceneIndex >= scenes.length - 1) {
-                finishTrailer();
-                return;
-            }
-
-            showScene(currentSceneIndex + 1);
-        }
-
-        function previousScene() {
-            showScene(currentSceneIndex - 1);
-        }
-
-        function updatePlayPauseInterface() {
-            pauseIcon.style.display = isPlaying ? "block" : "none";
-            playIcon.style.display = isPlaying ? "none" : "block";
-
-            playPauseButton.setAttribute(
-                "aria-label",
-                isPlaying ? "Pause trailer" : "Play trailer"
-            );
-
-            playPauseButton.title =
-                isPlaying ? "Pause trailer" : "Play trailer";
-        }
-
-        function pauseTrailer() {
-            if (!isPlaying) {
-                return;
-            }
-
-            elapsedBeforePause +=
-                performance.now() - sceneStartedAt;
-
-            isPlaying = false;
-
-            if (audioEnabled) {
-                narration.pause();
-            }
-
-            updatePlayPauseInterface();
-        }
-
-        function playTrailer() {
-            if (isPlaying) {
-                return;
-            }
-
-            sceneStartedAt = performance.now();
-            isPlaying = true;
-
-            if (audioEnabled) {
-                narration.play().catch(() => {});
-            }
-
-            updatePlayPauseInterface();
-        }
-
-        function togglePlayPause() {
-            if (isPlaying) {
-                pauseTrailer();
-            } else {
-                playTrailer();
-            }
-        }
-
-        function restartTrailer() {
-            isPlaying = true;
-            updatePlayPauseInterface();
-
-            if (audioEnabled) {
-                seekNarrationTo(0);
-                narration.play().catch(() => {});
-            }
-
-            showScene(0);
-        }
-
-        function animate(timestamp) {
-            if (isPlaying) {
-                const duration = getSceneDuration(currentSceneIndex);
-
-                const elapsed =
-                    elapsedBeforePause +
-                    (timestamp - sceneStartedAt);
-
-                const progress = Math.min(
-                    (elapsed / duration) * 100,
-                    100
-                );
-
-                progressBar.style.width = `${progress}%`;
-
-                if (elapsed >= duration) {
-                    nextScene();
-                }
-            }
-
-            animationFrameId = requestAnimationFrame(animate);
-        }
-
-        soundButton.addEventListener("click", toggleSound);
-        previousButton.addEventListener("click", previousScene);
-        nextButton.addEventListener("click", nextScene);
-        playPauseButton.addEventListener("click", togglePlayPause);
-        restartButton.addEventListener("click", restartTrailer);
-        document.getElementById("enterButton").addEventListener("click", markIntroSeen);
-
-        document.addEventListener("keydown", event => {
-            const key = event.key.toLowerCase();
-
-            if (key === "arrowright") {
-                nextScene();
-            }
-
-            if (key === "arrowleft") {
-                previousScene();
-            }
-
-            if (key === " " || key === "k") {
-                event.preventDefault();
-                togglePlayPause();
-            }
-
-            if (key === "r") {
-                restartTrailer();
-            }
-        });
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden && isPlaying) {
-                pauseTrailer();
-            }
-        });
-
-        showScene(0, {
-            flashTransition: false
-        });
-
-        updatePlayPauseInterface();
-
-        // Autoplay-with-fallback: try to start narration with sound
-        // immediately; browsers that block unmuted autoplay reject the
-        // promise, so we quietly fall back to the muted state with the
-        // existing manual "Enable sound" button as the way in.
-        seekNarrationTo(sceneAudioStarts[currentSceneIndex]);
-
-        narration.play().then(() => {
-            audioEnabled = true;
-            soundOffIcon.style.display = "none";
-            soundOnIcon.style.display = "block";
-            soundButton.setAttribute("aria-label", "Mute");
-            soundButton.title = "Mute";
-        }).catch(() => {
-            audioEnabled = false;
-        });
-
-        animationFrameId = requestAnimationFrame(animate);
-
-        window.addEventListener("beforeunload", () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-        });
-    </script>
+      }
+
+      await wait(400);
+      showReveal();
+    }
+
+    function showReveal() {
+      if (reveal.classList.contains("show")) return;
+      triggerFlash();
+      reveal.classList.add("show");
+      skipButton.style.opacity = "0";
+      skipButton.style.pointerEvents = "none";
+      enterButton.classList.add("ready");
+    }
+
+    function skipSequence() {
+      cancelled = true;
+      output.innerHTML = `
+        <p class="line success">[OK] Initialization complete.</p>
+        <p class="line success">ACCESS GRANTED</p>
+      `;
+      showReveal();
+    }
+
+    skipButton.addEventListener("click", skipSequence);
+
+    window.addEventListener("load", () => {
+      runSequence().catch(() => {
+        skipSequence();
+      });
+    });
+  </script>
 </body>
 </html>
