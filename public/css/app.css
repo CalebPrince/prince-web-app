@@ -4561,7 +4561,10 @@ body.site-search-open { overflow: hidden; }
 .os-flow li>span { color:#62ff98; font:650 .72rem "Fira Code",monospace; }
 .os-flow strong { display:block; margin:3.5rem 0 .7rem; color:#f2fff6; font-size:1.05rem; }
 .os-flow p { color:#829388; font-size:.82rem; line-height:1.6; }
-@keyframes osNodeIn { from { opacity:0; transform:translateX(-12px); } }
+@keyframes osNodeIn {
+  from { opacity:0; transform:translateX(-12px); }
+  to { opacity:1; transform:none; }
+}
 @keyframes osSignalPulse { to { transform:scale(1.7); box-shadow:0 0 24px #62ff98; } }
 @media(max-width:991px){.os-hero-grid,.os-topology{grid-template-columns:1fr}.os-topology::after,.os-agent-node::before{display:none}.os-flow{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:575px){.os-map-hero{padding:5rem 0 3rem}.os-agent-grid,.os-flow{grid-template-columns:1fr}.os-topology{padding:1rem}.os-section-head{display:block}.os-section-head>p{margin-top:1rem}.os-flow li{min-height:0;border-left:0;border-top:1px solid rgba(98,255,152,.12)}}
