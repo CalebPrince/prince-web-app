@@ -351,6 +351,12 @@ class AppointmentController
     private static function looksLikePlaceholder(string $value): bool
     {
         $normalized = strtolower(trim($value));
+        if (filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
+            $domain = strtolower((string) substr(strrchr($normalized, '@') ?: '', 1));
+            if (in_array($domain, ['example.com', 'example.org', 'example.net'], true)) {
+                return true;
+            }
+        }
         return in_array($normalized, [
             'your name', 'your email', 'your@email.com', 'name here', 'email here',
             'example@example.com', 'test@example.com', 'test@test.com', 'n/a', 'na',

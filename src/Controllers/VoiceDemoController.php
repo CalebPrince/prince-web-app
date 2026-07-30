@@ -314,7 +314,8 @@ final class VoiceDemoController
 
         $transcript[] = ['role' => 'user', 'text' => $speech];
         $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $callContext);
-        $endConversation = self::assistantFinishedConversation($result['reply']);
+        $bookingConfirmed = !empty($result['booking_confirmed']);
+        $endConversation = $bookingConfirmed || self::assistantFinishedConversation($result['reply']);
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
         self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'conversation_relay']);
@@ -322,7 +323,11 @@ final class VoiceDemoController
             'channel' => 'conversation_relay',
             'provider' => $result['provider'],
         ]);
-        Response::json(['reply' => $result['reply'], 'end' => $endConversation]);
+        Response::json([
+            'reply' => $result['reply'],
+            'end' => $endConversation,
+            'booking_confirmed' => $bookingConfirmed,
+        ]);
     }
 
     public static function callStatus(): void
@@ -473,7 +478,7 @@ final class VoiceDemoController
         ]);
     }
 
-    /** @return array{reply:string,provider:?string,mode:string} */
+    /** @return array{reply:string,provider:?string,mode:string,booking_confirmed:bool} */
     private static function reply(array $transcript, string $channel = 'web', ?array $context = null): array
     {
         if ($channel === 'outbound') {
@@ -510,9 +515,22 @@ final class VoiceDemoController
                     $args['phone'] = trim((string) ($args['phone'] ?? '')) ?: self::callPartyNumber($context ?? []);
                     $args['name'] = trim((string) ($args['name'] ?? ''))
                         ?: trim((string) (($context ?? [])['contact_name'] ?? ''));
-                    $args['email'] = trim((string) ($args['email'] ?? ''))
-                        ?: trim((string) (($context ?? [])['contact_email'] ?? ''));
+                    $trustedEmail = self::trustedBookingEmail($transcript, $context ?? []);
+                    if ($trustedEmail === '') {
+                        return [
+                            'success' => false,
+                            'error' => 'No verified email is available. Ask the caller for their real email, read it back, and wait for them to confirm it before booking.',
+                        ];
+                    }
+                    // Never trust an address invented in tool arguments. Only
+                    // book with an address sourced from the reviewed lead or
+                    // explicitly read back and confirmed during this call.
+                    $args['email'] = $trustedEmail;
                     $bookingResult = AppointmentController::createBooking($args);
+                    if (!empty($bookingResult['success'])) {
+                        $bookingResult['name'] = $args['name'];
+                        $bookingResult['email'] = $trustedEmail;
+                    }
                     return $bookingResult;
                 }
                 return ['error' => 'Unknown phone action.'];
@@ -529,11 +547,14 @@ final class VoiceDemoController
             $voiceToolsEnabled ? 2 : 1
         );
         if (is_array($bookingResult) && !empty($bookingResult['success'])) {
+            $contactName = trim((string) ($bookingResult['name'] ?? ''));
+            $thanks = $contactName !== '' ? ' Thank you, ' . $contactName . '.' : ' Thank you.';
             $result['reply'] = sprintf(
-                'Your booking is confirmed for %s at %s, %s. A confirmation email is on its way, and the calendar and team notifications have been created.',
+                'Your booking is confirmed for %s at %s, %s. A confirmation email is on its way.%s Have a great day. Goodbye.',
                 (string) $bookingResult['date'],
                 (string) $bookingResult['time'],
-                (string) $bookingResult['timezone']
+                (string) $bookingResult['timezone'],
+                $thanks
             );
         } elseif ($voiceToolsEnabled && ($identityPrompt = self::requiredBookingIdentityPrompt(
             $transcript,
@@ -550,7 +571,12 @@ final class VoiceDemoController
                 : "I can demonstrate routine call handling, appointment intake, approved clinic FAQs, "
                     . "and safe staff handoffs. The AI service is temporarily unavailable, but the demo never performs real actions.";
         }
-        return ['reply' => trim($result['reply']), 'provider' => $result['provider'], 'mode' => $result['mode']];
+        return [
+            'reply' => trim($result['reply']),
+            'provider' => $result['provider'],
+            'mode' => $result['mode'],
+            'booking_confirmed' => is_array($bookingResult) && !empty($bookingResult['success']),
+        ];
     }
 
     private static function voiceToolDeclarations(): array
@@ -770,7 +796,17 @@ final class VoiceDemoController
             '/^\s*(?:yes|yes please|correct|confirmed|I confirm|that(?:\'s| is) correct|please book it)\b/i',
             $lastUser
         ) === 1;
-        $readBack = preg_match('/\b(?:confirm|book)\b/i', $previousAssistant) === 1
+        // The preceding question must explicitly ask permission to create
+        // the appointment. Merely confirming a name/email in a sentence
+        // which also happens to mention "booking" is not final consent.
+        $asksToBook = preg_match(
+            '/\b(?:may I|can I|shall I|should I)\s+(?:go ahead and\s+)?book\b|'
+            . '\bready (?:for me )?to book\b|'
+            . '\b(?:does|is)\b.{0,45}\b(?:sound|correct)\b.{0,25}\bto book\b|'
+            . '\bplease confirm\b.{0,80}\b(?:before|and)\b.{0,25}\bbook\b/i',
+            $previousAssistant
+        ) === 1;
+        $readBack = $asksToBook
             && preg_match('/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/i', $previousAssistant) === 1
             && preg_match('/\b(?:Africa\/Accra|GMT|UTC|time(?:zone)?)\b/i', $previousAssistant) === 1
             && preg_match('/\b(?:20\d{2}|\d{4}-\d{2}-\d{2})\b/', $previousAssistant) === 1;
@@ -822,7 +858,13 @@ final class VoiceDemoController
      */
     private static function confirmedEmailInTranscript(array $transcript): bool
     {
-        $pendingEmail = false;
+        return self::confirmedEmailAddress($transcript) !== '';
+    }
+
+    private static function confirmedEmailAddress(array $transcript): string
+    {
+        $pendingEmail = '';
+        $confirmedEmail = '';
         foreach ($transcript as $turn) {
             if (!is_array($turn)) continue;
             $role = (string) ($turn['role'] ?? '');
@@ -831,22 +873,42 @@ final class VoiceDemoController
             if ($role === 'assistant') {
                 $pendingEmail = preg_match(
                     '/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i',
-                    $text
-                ) === 1;
+                    $text,
+                    $matches
+                ) === 1 ? strtolower($matches[0]) : '';
                 continue;
             }
 
-            if ($role === 'user' && $pendingEmail) {
+            if ($role === 'user' && $pendingEmail !== '') {
                 if (preg_match(
                     '/^\s*(?:yes|yes please|correct|confirmed|that(?:\'s| is) right|that(?:\'s| is) correct|right)\b/i',
                     $text
                 ) === 1) {
-                    return true;
+                    $confirmedEmail = $pendingEmail;
                 }
-                $pendingEmail = false;
+                $pendingEmail = '';
             }
         }
-        return false;
+        return $confirmedEmail;
+    }
+
+    private static function trustedBookingEmail(array $transcript, array $context): string
+    {
+        $confirmed = self::confirmedEmailAddress($transcript);
+        if ($confirmed !== '') return $confirmed;
+
+        $reviewed = strtolower(trim((string) ($context['contact_email'] ?? '')));
+        if (filter_var($reviewed, FILTER_VALIDATE_EMAIL)
+            && !self::isExampleEmailAddress($reviewed)) {
+            return $reviewed;
+        }
+        return '';
+    }
+
+    private static function isExampleEmailAddress(string $email): bool
+    {
+        $domain = strtolower((string) substr(strrchr($email, '@') ?: '', 1));
+        return in_array($domain, ['example.com', 'example.org', 'example.net'], true);
     }
 
     private static function callPartyNumber(array $context): string
