@@ -245,7 +245,17 @@
             <div class="system-case-copy"><p>${escapeHtml(p.case_study_body || 'The full engineering record is being prepared.').replaceAll('\n', '</p><p>')}</p></div>
           </section>
 
-          ${gallery.length || coverPath ? `<section class="system-visuals"><header><span>04 / LIVE INTERFACES</span><h2>The operating surfaces.</h2></header><div>${[coverPath, ...gallery].filter(Boolean).slice(0, 4).map((image, index) => `<figure><img src="${escapeHtml(image)}" alt="${escapeHtml(p.title)} interface ${index + 1}" loading="lazy"></figure>`).join('')}</div></section>` : ''}
+          ${gallery.length || coverPath ? `<section class="system-visuals"><header><span>04 / LIVE INTERFACES</span><h2>The operating surfaces.</h2></header><div>${[coverPath, ...gallery].filter(Boolean).slice(0, 4).map((image, index) => `
+            <figure class="system-browser-mockup">
+              <div class="system-browser-bar" aria-hidden="true">
+                <span class="system-browser-controls"><i></i><i></i><i></i></span>
+                <span class="system-browser-address">secure://${escapeHtml(p.slug)}/surface-${String(index + 1).padStart(2, '0')}</span>
+                <span class="system-browser-state"><i></i> LIVE</span>
+              </div>
+              <div class="system-browser-viewport">
+                <img src="${escapeHtml(image)}" alt="${escapeHtml(p.title)} interface ${index + 1}" loading="lazy">
+              </div>
+            </figure>`).join('')}</div></section>` : ''}
 
           <section class="system-results">
             <header><span>05 / MEASURABLE RESULT</span><h2>What changed after deployment.</h2></header>
