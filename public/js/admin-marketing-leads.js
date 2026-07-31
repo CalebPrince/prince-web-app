@@ -835,7 +835,7 @@ function renderOutreachStats(s) {
   const discoveryTarget = document.getElementById("oe-discovery-target");
   const discoveryQueries = document.getElementById("oe-discovery-queries");
   if (document.activeElement !== discoveryTarget) discoveryTarget.value = s.discovery_daily_target || 50;
-  if (document.activeElement !== discoveryQueries) discoveryQueries.value = s.discovery_queries || "";
+  if (document.activeElement !== discoveryQueries) discoveryQueries.value = String(s.discovery_queries || "").split(/\r?\n/).filter(Boolean).join(", ");
   const lastRun = s.discovery_last_run ? `Last run ${s.discovery_last_run} UTC. ` : "";
   document.getElementById("oe-discovery-status").textContent =
     lastRun + (s.discovery_last_status || "Waiting for its first run.");

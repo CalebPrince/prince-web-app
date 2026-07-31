@@ -319,7 +319,7 @@ class OutreachController
             Settings::set('lead_discovery_daily_target', (string) $target);
         }
         if (array_key_exists('discovery_queries', $data)) {
-            $queries = array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $data['discovery_queries']) ?: [])));
+            $queries = array_values(array_filter(array_map('trim', preg_split('/[\r\n,]+/', (string) $data['discovery_queries']) ?: [])));
             if (!$queries) {
                 Response::error('Add at least one niche and location for automatic discovery.', 422);
             }

@@ -62,6 +62,7 @@
 .tracker-card{min-width:0;overflow:visible;scroll-margin-top:1rem}
 .tracker-table-scroll{width:100%;max-width:100%;overflow-x:auto;overflow-y:visible;overscroll-behavior-inline:contain;scrollbar-gutter:stable;-webkit-overflow-scrolling:touch}
 .tracker-table-scroll .tracker-table-ai{min-width:760px}
+.discovery-query-list{min-height:6.5rem;resize:vertical;white-space:pre-wrap;overflow-wrap:anywhere}
 .tracker-table-ai tr[data-lead-row]:has(.row-checkbox:checked){background:var(--section-leads-soft)}
 .lead-more-item{display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .65rem;border:0;border-radius:8px;background:transparent;color:var(--text,#172033);font-size:.78rem;text-align:left}
 .lead-more-item:hover{background:var(--bg-soft)}
@@ -412,8 +413,8 @@ a.demo-link-ai:hover { color: var(--heading-color); }
                                         <input type="number" class="form-control form-control-sm" id="oe-discovery-target" min="1" max="50" step="1" style="width:6rem;">
                                     </div>
                                     <div class="flex-grow-1">
-                                        <label for="oe-discovery-queries" class="form-label small mb-1">Niche and location searches <span class="text-muted-custom">(one per line)</span></label>
-                                        <textarea class="form-control form-control-sm" id="oe-discovery-queries" rows="1" maxlength="4020" placeholder="private clinics in Accra Ghana"></textarea>
+                                        <label for="oe-discovery-queries" class="form-label small mb-1">Niche and location searches <span class="text-muted-custom">(separate each search with a comma)</span></label>
+                                        <textarea class="form-control form-control-sm discovery-query-list" id="oe-discovery-queries" rows="4" wrap="soft" maxlength="4020" placeholder="private clinics in Accra Ghana, dental clinics in Kumasi Ghana"></textarea>
                                     </div>
                                     <button type="button" class="btn btn-outline-secondary btn-sm" id="oe-discovery-save">Save</button>
                                 </div>
