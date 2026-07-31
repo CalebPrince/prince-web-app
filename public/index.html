@@ -68,35 +68,10 @@
       display: grid; grid-template-columns: minmax(0,1fr); gap: clamp(26px,4vw,72px);
       align-items: center; padding: 92px 0 54px;
     }
-    .terminal {
-      display: none;
-      height: min(63vh, 590px); overflow: hidden; padding: 20px;
-      border: 1px solid rgba(98,255,152,.16); border-radius: 14px;
-      background: linear-gradient(180deg, rgba(7,20,11,.78), rgba(2,7,4,.67));
-      box-shadow: inset 0 0 55px rgba(98,255,152,.025), 0 0 35px rgba(0,0,0,.22);
-    }
-    .terminal-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; margin-bottom: 14px; border-bottom: 1px solid rgba(98,255,152,.1); color: var(--green-bright); font-size: .69rem; letter-spacing: .13em; text-transform: uppercase; }
-    .terminal-lights { display: flex; gap: 7px; }
-    .terminal-lights i { width: 6px; height: 6px; border-radius: 50%; background: rgba(98,255,152,.35); }
-    .logs { display: flex; flex-direction: column; gap: 9px; color: rgba(98,255,152,.72); font-size: .67rem; line-height: 1.55; }
-    .log-line { opacity: 0; transform: translateY(5px); animation: logIn .35s ease forwards; }
-    .log-time { color: var(--green-bright); }
-    @keyframes logIn { to { opacity: 1; transform: translateY(0); } }
-
     .stage-terminal {
-      height: min(63vh, 590px); overflow: hidden;
-      border: 1px solid rgba(98,255,152,.16); border-radius: 14px;
-      background: linear-gradient(180deg, rgba(7,20,11,.78), rgba(2,7,4,.67));
-      box-shadow: inset 0 0 55px rgba(98,255,152,.025), 0 0 35px rgba(0,0,0,.22);
+      height: min(68vh, 640px); overflow: hidden;
       display: flex; flex-direction: column;
     }
-    .stage-terminal-head { flex: none; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 20px; border-bottom: 1px solid rgba(98,255,152,.1); background: rgba(255,255,255,.025); }
-    .stage-terminal-dots { display: flex; gap: 7px; }
-    .stage-terminal-dots i { width: 10px; height: 10px; border-radius: 999px; background: rgba(255,255,255,.2); }
-    .stage-terminal-dots i:nth-child(1) { background: #ff5f57; }
-    .stage-terminal-dots i:nth-child(2) { background: #febc2e; }
-    .stage-terminal-dots i:nth-child(3) { background: #28c840; }
-    .stage-terminal-label { color: rgba(255,255,255,.34); font-size: .69rem; letter-spacing: .08em; }
     .stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
     .term-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6em; margin: 0 0 14px; font-size: clamp(.82rem,1.6vw,1.05rem); line-height: 1.7; opacity: 0; transition: opacity .25s ease; }
     .term-line.show { opacity: 1; }
@@ -181,8 +156,7 @@
 
     @media (max-width: 900px) {
       .layout { display: block; padding-top: 96px; }
-      .terminal { display: none; }
-      .stage-terminal { height: calc(100vh - 145px); }
+      .stage-terminal { height: calc(100vh - 125px); }
       .system-status { display: none; }
     }
     @media (max-width: 560px) {
@@ -205,18 +179,12 @@
     </header>
 
     <main class="layout">
-      <aside class="terminal">
-        <div class="terminal-head"><span>Live boot log</span><span class="terminal-lights"><i></i><i></i><i></i></span></div>
-        <div class="logs" id="logs"></div>
-      </aside>
-
       <div class="stage-terminal">
-        <div class="stage-terminal-head"><span>Prince Caleb / AI systems</span><span class="terminal-lights"><i></i><i></i><i></i></span></div>
         <section class="stage" aria-live="polite">
         <article class="scene active" data-pause="650">
-          <div class="term-line"><div class="eyebrow" data-type="PRINCE CALEB"></div></div>
-          <div class="term-line"><h1 class="headline" data-type="AI systems built for real business."></h1></div>
-          <div class="term-line"><p class="copy" data-type="Voice agents, WhatsApp, automation and custom platforms."></p></div>
+          <div class="term-line"><div class="eyebrow" data-type="WELCOME TO"></div></div>
+          <div class="term-line"><h1 class="headline" data-type="PRINCE CALEB"></h1></div>
+          <div class="term-line"><p class="copy" data-type="AI systems built for real business."></p></div>
         </article>
 
         <article class="scene" data-pause="700">
@@ -275,7 +243,6 @@
 
   <script>
     const scenes = [...document.querySelectorAll('.scene')];
-    const logs = document.getElementById('logs');
     const pauseBtn = document.getElementById('pauseBtn');
     const skipBtn = document.getElementById('skipBtn');
     const progressBar = document.getElementById('progressBar');
@@ -289,7 +256,6 @@
     let currentScene = 0;
     let paused = false;
     let cancelled = false;
-    let introStarted = performance.now();
 
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -374,26 +340,6 @@
       skipBtn.style.display = 'none';
       progressBar.style.width = '100%';
     });
-
-    const bootMessages = [
-      'Kernel loaded', 'Memory allocated', 'UI compositor ready', 'AI engine online',
-      'Automation engine ready', 'Agent registry loaded', 'Lisa connected', 'Joan scouting',
-      'Sharon researching', 'Jason activated', 'Ledger synchronized', 'Sketch rendering',
-      'Danielle publishing', 'Arch building', 'Ada reviewing', 'Chief monitoring',
-      'Workspace secured', 'Builder OS ready'
-    ];
-    let logIndex = 0;
-    function addLog() {
-      const elapsed = ((performance.now() - introStarted) / 1000).toFixed(3).padStart(6,'0');
-      const line = document.createElement('div');
-      line.className = 'log-line';
-      line.innerHTML = `<span class="log-time">[${elapsed}]</span> ${bootMessages[logIndex % bootMessages.length]}`;
-      logs.appendChild(line);
-      if (logs.children.length > 16) logs.removeChild(logs.firstElementChild);
-      logIndex++;
-      setTimeout(addLog, 700 + Math.random() * 850);
-    }
-    addLog();
 
     const particles = document.getElementById('particles');
     for (let i = 0; i < 28; i++) {
