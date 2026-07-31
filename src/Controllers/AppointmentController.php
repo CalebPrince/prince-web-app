@@ -219,6 +219,7 @@ class AppointmentController
         if ($phoneError !== null) {
             return ['success' => false, 'error' => $phoneError];
         }
+        $phone = self::normalizePhone($phone);
 
         // filter_var happily accepts "your@email.com" as a syntactically
         // valid address — it can't tell a real one from a placeholder an AI
@@ -388,6 +389,28 @@ class AppointmentController
         }
 
         return null;
+    }
+
+    /** Store every supplied number in a consistent international form. */
+    private static function normalizePhone(string $phone): string
+    {
+        if ($phone === '') {
+            return '';
+        }
+
+        $trimmed = trim($phone);
+        $digits = preg_replace('/\D+/', '', $trimmed) ?? '';
+        if (str_starts_with($trimmed, '00')) {
+            return '+' . substr($digits, 2);
+        }
+        if (str_starts_with($digits, '233')) {
+            return '+' . $digits;
+        }
+        if (str_starts_with($digits, '0') && strlen($digits) === 10) {
+            return '+233' . substr($digits, 1);
+        }
+
+        return '+' . $digits;
     }
 
     private static function looksLikePlaceholder(string $value): bool
