@@ -12,6 +12,7 @@
       --green: #62ff98;
       --green-bright: #c7ffd8;
       --green-muted: #7bbf91;
+      --cyan: #5be3ff;
       --line: rgba(98,255,152,.2);
     }
     * { box-sizing: border-box; }
@@ -81,17 +82,43 @@
     .log-time { color: var(--green-bright); }
     @keyframes logIn { to { opacity: 1; transform: translateY(0); } }
 
-    .stage { position: relative; min-height: 520px; display: grid; place-items: center; text-align: center; }
-    .scene { position: absolute; width: min(920px,100%); opacity: 0; transform: translateY(14px) scale(.995); transition: opacity .55s ease, transform .55s ease; pointer-events: none; }
+    .stage-terminal {
+      height: min(63vh, 590px); overflow: hidden;
+      border: 1px solid rgba(98,255,152,.16); border-radius: 14px;
+      background: linear-gradient(180deg, rgba(7,20,11,.78), rgba(2,7,4,.67));
+      box-shadow: inset 0 0 55px rgba(98,255,152,.025), 0 0 35px rgba(0,0,0,.22);
+      display: flex; flex-direction: column;
+    }
+    .stage-terminal-head { flex: none; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 20px; border-bottom: 1px solid rgba(98,255,152,.1); background: rgba(255,255,255,.025); }
+    .stage-terminal-dots { display: flex; gap: 7px; }
+    .stage-terminal-dots i { width: 10px; height: 10px; border-radius: 999px; background: rgba(255,255,255,.2); }
+    .stage-terminal-dots i:nth-child(1) { background: #ff5f57; }
+    .stage-terminal-dots i:nth-child(2) { background: #febc2e; }
+    .stage-terminal-dots i:nth-child(3) { background: #28c840; }
+    .stage-terminal-label { color: rgba(255,255,255,.34); font-size: .69rem; letter-spacing: .08em; }
+    .stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+    .term-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6em; margin: 0 0 14px; font-size: clamp(.82rem,1.6vw,1.05rem); line-height: 1.7; opacity: 0; transition: opacity .25s ease; }
+    .term-line.show { opacity: 1; }
+    .term-line:last-child { margin-bottom: 0; }
+    .prompt-static { flex: none; color: var(--cyan); opacity: .85; }
+    .scene {
+      position: absolute;
+      inset: clamp(1.5rem,4vw,2.5rem) clamp(2.25rem,6vw,4.5rem);
+      display: flex; flex-direction: column; justify-content: center;
+      text-align: left;
+      opacity: 0; transform: translateY(14px) scale(.995);
+      transition: opacity .55s ease, transform .55s ease;
+      pointer-events: none;
+    }
     .scene.active { opacity: 1; transform: none; pointer-events: auto; }
     .scene.exit { opacity: 0; transform: translateY(-14px) scale(1.005); }
-    .eyebrow { min-height: 1em; margin-bottom: 18px; color: var(--green-muted); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; }
-    .headline { min-height: 2.3em; margin: 0; color: var(--green); font-size: clamp(1.65rem,4vw,4.65rem); line-height: 1.14; letter-spacing: -.035em; text-shadow: 0 0 14px rgba(98,255,152,.38); }
-    .copy { min-height: 2em; max-width: 820px; margin: 22px auto 0; color: var(--green-bright); font-size: clamp(.92rem,1.6vw,1.3rem); line-height: 1.75; }
+    .eyebrow { margin: 0; font: inherit; color: var(--green-muted); }
+    .headline { margin: 0; font: inherit; font-weight: 700; color: var(--green); }
+    .copy { margin: 0; font: inherit; color: var(--green-bright); }
     .typed::after { content: "▋"; display: inline-block; margin-left: 5px; color: var(--green); animation: blink .8s steps(1) infinite; }
     @keyframes blink { 50% { opacity: 0; } }
-    .list { display: grid; gap: 12px; margin: 30px auto 0; width: min(520px,100%); font-size: clamp(1rem,1.8vw,1.38rem); }
-    .list-line { min-height: 1.3em; }
+    .list { display: contents; }
+    .list-line { margin: 0; font: inherit; color: var(--green); }
 
     .eyebrow, .headline { position: relative; }
     .glitch-flicker::before, .glitch-flicker::after {
@@ -113,8 +140,7 @@
       75% { transform: translate(3px,2px); clip-path: inset(8% 0 76% 0); }
     }
 
-    .final .headline { min-height: auto; font-size: clamp(3rem,8.5vw,7.8rem); line-height: .94; }
-    .final-shell { width: min(760px,100%); margin: 34px auto 0; opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; }
+    .final-shell { width: min(760px,100%); margin: 24px 0 0; opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; }
     .final-shell.show { opacity: 1; transform: none; }
     .enter-frame {
       position: relative; display: block; width: 100%; padding: 2px;
@@ -154,7 +180,7 @@
     @media (max-width: 900px) {
       .layout { display: block; padding-top: 96px; }
       .terminal { display: none; }
-      .stage { height: calc(100vh - 145px); min-height: 0; }
+      .stage-terminal { height: calc(100vh - 145px); }
       .system-status { display: none; }
     }
     @media (max-width: 560px) {
@@ -182,59 +208,62 @@
         <div class="logs" id="logs"></div>
       </aside>
 
-      <section class="stage" aria-live="polite">
+      <div class="stage-terminal">
+        <div class="stage-terminal-head"><span>builder-os / render</span><span class="terminal-lights"><i></i><i></i><i></i></span></div>
+        <section class="stage" aria-live="polite">
         <article class="scene active" data-pause="650">
-          <div class="eyebrow" data-type="SYSTEM STARTUP"></div>
-          <h1 class="headline" data-type="INITIALIZING BUILDER OS..." data-glitch="true"></h1>
-          <p class="copy" data-type="Preparing the environment."></p>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ boot builder_os</span><div class="eyebrow" data-type="SYSTEM STARTUP"></div></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ boot builder_os</span><h1 class="headline" data-type="INITIALIZING BUILDER OS..." data-glitch="true"></h1></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ boot builder_os</span><p class="copy" data-type="Preparing the environment."></p></div>
         </article>
 
         <article class="scene" data-pause="700">
-          <div class="eyebrow" data-type="CORE PRINCIPLE"></div>
-          <h2 class="headline" data-type="Every business generates data."></h2>
-          <p class="copy" data-type="Very few know what to do with it."></p>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect data</span><div class="eyebrow" data-type="CORE PRINCIPLE"></div></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect data</span><h2 class="headline" data-type="Every business generates data."></h2></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect data</span><p class="copy" data-type="Very few know what to do with it."></p></div>
         </article>
 
         <article class="scene" data-pause="650">
-          <div class="eyebrow" data-type="ONE CONNECTED ECOSYSTEM"></div>
-          <h2 class="headline" data-type="Builder OS connects"></h2>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="eyebrow" data-type="ONE CONNECTED ECOSYSTEM"></div></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><h2 class="headline" data-type="Builder OS connects"></h2></div>
           <div class="list">
-            <div class="list-line" data-type="Web Applications"></div>
-            <div class="list-line" data-type="AI Agents"></div>
-            <div class="list-line" data-type="Automation"></div>
-            <div class="list-line" data-type="Dashboards"></div>
-            <div class="list-line" data-type="Data and People"></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Web Applications"></div></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="AI Agents"></div></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Automation"></div></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Dashboards"></div></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Data and People"></div></div>
           </div>
         </article>
 
         <article class="scene" data-pause="650">
-          <div class="eyebrow" data-type="AGENT NETWORK" data-glitch="true"></div>
-          <h2 class="headline" data-type="Systems are coming online."></h2>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="eyebrow" data-type="AGENT NETWORK" data-glitch="true"></div></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><h2 class="headline" data-type="Systems are coming online."></h2></div>
           <div class="list">
-            <div class="list-line" data-type="Lisa ........ ONLINE"></div>
-            <div class="list-line" data-type="Jason ........ ACTIVE"></div>
-            <div class="list-line" data-type="Ledger ...... READY"></div>
-            <div class="list-line" data-type="Chief ..... WATCHING"></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Lisa ........ ONLINE"></div></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Jason ........ ACTIVE"></div></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Ledger ...... READY"></div></div>
+            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Chief ..... WATCHING"></div></div>
           </div>
         </article>
 
         <article class="scene" data-pause="700">
-          <div class="eyebrow" data-type="ACCESS LAYER"></div>
-          <h2 class="headline" data-type="You're not entering a portfolio."></h2>
-          <p class="copy" data-type="You're entering an operating system."></p>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ whoami</span><div class="eyebrow" data-type="ACCESS LAYER"></div></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ whoami</span><h2 class="headline" data-type="You're not entering a portfolio."></h2></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ whoami</span><p class="copy" data-type="You're entering an operating system."></p></div>
         </article>
 
         <article class="scene final">
-          <div class="eyebrow" data-type="AUTHENTICATION COMPLETE"></div>
-          <h2 class="headline" data-type="BUILDER OS\nREADY" data-glitch="true"></h2>
-          <p class="copy" data-type="Explore projects. Meet the agents. See the systems in action."></p>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ enter system</span><div class="eyebrow" data-type="AUTHENTICATION COMPLETE"></div></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ enter system</span><h2 class="headline" data-type="BUILDER OS\nREADY" data-glitch="true"></h2></div>
+          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ enter system</span><p class="copy" data-type="Explore projects. Meet the agents. See the systems in action."></p></div>
           <div class="final-shell">
             <a class="enter-frame" id="enterButton" href="home.html" aria-label="Enter the system">
               <span class="enter-inner"><span id="buttonLabel">Enter the System</span><span class="enter-arrow">→</span></span>
             </a>
           </div>
         </article>
-      </section>
+        </section>
+      </div>
     </main>
 
     <div class="controls"><button class="control" id="pauseBtn" type="button">Pause</button><button class="control" id="skipBtn" type="button">Skip intro</button></div>
@@ -299,6 +328,7 @@
 
       const elements = [...scene.querySelectorAll('[data-type]')];
       for (const el of elements) {
+        el.closest('.term-line')?.classList.add('show');
         await typeText(el, el.dataset.type, el.classList.contains('eyebrow') ? FAST_SPEED : TYPE_SPEED);
         if (el.dataset.glitch === 'true') triggerGlitch(el);
         await sleep(el.classList.contains('list-line') ? 80 : 150);
@@ -333,6 +363,7 @@
       });
       const final = scenes.at(-1);
       final.querySelectorAll('[data-type]').forEach(el => {
+        el.closest('.term-line')?.classList.add('show');
         el.textContent = el.dataset.type;
         if (el.dataset.type.includes('\n')) el.style.whiteSpace = 'pre-line';
         if (el.dataset.glitch === 'true') triggerGlitch(el);
