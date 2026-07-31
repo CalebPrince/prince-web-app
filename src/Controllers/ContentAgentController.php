@@ -31,6 +31,9 @@ class ContentAgentController
 {
     private const MAX_MESSAGE_LENGTH = 1000;
     private const MAX_CHAT_TRANSCRIPT_TURNS = 30;
+    private const ADVERT_BACKGROUND = '#050d08';
+    private const ADVERT_GREEN = '#62ff98';
+    private const ADVERT_WHITE = '#f5fff8';
 
     /**
      * Real social platform pixel sizes create_flyer can target. Kept here (not
@@ -114,9 +117,9 @@ class ContentAgentController
             'description' => 'Generate a flyer / social graphic as an actual image, sized for a real social '
                 . 'platform. Write a vivid, self-contained visual description (subject, style, mood, and the '
                 . 'exact headline/short text to render on it) — the image model only sees this description, '
-                . 'not the conversation. Real brand colors, font, and Caleb\'s actual logo file are grounded '
-                . 'in automatically (call get_brand_info first if you want to reference the exact hex colors '
-                . 'or style note yourself, e.g. to describe a color in the prompt). The image is saved and '
+                . 'not the conversation. Every advert automatically uses the Builder OS black, signal-green, '
+                . 'and white visual system plus Caleb\'s actual logo; requested colours cannot override that '
+                . 'palette. The image is saved and '
                 . 'shown to Caleb automatically; to attach it to a post, pass its returned url as image_url on '
                 . 'save_social_draft.',
             'parameters' => [
@@ -129,8 +132,7 @@ class ContentAgentController
                     ],
                     'background' => [
                         'type' => 'STRING',
-                        'description' => 'Whether the flyer\'s background reads as dark or light overall — '
-                            . 'picks the matching real logo variant so it stays legible. One of: dark (default), light.',
+                        'description' => 'Deprecated compatibility field. Generated adverts always use the dark Builder OS background.',
                     ],
                 ],
                 'required' => ['description', 'size'],
@@ -196,11 +198,6 @@ class ContentAgentController
     {
         $description = trim((string) ($args['description'] ?? ''));
         $size = strtolower(trim((string) ($args['size'] ?? '')));
-        $background = strtolower(trim((string) ($args['background'] ?? 'dark')));
-        if (!in_array($background, ['dark', 'light'], true)) {
-            $background = 'dark';
-        }
-
         if ($description === '') {
             return ['error' => 'A visual description is required to generate a flyer.'];
         }
@@ -210,22 +207,27 @@ class ContentAgentController
 
         $spec = self::FLYER_SIZES[$size];
 
-        // Ground every flyer in the real brand — colors/font/style plus the
-        // actual logo file for the matching background — rather than relying
-        // on the model having called get_brand_info itself first.
-        // A dark flyer background needs the white-colored logo mark to read;
-        // a light background needs the dark-colored mark.
+        // Adverts have one non-negotiable Builder OS identity. This stays
+        // separate from client and proposal mockups, which can legitimately
+        // use the prospect's own palette.
         $brand = SharedAgentTools::getBrandInfo();
-        $logoUrl = $background === 'light' ? $brand['logo_dark'] : $brand['logo_white'];
+        $logoUrl = $brand['logo_white'];
         $logoPath = self::webPathToFsPath($logoUrl);
-        $groundedDescription = $description . "\n\nBrand: primary color {$brand['primary_color']}, accent color "
-            . "{$brand['accent_color']}, typography style {$brand['font']}. {$brand['style_note']}";
+        $groundedDescription = $description
+            . "\n\nMANDATORY BUILDER OS ADVERT ART DIRECTION:\n"
+            . "- Use only these three core colours: near-black " . self::ADVERT_BACKGROUND
+            . ", signal green " . self::ADVERT_GREEN . ", and clean white " . self::ADVERT_WHITE . ".\n"
+            . "- The background must read predominantly near-black. Use signal green for system lines, status "
+            . "indicators, highlights, dividers, and one focused visual gesture. Set all essential copy in white.\n"
+            . "- Do not introduce blue, purple, orange, red, beige, pastel, rainbow, or multicolour gradients. "
+            . "Neutral grey may appear only as a subtle tonal variation of black or white.\n"
+            . "- Use a cinematic technology-system aesthetic: precise grid, restrained glow, strong hierarchy, "
+            . "generous negative space, and crisp high-contrast typography. Avoid generic corporate flyer layouts.\n"
+            . "- Keep the supplied white Prince Caleb logo small, legible, and unchanged.\n"
+            . "- Typography style: {$brand['font']}.";
 
-        // Real surface color (public/css/app.css theme --bg), not the ink/text
-        // colors above — used only to pad AiImage::fitToPng()'s letterbox on
-        // an aspect-ratio mismatch too large to safely crop, so that padding
-        // blends into a matching solid background instead of standing out.
-        $surfaceColor = $background === 'light' ? '#fbfbfa' : '#0b0c0e';
+        // The same black fills any safety padding added for ratio mismatches.
+        $surfaceColor = self::ADVERT_BACKGROUND;
 
         $image = AiImage::generateFlyer($groundedDescription, $spec['width'], $spec['height'], 60, $logoPath, $surfaceColor);
         if ($image === null) {
@@ -346,10 +348,10 @@ class ContentAgentController
             . "chat when Caleb wants something saved:\n"
             . "- create_flyer: generate an actual flyer/graphic image at a real social size (square, portrait, "
             . "story, or landscape). Write a vivid, self-contained visual prompt including the exact text to "
-            . "render on it; the image model can't see the conversation. Real brand colors, font, and Caleb's "
-            . "actual logo are grounded in automatically for you (see get_brand_info if you want the exact hex "
-            . "values to reference explicitly), and the matching logo variant is attached based on whether the "
-            . "background reads dark or light. The result is shown to Caleb automatically.\n"
+            . "render on it; the image model can't see the conversation. Every advert must use Builder OS black "
+            . "(#050d08), signal green (#62ff98), and white (#f5fff8), with a predominantly black background. "
+            . "Never request a competing colour palette. Caleb's white logo and the complete visual rules are "
+            . "attached automatically. The result is shown to Caleb automatically.\n"
             . "- save_social_draft: save a caption as a draft (attach a flyer via image_url from create_flyer).\n"
             . "- save_blog_draft: save a full blog post as an UNPUBLISHED draft.\n\n"
             . "Nothing you save is published — everything you create (captions, flyers, and blog drafts) lands "

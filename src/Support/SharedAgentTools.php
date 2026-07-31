@@ -242,12 +242,12 @@ class SharedAgentTools
     public static function getBrandInfo(): array
     {
         return [
-            'primary_color' => Settings::get('brand_primary_color') ?: '#17181c',
-            'accent_color' => Settings::get('brand_accent_color') ?: '#e8eaed',
+            'primary_color' => Settings::get('brand_primary_color') ?: '#050d08',
+            'accent_color' => Settings::get('brand_accent_color') ?: '#62ff98',
             'font' => Settings::get('brand_font') ?: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif (clean geometric sans, no serif/script)',
             'style_note' => Settings::get('brand_style_note')
-                ?: 'Monochrome, dark editorial style — near-black or near-white surfaces only, no bright or '
-                    . 'saturated colors, generous whitespace, restrained typography.',
+                ?: 'Builder OS cinematic system style: near-black surfaces, signal-green status accents, '
+                    . 'clean white typography, precise grids, restrained glow, and generous negative space.',
             // The dark-colored mark reads on white/light backgrounds; the
             // white-colored mark reads on black/dark backgrounds.
             'logo_dark' => Settings::get('brand_logo_dark_url') ?: '/uploads/brand/logo-dark.png',
