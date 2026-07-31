@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#030604">
-  <title>Builder OS — Enter the System</title>
+  <title>Prince Caleb — AI Systems</title>
   <style>
     :root {
       --bg: #030604;
@@ -47,7 +47,7 @@
     .fx::before { top: -28%; left: 8%; }
     .fx::after { right: -8%; bottom: -34%; animation-delay: -6s; }
     @keyframes drift { to { transform: translate3d(8%,8%,0) scale(1.14); } }
-    .scanlines { z-index: 25; opacity: .18; background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(98,255,152,.03) 4px); }
+    .scanlines { display: none; }
     .vignette { z-index: 24; box-shadow: inset 0 0 190px rgba(0,0,0,.96); }
     .particle { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px var(--green); animation: rise linear infinite; }
     @keyframes rise { 0% { transform: translateY(15vh); opacity: 0; } 15% { opacity: .35; } 100% { transform: translateY(-115vh); opacity: 0; } }
@@ -65,10 +65,11 @@
 
     .layout {
       position: relative; z-index: 10; height: 100%; width: min(1480px, calc(100% - 38px)); margin: auto;
-      display: grid; grid-template-columns: minmax(280px,.7fr) minmax(0,1.65fr); gap: clamp(26px,4vw,72px);
+      display: grid; grid-template-columns: minmax(0,1fr); gap: clamp(26px,4vw,72px);
       align-items: center; padding: 92px 0 54px;
     }
     .terminal {
+      display: none;
       height: min(63vh, 590px); overflow: hidden; padding: 20px;
       border: 1px solid rgba(98,255,152,.16); border-radius: 14px;
       background: linear-gradient(180deg, rgba(7,20,11,.78), rgba(2,7,4,.67));
@@ -100,7 +101,7 @@
     .term-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6em; margin: 0 0 14px; font-size: clamp(.82rem,1.6vw,1.05rem); line-height: 1.7; opacity: 0; transition: opacity .25s ease; }
     .term-line.show { opacity: 1; }
     .term-line:last-child { margin-bottom: 0; }
-    .prompt-static { flex: none; color: var(--cyan); opacity: .85; }
+    .prompt-static { display: none; }
     .scene {
       position: absolute;
       inset: clamp(1.5rem,4vw,2.5rem) clamp(2.25rem,6vw,4.5rem);
@@ -122,6 +123,7 @@
 
     .eyebrow, .headline { position: relative; }
     .glitch-flicker::before, .glitch-flicker::after {
+      display: none;
       content: attr(data-glitch-text);
       position: absolute; inset: 0; white-space: pre-line; pointer-events: none;
     }
@@ -198,8 +200,8 @@
   <div class="app">
     <div class="grid"></div><div class="fx"></div><div class="particles" id="particles"></div><div class="scanlines"></div><div class="vignette"></div>
     <header class="topbar">
-      <div class="brand"><span class="brand-mark">OS</span><span>Builder OS</span></div>
-      <div class="system-status"><span class="dot"></span><span>Boot sequence active</span></div>
+      <div class="brand"><span class="brand-mark">PC</span><span>Prince Caleb · Builder OS</span></div>
+      <div class="system-status"><span class="dot"></span><span>Interactive introduction</span></div>
     </header>
 
     <main class="layout">
@@ -209,62 +211,55 @@
       </aside>
 
       <div class="stage-terminal">
-        <div class="stage-terminal-head"><span>builder-os / render</span><span class="terminal-lights"><i></i><i></i><i></i></span></div>
+        <div class="stage-terminal-head"><span>Prince Caleb / AI systems</span><span class="terminal-lights"><i></i><i></i><i></i></span></div>
         <section class="stage" aria-live="polite">
         <article class="scene active" data-pause="650">
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ boot builder_os</span><div class="eyebrow" data-type="SYSTEM STARTUP"></div></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ boot builder_os</span><h1 class="headline" data-type="INITIALIZING BUILDER OS..." data-glitch="true"></h1></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ boot builder_os</span><p class="copy" data-type="Preparing the environment."></p></div>
+          <div class="term-line"><div class="eyebrow" data-type="PRINCE CALEB"></div></div>
+          <div class="term-line"><h1 class="headline" data-type="AI systems built for real business."></h1></div>
+          <div class="term-line"><p class="copy" data-type="Voice agents, WhatsApp, automation and custom platforms."></p></div>
         </article>
 
         <article class="scene" data-pause="700">
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect data</span><div class="eyebrow" data-type="CORE PRINCIPLE"></div></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect data</span><h2 class="headline" data-type="Every business generates data."></h2></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect data</span><p class="copy" data-type="Very few know what to do with it."></p></div>
+          <div class="term-line"><div class="eyebrow" data-type="BUILT AROUND YOUR WORKFLOW"></div></div>
+          <div class="term-line"><h2 class="headline" data-type="Turn missed conversations into completed work."></h2></div>
+          <div class="term-line"><p class="copy" data-type="Answer customers. Capture leads. Book appointments. Keep operations moving."></p></div>
         </article>
 
         <article class="scene" data-pause="650">
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="eyebrow" data-type="ONE CONNECTED ECOSYSTEM"></div></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><h2 class="headline" data-type="Builder OS connects"></h2></div>
+          <div class="term-line"><div class="eyebrow" data-type="ONE CONNECTED ECOSYSTEM"></div></div>
+          <div class="term-line"><h2 class="headline" data-type="Builder OS connects"></h2></div>
           <div class="list">
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Web Applications"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="AI Agents"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Automation"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Dashboards"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ inspect network</span><div class="list-line" data-type="Data and People"></div></div>
+            <div class="term-line"><div class="list-line" data-type="AI voice and customer service"></div></div>
+            <div class="term-line"><div class="list-line" data-type="WhatsApp and booking workflows"></div></div>
+            <div class="term-line"><div class="list-line" data-type="Sales, follow-up and reporting"></div></div>
+            <div class="term-line"><div class="list-line" data-type="Custom websites and mobile apps"></div></div>
           </div>
         </article>
 
         <article class="scene" data-pause="650">
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="eyebrow" data-type="AGENT NETWORK" data-glitch="true"></div></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><h2 class="headline" data-type="Systems are coming online."></h2></div>
+          <div class="term-line"><div class="eyebrow" data-type="THE BUILDER OS TEAM"></div></div>
+          <div class="term-line"><h2 class="headline" data-type="Specialised agents. One coordinated system."></h2></div>
           <div class="list">
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Lisa ......... CUSTOMER SERVICE"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Joan ......... LEAD DISCOVERY"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Sharon ....... RESEARCH"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Jason ........ FOLLOW-UP"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Ledger ....... PROPOSALS"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Sketch ....... UX / UI"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Danielle ..... CONTENT"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Arch ......... WEBSITE BUILDER"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Ada .......... DOCUMENT REVIEW"></div></div>
-            <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ status agents</span><div class="list-line" data-type="Chief ........ OPERATIONS INTELLIGENCE"></div></div>
+            <div class="term-line"><div class="list-line" data-type="Customer service — Lisa"></div></div>
+            <div class="term-line"><div class="list-line" data-type="Sales intelligence — Joan, Sharon and Jason"></div></div>
+            <div class="term-line"><div class="list-line" data-type="Delivery — Ledger, Sketch, Danielle, Arch and Ada"></div></div>
+            <div class="term-line"><div class="list-line" data-type="Operations reporting — Chief"></div></div>
           </div>
         </article>
 
         <article class="scene" data-pause="700">
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ whoami</span><div class="eyebrow" data-type="ACCESS LAYER"></div></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ whoami</span><h2 class="headline" data-type="You're not entering a portfolio."></h2></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ whoami</span><p class="copy" data-type="You're entering an operating system."></p></div>
+          <div class="term-line"><div class="eyebrow" data-type="MORE THAN A PORTFOLIO"></div></div>
+          <div class="term-line"><h2 class="headline" data-type="See the systems working."></h2></div>
+          <div class="term-line"><p class="copy" data-type="Explore real projects, live demonstrations and practical outcomes."></p></div>
         </article>
 
         <article class="scene final">
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ enter system</span><div class="eyebrow" data-type="AUTHENTICATION COMPLETE"></div></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ enter system</span><h2 class="headline" data-type="BUILDER OS\nREADY" data-glitch="true"></h2></div>
-          <div class="term-line"><span class="prompt-static">builder@princecaleb:~$ enter system</span><p class="copy" data-type="Explore projects. Meet the agents. See the systems in action."></p></div>
+          <div class="term-line"><div class="eyebrow" data-type="WELCOME"></div></div>
+          <div class="term-line"><h2 class="headline" data-type="BUILDERS OF USEFUL AI."></h2></div>
+          <div class="term-line"><p class="copy" data-type="Explore projects. Meet the agents. See the systems in action."></p></div>
           <div class="final-shell">
             <a class="enter-frame" id="enterButton" href="home.html" aria-label="Enter the system">
-              <span class="enter-inner"><span id="buttonLabel">Enter the System</span><span class="enter-arrow">→</span></span>
+              <span class="enter-inner"><span id="buttonLabel">Enter website</span><span class="enter-arrow">→</span></span>
             </a>
           </div>
         </article>
@@ -276,7 +271,7 @@
     <div class="progress"><span id="progressBar"></span></div>
   </div>
 
-  <div class="transition" id="transition"><div class="transition-text typed" id="transitionText">AUTHENTICATING...</div></div>
+  <div class="transition" id="transition"><div class="transition-text typed" id="transitionText">OPENING WEBSITE...</div></div>
 
   <script>
     const scenes = [...document.querySelectorAll('.scene')];
@@ -289,8 +284,8 @@
     const transition = document.getElementById('transition');
     const transitionText = document.getElementById('transitionText');
 
-    const TYPE_SPEED = 32;
-    const FAST_SPEED = 18;
+    const TYPE_SPEED = 14;
+    const FAST_SPEED = 9;
     let currentScene = 0;
     let paused = false;
     let cancelled = false;
@@ -415,14 +410,14 @@
       e.preventDefault();
       const destination = enterButton.getAttribute('href');
       enterButton.classList.add('loading');
-      buttonLabel.textContent = 'Authenticating';
+      buttonLabel.textContent = 'Opening website';
       await sleep(400);
       transition.classList.add('show');
-      transitionText.textContent = 'AUTHENTICATING...';
+      transitionText.textContent = 'OPENING WEBSITE...';
       await sleep(850);
-      transitionText.textContent = 'ACCESS GRANTED';
+      transitionText.textContent = 'WELCOME';
       await sleep(650);
-      transitionText.textContent = 'LOADING WORKSPACE...';
+      transitionText.textContent = 'LOADING PRINCECALEB.DEV...';
       await sleep(750);
       window.location.href = destination;
     });
