@@ -22,7 +22,7 @@
       background:
         radial-gradient(circle at 50% 16%, rgba(98,255,152,.12), transparent 29%),
         linear-gradient(180deg, #050a07, var(--bg));
-      font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
     }
     button, a { font: inherit; }
     .app { position: relative; width: 100%; height: 100%; isolation: isolate; }
@@ -57,9 +57,9 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 20px clamp(18px,4vw,62px); border-bottom: 1px solid rgba(98,255,152,.08);
     }
-    .brand { display: flex; align-items: center; gap: 12px; font-size: .72rem; font-weight: 900; letter-spacing: .17em; text-transform: uppercase; }
+    .brand { display: flex; align-items: center; gap: 12px; font-family: "Cascadia Code", Consolas, monospace; font-size: .72rem; font-weight: 900; letter-spacing: .17em; text-transform: uppercase; }
     .brand-mark { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid rgba(98,255,152,.36); border-radius: 7px; background: rgba(98,255,152,.07); box-shadow: inset 0 0 18px rgba(98,255,152,.04); }
-    .system-status { display: flex; gap: 9px; align-items: center; color: var(--green-muted); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; }
+    .system-status { display: flex; gap: 9px; align-items: center; color: var(--green-muted); font-family: "Cascadia Code", Consolas, monospace; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; }
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 16px var(--green); animation: pulse 1.4s ease-in-out infinite; }
     @keyframes pulse { 50% { transform: scale(1.25); opacity: .65; } }
 
@@ -88,9 +88,9 @@
     }
     .scene.active { opacity: 1; transform: none; pointer-events: auto; }
     .scene.exit { opacity: 0; transform: translateY(-14px) scale(1.005); }
-    .eyebrow { margin: 0; font: inherit; color: var(--green-muted); }
-    .headline { margin: 0; font: inherit; font-weight: 700; color: var(--green); }
-    .copy { margin: 0; font: inherit; color: var(--green-bright); }
+    .eyebrow { margin: 0 0 .3rem; color: var(--green-muted); font-family: "Cascadia Code", Consolas, monospace; font-size: clamp(.78rem,1.3vw,.95rem); font-weight: 800; letter-spacing: .24em; }
+    .headline { margin: 0; color: var(--green); font-size: clamp(3.4rem,9vw,8.5rem); font-weight: 850; letter-spacing: -.065em; line-height: .88; text-wrap: balance; }
+    .copy { max-width: 720px; margin: .55rem 0 0; color: var(--green-bright); font-size: clamp(1rem,2vw,1.35rem); line-height: 1.55; }
     .typed::after { content: "▋"; display: inline-block; margin-left: 5px; color: var(--green); animation: blink .8s steps(1) infinite; }
     @keyframes blink { 50% { opacity: 0; } }
     .list { display: contents; }
@@ -180,52 +180,12 @@
 
     <main class="layout">
       <div class="stage-terminal">
-        <section class="stage" aria-live="polite">
-        <article class="scene active" data-pause="650">
-          <div class="term-line"><div class="eyebrow" data-type="WELCOME TO"></div></div>
-          <div class="term-line"><h1 class="headline" data-type="PRINCE CALEB"></h1></div>
-          <div class="term-line"><p class="copy" data-type="AI systems built for real business."></p></div>
-        </article>
-
-        <article class="scene" data-pause="700">
-          <div class="term-line"><div class="eyebrow" data-type="BUILT AROUND YOUR WORKFLOW"></div></div>
-          <div class="term-line"><h2 class="headline" data-type="Turn missed conversations into completed work."></h2></div>
-          <div class="term-line"><p class="copy" data-type="Answer customers. Capture leads. Book appointments. Keep operations moving."></p></div>
-        </article>
-
-        <article class="scene" data-pause="650">
-          <div class="term-line"><div class="eyebrow" data-type="ONE CONNECTED ECOSYSTEM"></div></div>
-          <div class="term-line"><h2 class="headline" data-type="Builder OS connects"></h2></div>
-          <div class="list">
-            <div class="term-line"><div class="list-line" data-type="AI voice and customer service"></div></div>
-            <div class="term-line"><div class="list-line" data-type="WhatsApp and booking workflows"></div></div>
-            <div class="term-line"><div class="list-line" data-type="Sales, follow-up and reporting"></div></div>
-            <div class="term-line"><div class="list-line" data-type="Custom websites and mobile apps"></div></div>
-          </div>
-        </article>
-
-        <article class="scene" data-pause="650">
-          <div class="term-line"><div class="eyebrow" data-type="THE BUILDER OS TEAM"></div></div>
-          <div class="term-line"><h2 class="headline" data-type="Specialised agents. One coordinated system."></h2></div>
-          <div class="list">
-            <div class="term-line"><div class="list-line" data-type="Customer service — Lisa"></div></div>
-            <div class="term-line"><div class="list-line" data-type="Sales intelligence — Joan, Sharon and Jason"></div></div>
-            <div class="term-line"><div class="list-line" data-type="Delivery — Ledger, Sketch, Danielle, Arch and Ada"></div></div>
-            <div class="term-line"><div class="list-line" data-type="Operations reporting — Chief"></div></div>
-          </div>
-        </article>
-
-        <article class="scene" data-pause="700">
-          <div class="term-line"><div class="eyebrow" data-type="MORE THAN A PORTFOLIO"></div></div>
-          <div class="term-line"><h2 class="headline" data-type="See the systems working."></h2></div>
-          <div class="term-line"><p class="copy" data-type="Explore real projects, live demonstrations and practical outcomes."></p></div>
-        </article>
-
-        <article class="scene final">
-          <div class="term-line"><div class="eyebrow" data-type="WELCOME"></div></div>
-          <div class="term-line"><h2 class="headline" data-type="BUILDERS OF USEFUL AI."></h2></div>
-          <div class="term-line"><p class="copy" data-type="Explore projects. Meet the agents. See the systems in action."></p></div>
-          <div class="final-shell">
+        <section class="stage" aria-labelledby="welcome-title">
+        <article class="scene active final">
+          <div class="term-line show"><div class="eyebrow">WELCOME TO</div></div>
+          <div class="term-line show"><h1 class="headline" id="welcome-title">PRINCE CALEB</h1></div>
+          <div class="term-line show"><p class="copy">AI agents, automations and custom digital systems built for real business.</p></div>
+          <div class="final-shell show">
             <a class="enter-frame" id="enterButton" href="home.html" aria-label="Enter the system">
               <span class="enter-inner"><span id="buttonLabel">Enter website</span><span class="enter-arrow">→</span></span>
             </a>
@@ -235,111 +195,17 @@
       </div>
     </main>
 
-    <div class="controls"><button class="control" id="pauseBtn" type="button">Pause</button><button class="control" id="skipBtn" type="button">Skip intro</button></div>
-    <div class="progress"><span id="progressBar"></span></div>
   </div>
 
-  <div class="transition" id="transition"><div class="transition-text typed" id="transitionText">OPENING WEBSITE...</div></div>
+  <div class="transition" id="transition"><div class="transition-text" id="transitionText">OPENING WEBSITE...</div></div>
 
   <script>
-    const scenes = [...document.querySelectorAll('.scene')];
-    const pauseBtn = document.getElementById('pauseBtn');
-    const skipBtn = document.getElementById('skipBtn');
-    const progressBar = document.getElementById('progressBar');
     const enterButton = document.getElementById('enterButton');
     const buttonLabel = document.getElementById('buttonLabel');
     const transition = document.getElementById('transition');
     const transitionText = document.getElementById('transitionText');
 
-    const TYPE_SPEED = 14;
-    const FAST_SPEED = 9;
-    let currentScene = 0;
-    let paused = false;
-    let cancelled = false;
-
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-    async function waitWhilePaused() {
-      while (paused) await sleep(80);
-      if (cancelled) throw new Error('cancelled');
-    }
-
-    function triggerGlitch(el) {
-      el.setAttribute('data-glitch-text', el.textContent);
-      el.classList.add('glitch-flicker');
-      setTimeout(() => el.classList.remove('glitch-flicker'), 520);
-    }
-
-    async function typeText(el, text, speed = TYPE_SPEED) {
-      el.textContent = '';
-      el.classList.add('typed');
-      for (let i = 0; i < text.length; i++) {
-        await waitWhilePaused();
-        const char = text[i];
-        el.textContent += char === '\n' ? '\n' : char;
-        if (char === '\n') el.style.whiteSpace = 'pre-line';
-        let delay = speed + Math.random() * 16;
-        if (/[,.!?]/.test(char)) delay += 90;
-        await sleep(delay);
-      }
-      el.classList.remove('typed');
-    }
-
-    async function playScene(scene, index) {
-      scenes.forEach((s, i) => {
-        s.classList.toggle('active', i === index);
-        s.classList.toggle('exit', i < index);
-      });
-      currentScene = index;
-      progressBar.style.width = `${(index / (scenes.length - 1)) * 100}%`;
-
-      const elements = [...scene.querySelectorAll('[data-type]')];
-      for (const el of elements) {
-        el.closest('.term-line')?.classList.add('show');
-        await typeText(el, el.dataset.type, el.classList.contains('eyebrow') ? FAST_SPEED : TYPE_SPEED);
-        if (el.dataset.glitch === 'true') triggerGlitch(el);
-        await sleep(el.classList.contains('list-line') ? 80 : 150);
-      }
-      if (scene.classList.contains('final')) {
-        await waitWhilePaused();
-        scene.querySelector('.final-shell')?.classList.add('show');
-      }
-      if (index < scenes.length - 1) await sleep(Number(scene.dataset.pause || 650));
-    }
-
-    async function runIntro() {
-      try {
-        for (let i = 0; i < scenes.length; i++) await playScene(scenes[i], i);
-        pauseBtn.style.display = 'none';
-        skipBtn.style.display = 'none';
-        progressBar.style.width = '100%';
-      } catch (e) { if (e.message !== 'cancelled') console.error(e); }
-    }
-
-    pauseBtn.addEventListener('click', () => {
-      paused = !paused;
-      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
-    });
-
-    skipBtn.addEventListener('click', async () => {
-      cancelled = true;
-      paused = false;
-      scenes.forEach((s, i) => {
-        s.classList.toggle('active', i === scenes.length - 1);
-        s.classList.toggle('exit', i < scenes.length - 1);
-      });
-      const final = scenes.at(-1);
-      final.querySelectorAll('[data-type]').forEach(el => {
-        el.closest('.term-line')?.classList.add('show');
-        el.textContent = el.dataset.type;
-        if (el.dataset.type.includes('\n')) el.style.whiteSpace = 'pre-line';
-        if (el.dataset.glitch === 'true') triggerGlitch(el);
-      });
-      final.querySelector('.final-shell')?.classList.add('show');
-      pauseBtn.style.display = 'none';
-      skipBtn.style.display = 'none';
-      progressBar.style.width = '100%';
-    });
 
     const particles = document.getElementById('particles');
     for (let i = 0; i < 28; i++) {
@@ -367,8 +233,6 @@
       await sleep(750);
       window.location.href = destination;
     });
-
-    runIntro();
   </script>
 </body>
 </html>
