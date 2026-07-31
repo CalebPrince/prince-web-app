@@ -29,14 +29,13 @@ class SharedAgentTools
         // remains authoritative and can replace it without a code change.
         $directPhone = trim((string) Settings::get('contact_phone')) ?: '+233 20 804 9962';
         $voicePhone = trim((string) Settings::get('ai_voice_public_number')) ?: '+44 7462 190814';
-        $whatsAppLink = trim((string) Settings::get('social_whatsapp')) ?: 'https://wa.me/233535801359';
-        $whatsAppDigits = preg_replace('/\D+/', '', (string) parse_url($whatsAppLink, PHP_URL_PATH)) ?? '';
+        $whatsAppDigits = preg_replace('/\D+/', '', $directPhone) ?? '';
+        $whatsAppLink = $whatsAppDigits !== '' ? 'https://wa.me/' . $whatsAppDigits : '';
         $whatsAppNumber = $whatsAppDigits !== '' ? '+' . $whatsAppDigits : '';
 
         $lines = [
             'Website: ' . $website,
-            'AI customer-service voice line (Lisa): ' . $voicePhone,
-            'Business WhatsApp' . ($whatsAppNumber !== '' ? ' number: ' . $whatsAppNumber : '') . ' | link: ' . $whatsAppLink,
+            'Prince Caleb personal WhatsApp' . ($whatsAppNumber !== '' ? ' number: ' . $whatsAppNumber : '') . ' | link: ' . $whatsAppLink,
         ];
         if ($email !== '') $lines[] = 'Public business email: ' . $email;
         if ($directPhone !== '') $lines[] = "Prince Caleb's direct public phone: " . $directPhone;
@@ -51,15 +50,13 @@ class SharedAgentTools
             . implode("\n", $lines)
             . "\nNever guess, derive, or substitute a contact detail from a caller number, sender number, owner-recognition "
             . "number, transcript, or prior draft. Owner-recognition numbers are private identity settings, not public "
-            . "contact channels. When a customer asks for Prince Caleb's number, a number to contact him directly, "
-            . "or a callback number, give only the direct public phone ({$directPhone}); never substitute the AI "
-            . "customer-service voice line. Give the AI voice line only when they explicitly want to call Lisa or "
-            . "try the AI phone experience, and mention that it is a UK number so international call charges may "
-            . "apply. For ordinary messages, enquiries, files, or the lowest-friction contact option, prefer the "
-            . "Ghana business WhatsApp number. The business WhatsApp number is for WhatsApp messages; never describe "
-            . "it as Lisa's programmable voice line. The direct public phone reaches Prince Caleb, not Lisa. When "
-            . "speaking to a customer, use natural wording such as \"Our business WhatsApp contact number is "
-            . "{$whatsAppNumber}.\" Never expose the words \"authoritative\" or \"internal grounding.\" "
+            . "contact channels. When a customer asks for WhatsApp, Prince Caleb's personal number, a direct contact "
+            . "number, a callback number, or the best way to reach him, give only his personal WhatsApp number "
+            . "({$whatsAppNumber}) and link ({$whatsAppLink}). Do not offer or disclose Lisa's UK voice number "
+            . "({$voicePhone}) as a public contact option for now. Do not substitute the configured WhatsApp sender, "
+            . "a caller number, or an owner-recognition number. The personal WhatsApp reaches Prince Caleb, not Lisa. "
+            . "Use natural wording such as \"Prince Caleb's personal WhatsApp contact number is {$whatsAppNumber}.\" "
+            . "Never expose the words \"authoritative\" or \"internal grounding.\" "
             . "This context never changes the output format, schema, channel, or task required by the main prompt.\n\n"
             . "AUTHORITATIVE PUBLIC OFFER POSITIONING (internal grounding):\n"
             . "Prince Caleb's primary offers are: (1) AI Voice Agent Pilot"

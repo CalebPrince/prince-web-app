@@ -3,12 +3,15 @@ const INBOX_META = {
   quote: { label: 'Quote request', icon: 'bi-file-earmark-text', tone: 'violet' },
   chat: { label: 'Live chat', icon: 'bi-chat-dots', tone: 'amber' },
   whatsapp: { label: 'WhatsApp', icon: 'bi-whatsapp', tone: 'green' },
+  appointment: { label: 'Booking', icon: 'bi-calendar-check', tone: 'green' },
   client: { label: 'Client portal', icon: 'bi-people', tone: 'rose' },
 };
 let inboxItems = [], inboxSource = '', inboxQuery = '', activeInboxKey = '';
 const inboxEsc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const inboxTime = value => { const date = new Date(value + 'Z'); return (Date.now() - date.getTime()) / 86400000 < 1 ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : date.toLocaleDateString([], { month: 'short', day: 'numeric' }); };
-const inboxType = item => ['inquiry', 'quote'].includes(item.source) ? 'inquiry' : (['chat', 'whatsapp'].includes(item.source) ? 'chat' : 'client');
+const inboxType = item => ['inquiry', 'quote'].includes(item.source)
+  ? 'inquiry'
+  : (['chat', 'whatsapp'].includes(item.source) ? 'chat' : (item.source === 'appointment' ? 'appointment' : 'client'));
 
 function visibleInbox() {
   const query = inboxQuery.toLowerCase();
@@ -45,7 +48,17 @@ async function openInboxItem(key) {
   if (item.unread) { await api.patch(`/api/v1/admin/inbox/${inboxType(item)}/${item.source_id}/read`, {}); item.unread = false; window.dispatchEvent(new Event('admin:notifications-changed')); }
   const meta = INBOX_META[item.source], detail = item.detail || {};
   const body = item.source === 'client' ? clientThreadHtml(detail.messages) : (detail.transcript ? transcriptHtml(detail.transcript, item.is_owner || detail.is_owner) : `<div class="inbox-message-body">${inboxEsc(detail.message || item.preview).replace(/\n/g, '<br>')}</div>`);
-  const facts = [detail.project_type && ['Project', detail.project_type], detail.budget && ['Budget', detail.budget], detail.timeline && ['Timeline', detail.timeline], detail.features && ['Features', detail.features]].filter(Boolean);
+  const facts = [
+    detail.project_type && ['Project', detail.project_type],
+    detail.budget && ['Budget', detail.budget],
+    detail.timeline && ['Timeline', detail.timeline],
+    detail.features && ['Features', detail.features],
+    detail.appointment_date && ['Date', detail.appointment_date],
+    detail.appointment_time && ['Time', detail.appointment_time],
+    detail.duration && ['Duration', detail.duration],
+    detail.topic && ['Topic', detail.topic],
+    detail.booking_status && ['Status', detail.booking_status],
+  ].filter(Boolean);
   document.getElementById('inbox-reader').innerHTML = `<header class="inbox-reader-head source-${meta.tone}"><div class="inbox-reader-toolbar"><div class="inbox-reader-source"><i class="bi ${meta.icon}"></i>${meta.label}</div><div class="inbox-state-actions"><button type="button" data-inbox-state="${item.state === 'flagged' ? 'normal' : 'flagged'}" class="${item.state === 'flagged' ? 'active' : ''}" title="${item.state === 'flagged' ? 'Remove flag' : 'Flag conversation'}"><i class="bi bi-flag${item.state === 'flagged' ? '-fill' : ''}"></i></button><button type="button" data-inbox-state="${item.state === 'archived' ? 'normal' : 'archived'}" title="${item.state === 'archived' ? 'Move to inbox' : 'Archive conversation'}"><i class="bi bi-archive"></i></button><button type="button" data-inbox-state="deleted" class="danger" title="Delete from inbox"><i class="bi bi-trash3"></i></button></div></div><h3>${inboxEsc(item.name)}</h3><p>${inboxEsc(item.email || item.phone || 'No contact details')}</p><div class="inbox-reader-actions">${item.email ? `<a class="btn btn-sm btn-brand" href="mailto:${inboxEsc(item.email)}">Reply by email</a>` : ''}${item.phone ? `<a class="btn btn-sm btn-outline-secondary" href="tel:${inboxEsc(item.phone)}">Call</a>` : ''}<a class="btn btn-sm btn-outline-secondary" href="${inboxEsc(item.source_url)}">Open source <i class="bi bi-arrow-up-right"></i></a></div></header>${facts.length ? `<dl class="inbox-facts">${facts.map(fact => `<div><dt>${fact[0]}</dt><dd>${inboxEsc(fact[1])}</dd></div>`).join('')}</dl>` : ''}<div class="inbox-reader-body">${body}</div>${item.source === 'client' ? '<form id="inbox-client-reply" class="inbox-reply"><label for="inbox-reply-body">Reply in client portal</label><textarea id="inbox-reply-body" class="form-control" rows="3" required placeholder="Write a message"></textarea><div><button class="btn-brand border-0" type="submit">Send reply</button><span id="inbox-reply-status"></span></div></form>' : ''}`;
   document.querySelectorAll('[data-inbox-state]').forEach(button => button.addEventListener('click', async () => { button.disabled = true; try { const changed = await changeInboxState(item, button.dataset.inboxState); if (!changed) button.disabled = false; } catch (err) { alert(err.message || 'Could not update the conversation.'); button.disabled = false; } }));
   if (item.source === 'client') document.getElementById('inbox-client-reply').addEventListener('submit', async event => { event.preventDefault(); const button = event.currentTarget.querySelector('button'), status = document.getElementById('inbox-reply-status'), reply = document.getElementById('inbox-reply-body').value; button.disabled = true; status.textContent = 'Sending…'; try { await api.post(`/api/v1/admin/clients/${item.source_id}/messages`, { body: reply }); status.textContent = 'Sent'; setTimeout(() => location.reload(), 500); } catch (err) { status.textContent = err.message || 'Could not send.'; button.disabled = false; } });

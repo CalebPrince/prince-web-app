@@ -985,19 +985,21 @@ class LiveChatController
         // self-description in agreement (a male voice → introduces itself as male).
         $name = Settings::get('chat_assistant_name') ?: 'Lisa';
         $voiceGender = Settings::get('chat_voice_gender') ?: 'female';
-        $publicWhatsApp = trim((string) Settings::get('social_whatsapp'));
-        $publicWhatsAppDigits = preg_replace('/\D+/', '', (string) parse_url($publicWhatsApp, PHP_URL_PATH)) ?? '';
+        $publicContactPhone = trim((string) Settings::get('contact_phone')) ?: '+233 20 804 9962';
+        $publicWhatsAppDigits = preg_replace('/\D+/', '', $publicContactPhone) ?? '';
+        $publicWhatsApp = $publicWhatsAppDigits !== '' ? 'https://wa.me/' . $publicWhatsAppDigits : '';
         $publicWhatsAppNumber = $publicWhatsAppDigits !== '' ? '+' . $publicWhatsAppDigits : '';
         $whatsAppGrounding = $publicWhatsApp !== ''
-            ? "Internally treat {$publicWhatsApp} as the only authoritative public WhatsApp link. Do not expose "
-                . "the words 'authoritative public WhatsApp link' to the user. When anyone asks for the business "
-                . "WhatsApp number, say naturally: \"Our business WhatsApp contact number is {$publicWhatsAppNumber}.\" "
-                . "When a clickable link is useful, add {$publicWhatsApp} exactly as saved. "
+            ? "Internally treat {$publicWhatsApp} as the only authoritative public WhatsApp and personal contact "
+                . "link for Prince Caleb. Do not expose the word 'authoritative' to the user. Whenever anyone asks "
+                . "for the WhatsApp number, personal number, direct contact number, or best number to reach Prince "
+                . "Caleb, say naturally: \"Prince Caleb's personal WhatsApp contact number is {$publicWhatsAppNumber}.\" "
+                . "When a clickable link is useful, add {$publicWhatsApp} exactly. Do not offer Lisa's UK voice "
+                . "number as a public contact option. "
             : "No public WhatsApp link is currently configured. If anyone asks for one, direct them to "
                 . "princecaleb.dev instead. ";
-        $whatsAppGrounding .= "Never construct, infer, or guess a wa.me link from an owner number, caller/sender "
-            . "number, contact phone, transcript, or prior reply. The owner's private recognition number is never "
-            . "a public contact link.\n\n";
+        $whatsAppGrounding .= "Never substitute a caller number, sender number, transcript number, the configured "
+            . "business WhatsApp sender, or Lisa's UK voice line for this public personal WhatsApp contact.\n\n";
         $genderLine = '';
         if ($voiceGender === 'male') {
             $genderLine = "You present as male — if a visitor asks, you're comfortable saying you're a man and using he/him. ";

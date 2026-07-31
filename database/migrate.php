@@ -132,10 +132,26 @@ $pricingInsertStmt->execute(['contact_phone', '+233 20 804 9962']);
 $pricingInsertStmt->execute(['ai_voice_public_number', '+44 7462 190814']);
 $pricingInsertStmt->execute(['social_whatsapp', 'https://wa.me/233535801359']);
 $pricingInsertStmt->execute(['twilio_whatsapp_number', 'whatsapp:+233535801359']);
+$personalNotificationSettings = [
+    'owner_whatsapp_number' => '+233208049962',
+    'notification_email' => 'hello@princecaleb.dev',
+    'composio_gmail_booking_to' => 'hello@princecaleb.dev',
+];
+foreach ($personalNotificationSettings as $name => $value) {
+    $pdo->prepare(
+        'INSERT INTO settings (name, value) VALUES (?, ?)
+         ON CONFLICT(name) DO UPDATE SET value = excluded.value'
+    )->execute([$name, $value]);
+}
 $pricingUpdateStmt->execute(['https://wa.me/233535801359', 'social_whatsapp', 'https://wa.me/447462190814']);
 $pricingUpdateStmt->execute(['whatsapp:+233535801359', 'twilio_whatsapp_number', 'whatsapp:+447462190814']);
 foreach ($pricingOfferInserts as $name => $value) {
     $pricingInsertStmt->execute([$name, $value]);
+}
+
+$appointmentColumns = array_column($pdo->query('PRAGMA table_info(appointments)')->fetchAll(), 'name');
+if (!in_array('admin_seen', $appointmentColumns, true)) {
+    $pdo->exec('ALTER TABLE appointments ADD COLUMN admin_seen INTEGER NOT NULL DEFAULT 0');
 }
 $marketPricingUpdates = [
     'pricing_tier_1_amount' => ['6000', '3000'],

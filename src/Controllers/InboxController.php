@@ -55,6 +55,29 @@ class InboxController
             ];
         }
 
+        foreach ($pdo->query(
+            "SELECT id,client_name,client_email,client_phone,appointment_date,appointment_time,
+                    duration_minutes,topic,status,admin_seen,created_at
+             FROM appointments ORDER BY created_at DESC"
+        )->fetchAll() as $row) {
+            $schedule = $row['appointment_date'] . ' at ' . $row['appointment_time'];
+            $items[] = [
+                'key' => 'appointment:' . $row['id'], 'source' => 'appointment', 'source_id' => (int) $row['id'],
+                'name' => $row['client_name'], 'email' => $row['client_email'], 'phone' => $row['client_phone'] ?: '',
+                'preview' => ($row['topic'] ?: 'Discovery call') . ' — ' . $schedule,
+                'unread' => !(bool) $row['admin_seen'], 'flagged' => false, 'created_at' => $row['created_at'],
+                'detail' => [
+                    'message' => "Booking scheduled for {$schedule}.",
+                    'appointment_date' => $row['appointment_date'],
+                    'appointment_time' => $row['appointment_time'],
+                    'duration' => $row['duration_minutes'] . ' minutes',
+                    'topic' => $row['topic'] ?: '—',
+                    'booking_status' => $row['status'],
+                ],
+                'source_url' => '/admin/appointments.html?open=' . $row['id'],
+            ];
+        }
+
         $clients = [];
         foreach ($pdo->query("SELECT m.*,c.name,c.email,c.phone FROM client_messages m JOIN clients c ON c.id=m.client_id ORDER BY m.created_at ASC")->fetchAll() as $row) {
             $id = (int) $row['client_id'];
@@ -90,6 +113,7 @@ class InboxController
         $pdo = Database::get();
         if ($type === 'inquiry') $pdo->prepare("UPDATE inquiries SET status='read' WHERE id=? AND status='unread'")->execute([$id]);
         elseif ($type === 'chat') $pdo->prepare('UPDATE chat_sessions SET admin_seen=1 WHERE id=?')->execute([$id]);
+        elseif ($type === 'appointment') $pdo->prepare('UPDATE appointments SET admin_seen=1 WHERE id=?')->execute([$id]);
         elseif ($type === 'client') $pdo->prepare("UPDATE client_messages SET read_by_admin=1 WHERE client_id=? AND sender_type='client'")->execute([$id]);
         else Response::error('Unknown inbox source.', 422);
         Response::json(['status' => 'read']);
@@ -102,7 +126,7 @@ class InboxController
         $id = (int) ($params['id'] ?? 0);
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $state = (string) ($data['state'] ?? '');
-        if (!in_array($type, ['inquiry', 'chat', 'client'], true) || $id < 1) Response::error('Unknown inbox item.', 422);
+        if (!in_array($type, ['inquiry', 'chat', 'appointment', 'client'], true) || $id < 1) Response::error('Unknown inbox item.', 422);
         if (!in_array($state, ['normal', 'flagged', 'archived', 'deleted'], true)) Response::error('Invalid inbox state.', 422);
         Database::get()->prepare(
             "INSERT INTO inbox_item_states (item_key,state,updated_at) VALUES (?,?,datetime('now'))

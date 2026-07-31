@@ -289,7 +289,7 @@ class AppointmentController
             ];
         }
 
-        $notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');
+        $notifyEmail = Settings::get('notification_email') ?: 'hello@princecaleb.dev';
         $templateVars = self::bookingTemplateVars([
             'name' => $name,
             'email' => $email,
@@ -405,7 +405,8 @@ class AppointmentController
             ],
         ], 'GOOGLECALENDAR_CREATE_EVENT');
 
-        $gmailTo = Settings::get('composio_gmail_booking_to') ?: (Settings::get('notification_email') ?: Settings::get('social_email'));
+        $gmailTo = Settings::get('composio_gmail_booking_to')
+            ?: (Settings::get('notification_email') ?: 'hello@princecaleb.dev');
         if (!empty($gmailTo)) {
             self::executeBookingAction('gmail', [
                 [

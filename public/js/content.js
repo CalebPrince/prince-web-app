@@ -43,7 +43,8 @@
     const number = el.querySelector("[data-voice-phone-number]");
     if (number) number.textContent = voiceNumber;
   });
-  const businessWhatsApp = content.social_whatsapp || "https://wa.me/233535801359";
+  const personalWhatsAppDigits = String(content.contact_phone || "+233 20 804 9962").replace(/\D/g, "");
+  const businessWhatsApp = `https://wa.me/${personalWhatsAppDigits}`;
   document.querySelectorAll("[data-business-whatsapp-link]").forEach(el => {
     el.href = businessWhatsApp;
   });
@@ -77,15 +78,15 @@
   // and the widget hasn't been explicitly turned off
   const whatsappOn = content.whatsapp_button_enabled !== "0";
   const whatsappBtn = document.getElementById("whatsapp-float-btn");
-  if (whatsappBtn && content.social_whatsapp && whatsappOn) {
-    whatsappBtn.href = content.social_whatsapp;
+  if (whatsappBtn && personalWhatsAppDigits && whatsappOn) {
+    whatsappBtn.href = businessWhatsApp;
     whatsappBtn.classList.remove("d-none");
   }
 
   // Contact page's own WhatsApp row (separate element, same source setting)
   const contactWhatsappRow = document.getElementById("contact-whatsapp-row");
-  if (contactWhatsappRow && content.social_whatsapp && whatsappOn) {
-    document.getElementById("contact-whatsapp-link").href = content.social_whatsapp;
+  if (contactWhatsappRow && personalWhatsAppDigits && whatsappOn) {
+    document.getElementById("contact-whatsapp-link").href = businessWhatsApp;
     contactWhatsappRow.classList.remove("d-none");
   }
 
