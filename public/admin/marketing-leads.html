@@ -58,7 +58,10 @@
 .lead-more-actions[open] summary{color:var(--lead-blue);border-color:rgba(36,87,214,.45);background:rgba(36,87,214,.05)}
 .lead-more-actions[open] summary i{transform:rotate(180deg)}
 .lead-more-panel{position:absolute;right:0;z-index:5;display:grid;gap:.2rem;min-width:13.5rem;margin-top:.35rem;padding:.4rem;border:1px solid var(--line);border-radius:12px;background:var(--card-bg,#fff);box-shadow:0 12px 30px rgba(16,35,63,.12)}
-.tracker-card{overflow:visible;scroll-margin-top:1rem}
+.dashboard-grid-ai>*{min-width:0}
+.tracker-card{min-width:0;overflow:visible;scroll-margin-top:1rem}
+.tracker-table-scroll{width:100%;max-width:100%;overflow-x:auto;overflow-y:visible;overscroll-behavior-inline:contain;scrollbar-gutter:stable;-webkit-overflow-scrolling:touch}
+.tracker-table-scroll .tracker-table-ai{min-width:760px}
 .tracker-table-ai tr[data-lead-row]:has(.row-checkbox:checked){background:var(--section-leads-soft)}
 .lead-more-item{display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .65rem;border:0;border-radius:8px;background:transparent;color:var(--text,#172033);font-size:.78rem;text-align:left}
 .lead-more-item:hover{background:var(--bg-soft)}
@@ -333,6 +336,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
                   <button type="button" class="btn btn-sm btn-link" id="bulk-clear-btn">Clear</button>
                 </div>
 
+                <div class="tracker-table-scroll" role="region" aria-label="Live Prospect Demo Tracker" tabindex="0">
                 <table class="tracker-table-ai table mb-0 align-middle">
                     <thead>
                         <tr>
@@ -348,6 +352,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
                     <tbody id="leads-tbody">
                     </tbody>
                 </table>
+                </div>
                 <div id="empty-state" class="text-center text-muted-custom py-5 d-none">No leads yet — add one to get started.</div>
                 <div id="pagination" class="d-flex flex-wrap gap-2 justify-content-center mt-4"></div>
             </div>
