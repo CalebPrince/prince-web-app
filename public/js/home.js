@@ -174,7 +174,16 @@
         const badges = (p.tags || []).slice(0, 3).map(t => `<span class="mono-badge">${esc(t.name)}</span>`).join("");
         const tech = badges || `<span class="mono-badge">Vanilla PHP</span><span class="mono-badge">SQLite</span><span class="mono-badge">Bootstrap 5</span>`;
         const media = p.cover_image_path
-          ? `<a href="/project.html?slug=${esc(p.slug)}" class="case-media"><img src="${esc(p.cover_image_path)}" alt="${esc(p.title)}" loading="lazy"></a>`
+          ? `<a href="/project.html?slug=${esc(p.slug)}" class="case-media case-browser-mockup" aria-label="View ${esc(p.title)} system">
+              <span class="case-browser-bar" aria-hidden="true">
+                <span class="case-browser-dots"><i></i><i></i><i></i></span>
+                <span class="case-browser-address">princecaleb.dev/systems/${esc(p.slug)}</span>
+                <span class="case-browser-live"><i></i> Live</span>
+              </span>
+              <span class="case-browser-viewport">
+                <img src="${esc(p.cover_image_path)}" alt="${esc(p.title)} system interface" loading="lazy">
+              </span>
+            </a>`
           : `<a href="/project.html?slug=${esc(p.slug)}" class="text-decoration-none"><div class="case-code-card"><code>${esc(tag)}</code><div class="sub">architecture summary</div></div></a>`;
         const flip = i % 2 === 1;
 
