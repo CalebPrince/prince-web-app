@@ -119,6 +119,7 @@ class Arch
             $transcript
         );
 
+        $brief = self::recoverConversationBrief($brief, $transcript);
         $reply = $result['reply'];
         if ($reply !== null && self::containsInternalArtifacts($reply)) {
             // Some OpenAI-compatible fallback models occasionally print a
@@ -128,6 +129,9 @@ class Arch
             // visitor or save it in the transcript.
             $brief = self::recoverPseudoBriefUpdate($brief, $reply);
             error_log('Arch discarded a reply containing internal model artifacts.');
+            $reply = null;
+        }
+        if ($reply !== null && self::replyRepeatsCompletedStep($reply, $brief)) {
             $reply = null;
         }
         if ($reply === null) {
@@ -201,10 +205,14 @@ class Arch
             $executor,
             $transcript
         );
+        $brief = self::recoverConversationBrief($brief, $transcript);
         $rawReply = $result['reply'];
         if ($rawReply !== null && self::containsInternalArtifacts($rawReply)) {
             $brief = self::recoverPseudoBriefUpdate($brief, $rawReply);
             error_log('Arch admin chat discarded a reply containing internal model artifacts.');
+            $rawReply = null;
+        }
+        if ($rawReply !== null && self::replyRepeatsCompletedStep($rawReply, $brief)) {
             $rawReply = null;
         }
         $reply = $rawReply !== null
@@ -512,6 +520,52 @@ class Arch
             $brief['email'] = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
         }
         return $brief;
+    }
+
+    /**
+     * Recover explicit creative-direction answers when a provider replies but
+     * fails to emit the update_brief tool call. This only records literal,
+     * unambiguous words the client used; it never invents a design choice.
+     */
+    private static function recoverConversationBrief(array $brief, array $transcript): array
+    {
+        foreach ($transcript as $turn) {
+            if (($turn['role'] ?? '') !== 'user') {
+                continue;
+            }
+            $text = strtolower(trim((string) ($turn['text'] ?? '')));
+            if ($text === '') {
+                continue;
+            }
+
+            if (preg_match('/\b(light|dark)\s+(?:theme|mode)\b|\btheme\s+(?:is\s+)?(light|dark)\b/', $text, $match)) {
+                $brief['theme'] = ($match[1] ?? '') !== '' ? $match[1] : ($match[2] ?? '');
+            }
+            if (preg_match('/\b(modern|classic|minimal|bold)\b/', $text, $match)) {
+                $brief['style'] = $match[1];
+            }
+            if (str_contains($text, 'color') || str_contains($text, 'colour')) {
+                if (preg_match('/\b(navy blue|navy|royal blue|blue|green|red|purple|orange|yellow|black|white|gold|silver|teal|pink|brown|grey|gray)\b/', $text, $match)) {
+                    $brief['primary_color'] = $match[1];
+                }
+            }
+            if (preg_match('/\b(calm(?:\s*(?:&|and)\s*trustworthy)?|refined(?:\s*(?:&|and)\s*premium)?|warm(?:\s*(?:&|and)\s*welcoming)?|bold(?:\s*(?:&|and)\s*energetic)?)\b/', $text, $match)) {
+                $brief['personality'] = trim((string) $match[1]);
+            }
+        }
+
+        return self::normaliseBrief($brief);
+    }
+
+    /** Prevent a provider from asking again for a step the brief has completed. */
+    private static function replyRepeatsCompletedStep(string $reply, array $brief): bool
+    {
+        $step = self::currentStep($brief);
+        if ($step > 1 && preg_match('/business name|what type|who (?:is|it is) (?:the website|it) for|main action visitors/i', $reply)) {
+            return true;
+        }
+        return $step > 2
+            && preg_match('/site feel like|preferred colou?rs?|light or dark|visual reference|modern\/classic/i', $reply);
     }
 
     /**
