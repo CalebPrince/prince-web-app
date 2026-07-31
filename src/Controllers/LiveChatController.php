@@ -191,12 +191,13 @@ class LiveChatController
         // confirmation instead of losing it to a retry on another provider
         // that would re-attempt — and likely reject — the same slot.
         $confirmedBooking = null;
+        $confirmedReschedule = null;
         // If a provider executes a side-effecting tool and then fails while
         // writing its reply, the engine retries the turn with the next
         // provider. Reuse the first result so that retry cannot insert the
         // same inquiry once per configured AI provider.
         $sideEffectResults = [];
-        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$sideEffectResults, $transcript, $isOwner, $handoffContext) {
+        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$confirmedReschedule, &$sideEffectResults, $transcript, $isOwner, $handoffContext) {
             if (isset($sideEffectResults[$name])) {
                 return $sideEffectResults[$name];
             }
@@ -209,16 +210,22 @@ class LiveChatController
                 }
             }
             $result = self::runTool($name, $args, $pdo, $isOwner);
-            if (in_array($name, ['log_inquiry', 'signal_handoff'], true)) {
+            if (in_array($name, ['log_inquiry', 'signal_handoff', 'reschedule_appointment'], true)) {
                 $sideEffectResults[$name] = $result;
             }
             if ($name === 'book_appointment' && ($result['success'] ?? false)) {
                 $confirmedBooking = $result;
                 self::queueProposalDraft($args, $result, $transcript, $pdo);
             }
+            if ($name === 'reschedule_appointment' && ($result['success'] ?? false)) {
+                $confirmedReschedule = $result;
+            }
             return $result;
         };
-        $onExhaustedFallback = function () use (&$confirmedBooking, $transcript) {
+        $onExhaustedFallback = function () use (&$confirmedBooking, &$confirmedReschedule, $transcript) {
+            if ($confirmedReschedule !== null) {
+                return ['reply' => self::rescheduleConfirmationText($confirmedReschedule, $transcript), 'ready' => false];
+            }
             return $confirmedBooking !== null
                 ? ['reply' => self::bookingConfirmationText($confirmedBooking, $transcript), 'ready' => false]
                 : null;
@@ -1191,6 +1198,14 @@ class LiveChatController
             . "booking is confirmed, do NOT call book_appointment again for that same request — a plain "
             . "\"thanks\" or other acknowledgment afterward needs a reply, not another booking attempt. Only "
             . "call it again if they explicitly ask to book a different or additional slot.\n\n"
+            . "WORKFLOW - RESCHEDULING: When someone asks to change an existing booking, never call "
+            . "book_appointment and never create a second appointment. Confirm the email, exact current date "
+            . "and current time already present in the transcript; ask only for details that are genuinely "
+            . "missing. Resolve the requested replacement date, call check_availability, and offer only real "
+            . "slots. Read the old slot and selected replacement slot back and obtain an explicit yes, then call "
+            . "reschedule_appointment. Claim the change succeeded only when that tool returns success. If "
+            . "calendar_synced is false, say the website booking and email were updated but the external calendar "
+            . "still needs Caleb's review. Preserve the visitor's current language in every rescheduling reply.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
         $system .= LisaInstructions::promptBlock(
@@ -1322,6 +1337,22 @@ class LiveChatController
                 ],
             ],
             [
+                'name' => 'reschedule_appointment',
+                'description' => 'Move an existing confirmed appointment to a checked replacement slot. Only call after identifying the original booking by its email, exact old date and exact old time; checking the new date; reading the old and new details back; and receiving an explicit yes. Never use book_appointment for a reschedule.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'email' => ['type' => 'STRING', 'description' => 'Email on the existing booking.'],
+                        'phone' => ['type' => 'STRING', 'description' => 'Full phone number on the existing booking.'],
+                        'old_date' => ['type' => 'STRING', 'description' => 'Current booking date, YYYY-MM-DD.'],
+                        'old_time' => ['type' => 'STRING', 'description' => 'Current booking time, exact HH:MM.'],
+                        'new_date' => ['type' => 'STRING', 'description' => 'Replacement date, YYYY-MM-DD.'],
+                        'new_time' => ['type' => 'STRING', 'description' => 'Exact HH:MM returned by check_availability for the replacement date.'],
+                    ],
+                    'required' => ['email', 'phone', 'old_date', 'old_time', 'new_date', 'new_time'],
+                ],
+            ],
+            [
                 'name' => 'audit_website',
                 'description' => 'Run a live technical audit of a website URL the visitor shared: load '
                     . 'time, HTTPS/SSL, mobile viewport tag, title/meta description, heading structure, '
@@ -1395,6 +1426,9 @@ class LiveChatController
                     ));
                 }
                 return $result;
+            }
+            if ($name === 'reschedule_appointment') {
+                return AppointmentController::rescheduleBooking($args);
             }
 
             return match ($name) {
@@ -1960,6 +1994,30 @@ class LiveChatController
 
         return "You're all set! I've got you down for {$friendlyDate} at {$booking['time']} ({$booking['timezone']}). "
             . "You should receive a confirmation email shortly.";
+    }
+
+    private static function rescheduleConfirmationText(array $booking, array $transcript = []): string
+    {
+        $date = (string) ($booking['date'] ?? '');
+        try {
+            $date = (new \DateTimeImmutable($date))->format('d-m-Y');
+        } catch (\Throwable) {
+            // Keep the tool's original value when it cannot be parsed.
+        }
+        $calendarNote = empty($booking['calendar_synced'])
+            ? ' The external calendar still needs Caleb’s review.'
+            : '';
+
+        if (self::conversationIsFrench($transcript)) {
+            $note = empty($booking['calendar_synced'])
+                ? ' Le calendrier externe doit encore être vérifié par Caleb.'
+                : '';
+            return "Votre réservation a été déplacée au {$date} à {$booking['time']} ({$booking['timezone']}). "
+                . "Vous recevrez un e-mail de confirmation mis à jour." . $note;
+        }
+
+        return "Your booking has been moved to {$date} at {$booking['time']} ({$booking['timezone']}). "
+            . "You will receive an updated confirmation email." . $calendarNote;
     }
 
     /** Keep the no-more-provider booking fallback in the language already established in the chat. */

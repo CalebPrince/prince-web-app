@@ -153,6 +153,9 @@ $appointmentColumns = array_column($pdo->query('PRAGMA table_info(appointments)'
 if (!in_array('admin_seen', $appointmentColumns, true)) {
     $pdo->exec('ALTER TABLE appointments ADD COLUMN admin_seen INTEGER NOT NULL DEFAULT 0');
 }
+if (!in_array('calendar_event_id', $appointmentColumns, true)) {
+    $pdo->exec('ALTER TABLE appointments ADD COLUMN calendar_event_id TEXT');
+}
 $marketPricingUpdates = [
     'pricing_tier_1_amount' => ['6000', '3000'],
     'pricing_tier_1_price' => ['From GHS 6,000', 'From GHS 5,000'],

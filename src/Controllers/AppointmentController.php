@@ -330,7 +330,7 @@ class AppointmentController
             "Hi {$name},\n\nYou're booked in for {$date} at {$time} ({$cfg['timezone']}).\n\nIf you need to reschedule or cancel, just reply to this email.\n\n— Prince Caleb"
         );
 
-        self::sendComposioBookingActions([
+        $calendarEventId = self::sendComposioBookingActions([
             'id' => $appointmentId,
             'name' => $name,
             'email' => $email,
@@ -341,8 +341,131 @@ class AppointmentController
             'timezone' => $cfg['timezone'],
             'topic' => $topic,
         ]);
+        if ($calendarEventId !== null) {
+            $pdo->prepare('UPDATE appointments SET calendar_event_id = ? WHERE id = ?')
+                ->execute([$calendarEventId, $appointmentId]);
+        }
 
         return ['success' => true, 'date' => $date, 'time' => $time, 'timezone' => $cfg['timezone'], 'appointment_id' => $appointmentId];
+    }
+
+    /** Update one confirmed booking instead of creating a second appointment. */
+    public static function rescheduleBooking(array $data): array
+    {
+        $cfg = self::config();
+        $email = trim((string) ($data['email'] ?? ''));
+        $phone = trim((string) ($data['phone'] ?? ''));
+        $oldDate = trim((string) ($data['old_date'] ?? ''));
+        $oldTime = trim((string) ($data['old_time'] ?? ''));
+        $newDate = trim((string) ($data['new_date'] ?? ''));
+        $newTime = trim((string) ($data['new_time'] ?? ''));
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'error' => 'A valid booking email is required to identify the existing appointment.'];
+        }
+        $phoneError = self::phoneValidationError($phone);
+        if ($phone === '' || $phoneError !== null) {
+            return ['success' => false, 'error' => $phoneError ?: 'The booking phone number is required to verify the existing appointment.'];
+        }
+        $phone = self::normalizePhone($phone);
+        foreach ([$oldDate, $newDate] as $date) {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+                return ['success' => false, 'error' => 'Both dates must use YYYY-MM-DD.'];
+            }
+        }
+        foreach ([$oldTime, $newTime] as $time) {
+            if (!preg_match('/^\d{2}:\d{2}$/', $time)) {
+                return ['success' => false, 'error' => 'Both times must use HH:MM.'];
+            }
+        }
+
+        $pdo = Database::get();
+        $find = $pdo->prepare(
+            "SELECT * FROM appointments
+             WHERE lower(client_email) = lower(?) AND appointment_date = ? AND appointment_time = ?
+               AND status = 'confirmed' LIMIT 1"
+        );
+        $find->execute([$email, $oldDate, $oldTime]);
+        $appointment = $find->fetch(\PDO::FETCH_ASSOC);
+        if (!$appointment) {
+            return ['success' => false, 'error' => 'No confirmed booking matches that email, original date, and original time. Reconfirm the original details; do not create a new booking.'];
+        }
+        $storedPhone = self::normalizePhone((string) ($appointment['client_phone'] ?? ''));
+        if ($storedPhone !== '' && $storedPhone !== $phone) {
+            return ['success' => false, 'error' => 'The phone number does not match the existing booking. Reconfirm it before trying again.'];
+        }
+        if ($oldDate === $newDate && $oldTime === $newTime) {
+            return [
+                'success' => true, 'date' => $newDate, 'time' => $newTime,
+                'timezone' => $cfg['timezone'], 'appointment_id' => (int) $appointment['id'],
+                'calendar_synced' => true,
+            ];
+        }
+
+        $target = $pdo->prepare(
+            "SELECT * FROM appointments
+             WHERE appointment_date = ? AND appointment_time = ? AND status != 'cancelled' LIMIT 1"
+        );
+        $target->execute([$newDate, $newTime]);
+        $existingTarget = $target->fetch(\PDO::FETCH_ASSOC);
+        if ($existingTarget) {
+            if (strcasecmp((string) $existingTarget['client_email'], $email) !== 0) {
+                return [
+                    'success' => false,
+                    'error' => 'The requested replacement slot is no longer available.',
+                    'available_slots' => self::getAvailableSlots($newDate)['slots'] ?? [],
+                ];
+            }
+
+            // Repair a duplicate made by the former booking-only flow: keep
+            // the newer target appointment and cancel the old one.
+            $pdo->prepare("UPDATE appointments SET status = 'cancelled' WHERE id = ?")
+                ->execute([(int) $appointment['id']]);
+            return [
+                'success' => true, 'date' => $newDate, 'time' => $newTime,
+                'timezone' => $cfg['timezone'], 'appointment_id' => (int) $existingTarget['id'],
+                'calendar_synced' => !empty($existingTarget['calendar_event_id']),
+                'duplicate_merged' => true,
+            ];
+        }
+
+        if (!in_array($newTime, self::possibleSlots($newDate, $cfg), true)) {
+            return [
+                'success' => false,
+                'error' => 'The requested replacement slot is not available.',
+                'available_slots' => self::getAvailableSlots($newDate)['slots'] ?? [],
+            ];
+        }
+
+        try {
+            $pdo->prepare(
+                "UPDATE appointments
+                 SET appointment_date = ?, appointment_time = ?, reminder_sent = 0, admin_seen = 0
+                 WHERE id = ?"
+            )->execute([$newDate, $newTime, (int) $appointment['id']]);
+        } catch (\PDOException) {
+            return ['success' => false, 'error' => 'The requested replacement slot was just taken. Please choose another time.'];
+        }
+
+        $booking = [
+            'id' => (int) $appointment['id'],
+            'name' => (string) $appointment['client_name'],
+            'email' => (string) $appointment['client_email'],
+            'phone' => (string) ($appointment['client_phone'] ?? ''),
+            'date' => $newDate,
+            'time' => $newTime,
+            'duration_minutes' => (int) $appointment['duration_minutes'],
+            'timezone' => $cfg['timezone'],
+            'topic' => (string) ($appointment['topic'] ?? ''),
+        ];
+        $calendarSynced = self::rescheduleCalendarEvent($booking, (string) ($appointment['calendar_event_id'] ?? ''));
+        self::sendRescheduleNotifications($booking, $oldDate, $oldTime);
+
+        return [
+            'success' => true, 'date' => $newDate, 'time' => $newTime,
+            'timezone' => $cfg['timezone'], 'appointment_id' => (int) $appointment['id'],
+            'calendar_synced' => $calendarSynced,
+        ];
     }
 
     /**
@@ -429,11 +552,87 @@ class AppointmentController
         ], true);
     }
 
+    private static function sendRescheduleNotifications(array $booking, string $oldDate, string $oldTime): void
+    {
+        $vars = self::bookingTemplateVars($booking);
+        $clientMessage = EmailTemplate::render(
+            'booking_client_confirmation',
+            $vars,
+            EmailTemplate::defaults()['booking_client_confirmation']
+        );
+        Mailer::sendHtml(
+            (string) $booking['email'],
+            'Booking rescheduled: ' . $booking['date'] . ' at ' . $booking['time'],
+            $clientMessage['html'],
+            $clientMessage['text']
+        );
+
+        $notifyEmail = Settings::get('notification_email') ?: 'hello@princecaleb.dev';
+        if ($notifyEmail !== '') {
+            $ownerMessage = EmailTemplate::render(
+                'booking_internal_notification',
+                $vars,
+                EmailTemplate::defaults()['booking_internal_notification']
+            );
+            $context = "Rescheduled from {$oldDate} at {$oldTime}.\n\n";
+            Mailer::sendHtml(
+                $notifyEmail,
+                'Booking rescheduled: ' . $booking['name'],
+                $ownerMessage['html'],
+                $context . $ownerMessage['text'],
+                (string) $booking['email']
+            );
+        }
+
+        self::executeBookingAction('slack', [
+            'channel' => Settings::get('composio_slack_channel') ?: null,
+            'text' => "Booking rescheduled from {$oldDate} {$oldTime} to {$booking['date']} {$booking['time']}.\n\n"
+                . self::bookingMessage($booking),
+        ], 'SLACK_SEND_MESSAGE');
+    }
+
+    private static function rescheduleCalendarEvent(array $booking, string $eventId): bool
+    {
+        $accountId = trim((string) Settings::get('composio_google_calendar_account_id'));
+        if ($eventId === '' || $accountId === '' || empty(Settings::get('composio_api_key'))) {
+            return false;
+        }
+
+        $start = self::bookingDateTime($booking['date'], $booking['time'], $booking['timezone']);
+        $end = $start ? (clone $start)->modify('+' . (int) $booking['duration_minutes'] . ' minutes') : null;
+        $calendarId = Settings::get('composio_google_calendar_id') ?: 'primary';
+        $startIso = $start ? $start->format(\DateTimeInterface::ATOM) : "{$booking['date']}T{$booking['time']}:00";
+        $endIso = $end ? $end->format(\DateTimeInterface::ATOM) : null;
+        $payloads = [
+            [
+                'calendar_id' => $calendarId, 'event_id' => $eventId,
+                'start_datetime' => $startIso, 'end_datetime' => $endIso,
+                'timezone' => $booking['timezone'],
+            ],
+            [
+                'calendar_id' => $calendarId, 'event_id' => $eventId,
+                'start' => $startIso, 'end' => $endIso, 'timezone' => $booking['timezone'],
+            ],
+        ];
+        foreach ($payloads as $payload) {
+            $payload = array_filter($payload, static fn ($value) => $value !== null && $value !== '');
+            if (Composio::executeTool('GOOGLECALENDAR_UPDATE_EVENT', $accountId, $payload) !== null) {
+                Settings::set('composio_google_calendar_last_error', '');
+                return true;
+            }
+        }
+
+        $error = Composio::lastError() ?: 'Calendar event update was not confirmed.';
+        Settings::set('composio_google_calendar_last_error', date('c') . ' - reschedule: ' . $error);
+        error_log('Composio calendar reschedule failed: ' . $error);
+        return false;
+    }
+
     /** Best-effort Composio fan-out after a confirmed booking. Booking itself never depends on these calls. */
-    private static function sendComposioBookingActions(array $booking): void
+    private static function sendComposioBookingActions(array $booking): ?string
     {
         if (empty(Settings::get('composio_api_key'))) {
-            return;
+            return null;
         }
 
         $start = self::bookingDateTime($booking['date'], $booking['time'], $booking['timezone']);
@@ -449,7 +648,7 @@ class AppointmentController
         $calendarId = Settings::get('composio_google_calendar_id') ?: 'primary';
         $startIso = $start ? $start->format(\DateTimeInterface::ATOM) : "{$booking['date']}T{$booking['time']}:00";
         $endIso = $end ? $end->format(\DateTimeInterface::ATOM) : null;
-        self::executeBookingAction('google_calendar', [
+        $calendarResult = self::executeBookingAction('google_calendar', [
             [
                 'calendar_id' => $calendarId,
                 'summary' => 'Call with ' . $booking['name'],
@@ -495,14 +694,16 @@ class AppointmentController
             'channel' => Settings::get('composio_slack_channel') ?: null,
             'text' => $details,
         ], 'SLACK_SEND_MESSAGE');
+
+        return self::calendarEventId($calendarResult);
     }
 
-    private static function executeBookingAction(string $toolkit, array $payloads, string $defaultTool): void
+    private static function executeBookingAction(string $toolkit, array $payloads, string $defaultTool): ?array
     {
         $accountId = Settings::get("composio_{$toolkit}_account_id");
         $tool = Settings::get("composio_{$toolkit}_booking_tool") ?: $defaultTool;
         if (empty($accountId) || empty($tool)) {
-            return;
+            return null;
         }
 
         $variants = self::isList($payloads) ? $payloads : [$payloads];
@@ -511,7 +712,7 @@ class AppointmentController
             $result = Composio::executeTool($tool, $accountId, $payload);
             if ($result !== null) {
                 Settings::set("composio_{$toolkit}_last_error", '');
-                return;
+                return $result;
             }
         }
 
@@ -521,6 +722,27 @@ class AppointmentController
             date('c') . " - {$toolkit} booking action failed using {$tool}: " . $lastError
         );
         error_log("Composio booking action failed for {$toolkit} using {$tool}: {$lastError}");
+        return null;
+    }
+
+    private static function calendarEventId(?array $result): ?string
+    {
+        if ($result === null) {
+            return null;
+        }
+        $candidates = [
+            $result['data']['id'] ?? null,
+            $result['data']['event']['id'] ?? null,
+            $result['response_data']['id'] ?? null,
+            $result['event']['id'] ?? null,
+            $result['event_id'] ?? null,
+        ];
+        foreach ($candidates as $candidate) {
+            if (is_scalar($candidate) && trim((string) $candidate) !== '') {
+                return trim((string) $candidate);
+            }
+        }
+        return null;
     }
 
     private static function isList(array $value): bool

@@ -327,6 +327,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled', 'completed')),
   reminder_sent INTEGER NOT NULL DEFAULT 0,
   admin_seen INTEGER NOT NULL DEFAULT 0,
+  calendar_event_id TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments (appointment_date, status);
