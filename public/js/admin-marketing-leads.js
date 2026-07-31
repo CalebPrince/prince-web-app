@@ -54,7 +54,6 @@ function intentBadge(demo) {
 function updateLeadPulse(rows) {
   document.getElementById("lead-total").textContent = rows.length.toLocaleString();
   document.getElementById("lead-priority").textContent = rows.filter(lead => Number(lead.is_high_priority) === 1).length.toLocaleString();
-  document.getElementById("lead-ready").textContent = rows.filter(lead => Boolean(lead.pitch_body) && lead.status !== "sent").length.toLocaleString();
   const currencies = [...new Set(rows.filter(lead => Number(lead.estimated_value) > 0).map(lead => lead.currency || "GHS"))];
   const total = rows.reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0) / 100;
   document.getElementById("lead-pipeline-value").textContent = currencies.length > 1
@@ -806,6 +805,7 @@ document.getElementById("pitch-body").addEventListener("input", renderPitchPrevi
 
 function renderOutreachStats(s) {
   document.getElementById("oe-queue").textContent = s.eligible_queue;
+  document.getElementById("lead-ready").textContent = Number(s.eligible_queue || 0).toLocaleString();
   document.getElementById("oe-draftable").textContent = s.draftable_queue;
   document.getElementById("oe-sent-today").textContent = s.sent_today;
   document.getElementById("oe-cap-label").textContent = s.daily_cap;
