@@ -250,6 +250,9 @@ class OutreachController
         $pdo = Database::get();
         $cap = self::dailyCap();
         $sentToday = self::sentToday($pdo);
+        $discoveryEnabled = Settings::get('lead_discovery_enabled') === '1';
+        $discoveryLastRun = (string) Settings::get('lead_discovery_last_run');
+        $discoveryRanToday = substr($discoveryLastRun, 0, 10) === gmdate('Y-m-d');
 
         Response::json([
             'enabled' => Settings::get('outreach_enabled') === '1',
@@ -274,11 +277,14 @@ class OutreachController
             'calls_today' => self::callsToday($pdo),
             'ai_calls_today' => self::aiCallsToday($pdo),
             'ai_call_daily_cap' => self::AI_CALL_DAILY_CAP,
-            'discovery_enabled' => Settings::get('lead_discovery_enabled') === '1',
+            'discovery_enabled' => $discoveryEnabled,
             'discovery_daily_target' => (int) (Settings::get('lead_discovery_daily_target') ?: 50),
             'discovery_queries' => (string) Settings::get('lead_discovery_queries'),
-            'discovery_last_run' => Settings::get('lead_discovery_last_run'),
+            'discovery_last_run' => $discoveryLastRun,
             'discovery_last_status' => Settings::get('lead_discovery_last_status'),
+            'discovery_next_eligible_at' => $discoveryEnabled
+                ? ($discoveryRanToday ? gmdate('Y-m-d\T00:00:00\Z', strtotime('tomorrow UTC')) : gmdate('Y-m-d\TH:i:s\Z'))
+                : null,
         ]);
     }
 

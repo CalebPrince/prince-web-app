@@ -63,6 +63,8 @@
 .tracker-table-scroll{width:100%;max-width:100%;overflow-x:auto;overflow-y:visible;overscroll-behavior-inline:contain;scrollbar-gutter:stable;-webkit-overflow-scrolling:touch}
 .tracker-table-scroll .tracker-table-ai{min-width:760px}
 .discovery-query-list{min-height:6.5rem;resize:vertical;white-space:pre-wrap;overflow-wrap:anywhere}
+.discovery-countdown{display:inline-flex;align-items:center;gap:.4rem;margin-top:.35rem;padding:.3rem .55rem;border:1px solid var(--line);border-radius:8px;color:var(--heading-color);background:var(--bg-soft);font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums}
+.discovery-countdown i{color:var(--section-leads)}
 .tracker-table-ai tr[data-lead-row]:has(.row-checkbox:checked){background:var(--section-leads-soft)}
 .lead-more-item{display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .65rem;border:0;border-radius:8px;background:transparent;color:var(--text,#172033);font-size:.78rem;text-align:left}
 .lead-more-item:hover{background:var(--bg-soft)}
@@ -406,6 +408,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
                             <div class="flex-grow-1">
                                 <div class="feature-title-ai">Daily Prospect Discovery <span class="small text-muted-custom" id="oe-discovery-enabled-label">Off</span></div>
                                 <div class="feature-desc-ai" id="oe-discovery-status">Waiting for its first run.</div>
+                                <div class="discovery-countdown" id="oe-discovery-countdown"><i class="bi bi-clock-history"></i><span>Waiting for schedule…</span></div>
                                 
                                 <div class="d-flex gap-3 mt-2 align-items-end">
                                     <div>
@@ -826,6 +829,6 @@ a.demo-link-ai:hover { color: var(--heading-color); }
 <script src="/js/theme.js?v=20260730-site-default"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260729-pagination-scroll"></script>
-<script src="/js/admin-marketing-leads.js?v=20260731-email-ready"></script>
+<script src="/js/admin-marketing-leads.js?v=20260731-discovery-countdown"></script>
 </body>
 </html>

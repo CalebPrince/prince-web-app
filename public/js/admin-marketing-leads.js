@@ -803,6 +803,37 @@ document.getElementById("pitch-body").addEventListener("input", renderPitchPrevi
 
 // --- Cold Outreach Engine panel ------------------------------------------
 
+let discoveryCountdownTimer = null;
+
+function startDiscoveryCountdown(enabled, nextEligibleAt) {
+  const label = document.querySelector("#oe-discovery-countdown span");
+  clearInterval(discoveryCountdownTimer);
+  if (!enabled) {
+    label.textContent = "Automatic search paused";
+    return;
+  }
+  const target = Date.parse(nextEligibleAt || "");
+  if (!Number.isFinite(target)) {
+    label.textContent = "Schedule unavailable";
+    return;
+  }
+  const update = () => {
+    const seconds = Math.max(0, Math.ceil((target - Date.now()) / 1000));
+    if (seconds <= 0) {
+      label.textContent = "Ready on next automation run";
+      clearInterval(discoveryCountdownTimer);
+      return;
+    }
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    label.textContent = `Next search in ${days ? `${days}d ` : ""}${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
+  };
+  update();
+  discoveryCountdownTimer = setInterval(update, 1000);
+}
+
 function renderOutreachStats(s) {
   document.getElementById("oe-queue").textContent = s.eligible_queue;
   document.getElementById("lead-ready").textContent = Number(s.eligible_queue || 0).toLocaleString();
@@ -839,6 +870,7 @@ function renderOutreachStats(s) {
   const lastRun = s.discovery_last_run ? `Last run ${s.discovery_last_run} UTC. ` : "";
   document.getElementById("oe-discovery-status").textContent =
     lastRun + (s.discovery_last_status || "Waiting for its first run.");
+  startDiscoveryCountdown(!!s.discovery_enabled, s.discovery_next_eligible_at);
 }
 
 async function loadOutreachStats() {
