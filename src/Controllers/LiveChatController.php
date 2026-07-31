@@ -218,9 +218,9 @@ class LiveChatController
             }
             return $result;
         };
-        $onExhaustedFallback = function () use (&$confirmedBooking) {
+        $onExhaustedFallback = function () use (&$confirmedBooking, $transcript) {
             return $confirmedBooking !== null
-                ? ['reply' => self::bookingConfirmationText($confirmedBooking), 'ready' => false]
+                ? ['reply' => self::bookingConfirmationText($confirmedBooking, $transcript), 'ready' => false]
                 : null;
         };
         $onGroqFailedGeneration = fn (string $failedGeneration) => self::recoverGroqFailedToolGeneration($failedGeneration, $toolExecutor);
@@ -1063,6 +1063,11 @@ class LiveChatController
             . "```php\\n...\\n```. Keep it illustrative rather than a full implementation, add a one-line "
             . "explanation, and then steer back to capturing their contact details so Caleb can review the "
             . "real build. Do not volunteer code unprompted, and never paste long files or secrets.\n\n"
+            . "LANGUAGE CONTINUITY: Reply in the language the visitor is currently using. Once they switch "
+            . "to French or another language, continue in that language through availability checks, explicit "
+            . "confirmation, successful booking, follow-up, and polite closing unless they switch back. Tool "
+            . "names and results may be English internally; translate their meaning naturally. Never switch "
+            . "to English merely because a tool succeeded.\n\n"
             . "If the visitor just greets you (hi, hello, hey), reply with a warm one-sentence hello and ask "
             . "what brings them by — nothing else. Not every visitor wants to start a project — some just "
             . "have a general question about what Prince builds, his experience, tech stack, process, "
@@ -1145,7 +1150,13 @@ class LiveChatController
             . "if the visitor hasn't actually stated their name or email yet in this conversation, ask for it "
             . "and wait for their real answer before calling the tool. NEVER invent, guess, or fill either "
             . "field with a placeholder (e.g. \"Your Name\", \"your@email.com\") just to complete the call — "
-            . "an unconfirmed field means you're not ready to book yet. When you list times from check_availability, list "
+            . "an unconfirmed field means you're not ready to book yet. Before booking, validate the phone "
+            . "number with the visitor: a Ghana local number beginning with 0 must contain exactly 10 digits, "
+            . "while a Ghana international number beginning with +233 or 233 must contain exactly 12 digits "
+            . "including 233. If it is incomplete or ambiguous, repeat it back, request the corrected full "
+            . "number, and wait. For another country, ask for the full international number including country "
+            . "code. When you list times from check_availability, present them as clean conversational prose "
+            . "without asterisks, markdown bullets, or decorative symbols, and list "
             . "only the exact strings it returned — never add a vague option like \"or perhaps a bit later\" "
             . "that isn't literally one of those strings; the visitor may pick it and it won't be real. If "
             . "their reply doesn't clearly match exactly one of the times you listed (e.g. a vague \"go ahead\" "
@@ -1290,7 +1301,7 @@ class LiveChatController
                         'phone' => ['type' => 'STRING'],
                         'topic' => ['type' => 'STRING'],
                     ],
-                    'required' => ['name', 'email', 'date', 'time'],
+                    'required' => ['name', 'email', 'phone', 'date', 'time'],
                 ],
             ],
             [
@@ -1916,10 +1927,36 @@ class LiveChatController
      * it actually went through. Confirming directly from the known-successful
      * tool result sidesteps needing any more AI text generation for it.
      */
-    private static function bookingConfirmationText(array $booking): string
+    private static function bookingConfirmationText(array $booking, array $transcript = []): string
     {
-        $friendlyDate = self::friendlyBookingDate((string) ($booking['date'] ?? ''));
+        $date = (string) ($booking['date'] ?? '');
+        try {
+            $friendlyDate = (new \DateTimeImmutable($date))->format('d-m-Y');
+        } catch (\Throwable) {
+            $friendlyDate = $date;
+        }
+
+        if (self::conversationIsFrench($transcript)) {
+            return "Votre réservation est confirmée pour le {$friendlyDate} à {$booking['time']} "
+                . "({$booking['timezone']}). Vous devriez recevoir un e-mail de confirmation sous peu.";
+        }
+
         return "You're all set! I've got you down for {$friendlyDate} at {$booking['time']} ({$booking['timezone']}). "
             . "You should receive a confirmation email shortly.";
+    }
+
+    /** Keep the no-more-provider booking fallback in the language already established in the chat. */
+    private static function conversationIsFrench(array $transcript): bool
+    {
+        $recent = array_slice($transcript, -16);
+        $text = implode(' ', array_map(
+            static fn (array $turn): string => (string) ($turn['text'] ?? ''),
+            array_filter($recent, 'is_array')
+        ));
+
+        return (bool) preg_match(
+            '/(?:[àâçéèêëîïôùûüÿœ]|\b(?:bonjour|merci|réservation|réserver|j[’\']aimerais|mardi|matin|après-midi|oui|créneau|préfère|disponibilités|comment ça va)\b)/ui',
+            $text
+        );
     }
 }

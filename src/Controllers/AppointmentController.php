@@ -215,6 +215,11 @@ class AppointmentController
         $time = trim((string) ($data['time'] ?? ''));
         $topic = trim((string) ($data['topic'] ?? ''));
 
+        $phoneError = self::phoneValidationError($phone);
+        if ($phoneError !== null) {
+            return ['success' => false, 'error' => $phoneError];
+        }
+
         // filter_var happily accepts "your@email.com" as a syntactically
         // valid address — it can't tell a real one from a placeholder an AI
         // caller fabricated because it didn't actually have the visitor's
@@ -348,6 +353,43 @@ class AppointmentController
      * catch every possible fabricated value, it's a backstop alongside the
      * system prompt instruction not to do this, not a substitute for it.
      */
+    /** Validate Ghana local/international numbers and require country codes elsewhere. */
+    private static function phoneValidationError(string $phone): ?string
+    {
+        if ($phone === '') {
+            // The public booking form still permits an intentionally omitted
+            // phone. Lisa's tool schema requires one before she can submit.
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+        if (str_starts_with(trim($phone), '00')) {
+            return strlen($digits) >= 10 && strlen($digits) <= 17
+                ? null
+                : 'That international phone number has an invalid length. Ask the visitor to repeat the full number including country code.';
+        }
+        if (str_starts_with($digits, '233')) {
+            return strlen($digits) === 12
+                ? null
+                : 'That Ghana international number is incomplete. It must contain 233 followed by exactly 9 digits. Ask the visitor to repeat the full number.';
+        }
+        if (str_starts_with($digits, '0')) {
+            return strlen($digits) === 10
+                ? null
+                : 'That Ghana local number is incomplete. It must contain exactly 10 digits beginning with 0. Ask the visitor to repeat the full number.';
+        }
+
+        $hasInternationalPrefix = str_starts_with(trim($phone), '+');
+        if (!$hasInternationalPrefix) {
+            return 'That phone number is ambiguous. Ask the visitor for the full international number including country code.';
+        }
+        if (strlen($digits) < 8 || strlen($digits) > 15) {
+            return 'That international phone number has an invalid length. Ask the visitor to repeat the full number including country code.';
+        }
+
+        return null;
+    }
+
     private static function looksLikePlaceholder(string $value): bool
     {
         $normalized = strtolower(trim($value));
@@ -405,9 +447,13 @@ class AppointmentController
             ],
         ], 'GOOGLECALENDAR_CREATE_EVENT');
 
-        $gmailTo = Settings::get('composio_gmail_booking_to')
-            ?: (Settings::get('notification_email') ?: 'hello@princecaleb.dev');
-        if (!empty($gmailTo)) {
+        // The normal booking notification above already emails notification_email
+        // with the client set as Reply-To. Composio used to fall back to that same
+        // address and send an indistinguishable second copy without Reply-To.
+        // Keep Gmail fan-out only for an explicitly configured, different inbox.
+        $gmailTo = trim((string) Settings::get('composio_gmail_booking_to'));
+        $notificationEmail = trim((string) (Settings::get('notification_email') ?: 'hello@princecaleb.dev'));
+        if ($gmailTo !== '' && strcasecmp($gmailTo, $notificationEmail) !== 0) {
             self::executeBookingAction('gmail', [
                 [
                     'recipient_email' => $gmailTo,
