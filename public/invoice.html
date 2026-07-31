@@ -103,6 +103,7 @@
 
   const isPaid = invoice.status === 'paid';
   const isVoid = invoice.status === 'void';
+  const isDraft = invoice.status === 'draft';
 
   const itemRows = (invoice.items || []).map(item => {
     const lineTotal = Math.round(item.quantity * item.unit_amount);
@@ -131,6 +132,7 @@
           <h4 class="mb-1">Invoice ${escapeHtml(invoice.invoice_number)}</h4>
           ${isPaid ? '<div class="invoice-paid-stamp mt-2">Paid</div>' : ''}
           ${isVoid ? '<div class="invoice-paid-stamp mt-2" style="border-color:#991b1b;color:#991b1b;">Void</div>' : ''}
+          ${isDraft ? '<div class="invoice-paid-stamp mt-2" style="border-color:#64748b;color:#64748b;">Draft preview</div>' : ''}
         </div>
       </div>
 
@@ -166,7 +168,7 @@
       </table>
 
       ${invoice.notes ? `<div class="small text-muted-custom mt-3"><span class="fw-semibold">Notes:</span> ${escapeHtml(invoice.notes)}</div>` : ''}
-      <div class="small text-muted-custom mt-4">${isPaid ? 'This invoice has been paid in full and serves as your receipt.' : 'Payment can be made securely online via the Pay Now button above.'} Thank you for your business.</div>
+      <div class="small text-muted-custom mt-4">${isPaid ? 'This invoice has been paid in full and serves as your receipt.' : (isDraft ? 'This is a draft preview. Payment becomes available after the invoice is sent.' : (isVoid ? 'This invoice has been voided and can no longer be paid.' : 'Payment can be made securely online via the Pay Now button above.'))} Thank you for your business.</div>
     </div>
   `;
 })();

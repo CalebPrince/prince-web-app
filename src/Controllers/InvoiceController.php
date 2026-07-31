@@ -253,11 +253,14 @@ class InvoiceController
     public static function show(array $params): void
     {
         $invoice = self::findWithItems('token', $params['token']);
-        if (!$invoice || $invoice['status'] === 'draft') {
+        if (!$invoice) {
             Response::error('Invoice not found.', 404);
         }
 
-        // Tokened public page: expose only what the invoice itself shows.
+        // The unguessable token is also the admin's draft-preview link. Drafts
+        // remain non-payable until send() changes their status to `sent` and
+        // creates the payment link, but the freshly-created invoice can still
+        // be reviewed instead of incorrectly appearing to be missing.
         Response::json([
             'invoice_number' => $invoice['invoice_number'],
             'client_name' => $invoice['client_name'],
