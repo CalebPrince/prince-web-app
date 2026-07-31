@@ -37,10 +37,10 @@ Growth, and Custom / Enterprise use the same tier names, amounts, summaries,
 and feature lists. The visible navigation no longer links to a generic Blog
 label; archive-style content remains available where the page itself is used.
 
-The hero can carry an optional WebGL depth layer (see #35) behind the copy,
-and UI chrome stays strictly monochrome throughout — e.g. the multi-step
-form progress bar on `/request.html` uses the ink accent, not a stock
-Bootstrap blue.
+The hero can carry an optional WebGL depth layer (see #35) behind the copy.
+The former strictly-monochrome UI chrome has been superseded by the
+**Builder OS** system, below — the ink accent from this description now
+carries a green identity rather than a neutral one.
 
 The admin styling was refreshed to match the public site: restrained
 monochrome surfaces, tighter cards, clearer section grouping, and a more
@@ -50,6 +50,51 @@ technical archive entries, production log headings, and live demo arena copy.
 These edits use the existing settings/content API and `settings` table; no
 database schema, migrations, seed data, or stored records were changed for
 this redesign.
+
+## Builder OS design system (2026-07-30 upgrade)
+
+The site's visual identity and navigation model were rebuilt around a single
+narrative: Prince Caleb doesn't just build sites, he runs **Builder OS**, one
+operating system connecting the agent team (Lisa, Jason, Chief, Ledger,
+Canvas, Dossier, and more), their handoffs, and every generated system. This
+replaced the earlier pure-monochrome accent with a deliberate green identity
+and added a dedicated `/builder-os.html` page plus supporting chrome used
+site-wide.
+
+- **Green accent system** — `--accent`/`--accent-strong`/`--accent-soft`
+  (`public/css/app.css`) moved from a neutral ink tone to green across every
+  theme (e.g. `#08783c` light, `#62ff98` dark), so links, active nav states,
+  buttons, and system labels read as one consistent brand color instead of
+  the prior strict grayscale.
+- **`/builder-os.html`** — a terminal-styled hero
+  (`builder@princecaleb:~$ inspect network`), a live agent topology map
+  (`#system-map`) rendered from the same team configuration the admin command
+  centre uses, and an **interactive workflow simulator**: three real
+  scenarios (after-hours clinic call, new business enquiry, invoice needing
+  review) that play back a step-by-step execution log showing which agent
+  handled what — demonstration only, no client data involved. "Systems"
+  replaced the generic "Projects" nav label site-wide, and the primary nav
+  now includes a dedicated Builder OS link.
+- **Agent dossiers** (`/agent.html`, `js/agent-profile.js`) — each AI
+  teammate gets its own profile page linked from the Builder OS topology and
+  Team page, rather than a single shared roster block.
+- **System browser mockups** — homepage and services sections now frame
+  screenshots inside a browser-chrome device frame (`js/home.js`,
+  `public/css/app.css`) instead of plain image boxes, reinforcing the
+  "inspect a running system" framing.
+- **Cinematic page transitions** (`js/cinematic-nav.js`) — internal
+  navigation between `.html` pages fades through a full-screen "BUILDER OS"
+  branded loading overlay with a page-specific status line (e.g. "Opening
+  agent dossier…"), skipped entirely under `prefers-reduced-motion` and for
+  external links, downloads, and modified clicks.
+- **Consistent generated marketing** — AI-drafted adverts/social creative
+  (`ContentAgentController`, Canvas) now standardize on the same Builder OS
+  branding and green identity instead of the older generic template, so
+  outbound creative matches the live site.
+
+No database schema, migration, or seed data changed for this redesign; it is
+CSS, static markup, and client-side JS plus the advert-generation prompt
+templates.
 
 ## Arch AI website builder
 
