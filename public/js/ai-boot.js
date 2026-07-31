@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // agent-face.js first (Lisa's header avatar) — ai-widget.js checks for
     // window.AgentFace at load time, so it must finish before ai-widget.js runs.
     const face = document.createElement("script");
-    face.src = "/js/agent-face.js?v=20260728-elevenlabs";
+    face.src = "/js/agent-face.js?v=20260731-scout-face";
     face.onload = () => {
       if (window.ElevenLabsTTS) {
         const widget = document.createElement("script");
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const naturalVoice = document.createElement("script");
-      naturalVoice.src = "/js/elevenlabs-tts.js?v=20260728-consistent";
+      naturalVoice.src = "/js/elevenlabs-tts.js?v=20260731-scout-voice";
       naturalVoice.onload = naturalVoice.onerror = () => {
         const widget = document.createElement("script");
         widget.src = "/js/ai-widget.js?v=20260728-elevenlabs-consistent";
