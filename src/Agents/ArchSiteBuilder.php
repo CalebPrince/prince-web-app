@@ -272,9 +272,14 @@ class ArchSiteBuilder
         $pages = array_map('strtolower', Arch::toList($brief['pages'] ?? []));
         $features = array_map('strtolower', Arch::toList($brief['features'] ?? []));
         $featureText = strtolower(implode(' ', $features));
+        $pageText = strtolower(implode(' ', $pages));
+        $goalText = strtolower((string) ($brief['primary_goal'] ?? ''));
+        $isChurch = $profile['kind'] === 'church';
+        $wantsLive = $isChurch && (str_contains($pageText, 'hook up') || str_contains($pageText, 'live') || str_contains($featureText, 'live') || str_contains($goalText, 'live'));
+        $wantsSermons = $isChurch && (str_contains($pageText, 'sermon') || str_contains($pageText, 'archive') || str_contains($featureText, 'sermon') || str_contains($goalText, 'sermon'));
         $wantsGallery = in_array('gallery', $pages, true) || str_contains($featureText, 'gallery');
         $wantsAbout = $pages === [] || in_array('about', $pages, true);
-        $wantsServices = $pages === [] || in_array('services', $pages, true) || !empty($content['services']);
+        $wantsServices = $pages === [] || in_array('services', $pages, true);
         $wantsContact = $pages === [] || in_array('contact', $pages, true) || str_contains($featureText, 'contact');
         $wantsMaps = str_contains($featureText, 'map');
         $wantsBooking = str_contains($featureText, 'book');
@@ -303,6 +308,8 @@ class ArchSiteBuilder
         // ---- nav ----
         $navLinks = '';
         if ($wantsAbout) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#about">About</a></li>'; }
+        if ($wantsLive) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#live">Watch Live</a></li>'; }
+        if ($wantsSermons) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#sermons">Sermons</a></li>'; }
         if ($wantsServices) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#services">Services</a></li>'; }
         if ($wantsGallery) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#gallery">Gallery</a></li>'; }
         if ($wantsContact) { $navLinks .= '<li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>'; }
@@ -314,7 +321,7 @@ class ArchSiteBuilder
             . "    <button class=\"navbar-toggler\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#nav\" aria-controls=\"nav\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"><span class=\"navbar-toggler-icon\"></span></button>\n"
             . "    <div class=\"collapse navbar-collapse\" id=\"nav\">\n"
             . "      <ul class=\"navbar-nav ms-auto align-items-lg-center\">$navLinks"
-            . ($wantsContact ? "<li class=\"nav-item ms-lg-3\"><a class=\"btn btn-brand btn-sm\" href=\"#contact\">" . $c('hero_cta', 'Get in touch') . "</a></li>" : '')
+            . ($wantsLive ? '<li class="nav-item ms-lg-3"><a class="btn btn-brand btn-sm" href="#live">Join live</a></li>' : ($wantsContact ? "<li class=\"nav-item ms-lg-3\"><a class=\"btn btn-brand btn-sm\" href=\"#contact\">" . $c('hero_cta', 'Get in touch') . "</a></li>" : ''))
             . "</ul>\n    </div>\n  </div>\n</nav>\n";
 
         // ---- hero ----
@@ -323,10 +330,9 @@ class ArchSiteBuilder
             . "      <div class=\"hero-copy reveal\"><p class=\"eyebrow\">" . self::e($profile['eyebrow']) . "</p>\n"
             . "        <h1 class=\"hero-title\">" . $c('hero_title', $name) . "</h1>\n"
             . "        <p class=\"hero-subtitle\">" . $c('hero_subtitle', '') . "</p>\n"
-            . ($wantsContact ? "        <div class=\"hero-actions\"><a href=\"#contact\" class=\"btn btn-brand btn-lg\">" . $c('hero_cta', 'Get in touch') . "</a><a href=\"#services\" class=\"text-link\">Explore what we do <i class=\"bi bi-arrow-right\"></i></a></div>\n" : '')
+            . ($wantsLive ? "        <div class=\"hero-actions\"><a href=\"#live\" class=\"btn btn-brand btn-lg\">Watch live service</a><a href=\"#sermons\" class=\"text-link\">Browse sermons <i class=\"bi bi-arrow-right\"></i></a></div>\n" : ($wantsContact ? "        <div class=\"hero-actions\"><a href=\"#contact\" class=\"btn btn-brand btn-lg\">" . $c('hero_cta', 'Get in touch') . "</a><a href=\"#" . ($wantsServices ? 'services' : 'about') . "\" class=\"text-link\">Learn more <i class=\"bi bi-arrow-right\"></i></a></div>\n" : ''))
             . "      </div>\n"
-            . "      <div class=\"hero-visual reveal\"><img src=\"" . self::e($profile['images'][0]) . "\" alt=\"" . self::e($profile['image_alt']) . "\" fetchpriority=\"high\">"
-            . "<div class=\"hero-note\"><span>" . self::e($profile['note_label']) . "</span><strong>" . self::e($profile['note_value']) . "</strong></div></div>\n"
+            . "      <div class=\"hero-visual reveal\">" . self::heroMockupHtml($profile, $brief) . "</div>\n"
             . "    </div>\n"
             . "    <div class=\"trust-strip reveal\"><span>Designed for <strong>$audience</strong></span><span><i class=\"bi bi-check2-circle\"></i> Clear next steps</span><span><i class=\"bi bi-check2-circle\"></i> $personality</span></div>\n"
             . "  </div>\n</header>\n";
@@ -339,6 +345,25 @@ class ArchSiteBuilder
                 . "    </div>\n  </div>\n</section>\n";
         }
 
+        // ---- church livestream and sermon archive ----
+        if ($wantsLive) {
+            $body .= "<section id=\"live\" class=\"section live-section\"><div class=\"container\">"
+                . "<div class=\"section-heading-split reveal\"><div><p class=\"eyebrow\">Worship with us online</p><h2 class=\"section-title\">Join the live service</h2></div><p>Connect your YouTube or Facebook livestream before launch. Visitors will be able to worship with the congregation without leaving the website.</p></div>"
+                . "<div class=\"live-player reveal\"><div class=\"live-screen\"><span class=\"live-badge\"><i></i> Live service</span><button type=\"button\" aria-label=\"Play live service preview\"><i class=\"bi bi-play-fill\"></i></button><div class=\"live-stage\"><i class=\"bi bi-broadcast-pin\"></i><strong>Livestream embed ready</strong><small>Add the church's YouTube or Facebook Live URL</small></div></div><div class=\"live-meta\"><div><span>Next gathering</span><strong>Sunday worship</strong></div><a href=\"#contact\">Get service updates <i class=\"bi bi-arrow-right\"></i></a></div></div>"
+                . "</div></section>\n";
+        }
+
+        if ($wantsSermons) {
+            $body .= "<section id=\"sermons\" class=\"section section-alt\"><div class=\"container\">"
+                . "<div class=\"section-heading-split reveal\"><div><p class=\"eyebrow\">Listen again</p><h2 class=\"section-title\">Recent sermons</h2></div><p>A clear archive for messages, teaching series and special services. Replace these mock entries with real recordings before launch.</p></div>"
+                . "<div class=\"sermon-grid\">"
+                . self::sermonCard('Walking in grace', 'Sunday message', '42 min', 'bi-sunrise')
+                . self::sermonCard('Faith for the journey', 'Teaching series', '36 min', 'bi-signpost-split')
+                . self::sermonCard('A hope that holds', 'Worship service', '48 min', 'bi-heart')
+                . "</div><div class=\"archive-action reveal\"><a class=\"btn btn-brand\" href=\"#sermons\">View sermon archive</a><span>Audio and video embeds supported</span></div>"
+                . "</div></section>\n";
+        }
+
         // ---- services ----
         if ($wantsServices) {
             $body .= "<section id=\"services\" class=\"section section-alt\">\n  <div class=\"container\">\n"
@@ -347,7 +372,7 @@ class ArchSiteBuilder
         }
 
         $body .= "<section class=\"section process-section\"><div class=\"container\"><div class=\"process-heading reveal\">"
-            . "<p class=\"eyebrow\">A simpler way forward</p><h2 class=\"section-title\">From interest to action</h2></div>"
+            . "<p class=\"eyebrow\">" . self::e($isChurch ? 'Your place in the community' : 'How it works') . "</p><h2 class=\"section-title\">" . self::e($isChurch ? 'Connect, grow and belong' : 'A clear path forward') . "</h2></div>"
             . "<div class=\"process-grid\">"
             . self::processStep('01', $profile['process'][0][0], $profile['process'][0][1])
             . self::processStep('02', $profile['process'][1][0], $profile['process'][1][1])
@@ -376,7 +401,9 @@ class ArchSiteBuilder
         // ---- contact ----
         if ($wantsContact) {
             $phone = self::e((string) ($brief['phone'] ?? ''));
-            $email = self::e((string) ($brief['email'] ?? ''));
+            // `email` is collected so Prince Caleb can deliver the prototype;
+            // it is private project metadata, not automatically public copy.
+            $email = self::e((string) ($brief['public_email'] ?? ''));
             $body .= "<section id=\"contact\" class=\"section\">\n  <div class=\"container\">\n"
                 . "    <div class=\"row justify-content-center\"><div class=\"col-lg-7 reveal\">\n"
                 . "      <h2 class=\"section-title text-center\">" . $c('cta_heading', 'Get in touch') . "</h2>\n"
@@ -419,6 +446,56 @@ class ArchSiteBuilder
             . "</body>\n</html>\n";
 
         return $head . $body;
+    }
+
+    /** A reliable, self-contained hero visual: no third-party image can fail. */
+    private static function heroMockupHtml(array $profile, array $brief): string
+    {
+        $name = self::e((string) ($brief['business_name'] ?? 'Your Business'));
+        $kind = (string) ($profile['kind'] ?? 'studio');
+        $icon = match ($kind) {
+            'church' => 'bi-broadcast-pin',
+            'clinical' => 'bi-heart-pulse',
+            'food' => 'bi-cup-hot',
+            'property' => 'bi-buildings',
+            'beauty' => 'bi-stars',
+            'hospitality' => 'bi-geo-alt',
+            'professional' => 'bi-briefcase',
+            default => 'bi-window-stack',
+        };
+        $headline = match ($kind) {
+            'church' => 'Sunday service is live',
+            'clinical' => 'Appointments made simpler',
+            'food' => 'Today’s experience',
+            'property' => 'Featured opportunity',
+            'beauty' => 'Your next appointment',
+            'hospitality' => 'Plan your stay',
+            'professional' => 'A clearer next step',
+            default => 'Built around your goal',
+        };
+        $detail = match ($kind) {
+            'church' => 'Watch live · Browse sermons · Connect',
+            'clinical' => 'Services · Availability · Contact',
+            'food' => 'Menu · Reservations · Location',
+            'property' => 'Explore · Compare · Enquire',
+            'beauty' => 'Services · Times · Book',
+            'hospitality' => 'Rooms · Experiences · Reserve',
+            'professional' => 'Expertise · Approach · Enquire',
+            default => 'Discover · Understand · Act',
+        };
+
+        return '<div class="site-mockup" role="img" aria-label="Website concept mockup for ' . $name . '">'
+            . '<div class="mockup-chrome"><i></i><i></i><i></i><span>' . $name . '</span></div>'
+            . '<div class="mockup-screen"><div class="mockup-topline"><span>' . $name . '</span><b>Menu</b></div>'
+            . '<div class="mockup-focus"><div class="mockup-icon"><i class="bi ' . $icon . '"></i></div><small>WELCOME</small><strong>' . self::e($headline) . '</strong><p>' . self::e($detail) . '</p><button type="button">Explore now</button></div>'
+            . '<div class="mockup-rail"><span></span><span></span><span></span></div></div>'
+            . '<div class="hero-note"><span>' . self::e($profile['note_label']) . '</span><strong>' . self::e($profile['note_value']) . '</strong></div></div>';
+    }
+
+    private static function sermonCard(string $title, string $series, string $duration, string $icon): string
+    {
+        return '<article class="sermon-card reveal"><div class="sermon-art"><i class="bi ' . self::safeIcon($icon) . '"></i><button type="button" aria-label="Play ' . self::e($title) . '"><i class="bi bi-play-fill"></i></button></div>'
+            . '<div><span>' . self::e($series) . ' · ' . self::e($duration) . '</span><h3>' . self::e($title) . '</h3><a href="#contact">Listen to message <i class="bi bi-arrow-right"></i></a></div></article>';
     }
 
     private static function servicesHtml(array $content, bool $forCms): string
@@ -763,6 +840,7 @@ PHP;
         ]));
         $kind = 'studio';
         $groups = [
+            'church' => ['church', 'ministry', 'assembly', 'worship', 'congregation', 'chapel', 'christian'],
             'clinical' => ['clinic', 'doctor', 'dental', 'health', 'hospital', 'pharmacy', 'medical'],
             'food' => ['restaurant', 'cafe', 'food', 'catering', 'bakery', 'bar'],
             'property' => ['property', 'real estate', 'realtor', 'construction', 'architecture'],
@@ -780,6 +858,13 @@ PHP;
         }
 
         $profiles = [
+            'church' => [
+                'layout' => 'structured', 'eyebrow' => 'Faith, wherever you are', 'image_alt' => 'A live church service and sermon archive website mockup',
+                'note_label' => 'Gather online', 'note_value' => 'Worship · Word · Community', 'radius' => '12px',
+                'about_detail' => 'Live worship, searchable teaching and clear ways to connect help the congregation stay close throughout the week.',
+                'process' => [['Join', 'Connect with live worship wherever you are.'], ['Grow', 'Return to messages and teaching throughout the week.'], ['Belong', 'Find prayer, fellowship and a clear way to connect.']],
+                'images' => ['data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"%3E%3Crect width="1200" height="800" fill="%230b1f4d"/%3E%3Ccircle cx="850" cy="250" r="220" fill="%23d7b56d" opacity=".35"/%3E%3Cpath d="M0 700L430 300l220 210 180-160 370 350" fill="none" stroke="%23fff" stroke-width="30" opacity=".65"/%3E%3C/svg%3E'],
+            ],
             'clinical' => [
                 'layout' => 'structured', 'eyebrow' => 'Care with clarity', 'image_alt' => 'A calm healthcare consultation',
                 'note_label' => 'Your next step', 'note_value' => 'Care starts here', 'radius' => '10px',
@@ -868,9 +953,19 @@ PHP;
     /** Accept a hex color or a plain CSS color name; otherwise use the fallback. */
     private static function cssColor(string $value, string $fallback): string
     {
-        $value = trim($value);
+        $value = strtolower(trim($value));
         if ($value === '') {
             return $fallback;
+        }
+        $named = [
+            'navy blue' => '#0b1f4d', 'deep navy' => '#081a3a',
+            'royal blue' => '#1d4ed8', 'sky blue' => '#0ea5e9',
+            'forest green' => '#166534', 'emerald green' => '#047857',
+            'warm gold' => '#b8892d', 'burnt orange' => '#c2410c',
+            'charcoal grey' => '#30343b', 'charcoal gray' => '#30343b',
+        ];
+        if (isset($named[$value])) {
+            return $named[$value];
         }
         if (preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $value)) {
             return $value;
@@ -896,6 +991,7 @@ PHP;
             'bold' => ['Poppins', 'Inter'],
         ];
         $nichePairs = [
+            'church' => ['Libre Baskerville', 'Inter'],
             'clinical' => ['DM Sans', 'Inter'],
             'food' => ['Playfair Display', 'Inter'],
             'property' => ['Manrope', 'Inter'],
@@ -932,7 +1028,7 @@ PHP;
             . ".hero-subtitle{font-size:clamp(1.05rem,2vw,1.28rem);color:var(--muted);max-width:610px;margin:0 0 2rem;}\n"
             . ".eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.75rem;font-weight:800;color:var(--brand);margin-bottom:1rem;}\n"
             . ".hero-actions{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap}.text-link{color:var(--text);font-weight:700;text-decoration:none}.text-link:hover{color:var(--brand)}\n"
-            . ".hero-visual{position:relative;min-height:540px}.hero-visual img{width:100%;height:540px;object-fit:cover;border-radius:var(--radius);box-shadow:0 30px 70px -35px #000;}\n"
+            . ".hero-visual{position:relative;min-height:540px;display:flex;align-items:center}.site-mockup{position:relative;width:100%;border:1px solid color-mix(in srgb,var(--text) 15%,transparent);border-radius:calc(var(--radius) + 8px);overflow:visible;background:var(--bg);box-shadow:0 34px 80px -38px #000}.mockup-chrome{height:42px;display:flex;align-items:center;gap:7px;padding:0 14px;border-bottom:1px solid color-mix(in srgb,var(--text) 10%,transparent);background:var(--surface);border-radius:calc(var(--radius) + 8px) calc(var(--radius) + 8px) 0 0}.mockup-chrome>i{width:8px;height:8px;border-radius:50%;background:color-mix(in srgb,var(--text) 22%,transparent)}.mockup-chrome span{min-width:0;margin-left:8px;overflow:hidden;color:var(--muted);font-size:.68rem;text-overflow:ellipsis;white-space:nowrap}.mockup-screen{min-height:440px;padding:1.4rem;background:linear-gradient(145deg,color-mix(in srgb,var(--brand) 7%,var(--bg)),var(--bg) 58%)}.mockup-topline{display:flex;justify-content:space-between;gap:1rem;color:var(--brand);font-size:.7rem;font-weight:800}.mockup-topline b{color:var(--muted);font-weight:600}.mockup-focus{display:flex;min-height:310px;align-items:center;justify-content:center;flex-direction:column;padding:2rem;text-align:center}.mockup-icon{display:grid;width:68px;height:68px;margin-bottom:1.2rem;place-items:center;border-radius:50%;color:#fff;background:var(--brand);font-size:1.6rem;box-shadow:0 14px 36px color-mix(in srgb,var(--brand) 35%,transparent)}.mockup-focus small{color:var(--brand);font-size:.6rem;font-weight:800;letter-spacing:.16em}.mockup-focus strong{display:block;max-width:12ch;margin:.55rem auto;color:var(--text);font-family:'{$fonts['heading']}',sans-serif;font-size:clamp(1.55rem,3vw,2.35rem);line-height:1.05}.mockup-focus p{margin:0 0 1.2rem;color:var(--muted);font-size:.78rem}.mockup-focus button{padding:.55rem .85rem;border:0;border-radius:8px;color:#fff;background:var(--brand);font-size:.68rem;font-weight:800}.mockup-rail{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem}.mockup-rail span{height:38px;border:1px solid color-mix(in srgb,var(--text) 8%,transparent);border-radius:8px;background:var(--bg)}\n"
             . ".hero-note{position:absolute;left:-2rem;bottom:2rem;background:var(--bg);padding:1rem 1.2rem;border-radius:var(--radius);box-shadow:0 20px 50px -28px #000;display:grid}.hero-note span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.hero-note strong{font-size:1.05rem}\n"
             . ".trust-strip{margin-top:3.5rem;padding:1.15rem 0;border-top:1px solid color-mix(in srgb,var(--text) 11%,transparent);display:flex;justify-content:space-between;gap:1rem;color:var(--muted);font-size:.9rem}.trust-strip i{color:var(--brand);margin-right:.35rem}\n"
             . ".section{padding:5rem 0;}\n.section-alt{background:var(--surface);}\n"
@@ -941,6 +1037,7 @@ PHP;
             . ".service-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px -24px color-mix(in srgb,var(--brand) 60%,transparent);}\n"
             . ".service-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);}\n"
             . ".process-section{background:var(--text);color:var(--bg)}.process-section .eyebrow{color:var(--accent)}.process-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:color-mix(in srgb,var(--bg) 18%,transparent);margin-top:2.5rem}.process-step{background:var(--text);padding:2rem}.process-no{color:var(--accent);font-weight:800;font-size:.78rem}.process-step p{color:color-mix(in srgb,var(--bg) 66%,transparent);margin:0}\n"
+            . ".section-heading-split{display:grid;grid-template-columns:1fr minmax(280px,.75fr);gap:3rem;align-items:end;margin-bottom:2.5rem}.section-heading-split p{margin:0;color:var(--muted)}.live-section{background:color-mix(in srgb,var(--brand) 5%,var(--bg))}.live-player{overflow:hidden;border:1px solid color-mix(in srgb,var(--text) 12%,transparent);border-radius:calc(var(--radius) + 8px);background:var(--bg);box-shadow:0 28px 70px -42px #000}.live-screen{position:relative;display:grid;min-height:480px;place-items:center;overflow:hidden;color:#fff;background:radial-gradient(circle at 70% 20%,color-mix(in srgb,var(--accent) 55%,transparent),transparent 30%),linear-gradient(135deg,color-mix(in srgb,var(--brand) 88%,#000),#071225)}.live-screen::after{content:'';position:absolute;inset:15% 8% -25%;border:1px solid rgba(255,255,255,.12);border-radius:50%}.live-badge{position:absolute;z-index:2;top:1.2rem;left:1.2rem;display:flex;align-items:center;gap:.45rem;padding:.4rem .65rem;border-radius:999px;background:rgba(6,10,20,.7);font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.live-badge i{width:7px;height:7px;border-radius:50%;background:#ff4d59;box-shadow:0 0 0 5px rgba(255,77,89,.16)}.live-screen>button{position:absolute;z-index:3;display:grid;width:74px;height:74px;place-items:center;border:1px solid rgba(255,255,255,.35);border-radius:50%;color:#fff;background:rgba(255,255,255,.12);font-size:2rem;backdrop-filter:blur(10px)}.live-stage{position:absolute;z-index:2;bottom:2rem;left:2rem;display:grid}.live-stage>i{margin-bottom:.45rem;color:var(--accent);font-size:1.4rem}.live-stage strong{font-size:1.15rem}.live-stage small{color:rgba(255,255,255,.68)}.live-meta{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 1.25rem}.live-meta span,.live-meta strong{display:block}.live-meta span{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}.live-meta a{color:var(--brand);font-size:.78rem;font-weight:800;text-decoration:none}.sermon-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.sermon-card{overflow:hidden;border:1px solid color-mix(in srgb,var(--text) 10%,transparent);border-radius:var(--radius);background:var(--bg)}.sermon-art{position:relative;display:grid;height:190px;place-items:center;color:var(--brand);background:linear-gradient(145deg,color-mix(in srgb,var(--brand) 18%,var(--surface)),var(--surface));font-size:3rem}.sermon-art>button{position:absolute;right:1rem;bottom:1rem;display:grid;width:44px;height:44px;place-items:center;border:0;border-radius:50%;color:#fff;background:var(--brand);font-size:1.2rem}.sermon-card>div:last-child{padding:1.2rem}.sermon-card span{color:var(--muted);font-size:.66rem;text-transform:uppercase;letter-spacing:.08em}.sermon-card h3{margin:.45rem 0 1rem;font-size:1.15rem}.sermon-card a{color:var(--brand);font-size:.75rem;font-weight:800;text-decoration:none}.archive-action{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.5rem}.archive-action span{color:var(--muted);font-size:.75rem}\n"
             . ".gallery-tile{width:100%;height:360px;object-fit:cover;border-radius:var(--radius);}\n"
             . ".map-embed{border:2px dashed color-mix(in srgb,var(--text) 20%,transparent);border-radius:14px;padding:3rem 1rem;}\n"
             . ".contact-form .form-control{border-radius:10px;}\n"
@@ -952,8 +1049,8 @@ PHP;
             . ".whatsapp-fab:hover{color:#fff;transform:scale(1.08);}\n"
             . ".reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease;}\n"
             . ".reveal.in{opacity:1;transform:none;}\n"
-            . ".layout-immersive .hero-grid{grid-template-columns:.8fr 1.2fr}.layout-immersive .hero-visual img{height:620px}.layout-structured .service-card{border-top:4px solid var(--brand)}.layout-editorial .hero-title{font-weight:600}.layout-editorial .hero-visual{transform:rotate(1.5deg)}\n"
-            . "@media(max-width:767px){.hero{padding-top:3.5rem}.hero-grid,.about-grid{grid-template-columns:1fr}.hero-visual,.hero-visual img{min-height:0;height:390px}.hero-note{left:1rem;bottom:1rem}.trust-strip{overflow-x:auto;justify-content:flex-start}.trust-strip span{min-width:max-content}.process-grid{grid-template-columns:1fr}.section{padding:4rem 0}.navbar-nav{padding:1rem 0}.gallery-tile{height:240px}}\n"
+            . ".layout-immersive .hero-grid{grid-template-columns:.8fr 1.2fr}.layout-structured .service-card{border-top:4px solid var(--brand)}.layout-editorial .hero-title{font-weight:600}.layout-editorial .hero-visual{transform:rotate(1deg)}\n"
+            . "@media(max-width:767px){.hero{padding-top:3.5rem}.hero-grid,.about-grid,.section-heading-split{grid-template-columns:1fr}.hero-visual{min-height:0}.mockup-screen{min-height:370px}.mockup-focus{min-height:250px;padding:1rem}.hero-note{left:1rem;bottom:1rem}.trust-strip{overflow-x:auto;justify-content:flex-start}.trust-strip span{min-width:max-content}.process-grid,.sermon-grid{grid-template-columns:1fr}.live-screen{min-height:390px}.live-stage{right:1.2rem;bottom:1.2rem;left:1.2rem}.live-meta,.archive-action{align-items:flex-start;flex-direction:column}.section{padding:4rem 0}.navbar-nav{padding:1rem 0}.gallery-tile{height:240px}}\n"
             . "@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none;}}\n";
     }
 
