@@ -153,6 +153,7 @@ $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'view
 $router->post('/api/v1/chat/feedback', [LiveChatController::class, 'feedback']);
 $router->post('/api/v1/chat/inquiry', [LiveChatController::class, 'inquiry']);
 $router->post('/api/v1/whatsapp/webhook', [LiveChatController::class, 'whatsappWebhook']);
+$router->post('/api/v1/whatsapp/whapi-webhook', [LiveChatController::class, 'whapiWebhook']);
 $router->post('/api/v1/whatsapp/status', [WhatsAppTemplateController::class, 'deliveryStatus']);
 $router->get('/api/v1/testimonials', [TestimonialController::class, 'publicList']);
 $router->get('/api/v1/testimonials/{token}', [TestimonialController::class, 'getByToken']);
@@ -295,6 +296,7 @@ $router->post('/api/v1/account-demos/{token}/track', [AccountDemoController::cla
 $router->get('/api/v1/admin/outreach/stats', [OutreachController::class, 'stats']);
 $router->post('/api/v1/admin/outreach/settings', [OutreachController::class, 'updateSettings']);
 $router->get('/api/v1/admin/outreach/call-queue', [OutreachController::class, 'callQueue']);
+$router->get('/api/v1/admin/outreach/whatsapp-queue', [OutreachController::class, 'callQueue']);
 $router->post('/api/v1/admin/outreach/ai-call/{id}', [OutreachController::class, 'initiateAiCall']);
 $router->get('/api/v1/admin/outreach/scoreboard', [OutreachController::class, 'scoreboard']);
 $router->post('/api/v1/admin/outreach/call-log/{id}', [OutreachController::class, 'logCall']);

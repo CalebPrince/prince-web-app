@@ -144,11 +144,11 @@ function actionButtons(lead) {
   }
   if (!lead.website_url || lead.audit_findings) {
     // Mirrors the server's own default channel choice in generatePitch():
-    // email when possible, a call script only when there's a phone but no
+    // email when possible, a WhatsApp message when there's a phone but no
     // email on file — so the button label never promises the wrong thing.
     const phoneOnly = !lead.contact_email && lead.contact_phone;
     const verb = lead.pitch_body ? "Regenerate" : "Generate";
-    buttons.push(`<button class="btn btn-sm btn-outline-secondary pitch-btn" data-id="${lead.id}">${verb} ${phoneOnly ? "call script" : "pitch"}</button>`);
+    buttons.push(`<button class="btn btn-sm btn-outline-secondary pitch-btn" data-id="${lead.id}">${verb} ${phoneOnly ? "WhatsApp message" : "pitch"}</button>`);
   }
   if (lead.pitch_body) {
     buttons.push(`<button class="btn btn-sm btn-brand review-btn" data-id="${lead.id}">Review &amp; Send</button>`);
@@ -169,7 +169,7 @@ function compactActionButtons(lead) {
   if (lead.pitch_body) {
     primary = `<button class="btn btn-sm btn-brand review-btn" data-id="${id}">Review &amp; send</button>`;
   } else if (canPitch) {
-    primary = `<button class="btn btn-sm btn-brand pitch-btn" data-id="${id}">Generate ${phoneOnly ? "call script" : "pitch"}</button>`;
+    primary = `<button class="btn btn-sm btn-brand pitch-btn" data-id="${id}">Generate ${phoneOnly ? "WhatsApp message" : "pitch"}</button>`;
   } else if (canAudit) {
     primary = `<button class="btn btn-sm btn-brand audit-btn" data-id="${id}">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`;
   } else {
@@ -185,7 +185,7 @@ function compactActionButtons(lead) {
     secondary.push(`<button class="lead-more-item audit-btn" data-id="${id}"><i class="bi bi-shield-check"></i> ${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>`);
   }
   if (canPitch && !primary.includes("pitch-btn")) {
-    secondary.push(`<button class="lead-more-item pitch-btn" data-id="${id}"><i class="bi bi-pencil-square"></i> ${lead.pitch_body ? "Regenerate" : "Generate"} ${phoneOnly ? "call script" : "pitch"}</button>`);
+    secondary.push(`<button class="lead-more-item pitch-btn" data-id="${id}"><i class="bi bi-pencil-square"></i> ${lead.pitch_body ? "Regenerate" : "Generate"} ${phoneOnly ? "WhatsApp message" : "pitch"}</button>`);
   }
   secondary.push(`<button class="lead-more-item account-demo-btn" data-id="${id}"><i class="bi bi-window"></i> ${lead.account_demo ? "Open Arch demo" : "Ask Arch to build demo"}</button>`);
   secondary.push(`<button class="lead-more-item remove-btn is-danger" data-id="${id}"><i class="bi bi-trash3"></i> Delete lead</button>`);
@@ -608,8 +608,8 @@ function openPitchModal(lead) {
   document.getElementById("pitch-phone-field").classList.toggle("d-none", !isPhone);
   document.getElementById("pitch-subject-field").classList.toggle("d-none", isPhone);
   document.getElementById("pitch-preview-field").classList.toggle("d-none", isPhone);
-  document.getElementById("pitch-body-label").textContent = isPhone ? "Call script" : "Pitch body";
-  document.getElementById("pitch-approve-send-btn").textContent = isPhone ? "Mark as called" : "Approve & Send";
+  document.getElementById("pitch-body-label").textContent = isPhone ? "WhatsApp message" : "Pitch body";
+  document.getElementById("pitch-approve-send-btn").textContent = isPhone ? "Open WhatsApp" : "Approve & Send";
   renderPitchPreview();
 
   const list = document.getElementById("pitch-findings-list");
@@ -660,24 +660,32 @@ document.getElementById("pitch-approve-send-btn").addEventListener("click", asyn
     const phone = document.getElementById("pitch-contact-phone").value.trim();
     if (!phone) {
       alertBox.className = "alert alert-danger py-2 small";
-      alertBox.textContent = "Add a contact phone before marking as called.";
+      alertBox.textContent = "Add a contact phone before opening WhatsApp.";
       alertBox.classList.remove("d-none");
       return;
     }
+    const whatsappWindow = window.open("about:blank", "_blank");
+    if (whatsappWindow) whatsappWindow.opener = null;
     try {
       await savePitchEdits();
       // tel: only launches whatever dialer app is registered (a desktop
       // browser usually has none) — it can't confirm a call happened, so
       // this is just a convenience, not the actual "send" action. Marking
       // as called always requires the admin to explicitly confirm it below.
-      window.location.href = `tel:${encodeURIComponent(phone)}`;
-      if (!confirm("Mark this lead as called?")) return;
+      const digits = phone.replace(/\D/g, "");
+      const whatsappUrl = `https://wa.me/${digits}?text=${encodeURIComponent(document.getElementById("pitch-body").value.trim())}`;
+      if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        window.location.href = whatsappUrl;
+      }
+      if (!confirm("After pressing Send in WhatsApp, mark this lead as messaged?")) return;
       await api.post(`/api/v1/admin/marketing-leads/${currentLead.id}/send`, {});
       pitchModal.hide();
       await loadLeads();
     } catch (err) {
       alertBox.className = "alert alert-danger py-2 small";
-      alertBox.textContent = err.message || "Could not mark as called.";
+      alertBox.textContent = err.message || "Could not mark as messaged.";
       alertBox.classList.remove("d-none");
     }
     return;
@@ -819,7 +827,7 @@ function renderOutreachStats(s) {
   document.getElementById("oe-autodraft-label").textContent = s.autodraft ? "Auto-draft on" : "Auto-draft off";
 
   document.getElementById("oe-calls-today").textContent = s.calls_today;
-  document.getElementById("oe-call-queue").textContent = s.call_queue;
+  document.getElementById("oe-call-queue").textContent = s.whatsapp_queue ?? s.call_queue;
 
   const discoveryToggle = document.getElementById("oe-discovery-enabled");
   discoveryToggle.checked = !!s.discovery_enabled;
@@ -859,116 +867,73 @@ async function saveOutreachSettings(body) {
   }
 }
 
-// --- Today's call list -----------------------------------------------------
-
-const CALL_OUTCOMES = [
-  ["connected", "Connected"],
-  ["interested", "Interested"],
-  ["callback", "Call back later"],
-  ["voicemail", "Voicemail"],
-  ["no_answer", "No answer"],
-  ["not_interested", "Not interested"],
-  ["wrong_number", "Wrong number"],
-];
-
-function callAttemptLabel(row) {
-  if (!row.attempts) return "Never called";
-  const outcome = CALL_OUTCOMES.find(([v]) => v === row.last_outcome);
-  const label = outcome ? outcome[1] : row.last_outcome;
-  return `${row.attempts} attempt${row.attempts > 1 ? "s" : ""} · last: ${label}`;
-}
+// --- WhatsApp outreach queue ----------------------------------------------
 
 async function loadCallList() {
   const body = document.getElementById("call-list-body");
   const empty = document.getElementById("call-list-empty");
   let data;
   try {
-    data = await api.get("/api/v1/admin/outreach/call-queue");
+    data = await api.get("/api/v1/admin/outreach/whatsapp-queue");
   } catch (err) {
     body.innerHTML = `<div class="alert alert-danger py-2 small">${escapeHtml(err.message || "Could not load the call queue.")}</div>`;
     return;
   }
-  document.getElementById("call-list-today").textContent = data.calls_today;
-  document.getElementById("ai-call-list-today").textContent = data.ai_calls_today || 0;
-  document.getElementById("ai-call-list-cap").textContent = data.ai_call_daily_cap || 5;
-  const rows = data.queue || [];
-  const aiCallsAvailable = Number(data.ai_calls_remaining || 0) > 0;
-  empty.classList.toggle("d-none", rows.length > 0);
-
-  body.innerHTML = rows.map(row => `
-    <div class="p-3 rounded" style="background: var(--bg-soft);" data-lead-id="${row.id}">
-      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-        <div>
-          <div class="fw-semibold">${escapeHtml(row.business_name)}</div>
-          ${row.contact_name ? `<div class="small"><i class="bi bi-person me-1"></i>${escapeHtml(row.contact_name)}</div>` : '<div class="small text-muted-custom">Contact name not provided · Lisa will ask</div>'}
-          <div class="small text-muted-custom">${callAttemptLabel(row)}</div>
+  const whatsappRows = data.queue || [];
+  empty.classList.toggle("d-none", whatsappRows.length > 0);
+  body.innerHTML = whatsappRows.map(row => {
+    const digits = String(row.contact_phone || "").replace(/\D/g, "");
+    const href = `https://wa.me/${digits}?text=${encodeURIComponent(row.pitch_body || "")}`;
+    return `
+      <div class="p-3 rounded" style="background:var(--bg-soft);" data-whatsapp-lead-id="${row.id}">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <div>
+            <div class="fw-semibold">${escapeHtml(row.business_name)}</div>
+            ${row.contact_name ? `<div class="small"><i class="bi bi-person me-1"></i>${escapeHtml(row.contact_name)}</div>` : '<div class="small text-muted-custom">Contact name not provided</div>'}
+            <div class="small text-muted-custom">${escapeHtml(row.contact_phone || "")}</div>
+          </div>
+          <a class="btn btn-sm btn-success ms-auto" href="${href}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-1"></i>Open WhatsApp</a>
         </div>
-        <a class="btn btn-sm btn-outline-secondary ms-auto" href="tel:${encodeURIComponent(row.contact_phone)}"><i class="bi bi-telephone"></i> Call myself</a>
-      </div>
-      <details class="mb-2">
-        <summary class="small" style="cursor:pointer;">Shared call brief</summary>
-        <div class="small text-muted-custom mt-1">Lisa introduces herself as an AI assistant. If you call manually, introduce yourself before using these points.</div>
-        <div class="small mt-1" style="white-space: pre-wrap;">${escapeHtml(row.pitch_body || "")}</div>
-      </details>
-      <div class="d-flex flex-wrap gap-2 align-items-center">
-        <select class="form-select form-select-sm call-outcome" style="width:auto;">
-          <option value="">Log outcome…</option>
-          ${CALL_OUTCOMES.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}
-        </select>
-        <input type="text" class="form-control form-control-sm call-notes" maxlength="2000" placeholder="Notes (optional)" style="max-width:18rem;">
-        <button type="button" class="btn btn-sm btn-outline-secondary call-save-btn">Save</button>
-      </div>
-      <div class="mt-3 pt-3 border-top">
-        <div class="form-check mb-2">
-          <input class="form-check-input ai-call-consent" type="checkbox" id="ai-call-consent-${row.id}">
-          <label class="form-check-label small" for="ai-call-consent-${row.id}">I confirm this person requested or consented to this call.</label>
+        <details class="mb-3" open>
+          <summary class="small" style="cursor:pointer;">Reviewed WhatsApp message</summary>
+          <div class="small text-muted-custom mt-1">WhatsApp opens with this draft. Confirm the number is reachable and press Send yourself.</div>
+          <div class="small mt-2" style="white-space:pre-wrap;">${escapeHtml(row.pitch_body || "")}</div>
+        </details>
+        <div class="border-top pt-3">
+          <button type="button" class="btn btn-sm btn-outline-success whatsapp-sent-btn"><i class="bi bi-check2 me-1"></i>Mark as messaged</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary whatsapp-redraft-btn"><i class="bi bi-stars me-1"></i>Regenerate WhatsApp draft</button>
+          <span class="small text-muted-custom ms-2">Use this only after pressing Send in WhatsApp.</span>
         </div>
-        <button type="button" class="btn btn-sm btn-brand ai-call-btn" disabled><i class="bi bi-robot me-1"></i>Approve Lisa call</button>
-        <span class="small text-muted-custom ms-2 ai-call-state">${aiCallsAvailable ? "" : "Daily Lisa call limit reached."}</span>
-      </div>
-    </div>`).join("");
-
-  body.querySelectorAll("[data-lead-id]").forEach(card => {
-    const consent = card.querySelector(".ai-call-consent");
-    const button = card.querySelector(".ai-call-btn");
-    const state = card.querySelector(".ai-call-state");
-    consent.disabled = !aiCallsAvailable;
-    consent.addEventListener("change", () => { button.disabled = !consent.checked || !aiCallsAvailable; });
+      </div>`;
+  }).join("");
+  body.querySelectorAll(".whatsapp-sent-btn").forEach(button => {
     button.addEventListener("click", async () => {
-      if (!consent.checked || !confirm("Approve one AI call from Lisa to this number now?")) return;
+      if (!confirm("Confirm that you sent this WhatsApp message?")) return;
+      const card = button.closest("[data-whatsapp-lead-id]");
       button.disabled = true;
-      consent.disabled = true;
-      state.textContent = "Starting call…";
       try {
-        const result = await api.post(`/api/v1/admin/outreach/ai-call/${card.dataset.leadId}`, {
-          approved: true,
-          consent_confirmed: true,
-        });
-        state.textContent = `Call ${result.status || "queued"}.`;
-      } catch (err) {
-        state.textContent = err.message || "Could not start the call.";
-        consent.disabled = false;
-        button.disabled = !consent.checked;
-      }
-    });
-  });
-
-  body.querySelectorAll(".call-save-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const card = btn.closest("[data-lead-id]");
-      const outcome = card.querySelector(".call-outcome").value;
-      if (!outcome) { alert("Pick an outcome first."); return; }
-      btn.disabled = true;
-      try {
-        await api.post(`/api/v1/admin/outreach/call-log/${card.dataset.leadId}`, {
-          outcome,
-          notes: card.querySelector(".call-notes").value.trim(),
-        });
+        await api.post(`/api/v1/admin/marketing-leads/${card.dataset.whatsappLeadId}/send`, {});
         await loadCallList();
         await loadLeads();
       } catch (err) {
-        alert(err.message || "Could not log the call.");
-        btn.disabled = false;
+        alert(err.message || "Could not mark the WhatsApp message as sent.");
+        button.disabled = false;
+      }
+    });
+  });
+  body.querySelectorAll(".whatsapp-redraft-btn").forEach(button => {
+    button.addEventListener("click", async () => {
+      const card = button.closest("[data-whatsapp-lead-id]");
+      button.disabled = true;
+      button.textContent = "Regenerating…";
+      try {
+        await api.post(`/api/v1/admin/marketing-leads/${card.dataset.whatsappLeadId}/generate-pitch`, { channel: "phone" });
+        await loadCallList();
+        await loadLeads();
+      } catch (err) {
+        alert(err.message || "Could not regenerate the WhatsApp message.");
+        button.disabled = false;
+        button.textContent = "Regenerate WhatsApp draft";
       }
     });
   });

@@ -9,6 +9,10 @@ class WhatsAppNotifier
 {
     public static function isOwnerConfigured(): bool
     {
+        if (Settings::get('whatsapp_provider') === 'whapi') {
+            return trim((string) Settings::get('whapi_api_token')) !== ''
+                && self::address((string) Settings::get('owner_whatsapp_number')) !== null;
+        }
         return trim((string) Settings::get('twilio_account_sid')) !== ''
             && trim((string) Settings::get('twilio_auth_token')) !== ''
             && self::address((string) Settings::get('twilio_whatsapp_number')) !== null
@@ -17,6 +21,10 @@ class WhatsAppNotifier
 
     public static function sendOwnerAlert(string $body): bool
     {
+        if (Settings::get('whatsapp_provider') === 'whapi') {
+            $result = WhapiClient::sendText((string) Settings::get('owner_whatsapp_number'), $body);
+            return $result['ok'];
+        }
         $accountSid = trim((string) Settings::get('twilio_account_sid'));
         $authToken = trim((string) Settings::get('twilio_auth_token'));
         $from = self::address((string) Settings::get('twilio_whatsapp_number'));

@@ -539,13 +539,26 @@ final class VoiceDemoController
                 return ['error' => 'The action could not be completed.'];
             }
         };
-        $result = AiAgentEngine::runLowLatency(
-            $systemPrompt,
-            $tools,
-            $toolExecutor,
-            $transcript,
-            $voiceToolsEnabled ? 2 : 1
-        );
+        // Once the caller has explicitly confirmed the exact read-back, do
+        // not leave the final action to model discretion. Models can choose
+        // to ask the same confirmation again instead of calling the tool,
+        // creating an audible loop. Execute the validated booking
+        // deterministically when all required values can be recovered.
+        if ($voiceToolsEnabled
+            && self::bookingConfirmationGiven($transcript)
+            && ($confirmedArgs = self::confirmedBookingArguments($transcript, $context ?? [])) !== null) {
+            $bookingResult = $toolExecutor('book_appointment', $confirmedArgs);
+        }
+
+        $result = is_array($bookingResult) && !empty($bookingResult['success'])
+            ? ['reply' => null, 'provider' => null, 'mode' => 'fallback']
+            : AiAgentEngine::runLowLatency(
+                $systemPrompt,
+                $tools,
+                $toolExecutor,
+                $transcript,
+                $voiceToolsEnabled ? 2 : 1
+            );
         if (is_array($bookingResult) && !empty($bookingResult['success'])) {
             $contactName = trim((string) ($bookingResult['name'] ?? ''));
             $thanks = $contactName !== '' ? ' Thank you, ' . $contactName . '.' : ' Thank you.';
@@ -903,6 +916,62 @@ final class VoiceDemoController
             return $reviewed;
         }
         return '';
+    }
+
+    /** @return array{name:string,email:string,phone:string,date:string,time:string,topic:string}|null */
+    private static function confirmedBookingArguments(array $transcript, array $context): ?array
+    {
+        $previousAssistant = '';
+        foreach (array_reverse($transcript) as $turn) {
+            if (($turn['role'] ?? '') === 'assistant') {
+                $previousAssistant = trim((string) ($turn['text'] ?? ''));
+                break;
+            }
+        }
+        if ($previousAssistant === '') return null;
+
+        $date = '';
+        if (preg_match('/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/', $previousAssistant, $match)) {
+            $date = sprintf('%04d-%02d-%02d', (int) $match[1], (int) $match[2], (int) $match[3]);
+        } elseif (preg_match('/\b(\d{1,2})\s*[,\/-]\s*(\d{1,2})\s*[,\/-]\s*(20\d{2})\b/', $previousAssistant, $match)) {
+            $date = sprintf('%04d-%02d-%02d', (int) $match[3], (int) $match[2], (int) $match[1]);
+        }
+
+        $time = '';
+        if (preg_match('/\b([01]?\d|2[0-3]):([0-5]\d)\b/', $previousAssistant, $match)) {
+            $time = sprintf('%02d:%02d', (int) $match[1], (int) $match[2]);
+        } elseif (preg_match('/\b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(AM|PM)\b/i', $previousAssistant, $match)) {
+            $hour = (int) $match[1] % 12;
+            if (strtoupper($match[3]) === 'PM') $hour += 12;
+            $time = sprintf('%02d:%02d', $hour, isset($match[2]) && $match[2] !== '' ? (int) $match[2] : 0);
+        }
+
+        $name = trim((string) ($context['contact_name'] ?? ''));
+        if ($name === '') {
+            foreach ($transcript as $turn) {
+                if (($turn['role'] ?? '') !== 'user') continue;
+                if (preg_match(
+                    '/\b(?:my name is|this is|I am|I\'m)\s+([a-z][a-z .\'-]{1,80})/i',
+                    (string) ($turn['text'] ?? ''),
+                    $match
+                )) {
+                    $name = trim($match[1]);
+                    break;
+                }
+            }
+        }
+
+        $email = self::trustedBookingEmail($transcript, $context);
+        if ($date === '' || $time === '' || $name === '' || $email === '') return null;
+
+        return [
+            'name' => $name,
+            'email' => $email,
+            'phone' => self::callPartyNumber($context),
+            'date' => $date,
+            'time' => $time,
+            'topic' => trim((string) ($context['business_name'] ?? 'Consultation')),
+        ];
     }
 
     private static function isExampleEmailAddress(string $email): bool

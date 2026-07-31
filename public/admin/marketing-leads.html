@@ -419,7 +419,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
                 
                 <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm" id="oe-call-list-btn" data-bs-toggle="modal" data-bs-target="#call-list-modal">
-                        <i class="bi bi-telephone"></i> Call list (<span id="oe-call-queue">0</span>)
+                        <i class="bi bi-whatsapp"></i> WhatsApp queue (<span id="oe-call-queue">0</span>)
                     </button>
                     <div class="small text-muted-custom">
                         <span id="oe-calls-today">0</span> calls today · <span id="oe-sent-total">0</span> total sends · <span id="oe-suppressed">0</span> unsubscribed
@@ -625,7 +625,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
             <input type="email" class="form-control" id="lead-email" maxlength="255" placeholder="contact@example.com">
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold" for="lead-phone">Contact phone <span class="text-muted-custom fw-normal">(optional — used for a call script if there's no email)</span></label>
+            <label class="form-label fw-semibold" for="lead-phone">Contact phone <span class="text-muted-custom fw-normal">(optional — used for WhatsApp outreach if there is no email)</span></label>
             <input type="tel" class="form-control" id="lead-phone" maxlength="50" placeholder="+233 20 000 0000">
           </div>
           <div class="mb-3">
@@ -793,22 +793,18 @@ a.demo-link-ai:hover { color: var(--heading-color); }
     <div class="modal-content">
       <div class="modal-header">
         <div>
-          <h5 class="modal-title mb-0">Today's call list</h5>
-          <div class="small text-muted-custom">
-            <span id="call-list-today">0</span> manual call(s) logged today ·
-            <span id="ai-call-list-today">0</span>/<span id="ai-call-list-cap">5</span> Lisa calls used
-          </div>
+          <h5 class="modal-title mb-0">WhatsApp outreach queue</h5>
+          <div class="small text-muted-custom">Manual review and send only. No Twilio call credit is used.</div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <p class="text-muted-custom small mb-3">
-          Phone-channel leads with a reviewed call script. You can call manually, or explicitly approve one Lisa
-          call after confirming the recipient requested or consented to it. Nothing batch-dials on its own.
-          Log every manual attempt: no-answer, voicemail and callback keep the lead queued;
-          connected, interested, not interested or wrong number close it out.
+          Every item opens as a prefilled WhatsApp draft for your review. WhatsApp availability cannot be known
+          reliably until the number opens in WhatsApp. Nothing is sent automatically; confirm consent and press
+          Send yourself, then mark the lead as messaged.
         </p>
-        <div id="call-list-empty" class="text-center text-muted-custom py-4 d-none">No calls queued — auto-draft prepares scripts for phone-only leads, or generate one from a lead's row.</div>
+        <div id="call-list-empty" class="text-center text-muted-custom py-4 d-none">No WhatsApp messages queued. Auto-draft prepares messages for phone-only leads.</div>
         <div id="call-list-body" class="d-flex flex-column gap-3"></div>
       </div>
       <div class="modal-footer">
@@ -824,6 +820,6 @@ a.demo-link-ai:hover { color: var(--heading-color); }
 <script src="/js/theme.js?v=20260730-site-default"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260729-pagination-scroll"></script>
-<script src="/js/admin-marketing-leads.js?v=20260729-contact-names"></script>
+<script src="/js/admin-marketing-leads.js?v=20260730-whatsapp-queue"></script>
 </body>
 </html>

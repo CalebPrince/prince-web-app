@@ -626,9 +626,9 @@ class MarketingLeadController
         $findings = $lead['audit_findings'] ? (json_decode($lead['audit_findings'], true) ?: []) : ['no_website' => true];
 
         if ($channel === 'phone') {
-            $script = self::draftCallScript($lead['business_name'], $findings);
+            $script = self::draftWhatsAppMessage($lead['business_name'], $findings);
             if ($script === null) {
-                Response::error('Call script generation failed — please try again in a moment.', 502);
+                Response::error('WhatsApp message generation failed — please try again in a moment.', 502);
             }
             $pdo->prepare(
                 "UPDATE marketing_leads SET pitch_subject = NULL, pitch_body = ?, pitch_channel = 'phone',
@@ -1211,6 +1211,31 @@ class MarketingLeadController
             return null;
         }
 
+        return trim(preg_replace('/^```\s*|```\s*$/m', '', $text));
+    }
+
+    /**
+     * Short, human-reviewed WhatsApp introduction for phone-only prospects.
+     * It remains stored under the legacy `phone` pitch channel until that
+     * database constraint is migrated; the admin never sends it automatically.
+     */
+    public static function draftWhatsAppMessage(string $businessName, array $findings): ?string
+    {
+        $context = self::findingsContext($findings);
+        $prompt = "Write one short, respectful WhatsApp introduction to {$businessName} from Prince Caleb. "
+            . "It will be reviewed and sent manually, never automatically. Prince builds AI WhatsApp assistants, "
+            . "booking workflows, business automation, and custom web/mobile systems.\n\n{$context}\n\n"
+            . "Use only facts supported above. In 45-80 words: introduce Prince Caleb, mention one relevant "
+            . "observation or opportunity, explain one useful outcome, and ask permission to share a short demo "
+            . "or continue the conversation. Do not imply they requested contact, do not use pressure, urgency, "
+            . "unverified loss claims, markdown, emojis, or a phone-call script. Output only the message body.\n\n"
+            . SharedAgentTools::publicContactContext();
+
+        $text = AiText::generate($prompt, null, 20);
+        if ($text === null) {
+            error_log('Marketing lead WhatsApp draft: all configured AI providers failed.');
+            return null;
+        }
         return trim(preg_replace('/^```\s*|```\s*$/m', '', $text));
     }
 

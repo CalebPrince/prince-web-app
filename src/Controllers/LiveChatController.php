@@ -18,6 +18,7 @@ use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\WhapiClient;
 
 /**
  * Live Chat: a requirements-gathering conversation. The AI cannot build or
@@ -274,6 +275,10 @@ class LiveChatController
     public static function whatsappWebhook(): void
     {
         set_time_limit(135);
+        if (Settings::get('whatsapp_provider') === 'whapi') {
+            self::respondTwiml('');
+            return;
+        }
 
         $authToken = Settings::get('twilio_auth_token');
         if (empty($authToken) || !self::verifyTwilioSignature($authToken)) {
@@ -329,6 +334,73 @@ class LiveChatController
         self::markChatUnread($pdo, (int) $session['id']);
 
         self::respondTwiml($result['reply']);
+    }
+
+    /**
+     * Whapi.Cloud linked-device webhook. A private custom header configured
+     * in Whapi authenticates callbacks, and message IDs prevent retry loops.
+     */
+    public static function whapiWebhook(): void
+    {
+        set_time_limit(135);
+        if (Settings::get('whatsapp_provider') !== 'whapi') {
+            Response::json(['ok' => true, 'ignored' => 'provider_disabled']);
+        }
+        $expected = trim((string) Settings::get('whapi_webhook_secret'));
+        $provided = trim((string) ($_SERVER['HTTP_X_WHAPI_SECRET'] ?? ''));
+        if ($expected === '' || $provided === '' || !hash_equals($expected, $provided)) {
+            Response::error('Invalid webhook secret.', 403);
+        }
+
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $messages = is_array($payload['messages'] ?? null) ? $payload['messages'] : [];
+        $pdo = Database::get();
+        $processed = 0;
+        foreach ($messages as $message) {
+            if (!is_array($message) || !empty($message['from_me']) || ($message['type'] ?? '') !== 'text') continue;
+            $messageId = mb_substr(trim((string) ($message['id'] ?? '')), 0, 255);
+            $chatId = trim((string) ($message['chat_id'] ?? ''));
+            $body = trim((string) ($message['text']['body'] ?? ''));
+            if ($messageId === '' || $chatId === '' || $body === '' || mb_strlen($body) > 1000) continue;
+
+            $insert = $pdo->prepare('INSERT OR IGNORE INTO whapi_webhook_events (message_id) VALUES (?)');
+            $insert->execute([$messageId]);
+            if ($insert->rowCount() === 0) continue;
+
+            $digits = preg_replace('/\D+/', '', preg_replace('/@.+$/', '', $chatId) ?? '') ?? '';
+            if ($digits === '') continue;
+            $from = 'whatsapp:+' . $digits;
+            RateLimitMiddleware::enforce('whatsapp_' . $digits, 30);
+
+            $session = self::findOrCreateSessionByExactToken($pdo, $from);
+            $transcript = json_decode($session['transcript_json'], true) ?: [];
+            $profileName = trim((string) ($message['from_name'] ?? ''));
+            if (empty($session['client_phone'])) {
+                $pdo->prepare('UPDATE chat_sessions SET client_phone = ?, client_name = ? WHERE id = ?')
+                    ->execute(['+' . $digits, $profileName !== '' ? $profileName : null, $session['id']]);
+            }
+
+            $transcript = self::rollingTranscript($transcript);
+            $isOwner = self::isOwnerWhatsAppNumber($from);
+            $transcript[] = ['role' => 'user', 'text' => $body];
+            $projects = self::projectCatalog($pdo);
+            $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
+                'name' => $profileName,
+                'phone' => '+' . $digits,
+            ]);
+            $sent = WhapiClient::sendText($digits, $result['reply']);
+            if (!$sent['ok']) {
+                $pdo->prepare('DELETE FROM whapi_webhook_events WHERE message_id = ?')->execute([$messageId]);
+                error_log('Whapi Lisa reply failed: ' . (string) $sent['error']);
+                continue;
+            }
+            $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+            $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
+            self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
+            self::markChatUnread($pdo, (int) $session['id']);
+            $processed++;
+        }
+        Response::json(['ok' => true, 'processed' => $processed]);
     }
 
     /** Empty $message sends no reply at all (Twilio just gets an ack) — used when there's nothing worth saying. */

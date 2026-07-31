@@ -226,7 +226,7 @@ class OutreachController
             } elseif ($phone !== '') {
                 // No reachable email but a phone number — prepare talking
                 // points for the call queue instead of dead-ending the lead.
-                $script = MarketingLeadController::draftCallScript((string) $lead['business_name'], $findings);
+                $script = MarketingLeadController::draftWhatsAppMessage((string) $lead['business_name'], $findings);
                 if ($script === null) {
                     continue;
                 }
@@ -262,6 +262,11 @@ class OutreachController
             'sent_total' => (int) $pdo->query('SELECT COUNT(*) FROM outreach_sends')->fetchColumn(),
             'suppressed' => (int) $pdo->query('SELECT COUNT(*) FROM email_suppressions')->fetchColumn(),
             'call_queue' => (int) $pdo->query(
+                "SELECT COUNT(*) FROM marketing_leads
+                 WHERE status = 'pitch_ready' AND pitch_channel = 'phone'
+                   AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''"
+            )->fetchColumn(),
+            'whatsapp_queue' => (int) $pdo->query(
                 "SELECT COUNT(*) FROM marketing_leads
                  WHERE status = 'pitch_ready' AND pitch_channel = 'phone'
                    AND contact_phone IS NOT NULL AND trim(contact_phone) <> ''"
@@ -454,6 +459,8 @@ class OutreachController
 
         Response::json([
             'queue' => $rows,
+            'channel' => 'whatsapp',
+            'manual_send_only' => true,
             'calls_today' => self::callsToday($pdo),
             'ai_calls_today' => self::aiCallsToday($pdo),
             'ai_call_daily_cap' => self::AI_CALL_DAILY_CAP,

@@ -254,8 +254,34 @@
                 <div class="form-text">Flash v2.5 is the recommended low-latency, lower-cost model for conversational experiences.</div>
               </div>
             </div>
+            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
+              <div class="mb-3">
+                <label class="form-label fw-semibold" for="whatsapp-provider">WhatsApp provider</label>
+                <select class="form-select" id="whatsapp-provider">
+                  <option value="twilio">Twilio (official Business API)</option>
+                  <option value="whapi">Whapi.Cloud sandbox (temporary)</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="whapi-api-token">Whapi channel API token</label>
+                <input type="password" class="form-control" id="whapi-api-token" autocomplete="new-password" placeholder="Paste the channel token">
+                <div class="form-text">Stored only on the server. Link the Ghana WhatsApp account to the Whapi channel by QR code first.</div>
+              </div>
+              <div class="mb-0">
+                <label class="form-label" for="whapi-webhook-secret">Whapi webhook secret</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="whapi-webhook-secret" autocomplete="new-password" placeholder="Create a long random secret">
+                  <button type="button" class="btn btn-outline-secondary" id="generate-whapi-secret">Generate</button>
+                </div>
+                <div class="form-text">
+                  Webhook: <code>https://princecaleb.dev/api/v1/whatsapp/whapi-webhook</code>.
+                  Subscribe to <code>messages</code> and add custom header <code>X-Whapi-Secret</code> with this exact value.
+                  The free sandbox allows only five active conversations per month.
+                </div>
+              </div>
+            </div>
             <div class="mb-3">
-              <label class="form-label">Twilio Auth Token <span class="text-muted-custom fw-normal">(Lisa on WhatsApp)</span></label>
+              <label class="form-label">Twilio Auth Token <span class="text-muted-custom fw-normal">(Twilio WhatsApp and Voice)</span></label>
               <input type="password" class="form-control" id="twilio-auth-token" placeholder="Paste your Twilio Auth Token" autocomplete="off">
               <div class="form-text">From your Twilio Console. Verifies that incoming WhatsApp webhook requests really came from Twilio before Lisa replies to them.</div>
             </div>
@@ -959,6 +985,6 @@
 <script src="/js/theme.js?v=20260730-site-default"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-settings.js?v=20260730-theme-default"></script>
+<script src="/js/admin-settings.js?v=20260731-whapi-provider"></script>
 </body>
 </html>
