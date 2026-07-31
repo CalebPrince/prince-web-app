@@ -10,6 +10,7 @@
     sketch: { label: "Sketch", nameKey: "sketch_assistant_name", genderKey: "sketch_voice_gender", accentKey: "sketch_voice_accent", fallbackName: "Sketch" },
     ada: { label: "Ada", nameKey: "ada_assistant_name", genderKey: "ada_voice_gender", accentKey: "ada_voice_accent", fallbackName: "Ada", attachments: true },
     chief: { label: "Chief", nameKey: "chief_assistant_name", genderKey: "chief_voice_gender", accentKey: "chief_voice_accent", fallbackName: "Chief" },
+    scout: { label: "Scout", nameKey: "scout_assistant_name", genderKey: "scout_voice_gender", accentKey: "scout_voice_accent", fallbackName: "Scout" },
   };
 
   // Files staged for the next message. Only Ada reads documents, so the
@@ -169,12 +170,14 @@
     if (synth) synth.cancel();
     const spoken = stripForSpeech(text);
     if (!spoken) return;
-    if (activeAgent === "lisa" && window.ElevenLabsTTS) {
+    // Lisa and Scout both have a dedicated ElevenLabs voice; everyone else
+    // falls through to the browser's own speechSynthesis below.
+    if ((activeAgent === "lisa" || activeAgent === "scout") && window.ElevenLabsTTS) {
       window.ElevenLabsTTS.play(spoken, {
         onstart: () => setSpeaking(btn, true),
         onend: () => setSpeaking(btn, false),
         onerror: () => setSpeaking(btn, false),
-      }).catch((error) => {
+      }, activeAgent).catch((error) => {
         setSpeaking(btn, false);
         if (window.ElevenLabsTTS.shouldFallback(error)) speakWithBrowser(spoken, btn);
       });

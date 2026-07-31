@@ -39,6 +39,7 @@ class TeamController
             ['key' => 'nurturer', 'name' => Settings::get('nurturer_assistant_name') ?: 'Jason', 'role' => 'Email follow-up', 'status' => $nurturerActive ? 'active' : 'standby', 'capabilities' => ['Email sequences', 'Reply tracking', 'Follow-up']],
             ['key' => 'proposal', 'name' => Settings::get('proposal_assistant_name') ?: 'Ledger', 'role' => 'Proposals & commercial workflows', 'status' => 'on demand', 'capabilities' => ['Proposals', 'Scope', 'Payment milestones']],
             ['key' => 'arch', 'name' => Settings::get('arch_assistant_name') ?: 'Arch', 'role' => 'AI website builder', 'status' => 'building', 'capabilities' => ['Websites', 'CMS', 'Deployments']],
+            ['key' => 'scout', 'name' => Settings::get('scout_assistant_name') ?: 'Scout', 'role' => 'Tech & ideation specialist', 'status' => 'on demand', 'capabilities' => ['Tech scouting', 'Ideation', 'Emerging tools']],
             ['key' => 'ada', 'name' => Settings::get('ada_assistant_name') ?: 'Ada', 'role' => 'Document review', 'status' => 'on demand', 'capabilities' => ['Invoices', 'Statements', 'Document checks']],
             ['key' => 'chief', 'name' => Settings::get('chief_assistant_name') ?: 'Chief', 'role' => 'Private operations intelligence', 'status' => $chiefActive ? 'active' : 'standby', 'capabilities' => ['Reporting', 'Monitoring', 'Owner alerts']],
         ];
@@ -213,6 +214,24 @@ class TeamController
                 'stat_label' => 'sites built',
                 'manage_url' => '/chat.html',
                 'manage_label' => 'Open builder',
+            ],
+            [
+                'key' => 'scout',
+                'name' => Settings::get('scout_assistant_name') ?: 'Scout',
+                'role' => 'Tech & Ideation Specialist',
+                'description' => 'Keeps watch on emerging web, mobile, and AI tools and frameworks, and brainstorms cutting-edge project ideas built on them — a live sparring partner, grounded with real web search rather than guessing.',
+                'icon' => 'bi-stars',
+                'status' => 'ondemand',
+                'status_label' => 'On demand',
+                // A real log of exchanges (ActivityLog rows Scout writes on each
+                // reply), not an invented counter — Scout has no artifact table
+                // of its own since it only chats, unlike Sketch/Ledger/Danielle.
+                'stat_value' => (int) $pdo->query(
+                    "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'scout_chat'"
+                )->fetchColumn(),
+                'stat_label' => 'ideas discussed',
+                'manage_url' => '/admin/agent-chat.html',
+                'manage_label' => 'Talk to Scout',
             ],
             [
                 'key' => 'ada',

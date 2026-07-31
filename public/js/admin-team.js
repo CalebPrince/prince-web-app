@@ -29,6 +29,8 @@ const AGENT_ACCENT = {
   ada: 'var(--section-money)',
   // System accent — reports on the team rather than working for clients.
   chief: 'var(--section-system)',
+  // Content accent — brainstorming/ideation sits alongside Danielle's bucket.
+  scout: 'var(--section-content)',
 };
 
 const CAPACITY_LABEL = { clear: 'Clear', available: 'Available', focused: 'Focused', full: 'At capacity' };

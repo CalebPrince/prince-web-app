@@ -1307,8 +1307,8 @@ storage/
     forecast. Target settings use the existing key/value `settings` table and
     need no migration.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
-    read-only roster of the studio — Caleb himself plus the ten AI agents
-    (Lisa, Jason, Joan, Sharon, Ledger, Danielle, Arch, Sketch, Ada,
+    read-only roster of the studio — Caleb himself plus the AI agents
+    (Lisa, Jason, Joan, Sharon, Ledger, Danielle, Arch, Sketch, Scout, Ada,
     Chief) — each card showing its
     real role, a live headline stat pulled from its own table (e.g. Ledger
     shows proposals drafted, Danielle shows drafts created from
@@ -1437,6 +1437,27 @@ storage/
     daily-brief panel. `GET /api/v1/admin/chief/dashboard?hours=N` supplies the
     live data and reuses `Chief::snapshot()` rather than introducing a second
     reporting calculation or AI-generated figures.
+47. **Scout, the tech & ideation specialist** (`src/Controllers/ScoutController.php`,
+    `/admin/agent-chat.html` "Scout" tab): a chat-only agent, same shape as
+    Dossier/Danielle — no cron, no discovery pipeline. Its job is to keep
+    watch on emerging web, mobile, and AI tools/frameworks and brainstorm
+    concrete, buildable project ideas with Caleb built on them. Alongside the
+    shared `get_site_info`/`search_content` tools every ideation-style agent
+    gets, Scout has its own `search_web` tool — a real, live Serper search
+    (`google.serper.dev/search`) — so a claim about "the latest X" comes from
+    an actual result instead of the model's training data pretending to be
+    current. Degrades quietly (an explanatory note, not a thrown error) with
+    no Serper key configured. Every exchange writes a real
+    `admin_activity_log` row (`entity_type = 'scout_chat'`) rather than
+    inventing a counter — that's what the Team page's "ideas discussed" stat
+    and Chief's daily brief both count, the same "real query, not a guess"
+    discipline every other agent's stat follows. Scout also has its own
+    dedicated ElevenLabs voice (`scout_elevenlabs_voice_id`, Settings → AI
+    providers) — `TextToSpeechController::speak()` now takes an `agent` key
+    and maps it to the right voice-ID setting, falling back to Lisa's voice
+    if Scout's is unset, so it's never a hard failure. Assistant
+    name/gender/accent settings ride the same generic `settings` store every
+    other agent persona uses.
 
 ## Deployment (Namecheap cPanel)
 

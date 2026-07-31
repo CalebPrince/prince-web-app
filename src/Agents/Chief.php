@@ -285,6 +285,21 @@ class Chief
                 ["SELECT MAX(created_at) FROM invoices WHERE status = 'draft'"]),
         ];
 
+        // --- Scout ---------------------------------------------------------------
+        $agents[] = [
+            'key' => 'scout',
+            'name' => Settings::get('scout_assistant_name') ?: 'Scout',
+            'role' => 'Tech & ideation',
+            'runs' => 'on_demand',
+            'state' => 'on demand',
+            'did' => [
+                ['label' => 'ideas discussed', 'count' => self::num($pdo,
+                    "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'scout_chat' AND created_at >= ?", [$since])],
+            ],
+            'last_active_at' => self::latestOf($pdo,
+                ["SELECT MAX(created_at) FROM admin_activity_log WHERE entity_type = 'scout_chat'"]),
+        ];
+
         // --- derived per-agent fields ------------------------------------------
         foreach ($agents as &$agent) {
             // Only output counts toward "actions". Items flagged context are

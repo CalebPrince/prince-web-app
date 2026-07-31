@@ -115,6 +115,7 @@ async function saveIntegrations(e) {
       elevenlabs_api_key: document.getElementById("elevenlabs-api-key").value.trim(),
       elevenlabs_voice_id: document.getElementById("elevenlabs-voice-id").value.trim(),
       elevenlabs_tts_model: document.getElementById("elevenlabs-tts-model").value.trim(),
+      scout_elevenlabs_voice_id: document.getElementById("scout-elevenlabs-voice-id").value.trim(),
       whatsapp_provider: document.getElementById("whatsapp-provider").value,
       whapi_api_token: document.getElementById("whapi-api-token").value.trim(),
       whapi_webhook_secret: document.getElementById("whapi-webhook-secret").value.trim(),
@@ -652,6 +653,7 @@ async function testAi() {
     document.getElementById("elevenlabs-api-key").value = settings.elevenlabs_api_key || "";
     document.getElementById("elevenlabs-voice-id").value = settings.elevenlabs_voice_id || "Xb7hH8MSUJpSbSDYk0k2";
     document.getElementById("elevenlabs-tts-model").value = settings.elevenlabs_tts_model || "eleven_flash_v2_5";
+    document.getElementById("scout-elevenlabs-voice-id").value = settings.scout_elevenlabs_voice_id || "";
     document.getElementById("whatsapp-provider").value = settings.whatsapp_provider || "twilio";
     document.getElementById("whapi-api-token").value = settings.whapi_api_token || "";
     document.getElementById("whapi-webhook-secret").value = settings.whapi_webhook_secret || "";

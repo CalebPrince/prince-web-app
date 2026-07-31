@@ -236,7 +236,7 @@
             <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
               <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" id="elevenlabs-tts-enabled">
-                <label class="form-check-label fw-semibold" for="elevenlabs-tts-enabled">Use ElevenLabs for Lisa on the website</label>
+                <label class="form-check-label fw-semibold" for="elevenlabs-tts-enabled">Use ElevenLabs for Lisa on the website (and Scout in Talk to Agents)</label>
               </div>
               <div class="mb-3">
                 <label class="form-label" for="elevenlabs-api-key">ElevenLabs API key</label>
@@ -248,10 +248,15 @@
                 <input type="text" class="form-control" id="elevenlabs-voice-id" placeholder="Xb7hH8MSUJpSbSDYk0k2">
                 <div class="form-text">Defaults to Alice, a British female voice. This controls live chat, the homepage voice demo, and Lisa in Talk to Agents.</div>
               </div>
-              <div class="mb-0">
+              <div class="mb-3">
                 <label class="form-label" for="elevenlabs-tts-model">TTS model</label>
                 <input type="text" class="form-control" id="elevenlabs-tts-model" placeholder="eleven_flash_v2_5">
                 <div class="form-text">Flash v2.5 is the recommended low-latency, lower-cost model for conversational experiences.</div>
+              </div>
+              <div class="mb-0">
+                <label class="form-label" for="scout-elevenlabs-voice-id">Scout's ElevenLabs voice ID <span class="text-muted-custom fw-normal">(optional)</span></label>
+                <input type="text" class="form-control" id="scout-elevenlabs-voice-id" placeholder="Leave blank to reuse Lisa's voice">
+                <div class="form-text">Uses the same API key and model above. Leave blank and Scout speaks with Lisa's voice; set a different voice ID here to give Scout its own distinct voice in Talk to Agents.</div>
               </div>
             </div>
             <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">

@@ -36,7 +36,7 @@
     }
   }
 
-  async function play(text, handlers) {
+  async function play(text, handlers, agent) {
     const spoken = String(text || "").trim();
     if (!spoken) throw new Error("No speech text");
     release();
@@ -45,7 +45,7 @@
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: spoken.slice(0, 700) }),
+      body: JSON.stringify({ text: spoken.slice(0, 700), agent: agent || "lisa" }),
     });
     if (!response.ok) {
       const error = new Error("Natural speech unavailable");

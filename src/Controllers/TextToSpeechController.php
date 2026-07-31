@@ -11,9 +11,21 @@ use App\Support\Settings;
 class TextToSpeechController
 {
     /**
-     * Turn a short Lisa reply into audio without ever exposing the ElevenLabs
-     * API key to the browser. This is intentionally rate- and length-limited:
-     * the public chat should not become an open text-to-speech proxy.
+     * Every agent that gets a real ElevenLabs voice, mapped to the Settings
+     * key holding its voice ID. Lisa is the original/default; Scout is the
+     * only other agent with a dedicated voice so far — everyone else still
+     * uses the browser's own speechSynthesis (see admin-agent-chat.js).
+     */
+    private const AGENT_VOICE_SETTING = [
+        'lisa' => 'elevenlabs_voice_id',
+        'scout' => 'scout_elevenlabs_voice_id',
+    ];
+
+    /**
+     * Turn a short agent reply into audio without ever exposing the
+     * ElevenLabs API key to the browser. This is intentionally rate- and
+     * length-limited: the public chat should not become an open
+     * text-to-speech proxy.
      */
     public static function speak(): void
     {
@@ -23,14 +35,19 @@ class TextToSpeechController
             Response::error('Natural website speech is not enabled.', 503);
         }
 
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $agent = trim((string) ($data['agent'] ?? 'lisa'));
+        $voiceSettingKey = self::AGENT_VOICE_SETTING[$agent] ?? self::AGENT_VOICE_SETTING['lisa'];
+
         $apiKey = trim((string) Settings::get('elevenlabs_api_key'));
-        $voiceId = trim((string) Settings::get('elevenlabs_voice_id'));
+        // Scout falls back to Lisa's voice ID until an admin sets its own —
+        // still a real, working voice rather than a hard failure.
+        $voiceId = trim((string) Settings::get($voiceSettingKey)) ?: trim((string) Settings::get('elevenlabs_voice_id'));
         $modelId = trim((string) Settings::get('elevenlabs_tts_model'));
         if ($apiKey === '' || $voiceId === '') {
             Response::error('Natural website speech is not configured.', 503);
         }
 
-        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $text = trim((string) ($data['text'] ?? ''));
         if ($text === '') {
             Response::error('Text is required.', 422);

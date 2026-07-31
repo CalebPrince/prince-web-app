@@ -818,6 +818,37 @@
               <span class="form-text ms-2" id="chief_voice_preview_note"></span>
             </div>
           </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-stars me-2" style="color: var(--section-content);"></i>Scout (tech &amp; ideation specialist)</h5>
+            <div class="form-text mb-3">Scout keeps watch on emerging web, mobile, and AI tools and frameworks, and brainstorms cutting-edge project ideas with you built on them — checking what's actually current with a real live web search rather than guessing. The name lightly flavors its internal framing, and the voice below is the real voice you'll hear if you talk to Scout live in the admin console (<a href="/admin/agent-chat.html">Talk to Agents</a>). It also has its own dedicated ElevenLabs voice — set the voice ID under <a href="/admin/settings.html">Settings → AI providers</a>.</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="scout_assistant_name" placeholder="Scout" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="scout_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="scout_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="scout_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="scout_voice_preview_note"></span>
+            </div>
+          </div>
         </div>
       </div>
     </form>
