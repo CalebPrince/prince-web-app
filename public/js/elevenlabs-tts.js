@@ -3,6 +3,12 @@
   let activeUrl = null;
   let unlocked = false;
 
+  // Mirrors TextToSpeechController::MAX_TEXT_LENGTH — Lisa's public replies
+  // stay short by design; Scout's admin-console ideation answers run much
+  // longer, and truncating below what the server will actually synthesize
+  // just moves the same "cuts off mid-sentence" bug to the client.
+  const MAX_TEXT_LENGTH = { lisa: 700, scout: 3000 };
+
   function release() {
     activeAudio.pause();
     activeAudio.onplay = null;
@@ -41,11 +47,13 @@
     if (!spoken) throw new Error("No speech text");
     release();
 
+    const agentKey = agent || "lisa";
+    const cap = MAX_TEXT_LENGTH[agentKey] || MAX_TEXT_LENGTH.lisa;
     const response = await fetch("/api/v1/voice/tts", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: spoken.slice(0, 700), agent: agent || "lisa" }),
+      body: JSON.stringify({ text: spoken.slice(0, cap), agent: agentKey }),
     });
     if (!response.ok) {
       const error = new Error("Natural speech unavailable");
@@ -77,11 +85,16 @@
     return !activeAudio.paused;
   }
 
-  // A 503 means the owner intentionally has ElevenLabs disabled or incomplete,
-  // so the browser voice is a useful fallback. For quota, provider, or playback
-  // failures, stay silent rather than switching Lisa's identity mid-session.
+  // Fall back to the browser's own voice on ANY failure — a disabled/
+  // unconfigured provider (503), a quota/provider outage (502), or anything
+  // else. This used to stay silent for Lisa on a non-503 failure, on the
+  // theory that switching her voice mid-conversation was worse than no
+  // voice at all; in practice an ElevenLabs outage (e.g. exhausted quota)
+  // then left her voiceless for as long as the outage lasted, which is
+  // worse for a live customer-facing widget than a different-sounding but
+  // working voice. Every agent now degrades the same way.
   function shouldFallback(error) {
-    return !!(error && error.status === 503);
+    return !!error;
   }
 
   document.addEventListener("pointerdown", unlock, { capture: true, once: true });

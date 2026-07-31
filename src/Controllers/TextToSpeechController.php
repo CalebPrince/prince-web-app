@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\Response;
 use App\Support\Settings;
@@ -22,10 +23,25 @@ class TextToSpeechController
     ];
 
     /**
+     * Max characters synthesized per agent. Lisa's 700 is a deliberate public-
+     * abuse guard (this endpoint has no auth check for her — the public
+     * widget calls it directly), sized for her short conversational replies.
+     * Scout's admin-console answers run much longer (a brainstormed list with
+     * reasoning easily clears 700 chars), so a text cut off at 700 played as
+     * audio that just stopped mid-sentence — the actual bug reported. Scout
+     * gets a real admin-auth check below instead, so the higher cap can't be
+     * hit by an anonymous caller racking up ElevenLabs cost.
+     */
+    private const MAX_TEXT_LENGTH = [
+        'lisa' => 700,
+        'scout' => 3000,
+    ];
+
+    /**
      * Turn a short agent reply into audio without ever exposing the
-     * ElevenLabs API key to the browser. This is intentionally rate- and
-     * length-limited: the public chat should not become an open
-     * text-to-speech proxy.
+     * ElevenLabs API key to the browser. Lisa's path is intentionally rate-
+     * and length-limited and stays open to the public widget; every other
+     * agent requires an authenticated admin session (see MAX_TEXT_LENGTH).
      */
     public static function speak(): void
     {
@@ -37,7 +53,11 @@ class TextToSpeechController
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $agent = trim((string) ($data['agent'] ?? 'lisa'));
+        if ($agent !== 'lisa') {
+            AuthMiddleware::requireAuth();
+        }
         $voiceSettingKey = self::AGENT_VOICE_SETTING[$agent] ?? self::AGENT_VOICE_SETTING['lisa'];
+        $maxLength = self::MAX_TEXT_LENGTH[$agent] ?? self::MAX_TEXT_LENGTH['lisa'];
 
         $apiKey = trim((string) Settings::get('elevenlabs_api_key'));
         // Scout falls back to Lisa's voice ID until an admin sets its own —
@@ -52,9 +72,10 @@ class TextToSpeechController
         if ($text === '') {
             Response::error('Text is required.', 422);
         }
-        if (mb_strlen($text) > 700) {
-            Response::error('Text is too long for website speech.', 422);
-        }
+        // Truncated, not rejected — the client already truncates to the same
+        // length before sending, so this is a graceful backstop, not the
+        // normal path.
+        $text = mb_substr($text, 0, $maxLength);
         $text = self::normalizeForSpeech($text);
 
         $url = 'https://api.elevenlabs.io/v1/text-to-speech/'

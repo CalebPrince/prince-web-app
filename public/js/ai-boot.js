@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const naturalVoice = document.createElement("script");
-      naturalVoice.src = "/js/elevenlabs-tts.js?v=20260731-scout-voice";
+      naturalVoice.src = "/js/elevenlabs-tts.js?v=20260731-length-fallback-fix";
       naturalVoice.onload = naturalVoice.onerror = () => {
         const widget = document.createElement("script");
         widget.src = "/js/ai-widget.js?v=20260728-elevenlabs-consistent";
