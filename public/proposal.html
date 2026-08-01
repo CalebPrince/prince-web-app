@@ -170,6 +170,7 @@
           ? `Accepted by ${escapeHtml(proposal.accepted_by_name || proposal.client_name)} on ${escapeHtml(new Date(proposal.accepted_at).toLocaleString())}. You can pay any pending milestone above.`
           : 'Review the scope, timeline, and terms above, then confirm below. The payment buttons will unlock once accepted.'}
       </p>
+      ${!accepted ? `<p class="small text-muted-custom mb-3"><a href="/builder-os.html">Curious what a finished system like this looks like running live? Inspect Builder OS →</a></p>` : ''}
       <div id="proposal-msg" class="alert py-2 small d-none"></div>
       ${accepted ? '<a href="/contact.html" class="btn-brand-outline">Contact me</a>' : `
         <form id="accept-proposal-form" class="mx-auto text-start" style="max-width: 420px;">
