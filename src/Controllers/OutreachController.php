@@ -10,6 +10,7 @@ use App\Support\CallOutcomeSync;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\LeadDiscovery;
+use App\Support\LeadFitScorer;
 use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
@@ -80,6 +81,7 @@ class OutreachController
         // Reuse this existing hourly cron for daily prospect discovery. The
         // discovery service has its own on/off switch and once-per-day gate.
         $discovery = LeadDiscovery::run();
+        self::scoreUnscoredLeads($pdo);
 
         $sentToday = self::sentToday($pdo);
         $remaining = max(0, $cap - $sentToday);
@@ -208,6 +210,16 @@ class OutreachController
                 }
             }
 
+            $lead['audit_findings'] = json_encode($findings);
+            $fit = LeadFitScorer::persist($pdo, $lead);
+            if (!$fit['qualified']) {
+                if ($fit['score'] < 35) {
+                    $pdo->prepare("UPDATE marketing_leads SET status='rejected', notes=trim(COALESCE(notes, '') || ?), updated_at=datetime('now') WHERE id=?")
+                        ->execute(["\nAutomatically disqualified: fit score {$fit['score']}/100.", $lead['id']]);
+                }
+                continue;
+            }
+
             $email = trim((string) ($lead['contact_email'] ?? ''));
             $phone = trim((string) ($lead['contact_phone'] ?? ''));
 
@@ -248,6 +260,7 @@ class OutreachController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
+        self::scoreUnscoredLeads($pdo);
         $cap = self::dailyCap();
         $sentToday = self::sentToday($pdo);
         $discoveryEnabled = Settings::get('lead_discovery_enabled') === '1';
@@ -693,6 +706,8 @@ class OutreachController
     private const ELIGIBLE_SQL =
         "SELECT ml.* FROM marketing_leads ml
          WHERE ml.status = 'pitch_ready'
+           AND COALESCE(ml.fit_score, 0) >= 55
+           AND ml.is_high_priority = 0
            AND ml.pitch_channel = 'email'
            AND ml.contact_email IS NOT NULL AND trim(ml.contact_email) <> ''
            AND ml.pitch_subject IS NOT NULL AND trim(ml.pitch_subject) <> ''
@@ -704,6 +719,15 @@ class OutreachController
     private static function eligibleCount(\PDO $pdo): int
     {
         return (int) $pdo->query('SELECT COUNT(*) FROM (' . self::ELIGIBLE_SQL . ')')->fetchColumn();
+    }
+
+    /** Score legacy/imported rows before queue counts or unattended sends use them. */
+    private static function scoreUnscoredLeads(\PDO $pdo): void
+    {
+        $rows = $pdo->query('SELECT * FROM marketing_leads WHERE fit_score IS NULL ORDER BY id ASC LIMIT 500')->fetchAll();
+        foreach ($rows as $lead) {
+            LeadFitScorer::persist($pdo, $lead);
+        }
     }
 
     /**
@@ -719,6 +743,12 @@ class OutreachController
     private const DRAFTABLE_SQL =
         "SELECT ml.* FROM marketing_leads ml
          WHERE ml.status IN ('pending', 'audited')
+           AND ml.is_high_priority = 0
+           AND (
+             ml.fit_score IS NULL OR ml.fit_score >= 55
+             OR (ml.website_url IS NOT NULL AND trim(ml.website_url) <> ''
+                 AND (ml.audit_findings IS NULL OR trim(ml.audit_findings) = ''))
+           )
            AND NOT EXISTS (SELECT 1 FROM outreach_sends os WHERE os.lead_id = ml.id)
            AND lower(COALESCE(ml.contact_email, '')) NOT IN (SELECT lower(email) FROM email_suppressions)
            AND lower(COALESCE(ml.contact_email, '')) NOT IN (SELECT lower(email) FROM drip_enrollments WHERE status = 'stopped')

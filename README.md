@@ -696,6 +696,20 @@ storage/
     never invents prospects. The standalone script is available for
     diagnostics and accepts `--force`.
 
+    **Explainable lead fit scoring** separates pre-outreach qualification
+    from post-demo intent. Each account receives a persisted 0-100 score and
+    plain-language reasons based on contactability, verified audit evidence,
+    research depth, and estimated opportunity value. Scores of 55+ may enter
+    automated outreach; 35-54 stay available for enrichment; scores below 35
+    are automatically disqualified. Manually starred high-priority accounts
+    are always held for Caleb's review. The tracker exposes score rings and
+    strong/qualified/develop filters, while demo engagement keeps its own
+    separate intent score. The leads page now uses a qualification-board
+    structure: a compact company/fit/opportunity/contact/stage table opens a
+    dedicated account workspace containing score evidence, live audit facts,
+    Dossier intelligence, Arch demo engagement, outreach copy, activity, and
+    the existing review actions without crowding the main pipeline view.
+
     **Account demos** add a reviewed account-based proof layer for the small
     set of prospects worth deeper work. **Arch owns the demo build**: Dossier
     supplies prospect research, the site audit supplies verified evidence,

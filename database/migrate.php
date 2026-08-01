@@ -541,6 +541,18 @@ if (!in_array('estimated_value', $leadColumnNames, true)) {
 if (!in_array('currency', $leadColumnNames, true)) {
     $pdo->exec("ALTER TABLE marketing_leads ADD COLUMN currency TEXT NOT NULL DEFAULT 'GHS'");
 }
+if (!in_array('fit_score', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN fit_score INTEGER');
+}
+if (!in_array('fit_label', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN fit_label TEXT');
+}
+if (!in_array('fit_reasons', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN fit_reasons TEXT');
+}
+if (!in_array('fit_scored_at', $leadColumnNames, true)) {
+    $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN fit_scored_at TEXT');
+}
 
 $dripEnrollmentColumns = array_column($pdo->query('PRAGMA table_info(drip_enrollments)')->fetchAll(), 'name');
 if (!in_array('nurturer_enabled', $dripEnrollmentColumns, true)) {

@@ -8,6 +8,9 @@ const selectedIds = new Set();
 let sendTrendChart = null;
 let replyBreakdownChart = null;
 let leadFilterTimer = null;
+let accountWorkspaceModal = null;
+let workspaceLeadId = null;
+let allLeadRows = [];
 
 if (window.Chart) {
   Chart.defaults.color = "#8b93a7";
@@ -51,6 +54,116 @@ function intentBadge(demo) {
   return `<span class="intent-badge intent-${level}" title="Account demo engagement score">${score} intent</span>`;
 }
 
+function fitScoreCell(lead) {
+  const score = Number(lead.fit_score || 0);
+  const label = lead.fit_label || "Not scored";
+  const reasons = Array.isArray(lead.fit_reasons) ? lead.fit_reasons : [];
+  const tone = score >= 55 ? "fit-qualified" : score >= 35 ? "fit-develop" : "fit-low";
+  return `<div class="fit-cell ${tone}" title="${escapeHtml(reasons.join(" "))}">
+    <div class="fit-score"><span class="fit-score-ring" style="--fit:${score}"><span>${score}</span></span><span class="fit-score-label">${escapeHtml(label)}</span></div>
+    <span class="fit-score-detail">${escapeHtml(reasons.slice(0, 2).join(" ") || "Add contact and audit evidence to improve this score.")}</span>
+  </div>`;
+}
+
+function renderQualificationTabs(rows) {
+  const counts = {
+    all: rows.length,
+    strong: rows.filter(lead => Number(lead.fit_score) >= 75 && lead.status !== "rejected").length,
+    qualified: rows.filter(lead => Number(lead.fit_score) >= 55 && Number(lead.fit_score) < 75 && lead.status !== "rejected").length,
+    develop: rows.filter(lead => Number(lead.fit_score) >= 35 && Number(lead.fit_score) < 55 && lead.status !== "rejected").length,
+    rejected: rows.filter(lead => lead.status === "rejected").length,
+  };
+  Object.entries(counts).forEach(([key, value]) => {
+    const el = document.getElementById(`fit-count-${key}`);
+    if (el) el.textContent = value.toLocaleString();
+  });
+  const active = document.getElementById("lead-status-filter").value;
+  document.querySelectorAll("[data-fit-filter]").forEach(button => {
+    button.classList.toggle("active", button.dataset.fitFilter === active);
+  });
+}
+
+function contactabilityCell(lead) {
+  const email = String(lead.contact_email || "").trim();
+  const phone = String(lead.contact_phone || "").trim();
+  if (!email && !phone) return '<div class="contactability"><span>No contact route yet</span></div>';
+  return `<div class="contactability">
+    ${email ? `<a href="mailto:${escapeHtml(email)}"><i class="bi bi-envelope me-1"></i>${escapeHtml(email)}</a>` : ""}
+    ${phone ? `<a href="tel:${escapeHtml(phone)}"><i class="bi bi-telephone me-1"></i>${escapeHtml(phone)}</a>` : ""}
+  </div>`;
+}
+
+function lastSignalCell(lead) {
+  const demo = lead.account_demo || {};
+  if (Number(demo.cta_clicks) > 0) return `<div class="last-signal"><strong>${Number(demo.cta_clicks)} demo CTA click${Number(demo.cta_clicks) === 1 ? "" : "s"}</strong>${Number(demo.views || 0)} views</div>`;
+  if (Number(demo.views) > 0) return `<div class="last-signal"><strong>${Number(demo.views)} demo view${Number(demo.views) === 1 ? "" : "s"}</strong>${Number(demo.engaged_seconds || 0)}s engaged</div>`;
+  if (lead.sent_at) return `<div class="last-signal"><strong>Outreach sent</strong>${escapeHtml(formatShortDate(lead.sent_at))}</div>`;
+  if (lead.researched_at) return `<div class="last-signal"><strong>Dossier ready</strong>${escapeHtml(formatShortDate(lead.researched_at))}</div>`;
+  return `<div class="last-signal"><strong>Awaiting evidence</strong>${escapeHtml(formatShortDate(lead.created_at))}</div>`;
+}
+
+function workspaceFact(label, value, href = "") {
+  const safeHref = /^(https?:\/\/|mailto:|tel:)/i.test(href) ? href : "";
+  const content = safeHref
+    ? `<a href="${escapeHtml(safeHref)}" target="${safeHref.startsWith("http") ? "_blank" : "_self"}" rel="noopener">${escapeHtml(value || "Not available")}</a>`
+    : `<strong>${escapeHtml(value || "Not available")}</strong>`;
+  return `<div class="workspace-fact"><span>${escapeHtml(label)}</span>${content}</div>`;
+}
+
+function openAccountWorkspace(lead) {
+  workspaceLeadId = Number(lead.id);
+  const fitReasons = Array.isArray(lead.fit_reasons) ? lead.fit_reasons : [];
+  const auditIssues = (lead.audit_findings && Array.isArray(lead.audit_findings.issues)) ? lead.audit_findings.issues : [];
+  const demo = lead.account_demo || null;
+  const research = lead.research_findings || null;
+  document.getElementById("account-workspace-title").textContent = lead.business_name || "Account";
+  document.getElementById("workspace-subtitle").textContent = `${lead.opportunity?.label || "Qualification pending"} · ${String(lead.status || "pending").replace("_", " ")}`;
+  document.getElementById("workspace-fit-score").textContent = `${Number(lead.fit_score || 0)}/100`;
+  document.getElementById("workspace-fit-label").textContent = lead.fit_label || "Not scored";
+  document.getElementById("workspace-fit-reasons").innerHTML = fitReasons.length
+    ? fitReasons.map(reason => `<li>${escapeHtml(reason)}</li>`).join("")
+    : "<li>Add contact details, research, or audit evidence to establish fit.</li>";
+  document.getElementById("workspace-audit").innerHTML = !lead.website_url
+    ? "<li>No website is listed. A focused first website is the verified opportunity.</li>"
+    : !lead.audit_findings
+      ? "<li>The website has not been audited yet.</li>"
+      : auditIssues.length
+        ? auditIssues.map(issue => `<li>${escapeHtml(issue.detail || issue.issue || "Verified website issue")}</li>`).join("")
+        : "<li>The audit found the website reachable with no specific technical issue. Lead with AI and workflow automation.</li>";
+  document.getElementById("workspace-pitch").textContent = lead.pitch_body || "No outreach draft yet. Build one after the account has enough verified evidence.";
+  document.getElementById("workspace-facts").innerHTML = [
+    workspaceFact("Contact", lead.contact_name || "Not named"),
+    workspaceFact("Email", lead.contact_email, lead.contact_email ? `mailto:${lead.contact_email}` : ""),
+    workspaceFact("Phone", lead.contact_phone, lead.contact_phone ? `tel:${lead.contact_phone}` : ""),
+    workspaceFact("Website", lead.website_url, lead.website_url || ""),
+    workspaceFact("Opportunity", lead.opportunity?.label || "Pending"),
+    workspaceFact("Estimated value", `${lead.currency || "GHS"} ${(Number(lead.estimated_value || 0) / 100).toLocaleString()}`),
+  ].join("");
+  document.getElementById("workspace-research").textContent = research
+    ? (research.summary || research.tech_note || "The dossier is ready. Open it for the complete evidence set.")
+    : "No dossier yet. Research the account before investing in a high-touch demo.";
+  document.getElementById("workspace-demo").innerHTML = demo
+    ? `<div class="workspace-facts mb-3">${workspaceFact("Intent", `${Number(demo.intent_score || 0)}/100`)}${workspaceFact("Views", String(Number(demo.views || 0)))}${workspaceFact("CTA clicks", String(Number(demo.cta_clicks || 0)))}${workspaceFact("Engaged", `${Number(demo.engaged_seconds || 0)}s`)}</div>${demo.url ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(demo.url)}" target="_blank" rel="noopener">Open private demo</a>` : '<span class="small text-muted-custom">Draft not published yet.</span>'}`
+    : '<p class="small text-muted-custom mb-0">No Arch demo yet. Build one only when the evidence justifies deeper personalization.</p>';
+  document.getElementById("workspace-activity").innerHTML = [
+    workspaceFact("Stage", String(lead.status || "pending").replace("_", " ")),
+    workspaceFact("Created", formatShortDate(lead.created_at)),
+    workspaceFact("Researched", formatShortDate(lead.researched_at)),
+    workspaceFact("Sent", formatShortDate(lead.sent_at)),
+  ].join("");
+
+  const canAudit = lead.website_url && (lead.status === "pending" || lead.audit_findings);
+  const canPitch = !lead.website_url || lead.audit_findings;
+  document.getElementById("workspace-actions").innerHTML = `
+    <button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="priority-btn"><i class="bi bi-star me-1"></i>${Number(lead.is_high_priority) ? "Remove priority" : "Hold for review"}</button>
+    <button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="${lead.research_findings ? "dossier-btn" : "research-btn"}">${lead.research_findings ? "Open dossier" : "Research account"}</button>
+    ${canAudit ? `<button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="audit-btn">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>` : ""}
+    ${canPitch ? `<button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="${lead.pitch_body ? "review-btn" : "pitch-btn"}">${lead.pitch_body ? "Review outreach" : "Build outreach"}</button>` : ""}
+    <button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="account-demo-btn">${lead.account_demo ? "Open Arch demo" : "Ask Arch to build"}</button>
+    <button type="button" class="btn btn-outline-danger workspace-forward ms-md-auto" data-forward="remove-btn">Delete lead</button>`;
+  accountWorkspaceModal.show();
+}
+
 function updateLeadPulse(rows) {
   document.getElementById("lead-total").textContent = rows.length.toLocaleString();
   document.getElementById("lead-priority").textContent = rows.filter(lead => Number(lead.is_high_priority) === 1).length.toLocaleString();
@@ -68,7 +181,12 @@ function filteredLeadRows(rows) {
     const haystack = `${lead.business_name || ""} ${lead.contact_name || ""} ${lead.contact_email || ""} ${lead.contact_phone || ""} ${lead.website_url || ""}`.toLowerCase();
     const matchesSearch = !search || haystack.includes(search);
     const matchesStage = !stage
-      || (stage === "priority" ? Number(lead.is_high_priority) === 1 : lead.status === stage);
+      || (stage === "priority" ? Number(lead.is_high_priority) === 1
+        : stage === "strong_fit" ? lead.status !== "rejected" && Number(lead.fit_score) >= 75
+        : stage === "qualified_fit" ? lead.status !== "rejected" && Number(lead.fit_score) >= 55 && Number(lead.fit_score) < 75
+        : stage === "develop_fit" ? lead.status !== "rejected" && Number(lead.fit_score) >= 35 && Number(lead.fit_score) < 55
+        : stage === "low_fit" ? lead.status !== "rejected" && Number(lead.fit_score) < 35
+        : lead.status === stage);
     return matchesSearch && matchesStage;
   });
 }
@@ -202,14 +320,16 @@ async function loadLeads() {
   loadOutreachStats(); // eligible-queue count tracks lead state; refresh alongside
   const response = await api.get("/api/v1/admin/marketing-leads");
   const rows = Array.isArray(response) ? response : [];
+  allLeadRows = rows;
   const tbody = document.getElementById("leads-tbody");
   const empty = document.getElementById("empty-state");
 
   selectedIds.clear();
   updateLeadPulse(rows);
+  renderQualificationTabs(rows);
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted-custom py-5">No accounts yet. Find prospects by niche or add your first lead.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted-custom py-5">No accounts yet. Find prospects by niche or add your first lead.</td></tr>';
     document.getElementById("lead-result-count").textContent = "No accounts yet";
     empty.classList.add("d-none");
     updateBulkToolbar();
@@ -253,12 +373,15 @@ async function loadLeads() {
             <div class="intel-details">
                 ${detailsHtml}
             </div>
-            <button class="btn btn-sm btn-primary w-100 mt-2 fw-semibold" onclick="document.querySelector('.row-checkbox[data-id=\\'${lead.id}\\']')?.closest('tr').querySelector('.lead-more-actions')?.click()">View Lead Options</button>
+            <button class="btn btn-sm btn-primary w-100 mt-2 fw-semibold open-account-btn" data-id="${lead.id}">Open account</button>
         </div>
        `;
     }).join('');
   };
   renderHighIntentLeads(rows);
+  document.querySelectorAll("#high-intent-leads-container .open-account-btn").forEach(button => {
+    button.addEventListener("click", () => openAccountWorkspace(rows.find(lead => lead.id === Number(button.dataset.id))));
+  });
   const filteredRows = filteredLeadRows(rows);
   document.getElementById("lead-result-count").textContent =
     `${filteredRows.length} account${filteredRows.length === 1 ? "" : "s"} found`;
@@ -278,16 +401,18 @@ async function loadLeads() {
         ${lead.contact_name ? `<span class="demo-link-ai"><i class="bi bi-person me-1"></i>${escapeHtml(lead.contact_name)}</span>` : ""}
         ${demo.url ? `<a href="${escapeHtml(demo.url)}" target="_blank" class="demo-link-ai">${escapeHtml(demo.url.replace(/^https?:\/\//, ""))}</a>` : `<span class="demo-link-ai text-muted-custom">No demo published</span>`}
       </td>
-      <td><strong>${Number(demo.views || 0)}</strong></td>
-      <td>${Number(demo.cta_clicks || 0)} Clicks</td>
-      <td>${Number(demo.engaged_seconds || 0)}s</td>
+      <td>${fitScoreCell(lead)}</td>
+      <td>${opportunityBadge(lead)}</td>
+      <td>${contactabilityCell(lead)}</td>
       <td><span class="status-pill-ai ${statusClass}">${escapeHtml(lead.status.replace("_", " "))}</span></td>
+      <td>${lastSignalCell(lead)}</td>
       <td class="text-end pe-3 lead-actions">
-        <div class="lead-actions-more">${compactActionButtons(lead)}</div>
+        <button type="button" class="btn btn-sm btn-brand open-account-btn" data-id="${lead.id}">Open account</button>
+        <div class="d-none">${compactActionButtons(lead)}</div>
       </td>
     </tr>
     `;
-    }).join("") : '<tr><td colspan="7" class="text-center text-muted-custom py-5">No accounts match this search or stage.</td></tr>';
+    }).join("") : '<tr><td colspan="8" class="text-center text-muted-custom py-5">No accounts match this search or stage.</td></tr>';
 
   tbody.querySelectorAll(".lead-more-actions").forEach(details => {
     details.addEventListener("toggle", () => {
@@ -308,6 +433,10 @@ async function loadLeads() {
   });
 
   updateBulkToolbar();
+
+  tbody.querySelectorAll(".open-account-btn").forEach(button => {
+    button.addEventListener("click", () => openAccountWorkspace(rows.find(lead => lead.id === Number(button.dataset.id))));
+  });
 
   tbody.querySelectorAll(".priority-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -1367,6 +1496,55 @@ async function loadAnalytics() {
   discoverModal = new bootstrap.Modal(document.getElementById("discover-modal"));
   dossierModal = new bootstrap.Modal(document.getElementById("dossier-modal"));
   accountDemoModal = new bootstrap.Modal(document.getElementById("account-demo-modal"));
+  accountWorkspaceModal = new bootstrap.Modal(document.getElementById("account-workspace-modal"));
+  document.getElementById("qualification-tabs").addEventListener("click", event => {
+    const button = event.target.closest("[data-fit-filter]");
+    if (!button) return;
+    document.getElementById("lead-status-filter").value = button.dataset.fitFilter;
+    AdminPagination.state.set("marketing-leads", 1);
+    loadLeads();
+  });
+  document.getElementById("workspace-actions").addEventListener("click", async event => {
+    const button = event.target.closest(".workspace-forward");
+    if (!button || !workspaceLeadId) return;
+    const lead = allLeadRows.find(row => Number(row.id) === workspaceLeadId);
+    if (!lead) return;
+    const action = button.dataset.forward;
+    button.disabled = true;
+    accountWorkspaceModal.hide();
+    await new Promise(resolve => setTimeout(resolve, 180));
+    try {
+      if (action === "priority-btn") {
+        await api.patch(`/api/v1/admin/marketing-leads/${lead.id}`, { is_high_priority: !Number(lead.is_high_priority) });
+      } else if (action === "research-btn") {
+        const response = await api.post(`/api/v1/admin/marketing-leads/${lead.id}/research`, {});
+        openDossierModal({ ...lead, research_findings: response.research, researched_at: response.research.researched_at });
+      } else if (action === "dossier-btn") {
+        openDossierModal(lead);
+      } else if (action === "audit-btn") {
+        const response = await api.post(`/api/v1/admin/marketing-leads/${lead.id}/audit`, {});
+        if (response?.found_email) alert(`Found a published email on their site: ${response.found_email} — added to the lead.`);
+      } else if (action === "pitch-btn") {
+        await api.post(`/api/v1/admin/marketing-leads/${lead.id}/generate-pitch`, {});
+      } else if (action === "review-btn") {
+        openPitchModal(lead);
+      } else if (action === "account-demo-btn") {
+        if (lead.account_demo) {
+          openAccountDemo(lead, lead.account_demo);
+        } else {
+          const response = await api.post(`/api/v1/admin/marketing-leads/${lead.id}/account-demo/generate`, {});
+          openAccountDemo({ ...lead, is_high_priority: 1 }, response.demo);
+        }
+      } else if (action === "remove-btn") {
+        if (!confirm(`Delete ${lead.business_name}?`)) return;
+        await api.delete(`/api/v1/admin/marketing-leads/${lead.id}`);
+      }
+      if (!["dossier-btn", "review-btn"].includes(action)) await loadLeads();
+    } catch (err) {
+      alert(err.message || "Could not complete this account action.");
+      await loadLeads();
+    }
+  });
   document.getElementById("lead-search").addEventListener("input", () => {
     clearTimeout(leadFilterTimer);
     leadFilterTimer = setTimeout(() => {

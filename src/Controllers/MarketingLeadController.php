@@ -10,6 +10,7 @@ use App\Support\AiText;
 use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailEnrichment;
+use App\Support\LeadFitScorer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -51,6 +52,11 @@ class MarketingLeadController
         $demoRows = $pdo->query('SELECT lead_id FROM account_demos')->fetchAll();
         $demoLeadIds = array_flip(array_map(static fn(array $row): int => (int) $row['lead_id'], $demoRows));
         foreach ($rows as &$row) {
+            $fit = LeadFitScorer::persist($pdo, $row);
+            $row['fit_score'] = $fit['score'];
+            $row['fit_label'] = $fit['label'];
+            $row['fit_reasons'] = $fit['reasons'];
+            $row['fit_qualified'] = $fit['qualified'];
             $row['audit_findings'] = $row['audit_findings'] ? json_decode($row['audit_findings'], true) : null;
             $row['opportunity'] = self::classifyOpportunity(
                 !empty($row['website_url']),
@@ -584,11 +590,15 @@ class MarketingLeadController
         // If the site publishes a real email and we had none on file, capture
         // it — turns a phone-only lead into an emailable one, no guessing.
         $foundEmail = self::applyFoundEmail($pdo, $lead, $findings);
+        $lead['audit_findings'] = json_encode($findings);
+        if ($foundEmail !== null) $lead['contact_email'] = $foundEmail;
+        $fit = LeadFitScorer::persist($pdo, $lead);
 
         Response::json([
             'findings' => $findings,
             'found_email' => $foundEmail,
             'opportunity' => self::classifyOpportunity(true, $findings),
+            'fit' => $fit,
         ]);
     }
 
@@ -624,6 +634,7 @@ class MarketingLeadController
             : (empty($lead['contact_email']) && !empty($lead['contact_phone']) ? 'phone' : 'email');
 
         $findings = $lead['audit_findings'] ? (json_decode($lead['audit_findings'], true) ?: []) : ['no_website' => true];
+        $fit = LeadFitScorer::persist($pdo, $lead);
 
         if ($channel === 'phone') {
             $script = self::draftWhatsAppMessage($lead['business_name'], $findings);
@@ -634,7 +645,7 @@ class MarketingLeadController
                 "UPDATE marketing_leads SET pitch_subject = NULL, pitch_body = ?, pitch_channel = 'phone',
                  status = 'pitch_ready', updated_at = datetime('now') WHERE id = ?"
             )->execute([$script, $lead['id']]);
-            Response::json(['channel' => 'phone', 'subject' => null, 'body' => $script]);
+            Response::json(['channel' => 'phone', 'subject' => null, 'body' => $script, 'fit' => $fit]);
         }
 
         $demoUrl = AccountDemoController::publishedUrlForLead($pdo, (int) $lead['id']);
@@ -648,7 +659,7 @@ class MarketingLeadController
              status = 'pitch_ready', updated_at = datetime('now') WHERE id = ?"
         )->execute([$pitch['subject'], $pitch['body'], $lead['id']]);
 
-        Response::json(['channel' => 'email'] + $pitch);
+        Response::json(['channel' => 'email', 'fit' => $fit] + $pitch);
     }
 
     /**
@@ -1137,13 +1148,14 @@ class MarketingLeadController
         $prompt = "You are drafting the BODY of a short, honest cold outreach email from Prince Caleb, a solo developer "
             . "who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering, "
             . "to a business called \"{$businessName}\".\n\n{$context}\n\n"
-            . "Structure: 1-2 sentences tied to what's actually true above, then a short \"here's how I can "
+            . "Structure: lead with one useful, specific observation tied to what's actually true above. Then use "
+            . "1-2 sentences to show the practical improvement or free private walkthrough being offered, followed by a short \"here's how I can "
             . "help\" offer mentioning relevant services in general terms (AI voice agents that answer business "
             . "calls, WhatsApp/chat assistants, workflow automation, and connected booking or follow-up systems). "
             . "Mention custom web or mobile engineering only when the verified findings make that foundation relevant "
             . "WITHOUT claiming specific problems that weren't verified "
             . "above, then a low-pressure closing line inviting a reply.\n\n"
-            . "Rules: 4-6 short sentences total, friendly and specific, never salesy or hyperbolic, no invented "
+            . "Rules: 4-6 short sentences total, value-first, friendly and specific, never salesy or hyperbolic, no invented "
             . "statistics, no false urgency, no claims of financial harm or lost business you can't verify. "
             . "Do NOT include a sign-off or any contact details — those are appended separately.\n\n"
             . SharedAgentTools::publicContactContext() . "\n\n"
