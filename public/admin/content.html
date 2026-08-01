@@ -849,6 +849,68 @@
               <span class="form-text ms-2" id="scout_voice_preview_note"></span>
             </div>
           </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-lightbulb me-2" style="color: var(--section-content);"></i>Sage (marketing frameworks specialist)</h5>
+            <div class="form-text mb-3">Sage is the public marketing-brain agent on <a href="/marketing-brain.html">/marketing-brain.html</a> — visitors bring it a real marketing problem and it works through the combined lens of Hormozi, Brunson, Ogilvy, Cialdini, and Godin. The name lightly flavors its internal framing; the voice below isn't spoken aloud on the live page yet, but is used for the preview here and any future read-aloud feature.</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="sage_assistant_name" placeholder="Sage" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="sage_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="sage_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="sage_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="sage_voice_preview_note"></span>
+            </div>
+          </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-film me-2" style="color: var(--section-content);"></i>Reel (video-creative specialist)</h5>
+            <div class="form-text mb-3">Reel helps plan a video before it gets built for the HyperFrames pipeline under video-assets/ — concept, scene breakdown, narration script, pacing, and visual style. It's a planning partner, not a builder. The name lightly flavors its internal framing, and the voice below is the real voice you'll hear if you talk to Reel live in the admin console (<a href="/admin/agent-chat.html">Talk to Agents</a>).</div>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Assistant name</label>
+                <input type="text" class="form-control" id="reel_assistant_name" placeholder="Reel" maxlength="40">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Voice / gender</label>
+                <select class="form-select" id="reel_voice_gender">
+                  <option value="auto">Auto (unspecified)</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Accent</label>
+                <select class="form-select" id="reel_voice_accent">
+                  <option value="en-GB">UK English</option>
+                  <option value="en-US">US English</option>
+                  <option value="auto">Auto (any English)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-0 mt-3">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="reel_voice_preview"><i class="bi bi-play-circle me-1"></i>Preview voice</button>
+              <span class="form-text ms-2" id="reel_voice_preview_note"></span>
+            </div>
+          </div>
         </div>
       </div>
     </form>

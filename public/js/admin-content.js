@@ -28,6 +28,8 @@ const CONTENT_FIELDS = [
   "ada_assistant_name", "ada_voice_gender", "ada_voice_accent",
   "chief_assistant_name", "chief_voice_gender", "chief_voice_accent",
   "scout_assistant_name", "scout_voice_gender", "scout_voice_accent",
+  "sage_assistant_name", "sage_voice_gender", "sage_voice_accent",
+  "reel_assistant_name", "reel_voice_gender", "reel_voice_accent",
   "brand_primary_color", "brand_accent_color", "brand_font", "brand_style_note",
   "brand_logo_dark_url", "brand_logo_white_url",
   "stat_1_value", "stat_1_suffix", "stat_1_label",
@@ -252,6 +254,8 @@ function wireAgentVoicePreview(prefix, fallbackName, sampleLine) {
   wireAgentVoicePreview("ada", "Ada", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("chief", "Chief", "This is how I'll sound when you talk to me in the admin console.");
   wireAgentVoicePreview("scout", "Scout", "This is how I'll sound when you talk to me in the admin console.");
+  wireAgentVoicePreview("sage", "Sage", "This is how I'll sound if read-aloud is ever added to the public marketing brain page.");
+  wireAgentVoicePreview("reel", "Reel", "This is how I'll sound when you talk to me in the admin console.");
   wireBrandLogoUpload("dark");
   wireBrandLogoUpload("white");
 })();

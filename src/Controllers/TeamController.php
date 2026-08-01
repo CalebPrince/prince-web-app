@@ -258,6 +258,23 @@ class TeamController
                 'manage_label' => 'Talk to Reel',
             ],
             [
+                'key' => 'sage',
+                'name' => Settings::get('sage_assistant_name') ?: 'Sage',
+                'role' => 'Marketing Frameworks Specialist',
+                'description' => 'The public marketing-brain agent on /marketing-brain.html — visitors bring a real marketing problem and Sage works through it via the combined lens of Hormozi, Brunson, Ogilvy, Cialdini, and Godin. Public and rate limited, not admin-gated, unlike every other agent here.',
+                'icon' => 'bi-lightbulb',
+                'status' => 'available',
+                'status_label' => 'Live on site',
+                // Real conversations recorded in sage_chats (mirrors chat_sessions'
+                // own "engaged" filter), not an invented counter.
+                'stat_value' => (int) $pdo->query(
+                    "SELECT COUNT(*) FROM sage_chats WHERE transcript_json != '[]'"
+                )->fetchColumn(),
+                'stat_label' => 'conversations',
+                'manage_url' => '/admin/sage-chats.html',
+                'manage_label' => 'View Sage chats',
+            ],
+            [
                 'key' => 'ada',
                 'name' => Settings::get('ada_assistant_name') ?: 'Ada',
                 'role' => 'Document Reviewer',
