@@ -15,6 +15,7 @@ require_once dirname(__DIR__) . '/src/autoload.php';
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
+use App\Support\Utm;
 
 $pdo = Database::get();
 
@@ -24,7 +25,8 @@ $pdo = Database::get();
 // promises. drip_sends stays UNIQUE per (enrollment, step), so a lead in
 // several automations at once still can't be double-sent the same step.
 $due = $pdo->query(
-    "SELECT e.id AS enrollment_id, e.email, e.name, e.unsubscribe_token, s.id AS step_id, s.subject, s.body
+    "SELECT e.id AS enrollment_id, e.email, e.name, e.unsubscribe_token, s.id AS step_id, s.subject, s.body,
+            a.trigger_event
      FROM drip_enrollments e
      JOIN automations a ON a.id = e.automation_id AND a.is_active = 1
      JOIN drip_steps s ON s.automation_id = e.automation_id AND s.is_active = 1
@@ -39,6 +41,7 @@ foreach ($due as $row) {
     $name = trim((string) ($row['name'] ?? '')) ?: 'there';
     $subject = str_replace('{{name}}', $name, $row['subject']);
     $message = str_replace('{{name}}', $name, $row['body']);
+    $message = Utm::tagLinks($message, (string) $row['trigger_event']);
     $unsubscribeUrl = 'https://princecaleb.dev/api/v1/drip/unsubscribe?token=' . $row['unsubscribe_token'];
 
     $text = $message . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n" . $unsubscribeUrl;

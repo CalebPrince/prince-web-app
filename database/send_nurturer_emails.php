@@ -18,6 +18,7 @@ use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Settings;
+use App\Support\Utm;
 
 $pdo = Database::get();
 
@@ -54,9 +55,10 @@ foreach ([2 => $sequence2Offset, 3 => $sequence3Offset] as $sequenceNumber => $d
             continue;
         }
 
+        $taggedBody = Utm::tagLinks($result['email_body'], 'nurturer_seq' . $sequenceNumber, 'email', 'nurturer');
         $unsubscribeUrl = 'https://princecaleb.dev/api/v1/drip/unsubscribe?token=' . $row['unsubscribe_token'];
-        $text = $result['email_body'] . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n" . $unsubscribeUrl;
-        $html = EmailTemplate::wrapMarketing($result['email_body'], 'Following up', $unsubscribeUrl);
+        $text = $taggedBody . "\n\n—\nNo longer interested? Unsubscribe here and you won't hear from me again:\n" . $unsubscribeUrl;
+        $html = EmailTemplate::wrapMarketing($taggedBody, 'Following up', $unsubscribeUrl);
 
         if (Mailer::sendHtml($row['email'], $result['subject_line'], $html, $text, Mailer::replyInbox())) {
             $pdo->prepare(

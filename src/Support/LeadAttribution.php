@@ -10,7 +10,7 @@ final class LeadAttribution
 {
     public static function capture(PDO $pdo, string $sourceType, int $sourceId, mixed $payload): void
     {
-        if (!is_array($payload) || $sourceId < 1 || !in_array($sourceType, ['inquiry', 'booking', 'chat'], true)) {
+        if (!is_array($payload) || $sourceId < 1 || !in_array($sourceType, ['inquiry', 'booking', 'chat', 'newsletter'], true)) {
             return;
         }
 

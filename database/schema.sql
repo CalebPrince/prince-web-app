@@ -974,7 +974,7 @@ CREATE INDEX IF NOT EXISTS idx_nurturer_replies_status ON nurturer_replies (stat
 -- CRM records so the same shape can serve contact forms, bookings and chat.
 CREATE TABLE IF NOT EXISTS lead_attribution (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source_type TEXT NOT NULL CHECK (source_type IN ('inquiry', 'booking', 'chat')),
+  source_type TEXT NOT NULL CHECK (source_type IN ('inquiry', 'booking', 'chat', 'newsletter')),
   source_id INTEGER NOT NULL,
   landing_path TEXT,
   referrer TEXT,

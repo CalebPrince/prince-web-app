@@ -10,8 +10,10 @@ use App\Support\ActivityLog;
 use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailTemplate;
+use App\Support\LeadAttribution;
 use App\Support\Mailer;
 use App\Support\Response;
+use App\Support\Utm;
 
 class NewsletterController
 {
@@ -42,6 +44,7 @@ class NewsletterController
             if ($existing['status'] === 'unsubscribed') {
                 $pdo->prepare("UPDATE newsletter_subscribers SET status = 'subscribed' WHERE id = ?")
                     ->execute([$existing['id']]);
+                LeadAttribution::capture($pdo, 'newsletter', (int) $existing['id'], $data['attribution'] ?? []);
                 Automations::fire('newsletter_subscribed', $email, [
                     'last_action' => 'Re-subscribed to the newsletter',
                 ], $pdo);
@@ -51,6 +54,7 @@ class NewsletterController
 
         $pdo->prepare('INSERT INTO newsletter_subscribers (email, unsubscribe_token) VALUES (?, ?)')
             ->execute([$email, bin2hex(random_bytes(16))]);
+        LeadAttribution::capture($pdo, 'newsletter', (int) $pdo->lastInsertId(), $data['attribution'] ?? []);
 
         Automations::fire('newsletter_subscribed', $email, [
             'last_action' => 'Subscribed to the newsletter',
@@ -142,11 +146,13 @@ class NewsletterController
             throw new \RuntimeException('No active subscribers are available. The newsletter remains unsent.');
         }
 
+        $taggedBody = Utm::tagLinks($draft['email_body'], 'newsletter_' . $draft['id'], 'email', 'newsletter');
+
         $sent = 0;
         foreach ($subscribers as $sub) {
             $unsubscribeUrl = 'https://princecaleb.dev/api/v1/newsletter/unsubscribe?token=' . $sub['unsubscribe_token'];
-            $text = $draft['email_body'] . "\n\n—\nUnsubscribe: " . $unsubscribeUrl;
-            $html = EmailTemplate::wrapMarketing($draft['email_body'], 'Newsletter', $unsubscribeUrl);
+            $text = $taggedBody . "\n\n—\nUnsubscribe: " . $unsubscribeUrl;
+            $html = EmailTemplate::wrapMarketing($taggedBody, 'Newsletter', $unsubscribeUrl);
             if (Mailer::sendHtml($sub['email'], $draft['subject_line'], $html, $text)) {
                 $sent++;
             }

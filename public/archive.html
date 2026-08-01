@@ -326,6 +326,7 @@ document.getElementById('newsletter-form').addEventListener('submit', async (e) 
     await api.post('/api/v1/newsletter/subscribe', {
       email: document.getElementById('newsletter-email').value,
       website: document.getElementById('newsletter-website').value,
+      attribution: window.getLeadAttribution ? window.getLeadAttribution() : {},
     });
     document.getElementById('newsletter-form').reset();
     msg.className = 'alert alert-success py-2 small mt-3 mx-auto';

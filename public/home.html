@@ -940,6 +940,7 @@
       await api.post('/api/v1/newsletter/subscribe', {
         email: document.getElementById('home-newsletter-email').value,
         website: document.getElementById('home-newsletter-website').value,
+        attribution: window.getLeadAttribution ? window.getLeadAttribution() : {},
       });
       form.reset();
       msg.className = 'alert alert-success py-2 small mt-3 mx-auto';

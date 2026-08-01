@@ -1450,4 +1450,34 @@ $pdo->exec(
        AND automation_id IN (SELECT id FROM automations WHERE trigger_event = 'marketing_pitch_sent')"
 );
 
+// Newsletter signups now capture first-touch attribution too (previously
+// only inquiry/booking/chat could). SQLite can't ALTER a CHECK constraint,
+// so rebuild the table if 'newsletter' isn't an allowed source_type yet.
+$leadAttributionSql = (string) $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'lead_attribution'"
+)->fetchColumn();
+if ($leadAttributionSql !== '' && !str_contains($leadAttributionSql, "'newsletter'")) {
+    rebuildTable(
+        $pdo,
+        'lead_attribution',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_type TEXT NOT NULL CHECK (source_type IN ('inquiry', 'booking', 'chat', 'newsletter')),
+            source_id INTEGER NOT NULL,
+            landing_path TEXT,
+            referrer TEXT,
+            utm_source TEXT,
+            utm_medium TEXT,
+            utm_campaign TEXT,
+            utm_content TEXT,
+            utm_term TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE (source_type, source_id)
+        )",
+        'id, source_type, source_id, landing_path, referrer, utm_source, utm_medium, utm_campaign, utm_content, utm_term, created_at',
+        ['CREATE INDEX IF NOT EXISTS idx_lead_attribution_source ON lead_attribution (source_type, source_id)']
+    );
+    echo "Rebuilt lead_attribution — source_type now allows 'newsletter'.\n";
+}
+
 echo "Schema applied.\n";
