@@ -29,8 +29,12 @@ $due = $pdo->query(
 $newsletters = 0;
 $recipients = 0;
 foreach ($due as $draft) {
-    $recipients += NewsletterController::deliverDraft($draft, $pdo);
-    $newsletters++;
+    try {
+        $recipients += NewsletterController::deliverDraft($draft, $pdo);
+        $newsletters++;
+    } catch (RuntimeException $e) {
+        fwrite(STDERR, 'Newsletter #' . $draft['id'] . ': ' . $e->getMessage() . "\n");
+    }
 }
 
 echo "{$newsletters} newsletter(s) sent to {$recipients} subscriber(s) total.\n";

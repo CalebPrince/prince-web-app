@@ -114,7 +114,11 @@ class NewsletterController
             Response::error('This newsletter has already been sent.', 409);
         }
 
-        $sent = self::deliverDraft($draft, $pdo);
+        try {
+            $sent = self::deliverDraft($draft, $pdo);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 422);
+        }
         ActivityLog::log($user, 'sent', 'newsletter_draft', (int) $draft['id'], $draft['subject_line'], ['recipients' => $sent]);
 
         Response::json(['status' => 'sent', 'recipients' => $sent]);
@@ -134,6 +138,10 @@ class NewsletterController
             "SELECT email, unsubscribe_token FROM newsletter_subscribers WHERE status = 'subscribed'"
         )->fetchAll();
 
+        if ($subscribers === []) {
+            throw new \RuntimeException('No active subscribers are available. The newsletter remains unsent.');
+        }
+
         $sent = 0;
         foreach ($subscribers as $sub) {
             $unsubscribeUrl = 'https://princecaleb.dev/api/v1/newsletter/unsubscribe?token=' . $sub['unsubscribe_token'];
@@ -142,6 +150,10 @@ class NewsletterController
             if (Mailer::sendHtml($sub['email'], $draft['subject_line'], $html, $text)) {
                 $sent++;
             }
+        }
+
+        if ($sent === 0) {
+            throw new \RuntimeException('Newsletter delivery failed for every active subscriber. The newsletter remains unsent so you can retry.');
         }
 
         $pdo->prepare("UPDATE newsletter_drafts SET sent_at = datetime('now'), recipient_count = ? WHERE id = ?")
