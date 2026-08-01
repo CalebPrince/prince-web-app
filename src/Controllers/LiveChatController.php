@@ -13,7 +13,6 @@ use App\Support\AiAgentEngine;
 use App\Support\AiText;
 use App\Support\Automations;
 use App\Support\Database;
-use App\Support\Jwt;
 use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
@@ -822,36 +821,13 @@ class LiveChatController
     }
 
     /**
-     * Is this browser tab logged into /admin right now? Caleb testing the
-     * public widget from his own browser used to get the full lead-capture
-     * treatment — name/email/phone requests, quote pitches — same as any
-     * stranger, because the web widget had no equivalent of WhatsApp's phone
-     * number match for "this is the owner". The admin session cookie is
-     * site-wide (path=/, set by AuthController::issueTokens) and just as hard
-     * to fake as a phone number, so it doubles as that signal here. Mirrors
-     * AuthMiddleware::requireAuth() but never errors — an absent or invalid
-     * cookie just means "ordinary visitor", which is the overwhelmingly
-     * common case for this endpoint.
+     * Delegates to AuthMiddleware::tryAuth(), the promoted, reusable version
+     * of this same check (also used by SageController for the same
+     * "recognize the owner without requiring auth" purpose).
      */
     private static function isOwnerSession(): bool
     {
-        $token = $_COOKIE['access_token'] ?? null;
-        if (!$token) {
-            return false;
-        }
-
-        $config = self::config();
-        $payload = Jwt::decode($token, $config['jwt_secret']);
-        if (!$payload || ($payload['type'] ?? null) !== 'access') {
-            return false;
-        }
-
-        $pdo = Database::get();
-        $stmt = $pdo->prepare('SELECT token_version FROM users WHERE id = ? AND is_active = 1');
-        $stmt->execute([$payload['sub']]);
-        $user = $stmt->fetch();
-
-        return $user && (int) $user['token_version'] === (int) $payload['tv'];
+        return AuthMiddleware::tryAuth() !== null;
     }
 
     private static function findOrCreateSession(\PDO $pdo, ?string $token): array

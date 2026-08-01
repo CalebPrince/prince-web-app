@@ -5293,3 +5293,21 @@ body a:not(.btn-brand):not(.btn-brand-outline):not(.brand-logo):not(.case-media)
 
 /* Shared heading accent word — the key word in a page's main H1, in the site's signal-green accent. */
 .accent-word { color: var(--accent-strong); }
+
+/* Homepage Sage feature — standalone section, not a deck-card, so it reads
+   as its own product rather than a footnote under the chatbots service. */
+.home-sage-feature { background: var(--bg-soft); border-block: 1px solid var(--line); }
+.sage-feature-card { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+.sage-feature-copy h2 { max-width: 20ch; letter-spacing: -.03em; }
+.sage-feature-copy p { max-width: 62ch; }
+.sage-feature-live { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .78rem; font-weight: 700; }
+.sage-feature-live i { width: .5rem; height: .5rem; border-radius: 50%; background: #22c77a; box-shadow: 0 0 0 4px rgba(34, 199, 122, .14); }
+.sage-feature-frameworks { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.sage-feature-frameworks span { display: flex; flex-direction: column; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--card-bg); }
+.sage-feature-frameworks span:last-child { grid-column: 1 / -1; }
+.sage-feature-frameworks b { color: var(--heading-color); font-size: .85rem; }
+.sage-feature-frameworks small { margin-top: .15rem; color: var(--muted); font-size: .68rem; }
+
+@media (max-width: 991.98px) {
+  .sage-feature-card { grid-template-columns: 1fr; }
+}

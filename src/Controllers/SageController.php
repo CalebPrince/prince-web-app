@@ -60,8 +60,20 @@ class SageController
         $pdo = Database::get();
         $session = self::findOrCreateSession($pdo, is_string($data['token'] ?? null) ? $data['token'] : null);
 
+        // Recognizes Prince Caleb without requiring auth for everyone else —
+        // same site-wide admin session cookie LiveChatController checks for
+        // Lisa. If it's him, mark the session so the admin Sage Chats list
+        // shows "Prince Caleb" instead of "anonymous visitor" too.
+        $owner = AuthMiddleware::tryAuth();
+        // users has no display-name column (single-admin system, email-only) —
+        // "Prince Caleb" is the one real admin this app has.
+        if ($owner && empty($session['client_name'])) {
+            $pdo->prepare('UPDATE sage_chats SET client_name = ? WHERE id = ?')->execute(['Prince Caleb', $session['id']]);
+            $session['client_name'] = 'Prince Caleb';
+        }
+
         $result = AiAgentEngine::run(
-            self::buildChatSystemPrompt(),
+            self::buildChatSystemPrompt($owner !== null),
             [
                 SharedAgentTools::siteInfoToolDeclaration(),
                 SharedAgentTools::searchContentToolDeclaration(),
@@ -135,14 +147,20 @@ class SageController
         return ['status' => 'recorded'];
     }
 
-    private static function buildChatSystemPrompt(): string
+    private static function buildChatSystemPrompt(bool $isOwner = false): string
     {
         $name = Settings::get('sage_assistant_name') ?: 'Sage';
         $genderLine = self::genderLine((string) Settings::get('sage_voice_gender'));
+        $ownerLine = $isOwner
+            ? " You know who you're talking to right now: this is Prince Caleb himself, logged into his own admin "
+                . "session, not an anonymous visitor — talk to him like the specialist on his own team that you are, "
+                . "not like a stranger you're meeting for the first time. He may be testing you, planning site copy, "
+                . "or working through a real problem of his own; either is fine."
+            : '';
 
         return "You are {$name}, a marketing-frameworks sparring partner on Prince Caleb's AI team — Prince Caleb "
             . "is a solo developer who builds AI voice agents, chatbots, and business automations, and runs "
-            . "princecaleb.dev.{$genderLine}\n\n"
+            . "princecaleb.dev.{$genderLine}{$ownerLine}\n\n"
             . "Visitors bring you a real marketing problem — an offer that isn't converting, a channel choice "
             . "(content vs. outbound), a stuck funnel, a headline or thumbnail, a pricing or positioning question — "
             . "and you work it through the combined lens of well-known marketing frameworks: Alex Hormozi's offer "
