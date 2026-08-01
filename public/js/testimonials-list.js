@@ -32,6 +32,7 @@
 
   if (caseStudies.length) {
     caseStudySection.classList.remove('d-none');
+    document.getElementById('case-study-pointer')?.classList.remove('d-none');
     caseStudyGrid.innerHTML = caseStudies.map((t, i) => `
       <div class="col-lg-6">
         <a href="/project.html?slug=${encodeURIComponent(t.project_slug)}" class="case-study-card reveal${i ? ' reveal-delay-' + Math.min(i, 2) : ''}">
