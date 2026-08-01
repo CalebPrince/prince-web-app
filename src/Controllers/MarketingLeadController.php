@@ -14,6 +14,7 @@ use App\Support\LeadFitScorer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\Utm;
 
 /**
  * Internal outreach tool ("Developer's Edge"): admin tracks target
@@ -651,7 +652,7 @@ class MarketingLeadController
         }
 
         $demoUrl = AccountDemoController::publishedUrlForLead($pdo, (int) $lead['id']);
-        $pitch = self::draftPitch($lead['business_name'], $findings, $demoUrl);
+        $pitch = self::draftPitch($lead['business_name'], $findings, $demoUrl, (int) $lead['id']);
         if ($pitch === null) {
             Response::error('Pitch generation failed — please try again in a moment.', 502);
         }
@@ -1143,7 +1144,7 @@ class MarketingLeadController
      * Engine's auto-draft can generate a pitch unattended — same code path as
      * a hand-triggered generate-pitch, so the two can't drift.
      */
-    public static function draftPitch(string $businessName, array $findings, ?string $accountDemoUrl = null): ?array
+    public static function draftPitch(string $businessName, array $findings, ?string $accountDemoUrl = null, ?int $leadId = null): ?array
     {
         $context = self::findingsContext($findings);
 
@@ -1178,7 +1179,9 @@ class MarketingLeadController
 
         $body = (string) $parsed['body'];
         if ($accountDemoUrl) {
-            $body .= "\n\nI put together a short outcome walkthrough for {$businessName}: {$accountDemoUrl}";
+            $campaign = 'cold_outreach_lead_' . ($leadId ?? 'unknown');
+            $taggedDemoUrl = Utm::tagLinks($accountDemoUrl, $campaign, 'email', 'cold_outreach');
+            $body .= "\n\nI put together a short outcome walkthrough for {$businessName}: {$taggedDemoUrl}";
         }
         return [
             'subject' => (string) $parsed['subject'],
