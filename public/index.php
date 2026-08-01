@@ -81,6 +81,7 @@ use App\Controllers\SettingsController;
 use App\Controllers\ShortLinkController;
 use App\Controllers\SketchController;
 use App\Controllers\ScoutController;
+use App\Controllers\SageController;
 use App\Controllers\SocialDraftController;
 use App\Controllers\SubscriptionController;
 use App\Controllers\TagController;
@@ -164,6 +165,7 @@ $router->get('/api/v1/admin/search', [SearchController::class, 'adminSearch']);
 $router->get('/api/v1/integrations/events', [IntegrationController::class, 'events']);
 $router->post('/api/v1/agents/beacon/draft', [BeaconController::class, 'draft']);
 $router->post('/api/v1/agents/nurturer/draft', [NurturerController::class, 'draft']);
+$router->post('/api/v1/agents/sage/chat', [SageController::class, 'chat']);
 
 // Auth
 $router->post('/api/v1/auth/login', [AuthController::class, 'login']);

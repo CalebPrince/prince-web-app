@@ -1,0 +1,24 @@
+{
+  "project": "princecaleb-brand-sting",
+  "category": "kinetic-type",
+  "search_needed": false,
+  "asset_needs": [],
+  "brief": "8s square (1080x1080) brand sting for princecaleb.dev. Three sequential kinetic-type lines build the sentence 'AI agents / that run your business / while you sleep' against a near-black surface with a faint precision grid and restrained glow, matching the site's real Builder OS design system (--brand-primary #050d08, --brand-accent #62ff98, clean geometric sans-serif, generous negative space). The type clears, then a logo-reveal beat scales in the 'P' brand mark inside a glowing accent ring, followed by the 'princecaleb.dev' wordmark, holding to the end frame.",
+  "brand": {
+    "primary_color": "#050d08",
+    "accent_color": "#62ff98",
+    "font": "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+    "style_note": "Builder OS cinematic system style: near-black surfaces, signal-green status accents, clean white typography, precise grids, restrained glow, generous negative space."
+  },
+  "duration": 8.0,
+  "resolution": { "width": 1080, "height": 1080 },
+  "beats": [
+    { "start": 0.0, "duration": 8.0, "track": 0, "content": "background: near-black surface + faint precision grid + vignette glow" },
+    { "start": 0.3, "duration": 1.3, "track": 1, "content": "kinetic-type line 1: \"AI agents\"" },
+    { "start": 1.6, "duration": 1.3, "track": 1, "content": "kinetic-type line 2: \"that run your business\"" },
+    { "start": 2.9, "duration": 1.3, "track": 1, "content": "kinetic-type line 3: \"while you sleep\" (accent pulse on \"sleep\")" },
+    { "start": 4.6, "duration": 3.4, "track": 2, "content": "logo-reveal: \"P\" brand mark scale-in inside glowing accent ring" },
+    { "start": 5.6, "duration": 2.4, "track": 3, "content": "wordmark: \"princecaleb.dev\" fade-in, holds to end" }
+  ],
+  "output": { "format": "mp4", "path": "renders/brand-sting.mp4" }
+}

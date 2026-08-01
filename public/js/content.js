@@ -13,7 +13,16 @@
   document.querySelectorAll("[data-content]").forEach(el => {
     const value = content[el.dataset.content];
     if (value) {
-      el.textContent = value;
+      if (el.dataset.content === "hero_title") {
+        // Keeps the "voice" accent-word highlight (matches every other page's
+        // heading treatment) alive across an admin-edited Site Content value,
+        // instead of losing it the moment textContent overwrites the markup.
+        // Falls back to plain text harmlessly if a future edit drops the word.
+        const escaped = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        el.innerHTML = escaped.replace(/\bvoice\b/i, (m) => `<span class="accent-word">${m}</span>`);
+      } else {
+        el.textContent = value;
+      }
       el.classList.remove("d-none");
     }
   });

@@ -40,6 +40,11 @@ class TeamController
             ['key' => 'proposal', 'name' => Settings::get('proposal_assistant_name') ?: 'Ledger', 'role' => 'Proposals & commercial workflows', 'status' => 'on demand', 'capabilities' => ['Proposals', 'Scope', 'Payment milestones']],
             ['key' => 'arch', 'name' => Settings::get('arch_assistant_name') ?: 'Arch', 'role' => 'AI website builder', 'status' => 'building', 'capabilities' => ['Websites', 'CMS', 'Deployments']],
             ['key' => 'scout', 'name' => Settings::get('scout_assistant_name') ?: 'Scout', 'role' => 'Tech & ideation specialist', 'status' => 'on demand', 'capabilities' => ['Tech scouting', 'Ideation', 'Emerging tools']],
+            // Sage is the one public-facing agent here with its own dedicated
+            // page (visitors chat with it directly, no admin auth) rather than
+            // the generic /agent.html dossier every other entry uses — 'url'
+            // lets the Builder OS grid link straight there instead.
+            ['key' => 'sage', 'name' => Settings::get('sage_assistant_name') ?: 'Sage', 'role' => 'Marketing frameworks specialist', 'status' => 'on demand', 'capabilities' => ['Offer critique', 'Funnel strategy', 'Copy & positioning'], 'url' => '/marketing-brain.html'],
             ['key' => 'ada', 'name' => Settings::get('ada_assistant_name') ?: 'Ada', 'role' => 'Document review', 'status' => 'on demand', 'capabilities' => ['Invoices', 'Statements', 'Document checks']],
             ['key' => 'chief', 'name' => Settings::get('chief_assistant_name') ?: 'Chief', 'role' => 'Private operations intelligence', 'status' => $chiefActive ? 'active' : 'standby', 'capabilities' => ['Reporting', 'Monitoring', 'Owner alerts']],
         ];

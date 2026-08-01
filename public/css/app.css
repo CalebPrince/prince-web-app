@@ -5206,3 +5206,90 @@ body a:not(.btn-brand):not(.btn-brand-outline):not(.brand-logo):not(.case-media)
 .system-recommendation > div a:not(.btn-brand):hover {
   color: var(--accent-strong) !important;
 }
+
+/* 5 Levels of AI Adoption ladder page */
+.ladder-hero { padding: clamp(5rem, 8vw, 8.5rem) 0 4rem; }
+.ladder-hero h1 { max-width: 16ch; margin: 0 0 1.4rem; color: var(--heading-color); font-size: clamp(3rem, 6vw, 5.6rem); font-weight: 760; letter-spacing: -.05em; line-height: .96; }
+.ladder-hero-sub { max-width: 68ch; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.18rem); line-height: 1.75; }
+
+.ladder-rungs { display: grid; gap: .9rem; }
+.ladder-rung { display: grid; grid-template-columns: auto 1fr; gap: 1.6rem; align-items: start; padding: 1.6rem clamp(1.4rem, 3vw, 2.2rem); border: 1px solid var(--line); border-radius: 16px; background: var(--card-bg); transition: transform .3s var(--ease-out), box-shadow .3s var(--ease-out), border-color .3s var(--ease-out); }
+.ladder-rung:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.ladder-rung-num { color: var(--line-strong); font-family: ui-monospace, monospace; font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.ladder-rung-body h3 { margin: 0 0 .5rem; font-size: 1.3rem; letter-spacing: -.02em; }
+.ladder-rung-body p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.7; }
+.ladder-rung-tag { display: inline-block; margin-top: .85rem; padding: .3rem .65rem; border-radius: 999px; color: var(--accent-strong); background: var(--bg-soft); font-size: .65rem; font-weight: 800; letter-spacing: .02em; }
+.ladder-rung.is-current { border-color: var(--accent-strong); background: linear-gradient(180deg, var(--bg-soft), var(--card-bg)); }
+.ladder-rung.is-current .ladder-rung-num { color: var(--accent-strong); }
+
+.ladder-proof-section { background: var(--bg-soft); }
+.ladder-proof-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 2.5rem; }
+.ladder-proof-grid article { display: grid; grid-template-columns: 40px 1fr; gap: 1rem; padding: 1.3rem; border: 1px solid var(--line); border-radius: 14px; background: var(--card-bg); }
+.ladder-proof-icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 10px; color: #fff; background: #182236; font-size: .78rem; font-weight: 900; }
+.ladder-proof-grid h3 { margin: 0 0 .5rem; font-size: 1rem; }
+.ladder-proof-grid p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.6; }
+.ladder-disclaimer { max-width: 90ch; margin: 1.4rem auto 0; color: var(--muted); font-size: .68rem; text-align: center; }
+
+.ladder-build-section { padding-top: 0; }
+.ladder-build-card { display: grid; grid-template-columns: 1fr auto; gap: 3rem; align-items: center; padding: clamp(2rem, 5vw, 4rem); border-radius: 22px; color: #d8e5f8; background: #0d1728; }
+.ladder-build-card h2 { max-width: 20ch; color: #fff; font-size: clamp(1.8rem, 3.5vw, 3rem); letter-spacing: -.04em; }
+.ladder-build-card p:not(.eyebrow) { max-width: 60ch; margin: 1rem 0 0; color: #aabbd3; line-height: 1.7; }
+.ladder-build-card .eyebrow { color: #73aaff; }
+.ladder-build-actions { display: grid; gap: .65rem; min-width: 235px; }
+.ladder-build-actions .btn-brand { color: #0d1728; background: #fff; text-align: center; }
+.ladder-build-actions .btn-brand-outline { color: #fff; border-color: rgba(255,255,255,.35); text-align: center; }
+
+@media (max-width: 991.98px) { .ladder-proof-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 767.98px) {
+  .ladder-rung { grid-template-columns: 1fr; gap: .5rem; }
+  .ladder-proof-grid { grid-template-columns: 1fr; }
+  .ladder-build-card { grid-template-columns: 1fr; gap: 2rem; }
+  .ladder-build-actions { min-width: 0; }
+}
+
+/* Sage: marketing-brain public chat page */
+.sage-hero { padding: clamp(5rem, 8vw, 8.5rem) 0 3.5rem; }
+.sage-hero h1 { margin: 0 0 1.4rem; color: var(--heading-color); font-size: clamp(3rem, 6vw, 5.6rem); font-weight: 760; letter-spacing: -.05em; line-height: .96; }
+.sage-hero h1 span { color: var(--accent-strong); }
+.sage-hero-sub { max-width: 66ch; color: var(--muted); font-size: clamp(1rem, 1.4vw, 1.18rem); line-height: 1.75; }
+.sage-framework-strip { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 2rem; }
+.sage-framework-strip span { display: flex; flex-direction: column; padding: .6rem .9rem; border: 1px solid var(--line); border-radius: 10px; background: var(--card-bg); }
+.sage-framework-strip b { color: var(--heading-color); font-size: .78rem; }
+.sage-framework-strip small { margin-top: .1rem; color: var(--muted); font-size: .63rem; }
+
+.sage-chat-section { padding-top: 0; }
+.sage-chat-layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2rem; align-items: start; }
+.sage-chat-card { display: grid; grid-template-rows: auto 1fr auto; min-height: 520px; border: 1px solid var(--line); border-radius: 18px; background: var(--card-bg); box-shadow: var(--shadow); overflow: hidden; }
+.sage-chat-card > header { display: flex; align-items: center; gap: .6rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--bg-soft); }
+.sage-chat-card > header strong { color: var(--heading-color); font-size: .9rem; }
+.sage-chat-card > header span { margin-left: auto; color: var(--muted); font-size: .68rem; }
+.sage-chat-card > header .status-dot.is-live { width: .5rem; height: .5rem; border-radius: 50%; background: #22c77a; box-shadow: 0 0 0 4px rgba(34, 199, 122, .12); }
+.sage-chat-log { display: flex; flex-direction: column; gap: .7rem; padding: 1.25rem; overflow-y: auto; max-height: 460px; }
+.sage-bubble { max-width: 85%; padding: .7rem .9rem; border-radius: 14px 14px 14px 3px; color: var(--heading-color); background: var(--bg-soft); font-size: .85rem; line-height: 1.6; white-space: pre-wrap; }
+.sage-bubble.user { align-self: flex-end; border-radius: 14px 14px 3px 14px; color: #fff; background: #182236; }
+.sage-chat-msg { margin: 0 1.25rem; }
+.sage-chat-form { display: flex; gap: .6rem; padding: 1rem 1.25rem; border-top: 1px solid var(--line); }
+.sage-chat-form .form-control { flex: 1; }
+
+.sage-chat-side { display: grid; align-content: start; gap: .6rem; }
+.sage-starter { padding: .75rem 1rem; border: 1px solid var(--line); border-radius: 12px; color: var(--heading-color); background: var(--card-bg); font-size: .82rem; font-weight: 600; text-align: left; transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out); }
+.sage-starter:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.sage-chat-note { margin: .6rem 0 0; color: var(--muted); font-size: .72rem; line-height: 1.6; }
+
+.sage-build-section { padding-top: 0; }
+.sage-build-card { display: grid; grid-template-columns: 1fr auto; gap: 3rem; align-items: center; padding: clamp(2rem, 5vw, 4rem); border-radius: 22px; color: #d8e5f8; background: #0d1728; }
+.sage-build-card h2 { max-width: 20ch; color: #fff; font-size: clamp(1.8rem, 3.5vw, 3rem); letter-spacing: -.04em; }
+.sage-build-card p:not(.eyebrow) { max-width: 60ch; margin: 1rem 0 0; color: #aabbd3; line-height: 1.7; }
+.sage-build-card .eyebrow { color: #73aaff; }
+.sage-build-actions { display: grid; gap: .65rem; min-width: 235px; }
+.sage-build-actions .btn-brand { color: #0d1728; background: #fff; text-align: center; }
+.sage-build-actions .btn-brand-outline { color: #fff; border-color: rgba(255,255,255,.35); text-align: center; }
+
+@media (max-width: 991.98px) { .sage-chat-layout { grid-template-columns: 1fr; } }
+@media (max-width: 767.98px) {
+  .sage-build-card { grid-template-columns: 1fr; gap: 2rem; }
+  .sage-build-actions { min-width: 0; }
+}
+
+/* Shared heading accent word — the key word in a page's main H1, in the site's signal-green accent. */
+.accent-word { color: var(--accent-strong); }
