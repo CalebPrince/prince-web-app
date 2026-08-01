@@ -51,7 +51,9 @@ class MarketingLeadController
         $rows = $pdo->query('SELECT * FROM marketing_leads ORDER BY created_at DESC')->fetchAll();
         $demoRows = $pdo->query('SELECT lead_id FROM account_demos')->fetchAll();
         $demoLeadIds = array_flip(array_map(static fn(array $row): int => (int) $row['lead_id'], $demoRows));
+        $researchAgentName = Settings::get('dossier_assistant_name') ?: 'Sharon';
         foreach ($rows as &$row) {
+            $row['research_agent_name'] = $researchAgentName;
             $fit = LeadFitScorer::persist($pdo, $row);
             $row['fit_score'] = $fit['score'];
             $row['fit_label'] = $fit['label'];

@@ -11,6 +11,7 @@ let leadFilterTimer = null;
 let accountWorkspaceModal = null;
 let workspaceLeadId = null;
 let allLeadRows = [];
+let researchAgentDisplayName = "Sharon";
 
 if (window.Chart) {
   Chart.defaults.color = "#8b93a7";
@@ -65,6 +66,10 @@ function fitScoreCell(lead) {
   </div>`;
 }
 
+function researchAgentName(lead = null) {
+  return String(lead?.research_agent_name || researchAgentDisplayName || "Sharon");
+}
+
 function renderQualificationTabs(rows) {
   const counts = {
     all: rows.length,
@@ -99,7 +104,7 @@ function lastSignalCell(lead) {
   if (Number(demo.cta_clicks) > 0) return `<div class="last-signal"><strong>${Number(demo.cta_clicks)} demo CTA click${Number(demo.cta_clicks) === 1 ? "" : "s"}</strong>${Number(demo.views || 0)} views</div>`;
   if (Number(demo.views) > 0) return `<div class="last-signal"><strong>${Number(demo.views)} demo view${Number(demo.views) === 1 ? "" : "s"}</strong>${Number(demo.engaged_seconds || 0)}s engaged</div>`;
   if (lead.sent_at) return `<div class="last-signal"><strong>Outreach sent</strong>${escapeHtml(formatShortDate(lead.sent_at))}</div>`;
-  if (lead.researched_at) return `<div class="last-signal"><strong>Dossier ready</strong>${escapeHtml(formatShortDate(lead.researched_at))}</div>`;
+  if (lead.researched_at) return `<div class="last-signal"><strong>${escapeHtml(researchAgentName(lead))} brief ready</strong>${escapeHtml(formatShortDate(lead.researched_at))}</div>`;
   return `<div class="last-signal"><strong>Awaiting evidence</strong>${escapeHtml(formatShortDate(lead.created_at))}</div>`;
 }
 
@@ -117,10 +122,12 @@ function openAccountWorkspace(lead) {
   const auditIssues = (lead.audit_findings && Array.isArray(lead.audit_findings.issues)) ? lead.audit_findings.issues : [];
   const demo = lead.account_demo || null;
   const research = lead.research_findings || null;
+  const researchName = researchAgentName(lead);
   document.getElementById("account-workspace-title").textContent = lead.business_name || "Account";
   document.getElementById("workspace-subtitle").textContent = `${lead.opportunity?.label || "Qualification pending"} · ${String(lead.status || "pending").replace("_", " ")}`;
   document.getElementById("workspace-fit-score").textContent = `${Number(lead.fit_score || 0)}/100`;
   document.getElementById("workspace-fit-label").textContent = lead.fit_label || "Not scored";
+  document.getElementById("workspace-research-agent").textContent = researchName;
   document.getElementById("workspace-fit-reasons").innerHTML = fitReasons.length
     ? fitReasons.map(reason => `<li>${escapeHtml(reason)}</li>`).join("")
     : "<li>Add contact details, research, or audit evidence to establish fit.</li>";
@@ -141,8 +148,8 @@ function openAccountWorkspace(lead) {
     workspaceFact("Estimated value", `${lead.currency || "GHS"} ${(Number(lead.estimated_value || 0) / 100).toLocaleString()}`),
   ].join("");
   document.getElementById("workspace-research").textContent = research
-    ? (research.summary || research.tech_note || "The dossier is ready. Open it for the complete evidence set.")
-    : "No dossier yet. Research the account before investing in a high-touch demo.";
+    ? (research.summary || research.tech_note || `${researchName}'s brief is ready. Open it for the complete evidence set.`)
+    : `No ${researchName} research brief yet. Research the account before investing in a high-touch demo.`;
   document.getElementById("workspace-demo").innerHTML = demo
     ? `<div class="workspace-facts mb-3">${workspaceFact("Intent", `${Number(demo.intent_score || 0)}/100`)}${workspaceFact("Views", String(Number(demo.views || 0)))}${workspaceFact("CTA clicks", String(Number(demo.cta_clicks || 0)))}${workspaceFact("Engaged", `${Number(demo.engaged_seconds || 0)}s`)}</div>${demo.url ? `<a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(demo.url)}" target="_blank" rel="noopener">Open private demo</a>` : '<span class="small text-muted-custom">Draft not published yet.</span>'}`
     : '<p class="small text-muted-custom mb-0">No Arch demo yet. Build one only when the evidence justifies deeper personalization.</p>';
@@ -157,7 +164,7 @@ function openAccountWorkspace(lead) {
   const canPitch = !lead.website_url || lead.audit_findings;
   document.getElementById("workspace-actions").innerHTML = `
     <button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="priority-btn"><i class="bi bi-star me-1"></i>${Number(lead.is_high_priority) ? "Remove priority" : "Hold for review"}</button>
-    <button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="${lead.research_findings ? "dossier-btn" : "research-btn"}">${lead.research_findings ? "Open dossier" : "Research account"}</button>
+    <button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="${lead.research_findings ? "dossier-btn" : "research-btn"}">${lead.research_findings ? `Open ${escapeHtml(researchName)} brief` : `Ask ${escapeHtml(researchName)} to research`}</button>
     ${canAudit ? `<button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="audit-btn">${lead.audit_findings ? "Re-run audit" : "Run audit"}</button>` : ""}
     ${canPitch ? `<button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="${lead.pitch_body ? "review-btn" : "pitch-btn"}">${lead.pitch_body ? "Review outreach" : "Build outreach"}</button>` : ""}
     <button type="button" class="btn btn-outline-secondary workspace-forward" data-forward="account-demo-btn">${lead.account_demo ? "Open Arch demo" : "Ask Arch to build"}</button>
@@ -251,7 +258,7 @@ function actionButtons(lead) {
   // every lead. Once a brief exists the button just reopens it (re-running is
   // a button inside the modal).
   if (lead.research_findings) {
-    buttons.push(`<button class="btn btn-sm btn-outline-secondary dossier-btn" data-id="${lead.id}">View dossier</button>`);
+    buttons.push(`<button class="btn btn-sm btn-outline-secondary dossier-btn" data-id="${lead.id}">View ${escapeHtml(researchAgentName(lead))} brief</button>`);
   } else {
     buttons.push(`<button class="btn btn-sm btn-outline-secondary research-btn" data-id="${lead.id}">Research</button>`);
   }
@@ -295,7 +302,7 @@ function compactActionButtons(lead) {
   }
 
   if (lead.research_findings) {
-    secondary.push(`<button class="lead-more-item dossier-btn" data-id="${id}"><i class="bi bi-journal-text"></i> View dossier</button>`);
+    secondary.push(`<button class="lead-more-item dossier-btn" data-id="${id}"><i class="bi bi-journal-text"></i> View ${escapeHtml(researchAgentName(lead))} brief</button>`);
   } else if (!primary.includes("research-btn")) {
     secondary.push(`<button class="lead-more-item research-btn" data-id="${id}"><i class="bi bi-search"></i> Research account</button>`);
   }
@@ -322,6 +329,9 @@ async function loadLeads() {
   const response = await api.get("/api/v1/admin/marketing-leads");
   const rows = Array.isArray(response) ? response : [];
   allLeadRows = rows;
+  researchAgentDisplayName = rows[0]?.research_agent_name || researchAgentDisplayName;
+  const dossierAgentLabel = document.getElementById("dossier-agent-name");
+  if (dossierAgentLabel) dossierAgentLabel.textContent = researchAgentDisplayName;
   const tbody = document.getElementById("leads-tbody");
   const empty = document.getElementById("empty-state");
 
@@ -702,6 +712,7 @@ function renderDossier(research) {
 function openDossierModal(lead) {
   dossierLeadId = lead.id;
   dossierBusinessName = lead.business_name;
+  document.getElementById("dossier-agent-name").textContent = researchAgentName(lead);
   document.getElementById("dossier-modal-business").textContent = lead.business_name;
   renderDossier(lead.research_findings);
   dossierModal.show();
@@ -1240,7 +1251,7 @@ document.getElementById("account-demo-publish").addEventListener("click", async 
 });
 
 document.getElementById("account-demo-regenerate").addEventListener("click", async () => {
-  if (!confirm("Replace the current draft with a fresh version grounded in the latest audit and dossier?")) return;
+  if (!confirm(`Replace the current draft with a fresh version grounded in the latest audit and ${researchAgentDisplayName} research brief?`)) return;
   const button = document.getElementById("account-demo-regenerate");
   button.disabled = true;
   try {

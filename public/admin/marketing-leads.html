@@ -615,7 +615,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
           </div>
           <div class="d-grid gap-3 align-content-start">
             <section class="workspace-panel"><h6>Account facts</h6><div class="workspace-facts" id="workspace-facts"></div></section>
-            <section class="workspace-panel"><h6>Dossier intelligence</h6><div class="workspace-copy" id="workspace-research"></div></section>
+            <section class="workspace-panel"><h6><span id="workspace-research-agent">Research</span> intelligence</h6><div class="workspace-copy" id="workspace-research"></div></section>
             <section class="workspace-panel"><h6>Arch demo and intent</h6><div id="workspace-demo"></div></section>
             <section class="workspace-panel"><h6>Activity</h6><div class="workspace-facts" id="workspace-activity"></div></section>
           </div>
@@ -787,7 +787,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
             <div class="mb-3">
               <label class="form-label fw-semibold" for="account-demo-friction">Current-state framing</label>
               <textarea class="form-control" id="account-demo-friction" rows="3" maxlength="300"></textarea>
-              <div class="form-text">Keep this hypothetical unless the audit or dossier proves it.</div>
+              <div class="form-text">Keep this hypothetical unless the audit or research brief proves it.</div>
             </div>
             <div class="mb-0">
               <label class="form-label fw-semibold" for="account-demo-proof">Evidence note</label>
@@ -819,7 +819,7 @@ a.demo-link-ai:hover { color: var(--heading-color); }
     <div class="modal-content">
       <div class="modal-header">
         <div>
-          <h5 class="modal-title mb-0">Research dossier — <span id="dossier-modal-business"></span></h5>
+          <h5 class="modal-title mb-0"><span id="dossier-agent-name">Research</span> brief — <span id="dossier-modal-business"></span></h5>
           <div class="small text-muted-custom" id="dossier-meta"></div>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

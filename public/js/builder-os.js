@@ -35,11 +35,15 @@
       observer.disconnect();
     }, { threshold: 0.35 });
     observer.observe(topology);
+    // Keep the registry readable if a short viewport never reaches the
+    // animation threshold or the observer callback is delayed.
+    window.setTimeout(() => topology.classList.add("is-activated"), 900);
   }
 
   api.get("/api/v1/builder-os/team").then(data => render(data.agents || [])).catch(() => {
     grid.innerHTML = '<div class="os-loading">The public registry is reconnecting. The customer-service channels remain available.</div>';
     document.getElementById("os-agent-count").textContent = "Registry reconnecting";
+    document.getElementById("os-topology")?.classList.add("is-activated");
   });
 
   const scenarios = {
