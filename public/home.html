@@ -839,6 +839,22 @@
   </div>
 </section>
 
+<section class="section text-center" style="background: var(--bg-soft); border-top: 1px solid var(--line);">
+  <div class="container" style="max-width: 560px;">
+    <h3 class="mb-2">Not ready to talk yet?</h3>
+    <p class="text-muted-custom mb-4">Get the next practical guide by email — no spam, unsubscribe any time.</p>
+    <form id="home-newsletter-form" class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+      <input type="email" class="form-control" id="home-newsletter-email" placeholder="you@example.com" required style="max-width: 320px;">
+      <div style="position: absolute; left: -9999px;" aria-hidden="true">
+        <label for="home-newsletter-website">Website</label>
+        <input type="text" id="home-newsletter-website" tabindex="-1" autocomplete="off">
+      </div>
+      <button type="submit" class="btn-brand" id="home-newsletter-submit-btn">Subscribe</button>
+    </form>
+    <div id="home-newsletter-msg" class="alert py-2 small d-none mt-3 mx-auto" style="max-width: 400px;"></div>
+  </div>
+</section>
+
 <footer class="site-footer">
   <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
     <span class="brand-logo" style="color:#fff;"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span>
@@ -904,6 +920,42 @@
   }
   sync();
   new MutationObserver(sync).observe(src, { attributes: true, attributeFilter: ['data-count-to'] });
+})();
+</script>
+
+<script>
+(function () {
+  var form = document.getElementById('home-newsletter-form');
+  if (!form) return;
+  var msg = document.getElementById('home-newsletter-msg');
+  var btn = document.getElementById('home-newsletter-submit-btn');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    msg.classList.add('d-none');
+    btn.disabled = true;
+    btn.textContent = 'Subscribing…';
+
+    try {
+      await api.post('/api/v1/newsletter/subscribe', {
+        email: document.getElementById('home-newsletter-email').value,
+        website: document.getElementById('home-newsletter-website').value,
+      });
+      form.reset();
+      msg.className = 'alert alert-success py-2 small mt-3 mx-auto';
+      msg.style.maxWidth = '400px';
+      msg.textContent = "Subscribed — you'll get the next post by email.";
+      msg.classList.remove('d-none');
+    } catch (err) {
+      msg.className = 'alert alert-danger py-2 small mt-3 mx-auto';
+      msg.style.maxWidth = '400px';
+      msg.textContent = err.message || 'Something went wrong.';
+      msg.classList.remove('d-none');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Subscribe';
+    }
+  });
 })();
 </script>
 
