@@ -23,14 +23,24 @@ use App\Support\Settings;
  */
 class TestimonialController
 {
-    /** GET /api/v1/testimonials — public, approved only, for the public listing page */
+    /**
+     * GET /api/v1/testimonials — public, approved only, for the public listing page.
+     * Left-joins the published project (if any) a client's review is linked to, so
+     * the listing can lead with that project's real outcome_metrics — the same
+     * mechanism-plus-metric data already shown on that project's own page —
+     * instead of a bare quote. Most reviews won't have a linked project; those
+     * still render as a plain quote card.
+     */
     public static function publicList(): void
     {
         $pdo = Database::get();
         $rows = $pdo->query(
-            "SELECT client_name, project_reference, rating, quote, submitted_at
-             FROM testimonials WHERE status = 'approved'
-             ORDER BY sort_order ASC, submitted_at DESC"
+            "SELECT t.client_name, t.project_reference, t.rating, t.quote, t.submitted_at,
+                    p.title AS project_title, p.slug AS project_slug, p.outcome_metrics
+             FROM testimonials t
+             LEFT JOIN projects p ON p.testimonial_id = t.id AND p.is_published = 1
+             WHERE t.status = 'approved'
+             ORDER BY t.sort_order ASC, t.submitted_at DESC"
         )->fetchAll();
         Response::json($rows);
     }

@@ -2190,6 +2190,179 @@ pre code.hljs {
 }
 .testimonial-list-card .stars { color: #f59e0b; letter-spacing: 2px; }
 
+.case-study-card {
+  display: block;
+  height: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.case-study-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+.case-study-eyebrow {
+  display: block;
+  font: 700 0.7rem/1 "Fira Code", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+.case-study-metric {
+  font: 650 clamp(1.25rem, 2.2vw, 1.6rem)/1.35 var(--font-display, inherit);
+  color: var(--heading-color);
+  letter-spacing: -0.01em;
+  margin-bottom: 0.5rem;
+}
+.case-study-signals {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.case-study-signals li {
+  padding-left: 1rem;
+  position: relative;
+}
+.case-study-signals li::before {
+  content: "+";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+.case-study-quote {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+.case-study-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.case-study-footer .cta-arrow { color: var(--accent); white-space: nowrap; }
+
+/* Sample project showcase (testimonials.html) — illustrative browser-mockup
+   cards, not real screenshots. Abstract wireframe scenes only. */
+.sample-project-track {
+  font-size: 1.1rem;
+  font-weight: 650;
+  color: var(--heading-color);
+  margin-bottom: 0.15rem;
+}
+.sample-project-card {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.sample-project-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--line-strong);
+}
+.sample-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+.sample-browser-controls { display: flex; gap: 0.3rem; flex: none; }
+.sample-browser-controls i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
+.sample-browser-address {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--card-bg);
+  color: var(--muted);
+  font: 600 0.68rem "Fira Code", monospace;
+  letter-spacing: 0.01em;
+}
+.sample-browser-viewport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 128px;
+  padding: 1rem;
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px),
+    var(--bg-soft);
+  background-size: 16px 16px;
+}
+.sample-project-body { padding: 1.1rem 1.25rem 1.3rem; }
+.sample-project-eyebrow {
+  display: block;
+  font: 700 0.68rem/1 "Fira Code", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+.sample-project-body h4 { font-size: 1rem; font-weight: 650; color: var(--heading-color); margin-bottom: 0.4rem; }
+.sample-project-body p { font-size: 0.87rem; color: var(--muted); margin: 0; line-height: 1.55; }
+
+.wf-scene { position: relative; width: 100%; max-width: 220px; }
+
+/* Voice: avatar + waveform + transcript lines */
+.wf-voice { display: flex; align-items: center; gap: 0.6rem; }
+.wf-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); border: 1.5px solid var(--accent); flex: none; }
+.wf-waveform { display: flex; align-items: flex-end; gap: 2px; height: 22px; flex: none; }
+.wf-waveform i { width: 3px; background: var(--line-strong); border-radius: 2px; }
+.wf-waveform i:nth-child(1) { height: 40%; }
+.wf-waveform i:nth-child(2) { height: 80%; background: var(--accent); }
+.wf-waveform i:nth-child(3) { height: 55%; }
+.wf-waveform i:nth-child(4) { height: 100%; background: var(--accent); }
+.wf-waveform i:nth-child(5) { height: 30%; }
+
+/* Agent: task queue rows */
+.wf-agent { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+.wf-agent .wf-row { display: flex; align-items: center; gap: 0.5rem; }
+.wf-agent .wf-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); flex: none; }
+.wf-agent .wf-dot-active { background: var(--accent); }
+.wf-agent .wf-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--line-strong); }
+.wf-agent .wf-bar-wide { background: var(--accent); }
+.wf-agent .wf-bar-short { max-width: 55%; }
+
+/* Automation: connected flow nodes */
+.wf-flow { display: flex; align-items: center; justify-content: center; gap: 0.4rem; width: 100%; }
+.wf-flow .wf-node { width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid var(--line-strong); background: var(--card-bg); flex: none; }
+.wf-flow .wf-node:nth-child(3) { border-color: var(--accent); }
+.wf-flow .wf-arrow { width: 20px; height: 1.5px; background: var(--line-strong); flex: none; }
+
+/* Chat: alternating bubbles */
+.wf-chat { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; }
+.wf-bubble { height: 12px; border-radius: 8px; background: var(--line-strong); max-width: 65%; }
+.wf-bubble-left { align-self: flex-start; }
+.wf-bubble-right { align-self: flex-end; background: var(--accent); max-width: 45%; }
+.wf-bubble-wide { max-width: 80%; }
+
+/* App: dashboard stats + tile grid */
+.wf-app { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 18px; gap: 5px; width: 100%; }
+.wf-app .wf-stat { border-radius: 3px; background: var(--line-strong); align-self: end; height: 60%; }
+.wf-app .wf-stat:nth-child(2) { height: 100%; background: var(--accent); }
+.wf-app .wf-tile { grid-column: span 1; border-radius: 3px; background: var(--bg-soft); border: 1px solid var(--line); height: 100%; }
+
 /* Prototype generator (chat.html) — Claude-style centered prompt that
    generates a concept prototype directly, no live chat required first. */
 .workspace-shell { padding: 2rem 0; }
