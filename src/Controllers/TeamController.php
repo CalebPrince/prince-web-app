@@ -40,6 +40,7 @@ class TeamController
             ['key' => 'proposal', 'name' => Settings::get('proposal_assistant_name') ?: 'Ledger', 'role' => 'Proposals & commercial workflows', 'status' => 'on demand', 'capabilities' => ['Proposals', 'Scope', 'Payment milestones']],
             ['key' => 'arch', 'name' => Settings::get('arch_assistant_name') ?: 'Arch', 'role' => 'AI website builder', 'status' => 'building', 'capabilities' => ['Websites', 'CMS', 'Deployments']],
             ['key' => 'scout', 'name' => Settings::get('scout_assistant_name') ?: 'Scout', 'role' => 'Tech & ideation specialist', 'status' => 'on demand', 'capabilities' => ['Tech scouting', 'Ideation', 'Emerging tools']],
+            ['key' => 'reel', 'name' => Settings::get('reel_assistant_name') ?: 'Reel', 'role' => 'Video-creative specialist', 'status' => 'on demand', 'capabilities' => ['Video concepts', 'Scene breakdowns', 'Narration scripts']],
             // Sage is the one public-facing agent here with its own dedicated
             // page (visitors chat with it directly, no admin auth) rather than
             // the generic /agent.html dossier every other entry uses — 'url'
@@ -237,6 +238,24 @@ class TeamController
                 'stat_label' => 'ideas discussed',
                 'manage_url' => '/admin/agent-chat.html',
                 'manage_label' => 'Talk to Scout',
+            ],
+            [
+                'key' => 'reel',
+                'name' => Settings::get('reel_assistant_name') ?: 'Reel',
+                'role' => 'Video-Creative Specialist',
+                'description' => 'Helps plan a video before it gets built for the HyperFrames pipeline — concept, scene breakdown, narration script, pacing, and visual style. A planning partner, not a builder; Claude Code still writes and renders the composition.',
+                'icon' => 'bi-film',
+                'status' => 'ondemand',
+                'status_label' => 'On demand',
+                // Same shape as Scout's own stat — a real log of exchanges, not
+                // an invented counter. Reel has no artifact table of its own
+                // since it only chats and never writes composition files.
+                'stat_value' => (int) $pdo->query(
+                    "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'reel_chat'"
+                )->fetchColumn(),
+                'stat_label' => 'videos planned',
+                'manage_url' => '/admin/agent-chat.html',
+                'manage_label' => 'Talk to Reel',
             ],
             [
                 'key' => 'ada',

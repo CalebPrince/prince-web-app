@@ -51,6 +51,11 @@
       mandate: "Track emerging web, mobile, and AI tools and frameworks, and turn them into concrete, buildable project ideas grounded in real, live research rather than guesses.",
       surfaces: [["Tech scouting", "Checks what is actually new via live web search."], ["Ideation", "Sketches concrete, buildable project concepts on new tooling."], ["Grounding", "Anchors ideas in the studio's real stack and past work."], ["Sparring", "Works through possibilities live with the owner."]],
       path: [["Prompt", "A question or a spark of curiosity starts the conversation."], ["Check", "A live web search verifies what is current before anything is claimed."], ["Connect", "The finding is matched against real services and past projects."], ["Propose", "A concrete, buildable idea comes back for the owner to weigh."]]
+    },
+    reel: {
+      mandate: "Plan a video before it gets built — concept, scene breakdown, narration script, pacing, and visual style — for videos produced with the studio's HyperFrames pipeline.",
+      surfaces: [["Video concepts", "Works through what a video should say and show."], ["Scene breakdowns", "Structures a concrete scene-by-scene plan with rough timings."], ["Narration scripts", "Drafts spoken lines that fit the visual pacing."], ["Visual style", "Anchors choices in the studio's real brand colors and fonts."]],
+      path: [["Brief", "A video idea or need starts the conversation."], ["Structure", "The video is broken into scenes with a clear arc and pacing."], ["Script", "Narration lines are drafted to match the visual beats."], ["Hand off", "The confirmed plan goes to Claude Code to actually build and render."]]
     }
   };
 

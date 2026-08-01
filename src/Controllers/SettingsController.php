@@ -102,6 +102,7 @@ class SettingsController
         'arch_assistant_name', 'arch_voice_gender', 'arch_voice_accent',
         'scout_assistant_name', 'scout_voice_gender', 'scout_voice_accent',
         'sage_assistant_name', 'sage_voice_gender', 'sage_voice_accent',
+        'reel_assistant_name', 'reel_voice_gender', 'reel_voice_accent',
         'brand_primary_color', 'brand_accent_color', 'brand_font', 'brand_style_note',
         'brand_logo_dark_url', 'brand_logo_white_url',
         'stat_1_value', 'stat_1_suffix', 'stat_1_label',
