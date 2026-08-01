@@ -51,6 +51,76 @@ These edits use the existing settings/content API and `settings` table; no
 database schema, migrations, seed data, or stored records were changed for
 this redesign.
 
+## AI marketing agents and video pipeline (2026-08-01 upgrade)
+
+Two new named agents joined the existing team, a from-scratch HyperFrames
+video production pipeline was set up, and a public positioning page put the
+"levels of AI adoption" framing already implicit in the agent roster into
+words.
+
+- **The 5 Levels of AI Adoption** (`/ai-adoption-ladder.html`) — a
+  positioning page mapping the site's own real agent system (Beacon,
+  Nurturer, Chief, the automations engine) onto a five-level adoption ladder
+  (Asking → Supervised → Coordinated → Delegated → Autonomous), honestly
+  framed as describing the current internal system, not a promised client
+  outcome.
+- **Sage** — a public, no-auth, rate-limited marketing-frameworks chat agent
+  (`SageController`, `/marketing-brain.html`) that works through a visitor's
+  real marketing problem via the combined lens of Hormozi, Brunson, Ogilvy,
+  Cialdini, and Godin, pushing back on vague questions rather than handing
+  out generic advice. Every conversation persists to a new `sage_chats`
+  table (mirrors `chat_sessions` minus Lisa's prototype-building fields) and
+  is reviewable at `/admin/sage-chats.html`; a name/email is only ever
+  recorded if a visitor volunteers it (`log_contact` tool) — Sage never
+  asks. Sage also:
+  - has its own dedicated homepage feature section (`.home-sage-feature` in
+    `home.html`) instead of a small in-deck link, and is listed on both the
+    public Builder OS agent grid and the admin Team page (with a real
+    "conversations" stat pulled from `sage_chats`);
+  - is admin-configurable from Site Content like every other agent (assistant
+    name, voice gender, UK/US accent, a live preview button);
+  - is the persona `MarketingLeadController::draftPitch()` now explicitly
+    channels when drafting cold-outreach pitch emails — applied, never named
+    in the email copy itself — while every existing safety rule (no invented
+    statistics, no fake urgency, real contact details appended separately in
+    PHP) stays unchanged;
+  - recognizes Prince Caleb specifically when he's logged into admin and
+    chatting with it on the public page, via a new reusable
+    `AuthMiddleware::tryAuth(): ?array` (the same JWT + `token_version` check
+    as `requireAuth()`, but returns null instead of erroring rather than
+    halting the request — `LiveChatController::isOwnerSession()` now
+    delegates to it instead of duplicating the same logic for Lisa).
+- **Reel** — an admin-only chat agent (`ReelController`; Talk to Agents
+  console and the Team page) that helps plan a video before it gets built:
+  concept, scene breakdown, narration script, pacing, and visual style for
+  the HyperFrames pipeline below. It's a planning partner, not a builder — it
+  never writes composition files, runs lint/check, or renders anything
+  itself. It can `browse_url` a public website or YouTube link (the same
+  SSRF-safe fetch pattern Dossier uses for site audits) to ground an idea in
+  a real inspiration source, and is told to say plainly when a page is too
+  JS-rendered to read rather than guess at its contents.
+- **HyperFrames video pipeline** (`video-assets/`) — a from-scratch setup for
+  producing motion-graphic and narrated videos by rendering HTML/CSS/GSAP
+  compositions to MP4. Each video is its own sub-project: a short
+  motion-graphic brand sting, and a full 8-scene narrated "system online"
+  trailer ported from a hand-authored HTML animation, both lint-clean and
+  rendered. Rendering works natively on Windows or via WSL depending on the
+  machine. Narration-driven scene timing is derived from a real Whisper
+  transcript of the audio (a local `whisper.cpp` build), not a guessed
+  scene-duration schedule — even narration recorded against a planned script
+  rarely lands on those exact durations, and the gap compounds into visible
+  audio/visual drift by the later scenes.
+- **Shared heading accent style** — a `.accent-word` utility class (the key
+  word in a page's H1, styled in the site's signal-green accent) rolled out
+  across the ~13 main marketing pages, including the dynamically-driven
+  homepage hero title (special-cased in `content.js`, since the generic
+  `[data-content]` text-hydration handler would otherwise wipe out any
+  embedded markup the moment an admin-edited value loads).
+
+No database migration is required beyond the new `sage_chats` table
+(`php database/migrate.php` picks it up automatically, same as any other new
+`CREATE TABLE IF NOT EXISTS`).
+
 ## Builder OS design system (2026-07-30 upgrade)
 
 The site's visual identity and navigation model were rebuilt around a single
