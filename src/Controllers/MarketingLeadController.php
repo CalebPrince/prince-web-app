@@ -1197,6 +1197,14 @@ class MarketingLeadController
 
         $body = (string) $parsed['body'];
         $campaign = 'cold_outreach_lead_' . ($leadId ?? 'unknown');
+        // Fixed, factual line rather than a prompt instruction — guarantees
+        // it's always present and worded exactly right, never dropped or
+        // embellished by the model. True either way: this outreach (and the
+        // walkthrough, when one exists) was drafted by the same kind of AI
+        // agent system being pitched.
+        $body .= $accountDemoUrl
+            ? "\n\nOne more thing, for transparency: this note and the walkthrough below were drafted by the same kind of AI agent system I build for clients. It's literally how I run my own outreach."
+            : "\n\nOne more thing, for transparency: this note was drafted by the same kind of AI agent system I build for clients. It's literally how I run my own outreach.";
         if ($accountDemoUrl) {
             $taggedDemoUrl = Utm::tagLinks($accountDemoUrl, $campaign, 'email', 'cold_outreach');
             $body .= "\n\nI put together a short outcome walkthrough for {$businessName}: {$taggedDemoUrl}";
