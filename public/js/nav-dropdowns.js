@@ -3,7 +3,7 @@
 // panel under the nav bar. Services and About are static link maps; Projects
 // is fed by the live portfolio API and About's featured slot by the blog API,
 // so the static pages stay in sync with real content. Built entirely
-// client-side — pages only include this script, no per-page nav markup.
+// client-side, pages only include this script, no per-page nav markup.
 (function () {
   var nav = document.querySelector(".site-nav");
   if (!nav) return;
@@ -207,13 +207,13 @@
           featured(
             "/book.html",
             "Book a 20-minute discovery call",
-            "Walk through what you're trying to build and get a straight read on scope, cost, and timeline — no obligation.",
+            "Walk through what you're trying to build and get a straight read on scope, cost, and timeline, no obligation.",
             "Pick a time"))
       + "</div>";
   }
 
   /* ---- Projects ------------------------------------------------------- */
-  // Shared with projects.html's ?platform= filter — keep the two in sync by
+  // Shared with projects.html's ?platform= filter, keep the two in sync by
   // exposing the classifier rather than duplicating it.
   function platformOf(p) {
     var hay = ((p.tags || []).map(function (t) { return t.name; }).join(" ")

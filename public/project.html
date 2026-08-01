@@ -9,20 +9,20 @@
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>(function(){var t=localStorage.getItem("theme")||localStorage.getItem("site_default_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
-<title id="page-title">Case Study — Prince Caleb</title>
-<meta name="description" id="page-description" content="A custom software case study by Prince Caleb — web and mobile app development, from architecture to launch.">
+<title id="page-title">Case Study, Prince Caleb</title>
+<meta name="description" id="page-description" content="A custom software case study by Prince Caleb, web and mobile app development, from architecture to launch.">
 <link rel="canonical" id="page-canonical" href="https://princecaleb.dev/projects.html">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Prince Caleb">
-<meta property="og:title" id="og-title" content="Case Study — Prince Caleb">
-<meta property="og:description" id="og-description" content="A custom software case study by Prince Caleb — web and mobile app development, from architecture to launch.">
+<meta property="og:title" id="og-title" content="Case Study, Prince Caleb">
+<meta property="og:description" id="og-description" content="A custom software case study by Prince Caleb, web and mobile app development, from architecture to launch.">
 <meta property="og:url" id="og-url" content="https://princecaleb.dev/projects.html">
 <meta property="og:image" id="og-image" content="https://princecaleb.dev/uploads/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" id="twitter-title" content="Case Study — Prince Caleb">
-<meta name="twitter:description" id="twitter-description" content="A custom software case study by Prince Caleb — web and mobile app development, from architecture to launch.">
+<meta name="twitter:title" id="twitter-title" content="Case Study, Prince Caleb">
+<meta name="twitter:description" id="twitter-description" content="A custom software case study by Prince Caleb, web and mobile app development, from architecture to launch.">
 <meta name="twitter:image" id="twitter-image" content="https://princecaleb.dev/uploads/og-image.png">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
@@ -165,7 +165,7 @@
 
   try {
     const p = await api.get(`/api/v1/projects/${encodeURIComponent(slug)}`);
-    const pageTitle = `${p.title} — Prince Caleb`;
+    const pageTitle = `${p.title}, Prince Caleb`;
     const canonicalUrl = `https://princecaleb.dev/project.html?slug=${encodeURIComponent(slug)}`;
     const coverPath = String(p.cover_image_path || '');
     const imageUrl = coverPath ? (coverPath.startsWith('http') ? coverPath : `https://princecaleb.dev${coverPath}`) : 'https://princecaleb.dev/uploads/og-image.png';
@@ -278,7 +278,7 @@
     if (p.is_embeddable && liveUrl) {
       const demoModalEl = document.getElementById('live-demo-modal');
       const demoModal = new bootstrap.Modal(demoModalEl);
-      document.getElementById('live-demo-title').textContent = `Live Demo — ${p.title}`;
+      document.getElementById('live-demo-title').textContent = `Live Demo ${p.title}`;
       document.getElementById('live-demo-btn').addEventListener('click', () => {
         document.getElementById('live-demo-frame').src = liveUrl;
         demoModal.show();

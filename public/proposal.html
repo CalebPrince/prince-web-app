@@ -28,7 +28,7 @@
   .status-pill.unread,
   .status-pill.pending { background: #fef3c7; color: #92400e; }
   .status-pill.published { background: #dcfce7; color: #166534; }
-  /* Clients print/PDF proposals before signing off — strip the site chrome
+  /* Clients print/PDF proposals before signing off, strip the site chrome
      and interactive controls, force a light document look (same approach
      as invoice.html). Status pills keep their tint so paid/pending still
      reads at a glance. */
@@ -135,7 +135,7 @@
       ${proposal.mockup_image_url ? `
         <div class="mb-4">
           <img src="${escapeHtml(proposal.mockup_image_url)}" alt="Concept mockup for ${escapeHtml(proposal.title)}" class="img-fluid rounded border w-100">
-          <p class="text-muted-custom small mt-2 mb-0">A concept image to give a sense of direction — not a screenshot of the finished build.</p>
+          <p class="text-muted-custom small mt-2 mb-0">A concept image to give a sense of direction, not a screenshot of the finished build.</p>
         </div>
       ` : ''}
       <h2 class="h5 mb-2">Scope</h2>

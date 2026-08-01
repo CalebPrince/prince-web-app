@@ -40,9 +40,9 @@
         blueprint = "2–3 wks"; launch = "8–12 wks";
       }
 
-      hoursEl.textContent = total ? `${total} hours` : "—";
-      blueprintEl.textContent = total ? blueprint : "—";
-      launchEl.textContent = total ? launch : "—";
+      hoursEl.textContent = total ? `${total} hours` : " ";
+      blueprintEl.textContent = total ? blueprint : " ";
+      launchEl.textContent = total ? launch : " ";
       [hoursEl, blueprintEl, launchEl].forEach(flash);
 
       lastEstimate = total
@@ -85,9 +85,9 @@
             website: document.getElementById("lead-website").value, // honeypot
             attribution: window.getLeadAttribution ? window.getLeadAttribution() : {},
           });
-          form.innerHTML = '<p class="mb-0" style="color: var(--heading-color); font-weight: 500;">Estimate on its way — I\'ll follow up within 48 hours. ✓</p>';
+          form.innerHTML = '<p class="mb-0" style="color: var(--heading-color); font-weight: 500;">Estimate on its way, I\'ll follow up within 48 hours. ✓</p>';
         } catch (err) {
-          status.textContent = err.message || "Something went wrong — please try again.";
+          status.textContent = err.message || "Something went wrong, please try again.";
           status.classList.remove("d-none");
           status.style.color = "#ef4444";
           btn.disabled = false;
@@ -100,7 +100,7 @@
   // --- Prototype-generator teaser: animated placeholder --------------------
   // Types example ideas into the landing mock's fake input, mirroring the
   // typewriter placeholder on /chat.html so the teaser feels like the real
-  // thing. Purely cosmetic — static first example under reduced motion. The
+  // thing. Purely cosmetic, static first example under reduced motion. The
   // row height is held by the send button, so the emptying text never jitters.
   const mockPlaceholder = document.getElementById("proto-cta-placeholder");
   if (mockPlaceholder) {
@@ -152,7 +152,7 @@
       try {
         projects = await api.get("/api/v1/projects");
       } catch (_) {
-        caseRows.innerHTML = ""; // API down — drop the skeletons quietly
+        caseRows.innerHTML = ""; // API down, drop the skeletons quietly
         return;
       }
 

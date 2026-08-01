@@ -2,7 +2,7 @@
 // 21st.dev React/Framer-Motion component to vanilla CSS transitions: every real
 // card element permanently exists and cycles through role classes
 // (front/middle/back/hidden/exiting) rather than swapping content, so there's
-// no timing-sensitive re-render logic — just reassigning which class each
+// no timing-sensitive re-render logic, just reassigning which class each
 // element wears. Works for any number of cards >= 4; the three frontmost are
 // visible and every card behind them sits in the hidden stack.
 (function () {

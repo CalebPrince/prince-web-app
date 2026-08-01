@@ -1,4 +1,4 @@
-// Arch — client-side conversation + build flow for the AI website builder.
+// Arch, client-side conversation + build flow for the AI website builder.
 // Talks to /api/v1/arch/chat.php (one question at a time, returns a running
 // structured brief + a "Step X of 5" signal) and /api/v1/arch/generate.php
 // (builds the site and returns a preview + download). Vanilla JS, no framework,
@@ -130,7 +130,7 @@
 
   // Reads ?prefill= (base64 JSON from admin-projects.js's "Copy Arch link"),
   // so a client Caleb has already set a style guide for skips being asked
-  // about it — mergeBrief() on the server just treats these as already
+  // about it, mergeBrief() on the server just treats these as already
   // answered, same as if the model itself had collected them. Returns null
   // on anything malformed rather than breaking the chat.
   function decodePrefill() {
@@ -159,7 +159,7 @@
       2: "What should the site feel like? Share a personality, preferred colors, style, light or dark theme, and any optional visual reference.",
       3: "Which pages do you need? Common ones are Home, About, Services, Contact, Gallery, Blog, and Shop.",
       4: "Any key features you'd like, such as a contact form, WhatsApp, maps, payments, a gallery, or booking?",
-      5: "Last step — tell me your tagline, business description, services, and contact details.",
+      5: "Last step, tell me your tagline, business description, services, and contact details.",
     };
     return fallbacks[step] || fallbacks[1];
   }
@@ -424,13 +424,13 @@
 
   // Kick off with Arch's greeting (no server round-trip needed for the opener).
   // The agent's name is admin-configurable (Site Content → Arch), so read it
-  // from the public content endpoint — same source Lisa's widget uses — and
+  // from the public content endpoint, same source Lisa's widget uses, and
   // fall back to "Arch" if unset or the fetch fails.
   function greet(name) {
     var avatar = document.querySelector(".arch-avatar");
     if (avatar && name) avatar.textContent = name.trim().charAt(0).toUpperCase();
     setProgress(1);
-    var greeting = "Hi, I'm " + name + " — your AI website builder. I'll ask a few quick questions and then build you a complete, ready-to-launch website. Let's start: what's the name of your business, and what type is it (restaurant, shop, church, portfolio, and so on)?";
+    var greeting = "Hi, I'm " + name + ", your AI website builder. I'll ask a few quick questions and then build you a complete, ready-to-launch website. Let's start: what's the name of your business, and what type is it (restaurant, shop, church, portfolio, and so on)?";
     addMessage("arch", greeting);
     transcript.push({
       role: "assistant",

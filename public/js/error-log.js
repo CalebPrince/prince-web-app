@@ -22,7 +22,7 @@
   }
 
   window.addEventListener('error', function (event) {
-    // Only real JS runtime errors carry an Error object here — plain
+    // Only real JS runtime errors carry an Error object here, plain
     // resource load failures (an image/script 404ing) fire 'error' too but
     // have no .error and aren't useful noise for this log.
     if (!event.error) return;

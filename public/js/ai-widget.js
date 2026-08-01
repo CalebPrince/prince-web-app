@@ -3,11 +3,11 @@
   let sessionToken = sessionStorage.getItem("chat_token") || null;
   let online = false;
   // Once the AI signals ready_for_prototype, the bubble has no build UI of
-  // its own — it hands off to the full /chat.html workspace instead. Shown
+  // its own, it hands off to the full /chat.html workspace instead. Shown
   // once per session (sticks even if the transcript keeps scrolling).
   let prototypeOffered = false;
   // Read-aloud every reply automatically when on (visitor-controlled, header
-  // toggle) — remembered for the browser session.
+  // toggle), remembered for the browser session.
   let autoSpeak = sessionStorage.getItem("chat_autospeak") === "1";
   // Header avatar that visibly thinks/speaks (public/js/agent-face.js, loaded
   // ahead of this file). Null on the rare page that somehow skipped it.
@@ -56,7 +56,7 @@
   //
   // Whenever Lisa posts a text reply we play a short chime (Web Audio) and hang
   // a mic button off the message that reads *that exact text* aloud on demand
-  // (Web Speech API). Both are progressive enhancements — if the browser lacks
+  // (Web Speech API). Both are progressive enhancements, if the browser lacks
   // the API the chat still works, just without sound. Placeholder bubbles
   // ("Typing…", "One sec…") are skipped; they're decorated once the real reply
   // lands via resolveBotMessage().
@@ -108,7 +108,7 @@
   const FEMALE_RE = /(female|zira|susan|hazel|linda|samantha|karen|moira|tessa|fiona|serena|catherine|aria|jenny|sonia|libby|amy|joanna|salli|kimberly|google uk english female)/i;
   const MALE_RE = /(\bmale\b|david|mark|george|guy|ryan|thomas|daniel|alex|fred|oliver|james|brian|matthew|arthur|google uk english male)/i;
 
-  // Some browsers populate voices asynchronously — nudge them to load early so
+  // Some browsers populate voices asynchronously, nudge them to load early so
   // the first mic click already has the full list to choose from.
   if ("speechSynthesis" in window) {
     window.speechSynthesis.getVoices();
@@ -157,7 +157,7 @@
   }
 
   // Strip emoji (and their modifiers/joiners) before speaking so the voice
-  // reads the words only — otherwise many TTS engines announce emoji names
+  // reads the words only, otherwise many TTS engines announce emoji names
   // aloud ("waving hand", "rocket"). The on-screen message keeps its emoji;
   // only the spoken copy is cleaned.
   function stripForSpeech(text) {
@@ -180,7 +180,7 @@
     if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();
     if (synth) synth.cancel();
     const spoken = stripForSpeech(text);
-    if (!spoken) return; // nothing but emoji — no words to read
+    if (!spoken) return; // nothing but emoji, no words to read
     if (window.ElevenLabsTTS) {
       window.ElevenLabsTTS.play(spoken, {
         onstart: () => setSpeaking(btn, true),
@@ -233,7 +233,7 @@
   // When a reply contains a fenced ```code``` block, render it as a Carbon-like
   // card (window chrome, language tag, copy button, light syntax colors) instead
   // of leaking raw backticks as plain text. Everything is escaped before it
-  // touches innerHTML — the token highlighter escapes each piece as it emits, so
+  // touches innerHTML, the token highlighter escapes each piece as it emits, so
   // no bot output is ever interpreted as markup.
 
   const CODE_FENCE_RE = /```([\w+#.-]*)[ \t]*\n?([\s\S]*?)```/g;
@@ -253,7 +253,7 @@
 
   function hasCode(text) { CODE_FENCE_RE.lastIndex = 0; return CODE_FENCE_RE.test(text); }
 
-  // Reply text with fenced code stripped — reading code aloud is noise, so the
+  // Reply text with fenced code stripped, reading code aloud is noise, so the
   // speaker button and auto read-aloud only ever get the prose.
   function proseOnly(text) {
     return parseSegments(text)
@@ -383,7 +383,7 @@
 
   // Reveal Lisa's reply word-by-word for a natural, "alive" feel. Honors
   // prefers-reduced-motion and skips very short strings. NOTE: this animates an
-  // already-received reply — it does not change how long the model takes; the
+  // already-received reply, it does not change how long the model takes; the
   // animated typing indicator (see appendMessage) covers that actual wait.
   function typewriterReveal(el, text, onDone) {
     const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -437,7 +437,7 @@
     return el;
   }
 
-  // Hands off to the full prototype workspace (/chat.html) — the bubble has
+  // Hands off to the full prototype workspace (/chat.html), the bubble has
   // no inline build/preview UI, so this is the only way a bubble visitor can
   // actually reach the "Build my prototype" step the AI may have offered.
   function showPrototypeLink() {
@@ -493,8 +493,7 @@
   // ---- quick-reply menu -------------------------------------------------------
   //
   // A lightweight decision tree layered on top of the existing free-text chat.
-  // Leaf options either hand off into the real AI conversation (projectLead —
-  // exactly as if the visitor had typed the summary themselves, so tool-calling,
+  // Leaf options either hand off into the real AI conversation (projectLead, // exactly as if the visitor had typed the summary themselves, so tool-calling,
   // context, and prototype-building all keep working unchanged), or resolve
   // locally with no AI call at all (techInfo, portfolio, supportForm,
   // humanHandoff) since that content doesn't need a model to generate it.
@@ -521,7 +520,7 @@
       ],
     },
     mobileApp: {
-      prompt: "Mobile app — which platform?",
+      prompt: "Mobile app, which platform?",
       back: "startProject",
       options: [
         { label: "🍎 iOS", action: "projectLead", text: "I'm interested in a mobile app for iOS." },
@@ -530,16 +529,16 @@
       ],
     },
     webApp: {
-      prompt: "Custom web application — what shape is it?",
+      prompt: "Custom web application, what shape is it?",
       back: "startProject",
       options: [
-        { label: "🖥️ Frontend/Backend Build", action: "projectLead", text: "I need a custom web application — a frontend and backend build." },
+        { label: "🖥️ Frontend/Backend Build", action: "projectLead", text: "I need a custom web application, a frontend and backend build." },
         { label: "📊 SaaS Platform", action: "projectLead", text: "I want to build a SaaS platform." },
         { label: "🔐 Client/Admin Portal", action: "projectLead", text: "I need a custom client or admin portal." },
       ],
     },
     website: {
-      prompt: "Website & e-commerce — what do you need?",
+      prompt: "Website & e-commerce, what do you need?",
       back: "startProject",
       options: [
         { label: "🐘 Custom PHP/Bootstrap Site", action: "projectLead", text: "I need a custom PHP/Bootstrap website." },
@@ -548,7 +547,7 @@
       ],
     },
     aiAutomation: {
-      prompt: "AI or automation — what are you picturing?",
+      prompt: "AI or automation, what are you picturing?",
       back: "startProject",
       options: [
         { label: "🤖 Chatbot", action: "projectLead", text: "I'm interested in building a chatbot." },
@@ -579,10 +578,10 @@
   };
 
   const TECH_INFO = {
-    frontend: "⚡ On the frontend: plain HTML/CSS/JS or React when a build needs real interactivity, Bootstrap 5 or Tailwind for layout, and React Native for cross-platform mobile — no framework or build-step overhead unless the project actually calls for it.",
-    backend: "⚙️ On the backend: PHP, Node.js, and Python/FastAPI, all built around clean REST APIs — picked per project, not a one-size-fits-all stack.",
+    frontend: "⚡ On the frontend: plain HTML/CSS/JS or React when a build needs real interactivity, Bootstrap 5 or Tailwind for layout, and React Native for cross-platform mobile, no framework or build-step overhead unless the project actually calls for it.",
+    backend: "⚙️ On the backend: PHP, Node.js, and Python/FastAPI, all built around clean REST APIs, picked per project, not a one-size-fits-all stack.",
     database: "🗄️ For data: MySQL, PostgreSQL, and SQLite for anything relational, NoSQL when the shape of the data calls for it, plus cloud object storage/CDNs for media-heavy features.",
-    cms: "🛠️ For content: tailored WordPress builds, headless CMS setups, or a fully custom lightweight admin panel — whichever keeps day-to-day editing easy without dragging in more than you need.",
+    cms: "🛠️ For content: tailored WordPress builds, headless CMS setups, or a fully custom lightweight admin panel, whichever keeps day-to-day editing easy without dragging in more than you need.",
   };
 
   function clearMenu() {
@@ -596,11 +595,11 @@
   // Buttons vanish the instant one is clicked (before its handler runs), so a
   // slow handler (e.g. projectLead's network call) can't be double-fired and
   // stale buttons from a previous step never linger once the user moves on.
-  // The visible transcript also clears on every click — each menu step is a
+  // The visible transcript also clears on every click, each menu step is a
   // fresh decision point, not something to keep scrolling back through, and
   // it's what makes the opening greeting disappear once the visitor engages.
   // (Free-text AI replies, which don't go through this function, still
-  // accumulate normally — that conversation is worth scrolling back through.)
+  // accumulate normally, that conversation is worth scrolling back through.)
   function renderButtonRow(buttons) {
     const container = document.getElementById("ai-widget-menu");
     container.innerHTML = "";
@@ -678,10 +677,10 @@
           document.getElementById("ai-widget-messages").appendChild(link);
         });
       } else {
-        resolveBotMessage(pending, "Take a look at the full portfolio — new work gets added regularly.");
+        resolveBotMessage(pending, "Take a look at the full portfolio, new work gets added regularly.");
       }
     } catch (_) {
-      resolveBotMessage(pending, "Couldn't load the portfolio right now — take a look at the full page instead.");
+      resolveBotMessage(pending, "Couldn't load the portfolio right now, take a look at the full page instead.");
     }
     renderButtonRow([
       { label: "📄 See all projects →", onClick: () => { window.location.href = "/projects.html"; } },
@@ -724,7 +723,7 @@
       panel.setAttribute("aria-label", `Live chat with ${assistantName}`);
     }
 
-    // Resume an existing conversation instead of starting over — the
+    // Resume an existing conversation instead of starting over, the
     // session token survives a page refresh or navigating to a different
     // page (sessionStorage lasts until the tab/browser closes), but until
     // now nothing re-fetched the saved transcript, so the widget looked
@@ -744,7 +743,7 @@
           return;
         }
       } catch (_) {
-        // Token expired or the session no longer exists — clear it and fall
+        // Token expired or the session no longer exists, clear it and fall
         // through to a fresh start below rather than showing an empty panel.
         sessionToken = null;
         sessionStorage.removeItem("chat_token");
@@ -756,7 +755,7 @@
       appendMessage("bot", status.intro || "Pick an option below, or describe the website or app you have in mind and I'll help however I can.");
       renderMenu("main", { skipPrompt: true });
     } else {
-      appendMessage("bot", status.offline_message || "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.");
+      appendMessage("bot", status.offline_message || "We're offline at the moment, but your message won't be missed, leave your name, email and a few words below and Prince will get back to you shortly.");
       showMessageForm();
     }
   })();
@@ -773,7 +772,7 @@
       sessionStorage.setItem("chat_token", sessionToken);
       resolveBotMessage(pending, res.reply);
       if (res.can_prototype) showPrototypeLink();
-      // Temporary debug aid — remove once the OpenRouter fallback is confirmed working in production.
+      // Temporary debug aid, remove once the OpenRouter fallback is confirmed working in production.
       console.log(`[chat debug] mode=${res.mode} provider=${res.provider || "keyword fallback"}`);
     } catch (err) {
       resolveBotMessage(pending, err.message || "Sorry, something went wrong. Please leave a message below instead.");
@@ -809,14 +808,14 @@
       const email = document.getElementById("lm-email").value.trim();
       document.getElementById("leave-msg-form").reset();
       document.getElementById("leave-msg-form").classList.add("d-none");
-      appendMessage("bot", `Thanks! Your message is on its way — Prince will reply to you at ${email} soon. 📬`);
+      appendMessage("bot", `Thanks! Your message is on its way, Prince will reply to you at ${email} soon. 📬`);
       clearMenu();
       if (online) {
         document.getElementById("ai-widget-form").classList.remove("d-none");
         renderMenu("main");
       }
     } catch (err) {
-      appendMessage("bot", err.message || "Could not send your message — please try again.");
+      appendMessage("bot", err.message || "Could not send your message, please try again.");
     }
     btn.disabled = false;
   });
@@ -908,7 +907,7 @@
     renderMenu("main");
   });
 
-  // Swap the bubble glyph for an "X" while the panel is open — the toggle
+  // Swap the bubble glyph for an "X" while the panel is open, the toggle
   // doubles as the close button, so its icon should say so.
   const CHAT_ICON_PATH = '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>';
   const CLOSE_ICON_PATH = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';

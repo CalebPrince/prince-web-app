@@ -19,7 +19,7 @@ const api = {
       });
     } catch (err) {
       if (err.name === "AbortError") {
-        throw new Error("That's taking longer than expected — please try again.");
+        throw new Error("That's taking longer than expected, please try again.");
       }
       throw err;
     } finally {
@@ -40,8 +40,8 @@ const api = {
       body = await res.json();
     } catch (_) {}
     if (!res.ok) {
-      // res.statusText is always "" over HTTP/2 — the spec dropped reason
-      // phrases — so any error without a JSON body (a 503 from the web server,
+      // res.statusText is always "" over HTTP/2, the spec dropped reason
+      // phrases, so any error without a JSON body (a 503 from the web server,
       // a PHP fatal, a proxy error page) used to throw an empty message, and
       // the admin rendered a red bar with nothing in it. That reads like "your
       // password is wrong", not "the server is down": during the LSPHP outage
@@ -50,7 +50,7 @@ const api = {
       const message =
         (body && (body.error || (body.errors && body.errors.join(" "))))
         || res.statusText
-        || `The server returned HTTP ${res.status} with no error message — it may be down or restarting.`;
+        || `The server returned HTTP ${res.status} with no error message, it may be down or restarting.`;
       throw new Error(message);
     }
     return body;

@@ -193,7 +193,7 @@
 
   function startListening() {
     if (!SR) {
-      showTypedFallback("Voice input is not available in this browser. Type a question below—the answer will still be spoken aloud.");
+      showTypedFallback("Voice input is not available in this browser. Type a question below, the answer will still be spoken aloud.");
       return;
     }
     if (window.ElevenLabsTTS) window.ElevenLabsTTS.stop();

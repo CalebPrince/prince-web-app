@@ -8,7 +8,7 @@
 
   const profiles = {
     lisa: {
-      mandate: "Keep customer conversations moving across voice, WhatsApp, and the website—then turn confirmed intent into bookings, follow-ups, or a human handoff.",
+      mandate: "Keep customer conversations moving across voice, WhatsApp, and the website, then turn confirmed intent into bookings, follow-ups, or a human handoff.",
       surfaces: [["Voice line", "Answers inbound calls and places individually approved outbound calls."], ["WhatsApp", "Handles enquiries and continues qualified conversations."], ["Bookings", "Captures contact details, checks availability, and confirms agreed times."], ["Handoffs", "Alerts the owner when judgment or direct attention is required."]],
       path: [["Signal", "A customer calls, messages, or opens live chat."], ["Understand", "Lisa identifies the request and captures the missing details."], ["Act", "She answers, books, follows up, or routes the next safe action."], ["Handoff", "The customer and owner receive the relevant confirmation or alert."]]
     },
@@ -60,7 +60,7 @@
       surfaces: (agent.capabilities || []).map(item => [item, `Supports ${item.toLowerCase()} within Builder OS.`]),
       path: [["Signal", "A configured workflow creates a task."], ["Process", "The agent handles its bounded responsibility."], ["Record", "The result becomes visible to the operating system."], ["Handoff", "The next agent or owner receives the required context."]]
     };
-    document.title = `${agent.name} — Builder OS agent`;
+    document.title = `${agent.name}, Builder OS agent`;
     root.innerHTML = `
       <header class="agent-profile-hero"><div class="container">
         <p class="agent-profile-command">builder@princecaleb:~$ inspect agent/${esc(agent.key)}</p>

@@ -1,5 +1,5 @@
 // First-party, minimal analytics beacon: path + referrer only, no cookies,
-// no visitor ID. Fire-and-forget — never blocks or affects the page.
+// no visitor ID. Fire-and-forget, never blocks or affects the page.
 (function () {
   function send(path, referrer) {
     fetch("/api/v1/analytics/track", {

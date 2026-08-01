@@ -18,8 +18,7 @@
   }
 
   // A review only counts as a case study once it's linked to a published
-  // project that actually has a real, admin-entered outcome_metrics line —
-  // otherwise it renders as a plain quote card like any other review.
+  // project that actually has a real, admin-entered outcome_metrics line, // otherwise it renders as a plain quote card like any other review.
   const caseStudies = [];
   const plain = [];
   rows.forEach((t) => {

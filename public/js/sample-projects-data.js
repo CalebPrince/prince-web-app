@@ -1,14 +1,14 @@
 // Illustrative service examples for the testimonials page's "What these
-// systems look like" section — NOT real client work and NOT attributed to
+// systems look like" section, NOT real client work and NOT attributed to
 // any actual business. Each entry maps to one of the five service tracks on
 // services.html, sketched as a plausible small-business use case with a
 // simple abstract wireframe (no fabricated screenshots, no invented client
-// quotes or metrics — see testimonials.html's real, admin-curated case
+// quotes or metrics, see testimonials.html's real, admin-curated case
 // studies for that).
 const SAMPLE_PROJECTS = [
   {
     track: 'AI voice agents',
-    groupNote: 'Answers and routes real phone calls — booking, triage, and callbacks, 24/7.',
+    groupNote: 'Answers and routes real phone calls, booking, triage, and callbacks, 24/7.',
     wireframe: 'voice',
     items: [
       { business: 'Dental clinic', headline: 'After-hours call answering & booking', description: 'Picks up when the front desk can’t, checks real chair availability, and books the slot without a person in the loop.', domain: 'dental-clinic.example' },
@@ -21,12 +21,12 @@ const SAMPLE_PROJECTS = [
   },
   {
     track: 'Autonomous AI agents',
-    groupNote: 'Runs a bounded task end-to-end in the background — research, outreach, follow-up.',
+    groupNote: 'Runs a bounded task end-to-end in the background, research, outreach, follow-up.',
     wireframe: 'agent',
     items: [
       { business: 'B2B SaaS company', headline: 'Lead scouting & qualification', description: 'Watches for signals of buying intent and scores a lead before a rep ever sees it.', domain: 'saas-startup.example' },
       { business: 'Recruiting agency', headline: 'Candidate outreach follow-up', description: 'Sends the second and third follow-up so a recruiter’s pipeline doesn’t go cold.', domain: 'recruiting.example' },
-      { business: 'E-commerce brand', headline: 'Abandoned cart recovery agent', description: 'Notices a cart sat untouched, waits the right amount of time, then nudges — no blanket blast.', domain: 'ecommerce-brand.example' },
+      { business: 'E-commerce brand', headline: 'Abandoned cart recovery agent', description: 'Notices a cart sat untouched, waits the right amount of time, then nudges, no blanket blast.', domain: 'ecommerce-brand.example' },
       { business: 'Insurance broker', headline: 'Renewal reminder agent', description: 'Tracks policy end dates and starts the renewal conversation before it becomes urgent.', domain: 'insurance-broker.example' },
       { business: 'Events company', headline: 'Sponsor outreach agent', description: 'Works down a prospect list for the next event, drafting a pitch grounded in what each sponsor actually cares about.', domain: 'events-co.example' },
       { business: 'Wholesale distributor', headline: 'Reorder prediction agent', description: 'Flags accounts trending toward a reorder before they run out and call a competitor instead.', domain: 'wholesale.example' },

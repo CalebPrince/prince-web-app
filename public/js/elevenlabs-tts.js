@@ -3,7 +3,7 @@
   let activeUrl = null;
   let unlocked = false;
 
-  // Mirrors TextToSpeechController::MAX_TEXT_LENGTH — Lisa's public replies
+  // Mirrors TextToSpeechController::MAX_TEXT_LENGTH, Lisa's public replies
   // stay short by design; Scout's admin-console ideation answers run much
   // longer, and truncating below what the server will actually synthesize
   // just moves the same "cuts off mid-sentence" bug to the client.
@@ -85,7 +85,7 @@
     return !activeAudio.paused;
   }
 
-  // Fall back to the browser's own voice on ANY failure — a disabled/
+  // Fall back to the browser's own voice on ANY failure, a disabled/
   // unconfigured provider (503), a quota/provider outage (502), or anything
   // else. This used to stay silent for Lisa on a non-503 failure, on the
   // theory that switching her voice mid-conversation was worse than no

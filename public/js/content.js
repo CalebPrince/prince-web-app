@@ -6,7 +6,7 @@
   try {
     content = await api.get("/api/v1/content");
   } catch (_) {
-    return; // API down — static fallbacks stay
+    return; // API down, static fallbacks stay
   }
 
   // Plain text swaps (also reveals d-none elements like the availability pill)
@@ -49,7 +49,7 @@
     el.href = businessWhatsApp;
   });
 
-  // Splash screen — on by default, dismissed early if explicitly turned off.
+  // Splash screen, on by default, dismissed early if explicitly turned off.
   // The inline script in <head> shows it immediately (before this fetch can
   // possibly resolve) so a brief flash is unavoidable when disabling it, but
   // this cuts the ~3s animation short instead of letting it play out.
@@ -58,7 +58,7 @@
   }
 
   // Global animation style (Admin -> Site Content -> Appearance). Drives the
-  // reveal/hero-entrance/hover CSS in app.css via this attribute — unset (or
+  // reveal/hero-entrance/hover CSS in app.css via this attribute, unset (or
   // an unrecognized value) leaves the hardcoded default (the original
   // "Slide Up" treatment) in place, same fallback contract as every other
   // field here. animations.js's own prefers-reduced-motion check still wins
@@ -68,13 +68,13 @@
     document.documentElement.setAttribute("data-animation-style", content.animation_style);
   }
 
-  // Live Chat toggle button — on by default, hidden only if explicitly turned off
+  // Live Chat toggle button, on by default, hidden only if explicitly turned off
   const chatToggle = document.getElementById("ai-widget-toggle");
   if (chatToggle && content.live_chat_enabled === "0") {
     chatToggle.classList.add("d-none");
   }
 
-  // Floating WhatsApp contact button — hidden unless a link is configured
+  // Floating WhatsApp contact button, hidden unless a link is configured
   // and the widget hasn't been explicitly turned off
   const whatsappOn = content.whatsapp_button_enabled !== "0";
   const whatsappBtn = document.getElementById("whatsapp-float-btn");
@@ -98,8 +98,7 @@
     let url;
     try {
       // Base of window.location.origin lets a self-hosted upload (e.g.
-      // "/uploads/clip.mp4") resolve correctly alongside full external URLs —
-      // it's ignored when urlValue is already absolute.
+      // "/uploads/clip.mp4") resolve correctly alongside full external URLs, // it's ignored when urlValue is already absolute.
       url = new URL(urlValue, window.location.origin);
     } catch (_) {
       return null;
@@ -242,7 +241,7 @@
     });
   }
 
-  // Footer social links, built only when at least one is set — icons, not text
+  // Footer social links, built only when at least one is set, icons, not text
   const socialIcons = {
     social_github: {
       label: "GitHub",

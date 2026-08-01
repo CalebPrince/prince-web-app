@@ -9,20 +9,20 @@
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>(function(){var t=localStorage.getItem("theme")||localStorage.getItem("site_default_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
-<title>Book a Call — Prince Caleb</title>
+<title>Book a Call, Prince Caleb</title>
 <meta name="description" content="Book a short workflow review for an AI voice agent, WhatsApp assistant, or business automation.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://princecaleb.dev/book.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Prince Caleb">
-<meta property="og:title" content="Book a Call — Prince Caleb">
+<meta property="og:title" content="Book a Call, Prince Caleb">
 <meta property="og:description" content="Review one repetitive customer or operations workflow and identify a safe first automation.">
 <meta property="og:url" content="https://princecaleb.dev/book.html">
 <meta property="og:image" content="https://princecaleb.dev/uploads/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Book a Call — Prince Caleb">
+<meta name="twitter:title" content="Book a Call, Prince Caleb">
 <meta name="twitter:description" content="Review one repetitive customer or operations workflow and identify a safe first automation.">
 <meta name="twitter:image" content="https://princecaleb.dev/uploads/og-image.png">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -219,7 +219,7 @@
     try {
       const { slots } = await api.get(`/api/v1/appointments/availability?date=${encodeURIComponent(dateInput.value)}`);
       if (!slots.length) {
-        container.innerHTML = '<span class="text-muted-custom small">No times available that day — try another date.</span>';
+        container.innerHTML = '<span class="text-muted-custom small">No times available that day, try another date.</span>';
         return;
       }
       container.innerHTML = slots.map(t => `<button type="button" class="pager-btn slot-btn" data-time="${t}">${t}</button>`).join('');
@@ -232,7 +232,7 @@
         });
       });
     } catch (err) {
-      container.innerHTML = '<span class="text-muted-custom small">Could not load times — please try again.</span>';
+      container.innerHTML = '<span class="text-muted-custom small">Could not load times, please try again.</span>';
     }
   }
 
@@ -276,7 +276,7 @@
       document.getElementById('booking-form-wrap').innerHTML = `
         <div class="handoff-success">
           <span class="handoff-check" aria-hidden="true">✓</span><p class="eyebrow mb-2">Call confirmed</p>
-          <h3 class="mb-2">You're booked in.</h3><p class="text-muted-custom">${dateInput.value} at ${selectedTime} — a confirmation email is on its way.</p>
+          <h3 class="mb-2">You're booked in.</h3><p class="text-muted-custom">${dateInput.value} at ${selectedTime}, a confirmation email is on its way.</p>
           <ol class="handoff-steps"><li><strong>I review your brief</strong><span>Your topic and context help me prepare before we meet.</span></li><li><strong>We use the call to clarify</strong><span>We’ll cover goals, constraints, timing, and fit.</span></li><li><strong>You get a considered next step</strong><span>If a project makes sense, I’ll prepare a proposal for your review.</span></li></ol>
         </div>`;
     } catch (err) {

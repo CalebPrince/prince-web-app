@@ -1,5 +1,5 @@
 // Theme picker. The inline snippet in <head> already set data-theme before
-// first paint (localStorage, falling back to the OS preference) — this file
+// first paint (localStorage, falling back to the OS preference), this file
 // wires up the toggle button into a small popover offering every theme, and
 // layers the admin's site-wide default on top for visitors who haven't
 // chosen for themselves.
@@ -10,7 +10,7 @@
 
   var SVG_ATTRS = 'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
   // Fixed "appearance" glyph (half-filled circle) rather than a sun/moon that
-  // reflects current state — the toggle now opens a picker with more than
+  // reflects current state, the toggle now opens a picker with more than
   // two options, not a simple on/off switch.
   var ICON_APPEARANCE = '<svg ' + SVG_ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>';
   var CHECK_SVG = '<svg class="theme-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -23,7 +23,7 @@
   ];
   // Admin pages maintain their own, separate dark-theme color system in
   // admin.css (sidebar section colors, etc.) that doesn't cover Midnight or
-  // Paper — offer just Light/Dark there so the dashboard never ends up
+  // Paper, offer just Light/Dark there so the dashboard never ends up
   // half-themed.
   var isAdminContext = !!document.querySelector('link[href*="/css/admin.css"]');
   var THEMES = isAdminContext ? ALL_THEMES.filter(t => t.id === "light" || t.id === "dark") : ALL_THEMES;

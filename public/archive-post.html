@@ -9,15 +9,15 @@
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>(function(){var t=localStorage.getItem("theme")||localStorage.getItem("site_default_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
-<title id="page-title">Article — Prince Caleb</title>
+<title id="page-title">Article, Prince Caleb</title>
 <meta name="description" id="page-description" content="An article from Prince Caleb on custom software, automation, and web/mobile development.">
 <meta name="keywords" id="page-keywords" content="custom software Ghana, business automation Accra">
 <meta name="robots" content="index, follow">
 <link rel="canonical" id="page-canonical" href="https://princecaleb.dev/archive.html">
-<link rel="alternate" type="application/rss+xml" title="Prince Caleb — Technical Archive" href="https://princecaleb.dev/feed.xml">
+<link rel="alternate" type="application/rss+xml" title="Prince Caleb, Technical Archive" href="https://princecaleb.dev/feed.xml">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Prince Caleb">
-<meta property="og:title" id="og-title" content="Article — Prince Caleb">
+<meta property="og:title" id="og-title" content="Article, Prince Caleb">
 <meta property="og:description" id="og-description" content="An article from Prince Caleb on custom software, automation, and web/mobile development.">
 <meta property="og:url" id="og-url" content="https://princecaleb.dev/archive.html">
 <meta property="og:image" id="og-image" content="https://princecaleb.dev/uploads/og-image.png">
@@ -28,7 +28,7 @@
 <meta property="article:section" id="article-section" content="">
 <meta property="article:tag" id="article-tag" content="">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" id="twitter-title" content="Article — Prince Caleb">
+<meta name="twitter:title" id="twitter-title" content="Article, Prince Caleb">
 <meta name="twitter:description" id="twitter-description" content="An article from Prince Caleb on custom software, automation, and web/mobile development.">
 <meta name="twitter:image" id="twitter-image" content="https://princecaleb.dev/uploads/og-image.png">
 <script type="application/ld+json" id="ld-json"></script>
@@ -174,10 +174,10 @@ function renderBody(body) {
 
   try {
     const p = await api.get(`/api/v1/blog/${encodeURIComponent(slug)}`);
-    const pageTitle = `${p.title} — Prince Caleb`;
+    const pageTitle = `${p.title}, Prince Caleb`;
     const canonicalUrl = `https://princecaleb.dev/archive-post.html?slug=${encodeURIComponent(slug)}`;
     // Share/structured-data image is the raster OG card (generate_blog_og_images.py),
-    // not the post's SVG cover — social platforms don't render SVG. This mirrors
+    // not the post's SVG cover, social platforms don't render SVG. This mirrors
     // what og-render.php injects server-side for crawlers.
     const imageUrl = `https://princecaleb.dev/uploads/og/blog/${slug}.png`;
     const categoryKeywords = CATEGORY_KEYWORDS[p.category] || 'custom software Ghana';
@@ -279,7 +279,7 @@ function renderBody(body) {
       container.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
     }
 
-    // Reading progress hairline — width tracks how far down the page you
+    // Reading progress hairline, width tracks how far down the page you
     // are. Capture-phase listener on window hears every scroll on the page
     // (scroll events don't bubble, so a plain document listener would miss
     // an element scroller if the page's scroll container ever changes).
@@ -295,7 +295,7 @@ function renderBody(body) {
     }
 
     // Related articles: same category first, padded with the most recent
-    // other posts if the category has fewer than three. Best-effort — a
+    // other posts if the category has fewer than three. Best-effort, a
     // failure here never breaks the article itself.
     try {
       const all = await api.get('/api/v1/blog');
@@ -337,7 +337,7 @@ function renderBody(body) {
     document.getElementById('post-newsletter-form')?.addEventListener('submit', async (e) => {
       e.preventDefault(); const msg = document.getElementById('post-newsletter-msg'); const btn = document.getElementById('post-newsletter-submit');
       msg.classList.add('d-none'); btn.disabled = true; btn.textContent = 'Joining…';
-      try { await api.post('/api/v1/newsletter/subscribe', { email: document.getElementById('post-newsletter-email').value, website: document.getElementById('post-newsletter-website').value }); e.currentTarget.reset(); msg.className = 'alert alert-success py-2 small mt-3'; msg.textContent = "You're on the list — watch your inbox for the next post."; }
+      try { await api.post('/api/v1/newsletter/subscribe', { email: document.getElementById('post-newsletter-email').value, website: document.getElementById('post-newsletter-website').value }); e.currentTarget.reset(); msg.className = 'alert alert-success py-2 small mt-3'; msg.textContent = "You're on the list, watch your inbox for the next post."; }
       catch (err) { msg.className = 'alert alert-danger py-2 small mt-3'; msg.textContent = err.message || 'Something went wrong.'; }
       finally { msg.classList.remove('d-none'); btn.disabled = false; btn.textContent = 'Join the list'; }
     });
@@ -350,7 +350,7 @@ function renderBody(body) {
         btn.textContent = '✓ Copied!';
         setTimeout(() => { btn.textContent = original; }, 2000);
       } catch (_) {
-        alert('Could not copy the link — you can copy it from the address bar.');
+        alert('Could not copy the link, you can copy it from the address bar.');
       }
     });
   } catch (e) {

@@ -19,7 +19,7 @@ const clientApi = {
       });
     } catch (err) {
       if (err.name === "AbortError") {
-        throw new Error("That's taking longer than expected — please try again.");
+        throw new Error("That's taking longer than expected, please try again.");
       }
       throw err;
     } finally {

@@ -1,7 +1,7 @@
 // Homepage hero: a subtle Three.js particle constellation behind the headline.
 // Deliberately gated so the library never loads where it can't earn its cost:
 // desktop-class pointers only, reduced-motion respected, WebGL required, and
-// the ~85KB (gzipped) self-hosted module is fetched on idle — never in the
+// the ~85KB (gzipped) self-hosted module is fetched on idle, never in the
 // critical path. The render loop pauses whenever the hero is off-screen or
 // the tab is hidden. If the admin-configured hero background video is active,
 // this never mounts (and unmounts if the video appears later), so the two
@@ -43,13 +43,13 @@
     : fn => setTimeout(fn, 1500);
   onIdle(() => {
     if (destroyed || videoActive()) return;
-    // The scene is decorative, so failure is non-fatal — but log it, or a
+    // The scene is decorative, so failure is non-fatal, but log it, or a
     // broken vendor file/init bug is indistinguishable from the guards
     // having (correctly) skipped the effect.
     // Versioned directory: the module internally imports ./three.core.min.js,
     // so upgrades bump the folder name (not the filenames) to bust caches.
     import("/js/vendor/three-0.180.0/three.module.min.js").then(init).catch(err => {
-      console.warn("hero-3d: skipped —", err);
+      console.warn("hero-3d: skipped, ", err);
     });
   });
 
@@ -126,7 +126,7 @@
     group.add(new THREE.LineSegments(linesGeo, linesMat));
 
     // One slow wireframe icosahedron, offset right so it sits behind the
-    // hero's value panel column — texture, not a focal point.
+    // hero's value panel column, texture, not a focal point.
     const icoGeo = new THREE.IcosahedronGeometry(30, 1);
     const icoMat = new THREE.MeshBasicMaterial({
       color: inkColor(),

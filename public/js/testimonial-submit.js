@@ -62,7 +62,7 @@
       document.getElementById('review-thanks').classList.remove('d-none');
     } catch (err) {
       msg.className = 'alert alert-danger py-2 small';
-      msg.textContent = err.message || 'Something went wrong — please try again.';
+      msg.textContent = err.message || 'Something went wrong, please try again.';
       msg.classList.remove('d-none');
       btn.disabled = false;
       btn.textContent = 'Submit review';
