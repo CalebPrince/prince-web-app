@@ -129,7 +129,39 @@ class AccountDemoController
         $stmt->execute([$token]);
         $demo = $stmt->fetch();
         if (!$demo) Response::error('Account demo not found.', 404);
-        Response::json(self::publicShape($demo));
+        Response::json(self::publicShape($demo, $pdo));
+    }
+
+    /**
+     * A real, published project in the same industry bucket as this lead —
+     * approved testimonial required, real outcome_metrics required. Returns
+     * null (never a fabricated stand-in) when nothing qualifies, which is
+     * the common case until a project is hand-tagged with an industry in
+     * Admin -> Projects.
+     */
+    public static function matchingCaseStudy(\PDO $pdo, string $industry): ?array
+    {
+        $stmt = $pdo->prepare(
+            "SELECT p.title, p.slug, p.outcome_metrics, t.client_name
+             FROM projects p
+             JOIN testimonials t ON t.id = p.testimonial_id AND t.status = 'approved'
+             WHERE p.is_published = 1 AND p.industry = ? AND p.outcome_metrics IS NOT NULL AND p.outcome_metrics != ''
+             ORDER BY p.is_featured DESC, p.sort_order ASC
+             LIMIT 1"
+        );
+        $stmt->execute([$industry]);
+        $row = $stmt->fetch();
+        if (!$row) return null;
+
+        $signals = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string) $row['outcome_metrics']))));
+        if (!$signals) return null;
+
+        return [
+            'project_title' => $row['title'],
+            'client_name' => $row['client_name'],
+            'metric' => $signals[0],
+            'url' => 'https://princecaleb.dev/project.html?slug=' . $row['slug'],
+        ];
     }
 
     public static function track(array $params): void
@@ -543,7 +575,7 @@ class AccountDemoController
         return $previews[$template] ?? $previews['professional'];
     }
 
-    private static function publicShape(array $row): array
+    private static function publicShape(array $row, \PDO $pdo): array
     {
         $personalization = self::personalization($row);
         return [
@@ -554,6 +586,7 @@ class AccountDemoController
             'workflow' => json_decode((string) $row['workflow_json'], true) ?: [],
             'proof_note' => $row['proof_note'],
             'personalization' => $personalization,
+            'case_study' => self::matchingCaseStudy($pdo, $personalization['template']),
             'cta_label' => 'Talk through a monitored pilot',
             'cta_url' => '/contact.html?source=account-demo',
         ];

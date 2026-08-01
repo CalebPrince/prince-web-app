@@ -235,6 +235,9 @@ if (!in_array('outcome_metrics', $projectColumns, true)) {
 if (!in_array('testimonial_id', $projectColumns, true)) {
     $pdo->exec('ALTER TABLE projects ADD COLUMN testimonial_id INTEGER REFERENCES testimonials(id)');
 }
+if (!in_array('industry', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN industry TEXT');
+}
 
 $webhookColumns = array_column($pdo->query('PRAGMA table_info(webhook_queue)')->fetchAll(), 'name');
 if (!in_array('slack_sent', $webhookColumns, true)) {

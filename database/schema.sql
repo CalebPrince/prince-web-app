@@ -27,6 +27,11 @@ CREATE TABLE IF NOT EXISTS projects (
   is_featured INTEGER NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL DEFAULT 0,
   outcome_metrics TEXT,
+  -- One of the same industry buckets AccountDemoController::profile() sorts
+  -- a cold-outreach lead into (healthcare/hospitality/finance/property/
+  -- education/commerce/professional). Lets a real, approved case study be
+  -- cited by industry match in a pitch or demo instead of only generic proof.
+  industry TEXT,
   testimonial_id INTEGER NULL REFERENCES testimonials(id) ON DELETE SET NULL,
   -- Delivery health, set by hand on the admin Projects page — separate from
   -- is_published, which is about public visibility, not build progress.

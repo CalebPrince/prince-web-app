@@ -304,6 +304,7 @@ function openNewModal() {
   document.getElementById("cover-upload-msg").textContent = "";
   document.getElementById("gallery-upload-msg").textContent = "";
   document.getElementById("outcome_metrics").value = "";
+  document.getElementById("industry").value = "";
   document.getElementById("testimonial_id").value = "";
   document.getElementById("client_id").value = "";
   document.getElementById("is_featured").checked = false;
@@ -346,6 +347,7 @@ function openEditModal(project) {
   document.getElementById("is_embeddable").checked = !!project.is_embeddable;
   document.getElementById("is_featured").checked = !!project.is_featured;
   document.getElementById("outcome_metrics").value = project.outcome_metrics || "";
+  document.getElementById("industry").value = project.industry || "";
   document.getElementById("testimonial_id").value = project.testimonial_id || "";
   document.getElementById("client_id").value = project.client_id || "";
   document.getElementById("delivery_status").value = project.delivery_status || "on_track";
@@ -472,6 +474,7 @@ async function saveProject() {
     is_embeddable: document.getElementById("is_embeddable").checked,
     is_featured: document.getElementById("is_featured").checked,
     outcome_metrics: document.getElementById("outcome_metrics").value || null,
+    industry: document.getElementById("industry").value || null,
     testimonial_id: document.getElementById("testimonial_id").value || null,
     client_id: document.getElementById("client_id").value || null,
     delivery_status: document.getElementById("delivery_status").value,

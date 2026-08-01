@@ -170,6 +170,13 @@
         <h3>${escapeHtml(step.label)}</h3>
         <p>${escapeHtml(step.detail)}</p>
       </article>`).join("");
+    if (data.case_study) {
+      fragment.querySelector("[data-case-study-metric]").textContent = data.case_study.metric;
+      fragment.querySelector("[data-case-study-source]").textContent = `${data.case_study.client_name} · ${data.case_study.project_title}`;
+      const caseStudyLink = fragment.querySelector("[data-case-study-link]");
+      caseStudyLink.href = data.case_study.url;
+      fragment.querySelector("[data-case-study-section]").classList.add("is-visible");
+    }
     fragment.querySelectorAll("[data-cta]").forEach(link => {
       link.href = data.cta_url;
       link.querySelector("[data-cta-label]").textContent = data.cta_label;

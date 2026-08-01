@@ -226,7 +226,8 @@ class OutreachController
             if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 // Emailable — the richer channel wins.
                 $demoUrl = AccountDemoController::publishedUrlForLead($pdo, (int) $lead['id']);
-                $pitch = MarketingLeadController::draftPitch((string) $lead['business_name'], $findings, $demoUrl, (int) $lead['id']);
+                $caseStudy = MarketingLeadController::findCaseStudyForLead($pdo, (int) $lead['id']);
+                $pitch = MarketingLeadController::draftPitch((string) $lead['business_name'], $findings, $demoUrl, (int) $lead['id'], $caseStudy);
                 if ($pitch === null) {
                     continue; // generation failed — try again next run rather than send nothing
                 }

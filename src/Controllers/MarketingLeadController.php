@@ -652,7 +652,8 @@ class MarketingLeadController
         }
 
         $demoUrl = AccountDemoController::publishedUrlForLead($pdo, (int) $lead['id']);
-        $pitch = self::draftPitch($lead['business_name'], $findings, $demoUrl, (int) $lead['id']);
+        $caseStudy = self::findCaseStudyForLead($pdo, (int) $lead['id']);
+        $pitch = self::draftPitch($lead['business_name'], $findings, $demoUrl, (int) $lead['id'], $caseStudy);
         if ($pitch === null) {
             Response::error('Pitch generation failed — please try again in a moment.', 502);
         }
@@ -1144,7 +1145,24 @@ class MarketingLeadController
      * Engine's auto-draft can generate a pitch unattended — same code path as
      * a hand-triggered generate-pitch, so the two can't drift.
      */
-    public static function draftPitch(string $businessName, array $findings, ?string $accountDemoUrl = null, ?int $leadId = null): ?array
+    /**
+     * A real case study to cite in this lead's pitch, matched by the same
+     * industry bucket its account demo was classified into. Requires a
+     * demo to already exist (draft or published) since that's where the
+     * industry classification comes from; returns null otherwise — never a
+     * guessed-at industry.
+     */
+    public static function findCaseStudyForLead(\PDO $pdo, int $leadId): ?array
+    {
+        $demo = AccountDemoController::forLead($pdo, $leadId);
+        if (!$demo) {
+            return null;
+        }
+        $industry = $demo['personalization']['template'] ?? null;
+        return $industry ? AccountDemoController::matchingCaseStudy($pdo, $industry) : null;
+    }
+
+    public static function draftPitch(string $businessName, array $findings, ?string $accountDemoUrl = null, ?int $leadId = null, ?array $caseStudy = null): ?array
     {
         $context = self::findingsContext($findings);
 
@@ -1178,10 +1196,16 @@ class MarketingLeadController
         }
 
         $body = (string) $parsed['body'];
+        $campaign = 'cold_outreach_lead_' . ($leadId ?? 'unknown');
         if ($accountDemoUrl) {
-            $campaign = 'cold_outreach_lead_' . ($leadId ?? 'unknown');
             $taggedDemoUrl = Utm::tagLinks($accountDemoUrl, $campaign, 'email', 'cold_outreach');
             $body .= "\n\nI put together a short outcome walkthrough for {$businessName}: {$taggedDemoUrl}";
+        }
+        // Real, admin-approved case study only — never AI-drafted or
+        // paraphrased, so the metric quoted is exactly what's on file.
+        if ($caseStudy) {
+            $taggedCaseStudyUrl = Utm::tagLinks($caseStudy['url'], $campaign . '_case_study', 'email', 'cold_outreach');
+            $body .= "\n\nFor context, a similar business, {$caseStudy['client_name']} ({$caseStudy['project_title']}), saw: {$caseStudy['metric']}. Full write-up: {$taggedCaseStudyUrl}";
         }
         return [
             'subject' => (string) $parsed['subject'],

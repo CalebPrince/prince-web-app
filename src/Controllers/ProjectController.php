@@ -144,8 +144,8 @@ class ProjectController
         $pdo = Database::get();
         $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key, arch_style_keyword, arch_primary_color, arch_accent_color)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, industry, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key, arch_style_keyword, arch_primary_color, arch_accent_color)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $clientId,
@@ -163,6 +163,7 @@ class ProjectController
             !empty($data['is_featured']) ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
             trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
+            self::industryValue($data['industry'] ?? null),
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
             $data['delivery_status'] ?? 'on_track',
             max(0, min(100, (int) ($data['progress_percent'] ?? 0))),
@@ -218,7 +219,7 @@ class ProjectController
         $stmt = $pdo->prepare(
             "UPDATE projects SET client_id=?, slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
-             outcome_metrics=?, testimonial_id=?, delivery_status=?, progress_percent=?, contract_value=?, estimated_cost=?,
+             outcome_metrics=?, industry=?, testimonial_id=?, delivery_status=?, progress_percent=?, contract_value=?, estimated_cost=?,
              actual_cost=?, hours_worked=?, finance_currency=?, deadline=?, assigned_agent_key=?, arch_style_keyword=?,
              arch_primary_color=?, arch_accent_color=?, updated_at=datetime('now') WHERE id=?"
         );
@@ -238,6 +239,7 @@ class ProjectController
             !empty($data['is_featured']) ? 1 : 0,
             (int) ($data['sort_order'] ?? 0),
             trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
+            self::industryValue($data['industry'] ?? null),
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
             $data['delivery_status'] ?? 'on_track',
             max(0, min(100, (int) ($data['progress_percent'] ?? 0))),
@@ -387,6 +389,21 @@ class ProjectController
         if ($style === '') return null;
         if (!in_array($style, ['modern', 'classic', 'minimal', 'bold'], true)) Response::error('Choose a valid style.', 422);
         return $style;
+    }
+
+    /**
+     * Same seven buckets AccountDemoController::profile() sorts a cold
+     * outreach lead into — lets a real case study be matched by industry
+     * when drafting a pitch or demo, instead of only generic proof.
+     */
+    private static function industryValue(mixed $value): ?string
+    {
+        $industry = strtolower(trim((string) ($value ?? '')));
+        if ($industry === '') return null;
+        if (!in_array($industry, ['healthcare', 'hospitality', 'finance', 'property', 'education', 'commerce', 'professional'], true)) {
+            Response::error('Choose a valid industry.', 422);
+        }
+        return $industry;
     }
 
     private static function hexColorValue(mixed $value): ?string

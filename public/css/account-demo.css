@@ -173,6 +173,12 @@ h1 { max-width: 820px; margin: 0; font-size: clamp(3rem, 7vw, 6.7rem); line-heig
 .evidence-list { display: grid; gap: 10px; margin: 24px 0 0; padding: 0; list-style: none; }
 .evidence-list li { position: relative; padding: 12px 14px 12px 40px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); background: color-mix(in srgb, var(--white) 72%, transparent); font-size: .85rem; line-height: 1.5; }
 .evidence-list li::before { content: "✓"; position: absolute; left: 14px; top: 12px; color: var(--blue); font-weight: 800; }
+.demo-case-study { display: none; padding: 0 0 80px; }
+.demo-case-study.is-visible { display: block; }
+.case-study-proof-link { display: block; margin-top: 24px; padding: 28px 30px; border-left: 3px solid var(--amber); border-radius: 4px; background: color-mix(in srgb, var(--white) 72%, transparent); text-decoration: none; transition: background .2s ease; }
+.case-study-proof-link:hover { background: color-mix(in srgb, var(--white) 90%, transparent); }
+.case-study-proof-metric { display: block; font: 700 clamp(1.2rem, 2.4vw, 1.6rem)/1.35 "Manrope", sans-serif; color: var(--ink); letter-spacing: -.01em; }
+.case-study-proof-source { display: block; margin-top: 10px; color: var(--muted); font-size: .8rem; }
 .demo-close { margin-bottom: 50px; padding: clamp(28px, 5vw, 60px); border-radius: 26px; background: var(--blue); color: white; display: flex; align-items: center; justify-content: space-between; gap: 30px; }
 .demo-close p { max-width: 650px; margin: 0; font: 700 clamp(1.4rem, 3vw, 2.5rem)/1.2 "Manrope", sans-serif; letter-spacing: -.03em; }
 .demo-cta-light { flex: none; background: white; color: var(--navy); box-shadow: none; }
