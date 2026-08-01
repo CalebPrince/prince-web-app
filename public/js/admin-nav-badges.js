@@ -32,6 +32,18 @@
     contacts.insertAdjacentElement('afterend', link);
   }
   injectPipelineNav();
+  function injectSageChatsNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/sage-chats.html"]')) return;
+    const marketingLeads = nav.querySelector('a[href="/admin/marketing-leads.html"]');
+    if (!marketingLeads) return;
+    const link = document.createElement('a');
+    link.href = '/admin/sage-chats.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/sage-chats.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-lightbulb nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Sage Chats</span><span id="nav-badge-sage-chats" class="notif-badge d-none"></span>';
+    marketingLeads.insertAdjacentElement('afterend', link);
+  }
+  injectSageChatsNav();
   function injectVoiceDemoNav() {
     const nav = document.querySelector('.admin-sidebar nav');
     if (!nav || nav.querySelector('a[href="/admin/voice-demo.html"]')) return;

@@ -189,6 +189,21 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_feedback ON chat_sessions (prototype_status, admin_seen);
 
+-- Sage (public marketing-brain agent) conversations — mirrors chat_sessions'
+-- shape minus the prototype-building fields Lisa needs, since Sage is a pure
+-- brainstorming agent with nothing to build or approve.
+CREATE TABLE IF NOT EXISTS sage_chats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT UNIQUE NOT NULL,
+  transcript_json TEXT NOT NULL DEFAULT '[]',
+  client_name TEXT,
+  client_email TEXT,
+  admin_seen INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sage_chats_seen ON sage_chats (admin_seen, updated_at);
+
 CREATE TABLE IF NOT EXISTS blog_posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   slug TEXT UNIQUE NOT NULL,
