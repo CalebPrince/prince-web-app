@@ -71,6 +71,7 @@ function renderQualificationTabs(rows) {
     strong: rows.filter(lead => Number(lead.fit_score) >= 75 && lead.status !== "rejected").length,
     qualified: rows.filter(lead => Number(lead.fit_score) >= 55 && Number(lead.fit_score) < 75 && lead.status !== "rejected").length,
     develop: rows.filter(lead => Number(lead.fit_score) >= 35 && Number(lead.fit_score) < 55 && lead.status !== "rejected").length,
+    low: rows.filter(lead => Number(lead.fit_score) < 35 && lead.status !== "rejected").length,
     rejected: rows.filter(lead => lead.status === "rejected").length,
   };
   Object.entries(counts).forEach(([key, value]) => {
