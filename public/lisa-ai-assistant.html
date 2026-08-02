@@ -55,9 +55,9 @@
   <header class="lisa-integrations-hero">
     <div class="container lisa-hero-grid">
       <div class="lisa-hero-copy">
-        <p class="eyebrow mb-3 hero-animate hero-animate-1">// Meet Lisa</p>
+        <p class="eyebrow mb-3 hero-animate hero-animate-1" data-content="lisa_page_eyebrow">// Meet Lisa</p>
         <h1 class="hero-animate hero-animate-2">One assistant.<br><span>Your tools, connected.</span></h1>
-        <p class="hero-animate hero-animate-3">Lisa can answer calls and messages, understand what a customer needs, complete the next task in the tools your team already uses, and bring a person in when judgment is required.</p>
+        <p class="hero-animate hero-animate-3" data-content="lisa_page_subheadline">Lisa can answer calls and messages, understand what a customer needs, complete the next task in the tools your team already uses, and bring a person in when judgment is required.</p>
         <div class="d-flex flex-wrap gap-3 hero-animate hero-animate-4"><a href="#scenario-lab" class="btn-brand">See Lisa at work</a><a href="/book.html" class="btn-brand-outline">Plan an integration</a></div>
         <div class="lisa-hero-proof hero-animate hero-animate-4"><span><i></i> Phone, WhatsApp and web chat</span><span>Human handoff built in</span></div>
       </div>
@@ -205,7 +205,77 @@
         <article class="reveal reveal-delay-1"><span class="tool-p">P</span><div><h3>Payments and documents</h3><p>Share payment links, confirm payments, issue receipts, and prepare approved documents.</p><small>Paystack · Stripe · Google Drive · DocuSign</small></div></article>
         <article class="reveal reveal-delay-2"><span class="tool-z">+</span><div><h3>Your internal systems</h3><p>Connect custom databases, admin dashboards, inventory tools, help desks, and APIs.</p><small>REST APIs · Webhooks · SQL · Custom software</small></div></article>
       </div>
-      <p class="integration-disclaimer reveal">Tool names describe possible integrations. Availability depends on the tool’s API, your account plan, permissions, and the workflow we approve together.</p>
+      <p class="integration-disclaimer reveal" data-content="lisa_page_integrations_disclaimer">Tool names describe possible integrations. Availability depends on the tool’s API, your account plan, permissions, and the workflow we approve together.</p>
+    </div>
+  </section>
+
+  <section class="section lisa-pricing-section" id="lisa-pricing">
+    <div class="container">
+      <div class="proof-heading reveal">
+        <div><p class="eyebrow mb-3" data-content="lisa_pricing_eyebrow">// One connected service</p><h2 class="display-5 mb-0" data-content="lisa_pricing_title">Lisa, sold as one whole service.</h2></div>
+        <p class="text-muted-custom mb-0" data-content="lisa_page_service_pitch">Lisa isn’t a pile of separate tools you have to stitch together. She’s one monthly service — calls, WhatsApp, and web chat on one side, and your social media tools, apps, and CRMs connected on the other, all managed as a single subscription.</p>
+      </div>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-3">
+          <div class="pricing-card service-card reveal">
+            <span class="eyebrow d-block mb-2" data-content="lisa_tier_1_name">Starter</span>
+            <div class="pricing-price mb-0"><span data-content="lisa_tier_1_price_ghs">GHS 800</span><small>/mo</small></div>
+            <div class="pricing-price-alt mb-3"><span data-content="lisa_tier_1_price_usd">$55</span><small>/mo</small></div>
+            <p class="text-muted-custom mb-3" data-content="lisa_tier_1_tagline">One channel, answering the questions and requests that come in every day.</p>
+            <ul class="mb-4" data-content-list="lisa_tier_1_features">
+              <li>One channel: WhatsApp or web chat</li>
+              <li>Approved FAQ and lead capture</li>
+              <li>Monthly conversation summary</li>
+            </ul>
+            <a href="/book.html" class="btn-brand-outline w-100 text-center">Plan this tier</a>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="pricing-card featured service-card reveal reveal-delay-1">
+            <span class="pricing-badge">Most requested</span>
+            <span class="eyebrow d-block mb-2" data-content="lisa_tier_2_name">Growth</span>
+            <div class="pricing-price mb-0"><span data-content="lisa_tier_2_price_ghs">GHS 2,000</span><small>/mo</small></div>
+            <div class="pricing-price-alt mb-3"><span data-content="lisa_tier_2_price_usd">$140</span><small>/mo</small></div>
+            <p class="text-muted-custom mb-3" data-content="lisa_tier_2_tagline">Voice and messaging together, connected to the calendar and CRM your team already uses.</p>
+            <ul class="mb-4" data-content-list="lisa_tier_2_features">
+              <li>Voice, WhatsApp, and web chat</li>
+              <li>One CRM or calendar integration</li>
+              <li>Human escalation and notifications</li>
+              <li>Monthly reporting dashboard</li>
+            </ul>
+            <a href="/book.html" class="btn-brand w-100 text-center">Plan this tier</a>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="pricing-card service-card reveal reveal-delay-2">
+            <span class="eyebrow d-block mb-2" data-content="lisa_tier_3_name">Scale</span>
+            <div class="pricing-price mb-0"><span data-content="lisa_tier_3_price_ghs">GHS 4,500</span><small>/mo</small></div>
+            <div class="pricing-price-alt mb-3"><span data-content="lisa_tier_3_price_usd">$300</span><small>/mo</small></div>
+            <p class="text-muted-custom mb-3" data-content="lisa_tier_3_tagline">Every channel, connected to social media tools, apps, and CRMs, with priority support.</p>
+            <ul class="mb-4" data-content-list="lisa_tier_3_features">
+              <li>All channels, including social inboxes</li>
+              <li>Multiple CRM, app, and social integrations</li>
+              <li>Priority support and monthly optimisation</li>
+              <li>Full audit trail and reporting</li>
+            </ul>
+            <a href="/book.html" class="btn-brand-outline w-100 text-center">Plan this tier</a>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="pricing-card service-card lisa-custom-tier reveal reveal-delay-3">
+            <span class="eyebrow d-block mb-2" data-content="lisa_custom_tier_name">Custom</span>
+            <div class="pricing-price mb-3">Tailored quote</div>
+            <p class="text-muted-custom mb-3" data-content="lisa_custom_tier_tagline">A workflow built around your exact tools, volume, and compliance needs, priced once we've scoped it.</p>
+            <ul class="mb-4" data-content-list="lisa_custom_tier_features">
+              <li>Unlimited channels and integrations</li>
+              <li>Dedicated workflows and safeguards</li>
+              <li>A named point of contact</li>
+            </ul>
+            <a href="/contact.html" class="btn-brand w-100 text-center" data-content="lisa_custom_tier_cta_label">Talk to us</a>
+          </div>
+        </div>
+      </div>
+      <p class="small text-muted-custom text-center mt-4">Monthly fee covers Lisa's connected service. Phone minutes, messaging, and AI usage are billed separately, same as every engagement.</p>
     </div>
   </section>
 
@@ -237,6 +307,6 @@
 <button type="button" id="ai-widget-toggle" aria-label="Open live chat" aria-expanded="false"><svg class="ai-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span class="ai-toggle-badge" id="ai-widget-badge" aria-hidden="true">1</span><span class="visually-hidden">1 unread message</span></button>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/api.js"></script><script src="/js/theme.js?v=20260730-site-default"></script><script src="/js/utility-dock.js"></script><script src="/js/nav-dropdowns.js"></script><script src="/js/mobile-nav.js"></script><script src="/js/animations.js"></script><script src="/js/lisa-capabilities.js"></script><script src="/js/ai-boot.js"></script><script src="/js/analytics.js"></script><script src="/js/pwa-register.js"></script>
+<script src="/js/api.js"></script><script src="/js/theme.js?v=20260730-site-default"></script><script src="/js/utility-dock.js"></script><script src="/js/nav-dropdowns.js"></script><script src="/js/mobile-nav.js"></script><script src="/js/content.js"></script><script src="/js/animations.js"></script><script src="/js/lisa-capabilities.js"></script><script src="/js/ai-boot.js"></script><script src="/js/analytics.js"></script><script src="/js/pwa-register.js"></script>
 </body>
 </html>

@@ -979,9 +979,13 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
   border-radius: 999px;
 }
 .pricing-card .pricing-price { font-size: 2rem; font-weight: 800; }
+.pricing-card .pricing-price small { font-size: 1rem; font-weight: 500; color: var(--ink-soft); margin-left: 0.25rem; }
+.pricing-card .pricing-price-alt { font-size: 1.1rem; font-weight: 600; color: var(--ink-soft); }
+.pricing-card .pricing-price-alt small { font-size: 0.85rem; font-weight: 500; margin-left: 0.2rem; }
 .pricing-card ul { list-style: none; padding-left: 0; }
 .pricing-card ul li { padding: 0.35rem 0; padding-left: 1.5rem; position: relative; }
 .pricing-card ul li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+.lisa-custom-tier { border-style: dashed; }
 
 /* Project grid */
 .filter-pill {

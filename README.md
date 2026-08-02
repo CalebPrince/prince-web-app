@@ -1542,6 +1542,24 @@ storage/
     if Scout's is unset, so it's never a hard failure. Assistant
     name/gender/accent settings ride the same generic `settings` store every
     other agent persona uses.
+48. **Lisa page & monthly pricing** (`/admin/lisa.html`, `public/lisa-ai-assistant.html`):
+    a dedicated admin page for the public Lisa service page, reusing the same
+    settings/content API as Site Content and Pricing rather than a new table
+    or controller. It edits the page's eyebrow, hero subheadline, and
+    integrations disclaimer, a "one whole service" pitch positioning Lisa as
+    a single connected service (calls/WhatsApp/web chat wired into social
+    media tools, apps, and CRMs, not separate point tools), and three monthly
+    pricing tiers plus one uncapped custom tier. Each of the three fixed
+    tiers carries its own GHS and USD monthly price shown side by side —
+    deliberately two authored fields (`lisa_tier_N_price_ghs`/`_usd`) rather
+    than one currency run through the homepage's live exchange-rate
+    converter (`currency-switcher.js`), since a subscription price is a
+    quoted number, not a spot-converted estimate. The custom tier has no
+    fixed price, only a tagline, feature list, and its own CTA label. All
+    fields degrade to the hardcoded page copy when unset, the same
+    fallback contract every other `[data-content]` field on the site follows.
+    No database migration needed — new keys live in the existing `settings`
+    table via `SettingsController::CONTENT_KEYS`.
 
 ## Deployment (Namecheap cPanel)
 

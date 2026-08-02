@@ -1,22 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="/js/error-log.js?v=20260719"></script>
+<script src="/js/error-log.js?v=20260802"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
-<title>Team — Admin</title>
+<title>Lisa - Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
 <link href="/css/admin.css" rel="stylesheet">
-<style>
-  .agent-avatar { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
-  .owner-avatar { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; flex-shrink: 0; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: .35rem; vertical-align: middle; }
-</style>
 </head>
 <body>
 
@@ -39,7 +34,7 @@
       <div class="nav-group-label">Overview</div>
       <a href="/admin/dashboard.html" class="nav-link"><i class="bi bi-speedometer2 nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Dashboard</span></a>
       <a href="/admin/reports.html" class="nav-link"><i class="bi bi-bar-chart-line nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Reports</span></a>
-      <a href="/admin/team.html" class="nav-link active"><i class="bi bi-people-fill nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Team</span></a>
+      <a href="/admin/team.html" class="nav-link"><i class="bi bi-people-fill nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Team</span></a>
       <div class="nav-group-label">Content</div>
       <a href="/admin/projects.html" class="nav-link"><i class="bi bi-kanban nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Projects</span></a>
       <a href="/admin/blog.html" class="nav-link"><i class="bi bi-journal-text nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Blog</span></a>
@@ -49,7 +44,7 @@
       <a href="/admin/tags.html" class="nav-link"><i class="bi bi-tags nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Tags</span></a>
       <a href="/admin/content.html" class="nav-link"><i class="bi bi-file-earmark-richtext nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Site Content</span></a>
       <a href="/admin/frontend-wording.html" class="nav-link"><i class="bi bi-translate nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Frontend Wording</span></a>
-      <a href="/admin/lisa.html" class="nav-link"><i class="bi bi-robot nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Lisa</span></a>
+      <a href="/admin/lisa.html" class="nav-link active"><i class="bi bi-robot nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Lisa</span></a>
       <div class="nav-group-label">Leads & Clients</div>
       <a href="/admin/contacts.html" class="nav-link"><i class="bi bi-person-vcard nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Contacts</span></a>
       <a href="/admin/inquiries.html" class="nav-link"><i class="bi bi-inbox nav-icon" style="color: var(--section-leads)"></i><span class="nav-label">Inquiries</span><span id="nav-badge-inquiries" class="notif-badge d-none"></span></a>
@@ -80,43 +75,96 @@
   <div class="flex-grow-1 p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div class="d-flex align-items-center gap-3">
-        <div class="icon-chip" style="background: var(--section-blue-soft); color: var(--section-blue);"><i class="bi bi-people-fill"></i></div>
+        <div class="icon-chip" style="background: var(--section-content-soft); color: var(--section-content);"><i class="bi bi-robot"></i></div>
         <div>
-          <h3 class="mb-0">Team</h3>
-          <p class="mb-0 small text-muted-custom">You and your AI agents — the crew running the studio.</p>
+          <h3 class="mb-0">Lisa</h3>
+          <p class="text-muted-custom mb-0 small">Edit the copy, monthly pricing tiers, and custom tier shown on the public Lisa page (<code>/lisa-ai-assistant.html</code>).</p>
         </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="/lisa-ai-assistant.html" target="_blank" rel="noopener" class="btn-brand-outline">View page</a>
+        <button class="btn-brand" id="save-lisa-btn" form="lisa-form" type="submit">Save</button>
       </div>
     </div>
 
-    <div id="team-error" class="alert alert-danger py-2 small d-none"></div>
+    <div id="lisa-msg" class="alert py-2 small d-none"></div>
 
-    <section class="team-capacity-summary mb-4" id="team-capacity-summary" aria-label="Current project workload"></section>
+    <form id="lisa-form">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="admin-card p-4 mb-4">
+            <h5 class="mb-3"><i class="bi bi-megaphone me-2" style="color: var(--section-content);"></i>Page copy</h5>
+            <div class="mb-3">
+              <label class="form-label">Eyebrow</label>
+              <input type="text" class="form-control" id="lisa_page_eyebrow" maxlength="80">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Hero subheadline</label>
+              <textarea class="form-control" id="lisa_page_subheadline" rows="3" maxlength="500"></textarea>
+            </div>
+            <div class="mb-0">
+              <label class="form-label">Integrations disclaimer</label>
+              <textarea class="form-control" id="lisa_page_integrations_disclaimer" rows="3" maxlength="500"></textarea>
+            </div>
+          </div>
 
-    <!-- Owner -->
-    <div class="admin-card p-4 mb-4" id="owner-card"></div>
-
-    <div class="nav-group-label mb-2" style="letter-spacing:.04em;">AI AGENTS</div>
-    <div id="agents-list" class="row g-3"></div>
-
-    <section class="admin-card arch-activity-card mt-4" aria-labelledby="arch-activity-title">
-      <div class="arch-activity-head">
-        <div>
-          <span class="arch-activity-kicker">ARCH DELIVERY LOG</span>
-          <h4 id="arch-activity-title" class="mb-1">Generated sites and client revisions</h4>
-          <p class="small text-muted-custom mb-0">The latest sites Arch built, who requested them, and what clients asked to change.</p>
+          <div class="admin-card p-4">
+            <h5 class="mb-3"><i class="bi bi-tag me-2" style="color: var(--section-content);"></i>Pricing section intro</h5>
+            <div class="mb-3">
+              <label class="form-label">Eyebrow</label>
+              <input type="text" class="form-control" id="lisa_pricing_eyebrow" maxlength="80">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Title</label>
+              <input type="text" class="form-control" id="lisa_pricing_title" maxlength="120">
+            </div>
+            <div class="mb-0">
+              <label class="form-label">"One whole service" pitch</label>
+              <textarea class="form-control" id="lisa_page_service_pitch" rows="5" maxlength="800"></textarea>
+              <div class="form-text">Sells Lisa as one connected service rather than separate tools — mentions social media tools, apps, and CRMs.</div>
+            </div>
+          </div>
         </div>
-        <a href="/chat.html" class="btn btn-sm btn-outline-secondary">Open builder &rarr;</a>
+
+        <div class="col-lg-8">
+          <div id="tier-editors" class="row g-4"></div>
+
+          <div class="admin-card p-4 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Custom tier</h5>
+              <span class="status-pill">Tailored quote, no fixed price</span>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Name</label>
+                <input type="text" class="form-control" id="lisa_custom_tier_name" maxlength="80">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Button label</label>
+                <input type="text" class="form-control" id="lisa_custom_tier_cta_label" maxlength="60">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Tagline</label>
+                <textarea class="form-control" id="lisa_custom_tier_tagline" rows="2" maxlength="500"></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Features</label>
+                <textarea class="form-control" id="lisa_custom_tier_features" rows="4" placeholder="One feature per line"></textarea>
+                <div class="form-text">One feature per line. These appear as bullets on the public page.</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="arch-activity-list" class="arch-activity-list"></div>
-    </section>
+    </form>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/api.js?v=20260719"></script>
+<script src="/js/api.js?v=20260802"></script>
 <script src="/js/theme.js?v=20260730-site-default"></script>
-<script src="/js/admin-auth.js?v=20260719"></script>
-<script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-team.js?v=20260731-scout"></script>
+<script src="/js/admin-auth.js?v=20260802"></script>
+<script src="/js/admin-nav-badges.js?v=20260802"></script>
+<script src="/js/admin-lisa.js?v=20260802"></script>
 </body>
 </html>
