@@ -100,6 +100,52 @@ class SageController
         Response::json(['reply' => $reply, 'token' => $session['token']]);
     }
 
+    /**
+     * POST /api/v1/admin/agents/sage/chat — body: {message, transcript: [{role,text}, ...]}.
+     * The admin-console counterpart to chat(), same "Talk to Agents" pattern as
+     * Danielle/Arch/Scout/etc: stateless (transcript replayed each turn, no
+     * sage_chats row) and no rate limit since it's behind admin auth already.
+     * Always treats the caller as Caleb — this route only runs inside his own
+     * logged-in session, never anonymous — and skips log_contact, which only
+     * makes sense for an actual visitor.
+     */
+    public static function adminChat(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $message = trim((string) ($data['message'] ?? ''));
+        $transcript = is_array($data['transcript'] ?? null) ? $data['transcript'] : [];
+
+        if ($message === '' || mb_strlen($message) > self::MAX_MESSAGE_LENGTH) {
+            Response::error('A message under ' . self::MAX_MESSAGE_LENGTH . ' characters is required.', 422);
+        }
+        if (count($transcript) > self::MAX_CHAT_TRANSCRIPT_TURNS) {
+            $transcript = array_slice($transcript, -self::MAX_CHAT_TRANSCRIPT_TURNS);
+        }
+        $transcript[] = ['role' => 'user', 'text' => $message];
+
+        $pdo = Database::get();
+        $result = AiAgentEngine::run(
+            self::buildChatSystemPrompt(true),
+            [
+                SharedAgentTools::siteInfoToolDeclaration(),
+                SharedAgentTools::searchContentToolDeclaration(),
+            ],
+            fn(string $name, array $args) => match ($name) {
+                'get_site_info' => SharedAgentTools::getSiteInfo(),
+                'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+                default => ['error' => 'Unknown tool.'],
+            },
+            $transcript
+        );
+        if ($result['reply'] === null) {
+            Response::error('Could not generate a reply — check that an AI provider is configured and reachable.', 502);
+        }
+
+        Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
+    }
+
     /** @return array{id:int,token:string,client_name:?string,client_email:?string} */
     private static function findOrCreateSession(\PDO $pdo, ?string $token): array
     {

@@ -12,6 +12,7 @@ let accountWorkspaceModal = null;
 let workspaceLeadId = null;
 let allLeadRows = [];
 let researchAgentDisplayName = "Sharon";
+let pitchAgentDisplayName = "Sage";
 
 if (window.Chart) {
   Chart.defaults.color = "#8b93a7";
@@ -68,6 +69,10 @@ function fitScoreCell(lead) {
 
 function researchAgentName(lead = null) {
   return String(lead?.research_agent_name || researchAgentDisplayName || "Sharon");
+}
+
+function pitchAgentName(lead = null) {
+  return String(lead?.pitch_agent_name || pitchAgentDisplayName || "Sage");
 }
 
 function renderQualificationTabs(rows) {
@@ -128,6 +133,7 @@ function openAccountWorkspace(lead) {
   document.getElementById("workspace-fit-score").textContent = `${Number(lead.fit_score || 0)}/100`;
   document.getElementById("workspace-fit-label").textContent = lead.fit_label || "Not scored";
   document.getElementById("workspace-research-agent").textContent = researchName;
+  document.getElementById("workspace-pitch-agent").textContent = pitchAgentName(lead);
   document.getElementById("workspace-fit-reasons").innerHTML = fitReasons.length
     ? fitReasons.map(reason => `<li>${escapeHtml(reason)}</li>`).join("")
     : "<li>Add contact details, research, or audit evidence to establish fit.</li>";
@@ -332,6 +338,7 @@ async function loadLeads() {
   researchAgentDisplayName = rows[0]?.research_agent_name || researchAgentDisplayName;
   const dossierAgentLabel = document.getElementById("dossier-agent-name");
   if (dossierAgentLabel) dossierAgentLabel.textContent = researchAgentDisplayName;
+  pitchAgentDisplayName = rows[0]?.pitch_agent_name || pitchAgentDisplayName;
   const tbody = document.getElementById("leads-tbody");
   const empty = document.getElementById("empty-state");
 
@@ -748,7 +755,7 @@ function openPitchModal(lead) {
   document.getElementById("pitch-phone-field").classList.toggle("d-none", !isPhone);
   document.getElementById("pitch-subject-field").classList.toggle("d-none", isPhone);
   document.getElementById("pitch-preview-field").classList.toggle("d-none", isPhone);
-  document.getElementById("pitch-body-label").textContent = isPhone ? "WhatsApp message" : "Pitch body";
+  document.getElementById("pitch-body-label").textContent = isPhone ? "WhatsApp message" : `Pitch body — drafted by ${pitchAgentName(lead)}`;
   document.getElementById("pitch-approve-send-btn").textContent = isPhone ? "Open WhatsApp" : "Approve & Send";
   renderPitchPreview();
 

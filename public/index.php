@@ -328,6 +328,7 @@ $router->get('/api/v1/admin/chief/dashboard', [\App\Agents\Chief::class, 'dashbo
 $router->post('/api/v1/admin/agents/sketch/chat', [SketchController::class, 'chat']);
 $router->post('/api/v1/admin/agents/scout/chat', [ScoutController::class, 'chat']);
 $router->post('/api/v1/admin/agents/reel/chat', [ReelController::class, 'chat']);
+$router->post('/api/v1/admin/agents/sage/chat', [SageController::class, 'adminChat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
 $router->post('/api/v1/admin/beacon-leads/{id}/flag', [BeaconController::class, 'flagLead']);

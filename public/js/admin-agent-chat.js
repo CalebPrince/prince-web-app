@@ -12,6 +12,7 @@
     chief: { label: "Chief", nameKey: "chief_assistant_name", genderKey: "chief_voice_gender", accentKey: "chief_voice_accent", fallbackName: "Chief" },
     scout: { label: "Scout", nameKey: "scout_assistant_name", genderKey: "scout_voice_gender", accentKey: "scout_voice_accent", fallbackName: "Scout" },
     reel: { label: "Reel", nameKey: "reel_assistant_name", genderKey: "reel_voice_gender", accentKey: "reel_voice_accent", fallbackName: "Reel" },
+    sage: { label: "Sage", nameKey: "sage_assistant_name", genderKey: "sage_voice_gender", accentKey: "sage_voice_accent", fallbackName: "Sage" },
   };
 
   // Files staged for the next message. Only Ada reads documents, so the
