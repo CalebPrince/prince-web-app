@@ -987,6 +987,12 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
 .pricing-card ul li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
 .lisa-custom-tier { border-style: dashed; }
 
+/* Cross-link banner: points general pricing tiers at Lisa's own page */
+.pricing-cross-link { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; margin-top: 2.5rem; padding: 1.5rem 1.75rem; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-soft); }
+.pricing-cross-link strong { display: block; font-size: 1.05rem; color: var(--heading-color); }
+.pricing-cross-link p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.9rem; max-width: 55ch; }
+.pricing-cross-link .btn-brand-outline { white-space: nowrap; }
+
 /* Project grid */
 .filter-pill {
   border: 1px solid var(--line);
