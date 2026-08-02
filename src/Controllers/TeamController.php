@@ -33,7 +33,11 @@ class TeamController
         )->fetchColumn() > 0;
         $chiefActive = Chief::briefsWritten($pdo) > 0;
         $agents = [
-            ['key' => 'lisa', 'name' => Settings::get('chat_assistant_name') ?: 'Lisa', 'role' => 'Voice, WhatsApp & customer service', 'status' => 'available', 'capabilities' => ['Voice calls', 'WhatsApp', 'Bookings']],
+            // Lisa gets her own dedicated marketing page (workflows,
+            // integrations, and pricing), so — same as Sage below — 'url'
+            // sends the Builder OS grid there instead of the generic
+            // /agent.html dossier every other entry falls back to.
+            ['key' => 'lisa', 'name' => Settings::get('chat_assistant_name') ?: 'Lisa', 'role' => 'Voice, WhatsApp & customer service', 'status' => 'available', 'capabilities' => ['Voice calls', 'WhatsApp', 'Bookings'], 'url' => '/lisa-ai-assistant.html'],
             ['key' => 'beacon', 'name' => Settings::get('beacon_assistant_name') ?: 'Joan', 'role' => 'Lead discovery', 'status' => (string) Settings::get('beacon_discovery_enabled') === '1' ? 'active' : 'standby', 'capabilities' => ['Prospecting', 'Opportunity detection', 'Lead sourcing']],
             ['key' => 'dossier', 'name' => Settings::get('dossier_assistant_name') ?: 'Sharon', 'role' => 'Research intelligence', 'status' => 'on demand', 'capabilities' => ['Research', 'Intelligence', 'Lead briefs']],
             ['key' => 'nurturer', 'name' => Settings::get('nurturer_assistant_name') ?: 'Jason', 'role' => 'Email follow-up', 'status' => $nurturerActive ? 'active' : 'standby', 'capabilities' => ['Email sequences', 'Reply tracking', 'Follow-up']],
