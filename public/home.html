@@ -110,6 +110,36 @@
   }
 </style>
 
+<style>
+  .home-page .service-icon svg { width: 1.45rem; height: 1.45rem; }
+  .home-process { border-top: 1px solid var(--line); }
+  .home-process-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+  .home-process-step {
+    min-height: 240px;
+    padding: clamp(1.5rem, 3vw, 2.4rem);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .home-process-step > span {
+    display: block;
+    margin-bottom: 3rem;
+    color: var(--accent);
+    font: 700 .72rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .12em;
+  }
+  .home-process-step h3 { margin-bottom: .8rem; }
+  .home-process-step p { max-width: 34ch; margin: 0; color: var(--text-muted); line-height: 1.7; }
+  @media (max-width: 767.98px) {
+    .home-process-grid { grid-template-columns: 1fr; }
+    .home-process-step { min-height: 0; }
+    .home-process-step > span { margin-bottom: 1.5rem; }
+  }
+</style>
 </head>
 <body class="home-page">
 
@@ -142,7 +172,7 @@
       <a href="/pricing.html" class="nav-link">Pricing</a>
       <a href="/contact.html" class="nav-link">Contact</a>
     </div>
-    <a href="#estimator" class="btn-brand btn-sm d-none d-md-inline-block">Get estimate</a>
+    <a href="/book.html" class="btn-brand btn-sm d-none d-md-inline-block">Book a call</a>
   </div>
 </nav>
 
@@ -175,8 +205,8 @@
       from scratch on 12+ years of custom web &amp; mobile development.
     </p>
     <div class="d-flex flex-wrap align-items-center gap-3 hero-animate hero-animate-4">
-      <a href="#estimator" class="btn-brand">Scope your project</a>
-      <a href="/projects.html" class="btn-brand-outline">View my work</a>
+      <a href="/book.html" class="btn-brand">Book a discovery call</a>
+      <a href="/services.html" class="btn-brand-outline">Explore services</a>
       <a href="/testimonials.html" id="hero-rating" class="rating-pill d-none"></a>
     </div>
     <div class="live-channel-rail hero-animate hero-animate-4" aria-label="Contact Prince Caleb">
@@ -242,7 +272,7 @@
   </div>
 </header>
 
-<section class="home-os-conversion" aria-labelledby="home-os-title">
+<section class="home-os-conversion d-none" aria-labelledby="home-os-title">
   <div class="container">
     <div class="home-os-status">
       <div class="home-os-status-head"><div><span>BUILDER OS</span><strong id="home-os-title"><i></i> Online</strong></div><a href="/builder-os.html">Inspect full system →</a></div>
@@ -271,14 +301,14 @@
   </div>
 </section>
 
-<div class="agency-marquee" aria-hidden="true">
+<div class="agency-marquee d-none" aria-hidden="true">
   <div class="agency-marquee-track">
     <span>AI voice agents</span><span>/</span><span>AI chatbots</span><span>/</span><span>Business automations</span><span>/</span><span>Autonomous AI agents</span><span>/</span><span>AI systems engineering</span><span>/</span>
     <span>AI voice agents</span><span>/</span><span>AI chatbots</span><span>/</span><span>Business automations</span><span>/</span><span>Autonomous AI agents</span><span>/</span><span>AI systems engineering</span><span>/</span>
   </div>
 </div>
 
-<div class="metric-strip agency-proof-strip">
+<div class="metric-strip agency-proof-strip d-none">
   <div class="container">
     <div class="row g-4">
       <div class="col-6 col-md-3">
@@ -309,7 +339,7 @@
   </div>
 </div>
 
-<section class="section product-proof-section">
+<section class="section product-proof-section d-none">
   <div class="container">
     <div class="proof-heading reveal">
       <div>
@@ -375,15 +405,12 @@
     <p class="eyebrow text-center mb-3">// What I build</p>
     <div class="service-columns">
         <div class="deck-card">
-          <div class="service-icon mono">01</div>
-          <h3 class="h4 mb-3" data-content="service_1_title">AI Voice Agents</h3>
-          <p class="text-muted-custom mb-4" data-content="service_1_summary">Voice agents that answer your business line 24/7, book appointments, qualify callers, and hand off to a human the moment it matters. Every missed call is a customer someone else answered.</p>
-          <a href="/ai-voice-agents-for-clinics.html" class="deck-cta">See the clinic solution <span class="cta-arrow">&rarr;</span></a>
-          <div class="service-live-links">
-            <a href="https://wa.me/233208049962" target="_blank" rel="noopener">Message Prince Caleb on WhatsApp</a>
-          </div>
+          <div class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/><path d="M15 3a6 6 0 0 1 6 6"/><path d="M15 7a2 2 0 0 1 2 2"/></svg></div>
+          <h3 class="h4 mb-3">AI agents</h3>
+          <p class="text-muted-custom mb-4">Voice and chat agents that answer customers, qualify enquiries, manage bookings and hand over to your team when human judgement matters.</p>
+          <a href="/services.html#track-01" class="deck-cta">Explore AI agents <span class="cta-arrow">&rarr;</span></a>
         </div>
-        <div class="deck-card">
+        <div class="deck-card d-none">
           <div class="service-icon mono">02</div>
           <h3 class="h4 mb-3" data-content="service_2_title">Autonomous AI Agents</h3>
           <p class="text-muted-custom mb-4" data-content="service_2_summary">Agents that scout leads, write follow-ups, draft proposals, and report daily, this site's own sales engine runs on agents I built. I build the same for your business.</p>
@@ -393,28 +420,53 @@
           </div>
         </div>
         <div class="deck-card">
-          <div class="service-icon mono">03</div>
+          <div class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4a3.5 3.5 0 0 1 3.5 3.5v4"/><path d="M6.5 10v4A3.5 3.5 0 0 0 10 17.5h4"/></svg></div>
           <h3 class="h4 mb-3" data-content="service_3_title">Business Automations</h3>
           <p class="text-muted-custom mb-4" data-content="service_3_summary">Connect the tools you already use and kill the manual work between them, enquiries into your CRM, bookings into invoices, events into email, running quietly on schedule.</p>
           <a href="/services.html#track-03" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
-        <div class="deck-card">
+        <div class="deck-card d-none">
           <div class="service-icon mono">04</div>
           <h3 class="h4 mb-3">AI Chatbots &amp; Live Assistants</h3>
           <p class="text-muted-custom mb-4">24/7 chat that actually knows your business, trained on your real content, with clean human handoff. The live chat on this site is a working example, not a demo.</p>
           <a href="/services.html#track-04" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
         <div class="deck-card">
-          <div class="service-icon mono">05</div>
+          <div class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m8 10 2 2 5-5"/></svg></div>
           <h3 class="h4 mb-3">Custom Websites &amp; Mobile Apps</h3>
-          <p class="text-muted-custom mb-4">Business websites, custom web platforms, and iOS or Android apps, built as standalone products or as the interface for your AI agents and automations.</p>
-          <a href="/services.html#track-05" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
+          <p class="text-muted-custom mb-4">Fast websites, focused web platforms and mobile applications built around how your customers and team actually work.</p>
+          <a href="/services.html#track-05" class="deck-cta">Explore digital products <span class="cta-arrow">&rarr;</span></a>
         </div>
     </div>
   </div>
 </section>
 
-<section class="section home-sage-feature">
+<section class="section home-process" aria-labelledby="home-process-title">
+  <div class="container">
+    <div class="row mb-5 reveal">
+      <div class="col-lg-7">
+        <span class="eyebrow d-block mb-2">// How we work</span>
+        <h2 class="display-5" id="home-process-title">From a costly problem to a working system.</h2>
+      </div>
+    </div>
+    <div class="home-process-grid">
+      <article class="home-process-step reveal">
+        <span>01</span><h3>Discover</h3>
+        <p>We identify the bottleneck, the people affected and the result worth measuring.</p>
+      </article>
+      <article class="home-process-step reveal reveal-delay-1">
+        <span>02</span><h3>Build</h3>
+        <p>I create the smallest dependable system, connect it to your tools and test the real workflow.</p>
+      </article>
+      <article class="home-process-step reveal reveal-delay-2">
+        <span>03</span><h3>Improve</h3>
+        <p>We review performance, remove friction and expand only after the first workflow proves useful.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section home-sage-feature d-none">
   <div class="container">
     <div class="sage-feature-card reveal">
       <div class="sage-feature-copy">
@@ -437,7 +489,7 @@
   </div>
 </section>
 
-<section id="estimator" class="section">
+<section id="estimator" class="section d-none">
   <div class="container reveal">
     <div class="planner-shell">
       <div class="row g-5">
@@ -512,7 +564,7 @@
   </div>
 </section>
 
-<section class="section" data-currency-zone>
+<section class="section d-none" data-currency-zone>
   <div class="container">
     <div class="row mb-4 reveal reveal-on-scroll">
       <div class="col-lg-7">
@@ -593,7 +645,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section d-none">
   <div class="container">
     <div class="row mb-4 reveal reveal-on-scroll">
       <div class="col-lg-7">
@@ -677,7 +729,7 @@
   </div>
 </section>
 
-<section id="prototype-cta" class="section">
+<section id="prototype-cta" class="section d-none">
   <div class="container reveal reveal-on-scroll">
     <div class="proto-cta-panel">
       <div class="row g-5 align-items-center">
@@ -723,7 +775,7 @@
   </div>
 </section>
 
-<section id="ai-booking" class="section">
+<section id="ai-booking" class="section d-none">
   <div class="container reveal reveal-on-scroll">
     <div class="ai-booking-panel">
       <div class="row g-5 align-items-center">
@@ -751,7 +803,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section d-none">
   <div class="container reveal">
     <div class="capability-panel">
       <div class="row g-4 align-items-start">
@@ -861,7 +913,7 @@
   </div>
 </section>
 
-<section class="section text-center" style="background: var(--bg-soft); border-top: 1px solid var(--line);">
+<section class="section text-center d-none" style="background: var(--bg-soft); border-top: 1px solid var(--line);">
   <div class="container" style="max-width: 560px;">
     <h3 class="mb-2">Not ready to talk yet?</h3>
     <p class="text-muted-custom mb-4">Get the next practical guide by email, no spam, unsubscribe any time.</p>
