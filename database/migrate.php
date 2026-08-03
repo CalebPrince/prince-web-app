@@ -120,11 +120,30 @@ $pricingOfferInserts = [
     'pricing_tier_4_tagline' => 'Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.',
     'pricing_tier_4_features' => "Business and e-commerce websites\nCustom web applications from GHS 15,000\niOS and Android mobile app MVPs from GHS 35,000\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
 ];
+$conversionCopyUpdates = [
+    'hero_eyebrow' => [
+        '// AI Voice Agents · Chatbots · Automation',
+        '// Stop losing enquiries to missed calls and slow follow-up',
+    ],
+    'hero_title' => [
+        'AI voice agents that answer every call. Automations that run the rest.',
+        'Turn more enquiries into booked customers, without adding more admin.',
+    ],
+    'hero_subtitle' => [
+        'Voice agents that pick up your business line, chatbots that know your business, and workflow automations that kill the busywork, engineered from scratch on 12+ years of custom web & mobile development.',
+        'I build AI voice agents, chat assistants and automations that answer quickly, capture the right details and move serious enquiries towards a booking.',
+    ],
+    'production_eyebrow' => ['// Production Logs', '// Proof, not promises'],
+    'production_title' => ['A registry of shipped systems.', 'See what has already shipped.'],
+];
 $pricingUpdateStmt = $pdo->prepare('UPDATE settings SET value = ? WHERE name = ? AND value = ?');
 foreach ($pricingDefaultUpdates as $name => [$oldValue, $newValue]) {
     $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
 }
 foreach ($pricingOfferUpdates as $name => [$oldValue, $newValue]) {
+    $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
+}
+foreach ($conversionCopyUpdates as $name => [$oldValue, $newValue]) {
     $pricingUpdateStmt->execute([$newValue, $name, $oldValue]);
 }
 $pricingInsertStmt = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value) VALUES (?, ?)');
