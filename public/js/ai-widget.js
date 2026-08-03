@@ -909,7 +909,8 @@
 
   // Swap the bubble glyph for an "X" while the panel is open, the toggle
   // doubles as the close button, so its icon should say so.
-  const CHAT_ICON_PATH = '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>';
+  // Lisa's pulse mark, shared with her product page and video branding.
+  const CHAT_ICON_PATH = '<circle cx="12" cy="12" r="9"/><path d="M7.5 12.5H9l1.2-4 2.2 7.5 1.7-5.5 1.05 3H17"/><path d="M9 18.5c1.9 1.05 4.1 1.05 6 0"/>';
   const CLOSE_ICON_PATH = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
   const toggleIcon = toggle.querySelector(".ai-toggle-icon");
 

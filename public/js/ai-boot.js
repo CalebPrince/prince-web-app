@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     face.onload = () => {
       if (window.ElevenLabsTTS) {
         const widget = document.createElement("script");
-        widget.src = "/js/ai-widget.js?v=20260728-elevenlabs-consistent";
+        widget.src = "/js/ai-widget.js?v=20260803-lisa-pulse-mark";
         document.body.appendChild(widget);
         return;
       }
@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
       naturalVoice.src = "/js/elevenlabs-tts.js?v=20260731-length-fallback-fix";
       naturalVoice.onload = naturalVoice.onerror = () => {
         const widget = document.createElement("script");
-        widget.src = "/js/ai-widget.js?v=20260728-elevenlabs-consistent";
+        widget.src = "/js/ai-widget.js?v=20260803-lisa-pulse-mark";
         document.body.appendChild(widget);
       };
       document.body.appendChild(naturalVoice);

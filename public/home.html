@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>(function(){var t=localStorage.getItem("theme")||localStorage.getItem("site_default_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
+<script>(function(){try{var k="prince_builder_connected_seen";if(sessionStorage.getItem(k)){document.documentElement.classList.add("builder-connected-seen");}else{sessionStorage.setItem(k,"1");}}catch(_){}})();</script>
 <title>Prince Caleb, AI Voice Agents, Chatbots &amp; Automation</title>
 <meta name="description" content="Prince Caleb builds AI voice agents that answer business calls, chatbots, and workflow automations, engineered on 12+ years of custom web &amp; mobile development.">
 <meta name="keywords" content="AI voice agents, AI chatbots, business automation, AI agents, custom software developer Ghana, web developer Accra, mobile app developer Ghana">
@@ -68,6 +69,8 @@
     animation: builderConnectedIn .5s .45s ease forwards,
                builderConnectedOut .5s 2.75s ease forwards;
   }
+
+  .builder-connected-seen .builder-connected { display: none; }
 
   .builder-connected-dot {
     width: .52rem;
