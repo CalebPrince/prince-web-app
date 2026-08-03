@@ -1,0 +1,7 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#111;overflow:hidden}canvas{width:640px;height:360px}</style>
+<video id="v" muted preload="auto" src="reference.mp4" style="display:none"></video><canvas id="c" width="640" height="360"></canvas>
+<script>
+const v=document.querySelector('#v'),c=document.querySelector('#c'),t=Number(new URLSearchParams(location.search).get('t')||0);
+v.addEventListener('loadedmetadata',()=>v.currentTime=Math.min(t,v.duration-.05));
+v.addEventListener('seeked',()=>{c.getContext('2d').drawImage(v,0,0,640,360);document.title='READY'});
+</script>

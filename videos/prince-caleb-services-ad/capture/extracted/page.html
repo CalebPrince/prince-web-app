@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+    :root {
+      --bg: #030604;
+      --panel: rgba(5, 13, 8, .76);
+      --green: #62ff98;
+      --green-bright: #c7ffd8;
+      --green-muted: #7bbf91;
+      --cyan: #5be3ff;
+      --line: rgba(98,255,152,.2);
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      color: var(--green);
+      background:
+        radial-gradient(circle at 50% 16%, rgba(98,255,152,.12), transparent 29%),
+        linear-gradient(180deg, #050a07, var(--bg));
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+    button, a { font: inherit; }
+    .app { position: relative; width: 100%; height: 100%; isolation: isolate; }
+    .fx, .grid, .scanlines, .vignette, .particles { position: absolute; inset: 0; pointer-events: none; }
+    .grid {
+      opacity: .27;
+      background-image:
+        linear-gradient(rgba(98,255,152,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(98,255,152,.055) 1px, transparent 1px);
+      background-size: 54px 54px;
+      transform: perspective(900px) rotateX(58deg) scale(1.65);
+      transform-origin: center bottom;
+      mask-image: linear-gradient(to top, #000 15%, transparent 82%);
+      animation: gridMove 17s linear infinite;
+    }
+    @keyframes gridMove { to { background-position: 0 54px, 54px 0; } }
+    .fx::before, .fx::after {
+      content: ""; position: absolute; width: 42vw; height: 42vw; border-radius: 50%;
+      background: var(--green); filter: blur(125px); opacity: .11;
+      animation: drift 13s ease-in-out infinite alternate;
+    }
+    .fx::before { top: -28%; left: 8%; }
+    .fx::after { right: -8%; bottom: -34%; animation-delay: -6s; }
+    @keyframes drift { to { transform: translate3d(8%,8%,0) scale(1.14); } }
+    .scanlines { display: none; }
+    .vignette { z-index: 24; box-shadow: inset 0 0 190px rgba(0,0,0,.96); }
+    .particle { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px var(--green); animation: rise linear infinite; }
+    @keyframes rise { 0% { transform: translateY(15vh); opacity: 0; } 15% { opacity: .35; } 100% { transform: translateY(-115vh); opacity: 0; } }
+
+    .topbar {
+      position: absolute; z-index: 30; inset: 0 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px clamp(18px,4vw,62px); border-bottom: 1px solid rgba(98,255,152,.08);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-family: "Cascadia Code", Consolas, monospace; font-size: .72rem; font-weight: 900; letter-spacing: .17em; text-transform: uppercase; }
+    .brand-mark { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid rgba(98,255,152,.36); border-radius: 7px; background: rgba(98,255,152,.07); box-shadow: inset 0 0 18px rgba(98,255,152,.04); }
+    .system-status { display: flex; gap: 9px; align-items: center; color: var(--green-muted); font-family: "Cascadia Code", Consolas, monospace; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 16px var(--green); animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 50% { transform: scale(1.25); opacity: .65; } }
+
+    .layout {
+      position: relative; z-index: 10; height: 100%; width: min(1480px, calc(100% - 38px)); margin: auto;
+      display: grid; grid-template-columns: minmax(0,1fr); gap: clamp(26px,4vw,72px);
+      align-items: center; padding: 92px 0 54px;
+    }
+    .stage-terminal {
+      height: min(68vh, 640px); overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+    .term-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6em; margin: 0 0 14px; font-size: clamp(.82rem,1.6vw,1.05rem); line-height: 1.7; opacity: 0; transition: opacity .25s ease; }
+    .term-line.show { opacity: 1; }
+    .term-line:last-child { margin-bottom: 0; }
+    .prompt-static { display: none; }
+    .scene {
+      position: absolute;
+      inset: clamp(1.5rem,4vw,2.5rem) clamp(2.25rem,6vw,4.5rem);
+      display: flex; flex-direction: column; justify-content: center;
+      text-align: left;
+      opacity: 0; transform: translateY(14px) scale(.995);
+      transition: opacity .55s ease, transform .55s ease;
+      pointer-events: none;
+    }
+    .scene.active { opacity: 1; transform: none; pointer-events: auto; }
+    .scene.exit { opacity: 0; transform: translateY(-14px) scale(1.005); }
+    .eyebrow { margin: 0 0 .3rem; color: var(--green-muted); font-family: "Cascadia Code", Consolas, monospace; font-size: clamp(.78rem,1.3vw,.95rem); font-weight: 800; letter-spacing: .24em; }
+    .headline { margin: 0; color: var(--green); font-size: clamp(3.4rem,9vw,8.5rem); font-weight: 850; letter-spacing: -.065em; line-height: .88; text-wrap: balance; }
+    .copy { max-width: 720px; margin: .55rem 0 0; color: var(--green-bright); font-size: clamp(1rem,2vw,1.35rem); line-height: 1.55; }
+    .typed::after { content: "▋"; display: inline-block; margin-left: 5px; color: var(--green); animation: blink .8s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .list { display: contents; }
+    .list-line { margin: 0; font: inherit; color: var(--green); }
+
+    .eyebrow, .headline { position: relative; }
+    .glitch-flicker::before, .glitch-flicker::after {
+      display: none;
+      content: attr(data-glitch-text);
+      position: absolute; inset: 0; white-space: pre-line; pointer-events: none;
+    }
+    .glitch-flicker::before { color: #00f7ff; opacity: .8; animation: glitchBefore .5s steps(1) both; }
+    .glitch-flicker::after { color: #ff3158; opacity: .7; animation: glitchAfter .5s steps(1) both; }
+    @keyframes glitchBefore {
+      0%, 100% { transform: translate(0); clip-path: inset(0 0 100% 0); }
+      30% { transform: translate(-6px,2px); clip-path: inset(14% 0 61% 0); }
+      55% { transform: translate(5px,-2px); clip-path: inset(51% 0 27% 0); }
+      80% { transform: translate(-3px,1px); clip-path: inset(77% 0 6% 0); }
+    }
+    @keyframes glitchAfter {
+      0%, 100% { transform: translate(0); clip-path: inset(100% 0 0 0); }
+      25% { transform: translate(5px,1px); clip-path: inset(65% 0 11% 0); }
+      50% { transform: translate(-5px,-2px); clip-path: inset(28% 0 49% 0); }
+      75% { transform: translate(3px,2px); clip-path: inset(8% 0 76% 0); }
+    }
+
+    .final-shell { width: min(760px,100%); margin: 24px 0 0; opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; }
+    .final-shell.show { opacity: 1; transform: none; }
+    .enter-frame {
+      position: relative; display: block; width: 100%; padding: 2px;
+      color: var(--green); text-decoration: none; background: linear-gradient(90deg, transparent, rgba(98,255,152,.9), transparent);
+      clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
+      transition: transform .28s ease, filter .28s ease;
+    }
+    .enter-frame::before {
+      content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 28%, rgba(255,255,255,.5) 48%, transparent 68%);
+      transform: translateX(-120%); transition: transform .65s ease; mix-blend-mode: screen;
+    }
+    .enter-inner {
+      position: relative; min-height: 92px; display: flex; align-items: center; justify-content: center; gap: 16px;
+      padding: 20px 28px; background: #041008; border: 1px solid rgba(98,255,152,.35);
+      clip-path: inherit; overflow: hidden;
+      color: var(--green); font-size: clamp(.92rem,1.8vw,1.3rem); font-weight: 900; letter-spacing: .16em; text-transform: uppercase;
+      box-shadow: inset 0 0 34px rgba(98,255,152,.06);
+    }
+    .enter-inner::after { content: ""; position: absolute; inset: 8px; border: 1px solid rgba(98,255,152,.11); clip-path: inherit; }
+    .enter-frame:hover { transform: translateY(-3px) scale(1.01); filter: drop-shadow(0 0 22px rgba(98,255,152,.3)); }
+    .enter-frame:hover::before { transform: translateX(120%); }
+    .enter-arrow { font-size: 1.45em; transition: transform .25s ease; }
+    .enter-frame:hover .enter-arrow { transform: translateX(7px); }
+    .enter-frame.loading { pointer-events: none; filter: drop-shadow(0 0 28px rgba(98,255,152,.4)); }
+    .enter-frame.loading .enter-arrow { animation: arrowPulse .7s ease-in-out infinite alternate; }
+    @keyframes arrowPulse { to { transform: translateX(8px); } }
+
+    .controls { position: absolute; z-index: 35; right: clamp(16px,4vw,62px); bottom: 25px; display: flex; gap: 9px; }
+    .control { padding: 9px 12px; border: 1px solid rgba(98,255,152,.18); border-radius: 5px; color: var(--green-muted); background: rgba(3,8,5,.65); cursor: pointer; font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; }
+    .control:hover { color: var(--green); border-color: rgba(98,255,152,.45); }
+    .progress { position: absolute; z-index: 35; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(98,255,152,.07); }
+    .progress > span { display: block; width: 0; height: 100%; background: var(--green); box-shadow: 0 0 12px var(--green); transition: width .2s linear; }
+    .transition { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; background: #020403; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
+    .transition.show { opacity: 1; pointer-events: auto; }
+    .transition-text { color: var(--green); font-size: clamp(1rem,2vw,1.4rem); letter-spacing: .15em; text-transform: uppercase; text-shadow: 0 0 18px rgba(98,255,152,.45); }
+
+    @media (max-width: 900px) {
+      .layout { display: block; padding-top: 96px; }
+      .stage-terminal { height: calc(100vh - 125px); }
+      .system-status { display: none; }
+    }
+    @media (max-width: 560px) {
+      .topbar { padding: 17px 15px; }
+      .layout { width: calc(100% - 26px); }
+      .copy { line-height: 1.55; }
+      .enter-inner { min-height: 82px; padding: 18px 16px; letter-spacing: .1em; }
+      .controls { right: 13px; bottom: 18px; }
+      .control { padding: 8px 9px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+
+</head>
+<body>
+
+  <div class="app">
+    <div class="grid"></div><div class="fx"></div><div class="particles" id="particles"><span class="particle" style="left: 52.1658%; bottom: -15.7655%; animation-duration: 19.0939s; animation-delay: -15.537s;"></span><span class="particle" style="left: 24.5268%; bottom: -20.286%; animation-duration: 12.5137s; animation-delay: -11.1953s;"></span><span class="particle" style="left: 27.1353%; bottom: -12.3935%; animation-duration: 22.7552s; animation-delay: -3.18903s;"></span><span class="particle" style="left: 92.9636%; bottom: -36.0603%; animation-duration: 23.1429s; animation-delay: -10.1572s;"></span><span class="particle" style="left: 18.0147%; bottom: -31.7484%; animation-duration: 10.0901s; animation-delay: -1.40298s;"></span><span class="particle" style="left: 93.3228%; bottom: -22.7257%; animation-duration: 23.8786s; animation-delay: -2.61402s;"></span><span class="particle" style="left: 7.61163%; bottom: -29.8898%; animation-duration: 24.1706s; animation-delay: -4.67059s;"></span><span class="particle" style="left: 57.6621%; bottom: -32.7856%; animation-duration: 10.4437s; animation-delay: -6.12494s;"></span><span class="particle" style="left: 96.787%; bottom: -23.4843%; animation-duration: 18.1336s; animation-delay: -2.72437s;"></span><span class="particle" style="left: 27.3016%; bottom: -38.0571%; animation-duration: 10.6347s; animation-delay: -8.55938s;"></span><span class="particle" style="left: 32.5502%; bottom: -32.3974%; animation-duration: 12.4944s; animation-delay: -6.09373s;"></span><span class="particle" style="left: 62.7145%; bottom: -46.9464%; animation-duration: 15.5499s; animation-delay: -12.5605s;"></span><span class="particle" style="left: 53.2581%; bottom: -42.0512%; animation-duration: 10.118s; animation-delay: -10.4569s;"></span><span class="particle" style="left: 57.2353%; bottom: -38.1457%; animation-duration: 17.0322s; animation-delay: -16.2181s;"></span><span class="particle" style="left: 27.2735%; bottom: -26.1404%; animation-duration: 10.5129s; animation-delay: -7.64661s;"></span><span class="particle" style="left: 53.6366%; bottom: -35.4517%; animation-duration: 12.2818s; animation-delay: -10.7232s;"></span><span class="particle" style="left: 99.2285%; bottom: -14.2534%; animation-duration: 22.1754s; animation-delay: -11.9536s;"></span><span class="particle" style="left: 92.6193%; bottom: -13.1107%; animation-duration: 19.7965s; animation-delay: -5.04431s;"></span><span class="particle" style="left: 39.8035%; bottom: -13.6651%; animation-duration: 23.2645s; animation-delay: -9.41098s;"></span><span class="particle" style="left: 77.8172%; bottom: -20.2184%; animation-duration: 12.8097s; animation-delay: -13.5112s;"></span><span class="particle" style="left: 66.1418%; bottom: -31.9006%; animation-duration: 12.0827s; animation-delay: -15.6186s;"></span><span class="particle" style="left: 59.1128%; bottom: -28.2253%; animation-duration: 22.2792s; animation-delay: -13.4254s;"></span><span class="particle" style="left: 9.38436%; bottom: -25.8455%; animation-duration: 21.1855s; animation-delay: -5.94331s;"></span><span class="particle" style="left: 14.3008%; bottom: -34.1994%; animation-duration: 16.2075s; animation-delay: -7.01254s;"></span><span class="particle" style="left: 75.1994%; bottom: -30.8962%; animation-duration: 21.3553s; animation-delay: -14.5957s;"></span><span class="particle" style="left: 80.4162%; bottom: -45.611%; animation-duration: 11.958s; animation-delay: -18.1768s;"></span><span class="particle" style="left: 88.8072%; bottom: -20.4049%; animation-duration: 10.528s; animation-delay: -1.18942s;"></span><span class="particle" style="left: 7.63665%; bottom: -27.6846%; animation-duration: 22.6605s; animation-delay: -6.37505s;"></span></div><div class="scanlines"></div><div class="vignette"></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">PC</span><span>Prince Caleb · Builder OS</span></div>
+      <div class="system-status"><span class="dot"></span><span>Interactive introduction</span></div>
+    </header>
+
+    <main class="layout">
+      <div class="stage-terminal">
+        <section class="stage" aria-labelledby="welcome-title">
+        <article class="scene active final">
+          <div class="term-line show"><div class="eyebrow">WELCOME TO</div></div>
+          <div class="term-line show"><h1 class="headline" id="welcome-title">PRINCE CALEB</h1></div>
+          <div class="term-line show"><p class="copy">AI agents, automations and custom digital systems built for real business.</p></div>
+          <div class="final-shell show">
+            <a class="enter-frame" id="enterButton" href="home.html" aria-label="Enter the system">
+              <span class="enter-inner"><span id="buttonLabel">Enter website</span><span class="enter-arrow">→</span></span>
+            </a>
+          </div>
+        </article>
+        </section>
+      </div>
+    </main>
+
+  </div>
+
+  <div class="transition" id="transition" style=""><div class="transition-text" id="transitionText">OPENING WEBSITE...</div></div>
+
+  <script>
+    const enterButton = document.getElementById('enterButton');
+    const buttonLabel = document.getElementById('buttonLabel');
+    const transition = document.getElementById('transition');
+    const transitionText = document.getElementById('transitionText');
+
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    const particles = document.getElementById('particles');
+    for (let i = 0; i < 28; i++) {
+      const p = document.createElement('span');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.bottom = (-12 - Math.random() * 35) + '%';
+      p.style.animationDuration = (10 + Math.random() * 15) + 's';
+      p.style.animationDelay = (-Math.random() * 19) + 's';
+      particles.appendChild(p);
+    }
+
+    enterButton.addEventListener('click', async e => {
+      e.preventDefault();
+      const destination = enterButton.getAttribute('href');
+      enterButton.classList.add('loading');
+      buttonLabel.textContent = 'Opening website';
+      await sleep(400);
+      transition.classList.add('show');
+      transitionText.textContent = 'OPENING WEBSITE...';
+      await sleep(850);
+      transitionText.textContent = 'WELCOME';
+      await sleep(650);
+      transitionText.textContent = 'LOADING PRINCECALEB.DEV...';
+      await sleep(750);
+      window.location.href = destination;
+    });
+  </script>
+
+
+
+</body>
+</html>

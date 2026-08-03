@@ -1,0 +1,13 @@
+Read these two files completely before doing anything:
+1. D:\Websites\prince-web-app\videos\prince-caleb-services-ad\.hyperframes\frame-packets\_role.md
+2. D:\Websites\prince-web-app\videos\prince-caleb-services-ad\.hyperframes\frame-packets\02-system-finishes.md
+
+## Dispatch context
+
+PROJECT_DIR: D:\Websites\prince-web-app\videos\prince-caleb-services-ad
+frame_id: 02-system-finishes
+confirmed_sketch: no
+canvas: 1080x1920
+caption_status: planned; keep bottom 326px clear
+
+Write only compositions/frames/02-system-finishes.html. Follow the role and packet exactly. Verify the file before finishing.

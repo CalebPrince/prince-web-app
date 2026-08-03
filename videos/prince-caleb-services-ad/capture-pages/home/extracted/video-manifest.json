@@ -1,0 +1,16 @@
+[
+  {
+    "index": 0,
+    "url": "https://princecaleb.dev/uploads/ai-demo.mp4",
+    "filename": "ai-demo.mp4",
+    "width": 627,
+    "height": 352,
+    "sourceWidth": 1366,
+    "sourceHeight": 768,
+    "heading": "AI context canvas plus direct scheduling.",
+    "caption": "A live interface for technical questions, scope capture, and booking handoff, so the client can inspect the system instead of only reading claims.",
+    "ariaLabel": "AI live demo video",
+    "preview": "assets/videos/previews/video-0-preview.png",
+    "localPath": "assets/videos/ai-demo.mp4"
+  }
+]

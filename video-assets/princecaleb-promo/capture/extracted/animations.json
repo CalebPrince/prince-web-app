@@ -1,0 +1,442 @@
+{
+  "summary": {
+    "webAnimations": 34,
+    "cssDeclarations": 203,
+    "scrollTargets": 43,
+    "cdpAnimations": 371,
+    "canvases": 1
+  },
+  "namedAnimations": [
+    "hero-fade-up",
+    "voice-wave",
+    "agency-marquee-scroll",
+    "ai-badge-pop, ai-badge-pulse"
+  ],
+  "scrollTriggeredElements": 43,
+  "representativeAnimations": [
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "hero-fade-up",
+      "targetSelector": "p.eyebrow.mb-3.hero-animate",
+      "targetRect": {
+        "x": 312,
+        "y": -11318.78125,
+        "width": 760,
+        "height": 18.234375,
+        "top": -11318.78125,
+        "right": 1072,
+        "bottom": -11300.546875,
+        "left": 312
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(3px)",
+          "transform": "translateY(22px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(0px)",
+          "transform": "translateY(0px)",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 800,
+        "delay": 50,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "hero-fade-up",
+      "targetSelector": "h1.display-1.mb-4.hero-animate",
+      "targetRect": {
+        "x": 312,
+        "y": -11204.546875,
+        "width": 821.609375,
+        "height": 352,
+        "top": -11204.546875,
+        "right": 1133.609375,
+        "bottom": -10852.546875,
+        "left": 312
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(3px)",
+          "transform": "translateY(22px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(0px)",
+          "transform": "translateY(0px)",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 800,
+        "delay": 150,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "hero-fade-up",
+      "targetSelector": "p.fs-5.text-muted-custom.mb-4",
+      "targetRect": {
+        "x": 312,
+        "y": -10748.546875,
+        "width": 760,
+        "height": 99,
+        "top": -10748.546875,
+        "right": 1072,
+        "bottom": -10649.546875,
+        "left": 312
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(3px)",
+          "transform": "translateY(22px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(0px)",
+          "transform": "translateY(0px)",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 800,
+        "delay": 250,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "hero-fade-up",
+      "targetSelector": "div.d-flex.flex-wrap.align-items-center",
+      "targetRect": {
+        "x": 312,
+        "y": -10545.546875,
+        "width": 821.609375,
+        "height": 52.21875,
+        "top": -10545.546875,
+        "right": 1133.609375,
+        "bottom": -10493.328125,
+        "left": 312
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(3px)",
+          "transform": "translateY(22px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(0px)",
+          "transform": "translateY(0px)",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 800,
+        "delay": 350,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "hero-fade-up",
+      "targetSelector": "div.live-channel-rail.hero-animate.hero-animate-4",
+      "targetRect": {
+        "x": 312,
+        "y": -10394.9375,
+        "width": 704,
+        "height": 61.984375,
+        "top": -10394.9375,
+        "right": 1016,
+        "bottom": -10332.953125,
+        "left": 312
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(3px)",
+          "transform": "translateY(22px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(0px)",
+          "transform": "translateY(0px)",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 800,
+        "delay": 350,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "hero-fade-up",
+      "targetSelector": "div.hero-proof-line.d-flex.flex-wrap",
+      "targetRect": {
+        "x": 312,
+        "y": -10236.953125,
+        "width": 821.609375,
+        "height": 21,
+        "top": -10236.953125,
+        "right": 1133.609375,
+        "bottom": -10215.953125,
+        "left": 312
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(3px)",
+          "transform": "translateY(22px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(0px)",
+          "transform": "translateY(0px)",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 800,
+        "delay": 350,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "hero-fade-up",
+      "targetSelector": "div.hero-side-stack.hero-animate.hero-animate-4",
+      "targetRect": {
+        "x": 1213.609375,
+        "y": -11002.25,
+        "width": 394.375,
+        "height": 469.765625,
+        "top": -11002.25,
+        "right": 1607.984375,
+        "bottom": -10532.484375,
+        "left": 1213.609375
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(3px)",
+          "transform": "translateY(22px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "composite": "auto",
+          "filter": "blur(0px)",
+          "transform": "translateY(0px)",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 800,
+        "delay": 350,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "paused",
+      "animationName": "voice-wave",
+      "targetSelector": "i",
+      "targetRect": {
+        "x": 1370.796875,
+        "y": -10847.03515625,
+        "width": 3,
+        "height": 4.3359375,
+        "top": -10847.03515625,
+        "right": 1373.796875,
+        "bottom": -10842.69921875,
+        "left": 1370.796875
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease-in-out",
+          "composite": "replace",
+          "transform": "scaleY(0.35)",
+          "opacity": "0.2",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease-in-out",
+          "composite": "auto",
+          "transform": "scaleY(1.65)",
+          "opacity": "0.45",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 1100,
+        "delay": 0,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "alternate"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "paused",
+      "animationName": "voice-wave",
+      "targetSelector": "i",
+      "targetRect": {
+        "x": 1377.796875,
+        "y": -10860.1787109375,
+        "width": 3,
+        "height": 30.638671875,
+        "top": -10860.1787109375,
+        "right": 1380.796875,
+        "bottom": -10829.5400390625,
+        "left": 1377.796875
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease-in-out",
+          "composite": "replace",
+          "transform": "scaleY(0.35)",
+          "opacity": "0.2",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease-in-out",
+          "composite": "auto",
+          "transform": "scaleY(1.65)",
+          "opacity": "0.45",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 1100,
+        "delay": -500,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "alternate"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "paused",
+      "animationName": "voice-wave",
+      "targetSelector": "i",
+      "targetRect": {
+        "x": 1384.796875,
+        "y": -10883.041015625,
+        "width": 3,
+        "height": 76.36328125,
+        "top": -10883.041015625,
+        "right": 1387.796875,
+        "bottom": -10806.677734375,
+        "left": 1384.796875
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease-in-out",
+          "composite": "replace",
+          "transform": "scaleY(0.35)",
+          "opacity": "0.2",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease-in-out",
+          "composite": "auto",
+          "transform": "scaleY(1.65)",
+          "opacity": "0.45",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 1100,
+        "delay": -800,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "alternate"
+      }
+    }
+  ]
+}

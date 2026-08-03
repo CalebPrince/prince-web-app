@@ -1,0 +1,159 @@
+[a] Skip to main content
+[span] Prince Caleb
+[a] Services
+[a] Builder OS
+[a] Review a workflow
+[p] // Services
+[span] agents
+[h1] that finish the workflow.
+[p] Start with the call, message, or repetitive task costing your team time.
+      Then connect the answer to the booking, follow-up, record, and person who needs it.
+[p] // A working handoff
+[h2] From first hello to confirmed booking.
+[p] The useful part is not one clever AI response. It is the full chain: answering, understanding, updating your records, and telling the right person what happened.
+[strong] Ops desk
+[span] Live activity
+[span] Conversations
+[span] Automations
+[span] Customers
+[strong] All systems online
+[small] Checked just now
+[span] ACTIVITY / CALL-1048
+[h3] New appointment enquiry
+[span] Resolved automatically
+[strong] Akosua Mensah
+[small] Inbound call · 2m 14s
+[span] Customer
+[p] Can I book a consultation for Thursday morning?
+[span] Voice agent
+[p] Yes, 10:30 is available. I’ve held it and sent the details to your WhatsApp.
+[span] Intent: appointment
+[span] Confidence 98%
+[span] Actions completed
+[strong] Calendar booked
+[small] Thu · 10:30 GMT
+[strong] Customer added
+[small] CRM record #2841
+[strong] Team notified
+[small] WhatsApp summary sent
+[span] Human time used
+[strong] 0 min
+[span] TRACK 01
+[div] Voice operations
+[h2] AI Voice Agents
+[p] Voice agents that answer your business line around the clock, booking appointments, qualifying callers, answering the questions you answer twenty times a day, and handing off to a human the moment a call needs one.
+[span] Call answering
+[span] Appointment booking
+[span] Caller qualification
+[span] Human handoff
+[strong] 24/7
+[span] Answer coverage
+[span] TRACK 02
+[div] Agents at work
+[h2] Autonomous AI Agents
+[p] Agents that scout leads, draft follow-ups, prepare proposals, and report on their own work daily. Not a pitch deck concept: this site's own sales engine runs on agents I built, and I build the same discipline into agents for clients.
+[span] Lead scouting
+[span] Follow-up drafting
+[span] Daily reporting
+[span] Grounded in your data
+[strong] In production
+[span] Running this very site
+[span] TRACK 03
+[div] Workflow relay
+[h2] Business Automations
+[p] Connect the tools you already use and remove the manual work between them, enquiries into your CRM, bookings into invoices and reminders, events into email sequences. Built lean, running quietly on schedule, with failures surfaced instead of swallowed.
+[span] CRM sync
+[span] Email triggers
+[span] Scheduled jobs
+[span] Webhooks
+[strong] Hands-off
+[span] Runs on schedule
+[span] TRACK 04
+[div] Always-on support
+[h2] AI Chatbots & Live Assistants
+[p] Chat that actually knows your business, grounded in your real content and services, with graceful fallbacks and a clean handoff to a human. The assistant in the corner of this page is the working example, not a mockup.
+[span] Your real content
+[span] Human handoff
+[span] Fallbacks
+[span] Lead capture
+[strong] Live demo
+[span] Bottom-right corner
+[span] TRACK 05
+[div] The backbone
+[h2] Custom Websites & Mobile Apps
+[p] Fast business websites, custom web applications, and cross-platform mobile apps designed around how your customers and team actually work. They can launch as standalone products or become the interface for your AI agents and automations.
+[span] Business websites
+[span] Web applications
+[span] iOS & Android apps
+[span] UX & integrations
+[strong] 12+ yrs
+[span] Engineering behind it
+[p] // Evidence, not invented metrics
+[h2] This site runs the systems it sells.
+[p] These are working product surfaces you can inspect today. They demonstrate capability; they are not presented as client performance results.
+[strong] Live
+[h3] Builder OS
+[p] Inspect the full multi-agent system live: Lisa, Joan, Sharon, and Jason, each doing real work on this site right now.
+[a] Open Builder OS →
+[strong] Live
+[h3] Browser voice agent
+[p] Speak with Lisa on the homepage and see the typed fallback, transcript state, and service-aware responses.
+[a] Try the voice demo →
+[strong] Connected
+[h3] Phone and WhatsApp
+[p] The same assistant can receive real calls and messages through configured Twilio channels and route them into the application.
+[a] See the live channels →
+[strong] Integrated
+[h3] Lisa across your tools
+[p] See how Lisa can turn calls and messages into calendar bookings, CRM records, Slack alerts, and structured follow-ups.
+[a] Explore Lisa's capabilities →
+[strong] Visible
+[h3] Operational audit trail
+[p] Call direction, numbers, status, duration, conversation turns, provider, and lead linkage are recorded for review.
+[a] Inspect the workflow →
+[strong] Controlled
+[h3] Human-approved outreach
+[p] Lisa can prepare and place an eligible lead call only after a person reviews the script and confirms consent.
+[a] Review the safeguards →
+[h4] AI Voice Agents
+[p] Voice agents that answer your business line around the clock, booking
+              appointments, qualifying callers, and handing off to a human the moment
+              a call needs one.
+[li] REST/GraphQL APIs designed around your real data model
+[li] Database schema design and query performance tuning
+[li] Authentication, authorization, and role-based access control
+[li] Third-party integrations (payments, webhooks, messaging)
+[h4] Autonomous AI Agents
+[p] Agents that scout leads, draft follow-ups, and report on their own work
+              daily, the same systems that run this site's sales engine.
+[li] Headless WordPress / decoupled frontend architecture
+[li] Custom post types, fields, and editorial workflows
+[li] Migration from legacy CMS platforms without data loss
+[li] Performance and SEO-focused theme development
+[h4] Business Automations
+[p] Connect the tools you already use and remove the manual work between
+              them, running quietly on schedule.
+[li] Cross-platform apps (React Native) with native-feel navigation
+[li] Offline-first data sync and local storage strategy
+[li] Push notifications, deep linking, and app store deployment
+[li] UI/UX design tailored to platform conventions
+[span] Also in the toolkit
+[h4] Custom AI Integrations
+[p] A supplemental capability I fold into any of the three disciplines above when it
+          genuinely earns its place, not a bolted-on gimmick.
+[li] Chat assistants and support widgets wired to your own content and data
+[li] AI-assisted content, recommendation, and search features
+[li] Workflow automation that removes manual, repetitive steps
+[li] Sensible fallbacks so the product still works fully without the AI layer
+[h2] Start with the workflow that repeats most.
+[p] A short review identifies what the agent may handle, where a person takes over, and what result should reach your team.
+[a] Review a workflow
+[a] Send a message
+[span] Prince Caleb
+[a] Services
+[a] Projects
+[small] © 2026 Prince Caleb. All rights reserved.
+[a] Privacy Policy
+[a] Cookie Policy
+[a] Terms of Service
+[span] 1 unread message

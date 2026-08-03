@@ -1,0 +1,193 @@
+<template>
+  <style>
+    /* Root — styled by #root only (never a class on the data-composition-id element). */
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: sans-serif;
+    }
+
+    /* Full-bleed ground lives on its own class="clip" layer, never on #root. */
+    .ov01-bg {
+      background: #fbfbfa;
+    }
+
+    .ov01-stage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1920px;
+      height: 896px; /* top 83% — caption keep-out starts at y=896 on a 1080-tall frame */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 160px;
+      box-sizing: border-box;
+    }
+
+    /* Phrase groups share one centered slot so no phrase causes a layout shift. */
+    .ov01-phrase {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      opacity: 0;
+    }
+
+    .ov01-word {
+      display: inline-block;
+      font-weight: 800;
+      font-size: 152px;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: #17181c;
+      white-space: nowrap;
+      will-change: transform, filter, opacity;
+    }
+
+    .ov01-final {
+      max-width: 1600px;
+      text-align: center;
+    }
+
+    .ov01-final-line {
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: center;
+      column-gap: 22px;
+      row-gap: 6px;
+    }
+
+    .ov01-chunk {
+      display: inline-block;
+      font-weight: 600;
+      font-size: 82px;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      color: #6e737c;
+      white-space: nowrap;
+      will-change: filter, clip-path;
+    }
+
+    .ov01-chunk--emphasis {
+      font-weight: 800;
+      color: #17181c;
+    }
+  </style>
+
+  <div data-hf-id="hf-zcuy" id="root" data-composition-id="01-overwhelm" data-width="1920" data-height="1080" data-duration="5.904">
+    <div data-hf-id="hf-759u" class="ov01-bg clip" id="ov01-bg" data-start="0" data-duration="5.904" data-track-index="0"></div>
+
+    <div data-hf-id="hf-g8ed" class="ov01-stage clip" id="ov01-stage" data-start="0" data-duration="5.904" data-track-index="1">
+      <!-- Scene 1 (0.0-1.3s): "Missed calls." -->
+      <div data-hf-id="hf-xznk" class="ov01-phrase" id="ov01-p1">
+        <span data-hf-id="hf-8kd4" class="ov01-word" id="ov01-p1-w1">Missed</span>
+        <span data-hf-id="hf-smdz" class="ov01-word" id="ov01-p1-w2">calls.</span>
+      </div>
+
+      <!-- Scene 2 (1.3-2.6s): "Buried inboxes." -->
+      <div data-hf-id="hf-6njf" class="ov01-phrase" id="ov01-p2">
+        <span data-hf-id="hf-ofyt" class="ov01-word" id="ov01-p2-w1">Buried</span>
+        <span data-hf-id="hf-0ybx" class="ov01-word" id="ov01-p2-w2">inboxes.</span>
+      </div>
+
+      <!-- Scene 3 (2.6-5.504s): final clause, phrase-segmented left-to-right reveal, holds to end -->
+      <div data-hf-id="hf-8i2t" class="ov01-phrase ov01-final" id="ov01-p3">
+        <p data-hf-id="hf-nnnd" class="ov01-final-line">
+          <span data-hf-id="hf-xah7" class="ov01-chunk" id="ov01-p3-c1">A dozen tabs —</span>
+          <span data-hf-id="hf-iqfe" class="ov01-chunk" id="ov01-p3-c2">and somehow,</span>
+          <span data-hf-id="hf-y4fu" class="ov01-chunk ov01-chunk--emphasis" id="ov01-p3-c3">it’s all still on you.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      // ---- Scene 1 (0.0-1.3s) — "Missed calls." per-word staggered reveal, then clears. ----
+      tl.set("#ov01-p1", { opacity: 1 }, 0);
+
+      tl.fromTo(
+        "#ov01-p1-w1",
+        { scale: 1.4, filter: "blur(16px)", opacity: 0 },
+        { scale: 1, filter: "blur(0px)", opacity: 1, duration: 0.45, ease: "power4.out" },
+        0.0
+      );
+      tl.fromTo(
+        "#ov01-p1-w2",
+        { scale: 1.4, filter: "blur(16px)", opacity: 0 },
+        { scale: 1, filter: "blur(0px)", opacity: 1, duration: 0.45, ease: "power4.out" },
+        0.1
+      );
+
+      // Clears — motion-blur fly-off (position + blur + opacity share the same window/ease).
+      tl.to(
+        "#ov01-p1",
+        { x: 160, filter: "blur(14px)", opacity: 0, duration: 0.3, ease: "power2.in" },
+        0.95
+      );
+
+      // ---- Scene 2 (1.3-2.6s) — "Buried inboxes." same reveal, same weight/position. ----
+      tl.set("#ov01-p2", { opacity: 1 }, 1.3);
+
+      tl.fromTo(
+        "#ov01-p2-w1",
+        { scale: 1.4, filter: "blur(16px)", opacity: 0 },
+        { scale: 1, filter: "blur(0px)", opacity: 1, duration: 0.45, ease: "power4.out" },
+        1.3
+      );
+      tl.fromTo(
+        "#ov01-p2-w2",
+        { scale: 1.4, filter: "blur(16px)", opacity: 0 },
+        { scale: 1, filter: "blur(0px)", opacity: 1, duration: 0.45, ease: "power4.out" },
+        1.4
+      );
+
+      // Clears — motion-blur fly-off, mirrored direction.
+      tl.to(
+        "#ov01-p2",
+        { x: -160, filter: "blur(14px)", opacity: 0, duration: 0.3, ease: "power2.in" },
+        2.25
+      );
+
+      // ---- Scene 3 (2.6-5.504s) — final clause: phrase-segmented left-to-right reveal
+      // with leading-edge blur ("a dozen tabs" first, "it's all still on you" resolves last),
+      // muted gray stepping to near-black on the last phrase. Holds static to frame end. ----
+      tl.set("#ov01-p3", { opacity: 1 }, 2.6);
+
+      tl.fromTo(
+        "#ov01-p3-c1",
+        { clipPath: "inset(0% 100% 0% 0%)", filter: "blur(10px)" },
+        { clipPath: "inset(0% 0% 0% 0%)", filter: "blur(0px)", duration: 0.5, ease: "power2.out" },
+        2.6
+      );
+      tl.fromTo(
+        "#ov01-p3-c2",
+        { clipPath: "inset(0% 100% 0% 0%)", filter: "blur(10px)" },
+        { clipPath: "inset(0% 0% 0% 0%)", filter: "blur(0px)", duration: 0.5, ease: "power2.out" },
+        2.95
+      );
+      tl.fromTo(
+        "#ov01-p3-c3",
+        { clipPath: "inset(0% 100% 0% 0%)", filter: "blur(10px)" },
+        { clipPath: "inset(0% 0% 0% 0%)", filter: "blur(0px)", duration: 0.55, ease: "power2.out" },
+        3.3
+      );
+
+      // Static hold from ~3.85s to 5.504s — no further motion.
+
+      window.__timelines["01-overwhelm"] = tl;
+    })();
+  </script>
+</template>

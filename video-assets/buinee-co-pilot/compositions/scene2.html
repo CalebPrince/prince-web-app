@@ -1,0 +1,195 @@
+<template>
+  <style>
+    #s2-root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      font-family: "Inter", sans-serif;
+      color: #101619;
+      overflow: hidden;
+    }
+    #s2-cover {
+      position: absolute;
+      inset: 0;
+      background: #101619;
+      z-index: 5;
+    }
+
+    #s2-mark-wrap {
+      position: absolute;
+      left: 860px;
+      top: 380px;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+    }
+    #s2-mark-glow {
+      position: absolute;
+      inset: -60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14, 93, 87, 0.35) 0%, rgba(14, 93, 87, 0) 70%);
+    }
+    #s2-mark {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: #0e5d57;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 24px 60px rgba(14, 93, 87, 0.35);
+    }
+    #s2-mark svg { width: 60px; height: 60px; }
+
+    #s2-wordmark {
+      position: absolute;
+      left: 50%;
+      top: 620px;
+      transform: translateX(-50%);
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+      font-size: 64px;
+      color: #101619;
+      opacity: 0;
+    }
+
+    #s2-workspace {
+      position: absolute;
+      left: 260px;
+      top: 210px;
+      width: 1400px;
+      height: 660px;
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 40px 90px rgba(16, 22, 25, 0.16);
+      display: flex;
+      opacity: 0;
+    }
+    #s2-panel-left, #s2-panel-right {
+      width: 320px;
+      padding: 32px 28px;
+      border-right: 1px solid rgba(16, 22, 25, 0.08);
+    }
+    #s2-panel-right { border-right: none; border-left: 1px solid rgba(16, 22, 25, 0.08); }
+    #s2-panel-left .label, #s2-panel-right .label {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #3c4750;
+      margin-bottom: 20px;
+    }
+    #s2-panel-left .item, #s2-panel-right .item {
+      height: 16px;
+      border-radius: 8px;
+      background: rgba(16, 22, 25, 0.08);
+      margin-bottom: 14px;
+    }
+
+    #s2-chat {
+      flex: 1;
+      padding: 40px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    #s2-chat-bubble {
+      background: #f6f4ef;
+      border-radius: 20px;
+      padding: 24px 30px;
+      font-size: 26px;
+      font-weight: 500;
+      color: #101619;
+      max-width: 520px;
+    }
+    #s2-chat-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #0e5d57;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    #s2-tagline {
+      position: absolute;
+      left: 50%;
+      top: 900px;
+      transform: translateX(-50%);
+      font-size: 32px;
+      font-weight: 600;
+      color: #3c4750;
+      opacity: 0;
+    }
+  </style>
+
+  <div
+    id="s2-root"
+    class="clip"
+    data-composition-id="s2"
+    data-start="0"
+    data-duration="5.76"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="s2-cover"></div>
+
+    <div id="s2-mark-wrap">
+      <div id="s2-mark-glow"></div>
+      <div id="s2-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h11"/></svg>
+      </div>
+    </div>
+    <div id="s2-wordmark">Buinee</div>
+
+    <div id="s2-workspace">
+      <div id="s2-panel-left">
+        <div class="label">My Mailbox</div>
+        <div class="item" style="width: 92%"></div>
+        <div class="item" style="width: 68%"></div>
+        <div class="item" style="width: 80%"></div>
+      </div>
+      <div id="s2-chat">
+        <div id="s2-chat-bubble"><span id="s2-chat-dot"></span>Your AI Assistant.</div>
+      </div>
+      <div id="s2-panel-right">
+        <div class="label">My Documents</div>
+        <div class="item" style="width: 88%"></div>
+        <div class="item" style="width: 60%"></div>
+        <div class="item" style="width: 74%"></div>
+      </div>
+    </div>
+
+    <div id="s2-tagline">One assistant, for every person on your team.</div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const s2 = gsap.timeline({ paused: true });
+
+    // 0-1s: cut from black, mark animates in with a glow
+    s2.to("#s2-cover", { opacity: 0, duration: 0.5, ease: "power1.out" }, 0);
+    s2.fromTo("#s2-mark-wrap", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.8)" }, 0.15);
+    s2.fromTo("#s2-mark-glow", { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0.15);
+    s2.fromTo("#s2-wordmark", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35 }, 0.55);
+
+    // 1-4s: workspace UI reveal
+    s2.to("#s2-mark-wrap", { scale: 0.55, x: -570, y: -270, duration: 0.5, ease: "power2.inOut" }, 1.05);
+    s2.to("#s2-wordmark", { opacity: 0, duration: 0.3 }, 1.05);
+    s2.fromTo("#s2-workspace", { opacity: 0, y: 30, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power2.out" }, 1.3);
+    s2.fromTo("#s2-panel-left .item, #s2-panel-right .item", { opacity: 0 }, { opacity: 1, duration: 0.3, stagger: 0.06 }, 1.7);
+    s2.fromTo("#s2-chat-bubble", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35 }, 1.85);
+    s2.fromTo("#s2-tagline", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35 }, 2.4);
+    // hold through "Imagine a co-pilot... every person on your team." then fade for the cut
+    s2.to("#s2-tagline", { opacity: 0, duration: 0.3 }, 5.2);
+    s2.to("#s2-workspace", { opacity: 0, duration: 0.3 }, 5.3);
+    s2.to("#s2-mark-wrap", { opacity: 0, duration: 0.3 }, 5.3);
+
+    window.__timelines["s2"] = s2;
+  </script>
+</template>

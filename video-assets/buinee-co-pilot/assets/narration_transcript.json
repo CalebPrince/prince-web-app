@@ -1,0 +1,109 @@
+{
+	"systeminfo": "WHISPER : COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | OPENMP = 1 | REPACK = 1 | ",
+	"model": {
+		"type": "small",
+		"multilingual": false,
+		"vocab": 51864,
+		"audio": {
+			"ctx": 1500,
+			"state": 768,
+			"head": 12,
+			"layer": 12
+		},
+		"text": {
+			"ctx": 448,
+			"state": 768,
+			"head": 12,
+			"layer": 12
+		},
+		"mels": 80,
+		"ftype": 1
+	},
+	"params": {
+		"model": "/home/prince/whisper.cpp/models/ggml-small.en.bin",
+		"language": "en",
+		"translate": false
+	},
+	"result": {
+		"language": "en"
+	},
+	"transcription": [
+		{
+			"timestamps": {
+				"from": "00:00:00,000",
+				"to": "00:00:04,880"
+			},
+			"offsets": {
+				"from": 0,
+				"to": 4880
+			},
+			"text": " Emails, messages, a dozen apps. Feeling overwhelmed, struggling to keep pace."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:05,680",
+				"to": "00:00:11,440"
+			},
+			"offsets": {
+				"from": 5680,
+				"to": 11440
+			},
+			"text": " Imagine a co-pilot, integrated into your workday. One assistant, for every person on your team."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:12,160",
+				"to": "00:00:16,240"
+			},
+			"offsets": {
+				"from": 12160,
+				"to": 16240
+			},
+			"text": " Buini connects to your mailbox, documents, and even your unique business rules."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:16,800",
+				"to": "00:00:22,400"
+			},
+			"offsets": {
+				"from": 16800,
+				"to": 22400
+			},
+			"text": " It sorts, drafts, and flags overnight. Reads files, extracts details, and suggests action."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:23,040",
+				"to": "00:00:25,760"
+			},
+			"offsets": {
+				"from": 23040,
+				"to": 25760
+			},
+			"text": " Always drafting, never sending, until you say so."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:26,960",
+				"to": "00:00:31,920"
+			},
+			"offsets": {
+				"from": 26960,
+				"to": 31920
+			},
+			"text": " Take the pressure off. Empower your team with intelligent assistance and reclaim your workday."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:31,920",
+				"to": "00:00:35,040"
+			},
+			"offsets": {
+				"from": 31920,
+				"to": 35040
+			},
+			"text": " Buini.app, your AI co-pilot. AI."
+		}
+	]
+}

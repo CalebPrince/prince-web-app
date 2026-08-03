@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6rem 8rem;
+          color: #00ff66;
+          font-family: "JetBrains Mono", monospace;
+        }
+        .s1-content { width: min(1100px, 100%); text-align: center; }
+        .s1-eyebrow {
+          margin-bottom: 1.25rem;
+          color: rgba(214, 255, 226, 0.78);
+          font-size: 0.8rem;
+          letter-spacing: 0.32em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .s1-terminal {
+          width: min(850px, 100%);
+          margin: 0 auto;
+          overflow: hidden;
+          border: 1px solid rgba(0, 255, 102, 0.22);
+          border-radius: 18px;
+          background: linear-gradient(180deg, rgba(9, 18, 12, 0.92), rgba(2, 5, 3, 0.95));
+          box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65), 0 0 60px rgba(0, 255, 102, 0.07);
+          opacity: 0;
+          transform: scale(0.97);
+        }
+        .s1-terminal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 48px;
+          padding: 0 1rem;
+          border-bottom: 1px solid rgba(0, 255, 102, 0.22);
+          background: rgba(255, 255, 255, 0.025);
+        }
+        .s1-dots { display: flex; gap: 0.48rem; }
+        .s1-dot { width: 10px; height: 10px; border-radius: 999px; }
+        .s1-dot:nth-child(1) { background: #ff5f57; }
+        .s1-dot:nth-child(2) { background: #febc2e; }
+        .s1-dot:nth-child(3) { background: #28c840; }
+        .s1-label { color: rgba(255, 255, 255, 0.34); font-size: 0.72rem; letter-spacing: 0.08em; }
+        .s1-body { min-height: 220px; padding: 2.4rem clamp(1.4rem, 4vw, 3rem); text-align: left; }
+        .s1-line { display: flex; flex-wrap: wrap; gap: 0.7rem; margin: 0 0 1rem; font-size: 1.08rem; line-height: 1.7; }
+        .s1-prompt { color: #4dfaff; }
+        .s1-typing {
+          display: inline-block;
+          max-width: 100%;
+          overflow: hidden;
+          white-space: nowrap;
+          border-right: 2px solid #00ff66;
+          width: 0;
+          color: #f5fff8;
+        }
+        .s1-output { color: #00ff66; opacity: 0; }
+        .s1-muted { color: rgba(214, 255, 226, 0.68); opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="s1" data-width="1920" data-height="1080" data-duration="5.100">
+        <div class="s1-content">
+          <p class="s1-eyebrow" id="s1-eyebrow">Archive transmission initiated</p>
+          <div class="s1-terminal" id="s1-terminal">
+            <div class="s1-terminal-header">
+              <div class="s1-dots"><span class="s1-dot"></span><span class="s1-dot"></span><span class="s1-dot"></span></div>
+              <span class="s1-label">prince@builder-os:~</span>
+              <span></span>
+            </div>
+            <div class="s1-body">
+              <p class="s1-line"><span class="s1-prompt">prince@builder-os:~$</span><span class="s1-typing" id="s1-typed">initiate transmission</span></p>
+              <p class="s1-line s1-output" id="s1-out1">The web was built to display information.</p>
+              <p class="s1-line s1-muted" id="s1-out2">But information alone was never enough.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        tl.fromTo("#s1-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 0);
+        tl.fromTo("#s1-terminal", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out" }, 0.15);
+        tl.fromTo("#s1-typed", { width: 0 }, { width: "24ch", duration: 1.8, ease: "none" }, 0.6);
+        tl.fromTo("#s1-out1", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 2.5);
+        tl.fromTo("#s1-out2", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power1.out" }, 2.9);
+
+        window.__timelines["s1"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

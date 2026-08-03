@@ -1,0 +1,15 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  html,body{margin:0;background:#111;color:#fff;font:16px Arial}#grid{display:grid;grid-template-columns:repeat(4,320px);gap:10px;padding:10px;width:1310px}.shot{position:relative;width:320px;height:190px;background:#222;overflow:hidden}.shot canvas{width:320px;height:180px;object-fit:cover}.shot b{position:absolute;left:6px;bottom:4px;background:#000c;padding:3px 6px;border-radius:3px}
+</style>
+<video id="v" muted preload="auto" src="reference.mp4" style="display:none"></video><div id="grid"></div>
+<script>
+const v=document.querySelector('#v'), grid=document.querySelector('#grid');
+const seek=t=>new Promise(r=>{v.addEventListener('seeked',r,{once:true});v.currentTime=t});
+v.addEventListener('loadedmetadata',async()=>{
+  const times=Array.from({length:8},(_,i)=>Math.min(v.duration-.1,i*v.duration/7));
+  for(const t of times){await seek(t);const d=document.createElement('div');d.className='shot';const c=document.createElement('canvas');c.width=640;c.height=360;c.getContext('2d').drawImage(v,0,0,640,360);const b=document.createElement('b');b.textContent=t.toFixed(1)+'s';d.append(c,b);grid.append(d)}
+  document.title='READY';
+});
+</script>

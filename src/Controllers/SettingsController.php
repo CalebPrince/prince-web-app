@@ -23,6 +23,7 @@ class SettingsController
         'twilio_conversation_relay_enabled', 'twilio_conversation_relay_url', 'twilio_conversation_relay_secret',
         'twilio_conversation_relay_voice',
         'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model', 'scout_elevenlabs_voice_id',
+        'liveavatar_enabled', 'liveavatar_api_key', 'liveavatar_avatar_id', 'liveavatar_context_id',
         'twilio_whatsapp_production_approved',
         'twilio_whatsapp_post_call_enabled', 'twilio_whatsapp_post_call_content_sid',
         'twilio_whatsapp_post_call_template_status',

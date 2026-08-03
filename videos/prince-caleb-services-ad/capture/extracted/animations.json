@@ -1,0 +1,472 @@
+{
+  "summary": {
+    "webAnimations": 32,
+    "cssDeclarations": 38,
+    "scrollTargets": 0,
+    "cdpAnimations": 32,
+    "canvases": 0
+  },
+  "namedAnimations": [
+    "gridMove",
+    "rise",
+    "pulse"
+  ],
+  "scrollTriggeredElements": 0,
+  "representativeAnimations": [
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "gridMove",
+      "targetSelector": "div.grid",
+      "targetRect": {
+        "x": -624,
+        "y": 727.5294799804688,
+        "width": 3168,
+        "height": 352.47052001953125,
+        "top": 727.5294799804688,
+        "right": 2544,
+        "bottom": 1080,
+        "left": -624
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "replace",
+          "backgroundPositionX": "0%, 0%",
+          "backgroundPositionY": "0%, 0%",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "backgroundPositionX": "0px, 54px",
+          "backgroundPositionY": "54px, 0px",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 17000,
+        "delay": 0,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "drift",
+      "targetSelector": "div.fx",
+      "targetRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080,
+        "top": 0,
+        "right": 1920,
+        "bottom": 1080,
+        "left": 0
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease-in-out",
+          "composite": "replace",
+          "transform": "none",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease-in-out",
+          "composite": "auto",
+          "transform": "translate3d(8%, 8%, 0px) scale(1.14)",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 13000,
+        "delay": 0,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "alternate"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "drift",
+      "targetSelector": "div.fx",
+      "targetRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080,
+        "top": 0,
+        "right": 1920,
+        "bottom": 1080,
+        "left": 0
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease-in-out",
+          "composite": "replace",
+          "transform": "none",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease-in-out",
+          "composite": "auto",
+          "transform": "translate3d(8%, 8%, 0px) scale(1.14)",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 13000,
+        "delay": -6000,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "alternate"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "rise",
+      "targetSelector": "span.particle",
+      "targetRect": {
+        "x": 1001.578125,
+        "y": 236.1671142578125,
+        "width": 3,
+        "height": 3,
+        "top": 236.1671142578125,
+        "right": 1004.578125,
+        "bottom": 239.1671142578125,
+        "left": 1001.578125
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(162px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.15,
+          "easing": "linear",
+          "composite": "auto",
+          "opacity": "0.35",
+          "computedOffset": 0.15
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(-1242px)",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 19093.85258620757,
+        "delay": -15537.03395755689,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "rise",
+      "targetSelector": "span.particle",
+      "targetRect": {
+        "x": 470.90625,
+        "y": 155.2423095703125,
+        "width": 3,
+        "height": 3,
+        "top": 155.2423095703125,
+        "right": 473.90625,
+        "bottom": 158.2423095703125,
+        "left": 470.90625
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(162px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.15,
+          "easing": "linear",
+          "composite": "auto",
+          "opacity": "0.35",
+          "computedOffset": 0.15
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(-1242px)",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 12513.658689724012,
+        "delay": -11195.34775582166,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "rise",
+      "targetSelector": "span.particle",
+      "targetRect": {
+        "x": 520.984375,
+        "y": 1150.3729248046875,
+        "width": 3,
+        "height": 3,
+        "top": 1150.3729248046875,
+        "right": 523.984375,
+        "bottom": 1153.3729248046875,
+        "left": 520.984375
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(162px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.15,
+          "easing": "linear",
+          "composite": "auto",
+          "opacity": "0.35",
+          "computedOffset": 0.15
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(-1242px)",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 22755.23349569815,
+        "delay": -3189.0323693455907,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "rise",
+      "targetSelector": "span.particle",
+      "targetRect": {
+        "x": 1784.890625,
+        "y": 986.957275390625,
+        "width": 3,
+        "height": 3,
+        "top": 986.957275390625,
+        "right": 1787.890625,
+        "bottom": 989.957275390625,
+        "left": 1784.890625
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(162px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.15,
+          "easing": "linear",
+          "composite": "auto",
+          "opacity": "0.35",
+          "computedOffset": 0.15
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(-1242px)",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 23142.85550865918,
+        "delay": -10157.200939504932,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "rise",
+      "targetSelector": "span.particle",
+      "targetRect": {
+        "x": 345.875,
+        "y": 1328.6810302734375,
+        "width": 3,
+        "height": 3,
+        "top": 1328.6810302734375,
+        "right": 348.875,
+        "bottom": 1331.6810302734375,
+        "left": 345.875
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(162px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.15,
+          "easing": "linear",
+          "composite": "auto",
+          "opacity": "0.35",
+          "computedOffset": 0.15
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(-1242px)",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 10090.11885984779,
+        "delay": -1402.9794888415997,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "rise",
+      "targetSelector": "span.particle",
+      "targetRect": {
+        "x": 1791.796875,
+        "y": 1306.2261962890625,
+        "width": 3,
+        "height": 3,
+        "top": 1306.2261962890625,
+        "right": 1794.796875,
+        "bottom": 1309.2261962890625,
+        "left": 1791.796875
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(162px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.15,
+          "easing": "linear",
+          "composite": "auto",
+          "opacity": "0.35",
+          "computedOffset": 0.15
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(-1242px)",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 23878.605775814664,
+        "delay": -2614.0242747269035,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "running",
+      "animationName": "rise",
+      "targetSelector": "span.particle",
+      "targetRect": {
+        "x": 146.140625,
+        "y": 1266.2935791015625,
+        "width": 3,
+        "height": 3,
+        "top": 1266.2935791015625,
+        "right": 149.140625,
+        "bottom": 1269.2935791015625,
+        "left": 146.140625
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(162px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 0.15,
+          "easing": "linear",
+          "composite": "auto",
+          "opacity": "0.35",
+          "computedOffset": 0.15
+        },
+        {
+          "offset": 1,
+          "easing": "linear",
+          "composite": "auto",
+          "transform": "translateY(-1242px)",
+          "opacity": "0",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 24170.582709854756,
+        "delay": -4670.592802942803,
+        "iterations": null,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    }
+  ]
+}

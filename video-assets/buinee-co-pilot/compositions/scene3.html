@@ -1,0 +1,252 @@
+<template>
+  <style>
+    #s3-root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      font-family: "Inter", sans-serif;
+      color: #101619;
+      overflow: hidden;
+    }
+    #s3-root .beat { position: absolute; inset: 0; }
+
+    #s3-root .kinetic {
+      position: absolute;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+      font-size: 60px;
+      color: #101619;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    /* Beat A: email */
+    #s3-chat-card {
+      position: absolute;
+      left: 220px;
+      top: 300px;
+      width: 620px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(16, 22, 25, 0.14);
+      padding: 36px;
+      opacity: 0;
+    }
+    #s3-chat-card .label { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #3c4750; margin-bottom: 22px; }
+    #s3-user-line {
+      background: #f6f4ef;
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    #s3-ai-line {
+      background: #eef4f2;
+      border-left: 4px solid #0e5d57;
+      border-radius: 0 14px 14px 0;
+      padding: 16px 20px;
+      font-size: 24px;
+      opacity: 0;
+    }
+
+    #s3-gmail-card {
+      position: absolute;
+      left: 1000px;
+      top: 260px;
+      width: 660px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(16, 22, 25, 0.14);
+      padding: 32px 36px;
+      opacity: 0;
+    }
+    #s3-gmail-card .to-line { font-size: 20px; color: #3c4750; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(16, 22, 25, 0.08); }
+    #s3-gmail-card .draft-text {
+      background: rgba(14, 93, 87, 0.10);
+      border-radius: 12px;
+      padding: 18px 20px;
+      font-size: 22px;
+      line-height: 1.5;
+      color: #101619;
+    }
+    #s3-gmail-card .draft-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      font-size: 17px;
+      font-weight: 600;
+      color: #0e5d57;
+    }
+    #s3-gmail-card .draft-tag .dot { width: 9px; height: 9px; border-radius: 50%; background: #0e5d57; }
+
+    /* Beat B: documents */
+    #s3-pdf-card {
+      position: absolute;
+      left: 260px;
+      top: 260px;
+      width: 560px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 30px 70px rgba(16, 22, 25, 0.14);
+      padding: 40px 44px;
+      opacity: 0;
+    }
+    #s3-pdf-card .pdf-title { font-size: 26px; font-weight: 700; margin-bottom: 26px; }
+    #s3-pdf-card .pdf-line { height: 13px; border-radius: 6px; background: rgba(16, 22, 25, 0.10); margin-bottom: 16px; }
+    #s3-pdf-card .pdf-line.hl { background: rgba(14, 93, 87, 0.28); }
+
+    #s3-summary-card {
+      position: absolute;
+      left: 1000px;
+      top: 300px;
+      width: 640px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 30px 70px rgba(16, 22, 25, 0.14);
+      padding: 36px 40px;
+      opacity: 0;
+    }
+    #s3-summary-card .label { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #3c4750; margin-bottom: 22px; }
+    #s3-summary-card .bullet {
+      display: flex;
+      gap: 14px;
+      font-size: 23px;
+      margin-bottom: 18px;
+      opacity: 0;
+    }
+    #s3-summary-card .bullet .mark { color: #0e5d57; font-weight: 700; }
+
+    /* Beat C: rules */
+    #s3-flow {
+      position: absolute;
+      left: 50%;
+      top: 320px;
+      transform: translateX(-50%);
+      width: 1200px;
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+    }
+    #s3-flow .node {
+      width: 300px;
+      height: 180px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(16, 22, 25, 0.14);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+    }
+    #s3-flow .node small { font-size: 16px; font-weight: 500; color: #3c4750; }
+    #s3-flow svg.arrow { width: 90px; height: 24px; }
+
+    #s3-approval-tag {
+      position: absolute;
+      left: 50%;
+      top: 660px;
+      transform: translateX(-50%);
+      background: #eef4f2;
+      border: 2px solid #0e5d57;
+      border-radius: 16px;
+      padding: 18px 32px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #0e5d57;
+      opacity: 0;
+    }
+  </style>
+
+  <div
+    id="s3-root"
+    class="clip"
+    data-composition-id="s3"
+    data-start="0"
+    data-duration="14.32"
+    data-width="1920"
+    data-height="1080"
+  >
+    <!-- Beat A -->
+    <div id="s3-chat-card">
+      <div class="label">Buinee Assistant</div>
+      <div id="s3-user-line">Draft a concise reply to this email, declining the meeting and suggesting Tuesday.</div>
+      <div id="s3-ai-line">Done — I've drafted a reply declining Thursday and proposing Tuesday instead.</div>
+    </div>
+    <div id="s3-gmail-card">
+      <div class="to-line">To: james@northfield.co &nbsp;·&nbsp; Re: Thursday sync</div>
+      <div class="draft-text">Thanks for the invite — Thursday doesn't work on my end. Could we move this to Tuesday instead? Happy to align on a time that suits you.</div>
+      <div class="draft-tag"><span class="dot"></span>Drafted by Buinee, awaiting your review</div>
+    </div>
+    <div class="kinetic" id="s3-k1">Sorts. Drafts. Flags.</div>
+
+    <!-- Beat B -->
+    <div id="s3-pdf-card">
+      <div class="pdf-title">Q3 Sales Report.pdf</div>
+      <div class="pdf-line" style="width: 92%"></div>
+      <div class="pdf-line hl" style="width: 84%"></div>
+      <div class="pdf-line" style="width: 70%"></div>
+      <div class="pdf-line hl" style="width: 88%"></div>
+      <div class="pdf-line" style="width: 60%"></div>
+      <div class="pdf-line hl" style="width: 76%"></div>
+    </div>
+    <div id="s3-summary-card">
+      <div class="label">Key Action Items</div>
+      <div class="bullet" id="s3-bullet-1"><span class="mark">—</span>Revenue up 18% in the north region</div>
+      <div class="bullet" id="s3-bullet-2"><span class="mark">—</span>Follow up with 3 stalled accounts</div>
+      <div class="bullet" id="s3-bullet-3"><span class="mark">—</span>Renew the Q4 supplier contract</div>
+    </div>
+    <div class="kinetic" id="s3-k2">Reads. Extracts. Acts.</div>
+
+    <!-- Beat C -->
+    <div id="s3-flow">
+      <div class="node" style="color:#0e5d57">Your Rule<br/><small>"Never auto-send"</small></div>
+      <svg class="arrow" viewBox="0 0 90 24" fill="none" stroke="#3c4750" stroke-width="2"><path d="M0 12h80M70 4l10 8-10 8"/></svg>
+      <div class="node">Buinee Drafts<br/><small>Reply prepared</small></div>
+      <svg class="arrow" viewBox="0 0 90 24" fill="none" stroke="#3c4750" stroke-width="2"><path d="M0 12h80M70 4l10 8-10 8"/></svg>
+      <div class="node" style="color:#0e5d57">Your Approval<br/><small>You decide</small></div>
+    </div>
+    <div id="s3-approval-tag">Drafted by Buinee, awaiting your review</div>
+    <div class="kinetic" id="s3-k3">Your Rules. Your Approval. Your Control.</div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const s3 = gsap.timeline({ paused: true });
+
+    // Beat A 0-5s — "Buinee connects to your mailbox, documents, and your business rules."
+    s3.fromTo("#s3-chat-card", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4 }, 0.1);
+    s3.fromTo("#s3-ai-line", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35 }, 0.65);
+    s3.fromTo("#s3-gmail-card", { opacity: 0, x: 30, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 0.4, ease: "back.out(1.4)" }, 1.15);
+    s3.fromTo("#s3-k1", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3 }, 1.5);
+    s3.to(["#s3-chat-card", "#s3-gmail-card", "#s3-k1"], { opacity: 0, duration: 0.3 }, 4.6);
+
+    // Beat B 5-10s — "It sorts, drafts, and flags overnight. Reads files, extracts details, and suggests action."
+    s3.fromTo("#s3-pdf-card", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4 }, 5.1);
+    s3.fromTo("#s3-pdf-card .hl", { backgroundColor: "rgba(16,22,25,0.10)" }, { backgroundColor: "rgba(14,93,87,0.28)", duration: 0.3, stagger: 0.15 }, 5.5);
+    s3.fromTo("#s3-summary-card", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4 }, 5.9);
+    s3.fromTo(["#s3-bullet-1", "#s3-bullet-2", "#s3-bullet-3"], { opacity: 0, x: 14 }, { opacity: 1, x: 0, duration: 0.3, stagger: 0.18 }, 6.2);
+    s3.fromTo("#s3-k2", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3 }, 6.9);
+    s3.to(["#s3-pdf-card", "#s3-summary-card", "#s3-k2"], { opacity: 0, duration: 0.3 }, 9.6);
+
+    // Beat C 10-14.32s — "Always drafting, never sending, until you say so."
+    s3.fromTo("#s3-flow .node", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.15 }, 10.1);
+    s3.set("#s3-flow", { opacity: 1 }, 10.1);
+    s3.fromTo("#s3-flow .arrow", { opacity: 0 }, { opacity: 1, duration: 0.25, stagger: 0.15 }, 10.4);
+    s3.fromTo("#s3-approval-tag", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3 }, 11.1);
+    s3.to("#s3-approval-tag", { scale: 1.04, duration: 0.35, yoyo: true, repeat: 3, ease: "power1.inOut" }, 11.5);
+    s3.fromTo("#s3-k3", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3 }, 11.4);
+    s3.to(["#s3-flow", "#s3-approval-tag", "#s3-k3"], { opacity: 0, duration: 0.3 }, 13.9);
+
+    window.__timelines["s3"] = s3;
+  </script>
+</template>

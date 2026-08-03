@@ -116,6 +116,10 @@ async function saveIntegrations(e) {
       elevenlabs_voice_id: document.getElementById("elevenlabs-voice-id").value.trim(),
       elevenlabs_tts_model: document.getElementById("elevenlabs-tts-model").value.trim(),
       scout_elevenlabs_voice_id: document.getElementById("scout-elevenlabs-voice-id").value.trim(),
+      liveavatar_enabled: document.getElementById("liveavatar-enabled").checked ? "1" : "0",
+      liveavatar_api_key: document.getElementById("liveavatar-api-key").value.trim(),
+      liveavatar_avatar_id: document.getElementById("liveavatar-avatar-id").value.trim(),
+      liveavatar_context_id: document.getElementById("liveavatar-context-id").value.trim(),
       whatsapp_provider: document.getElementById("whatsapp-provider").value,
       whapi_api_token: document.getElementById("whapi-api-token").value.trim(),
       whapi_webhook_secret: document.getElementById("whapi-webhook-secret").value.trim(),
@@ -654,6 +658,10 @@ async function testAi() {
     document.getElementById("elevenlabs-voice-id").value = settings.elevenlabs_voice_id || "Xb7hH8MSUJpSbSDYk0k2";
     document.getElementById("elevenlabs-tts-model").value = settings.elevenlabs_tts_model || "eleven_flash_v2_5";
     document.getElementById("scout-elevenlabs-voice-id").value = settings.scout_elevenlabs_voice_id || "";
+    document.getElementById("liveavatar-enabled").checked = settings.liveavatar_enabled === "1";
+    document.getElementById("liveavatar-api-key").value = settings.liveavatar_api_key || "";
+    document.getElementById("liveavatar-avatar-id").value = settings.liveavatar_avatar_id || "";
+    document.getElementById("liveavatar-context-id").value = settings.liveavatar_context_id || "";
     document.getElementById("whatsapp-provider").value = settings.whatsapp_provider || "twilio";
     document.getElementById("whapi-api-token").value = settings.whapi_api_token || "";
     document.getElementById("whapi-webhook-secret").value = settings.whapi_webhook_secret || "";

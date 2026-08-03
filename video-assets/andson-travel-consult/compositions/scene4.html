@@ -1,0 +1,205 @@
+<template>
+  <style>
+    #s4-root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      font-family: "Montserrat", sans-serif;
+      color: #1a202c;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    #s4-glow-field {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(29, 75, 170, 0) 0%, rgba(29, 75, 170, 0) 100%);
+    }
+
+    #s4-root .chip {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      border-radius: 22px;
+      opacity: 0;
+    }
+    #s4-chip-passport { left: 260px; top: 220px; background: #044888; }
+    #s4-chip-calendar { left: 1560px; top: 200px; background: #1d4baa; }
+    #s4-chip-form      { left: 1600px; top: 700px; background: #2b6cb0; }
+    #s4-chip-ticket    { left: 220px;  top: 720px; background: #0b6e4f; }
+
+    #s4-disclaimer {
+      position: absolute;
+      left: 50%;
+      top: 380px;
+      transform: translateX(-50%);
+      width: 1200px;
+      text-align: center;
+      opacity: 0;
+    }
+    #s4-disclaimer .no {
+      font-size: 40px;
+      font-weight: 700;
+      color: #4a5568;
+      margin-bottom: 18px;
+    }
+    #s4-disclaimer .yes {
+      font-family: "Montserrat", sans-serif;
+      font-weight: 800;
+      font-size: 56px;
+      color: #1d4baa;
+    }
+
+    #s4-mark-wrap {
+      position: absolute;
+      left: 860px;
+      top: 280px;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+    }
+    #s4-mark-glow {
+      position: absolute;
+      inset: -100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(29, 75, 170, 0.30) 0%, rgba(29, 75, 170, 0) 70%);
+    }
+    #s4-mark {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: #1d4baa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 30px 70px rgba(29, 75, 170, 0.35);
+    }
+    #s4-mark svg { width: 64px; height: 64px; }
+
+    #s4-wordmark {
+      position: absolute;
+      left: 50%;
+      top: 540px;
+      transform: translateX(-50%);
+      font-family: "Montserrat", sans-serif;
+      font-weight: 800;
+      font-size: 72px;
+      color: #1a202c;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    #s4-tagline-brand {
+      position: absolute;
+      left: 50%;
+      top: 660px;
+      transform: translateX(-50%);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #1d4baa;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    #s4-cta {
+      position: absolute;
+      left: 50%;
+      top: 780px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      opacity: 0;
+    }
+    #s4-cta .item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 30px;
+      font-weight: 700;
+      color: #1a202c;
+    }
+    #s4-cta .item.url { color: #1d4baa; }
+    #s4-cta svg { width: 32px; height: 32px; color: #1d4baa; }
+  </style>
+
+  <div
+    id="s4-root"
+    class="clip"
+    data-composition-id="s4"
+    data-start="0"
+    data-duration="14.776"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="s4-glow-field"></div>
+
+    <div class="chip" id="s4-chip-passport"></div>
+    <div class="chip" id="s4-chip-calendar"></div>
+    <div class="chip" id="s4-chip-form"></div>
+    <div class="chip" id="s4-chip-ticket"></div>
+
+    <div id="s4-disclaimer">
+      <div class="no">We don't guarantee visas.</div>
+      <div class="yes">We guarantee expert guidance, every step of the way.</div>
+    </div>
+
+    <div id="s4-mark-wrap">
+      <div id="s4-mark-glow" data-layout-allow-overflow></div>
+      <div id="s4-mark">
+        <svg viewBox="0 0 30 30" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l20-8-8 20-3-9-9-3z"/></svg>
+      </div>
+    </div>
+    <div id="s4-wordmark">Andson Travel Consult</div>
+    <div id="s4-tagline-brand">Beyond The Travel Agent</div>
+
+    <div id="s4-cta">
+      <div class="item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.7 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+        WhatsApp
+      </div>
+      <div class="item url">andsontravelconsult.com</div>
+    </div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const s4 = gsap.timeline({ paused: true });
+
+    // 0-1.5s: scattered document chips converge into the glowing center, absorbed
+    s4.fromTo(
+      ["#s4-chip-passport", "#s4-chip-calendar", "#s4-chip-form", "#s4-chip-ticket"],
+      { opacity: 0, scale: 1.2 },
+      { opacity: 1, scale: 1, duration: 0.22, stagger: 0.05 },
+      0
+    );
+    s4.to("#s4-chip-passport", { x: 640, y: 200, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.25);
+    s4.to("#s4-chip-calendar", { x: -560, y: 220, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.32);
+    s4.to("#s4-chip-form", { x: -600, y: -260, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.39);
+    s4.to("#s4-chip-ticket", { x: 620, y: -280, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.46);
+    s4.fromTo(
+      "#s4-glow-field",
+      { background: "radial-gradient(circle at 50% 40%, rgba(29, 75, 170, 0) 0%, rgba(29, 75, 170, 0) 100%)" },
+      { background: "radial-gradient(circle at 50% 40%, rgba(29, 75, 170, 0.14) 0%, rgba(29, 75, 170, 0) 60%)", duration: 0.9, ease: "power2.out" },
+      0.5
+    );
+
+    // 0-6s: "We don't guarantee visas... every step of the way."
+    s4.fromTo("#s4-disclaimer", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, 1.2);
+    s4.to("#s4-disclaimer", { opacity: 0, duration: 0.35 }, 5.5);
+
+    // 6-14.776s: "Reach out on WhatsApp or visit andsontravelconsult.com. Andseen Travel Consult. Beyond the travel agent."
+    s4.fromTo("#s4-mark-wrap", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.8)" }, 6.0);
+    s4.fromTo("#s4-mark-glow", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 6.0);
+    s4.fromTo("#s4-wordmark", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35 }, 6.35);
+    s4.fromTo("#s4-tagline-brand", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35 }, 6.6);
+    s4.fromTo("#s4-cta", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, 7.0);
+
+    window.__timelines["s4"] = s4;
+  </script>
+</template>

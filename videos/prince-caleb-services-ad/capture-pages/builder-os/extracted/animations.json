@@ -1,0 +1,426 @@
+{
+  "summary": {
+    "webAnimations": 13,
+    "cssDeclarations": 82,
+    "scrollTargets": 1,
+    "cdpAnimations": 101,
+    "canvases": 0
+  },
+  "namedAnimations": [
+    "osNodeIn",
+    "osLogIn"
+  ],
+  "scrollTriggeredElements": 1,
+  "representativeAnimations": [
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 691,
+        "y": 1520.609375,
+        "width": 426,
+        "height": 170.078125,
+        "top": 1520.609375,
+        "right": 1117,
+        "bottom": 1690.6875,
+        "left": 691
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 250,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 1133,
+        "y": 1520.609375,
+        "width": 426,
+        "height": 170.078125,
+        "top": 1520.609375,
+        "right": 1559,
+        "bottom": 1690.6875,
+        "left": 1133
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 339.99999999999994,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 691,
+        "y": 1706.6875,
+        "width": 426,
+        "height": 170.078125,
+        "top": 1706.6875,
+        "right": 1117,
+        "bottom": 1876.765625,
+        "left": 691
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 430,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 1133,
+        "y": 1706.6875,
+        "width": 426,
+        "height": 170.078125,
+        "top": 1706.6875,
+        "right": 1559,
+        "bottom": 1876.765625,
+        "left": 1133
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 520,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 691,
+        "y": 1892.765625,
+        "width": 426,
+        "height": 170.078125,
+        "top": 1892.765625,
+        "right": 1117,
+        "bottom": 2062.84375,
+        "left": 691
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 610,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 1133,
+        "y": 1892.765625,
+        "width": 426,
+        "height": 170.078125,
+        "top": 1892.765625,
+        "right": 1559,
+        "bottom": 2062.84375,
+        "left": 1133
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 700,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 691,
+        "y": 2078.84375,
+        "width": 426,
+        "height": 170.078125,
+        "top": 2078.84375,
+        "right": 1117,
+        "bottom": 2248.921875,
+        "left": 691
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 790,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 1133,
+        "y": 2078.84375,
+        "width": 426,
+        "height": 170.078125,
+        "top": 2078.84375,
+        "right": 1559,
+        "bottom": 2248.921875,
+        "left": 1133
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 880,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 691,
+        "y": 2264.921875,
+        "width": 426,
+        "height": 170.078125,
+        "top": 2264.921875,
+        "right": 1117,
+        "bottom": 2435,
+        "left": 691
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 970,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    },
+    {
+      "type": "CSSAnimation",
+      "playState": "finished",
+      "animationName": "osNodeIn",
+      "targetSelector": "a.os-agent-node",
+      "targetRect": {
+        "x": 1133,
+        "y": 2264.921875,
+        "width": 426,
+        "height": 170.078125,
+        "top": 2264.921875,
+        "right": 1559,
+        "bottom": 2435,
+        "left": 1133
+      },
+      "keyframes": [
+        {
+          "offset": 0,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "translateX(-12px)",
+          "opacity": "0",
+          "computedOffset": 0
+        },
+        {
+          "offset": 1,
+          "easing": "ease",
+          "composite": "auto",
+          "transform": "none",
+          "opacity": "1",
+          "computedOffset": 1
+        }
+      ],
+      "timing": {
+        "duration": 500,
+        "delay": 1060,
+        "iterations": 1,
+        "easing": "linear",
+        "direction": "normal"
+      }
+    }
+  ]
+}

@@ -1,0 +1,292 @@
+<template>
+  <style>
+    #root {
+      container-type: size;
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    /* ---- base ground (safety fill under the hoisted video) ---- */
+    .automations-bg {
+      position: absolute;
+      inset: 0;
+      background: #fbfbfa;
+    }
+
+    /* ---- findings card ---- */
+    .automations-card {
+      position: absolute;
+      left: 31cqw;
+      top: 17cqh;
+      width: 38cqw;
+      padding: 2.1cqw 2.2cqw 2.3cqw;
+      background: rgba(251, 251, 250, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1.5px solid rgba(8, 120, 60, 0.22);
+      border-radius: 14px;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+
+    .automations-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.6cqw;
+    }
+
+    .automations-eyebrow {
+      font-size: 1.05cqw;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #08783c;
+    }
+
+    .automations-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4cqw;
+      padding: 0.5cqw 1cqw;
+      border-radius: 100px;
+      background: rgba(8, 120, 60, 0.08);
+      color: #08783c;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .automations-tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #08783c;
+      flex: 0 0 auto;
+    }
+
+    .automations-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 1cqw;
+    }
+
+    .automations-row {
+      display: flex;
+      align-items: center;
+      gap: 1.3cqw;
+      padding: 1.1cqw 1.3cqw;
+      border-radius: 12px;
+      background: rgba(8, 120, 60, 0.045);
+      border: 1.5px solid rgba(8, 120, 60, 0.18);
+      opacity: 0;
+    }
+
+    .automations-badge-wrap {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      flex: 0 0 52px;
+    }
+
+    .automations-badge-outline,
+    .automations-badge-solid {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+
+    .automations-badge-outline {
+      background: rgba(8, 120, 60, 0.05);
+      border: 1.5px solid rgba(8, 120, 60, 0.4);
+      font-size: 20px;
+      font-weight: 700;
+      color: #08783c;
+    }
+
+    .automations-badge-solid {
+      background: #08783c;
+      opacity: 0;
+    }
+
+    .automations-badge-solid svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .automations-badge-solid path {
+      fill: none;
+      stroke: #fbfbfa;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .automations-label-wrap {
+      position: relative;
+      flex: 1 1 auto;
+    }
+
+    .automations-label {
+      position: relative;
+      font-size: 1.3cqw;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      color: #17181c;
+    }
+
+    .automations-strike {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(50% - 1px);
+      height: 2px;
+      background: #08783c;
+      transform-origin: left center;
+      transform: scaleX(0);
+    }
+
+    .automations-row.is-pending .automations-badge-outline {
+      color: #6e737c;
+      border-color: rgba(8, 120, 60, 0.28);
+    }
+  </style>
+
+  <div data-hf-id="hf-1zfy" id="root" data-composition-id="04-automations" data-width="1920" data-height="1080" data-duration="6.309">
+    <div data-hf-id="hf-xqag" class="clip automations-bg" data-start="0" data-duration="6.309" data-track-index="0"></div>
+
+    <div data-hf-id="hf-gp5s" class="clip automations-card" id="automations-card" data-start="0.3" data-duration="6.009" data-track-index="2">
+      <div data-hf-id="hf-rncn" class="automations-card-header">
+        <span data-hf-id="hf-96j0" class="automations-eyebrow">Running Now</span>
+        <span data-hf-id="hf-5bcy" class="automations-tag-pill"><span data-hf-id="hf-2pvu" class="automations-tag-dot"></span>Live</span>
+      </div>
+
+      <div data-hf-id="hf-m7sq" class="automations-rows">
+        <div data-hf-id="hf-erhq" class="automations-row" id="automations-row-1">
+          <div data-hf-id="hf-yuz3" class="automations-badge-wrap">
+            <div data-hf-id="hf-y1wh" class="automations-badge-outline" id="automations-badge-outline-1">1</div>
+            <div data-hf-id="hf-swqw" class="automations-badge-solid" id="automations-badge-solid-1">
+              <svg data-hf-id="hf-y9f5" viewBox="0 0 24 24">
+                <path data-hf-id="hf-6goq" id="automations-check-1" d="M5 13 L10 18 L19 7" />
+              </svg>
+            </div>
+          </div>
+          <div data-hf-id="hf-yyhm" class="automations-label-wrap">
+            <span data-hf-id="hf-m82e" class="automations-label" id="automations-label-1">Qualify new lead</span>
+            <span data-hf-id="hf-rdhp" class="automations-strike" id="automations-strike-1"></span>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-atdp" class="automations-row" id="automations-row-2">
+          <div data-hf-id="hf-krqn" class="automations-badge-wrap">
+            <div data-hf-id="hf-184x" class="automations-badge-outline" id="automations-badge-outline-2">2</div>
+            <div data-hf-id="hf-3s8j" class="automations-badge-solid" id="automations-badge-solid-2">
+              <svg data-hf-id="hf-svtx" viewBox="0 0 24 24">
+                <path data-hf-id="hf-2ikp" id="automations-check-2" d="M5 13 L10 18 L19 7" />
+              </svg>
+            </div>
+          </div>
+          <div data-hf-id="hf-9flq" class="automations-label-wrap">
+            <span data-hf-id="hf-0tuq" class="automations-label" id="automations-label-2">Draft follow-up</span>
+            <span data-hf-id="hf-vblq" class="automations-strike" id="automations-strike-2"></span>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-emzg" class="automations-row is-pending" id="automations-row-3">
+          <div data-hf-id="hf-kdfm" class="automations-badge-wrap">
+            <div data-hf-id="hf-ndnd" class="automations-badge-outline" id="automations-badge-outline-3">3</div>
+            <div data-hf-id="hf-zu4i" class="automations-badge-solid" id="automations-badge-solid-3">
+              <svg data-hf-id="hf-u2r0" viewBox="0 0 24 24">
+                <path data-hf-id="hf-zjb4" id="automations-check-3" d="M5 13 L10 18 L19 7" />
+              </svg>
+            </div>
+          </div>
+          <div data-hf-id="hf-9twr" class="automations-label-wrap">
+            <span data-hf-id="hf-ucti" class="automations-label" id="automations-label-3">Report back</span>
+            <span data-hf-id="hf-z9pr" class="automations-strike" id="automations-strike-3"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      // measure the check-mark paths once, up front (real geometry, not a magic number)
+      ["automations-check-1", "automations-check-2", "automations-check-3"].forEach((id) => {
+        const path = document.getElementById(id);
+        const len = path.getTotalLength();
+        path.style.strokeDasharray = String(len);
+        path.style.strokeDashoffset = String(len);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ---- Scene 1 (0.3-1.5s): findings card spring-pops in on the cream ground. ----
+      tl.fromTo(
+        "#automations-card",
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.55, ease: "power3.out" },
+        0.3,
+      );
+
+      // ---- Scene 2 (1.5-3.5s): rows cascade in, paced to "qualify leads / draft the follow-up / report back". ----
+      const rowStarts = [1.5, 2.35, 3.1];
+      rowStarts.forEach((start, i) => {
+        tl.fromTo(
+          `#automations-row-${i + 1}`,
+          { opacity: 0, y: 26 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+          start,
+        );
+      });
+
+      // ---- Scene 3 (3.5-6.0s): state mutation runs on "every single day", ends mid-list (2 of 3 checked). ----
+      const checkOffs = [3.9, 4.6];
+      checkOffs.forEach((start, i) => {
+        const n = i + 1;
+        tl.to(
+          `#automations-badge-outline-${n}`,
+          { scale: 0.6, opacity: 0, duration: 0.25, ease: "power2.in" },
+          start,
+        );
+        tl.fromTo(
+          `#automations-badge-solid-${n}`,
+          { scale: 0.6, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.6)" },
+          start + 0.13,
+        );
+        tl.to(
+          `#automations-check-${n}`,
+          { strokeDashoffset: 0, duration: 0.3, ease: "power2.out" },
+          start + 0.33,
+        );
+        tl.fromTo(
+          `#automations-strike-${n}`,
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.35, ease: "power2.out" },
+          start + 0.4,
+        );
+        tl.to(
+          `#automations-label-${n}`,
+          { opacity: 0.5, duration: 0.35, ease: "power1.out" },
+          start + 0.4,
+        );
+      });
+
+      window.__timelines["04-automations"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "preferences": {
+    "destination": {
+      "value": "youtube",
+      "confirmed_in": [
+        "princecaleb-promo"
+      ],
+      "updated_at": "2026-08-03T03:35:04.348Z"
+    },
+    "aspect": {
+      "value": "1920x1080",
+      "confirmed_in": [
+        "princecaleb-promo"
+      ],
+      "updated_at": "2026-08-03T03:35:04.450Z"
+    },
+    "language": {
+      "value": "en",
+      "confirmed_in": [
+        "princecaleb-promo"
+      ],
+      "updated_at": "2026-08-03T03:35:04.555Z"
+    },
+    "flow": {
+      "value": "automation",
+      "confirmed_in": [
+        "princecaleb-promo"
+      ],
+      "updated_at": "2026-08-03T03:35:04.663Z"
+    },
+    "storyboard": {
+      "value": "no",
+      "confirmed_in": [
+        "princecaleb-promo"
+      ],
+      "updated_at": "2026-08-03T03:35:04.768Z"
+    },
+    "style_preset.product-launch-video": {
+      "value": "blue-professional",
+      "confirmed_in": [
+        "princecaleb-promo"
+      ],
+      "updated_at": "2026-08-03T03:43:29.227Z"
+    }
+  },
+  "sightings": {}
+}

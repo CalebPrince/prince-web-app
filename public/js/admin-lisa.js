@@ -46,12 +46,12 @@ const LISA_DEFAULTS = {
   lisa_tier_3_name: "Scale",
   lisa_tier_3_price_ghs: "GHS 4,500",
   lisa_tier_3_price_usd: "$300",
-  lisa_tier_3_tagline: "Every channel, connected to social media tools, apps, and CRMs, with priority support.",
-  lisa_tier_3_features: "All channels, including social inboxes\nMultiple CRM, app, and social integrations\nPriority support and monthly optimisation\nFull audit trail and reporting",
+  lisa_tier_3_tagline: "Every channel plus a live AI video agent, connected to your apps and CRMs with priority support.",
+  lisa_tier_3_features: "All channels, including social inboxes\nLive AI video agent with an agreed monthly allowance\nMultiple CRM, app, and social integrations\nPriority support and monthly optimisation\nFull audit trail and reporting",
   lisa_custom_tier_name: "Custom",
   lisa_custom_tier_cta_label: "Talk to us",
   lisa_custom_tier_tagline: "A workflow built around your exact tools, volume, and compliance needs, priced once we've scoped it.",
-  lisa_custom_tier_features: "Unlimited channels and integrations\nDedicated workflows and safeguards\nA named point of contact",
+  lisa_custom_tier_features: "Unlimited channels and integrations\nCustom-trained branded video avatar\nDedicated workflows and safeguards\nA named point of contact",
 };
 
 function showLisaMsg(text, ok) {

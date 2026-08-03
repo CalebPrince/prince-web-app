@@ -1,0 +1,313 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "system-ui",
+      "fontSize": "80px",
+      "fontWeight": "700",
+      "lineHeight": "88px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "AI agents that finish the workflow."
+    },
+    {
+      "role": "heading",
+      "fontFamily": "system-ui",
+      "fontSize": "48px",
+      "fontWeight": "700",
+      "lineHeight": "52.8px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "From first hello to confirmed booking."
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "system-ui",
+      "fontSize": "28px",
+      "fontWeight": "500",
+      "lineHeight": "33.6px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "AI Voice Agents"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "system-ui",
+      "fontSize": "18.88px",
+      "fontWeight": "700",
+      "lineHeight": "21.712px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "Builder OS"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "system-ui",
+      "fontSize": "18.4px",
+      "fontWeight": "700",
+      "lineHeight": "21.16px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "New appointment enquiry"
+    },
+    {
+      "role": "link",
+      "fontFamily": "system-ui",
+      "fontSize": "17.6px",
+      "fontWeight": "700",
+      "lineHeight": "26.4px",
+      "letterSpacing": "-0.352px",
+      "color": "#FFFFFF",
+      "sampleText": "PPrince Caleb."
+    },
+    {
+      "role": "body",
+      "fontFamily": "system-ui",
+      "fontSize": "12.16px",
+      "fontWeight": "600",
+      "lineHeight": "18.24px",
+      "letterSpacing": "0.9728px",
+      "color": "#62FF98",
+      "sampleText": "// Services"
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "system-ui",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "lineHeight": "18px",
+      "letterSpacing": "normal",
+      "color": "#B5BAC3",
+      "sampleText": "Inbound call · 2m 14s"
+    },
+    {
+      "role": "code",
+      "fontFamily": "ui-monospace",
+      "fontSize": "11.84px",
+      "fontWeight": "400",
+      "lineHeight": "17.76px",
+      "letterSpacing": "normal",
+      "color": "#F1F3F5",
+      "sampleText": "Call answering"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      16,
+      18,
+      19,
+      24
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "8px",
+    "999px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.498) 0px 16px 40px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Review a workflow",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgb(255, 255, 255)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    },
+    {
+      "label": "Start with the workflow that repeats mos",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "88px 0px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "344.219px"
+    },
+    {
+      "label": "Review a workflow",
+      "background": "#0B0C0E",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgb(11, 12, 14)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    },
+    {
+      "label": "Send a message",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgba(255, 255, 255, 0.35)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    },
+    {
+      "label": "1\n  1 unread message",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "0px",
+      "borderRadius": "50%",
+      "border": "0px none rgb(11, 12, 14)",
+      "boxShadow": "rgba(0, 0, 0, 0.498) 0px 16px 40px 0px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "60px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#101114",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#D7DBE0",
+      "padding": "16px",
+      "borderRadius": "4px 14px 14px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "86.5156px"
+    },
+    {
+      "label": "card",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#D7DBE0",
+      "padding": "16px",
+      "borderRadius": "14px 4px 14px 14px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "86.5156px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#0B0C0E",
+    "backgroundImage": "",
+    "backdropFilter": "blur(16px)",
+    "color": "#D7DBE0",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "85.2188px"
+  },
+  "chips": [
+    {
+      "label": "Resolved automatically",
+      "background": "#20A36A",
+      "color": "#16835A",
+      "padding": "5.6px 8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgba(32, 163, 106, 0.28)",
+      "boxShadow": "none",
+      "fontSize": "10.88px",
+      "fontWeight": "600",
+      "height": "26.2344px"
+    },
+    {
+      "label": "Call answering",
+      "background": "transparent",
+      "color": "#F1F3F5",
+      "padding": "5.6px 11.2px",
+      "borderRadius": "8px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "11.84px",
+      "fontWeight": "400",
+      "height": "30.9531px"
+    },
+    {
+      "label": "1",
+      "background": "#EF4444",
+      "color": "#FFFFFF",
+      "padding": "0px 5px",
+      "borderRadius": "999px",
+      "border": "2px solid rgb(11, 12, 14)",
+      "boxShadow": "none",
+      "fontSize": "11.2px",
+      "fontWeight": "700",
+      "height": "20px"
+    },
+    {
+      "label": "AM",
+      "background": "#FFFFFF",
+      "color": "#0B0C0E",
+      "padding": "0px",
+      "borderRadius": "50%",
+      "border": "0px none rgb(11, 12, 14)",
+      "boxShadow": "none",
+      "fontSize": "11.2px",
+      "fontWeight": "700",
+      "height": "38.3906px"
+    }
+  ],
+  "statCells": [
+    {
+      "background": "transparent",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "numberFontSize": "33.6px",
+      "numberFontWeight": "700",
+      "numberColor": "#FFFFFF"
+    }
+  ],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": [
+    {
+      "backdropFilter": "blur(16px)",
+      "background": "rgba(11, 12, 14, 0.8)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 163620
+    }
+  ]
+}

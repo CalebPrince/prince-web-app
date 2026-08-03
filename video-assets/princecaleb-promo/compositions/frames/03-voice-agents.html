@@ -1,0 +1,499 @@
+<template>
+<div data-hf-id="hf-fjzk" id="root" data-composition-id="03-voice-agents" data-width="1920" data-height="1080" data-duration="5.919">
+<style>
+  #root {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: sans-serif;
+    --va3-bg: #fbfbfa;
+    --va3-primary: #08783c;
+    --va3-text: #17181c;
+    --va3-text-muted: #6e737c;
+    --va3-text-light: #9a9ea5;
+    --va3-accent-light: rgba(8, 120, 60, 0.08);
+    --va3-accent-medium: rgba(8, 120, 60, 0.15);
+    --va3-border: rgba(8, 120, 60, 0.2);
+    --va3-card-bg: rgba(8, 120, 60, 0.04);
+    --va3-cream: #fdfdfb;
+  }
+
+  /* ---------- background ground (class=clip, never on #root) ---------- */
+  .va3-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60% 55% at 50% 42%, var(--va3-accent-light) 0%, rgba(8, 120, 60, 0) 70%),
+      var(--va3-bg);
+  }
+
+  /* ---------- shared card chrome ---------- */
+  .va3-card {
+    position: absolute;
+    background: var(--va3-card-bg);
+    border: 1.5px solid var(--va3-border);
+    border-radius: 22px;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+
+  /* ---------- card slot (fixed footprint for the swap) ---------- */
+  .va3-slot {
+    position: absolute;
+    left: 640px;
+    top: 270px;
+    width: 640px;
+    height: 380px;
+    transform-origin: 50% 50%;
+  }
+
+  .va3-callcard,
+  .va3-bookingcard {
+    position: absolute;
+    inset: 0;
+    padding: 44px 48px;
+    transform-origin: 50% 50%;
+    will-change: transform;
+  }
+  .va3-bookingcard { z-index: 2; }
+  .va3-callcard { z-index: 1; }
+
+  .va3-eyebrow {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--va3-primary);
+  }
+
+  .va3-status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .va3-status-dot-wrap {
+    position: relative;
+    width: 14px;
+    height: 14px;
+  }
+  .va3-status-dot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--va3-primary);
+    transform-origin: 50% 50%;
+  }
+  .va3-status-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--va3-primary);
+    transform-origin: 50% 50%;
+  }
+  .va3-status-text {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--va3-text-muted);
+  }
+
+  .va3-avatar {
+    position: absolute;
+    left: 48px;
+    top: 110px;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--va3-primary);
+    display: grid;
+    place-items: center;
+    transform-origin: 50% 50%;
+  }
+  .va3-avatar-glyph {
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--va3-cream);
+  }
+
+  .va3-callname {
+    position: absolute;
+    left: 168px;
+    top: 134px;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--va3-text);
+  }
+  .va3-callsub {
+    position: absolute;
+    left: 168px;
+    top: 178px;
+    font-size: 19px;
+    font-weight: 400;
+    color: var(--va3-text-light);
+  }
+
+  .va3-answer-btn {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 168px;
+    height: 60px;
+    border-radius: 100px;
+    background: var(--va3-primary);
+    color: var(--va3-cream);
+    font-size: 22px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    transform-origin: 50% 50%;
+  }
+
+  /* ---------- booking card contents ---------- */
+  .va3-calendar-tile {
+    position: absolute;
+    left: 0;
+    top: 118px;
+    width: 128px;
+    height: 128px;
+    border-radius: 18px;
+    background: var(--va3-accent-light);
+    border: 1.5px solid var(--va3-border);
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+  }
+  .va3-calendar-glyph {
+    position: absolute;
+    top: 22px;
+    left: 22px;
+    right: 22px;
+    height: 8px;
+    border-radius: 3px;
+    background: var(--va3-accent-medium);
+  }
+  .va3-check {
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--va3-primary);
+    line-height: 1;
+    transform-origin: 50% 50%;
+  }
+
+  .va3-book-title {
+    position: absolute;
+    left: 168px;
+    top: 126px;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--va3-text);
+    line-height: 1.15;
+  }
+  .va3-book-sub {
+    position: absolute;
+    left: 168px;
+    top: 186px;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--va3-primary);
+  }
+
+  /* ---------- handoff badge ---------- */
+  .va3-badge {
+    position: absolute;
+    left: 1330px;
+    top: 388px;
+    width: 300px;
+    height: 148px;
+    padding: 22px 26px;
+    box-sizing: border-box;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    z-index: 3;
+  }
+  .va3-badge-eyebrow {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--va3-text-light);
+  }
+  .va3-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .va3-badge-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    background: var(--va3-primary);
+    color: var(--va3-cream);
+    font-size: 20px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+  }
+  .va3-badge-text {
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--va3-text);
+    line-height: 1.25;
+  }
+
+  /* ---------- cursor ---------- */
+  .va3-cursor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    z-index: 10;
+  }
+  .va3-cursor svg { display: block; width: 30px; height: 30px; }
+  .va3-cursor-label {
+    position: absolute;
+    left: 30px;
+    top: 4px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    background: var(--va3-primary);
+    color: var(--va3-cream);
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* ---------- click ripples (centered by fixed margin, not CSS transform) ---------- */
+  .va3-ripple {
+    position: absolute;
+    left: 1148px;
+    top: 576px;
+    width: 90px;
+    height: 90px;
+    margin-left: -45px;
+    margin-top: -45px;
+    border-radius: 50%;
+    border: 2px solid var(--va3-primary);
+    pointer-events: none;
+    z-index: 9;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+<div data-hf-id="hf-pooo" class="clip va3-bg" data-start="0" data-duration="5.919" data-track-index="0"></div>
+
+<div data-hf-id="hf-gown" class="clip" data-start="0" data-duration="5.919" data-track-index="1">
+  <div data-hf-id="hf-i5fu" class="va3-slot" id="va3-slot">
+
+    <!-- Scene 1: incoming call -->
+    <div data-hf-id="hf-s4l5" class="va3-callcard va3-card" id="va3-callcard">
+      <div data-hf-id="hf-jigb" class="va3-eyebrow">Lisa · AI voice agent</div>
+      <div data-hf-id="hf-97ja" class="va3-avatar" id="va3-avatar"><span data-hf-id="hf-nzhs" class="va3-avatar-glyph">L</span></div>
+      <div data-hf-id="hf-o34y" class="va3-callname" id="va3-callname">Incoming call</div>
+      <div data-hf-id="hf-r0cu" class="va3-callsub" id="va3-callsub">Live answer · no hold queue</div>
+      <div data-hf-id="hf-zzdv" class="va3-status-row" id="va3-statusrow">
+        <div data-hf-id="hf-8p7c" class="va3-status-dot-wrap">
+          <div data-hf-id="hf-sgar" class="va3-status-dot"></div>
+          <div data-hf-id="hf-fokp" class="va3-status-ring" id="va3-ring-a"></div>
+          <div data-hf-id="hf-jmoq" class="va3-status-ring" id="va3-ring-b"></div>
+        </div>
+        <div data-hf-id="hf-w3ab" class="va3-status-text">Ringing</div>
+      </div>
+      <div data-hf-id="hf-5eur" class="va3-answer-btn" id="va3-answer">Answer</div>
+    </div>
+
+    <!-- Scene 2: booking confirmed -->
+    <div data-hf-id="hf-fo1h" class="va3-bookingcard va3-card" id="va3-bookingcard">
+      <div data-hf-id="hf-67iq" class="va3-eyebrow" id="va3-book-eyebrow">Booking confirmed</div>
+      <div data-hf-id="hf-aesq" class="va3-calendar-tile">
+        <div data-hf-id="hf-sm3c" class="va3-calendar-glyph"></div>
+        <div data-hf-id="hf-tio1" class="va3-check" id="va3-check">✓</div>
+      </div>
+      <div data-hf-id="hf-1r46" class="va3-book-title" id="va3-book-title">Appointment held</div>
+      <div data-hf-id="hf-s8k5" class="va3-book-sub" id="va3-book-sub">Confirmed instantly</div>
+    </div>
+  </div>
+
+  <!-- Scene 3: human handoff -->
+  <div data-hf-id="hf-xjqt" class="va3-badge va3-card" id="va3-badge">
+    <div data-hf-id="hf-s5us" class="va3-badge-eyebrow">Handoff</div>
+    <div data-hf-id="hf-3b2r" class="va3-badge-row">
+      <div data-hf-id="hf-dvqo" class="va3-badge-icon" id="va3-badge-icon">→</div>
+      <div data-hf-id="hf-60j6" class="va3-badge-text">Escalated to Prince</div>
+    </div>
+  </div>
+</div>
+
+<div data-hf-id="hf-5tf0" class="clip" data-start="0" data-duration="5.919" data-track-index="2">
+  <div data-hf-id="hf-jxus" class="va3-ripple" id="va3-ripple-1"></div>
+  <div data-hf-id="hf-slqn" class="va3-ripple" id="va3-ripple-2"></div>
+  <div data-hf-id="hf-onmm" class="va3-ripple" id="va3-ripple-3"></div>
+  <div data-hf-id="hf-bqge" class="va3-cursor" id="va3-cursor">
+    <svg data-hf-id="hf-aq7j" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path data-hf-id="hf-gu1e" d="M2 1.5L21 10.2L12.4 12.6L9 21L2 1.5Z" fill="#08783c" stroke="#fdfdfb" stroke-width="1.4" stroke-linejoin="round" />
+    </svg>
+    <div data-hf-id="hf-sdk7" class="va3-cursor-label">Lisa</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var tl = gsap.timeline({ paused: true });
+
+  // ---- ripple rings: live in DOM from t=0, invisible until triggered ----
+  gsap.set(["#va3-ripple-1", "#va3-ripple-2", "#va3-ripple-3"], { scale: 0, opacity: 0 });
+  // pulse rings on the call card start invisible too
+  gsap.set(["#va3-ring-a", "#va3-ring-b"], { scale: 1, opacity: 0 });
+
+  // =========================================================
+  // Scene 1 (0.0 - 2.0s): call arrives, cursor glides to Answer
+  // =========================================================
+
+  // call card arrives — hero visible by t <= 0.5s
+  tl.fromTo("#va3-callcard",
+    { scale: 0, opacity: 0 },
+    { scale: 1, opacity: 1, duration: 0.48, ease: "power3.out" },
+    0.0
+  );
+
+  // inner content: staggered small entrances once the card reads
+  [
+    ["#va3-avatar", 0.30],
+    ["#va3-callname", 0.36],
+    ["#va3-callsub", 0.42],
+    ["#va3-statusrow", 0.48],
+    ["#va3-answer", 0.54]
+  ].forEach(function (pair) {
+    tl.fromTo(pair[0],
+      { opacity: 0, y: 14 },
+      { opacity: 1, y: 0, duration: 0.32, ease: "power3.out" },
+      pair[1]
+    );
+  });
+
+  // incoming-call indicator: two explicit ring pulses (deterministic, no CSS loop)
+  [0.75, 1.45].forEach(function (at) {
+    tl.fromTo("#va3-ring-a",
+      { scale: 1, opacity: 0.55 },
+      { scale: 1.9, opacity: 0, duration: 0.55, ease: "power2.out" },
+      at
+    );
+  });
+  [0.85, 1.55].forEach(function (at) {
+    tl.fromTo("#va3-ring-b",
+      { scale: 1, opacity: 0.4 },
+      { scale: 2.2, opacity: 0, duration: 0.55, ease: "power2.out" },
+      at
+    );
+  });
+
+  // cursor glides in and moves to the Answer button (cursor-click-ripple: move phase)
+  var CURSOR_START_X = -90, CURSOR_START_Y = 720;
+  var CURSOR_TARGET_X = 1140, CURSOR_TARGET_Y = 564;
+  var MOVE_AT = 0.60, MOVE_DUR = 1.25;
+  var CLICK_AT = 2.0;
+
+  tl.fromTo("#va3-cursor",
+    { x: CURSOR_START_X, y: CURSOR_START_Y, opacity: 0 },
+    { x: CURSOR_TARGET_X, y: CURSOR_TARGET_Y, opacity: 1, duration: MOVE_DUR, ease: "power2.inOut" },
+    MOVE_AT
+  );
+
+  // =========================================================
+  // Scene 2 (2.0 - 4.0s): click -> hard element swap -> booking confirmed
+  // =========================================================
+
+  // click phase: cursor + button depress together, yoyo back
+  tl.to("#va3-cursor", { scale: 0.85, duration: 0.08, ease: "power2.in", yoyo: true, repeat: 1 }, CLICK_AT);
+  tl.to("#va3-answer", { scale: 0.95, duration: 0.08, ease: "power2.in", yoyo: true, repeat: 1 }, CLICK_AT);
+
+  // ripple burst from the click point
+  var RIPPLE_AT = CLICK_AT + 0.05;
+  tl.set(["#va3-ripple-1", "#va3-ripple-2", "#va3-ripple-3"], { opacity: 1 }, RIPPLE_AT);
+  tl.to(["#va3-ripple-1", "#va3-ripple-2", "#va3-ripple-3"], {
+    scale: 4,
+    opacity: 0,
+    duration: 0.55,
+    ease: "power2.out",
+    stagger: 0.08,
+    immediateRender: false
+  }, RIPPLE_AT);
+
+  // scale-swap-transition: outgoing call card shrinks + fades
+  var SWAP_TRIGGER = 2.05;
+  var EXIT_DUR = 0.4;
+  tl.to("#va3-callcard",
+    { scale: 0.75, opacity: 0, duration: EXIT_DUR, ease: "power2.in" },
+    SWAP_TRIGGER
+  );
+
+  // incoming booking card: side-panel slide-in from the right + spring pop
+  var ENTER_AT = SWAP_TRIGGER + EXIT_DUR - 0.15;
+  var ENTER_DUR = 0.6;
+  tl.fromTo("#va3-bookingcard",
+    { x: 150, scale: 0.75, opacity: 0 },
+    { x: 0, scale: 1, opacity: 1, duration: ENTER_DUR, ease: "back.out(1.6)" },
+    ENTER_AT
+  );
+
+  var SETTLE_AT = ENTER_AT + ENTER_DUR; // ~2.9
+
+  // inner booking content reveals AFTER the container settles (paced across scene 2)
+  tl.fromTo("#va3-book-eyebrow",
+    { opacity: 0, y: 10 },
+    { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" },
+    SETTLE_AT - 0.15
+  );
+
+  tl.fromTo("#va3-check",
+    { scale: 0, opacity: 0 },
+    { scale: 1, opacity: 1, duration: 0.32, ease: "power3.out" },
+    SETTLE_AT + 0.10
+  );
+
+  tl.fromTo("#va3-book-title",
+    { opacity: 0, y: 14 },
+    { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" },
+    SETTLE_AT + 0.18
+  );
+
+  tl.fromTo("#va3-book-sub",
+    { opacity: 0, y: 10 },
+    { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" },
+    SETTLE_AT + 0.38
+  );
+
+  // =========================================================
+  // Scene 3 (4.0 - 5.419s): human-handoff badge spring-pops in, holds
+  // =========================================================
+
+  var BADGE_AT = 4.05;
+  tl.fromTo("#va3-badge",
+    { scale: 0, opacity: 0, y: 16 },
+    { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+    BADGE_AT
+  );
+  tl.fromTo("#va3-badge-icon",
+    { opacity: 0, scale: 0.6 },
+    { opacity: 1, scale: 1, duration: 0.28, ease: "power3.out" },
+    BADGE_AT + 0.16
+  );
+
+  // camera / composition settles static and holds to frame end (5.419s) — no exit.
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines["03-voice-agents"] = tl;
+})();
+</script>
+</div>
+</template>

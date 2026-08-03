@@ -1,0 +1,212 @@
+<template>
+  <style>
+    #s3-root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      font-family: "Montserrat", sans-serif;
+      color: #1a202c;
+      overflow: hidden;
+      background: #ffffff;
+    }
+    #s3-root .beat { position: absolute; inset: 0; }
+
+    #s3-root .kinetic {
+      position: absolute;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+      font-family: "Montserrat", sans-serif;
+      font-weight: 800;
+      font-size: 56px;
+      color: #1d4baa;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    /* Beat A: visa & document prep */
+    #s3-visa-card {
+      position: absolute;
+      left: 220px;
+      top: 280px;
+      width: 620px;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(26, 32, 44, 0.14);
+      padding: 36px;
+      opacity: 0;
+    }
+    #s3-visa-card .label { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1d4baa; margin-bottom: 22px; }
+    #s3-visa-card .row { display: flex; align-items: center; gap: 16px; padding: 12px 0; font-size: 22px; opacity: 0; }
+    #s3-visa-card .row .check {
+      width: 26px; height: 26px; border-radius: 50%; background: #1d4baa;
+      display: flex; align-items: center; justify-content: center; flex: none;
+    }
+    #s3-visa-card .row .check svg { width: 14px; height: 14px; }
+
+    #s3-countries-card {
+      position: absolute;
+      left: 1000px;
+      top: 300px;
+      width: 660px;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(26, 32, 44, 0.14);
+      padding: 32px 36px;
+      opacity: 0;
+    }
+    #s3-countries-card .label { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1d4baa; margin-bottom: 22px; }
+    #s3-countries-card .country {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; border-bottom: 1px solid rgba(26, 32, 44, 0.08);
+      font-size: 24px; font-weight: 600;
+    }
+    #s3-countries-card .country:last-child { border-bottom: none; }
+    #s3-countries-card .tag {
+      background: rgba(29, 75, 170, 0.10); color: #1d4baa; font-size: 15px; font-weight: 700;
+      padding: 6px 14px; border-radius: 999px;
+    }
+
+    /* Beat B: bookings */
+    #s3-ticket-card {
+      position: absolute;
+      left: 260px;
+      top: 320px;
+      width: 560px;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 30px 70px rgba(26, 32, 44, 0.14);
+      padding: 40px 44px;
+      opacity: 0;
+    }
+    #s3-ticket-card .label { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1d4baa; margin-bottom: 22px; }
+    #s3-ticket-card .route { display: flex; align-items: center; gap: 20px; font-size: 34px; font-weight: 800; margin-bottom: 20px; }
+    #s3-ticket-card .route svg { width: 32px; height: 32px; color: #1d4baa; }
+    #s3-ticket-card .meta { font-size: 20px; color: #4a5568; }
+
+    #s3-hotel-card {
+      position: absolute;
+      left: 1000px;
+      top: 320px;
+      width: 640px;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 30px 70px rgba(26, 32, 44, 0.14);
+      padding: 36px 40px;
+      opacity: 0;
+    }
+    #s3-hotel-card .label { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1d4baa; margin-bottom: 22px; }
+    #s3-hotel-card .hotel-row { display: flex; align-items: center; gap: 14px; font-size: 23px; margin-bottom: 18px; opacity: 0; }
+    #s3-hotel-card .hotel-row .mark { color: #1d4baa; font-weight: 700; }
+
+    /* Beat C: student counseling */
+    #s3-counsel-card {
+      position: absolute;
+      left: 50%;
+      top: 300px;
+      transform: translateX(-50%);
+      width: 800px;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(26, 32, 44, 0.14);
+      padding: 44px 52px;
+      opacity: 0;
+    }
+    #s3-counsel-card .top-row { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
+    #s3-counsel-card .cap { width: 60px; height: 60px; border-radius: 50%; background: #1d4baa; display: flex; align-items: center; justify-content: center; }
+    #s3-counsel-card .cap svg { width: 30px; height: 30px; }
+    #s3-counsel-card .top-row .label { font-size: 26px; font-weight: 800; }
+    #s3-counsel-card .steps { display: flex; gap: 24px; }
+    #s3-counsel-card .step {
+      flex: 1; background: #f4f7fc; border-radius: 16px; padding: 22px; text-align: center;
+      font-size: 20px; font-weight: 700; color: #1d4baa; opacity: 0;
+    }
+    #s3-counsel-card .step small { display: block; font-size: 15px; font-weight: 500; color: #4a5568; margin-top: 6px; }
+  </style>
+
+  <div
+    id="s3-root"
+    class="clip"
+    data-composition-id="s3"
+    data-start="0"
+    data-duration="11.0"
+    data-width="1920"
+    data-height="1080"
+  >
+    <!-- Beat A -->
+    <div id="s3-visa-card">
+      <div class="label">Visa Document Checklist</div>
+      <div class="row"><div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div>Passport &amp; photos</div>
+      <div class="row"><div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div>Bank statements</div>
+      <div class="row"><div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div>Invitation letter</div>
+      <div class="row"><div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 12l5 5 9-10"/></svg></div>Interview form</div>
+    </div>
+    <div id="s3-countries-card">
+      <div class="label">Prepared For</div>
+      <div class="country">United States <span class="tag">Ready</span></div>
+      <div class="country">United Kingdom <span class="tag">Ready</span></div>
+      <div class="country">Europe (Schengen) <span class="tag">Ready</span></div>
+    </div>
+    <div class="kinetic" id="s3-k1">Visa &amp; Document Prep.</div>
+
+    <!-- Beat B -->
+    <div id="s3-ticket-card">
+      <div class="label">Flight Booking</div>
+      <div class="route">ACC <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M14 5l7 7-7 7"/></svg> LHR</div>
+      <div class="meta">Confirmed &amp; ticketed for you</div>
+    </div>
+    <div id="s3-hotel-card">
+      <div class="label">Hotel &amp; Airport Support</div>
+      <div class="hotel-row" id="s3-hotel-1"><span class="mark">—</span>Hotel reserved near city centre</div>
+      <div class="hotel-row" id="s3-hotel-2"><span class="mark">—</span>Airport pick-up arranged</div>
+      <div class="hotel-row" id="s3-hotel-3"><span class="mark">—</span>Tourism package included</div>
+    </div>
+    <div class="kinetic" id="s3-k2">Flights. Hotels. Airport Support.</div>
+
+    <!-- Beat C -->
+    <div id="s3-counsel-card">
+      <div class="top-row">
+        <div class="cap"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></div>
+        <div class="label">Student Counseling</div>
+      </div>
+      <div class="steps">
+        <div class="step" id="s3-step-1">Application<small>Choosing a school</small></div>
+        <div class="step" id="s3-step-2">Visa<small>Study-permit guidance</small></div>
+        <div class="step" id="s3-step-3">Arrival<small>Settling in abroad</small></div>
+      </div>
+    </div>
+    <div class="kinetic" id="s3-k3">Student Counseling.</div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const s3 = gsap.timeline({ paused: true });
+
+    // Beat A 0-4s — "visa document preparation for the US, UK, and Europe..."
+    s3.fromTo("#s3-visa-card", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4 }, 0.1);
+    s3.fromTo("#s3-visa-card .row", { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.3, stagger: 0.18 }, 0.5);
+    s3.fromTo("#s3-countries-card", { opacity: 0, x: 30, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 0.4, ease: "back.out(1.4)" }, 1.3);
+    s3.fromTo("#s3-k1", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3 }, 1.7);
+    s3.to(["#s3-visa-card", "#s3-countries-card", "#s3-k1"], { opacity: 0, duration: 0.3 }, 3.6);
+
+    // Beat B 4-8s — "...help with flight and hotel bookings"
+    s3.fromTo("#s3-ticket-card", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4 }, 4.3);
+    s3.fromTo("#s3-hotel-card", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4 }, 4.9);
+    s3.fromTo(["#s3-hotel-1", "#s3-hotel-2", "#s3-hotel-3"], { opacity: 0, x: 14 }, { opacity: 1, x: 0, duration: 0.3, stagger: 0.18 }, 5.2);
+    s3.fromTo("#s3-k2", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3 }, 5.9);
+    s3.to(["#s3-ticket-card", "#s3-hotel-card", "#s3-k2"], { opacity: 0, duration: 0.3 }, 7.6);
+
+    // Beat C 8-11s — "...support prospective students with study-abroad counselling."
+    s3.fromTo("#s3-counsel-card", { opacity: 0, y: 20, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.4 }, 8.3);
+    s3.fromTo(["#s3-step-1", "#s3-step-2", "#s3-step-3"], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.15 }, 8.7);
+    s3.fromTo("#s3-k3", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3 }, 9.3);
+    s3.to(["#s3-counsel-card", "#s3-k3"], { opacity: 0, duration: 0.3 }, 10.6);
+
+    window.__timelines["s3"] = s3;
+  </script>
+</template>

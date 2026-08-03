@@ -1,0 +1,236 @@
+<template>
+  <style>
+    #s1-root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      font-family: "Montserrat", sans-serif;
+      color: #1a202c;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    #s1-root .chip {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 18px 40px rgba(26, 32, 44, 0.14);
+      opacity: 0;
+    }
+    #s1-root .chip svg { width: 64px; height: 64px; }
+
+    #s1-chip-passport { left: 300px;  top: 200px;  background: #044888; }
+    #s1-chip-calendar { left: 1480px; top: 180px;  background: #1d4baa; }
+    #s1-chip-form      { left: 1560px; top: 620px;  background: #2b6cb0; }
+    #s1-chip-ticket    { left: 260px;  top: 660px;  background: #0b6e4f; }
+
+    #s1-checklist {
+      position: absolute;
+      left: 660px;
+      top: 260px;
+      width: 600px;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(26, 32, 44, 0.14);
+      padding: 28px;
+      opacity: 0;
+    }
+    #s1-checklist .row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(26, 32, 44, 0.08);
+    }
+    #s1-checklist .row .dot { width: 10px; height: 10px; border-radius: 50%; background: #c0392b; flex: none; }
+    #s1-checklist .row .bar { height: 14px; border-radius: 7px; background: rgba(26, 32, 44, 0.14); }
+
+    #s1-clock {
+      position: absolute;
+      left: 300px;
+      top: 200px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      box-shadow: 0 24px 60px rgba(26, 32, 44, 0.14);
+      opacity: 0;
+    }
+    #s1-clock .tick { position: absolute; left: 50%; top: 50%; width: 6px; background: #1a202c; border-radius: 3px; transform-origin: 50% 0%; }
+    #s1-clock .hand-h { height: 62px; margin-left: -3px; }
+    #s1-clock .hand-m { height: 88px; margin-left: -3px; background: #c0392b; }
+
+    #s1-calendar-warn {
+      position: absolute;
+      left: 560px;
+      top: 260px;
+      width: 140px;
+      height: 140px;
+      opacity: 0;
+    }
+    #s1-calendar-warn svg { width: 100%; height: 100%; }
+
+    #s1-person {
+      position: absolute;
+      left: 1420px;
+      top: 640px;
+      width: 180px;
+      height: 220px;
+      opacity: 0;
+    }
+    #s1-person svg { width: 100%; height: 100%; }
+
+    #s1-root .bubble {
+      position: absolute;
+      background: #ffffff;
+      border: 1px solid rgba(26, 32, 44, 0.08);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(26, 32, 44, 0.14);
+      padding: 14px 20px;
+      font-size: 21px;
+      font-weight: 600;
+      color: #1d4baa;
+      opacity: 0;
+    }
+    #s1-bubble-1 { left: 1300px; top: 520px; }
+    #s1-bubble-2 { left: 1560px; top: 580px; }
+    #s1-bubble-3 { left: 1420px; top: 460px; }
+
+    #s1-root .kinetic {
+      position: absolute;
+      left: 660px;
+      width: 900px;
+      font-family: "Montserrat", sans-serif;
+      font-weight: 800;
+      font-size: 72px;
+      color: #1d4baa;
+      opacity: 0;
+    }
+    #s1-k1 { top: 560px; }
+    #s1-k2 { top: 520px; left: 300px; }
+    #s1-k3 { top: 900px; left: 1180px; text-align: right; width: 500px; }
+
+    #s1-flash {
+      position: absolute;
+      inset: 0;
+      background: #1a202c;
+      opacity: 0;
+    }
+  </style>
+
+  <div
+    id="s1-root"
+    class="clip"
+    data-composition-id="s1"
+    data-start="0"
+    data-duration="7.0"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div class="chip" id="s1-chip-passport">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="9" r="2.4"/><path d="M9 15h6M9 18h6"/></svg>
+    </div>
+    <div class="chip" id="s1-chip-calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    </div>
+    <div class="chip" id="s1-chip-form">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M7 3h7l4 4v14H7z"/><path d="M9 12h6M9 16h6"/></svg>
+    </div>
+    <div class="chip" id="s1-chip-ticket">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M2 12l19-8-6 8 6 8z"/></svg>
+    </div>
+
+    <div class="kinetic" id="s1-k1">Visa Forms.</div>
+    <div id="s1-checklist">
+      <div class="row"><div class="dot"></div><div class="bar" style="width: 78%"></div></div>
+      <div class="row"><div class="dot"></div><div class="bar" style="width: 56%"></div></div>
+      <div class="row"><div class="dot"></div><div class="bar" style="width: 68%"></div></div>
+      <div class="row"><div class="dot"></div><div class="bar" style="width: 44%"></div></div>
+      <div class="row" style="border-bottom: none"><div class="dot"></div><div class="bar" style="width: 62%"></div></div>
+    </div>
+
+    <div class="kinetic" id="s1-k2">Embassy Appointments.</div>
+    <div id="s1-clock">
+      <div class="tick hand-h" id="s1-hand-h"></div>
+      <div class="tick hand-m" id="s1-hand-m"></div>
+    </div>
+    <div id="s1-calendar-warn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 14v3M12 19h.01"/></svg>
+    </div>
+
+    <div class="kinetic" id="s1-k3">A Dozen Requirements.</div>
+    <div id="s1-person">
+      <svg viewBox="0 0 24 28" fill="#1a202c"><circle cx="12" cy="6" r="5"/><path d="M2 27c0-7 4.5-11 10-11s10 4 10 11"/></svg>
+    </div>
+    <div class="bubble" id="s1-bubble-1">Bank statement</div>
+    <div class="bubble" id="s1-bubble-2">Invitation letter</div>
+    <div class="bubble" id="s1-bubble-3">Passport photo</div>
+
+    <div id="s1-flash"></div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const s1 = gsap.timeline({ paused: true });
+
+    // 0-1s: document/travel chips bounce in
+    s1.fromTo(
+      ["#s1-chip-passport", "#s1-chip-calendar", "#s1-chip-form", "#s1-chip-ticket"],
+      { opacity: 0, scale: 0.4, y: 30 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.5, stagger: 0.12, ease: "back.out(2)" },
+      0
+    );
+    s1.to(["#s1-chip-passport", "#s1-chip-calendar", "#s1-chip-form", "#s1-chip-ticket"], {
+      y: -14,
+      duration: 0.4,
+      yoyo: true,
+      repeat: 1,
+      ease: "power1.inOut",
+    }, 0.55);
+
+    // 1-2s: checklist fills, "Visa Forms."
+    s1.fromTo("#s1-checklist", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 1.0);
+    s1.fromTo("#s1-checklist .row", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.3, stagger: 0.08 }, 1.1);
+    s1.fromTo("#s1-k1", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35 }, 1.4);
+    s1.to("#s1-k1", { opacity: 0, duration: 0.25 }, 1.95);
+
+    // 2-3s: clock spins, deadline warning, "Embassy Appointments."
+    s1.fromTo("#s1-clock", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.3 }, 2.0);
+    s1.to("#s1-hand-m", { rotation: 360 * 3, duration: 0.8, ease: "power2.in", transformOrigin: "50% 0%" }, 2.05);
+    s1.to("#s1-hand-h", { rotation: 90, duration: 0.8, ease: "power2.in", transformOrigin: "50% 0%" }, 2.05);
+    s1.fromTo("#s1-calendar-warn", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.in(3)" }, 2.55);
+    s1.to("#s1-calendar-warn", { scale: 0.88, duration: 0.15, yoyo: true, repeat: 1 }, 2.8);
+    s1.fromTo("#s1-k2", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35 }, 2.35);
+    s1.to("#s1-k2", { opacity: 0, duration: 0.25 }, 2.95);
+
+    // 3-4s: person + requirement bubbles, "A Dozen Requirements."
+    s1.fromTo("#s1-person", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.3 }, 3.0);
+    s1.fromTo(
+      ["#s1-bubble-1", "#s1-bubble-2", "#s1-bubble-3"],
+      { opacity: 0, scale: 0.6 },
+      { opacity: 1, scale: 1, duration: 0.3, stagger: 0.15, ease: "back.out(2)" },
+      3.15
+    );
+    s1.fromTo("#s1-k3", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35 }, 3.3);
+    s1.to("#s1-k3", { opacity: 0, duration: 0.2 }, 3.95);
+
+    // 4-5.5s: brief cacophony, everything jitters then whip-fades for the cut
+    const chaosEls = [
+      "#s1-chip-passport", "#s1-chip-calendar", "#s1-chip-form", "#s1-chip-ticket",
+      "#s1-checklist", "#s1-clock", "#s1-calendar-warn", "#s1-person",
+      "#s1-bubble-1", "#s1-bubble-2", "#s1-bubble-3",
+    ];
+    s1.to(chaosEls, { x: "+=6", duration: 0.06, repeat: 5, yoyo: true, ease: "none" }, 4.0);
+    s1.to(chaosEls, { opacity: 0.85, duration: 0.06, repeat: 5, yoyo: true, ease: "none" }, 4.0);
+    s1.to(chaosEls, { opacity: 0, scale: 0.9, duration: 0.3, ease: "power2.in" }, 4.55);
+    s1.fromTo("#s1-flash", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.in" }, 4.65);
+
+    window.__timelines["s1"] = s1;
+  </script>
+</template>

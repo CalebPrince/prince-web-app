@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6rem 8rem;
+          font-family: "JetBrains Mono", monospace;
+        }
+        .s2-content { width: min(1100px, 100%); text-align: center; }
+        .s2-eyebrow {
+          margin-bottom: 1.25rem;
+          color: rgba(214, 255, 226, 0.78);
+          font-size: 0.8rem;
+          letter-spacing: 0.32em;
+          text-transform: uppercase;
+        }
+        .s2-title-wrap { position: relative; display: inline-block; }
+        .s2-title {
+          position: relative;
+          margin: 0;
+          color: #f5fff8;
+          font-family: "Inter", sans-serif;
+          font-size: clamp(2.6rem, 6vw, 6.5rem);
+          font-weight: 800;
+          line-height: 0.95;
+          letter-spacing: -0.055em;
+          text-transform: uppercase;
+        }
+        .s2-title-ghost {
+          position: absolute;
+          inset: 0;
+          margin: 0;
+          font-family: "Inter", sans-serif;
+          font-size: clamp(2.6rem, 6vw, 6.5rem);
+          font-weight: 800;
+          line-height: 0.95;
+          letter-spacing: -0.055em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .s2-title-ghost.cyan { color: #00f7ff; }
+        .s2-title-ghost.red { color: #ff3158; }
+        .s2-chaos-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 1rem;
+          width: min(880px, 100%);
+          margin: 2.2rem auto 0;
+        }
+        .s2-card {
+          padding: 1.4rem;
+          border: 1px solid rgba(255, 49, 88, 0.2);
+          border-radius: 14px;
+          background: rgba(255, 49, 88, 0.035);
+          color: rgba(255, 255, 255, 0.65);
+          font-family: "JetBrains Mono", monospace;
+          font-size: 0.92rem;
+          text-align: left;
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        .s2-card strong {
+          display: block;
+          margin-bottom: 0.4rem;
+          color: #ff3158;
+          font-size: 0.76rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s2" data-width="1920" data-height="1080" data-duration="2.340">
+        <div class="s2-content">
+          <p class="s2-eyebrow" id="s2-eyebrow">System diagnosis</p>
+          <div class="s2-title-wrap">
+            <h1 class="s2-title-ghost cyan" id="s2-ghost-cyan" data-layout-allow-overlap>Trapped in Templates</h1>
+            <h1 class="s2-title-ghost red" id="s2-ghost-red" data-layout-allow-overlap>Trapped in Templates</h1>
+            <h1 class="s2-title" id="s2-title">Trapped in Templates</h1>
+          </div>
+          <div class="s2-chaos-grid">
+            <article class="s2-card" id="s2-card-1"><strong>01 // Communication</strong>Missed calls. Unanswered messages. Lost opportunities.</article>
+            <article class="s2-card" id="s2-card-2"><strong>02 // Operations</strong>Disconnected tools, repetitive tasks and manual work.</article>
+            <article class="s2-card" id="s2-card-3"><strong>03 // Intelligence</strong>Valuable data buried inside dashboards nobody checks.</article>
+            <article class="s2-card" id="s2-card-4"><strong>04 // Growth</strong>Websites that exist, but never actively help the business.</article>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        tl.fromTo("#s2-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, 0);
+        tl.fromTo("#s2-title", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 0.05);
+        // Quick chromatic-aberration glitch flicker on entrance.
+        tl.set(["#s2-ghost-cyan", "#s2-ghost-red"], { opacity: 0.7 }, 0.05);
+        tl.fromTo("#s2-ghost-cyan", { x: 0 }, { x: 4, duration: 0.06, ease: "none" }, 0.05);
+        tl.to("#s2-ghost-cyan", { x: -3, duration: 0.06, ease: "none" }, 0.14);
+        tl.to("#s2-ghost-cyan", { x: 0, opacity: 0, duration: 0.1, ease: "none" }, 0.24);
+        tl.fromTo("#s2-ghost-red", { x: 0 }, { x: -4, duration: 0.06, ease: "none" }, 0.09);
+        tl.to("#s2-ghost-red", { x: 3, duration: 0.06, ease: "none" }, 0.18);
+        tl.to("#s2-ghost-red", { x: 0, opacity: 0, duration: 0.1, ease: "none" }, 0.26);
+
+        const cards = ["#s2-card-1", "#s2-card-2", "#s2-card-3", "#s2-card-4"];
+        tl.to(cards, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", stagger: 0.13 }, 0.25);
+
+        window.__timelines["s2"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

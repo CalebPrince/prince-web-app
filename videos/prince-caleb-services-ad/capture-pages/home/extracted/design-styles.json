@@ -1,0 +1,357 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "system-ui",
+      "fontSize": "80px",
+      "fontWeight": "700",
+      "lineHeight": "88px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "AI voice agents that answer every call. Automations that run"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Plus Jakarta Sans",
+      "fontSize": "56px",
+      "fontWeight": "750",
+      "lineHeight": "58.8px",
+      "letterSpacing": "-3.08px",
+      "color": "#FFFFFF",
+      "sampleText": "What should the system improve first?"
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "system-ui",
+      "fontSize": "48px",
+      "fontWeight": "700",
+      "lineHeight": "52.8px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "See the work while it works."
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "system-ui",
+      "fontSize": "32px",
+      "fontWeight": "700",
+      "lineHeight": "36.8px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "Project scope planner"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "system-ui",
+      "fontSize": "24px",
+      "fontWeight": "500",
+      "lineHeight": "28.8px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "AI Voice Agents"
+    },
+    {
+      "role": "link",
+      "fontFamily": "system-ui",
+      "fontSize": "17.6px",
+      "fontWeight": "700",
+      "lineHeight": "26.4px",
+      "letterSpacing": "-0.352px",
+      "color": "#FFFFFF",
+      "sampleText": "PPrince Caleb."
+    },
+    {
+      "role": "code",
+      "fontFamily": "ui-monospace",
+      "fontSize": "13.6px",
+      "fontWeight": "400",
+      "lineHeight": "20.4px",
+      "letterSpacing": "1.088px",
+      "color": "#FFFFFF",
+      "sampleText": "01"
+    },
+    {
+      "role": "body",
+      "fontFamily": "system-ui",
+      "fontSize": "12.16px",
+      "fontWeight": "600",
+      "lineHeight": "18.24px",
+      "letterSpacing": "0.9728px",
+      "color": "#62FF98",
+      "sampleText": "// AI Voice Agents · Chatbots · Automation"
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "system-ui",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "lineHeight": "18px",
+      "letterSpacing": "normal",
+      "color": "#B5BAC3",
+      "sampleText": "Ask about services, pricing, or a project"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      16,
+      18,
+      20,
+      22
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "4px",
+    "8px",
+    "14px",
+    "28px",
+    "999px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.5) 0px 16px 40px 0px",
+      "count": 6
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Get estimate",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgb(255, 255, 255)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    },
+    {
+      "label": "View my work",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F1F3F5",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    },
+    {
+      "label": "Start voice demo",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "10.88px 14.4px",
+      "borderRadius": "999px",
+      "border": "0px none rgb(11, 12, 14)",
+      "boxShadow": "none",
+      "fontSize": "11.2px",
+      "fontWeight": "700",
+      "height": "44.1562px"
+    },
+    {
+      "label": "01I need an AI agentHandle calls, WhatsA",
+      "background": "#121418",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#D7DBE0",
+      "padding": "22.4px",
+      "borderRadius": "14px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "220px"
+    },
+    {
+      "label": "See the clinic solution →",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#62FF98",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(98, 255, 152)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "600",
+      "height": "24px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#121418",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#D7DBE0",
+      "padding": "0px",
+      "borderRadius": "20px",
+      "border": "1px solid rgba(255, 255, 255, 0.26)",
+      "boxShadow": "rgba(0, 0, 0, 0.5) 0px 16px 40px 0px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "469.766px"
+    },
+    {
+      "label": "card",
+      "background": "color(srgb 0.0705882 0.0784314 0.0941176 / 0.94)",
+      "backgroundImage": "",
+      "backdropFilter": "blur(16px)",
+      "color": "#D7DBE0",
+      "padding": "0px",
+      "borderRadius": "16px",
+      "border": "1px solid rgba(255, 255, 255, 0.26)",
+      "boxShadow": "rgba(0, 0, 0, 0.5) 0px 16px 40px 0px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "382.219px"
+    },
+    {
+      "label": "card",
+      "background": "#121418",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#D7DBE0",
+      "padding": "32px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "380.719px"
+    },
+    {
+      "label": "card",
+      "background": "#101114",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#D7DBE0",
+      "padding": "88px 0px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "582.844px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#0B0C0E",
+    "backgroundImage": "",
+    "backdropFilter": "blur(16px)",
+    "color": "#D7DBE0",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "85.2188px"
+  },
+  "chips": [
+    {
+      "label": "4 active",
+      "background": "transparent",
+      "color": "#B5BAC3",
+      "padding": "5.6px 8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "10.88px",
+      "fontWeight": "600",
+      "height": "26.2344px"
+    },
+    {
+      "label": "Run complete",
+      "background": "#20A36A",
+      "color": "#16835A",
+      "padding": "5.6px 8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgba(32, 163, 106, 0.28)",
+      "boxShadow": "none",
+      "fontSize": "10.88px",
+      "fontWeight": "600",
+      "height": "26.2344px"
+    },
+    {
+      "label": "Most requested",
+      "background": "#FFFFFF",
+      "color": "#0B0C0E",
+      "padding": "4px 13.6px",
+      "borderRadius": "999px",
+      "border": "0px none rgb(11, 12, 14)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "height": "26px"
+    },
+    {
+      "label": "React",
+      "background": "transparent",
+      "color": "#F1F3F5",
+      "padding": "7.2px 14.4px",
+      "borderRadius": "8px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "12.8px",
+      "fontWeight": "400",
+      "height": "35.5625px"
+    }
+  ],
+  "statCells": [
+    {
+      "background": "transparent",
+      "borderRadius": "0px",
+      "border": "0px none rgb(215, 219, 224)",
+      "boxShadow": "none",
+      "numberFontSize": "38.4px",
+      "numberFontWeight": "700",
+      "numberColor": "#FFFFFF"
+    }
+  ],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "radial-gradient(circle, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0) 42%)",
+      "area": 3326807
+    },
+    {
+      "value": "linear-gradient(rgba(255, 255, 255, 0.08) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, rgba(0, 0, 0, 0) 1px), none",
+      "area": 787968
+    },
+    {
+      "value": "radial-gradient(circle at 50% 0%, rgba(98, 255, 152, 0.1), rgba(0, 0, 0, 0) 68%)",
+      "area": 185264
+    }
+  ],
+  "glass": [
+    {
+      "backdropFilter": "blur(16px)",
+      "background": "rgba(11, 12, 14, 0.8)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 163620
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #030504; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      #root > div[data-composition-src] { position: absolute; inset: 0; }
+
+      .hud { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+      .topbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 1.5rem 2rem;
+        color: rgba(214, 255, 226, 0.65);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.8rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .system-indicator { display: flex; align-items: center; gap: 0.55rem; }
+      .system-indicator::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #00ff66;
+        box-shadow: 0 0 12px #00ff66;
+      }
+      .progress-track { position: absolute; right: 0; bottom: 0; left: 0; height: 3px; background: rgba(255, 255, 255, 0.06); }
+      .progress-bar { width: 0; height: 100%; background: #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.7); }
+      .scene-number {
+        position: absolute;
+        bottom: 1.8rem;
+        left: 2rem;
+        color: rgba(214, 255, 226, 0.72);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.18em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="root" data-width="1920" data-height="1080" data-start="0" data-duration="39.5">
+      <div
+        id="el-bg"
+        class="clip"
+        data-composition-id="bg"
+        data-composition-src="compositions/background.html"
+        data-start="0"
+        data-duration="39.5"
+        data-track-index="0"
+      ></div>
+
+      <div id="el-s1" class="clip" data-composition-id="s1" data-composition-src="compositions/scene1.html" data-start="0" data-duration="5.100" data-track-index="1"></div>
+      <div id="el-s2" class="clip" data-composition-id="s2" data-composition-src="compositions/scene2.html" data-start="5.100" data-duration="2.340" data-track-index="1"></div>
+      <div id="el-s3" class="clip" data-composition-id="s3" data-composition-src="compositions/scene3.html" data-start="7.440" data-duration="3.760" data-track-index="1"></div>
+      <div id="el-s4" class="clip" data-composition-id="s4" data-composition-src="compositions/scene4.html" data-start="11.200" data-duration="4.040" data-track-index="1"></div>
+      <div id="el-s5" class="clip" data-composition-id="s5" data-composition-src="compositions/scene5.html" data-start="15.240" data-duration="2.960" data-track-index="1"></div>
+      <div id="el-s6" class="clip" data-composition-id="s6" data-composition-src="compositions/scene6.html" data-start="18.200" data-duration="3.960" data-track-index="1"></div>
+      <div id="el-s7" class="clip" data-composition-id="s7" data-composition-src="compositions/scene7.html" data-start="22.160" data-duration="6.280" data-track-index="1"></div>
+      <div id="el-s8" class="clip" data-composition-id="s8" data-composition-src="compositions/scene8.html" data-start="28.440" data-duration="11.060" data-track-index="1"></div>
+
+      <audio id="el-narration" src="assets/narration.mp3" data-start="0" data-track-index="10" data-volume="1"></audio>
+
+      <div class="hud">
+        <div class="topbar">
+          <div class="system-indicator">PrinceCaleb.dev</div>
+          <span>Builder System // Cinematic Archive</span>
+        </div>
+        <div class="scene-number" id="scene-number">01 / 08</div>
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const DURATION = 39.5;
+
+      // Root stays thin: just the global progress bar and scene counter,
+      // driven at global time — no per-scene visual motion lives here.
+      tl.to("#progress-bar", { width: "100%", duration: DURATION, ease: "none" }, 0);
+
+      const sceneStarts = [0, 5.100, 7.440, 11.200, 15.240, 18.200, 22.160, 28.440];
+      sceneStarts.forEach((start, i) => {
+        tl.set("#scene-number", { innerText: String(i + 1).padStart(2, "0") + " / 08" }, start);
+      });
+
+      window.__timelines["root"] = tl;
+    </script>
+  </body>
+</html>

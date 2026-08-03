@@ -1,0 +1,181 @@
+<template>
+  <style>
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .f02-bg {
+      position: absolute;
+      inset: 0;
+      background: #fbfbfa;
+    }
+
+    .f02-stage {
+      position: absolute;
+      inset: 0;
+      bottom: 17cqh; /* stay clear of the caption keep-out band, center within the safe area */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8cqw;
+    }
+
+    .f02-sentence-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .f02-line {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: baseline;
+      gap: 0.9cqw 1.15cqw;
+      max-width: 74cqw;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.16;
+      text-align: center;
+    }
+
+    .f02-line1 {
+      font-size: 4.1cqw;
+      color: #17181c;
+    }
+
+    .f02-line2 {
+      font-size: 4.5cqw;
+      color: #08783c;
+      margin-top: 1.8cqw;
+    }
+
+    .f02-word {
+      display: inline-block;
+      transform-origin: 50% 60%;
+      will-change: transform, filter, opacity;
+    }
+
+    .f02-wordmark-layer {
+      position: absolute;
+      inset: 0;
+      bottom: 17cqh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5cqw;
+    }
+
+    .f02-accent-line {
+      width: 60px;
+      height: 4px;
+      border-radius: 2px;
+      background: #08783c;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+
+    .f02-wordmark {
+      font-size: 6.2cqw;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #17181c;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+    }
+  </style>
+
+  <div data-hf-id="hf-avog" id="root" data-composition-id="02-product-intro" data-width="1920" data-height="1080" data-duration="4.404">
+    <div data-hf-id="hf-hzs0" class="clip f02-bg" data-start="0" data-duration="4.404" data-track-index="0"></div>
+
+    <div data-hf-id="hf-pz0c" class="clip f02-stage" data-start="0" data-duration="4.404" data-track-index="1">
+      <div data-hf-id="hf-qo1u" class="f02-sentence-group" id="f02-sentence-group">
+        <div data-hf-id="hf-uupz" class="f02-line f02-line1" id="f02-line1">
+          <span data-hf-id="hf-zlzn" class="f02-word">Meet</span>
+          <span data-hf-id="hf-srn3" class="f02-word">the</span>
+          <span data-hf-id="hf-iuoa" class="f02-word">AI</span>
+          <span data-hf-id="hf-rc4y" class="f02-word">systems</span>
+          <span data-hf-id="hf-jjvw" class="f02-word">built</span>
+          <span data-hf-id="hf-r0lx" class="f02-word">to</span>
+          <span data-hf-id="hf-aoft" class="f02-word">run</span>
+          <span data-hf-id="hf-vpc5" class="f02-word">it —</span>
+        </div>
+        <div data-hf-id="hf-ekgd" class="f02-line f02-line2" id="f02-line2">
+          <span data-hf-id="hf-fapi" class="f02-word">so</span>
+          <span data-hf-id="hf-pqm7" class="f02-word">you</span>
+          <span data-hf-id="hf-4av6" class="f02-word">don't</span>
+          <span data-hf-id="hf-5hn6" class="f02-word">have</span>
+          <span data-hf-id="hf-n8rl" class="f02-word">to.</span>
+        </div>
+      </div>
+    </div>
+
+    <div data-hf-id="hf-ah44" class="clip f02-wordmark-layer" data-start="0" data-duration="4.404" data-track-index="2">
+      <div data-hf-id="hf-6q8y" class="f02-accent-line" id="f02-accent-line"></div>
+      <div data-hf-id="hf-otty" class="f02-wordmark" id="f02-wordmark">Prince Caleb.</div>
+    </div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Scene 1 (0.0-2.5s) — "Meet the AI systems built to run it —" builds
+    // phrase-by-phrase: per-word staggered reveal, smooth long-tail settle
+    // (spring-pop-entrance mechanics: fromTo, power3.out, no overshoot).
+    const line1Words = gsap.utils.toArray('#f02-line1 .f02-word');
+    const line1Starts = [0.05, 0.31, 0.57, 0.83, 1.09, 1.35, 1.61, 1.87];
+    line1Words.forEach((el, i) => {
+      tl.fromTo(
+        el,
+        { opacity: 0, y: 16, filter: 'blur(7px)' },
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.42, ease: 'power3.out' },
+        line1Starts[i],
+      );
+    });
+
+    // Scene 2 (2.5-3.2s) — "so you don't have to." completes the sentence
+    // beneath it in the primary accent green, landing on the VO's closing clause.
+    const line2Words = gsap.utils.toArray('#f02-line2 .f02-word');
+    const line2Starts = [2.5, 2.575, 2.65, 2.725, 2.8];
+    line2Words.forEach((el, i) => {
+      tl.fromTo(
+        el,
+        { opacity: 0, y: 14, filter: 'blur(6px)' },
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.35, ease: 'power3.out' },
+        line2Starts[i],
+      );
+    });
+
+    // Scene 3 (3.2-3.904s) — the sentence clears (scale-down + fade); the
+    // wordmark "Prince Caleb." pops in dead-center with its accent-line,
+    // settles and holds (no further motion — this is the resolve beat).
+    tl.to(
+      '#f02-sentence-group',
+      { scale: 0.88, opacity: 0, filter: 'blur(5px)', duration: 0.28, ease: 'power2.in' },
+      3.2,
+    );
+
+    tl.fromTo(
+      '#f02-accent-line',
+      { scaleX: 0 },
+      { scaleX: 1, duration: 0.22, ease: 'power2.out' },
+      3.44,
+    );
+
+    tl.fromTo(
+      '#f02-wordmark',
+      { scale: 0, opacity: 0, y: 8 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.42, ease: 'power3.out' },
+      3.48,
+    );
+
+    window.__timelines['02-product-intro'] = tl;
+  </script>
+</template>

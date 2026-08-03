@@ -1,0 +1,36 @@
+
+  ⚠ [compositions/frames/01-not-a-concept.html] studio_missing_editable_id: <div class="f01-bg" data-start="0" data-track-index="0"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/01-not-a-concept.html] studio_missing_editable_id: <div data-start="0" data-track-index="1"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/02-system-finishes.html] studio_missing_editable_id: <div class="f02-bg" data-start="0" data-track-index="0"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/02-system-finishes.html] studio_missing_editable_id: <div data-start="0" data-track-index="1"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/03-specialists.html] studio_missing_editable_id: <div class="f03-bg" data-start="0" data-track-index="0"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/03-specialists.html] studio_missing_editable_id: <div data-start="0" data-track-index="1"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/04-proof.html] studio_missing_editable_id: <div class="f04-bg" data-start="0" data-track-index="0"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/04-proof.html] studio_missing_editable_id: <div data-start="0" data-track-index="1"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/05-cta.html] studio_missing_editable_id: <div class="f05-bg" data-start="0" data-track-index="0"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+  ⚠ [compositions/frames/05-cta.html] studio_missing_editable_id: <div data-start="0" data-track-index="1"> has no id, so Studio cannot use a stable edit target for its timeline and canvas controls.
+    Fix: Add a stable, human-readable id such as id="hero-title" or id="scene-1-card" to every timeline-visible element you want agents or Studio to edit.
+
+T  hyperframes preview
+[?25l|
+o  Studio running
+[?25h
+
+  Project   prince-caleb-services-ad
+  Studio    http://localhost:3017
+
+  Edit with your AI agent — it has HyperFrames skills installed.
+  Changes reload automatically in the studio.
+
+  Press Ctrl+C to stop
+
+[BrowserManager] Browser launched (HeadlessChrome/152.0.7928.2, screenshot, gl=--use-gl=angle --use-angle=d3d11, headlessShell=true, platform=win32)

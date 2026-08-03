@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 5rem 8rem;
+          font-family: "JetBrains Mono", monospace;
+        }
+        .s6-content { width: min(1100px, 100%); text-align: center; }
+        .s6-eyebrow {
+          margin-bottom: 1rem;
+          color: rgba(214, 255, 226, 0.78);
+          font-size: 0.8rem;
+          letter-spacing: 0.32em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .s6-title {
+          margin: 0 0 1rem;
+          color: #f5fff8;
+          font-family: "Inter", sans-serif;
+          font-size: clamp(1.9rem, 3.4vw, 3.2rem);
+          font-weight: 800;
+          line-height: 1.05;
+          letter-spacing: -0.03em;
+          opacity: 0;
+        }
+        .s6-title .accent { color: #00ff66; text-shadow: 0 0 12px rgba(0, 255, 102, 0.7), 0 0 36px rgba(0, 255, 102, 0.25); }
+        .s6-map { position: relative; width: min(780px, 90%); aspect-ratio: 16 / 8; margin: 1.5rem auto 0; }
+        .s6-orbit {
+          position: absolute;
+          inset: 12% 23%;
+          border: 1px dashed rgba(0, 255, 102, 0.16);
+          border-radius: 999px;
+          opacity: 0;
+        }
+        .s6-core {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          display: grid;
+          place-items: center;
+          width: clamp(110px, 16vw, 160px);
+          aspect-ratio: 1;
+          border: 1px solid rgba(0, 255, 102, 0.45);
+          border-radius: 999px;
+          background: rgba(0, 255, 102, 0.08);
+          color: #f5fff8;
+          font-family: "Inter", sans-serif;
+          font-weight: 800;
+          font-size: 0.95rem;
+          transform: translate(-50%, -50%);
+          opacity: 0;
+        }
+        .s6-node {
+          position: absolute;
+          min-width: 110px;
+          padding: 0.7rem 0.9rem;
+          border: 1px solid rgba(0, 255, 102, 0.22);
+          border-radius: 999px;
+          background: rgba(2, 8, 4, 0.86);
+          color: #8affb2;
+          font-size: 0.72rem;
+          text-align: center;
+          opacity: 0;
+        }
+        #s6-n1 { top: 2%; left: 50%; transform: translateX(-50%); }
+        #s6-n2 { top: 30%; right: 2%; }
+        #s6-n3 { bottom: 5%; right: 15%; }
+        #s6-n4 { bottom: 5%; left: 15%; }
+        #s6-n5 { top: 30%; left: 2%; }
+      </style>
+
+      <div id="root" data-composition-id="s6" data-width="1920" data-height="1080" data-duration="3.960">
+        <div class="s6-content">
+          <p class="s6-eyebrow" id="s6-eyebrow">One connected ecosystem</p>
+          <h2 class="s6-title" id="s6-title">Not isolated tools. <span class="accent">One system.</span></h2>
+          <div class="s6-map">
+            <div class="s6-orbit" id="s6-orbit"></div>
+            <div class="s6-core" id="s6-core">BUILDER OS</div>
+            <div class="s6-node" id="s6-n1">AI Voice</div>
+            <div class="s6-node" id="s6-n2">Automation</div>
+            <div class="s6-node" id="s6-n3">Finance</div>
+            <div class="s6-node" id="s6-n4">Operations</div>
+            <div class="s6-node" id="s6-n5">Intelligence</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        tl.fromTo("#s6-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, 0);
+        tl.fromTo("#s6-title", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 0.1);
+        tl.fromTo("#s6-orbit", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, 0.3);
+        // Orbit ring: originally a 16s linear infinite spin — here it only
+        // needs its share of a single slow rotation within the scene's window.
+        tl.fromTo("#s6-orbit", { rotation: 0 }, { rotation: (3.963 / 16) * 360, duration: 3.963, ease: "none" }, 0);
+        tl.fromTo("#s6-core", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.6)" }, 0.35);
+        tl.fromTo("#s6-core", { boxShadow: "0 0 35px rgba(0,255,102,0.18), inset 0 0 35px rgba(0,255,102,0.09)" },
+          { boxShadow: "0 0 60px rgba(0,255,102,0.34), inset 0 0 45px rgba(0,255,102,0.16)", duration: 1.15, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0.35);
+
+        const nodes = ["#s6-n1", "#s6-n2", "#s6-n3", "#s6-n4", "#s6-n5"];
+        tl.fromTo(nodes, { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power1.out", stagger: 0.15 }, 0.5);
+
+        window.__timelines["s6"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

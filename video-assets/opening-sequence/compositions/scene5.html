@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 4.5rem 6rem;
+          font-family: "JetBrains Mono", monospace;
+        }
+        .s5-content { width: min(1500px, 100%); text-align: center; }
+        .s5-eyebrow {
+          margin-bottom: 1rem;
+          color: rgba(214, 255, 226, 0.78);
+          font-size: 0.8rem;
+          letter-spacing: 0.32em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .s5-title {
+          margin: 0 0 1.6rem;
+          color: #f5fff8;
+          font-family: "Inter", sans-serif;
+          font-size: clamp(2rem, 3.6vw, 3.4rem);
+          font-weight: 800;
+          line-height: 1.05;
+          letter-spacing: -0.03em;
+          opacity: 0;
+        }
+        .s5-title .accent { color: #00ff66; text-shadow: 0 0 12px rgba(0, 255, 102, 0.7), 0 0 36px rgba(0, 255, 102, 0.25); }
+        .s5-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; }
+        .s5-card {
+          position: relative;
+          overflow: hidden;
+          min-height: 126px;
+          padding: 1.1rem;
+          border: 1px solid rgba(0, 255, 102, 0.22);
+          border-radius: 16px;
+          background: linear-gradient(145deg, rgba(0, 255, 102, 0.06), rgba(255, 255, 255, 0.015));
+          text-align: left;
+        }
+        .s5-status { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.7rem; color: #00ff66; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
+        .s5-dot { width: 7px; height: 7px; border-radius: 999px; background: #00ff66; box-shadow: 0 0 12px #00ff66; }
+        .s5-name { position: relative; margin: 0; color: #f5fff8; font-family: "Inter", sans-serif; font-size: 1.15rem; font-weight: 750; }
+        .s5-role { position: relative; margin: 0.4rem 0 0; color: rgba(214, 255, 226, 0.78); font-size: 0.68rem; line-height: 1.4; }
+      </style>
+
+      <div id="root" data-composition-id="s5" data-width="1920" data-height="1080" data-duration="2.960">
+        <div class="s5-content">
+          <p class="s5-eyebrow" id="s5-eyebrow">The team is online</p>
+          <h2 class="s5-title" id="s5-title">Intelligence with <span class="accent">a job to do.</span></h2>
+          <div class="s5-grid">
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Customer service</div><h3 class="s5-name">Lisa</h3><p class="s5-role">Voice, WhatsApp and bookings.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Lead discovery</div><h3 class="s5-name">Joan</h3><p class="s5-role">Prospecting and opportunity detection.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Research intelligence</div><h3 class="s5-name">Sharon</h3><p class="s5-role">Lead research and grounded briefs.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Email follow-up</div><h3 class="s5-name">Jason</h3><p class="s5-role">Sequences, replies and nurturing.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Commercial workflows</div><h3 class="s5-name">Ledger</h3><p class="s5-role">Proposals, scope and milestones.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>UX/UI design</div><h3 class="s5-name">Sketch</h3><p class="s5-role">Visual concepts and client mockups.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Content studio</div><h3 class="s5-name">Danielle</h3><p class="s5-role">Social content, articles and adverts.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Website builder</div><h3 class="s5-name">Arch</h3><p class="s5-role">Websites, CMS builds and deployments.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Document review</div><h3 class="s5-name">Ada</h3><p class="s5-role">Invoices, statements and document checks.</p></article>
+            <article class="s5-card"><div class="s5-status"><span class="s5-dot"></span>Operations intelligence</div><h3 class="s5-name">Chief</h3><p class="s5-role">Reporting, monitoring and owner alerts.</p></article>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+        const DURATION = 2.960;
+
+        tl.fromTo("#s5-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, 0);
+        tl.fromTo("#s5-title", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 0.1);
+        tl.fromTo(".s5-card", { opacity: 0, y: 20, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "power2.out", stagger: 0.08 }, 0.3);
+
+        const pulseStart = 0.3;
+        const pulseCycle = 1.5;
+        const pulseRepeat = Math.max(0, Math.floor((DURATION - pulseStart) / pulseCycle) - 1);
+        tl.fromTo(".s5-dot", { opacity: 1, scale: 1 }, { opacity: 0.35, scale: 0.8, duration: pulseCycle / 2, ease: "sine.inOut", yoyo: true, repeat: pulseRepeat }, pulseStart);
+
+        window.__timelines["s5"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

@@ -20,3 +20,11 @@ video-assets/renders/
 video-assets/.debug/
 video-assets/assets/*
 !video-assets/assets/.gitkeep
+
+# HyperFrames/browser working data and generated delivery renders
+video-assets/**/renders/
+video-assets/**/.thumbnails/
+videos/**/node_modules/
+videos/**/.capture-profile/
+videos/**/renders/
+videos/**/reference/yt-dlp.exe

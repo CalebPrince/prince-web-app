@@ -1,0 +1,17 @@
+{
+  "bgm": {
+    "path": ".media/audio/bgm/bgm_001.wav",
+    "volume": 0.22,
+    "query": "fast electronic tech pulse, confident and percussive",
+    "duration_s": 30
+  },
+  "bgm_pending": false,
+  "voices": [],
+  "sfx": [
+    { "frame": 1, "file": ".media/audio/sfx/sfx_001.wav", "offset_s": 0.0, "duration_s": 0.45, "volume": 0.42 },
+    { "frame": 2, "file": ".media/audio/sfx/sfx_001.wav", "offset_s": 0.0, "duration_s": 0.45, "volume": 0.34 },
+    { "frame": 3, "file": ".media/audio/sfx/sfx_001.wav", "offset_s": 0.0, "duration_s": 0.45, "volume": 0.34 },
+    { "frame": 4, "file": ".media/audio/sfx/sfx_001.wav", "offset_s": 0.0, "duration_s": 0.45, "volume": 0.34 },
+    { "frame": 5, "file": ".media/audio/sfx/sfx_001.wav", "offset_s": 0.0, "duration_s": 0.45, "volume": 0.4 }
+  ]
+}

@@ -1,0 +1,138 @@
+[a] Skip to main content
+[span] Prince Caleb
+[a] Services
+[a] Builder OS
+[a] Build a system
+[p] builder@princecaleb:~$ inspect network
+[p] // Connected intelligence
+[h1] One
+[span] operating system
+[h1] Specialists at every handoff.
+[p] Builder OS connects customer conversations, research, follow-up, documents, proposals, websites, and private reporting into one working environment.
+[a] Inspect the network
+[a] View deployed systems
+[span] NETWORK HEALTH
+[strong] ONLINE
+[small] 11 configured specialists connected
+[span] 01 / CONVERSATIONS
+[strong] Voice · Chat · WhatsApp
+[small] Customer requests enter through one connected front door.
+[span] 02 / EXECUTION
+[strong] Research · Booking · Follow-up
+[small] Specialists act with shared context instead of isolated prompts.
+[span] 03 / CONTROL
+[strong] Human checkpoints
+[small] Private decisions remain visible to Prince Caleb.
+[p] // Live topology
+[h2] The people are AI. The handoffs are real.
+[p] Names and availability are loaded from the same team configuration used by the command centre.
+[span] CORE
+[strong] Builder OS
+[small] Routing · Context · Control
+[span] LISA
+[h3] Lisa
+[p] Voice, WhatsApp & customer service
+[small] Voice calls
+[small] WhatsApp
+[small] Bookings
+[span] STATUS: AVAILABLE
+[span] BEACON
+[h3] Joan
+[p] Lead discovery
+[small] Prospecting
+[small] Opportunity detection
+[small] Lead sourcing
+[span] STATUS: ACTIVE
+[span] DOSSIER
+[h3] Sharon
+[p] Research intelligence
+[small] Research
+[small] Intelligence
+[small] Lead briefs
+[span] STATUS: ON DEMAND
+[span] NURTURER
+[h3] Jason
+[p] Email follow-up
+[small] Email sequences
+[small] Reply tracking
+[small] Follow-up
+[span] STATUS: ACTIVE
+[span] PROPOSAL
+[h3] Ledger
+[p] Proposals & commercial workflows
+[small] Proposals
+[small] Scope
+[small] Payment milestones
+[span] STATUS: ON DEMAND
+[span] ARCH
+[h3] Arch
+[p] AI website builder
+[small] Websites
+[small] CMS
+[small] Deployments
+[span] STATUS: BUILDING
+[span] SCOUT
+[h3] Scout
+[p] Tech & ideation specialist
+[small] Tech scouting
+[small] Ideation
+[small] Emerging tools
+[span] STATUS: ON DEMAND
+[span] REEL
+[h3] Reel
+[p] Video-creative specialist
+[small] Video concepts
+[small] Scene breakdowns
+[small] Narration scripts
+[span] STATUS: ON DEMAND
+[span] SAGE
+[h3] Sage
+[p] Marketing frameworks specialist
+[small] Offer critique
+[small] Funnel strategy
+[small] Copy & positioning
+[span] STATUS: ON DEMAND
+[span] ADA
+[h3] Ada
+[p] Document review
+[small] Invoices
+[small] Statements
+[small] Document checks
+[span] STATUS: ON DEMAND
+[span] CHIEF
+[h3] Chief
+[p] Private operations intelligence
+[small] Reporting
+[small] Monitoring
+[small] Owner alerts
+[span] STATUS: ACTIVE
+[p] // Example execution
+[h2] One enquiry. A complete operational trail.
+[strong] Conversation starts
+[p] Lisa answers by voice, web chat, or WhatsApp and captures the request.
+[strong] Context moves
+[p] Research, contact details, intent, and next action become structured data.
+[strong] The right specialist acts
+[p] A configured agent handles research, follow-up, proposals, or document work.
+[strong] The owner stays in control
+[p] Chief watches the private command centre and flags decisions that need Prince Caleb.
+[p] // Interactive workflow playback
+[h3] Run a request through Builder OS.
+[span] READY
+[button] After-hours clinic call
+[button] New business enquiry
+[button] Invoice needs review
+[span] INCOMING REQUEST
+[blockquote] “I need to book an appointment, but the clinic is closed.”
+[button] Run simulation
+[span] builder-os / execution-log
+[small] WAITING
+[li] Choose a scenario, then run the workflow.
+[span] No client data is used. This simulation demonstrates routing and handoffs only.
+[a] Build this workflow →
+[p] // Your workflow next
+[h2] What should your business stop doing manually?
+[p] Start with one customer journey or operational bottleneck. Build the smallest system that proves the result.
+[a] Map my workflow
+[span] Prince Caleb · Builder OS
+[a] Return home

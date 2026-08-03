@@ -59,6 +59,7 @@ use App\Controllers\InquiryController;
 use App\Controllers\IntegrationController;
 use App\Controllers\InvoiceController;
 use App\Controllers\LiveChatController;
+use App\Controllers\LiveAvatarController;
 use App\Controllers\MarketingLeadController;
 use App\Controllers\AccountDemoController;
 use App\Controllers\NewsletterController;
@@ -140,6 +141,8 @@ $router->get('/api/v1/appointments/config', [AppointmentController::class, 'publ
 $router->get('/api/v1/appointments/availability', [AppointmentController::class, 'availability']);
 $router->post('/api/v1/appointments/book', [AppointmentController::class, 'book']);
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
+$router->post('/api/v1/liveavatar/embed', [LiveAvatarController::class, 'createEmbed']);
+$router->post('/api/v1/liveavatar/session-token', [LiveAvatarController::class, 'createSessionToken']);
 $router->get('/api/v1/chat/status', [LiveChatController::class, 'status']);
 $router->get('/api/v1/chat/session/{token}', [LiveChatController::class, 'session']);
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);

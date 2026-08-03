@@ -1,0 +1,175 @@
+<template>
+  <style>
+    #s4-root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      font-family: "Inter", sans-serif;
+      color: #101619;
+      overflow: hidden;
+    }
+
+    #s4-glow-field {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(14, 93, 87, 0) 0%, rgba(14, 93, 87, 0) 100%);
+    }
+
+    #s4-root .chip {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      border-radius: 22px;
+      opacity: 0;
+    }
+    #s4-chip-mail { left: 260px; top: 220px; background: #d9603b; }
+    #s4-chip-chat { left: 1560px; top: 200px; background: #3a6ea5; }
+    #s4-chip-crm  { left: 1600px; top: 700px; background: #c98a2b; }
+    #s4-chip-docs { left: 220px;  top: 720px; background: #2f7a6b; }
+
+    #s4-mark-wrap {
+      position: absolute;
+      left: 860px;
+      top: 300px;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+    }
+    #s4-mark-glow {
+      position: absolute;
+      inset: -100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14, 93, 87, 0.4) 0%, rgba(14, 93, 87, 0) 70%);
+    }
+    #s4-mark {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: #0e5d57;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 30px 70px rgba(14, 93, 87, 0.4);
+    }
+    #s4-mark svg { width: 64px; height: 64px; }
+
+    #s4-wordmark {
+      position: absolute;
+      left: 50%;
+      top: 560px;
+      transform: translateX(-50%);
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+      font-size: 96px;
+      color: #101619;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    #s4-tagline-brand {
+      position: absolute;
+      left: 50%;
+      top: 690px;
+      transform: translateX(-50%);
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #3c4750;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    #s4-kinetic {
+      position: absolute;
+      left: 50%;
+      top: 820px;
+      transform: translateX(-50%);
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+      font-size: 52px;
+      color: #101619;
+      opacity: 0;
+      white-space: nowrap;
+      text-align: center;
+    }
+    #s4-url {
+      position: absolute;
+      left: 50%;
+      top: 820px;
+      transform: translateX(-50%);
+      font-size: 56px;
+      font-weight: 700;
+      color: #0e5d57;
+      opacity: 0;
+      white-space: nowrap;
+    }
+  </style>
+
+  <div
+    id="s4-root"
+    class="clip"
+    data-composition-id="s4"
+    data-start="0"
+    data-duration="9.57"
+    data-width="1920"
+    data-height="1080"
+  >
+    <div id="s4-glow-field"></div>
+
+    <div class="chip" id="s4-chip-mail"></div>
+    <div class="chip" id="s4-chip-chat"></div>
+    <div class="chip" id="s4-chip-crm"></div>
+    <div class="chip" id="s4-chip-docs"></div>
+
+    <div id="s4-mark-wrap">
+      <div id="s4-mark-glow" data-layout-allow-overflow></div>
+      <div id="s4-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h11"/></svg>
+      </div>
+    </div>
+    <div id="s4-wordmark">Buinee</div>
+    <div id="s4-tagline-brand">Your AI Co-Pilot</div>
+
+    <div id="s4-kinetic">Reclaim Your Day.<br/>Boost Your Team.</div>
+    <div id="s4-url">buinee.app</div>
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const s4 = gsap.timeline({ paused: true });
+
+    // 0-1.2s: scattered chips converge into the glowing center, absorbed
+    s4.fromTo(
+      ["#s4-chip-mail", "#s4-chip-chat", "#s4-chip-crm", "#s4-chip-docs"],
+      { opacity: 0, scale: 1.2 },
+      { opacity: 1, scale: 1, duration: 0.22, stagger: 0.05 },
+      0
+    );
+    s4.to("#s4-chip-mail", { x: 640, y: 240, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.25);
+    s4.to("#s4-chip-chat", { x: -560, y: 260, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.32);
+    s4.to("#s4-chip-crm", { x: -600, y: -260, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.39);
+    s4.to("#s4-chip-docs", { x: 620, y: -280, scale: 0.2, opacity: 0, duration: 0.7, ease: "power2.in" }, 0.46);
+    s4.fromTo(
+      "#s4-glow-field",
+      { background: "radial-gradient(circle at 50% 45%, rgba(14, 93, 87, 0) 0%, rgba(14, 93, 87, 0) 100%)" },
+      { background: "radial-gradient(circle at 50% 45%, rgba(14, 93, 87, 0.22) 0%, rgba(14, 93, 87, 0) 60%)", duration: 0.9, ease: "power2.out" },
+      0.5
+    );
+
+    // 1.2-6.16s: "Take the pressure off... reclaim your workday" — mark, wordmark, tagline hold
+    s4.fromTo("#s4-mark-wrap", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.8)" }, 1.2);
+    s4.fromTo("#s4-mark-glow", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 1.2);
+    s4.fromTo("#s4-wordmark", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35 }, 1.55);
+    s4.fromTo("#s4-tagline-brand", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35 }, 1.8);
+
+    s4.fromTo("#s4-kinetic", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, 2.3);
+    // 6.16s: "Buinee.app, your AI Co-Pilot" — swap kinetic text for the URL
+    s4.to("#s4-kinetic", { opacity: 0, duration: 0.3 }, 6.16);
+    s4.fromTo("#s4-url", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4 }, 6.3);
+
+    window.__timelines["s4"] = s4;
+  </script>
+</template>

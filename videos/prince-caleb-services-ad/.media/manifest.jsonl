@@ -1,0 +1,2 @@
+{"id":"bgm_001","type":"bgm","path":".media/audio/bgm/bgm_001.wav","source":"ingested","description":"prince-tech-pulse.wav","provenance":{"provider":"local","from":"assets\\bgm\\prince-tech-pulse.wav"}}
+{"id":"sfx_001","type":"sfx","path":".media/audio/sfx/sfx_001.wav","source":"ingested","description":"interface-sweep.wav","provenance":{"provider":"local","from":"assets\\sfx\\interface-sweep.wav"}}

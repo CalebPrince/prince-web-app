@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6rem 8rem;
+          font-family: "JetBrains Mono", monospace;
+        }
+        .s4-content { width: min(1100px, 100%); text-align: center; }
+        .s4-eyebrow {
+          margin-bottom: 1.25rem;
+          color: rgba(214, 255, 226, 0.78);
+          font-size: 0.8rem;
+          letter-spacing: 0.32em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .s4-sequence { display: flex; flex-direction: column; gap: 0.5rem; }
+        .s4-word {
+          color: #f5fff8;
+          font-family: "Inter", sans-serif;
+          font-size: clamp(3.5rem, 10vw, 9rem);
+          font-weight: 800;
+          line-height: 0.9;
+          letter-spacing: -0.075em;
+          opacity: 0;
+          transform: scale(0.88) translateY(30px);
+        }
+        .s4-word.accent { color: #00ff66; }
+      </style>
+
+      <div id="root" data-composition-id="s4" data-width="1920" data-height="1080" data-duration="4.040">
+        <div class="s4-content">
+          <p class="s4-eyebrow" id="s4-eyebrow">What if a website could</p>
+          <div class="s4-sequence">
+            <div class="s4-word" id="s4-w1">Listen.</div>
+            <div class="s4-word" id="s4-w2">Think.</div>
+            <div class="s4-word accent" id="s4-w3">Operate.</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+        const bounce = "cubic-bezier(.17,.67,.32,1.2)";
+
+        tl.fromTo("#s4-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0);
+        tl.to("#s4-w1", { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: bounce }, 0.2);
+        tl.to("#s4-w2", { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: bounce }, 0.7);
+        tl.to("#s4-w3", { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: bounce }, 1.2);
+
+        window.__timelines["s4"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

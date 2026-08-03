@@ -55,6 +55,12 @@
   <header class="lisa-integrations-hero">
     <div class="container lisa-hero-grid">
       <div class="lisa-hero-copy">
+        <div class="lisa-brand-lockup hero-animate hero-animate-1">
+          <span class="lisa-profile-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" focusable="false"><circle cx="24" cy="24" r="18"/><path d="M15 25h3l2.4-8 4.4 15 3.4-11 2.1 6H34"/><path d="M18 37c3.8 2.1 8.2 2.1 12 0"/></svg>
+          </span>
+          <span><strong>Lisa</strong><small>AI assistant by Prince Caleb</small></span>
+        </div>
         <p class="eyebrow mb-3 hero-animate hero-animate-1" data-content="lisa_page_eyebrow">// Meet Lisa</p>
         <h1 class="hero-animate hero-animate-2">One assistant.<br><span>Your tools, connected.</span></h1>
         <p class="hero-animate hero-animate-3" data-content="lisa_page_subheadline">Lisa can answer calls and messages, understand what a customer needs, complete the next task in the tools your team already uses, and bring a person in when judgment is required.</p>
@@ -65,7 +71,7 @@
         <div class="integration-map-head"><span>Live workflow map</span><strong><i></i> All connections ready</strong></div>
         <div class="integration-orbit">
           <div class="orbit-line orbit-line-1"></div><div class="orbit-line orbit-line-2"></div><div class="orbit-line orbit-line-3"></div><div class="orbit-line orbit-line-4"></div>
-          <div class="lisa-core"><span class="lisa-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><strong>Lisa</strong><small>AI assistant</small><em>Listening</em></div>
+          <div class="lisa-core"><span class="lisa-profile-mark lisa-profile-mark--core" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><circle cx="24" cy="24" r="18"/><path d="M15 25h3l2.4-8 4.4 15 3.4-11 2.1 6H34"/><path d="M18 37c3.8 2.1 8.2 2.1 12 0"/></svg></span><strong>Lisa</strong><small>AI assistant</small><em>Listening</em></div>
           <div class="orbit-tool tool-calendar"><b class="tool-g">31</b><span><strong>Google Calendar</strong><small>Bookings</small></span><i>Connected</i></div>
           <div class="orbit-tool tool-slack"><b class="tool-s">S</b><span><strong>Slack</strong><small>Team alerts</small></span><i>Connected</i></div>
           <div class="orbit-tool tool-crm"><b class="tool-c">C</b><span><strong>Your CRM</strong><small>Customer records</small></span><i>Connected</i></div>
@@ -77,6 +83,29 @@
   </header>
 
   <section class="lisa-channel-strip" aria-label="Lisa communication channels"><div class="container"><span>Customer calls</span><i></i><span>WhatsApp</span><i></i><span>Website chat</span><i></i><span>Email</span><i></i><strong>One shared assistant</strong></div></section>
+
+  <section class="section lisa-video-intro" aria-labelledby="lisa-video-title">
+    <div class="container lisa-video-grid">
+      <div class="lisa-video-stage reveal" id="lisa-video-stage">
+        <img id="lisa-video-poster" src="/uploads/lisa/june-hr-liveavatar.webp" alt="Lisa's current LiveAvatar video presenter" width="1280" height="720">
+        <div class="lisa-video-embed" id="lisa-video-embed" hidden></div>
+        <div class="lisa-video-status"><i></i><span>Lisa · Video identity</span><strong>Ready</strong></div>
+        <div class="lisa-video-controls lisa-video-controls--live" id="lisa-video-controls" hidden><button type="button" id="lisa-video-mute" aria-pressed="false">Mute</button><button type="button" id="lisa-video-end">End call</button></div>
+      </div>
+      <div class="lisa-video-copy reveal reveal-delay-1">
+        <p class="eyebrow mb-3">// Meet Lisa face to face</p>
+        <h2 id="lisa-video-title" class="display-5">A human presence.<br><span>The same connected intelligence.</span></h2>
+        <p>Lisa's current visual presenter is designed for natural video conversations. The same face now appears before and during website calls, while Lisa's connected workflows continue to handle the real work behind the conversation.</p>
+        <ul>
+          <li><span>01</span>Natural face, voice and lip-sync</li>
+          <li><span>02</span>Live captions and clear AI disclosure</li>
+          <li><span>03</span>Calendar, CRM and human hand-off connected</li>
+        </ul>
+        <button type="button" class="btn-brand" id="lisa-video-start">Start a video chat</button>
+        <small id="lisa-video-note" role="status">You will be speaking with an AI assistant. Microphone permission is required.</small>
+      </div>
+    </div>
+  </section>
 
   <section class="section lisa-scenario-section" id="scenario-lab">
     <div class="container">
@@ -251,9 +280,10 @@
             <span class="eyebrow d-block mb-2" data-content="lisa_tier_3_name">Scale</span>
             <div class="pricing-price mb-0"><span data-content="lisa_tier_3_price_ghs">GHS 4,500</span><small>/mo</small></div>
             <div class="pricing-price-alt mb-3"><span data-content="lisa_tier_3_price_usd">$300</span><small>/mo</small></div>
-            <p class="text-muted-custom mb-3" data-content="lisa_tier_3_tagline">Every channel, connected to social media tools, apps, and CRMs, with priority support.</p>
+            <p class="text-muted-custom mb-3" data-content="lisa_tier_3_tagline">Every channel plus a live AI video agent, connected to your apps and CRMs with priority support.</p>
             <ul class="mb-4" data-content-list="lisa_tier_3_features">
               <li>All channels, including social inboxes</li>
+              <li>Live AI video agent with an agreed monthly allowance</li>
               <li>Multiple CRM, app, and social integrations</li>
               <li>Priority support and monthly optimisation</li>
               <li>Full audit trail and reporting</li>
@@ -268,6 +298,7 @@
             <p class="text-muted-custom mb-3" data-content="lisa_custom_tier_tagline">A workflow built around your exact tools, volume, and compliance needs, priced once we've scoped it.</p>
             <ul class="mb-4" data-content-list="lisa_custom_tier_features">
               <li>Unlimited channels and integrations</li>
+              <li>Custom-trained branded video avatar</li>
               <li>Dedicated workflows and safeguards</li>
               <li>A named point of contact</li>
             </ul>
@@ -275,7 +306,7 @@
           </div>
         </div>
       </div>
-      <p class="small text-muted-custom text-center mt-4">Monthly fee covers Lisa's connected service. Phone minutes, messaging, and AI usage are billed separately, same as every engagement.</p>
+      <p class="small text-muted-custom text-center mt-4">Monthly fee covers Lisa's connected service. Phone minutes, messaging, live video minutes, and AI usage beyond the agreed allowance are billed separately.</p>
     </div>
   </section>
 
@@ -307,6 +338,8 @@
 <button type="button" id="ai-widget-toggle" aria-label="Open live chat" aria-expanded="false"><svg class="ai-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span class="ai-toggle-badge" id="ai-widget-badge" aria-hidden="true">1</span><span class="visually-hidden">1 unread message</span></button>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/api.js"></script><script src="/js/theme.js?v=20260730-site-default"></script><script src="/js/utility-dock.js"></script><script src="/js/nav-dropdowns.js"></script><script src="/js/mobile-nav.js"></script><script src="/js/content.js"></script><script src="/js/animations.js"></script><script src="/js/lisa-capabilities.js"></script><script src="/js/ai-boot.js"></script><script src="/js/analytics.js"></script><script src="/js/pwa-register.js"></script>
+<script src="/vendor/liveavatar/events-shim.js?v=1"></script>
+<script src="/vendor/liveavatar/index.umd.js?v=0.0.18-1"></script>
+<script src="/js/api.js"></script><script src="/js/theme.js?v=20260730-site-default"></script><script src="/js/utility-dock.js"></script><script src="/js/nav-dropdowns.js"></script><script src="/js/mobile-nav.js"></script><script src="/js/content.js"></script><script src="/js/animations.js"></script><script src="/js/lisa-capabilities.js"></script><script src="/js/lisa-video-agent.js?v=20260803-sdk4"></script><script src="/js/ai-boot.js"></script><script src="/js/analytics.js"></script><script src="/js/pwa-register.js"></script>
 </body>
 </html>

@@ -261,6 +261,27 @@
               </div>
             </div>
             <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="liveavatar-enabled">
+                <label class="form-check-label fw-semibold" for="liveavatar-enabled">Enable LiveAvatar video for Lisa</label>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="liveavatar-api-key">LiveAvatar API key</label>
+                <input type="password" class="form-control" id="liveavatar-api-key" placeholder="Paste your LiveAvatar API key" autocomplete="new-password">
+                <div class="form-text">Stored in the private settings database and used only by the server. It is never sent directly to visitors.</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label" for="liveavatar-avatar-id">Lisa avatar ID</label>
+                <input type="text" class="form-control" id="liveavatar-avatar-id" placeholder="LiveAvatar avatar ID" autocomplete="off">
+                <div class="form-text">The permanent LiveAvatar identity that should render Lisa's face.</div>
+              </div>
+              <div class="mb-0">
+                <label class="form-label" for="liveavatar-context-id">Lisa context ID</label>
+                <input type="text" class="form-control" id="liveavatar-context-id" placeholder="LiveAvatar context ID" autocomplete="off">
+                <div class="form-text">The conversation context that connects Lisa's behaviour and business knowledge to the avatar session.</div>
+              </div>
+            </div>
+            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
               <div class="mb-3">
                 <label class="form-label fw-semibold" for="whatsapp-provider">WhatsApp provider</label>
                 <select class="form-select" id="whatsapp-provider">
@@ -991,6 +1012,6 @@
 <script src="/js/theme.js?v=20260730-site-default"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-settings.js?v=20260731-scout-voice"></script>
+<script src="/js/admin-settings.js?v=20260803-liveavatar"></script>
 </body>
 </html>

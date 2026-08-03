@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6rem 8rem;
+          font-family: "JetBrains Mono", monospace;
+        }
+        .s7-content { width: min(1100px, 100%); text-align: center; }
+        .s7-eyebrow {
+          margin-bottom: 1.25rem;
+          color: rgba(214, 255, 226, 0.78);
+          font-size: 0.8rem;
+          letter-spacing: 0.32em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .s7-lines { display: grid; gap: 0.45rem; }
+        .s7-line {
+          color: #f5fff8;
+          font-family: "Inter", sans-serif;
+          font-size: clamp(1.6rem, 4.4vw, 3.6rem);
+          font-weight: 750;
+          line-height: 1.1;
+          letter-spacing: -0.04em;
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        .s7-line.accent { color: #00ff66; }
+      </style>
+
+      <div id="root" data-composition-id="s7" data-width="1920" data-height="1080" data-duration="6.280">
+        <div class="s7-content">
+          <p class="s7-eyebrow" id="s7-eyebrow">Access granted</p>
+          <div class="s7-lines">
+            <div class="s7-line" id="s7-l1">You thought you were opening a portfolio.</div>
+            <div class="s7-line" id="s7-l2">You entered a company.</div>
+            <div class="s7-line accent" id="s7-l3">You activated an operating system.</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        tl.fromTo("#s7-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0);
+        tl.to("#s7-l1", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 0.2);
+        tl.to("#s7-l2", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 1.05);
+        tl.to("#s7-l3", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 1.9);
+
+        window.__timelines["s7"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

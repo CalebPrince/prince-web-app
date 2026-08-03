@@ -1,0 +1,295 @@
+<template>
+  <style>
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      background: transparent;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .proof05-bg {
+      position: absolute;
+      inset: 0;
+      background: #fbfbfa;
+    }
+
+    .proof05-scene {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* ---- tilted card grid ---- */
+    .proof05-stage {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 896px;
+      perspective: 1600px;
+    }
+
+    .proof05-grid {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+    }
+
+    .proof05-card {
+      position: absolute;
+      width: 460px;
+      height: 368px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(8, 120, 60, 0.04);
+      border: 1.5px solid rgba(8, 120, 60, 0.2);
+      box-shadow: none;
+      transform-origin: 50% 50%;
+      backface-visibility: hidden;
+    }
+
+    .proof05-card-lumen { left: 1100px; top: 90px; filter: blur(1.5px); }
+    .proof05-card-simply { left: 1330px; top: 300px; filter: blur(0.5px); }
+    .proof05-card-andson { left: 1050px; top: 470px; filter: none; }
+
+    .proof05-card-bezel {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      background: rgba(8, 120, 60, 0.06);
+      border-bottom: 1px solid rgba(8, 120, 60, 0.12);
+    }
+
+    .proof05-card-bezel span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #9a9ea5;
+      opacity: 0.6;
+    }
+
+    .proof05-card-img {
+      width: 100%;
+      height: 340px;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+
+    /* ---- top-left years label ---- */
+    .proof05-label-years {
+      position: absolute;
+      left: 90px;
+      top: 84px;
+      font-size: 0.85cqw;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #08783c;
+      opacity: 0;
+    }
+
+    /* ---- systems-shipped stat block ---- */
+    .proof05-stat-systems {
+      position: absolute;
+      left: 90px;
+      top: 340px;
+      width: 440px;
+      opacity: 0;
+    }
+
+    .proof05-stat-num {
+      font-size: 1.9cqw;
+      font-weight: 700;
+      line-height: 1.0;
+      color: #08783c;
+    }
+
+    .proof05-stat-label {
+      margin-top: 10px;
+      font-size: 0.8cqw;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6e737c;
+    }
+
+    /* ---- hero cluster (98% satisfaction) ---- */
+    .proof05-hero-glow {
+      position: absolute;
+      left: 580px;
+      top: 80px;
+      width: 760px;
+      height: 760px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(8, 120, 60, 0.30) 0%, rgba(8, 120, 60, 0.12) 40%, rgba(8, 120, 60, 0) 72%);
+      opacity: 0;
+    }
+
+    .proof05-hero-card {
+      position: absolute;
+      left: 720px;
+      top: 670px;
+      width: 480px;
+      height: 150px;
+      border-radius: 14px;
+      background: rgba(8, 120, 60, 0.04);
+      border: 1.5px solid rgba(8, 120, 60, 0.2);
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+    }
+
+    .proof05-hero-num {
+      font-size: 3.0cqw;
+      font-weight: 700;
+      line-height: 1.0;
+      color: #08783c;
+    }
+
+    .proof05-hero-label {
+      margin-top: 12px;
+      font-size: 0.85cqw;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6e737c;
+    }
+
+    .proof05-tagline {
+      position: absolute;
+      left: 0;
+      top: 840px;
+      width: 1920px;
+      text-align: center;
+      font-size: 0.85cqw;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #6e737c;
+      opacity: 0;
+    }
+  </style>
+
+  <div data-hf-id="hf-l000" id="root" data-composition-id="05-proof" data-width="1920" data-height="1080" data-duration="11.593">
+    <div data-hf-id="hf-nlt0" class="clip proof05-bg" data-start="0" data-duration="11.593" data-track-index="0"></div>
+
+    <div data-hf-id="hf-kl82" class="clip proof05-scene" data-start="0" data-duration="11.593" data-track-index="1">
+      <div data-hf-id="hf-94l6" class="proof05-stage">
+        <div data-hf-id="hf-fuoo" class="proof05-grid">
+          <div data-hf-id="hf-njas" class="proof05-card proof05-card-lumen">
+            <div data-hf-id="hf-9ie9" class="proof05-card-bezel"><span data-hf-id="hf-uckh"></span><span data-hf-id="hf-l73p"></span><span data-hf-id="hf-me0s"></span></div>
+            <img data-hf-id="hf-tknp" class="proof05-card-img" src="assets/lumen-system-interface.png" alt="">
+          </div>
+          <div data-hf-id="hf-69kr" class="proof05-card proof05-card-simply">
+            <div data-hf-id="hf-heut" class="proof05-card-bezel"><span data-hf-id="hf-lzpr"></span><span data-hf-id="hf-n6mu"></span><span data-hf-id="hf-msbt"></span></div>
+            <img data-hf-id="hf-ebbx" class="proof05-card-img" src="assets/simply-my-care-system-interface.png" alt="">
+          </div>
+          <div data-hf-id="hf-4ses" class="proof05-card proof05-card-andson">
+            <div data-hf-id="hf-ilrw" class="proof05-card-bezel"><span data-hf-id="hf-nz8w"></span><span data-hf-id="hf-nkxv"></span><span data-hf-id="hf-ieyi"></span></div>
+            <img data-hf-id="hf-dgpf" class="proof05-card-img" src="assets/andson-travel-consult-system-interface.png" alt="">
+          </div>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-5cb0" class="proof05-label-years">0+ YEARS</div>
+
+      <div data-hf-id="hf-t0un" class="proof05-stat-systems">
+        <div data-hf-id="hf-bsi8" class="proof05-stat-num">0+</div>
+        <div data-hf-id="hf-53pg" class="proof05-stat-label">Systems Shipped</div>
+      </div>
+
+      <div data-hf-id="hf-166m" class="proof05-hero-glow"></div>
+      <div data-hf-id="hf-lapf" class="proof05-hero-card">
+        <div data-hf-id="hf-6ri0" class="proof05-hero-num">0%</div>
+        <div data-hf-id="hf-a42e" class="proof05-hero-label">Client Satisfaction</div>
+      </div>
+
+      <div data-hf-id="hf-zr7e" class="proof05-tagline">Websites &amp; mobile apps too</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+
+      var tl = gsap.timeline({ paused: true });
+
+      var scopeEl = document.querySelector('[data-composition-id="05-proof"]');
+      var q = function (sel) { return scopeEl.querySelectorAll(sel); };
+
+      var lumen = q(".proof05-card-lumen");
+      var simply = q(".proof05-card-simply");
+      var andson = q(".proof05-card-andson");
+      var grid = q(".proof05-grid");
+      var yearsLabel = q(".proof05-label-years");
+      var systemsBlock = q(".proof05-stat-systems");
+      var systemsNum = q(".proof05-stat-num");
+      var heroGlow = q(".proof05-hero-glow");
+      var heroCard = q(".proof05-hero-card");
+      var heroNum = q(".proof05-hero-num");
+      var tagline = q(".proof05-tagline");
+
+      /* ---- static 3D tilt (own by GSAP from t=0, never CSS transform) ---- */
+      tl.set(lumen, { rotationX: 6, rotationY: -18, z: -160, transformPerspective: 1600 }, 0);
+      tl.set(simply, { rotationX: 4, rotationY: -10, z: -60, transformPerspective: 1600 }, 0);
+      tl.set(andson, { rotationX: 2, rotationY: -4, z: 40, transformPerspective: 1600 }, 0);
+
+      /* ---- Scene 1 (0.0-2.0s): grid establishes, asymmetric 60/40, 3 depth layers ---- */
+      tl.fromTo(lumen, { opacity: 0, y: 18, scale: 0.72 }, { opacity: 0.55, y: 0, scale: 0.78, duration: 0.32, ease: "power2.out" }, 0.0);
+      tl.fromTo(simply, { opacity: 0, y: 18, scale: 0.81 }, { opacity: 0.8, y: 0, scale: 0.88, duration: 0.32, ease: "power2.out" }, 0.05);
+      tl.fromTo(andson, { opacity: 0, y: 18, scale: 0.92 }, { opacity: 1, y: 0, scale: 1.0, duration: 0.32, ease: "power2.out" }, 0.1);
+
+      tl.fromTo(yearsLabel, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: "power2.out" }, 0.08);
+      var yearsN = { v: 0 };
+      tl.to(yearsN, {
+        v: 10, duration: 0.5, ease: "power1.out",
+        onUpdate: function () { yearsLabel[0].textContent = Math.round(yearsN.v) + "+ YEARS"; }
+      }, 0.1);
+
+      /* ---- Scene 2 (2.0-3.5s): slow camera scroll + "30+" systems counter ---- */
+      tl.to(grid, { x: -50, y: 18, duration: 1.5, ease: "power1.inOut" }, 2.0);
+
+      tl.fromTo(systemsBlock, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, 2.0);
+      var systemsN = { v: 0 };
+      tl.to(systemsN, {
+        v: 30, duration: 0.85, ease: "power1.out",
+        onUpdate: function () { systemsNum[0].textContent = Math.round(systemsN.v) + "+"; }
+      }, 2.05);
+
+      /* ---- Scene 3 (3.5-5.0s): off cards slide away, andson glides to hero center ---- */
+      tl.to(lumen, { x: -320, y: -40, opacity: 0, duration: 0.9, ease: "power2.in" }, 3.5);
+      tl.to(simply, { x: 340, y: 120, opacity: 0, duration: 0.9, ease: "power2.in" }, 3.5);
+      tl.to(andson, {
+        x: -270, y: -300, scale: 1.478,
+        rotationX: 0, rotationY: 0, z: 0,
+        duration: 1.2, ease: "power2.inOut"
+      }, 3.5);
+
+      tl.fromTo(heroGlow, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }, 3.7);
+      tl.fromTo(heroCard, { opacity: 0, y: 20, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out" }, 3.95);
+
+      var heroN = { v: 0 };
+      tl.to(heroN, {
+        v: 98, duration: 0.9, ease: "power1.out",
+        onUpdate: function () { heroNum[0].textContent = Math.round(heroN.v) + "%"; }
+      }, 4.05);
+
+      /* ---- Scene 3 continues (5.0s-end): tagline settles, holds ---- */
+      tl.fromTo(tagline, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 5.0);
+
+      /* gentle ambient drift under the hold so the tail never freezes dead */
+      tl.to(grid, { x: -70, y: 26, duration: 5.5, ease: "none" }, 5.5);
+
+      window.__timelines["05-proof"] = tl;
+    })();
+  </script>
+</template>

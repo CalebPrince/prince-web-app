@@ -1,0 +1,266 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Plus Jakarta Sans",
+      "fontSize": "105.6px",
+      "fontWeight": "800",
+      "lineHeight": "99.264px",
+      "letterSpacing": "-7.392px",
+      "color": "#F2FFF6",
+      "sampleText": "One operating system.Specialists at every handoff."
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Plus Jakarta Sans",
+      "fontSize": "60.8px",
+      "fontWeight": "750",
+      "lineHeight": "63.232px",
+      "letterSpacing": "-3.344px",
+      "color": "#F2FFF6",
+      "sampleText": "The people are AI. The handoffs are real."
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "system-ui",
+      "fontSize": "40px",
+      "fontWeight": "700",
+      "lineHeight": "44px",
+      "letterSpacing": "normal",
+      "color": "#F2FFF6",
+      "sampleText": "What should your business stop doing manually?"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "system-ui",
+      "fontSize": "19.2px",
+      "fontWeight": "700",
+      "lineHeight": "22.08px",
+      "letterSpacing": "normal",
+      "color": "#F2FFF6",
+      "sampleText": "Lisa"
+    },
+    {
+      "role": "link",
+      "fontFamily": "system-ui",
+      "fontSize": "17.6px",
+      "fontWeight": "700",
+      "lineHeight": "26.4px",
+      "letterSpacing": "-0.352px",
+      "color": "#FFFFFF",
+      "sampleText": "PPrince Caleb."
+    },
+    {
+      "role": "body",
+      "fontFamily": "Fira Code",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "lineHeight": "16.8px",
+      "letterSpacing": "0.72px",
+      "color": "#62FF98",
+      "sampleText": "builder@princecaleb:~$ inspect network"
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "Fira Code",
+      "fontSize": "10.88px",
+      "fontWeight": "600",
+      "lineHeight": "16.32px",
+      "letterSpacing": "0.9792px",
+      "color": "#81978A",
+      "sampleText": "11 configured specialists connected"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      3,
+      4,
+      5,
+      6,
+      8,
+      9,
+      12,
+      13,
+      16,
+      18,
+      21,
+      24,
+      29,
+      32,
+      48
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "999px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.12) 0px 12px 45px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Build a system",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgb(255, 255, 255)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    },
+    {
+      "label": "View deployed systems",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F1F3F5",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    },
+    {
+      "label": "After-hours clinic call",
+      "background": "#62FF98",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#62FF98",
+      "padding": "8.8px 12.8px",
+      "borderRadius": "0px",
+      "border": "1px solid rgba(98, 255, 152, 0.45)",
+      "boxShadow": "none",
+      "fontSize": "10.88px",
+      "fontWeight": "650",
+      "height": "31.5938px"
+    },
+    {
+      "label": "New business enquiry",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#84978B",
+      "padding": "8.8px 12.8px",
+      "borderRadius": "0px",
+      "border": "1px solid rgba(255, 255, 255, 0.1)",
+      "boxShadow": "none",
+      "fontSize": "10.88px",
+      "fontWeight": "650",
+      "height": "31.5938px"
+    },
+    {
+      "label": "// Your workflow nextWhat should your bu",
+      "background": "#061009",
+      "backgroundImage": "radial-gradient(circle at 50% 0px, rgba(98, 255, 152, 0.12), rgba(0, 0, 0, 0) 46%), none",
+      "backdropFilter": "",
+      "color": "#0B0C0E",
+      "padding": "112px 0px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "426.453px"
+    },
+    {
+      "label": "Map my workflow",
+      "background": "#0B0C0E",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "13.12px 28.8px",
+      "borderRadius": "999px",
+      "border": "1px solid rgb(11, 12, 14)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "500",
+      "height": "52.2188px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "transparent",
+      "backgroundImage": "radial-gradient(circle at 20% 20%, rgba(98, 255, 152, 0.07), rgba(0, 0, 0, 0) 35%)",
+      "backdropFilter": "",
+      "color": "#E9FFF0",
+      "padding": "32px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "390px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#0B0C0E",
+    "backgroundImage": "",
+    "backdropFilter": "blur(16px)",
+    "color": "#E9FFF0",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "rgba(0, 0, 0, 0.12) 0px 12px 45px 0px",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "85.2188px"
+  },
+  "chips": [],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "radial-gradient(circle at 8% 40%, rgba(98, 255, 152, 0.06), rgba(0, 0, 0, 0) 24%), none",
+      "area": 3147150
+    },
+    {
+      "value": "radial-gradient(circle at 90% 18%, rgba(98, 255, 152, 0.07), rgba(0, 0, 0, 0) 26%), none",
+      "area": 2624970
+    },
+    {
+      "value": "radial-gradient(circle at 76% 25%, rgba(36, 255, 113, 0.18), rgba(0, 0, 0, 0) 26%), radial-gradient(circle at 16% 78%, rgba(19, 151, 81, 0.1), rgba(0, 0, 0, 0) 28%), linear-gradient(145deg, rgb(5, 11, 7) 0%, rgb(7, 21, 12) 52%, rgb(11, 32, 18) 100%)",
+      "area": 2030820
+    },
+    {
+      "value": "linear-gradient(rgba(98, 255, 152, 0.043) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(90deg, rgba(98, 255, 152, 0.043) 1px, rgba(0, 0, 0, 0) 1px)",
+      "area": 2030820
+    },
+    {
+      "value": "linear-gradient(rgba(98, 255, 152, 0.05) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(90deg, rgba(98, 255, 152, 0.05) 1px, rgba(0, 0, 0, 0) 1px)",
+      "area": 1553216
+    },
+    {
+      "value": "radial-gradient(circle at 50% 0px, rgba(98, 255, 152, 0.12), rgba(0, 0, 0, 0) 46%), none",
+      "area": 818790
+    }
+  ],
+  "glass": [
+    {
+      "backdropFilter": "blur(14px)",
+      "background": "rgba(4, 12, 7, 0.66)",
+      "border": "1px solid rgba(98, 255, 152, 0.18)",
+      "borderRadius": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0.2) 0px 26px 70px 0px",
+      "area": 196992
+    },
+    {
+      "backdropFilter": "blur(16px)",
+      "background": "rgba(11, 12, 14, 0.8)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "rgba(0, 0, 0, 0.12) 0px 12px 45px 0px",
+      "area": 163620
+    }
+  ]
+}

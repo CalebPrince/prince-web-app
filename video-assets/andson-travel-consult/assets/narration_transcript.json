@@ -1,0 +1,109 @@
+{
+	"systeminfo": "WHISPER : COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | OPENMP = 1 | REPACK = 1 | ",
+	"model": {
+		"type": "small",
+		"multilingual": false,
+		"vocab": 51864,
+		"audio": {
+			"ctx": 1500,
+			"state": 768,
+			"head": 12,
+			"layer": 12
+		},
+		"text": {
+			"ctx": 448,
+			"state": 768,
+			"head": 12,
+			"layer": 12
+		},
+		"mels": 80,
+		"ftype": 1
+	},
+	"params": {
+		"model": "/home/prince/whisper.cpp/models/ggml-small.en.bin",
+		"language": "en",
+		"translate": false
+	},
+	"result": {
+		"language": "en"
+	},
+	"transcription": [
+		{
+			"timestamps": {
+				"from": "00:00:00,000",
+				"to": "00:00:07,000"
+			},
+			"offsets": {
+				"from": 0,
+				"to": 7000
+			},
+			"text": " Planning international travel means visa forms, embassy appointments and a dozen requirements to track."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:07,000",
+				"to": "00:00:12,000"
+			},
+			"offsets": {
+				"from": 7000,
+				"to": 12000
+			},
+			"text": " And Scene Travel Consult is your travel advisory partner beyond the travel agent."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:12,000",
+				"to": "00:00:20,000"
+			},
+			"offsets": {
+				"from": 12000,
+				"to": 20000
+			},
+			"text": " We guide you through visa document preparation for the US, UK and Europe, help with flight and hotel bookings"
+		},
+		{
+			"timestamps": {
+				"from": "00:00:20,000",
+				"to": "00:00:23,000"
+			},
+			"offsets": {
+				"from": 20000,
+				"to": 23000
+			},
+			"text": " and support prospective students with study abroad counselling."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:23,000",
+				"to": "00:00:29,000"
+			},
+			"offsets": {
+				"from": 23000,
+				"to": 29000
+			},
+			"text": " We don't guarantee visas, we guarantee expert guidance every step of the way."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:29,000",
+				"to": "00:00:33,000"
+			},
+			"offsets": {
+				"from": 29000,
+				"to": 33000
+			},
+			"text": " Reach out on WhatsApp or visit andsontravelconsult.com."
+		},
+		{
+			"timestamps": {
+				"from": "00:00:33,000",
+				"to": "00:00:37,000"
+			},
+			"offsets": {
+				"from": 33000,
+				"to": 37000
+			},
+			"text": " And Scene Travel Consult. Beyond the travel agent."
+		}
+	]
+}

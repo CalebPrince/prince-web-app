@@ -1,0 +1,13 @@
+· tts: kokoro · voice am_michael · 6 line(s)
+  voice 01: assets/voice/01.wav (5.504s, 0 words)
+  voice 02: assets/voice/02.wav (3.904s, 0 words)
+  voice 03: assets/voice/03.wav (5.419s, 0 words)
+  voice 04: assets/voice/04.wav (5.909s, 0 words)
+  voice 05: assets/voice/05.wav (11.093s, 0 words)
+  voice 06: assets/voice/06.wav (5.227s, 0 words)
+· bgm: disabled
+✓ audio engine → D:\Websites\prince-web-app\video-assets\princecaleb-promo\audio_engine_meta.json
+  heygen: no  ·  ran: tts,bgm
+  voices: 6  ·  bgm: none  ·  sfx: 0
+  total voice duration: 37.056s
+✓ audio generate: 6 voice + no bgm → D:\Websites\prince-web-app\video-assets\princecaleb-promo\audio_meta.json

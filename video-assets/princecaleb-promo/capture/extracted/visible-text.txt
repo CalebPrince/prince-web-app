@@ -1,0 +1,338 @@
+[a] Skip to main content
+[span] Prince Caleb
+[a] Services
+[a] Builder OS
+[a] Get estimate
+[p] // AI Voice Agents · Chatbots · Automation
+[span] voice
+[h1] agents that answer every call. Automations that run the rest.
+[p] Voice agents that pick up your business line, chatbots that know your
+      business, and workflow automations that kill the busywork, engineered
+      from scratch on 12+ years of custom web & mobile development.
+[a] Scope your project
+[a] View my work
+[span] Lisa is live
+[strong] Message Prince Caleb
+[small] WhatsApp: +233 20 804 9962
+[strong] 10+
+[span] yrs building software
+[strong] 30+
+[span] projects shipped
+[strong] 98%
+[span] client satisfaction
+[a] Ask the live AI assistant
+[span] Voice demo ready
+[span] 00:00
+[strong] Lisa · AI voice agent
+[small] Ask about services, pricing, or a project
+[span] Ready
+[span] Voice agent
+[p] Tap “Start voice demo,” then ask me what an AI voice agent could handle for your business.
+[strong] Uses the real site assistant
+[small] Your question is answered from Prince’s actual services and business information.
+[label] Type your question
+[button] Ask
+[span] Start voice demo
+[span] Microphone activates only after you tap.
+[span] BUILDER OS
+[strong] Online
+[a] Inspect full system →
+[span] Lisa
+[small] Voice, WhatsApp & customer service · available
+[span] Joan
+[small] Lead discovery · active
+[span] Sharon
+[small] Research intelligence · on demand
+[span] Jason
+[small] Email follow-up · active
+[p] // Choose your starting point
+[h2] What should the system improve first?
+[strong] I need an AI agent
+[small] Handle calls, WhatsApp, support, and bookings.
+[strong] I need automation
+[small] Connect repetitive work across the tools you already use.
+[strong] I need a custom platform
+[small] Build the website, application, dashboard, or portal around the workflow.
+[p] // Try Builder OS
+[h2] Describe the work that keeps slipping.
+[p] Enter one real situation. The system will map the smallest useful combination of agents, automation, and software.
+[label] Your business situation
+[button] Recommend a system
+[span] AI voice agents
+[span] AI chatbots
+[span] Business automations
+[span] Autonomous AI agents
+[span] AI systems engineering
+[span] AI voice agents
+[span] AI chatbots
+[span] Business automations
+[span] Autonomous AI agents
+[span] AI systems engineering
+[div] 10+
+[div] Years building software
+[div] 30+
+[div] Projects shipped
+[div] 98%
+[div] Client satisfaction
+[div] <48h
+[div] Average response time
+[p] // Systems, not slides
+[h2] See the work while it works.
+[p] A call gets answered, the right details reach your team, and the follow-up is already moving, without another tab to babysit.
+[span] Voice agent · live call
+[span] 02:14
+[strong] Akosua Mensah
+[small] New booking enquiry
+[span] Speaking
+[span] Agent
+[p] I can book that for Thursday at 10:30. Should I send the confirmation to this number?
+[strong] Appointment held
+[small] Calendar slot reserved for 5 minutes
+[span] Agent work queue
+[span] 4 active
+[strong] Qualify new lead
+[small] Beacon · completed 1m ago
+[strong] Research company
+[small] Sharon · working now
+[strong] Draft first response
+[small] Nurturer · queued
+[span] •••
+[span] Next daily report
+[strong] 17:00 GMT
+[span] Booking workflow
+[span] Run complete
+[strong] Call captured
+[small] Voice agent
+[strong] CRM updated
+[small] Contact + notes
+[strong] Confirmation sent
+[small] WhatsApp + email
+[span] Last run
+[strong] 8 seconds · no errors
+[span] One connected system
+[span] Built around your actual workflow
+[a] Explore the system
+[p] // What I build
+[h3] AI Voice Agents
+[p] Voice agents that answer your business line 24/7, book appointments, qualify callers, and hand off to a human the moment it matters. Every missed call is a customer someone else answered.
+[a] See the clinic solution
+[a] Message Prince Caleb on WhatsApp
+[h3] Autonomous AI Agents
+[p] Agents that scout leads, write follow-ups, draft proposals, and report daily, this site's own sales engine runs on agents I built. I build the same for your business.
+[a] Explore this service
+[a] See the 5 levels of AI adoption
+[h3] Business Automations
+[p] Connect the tools you already use and kill the manual work between them, enquiries into your CRM, bookings into invoices, events into email, running quietly on schedule.
+[a] Explore this service
+[h3] AI Chatbots & Live Assistants
+[p] 24/7 chat that actually knows your business, trained on your real content, with clean human handoff. The live chat on this site is a working example, not a demo.
+[a] Explore this service
+[h3] Custom Websites & Mobile Apps
+[p] Business websites, custom web platforms, and iOS or Android apps, built as standalone products or as the interface for your AI agents and automations.
+[a] Explore this service
+[p] // Free marketing brain
+[h2] Meet Sage, a marketing sparring partner trained on the greats.
+[p] Bring Sage a real problem, an offer that isn't converting, a channel you can't decide between, a headline that isn't landing, and it works through the combined lens of Hormozi, Brunson, Ogilvy, Cialdini, and Godin. Free, no signup, and it pushes back on vague answers instead of handing you generic advice.
+[a] Talk to Sage
+[span] Live on this site, not a demo
+[b] Hormozi
+[small] Offer construction
+[b] Brunson
+[small] Funnels & value ladders
+[b] Ogilvy
+[small] Headlines & copy
+[b] Cialdini
+[small] Ethical influence
+[b] Godin
+[small] Positioning & permission
+[h2] Project scope planner
+[label] Select platforms
+[label] Web platform architecture
+[label] Mobile application suite
+[label] Cloud backend / APIs
+[label] Project complexity
+[span] MVP prototype
+[span] Standard build
+[span] Scale infrastructure
+[span] Engineering timeline estimate
+[div] 45 hours
+[p] Approximate development lifecycle range
+[span] Phase 1: Architecture blueprint
+[strong] 1 wk
+[span] Phase 2: Alpha environment launch
+[strong] 2–3 wks
+[strong] Display prices in
+[span] Live planning estimate · checkout remains in its stated currency
+[button] GHS
+[button] USD
+[small] 11.6631 GHS per USD · ExchangeRate.fun fallback
+[span] // Pricing
+[h2] Start with one workflow. Expand after it works.
+[span] AI Voice Agent Pilot
+[div] From GHS 5,000
+[p] One focused call flow, trained on your approved information and tested before it reaches customers.
+[li] One inbound call flow
+[li] Approved FAQ and handoff rules
+[li] Call logs and staff summaries
+[li] Launch review after monitored testing
+[a] Get a quote
+[span] Most requested
+[span] Voice + WhatsApp
+[div] From GHS 15,000
+[p] A connected customer-service system that carries context across calls, WhatsApp, bookings, and staff handoffs.
+[li] AI voice and WhatsApp assistant
+[li] Calendar or CRM integration
+[li] Human escalation and notifications
+[li] Reporting dashboard and audit trail
+[a] Get a quote
+[span] AI Operations System
+[div] From GHS 25,000
+[p] Multiple agents and automations working across sales, service, follow-up, reporting, and internal operations.
+[li] Multiple agent workflows
+[li] Custom dashboards and integrations
+[li] Permissions, monitoring, and safeguards
+[li] Ongoing optimisation and support
+[a] Get a quote
+[span] Custom Websites & Mobile Apps
+[div] Websites from GHS 5,000
+[p] Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.
+[li] Business and e-commerce websites
+[li] Custom web applications from GHS 15,000
+[li] iOS and Android mobile app MVPs from GHS 35,000
+[li] APIs, payments, and third-party integrations
+[li] Launch support and ongoing improvements
+[a] Get a quote
+[p] AI usage, calls, and messages are shown separately from implementation costs, so you can see what scales with activity.
+[a] View full pricing page
+[strong] Looking for Lisa specifically?
+[p] She has her own monthly service tiers, priced in GHS and USD, connected to the social media tools, apps, and CRMs you already use.
+[a] See Lisa's pricing
+[span] // Technical Archive
+[h2] Engineering deep-dives, not generic posts.
+[span] [SOFTWARE DEVELOPMENT, WEB DEVELOPMENT, CLIENT MANAGEMENT, PROJECT MANAGEMENT, UI/UX, TECHNICAL DEBT, BEST PRACTICES]
+[div] Jul 2026
+[a] Avoiding the Minefield: Common Pitfalls in Custom Software Development
+[p] Building a custom web application or platform is an exciting venture, promising to streamline operations, enhance user experience, and drive growth. However, the path from idea to a fully functional, high-performing product is often fraught with common pitfalls that can derail projects, inflate costs, and lead to disappointing outcomes. At princecaleb.dev, we've seen these traps firsthand and have refined our process to help clients navigate them successfully.
+[a] Read the breakdown
+[strong] 3 min
+[span] Technical read
+[span] [AI & CHATBOTS]
+[div] Jul 2026
+[a] AI Booking Assistants for Salons in Accra: Cutting No-Shows With Automation
+[p] A no-show costs a stylist a paid hour with nothing to show for it. An AI booking assistant that reminds, confirms, and reschedules cuts that loss without an awkward conversation.
+[a] Read the breakdown
+[strong] 1 min
+[span] Technical read
+[span] [AI & CHATBOTS]
+[div] Jul 2026
+[a] Using AI to Match Volunteers to Causes: A Guide for NGOs in Ghana
+[p] Matching a volunteer's actual skills to where they're needed usually happens by memory. AI matching does it systematically, at a scale memory can't handle.
+[a] Read the breakdown
+[strong] 1 min
+[span] Technical read
+[span] // Production Logs
+[h2] A registry of shipped systems.
+[span] 01 / React
+[a] Lumen
+[p] Apple-inspired dark-theme product landing page with parallax animations, multi-ring orb hero, bento grid features, and snap-scroll carousel — built with React, Vite, TypeScript and Framer Motion
+[span] React
+[span] TypeScript
+[span] Vite
+[a] View case study
+[span] princecaleb.dev/systems/lumen
+[span] Live
+[span] 02 / PHP
+[a] Simply My Care
+[p] Custom PHP website and staff/client portal for a UK home care and supported living provider, replacing a previous WordPress site.
+[span] PHP
+[span] MySQL
+[span] Bootstrap 5
+[a] View case study
+[span] princecaleb.dev/systems/simply-my-care
+[span] Live
+[span] 03 / React
+[a] Andson Travel Consult
+[p] Andson Travel Consult is a travel consultancy website built with React JS and Node.js to give the business a professional online presence beyond word-of-mouth referrals. The site presents the brand, communicates its travel-support services, and gives prospective clients a simple way to understand what the company offers before making contact.
+[span] React
+[span] Node
+[a] View case study
+[span] princecaleb.dev/systems/andson-travel-consult
+[span] Live
+[a] See all projects
+[span] // Instant prototype
+[h2] Describe your idea. Watch it built in about a minute.
+[p] Tell the AI what you want, a website or an app, in a sentence or two, and get a live, clickable concept prototype you can preview, tweak in plain English, and send straight to me. No account, no cost, no waiting on a quote.
+[span] Free and instant, no sign-up required
+[span] A real, previewable prototype in about 60 seconds
+[span] Refine it, then hand it to me to build for real
+[a] Build my prototype
+[div] // Prototype generator
+[div] What do you want to build?
+[span] A booking ap
+[a] Photographer portfolio
+[a] Handmade jewelry store
+[a] Fitness studio booking
+[span] // Live Demonstration Arena
+[h2] AI context canvas plus direct scheduling.
+[p] A live interface for technical questions, scope capture, and booking handoff, so the client can inspect the system instead of only reading claims.
+[small] Engineering Metric
+[span] Designed for streaming requests with less than 1.5s overhead response delay.
+[span] AI context canvas & booking engine
+[a] Open booking flow
+[button] Open live chat
+[span] // Capability layer
+[h2] The engineering behind reliable agents
+[p] Inspect the infrastructure that turns an AI demo into dependable daily operations.
+[button] Agent interface
+[button] Human handoff
+[button] Integrations & APIs
+[h3] Lean-first delivery
+[p] Purpose-built stacks over massive framework dependencies, fast, ultra-performant interfaces backed by clean PHP and JavaScript cores.
+[span] PHP
+[span] JavaScript ES6+
+[span] React
+[span] CSS Variables
+[span] Bootstrap Utilities
+[h3] Cross-platform native core
+[p] Clean code structures deployed across iOS and Android while using local device hardware efficiently.
+[span] React Native
+[span] Native API Integrations
+[span] Offline Asset Storage
+[span] Push Pipelines
+[h3] High-performance asynchronous data
+[p] REST API environments engineered to route complex data flows seamlessly, with role-based access control baked in.
+[span] REST APIs
+[span] MySQL / PostgreSQL
+[span] Role-Based Access Control
+[span] Webhooks & Automation
+[span] // Client signals
+[h2] What clients say.
+[div] ★★★★★
+[p] "Prince took a vague idea and turned it into a real product in weeks, not months. He asked the right questions upfront so we never had to backtrack."
+[div] Amara K.
+[div] Founder, boutique retail brand
+[div] ★★★★★
+[p] "The performance difference was night and day. Our old site felt sluggish everywhere; the new one just feels instant, even on mobile."
+[div] David O.
+[div] Operations Lead, accounting firm
+[div] ★★★★★
+[p] "Clear communication the entire way through, and the app has needed almost zero maintenance since launch. Exactly what we needed."
+[div] Maya T.
+[div] Studio Owner, wellness & bookings
+[a] Read more reviews
+[h2] Have a project in mind?
+[p] Let's talk about what you're building and how to make it fast, secure, and maintainable.
+[a] Book a discovery call
+[a] Send a message
+[h3] Not ready to talk yet?
+[p] Get the next practical guide by email, no spam, unsubscribe any time.
+[label] Website
+[button] Subscribe
+[span] Prince Caleb
+[a] Services
+[a] Projects
+[small] © 2026 Prince Caleb. All rights reserved.
+[a] Privacy Policy
+[a] Cookie Policy
+[a] Terms of Service
+[span] 1 unread message

@@ -1,0 +1,178 @@
+<template>
+  <style>
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: sans-serif;
+      color: #17181c;
+    }
+
+    /* ---- Full-bleed ground + closing atmosphere (never on #root itself) ---- */
+    #cta06-ground {
+      position: absolute;
+      inset: 0;
+      background: #fbfbfa;
+    }
+    .cta06-ring {
+      position: absolute;
+      left: 960px;
+      top: 448px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(8, 120, 60, 0.14);
+      transform: translate(-50%, -50%);
+    }
+    .cta06-ring-1 {
+      width: 640px;
+      height: 640px;
+      opacity: 0.9;
+    }
+    .cta06-ring-2 {
+      width: 900px;
+      height: 900px;
+      opacity: 0.55;
+    }
+    .cta06-ring-3 {
+      width: 1180px;
+      height: 1180px;
+      opacity: 0.3;
+    }
+
+    /* ---- Card stack (each a direct-child clip, stacked in the same slot) ---- */
+    .cta06-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 83cqh; /* keep-out: content stays clear of the bottom ~17% caption band */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 6cqw;
+    }
+
+    .cta06-h1 {
+      margin: 0;
+      font-size: 3.4cqw;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: #17181c;
+      max-width: 64cqw;
+    }
+
+    .cta06-h2 {
+      margin: 0 0 2.1cqw;
+      font-size: 2.6cqw;
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: #17181c;
+      max-width: 58cqw;
+    }
+
+    .cta06-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.05cqw 2.6cqw;
+      border-radius: 100px;
+      background: #08783c;
+      color: #fbfbfa;
+      font-size: 1.15cqw;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .cta06-card3-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform-origin: 50% 50%;
+    }
+
+    .cta06-accent-line {
+      width: 60px;
+      height: 4px;
+      border-radius: 2px;
+      background: #08783c;
+      margin: 0 0 1.7cqw;
+    }
+
+    .cta06-wordmark {
+      margin: 0 0 1.05cqw;
+      font-size: 3.6cqw;
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      color: #17181c;
+    }
+
+    .cta06-domain {
+      margin: 0;
+      font-size: 1.4cqw;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: #08783c;
+    }
+  </style>
+
+  <div data-hf-id="hf-dzuo" id="root" data-composition-id="06-cta" data-width="1920" data-height="1080" data-duration="5.227">
+    <div data-hf-id="hf-6jmk" id="cta06-ground" class="clip" data-start="0" data-duration="5.227" data-track-index="0">
+      <span data-hf-id="hf-cgl5" class="cta06-ring cta06-ring-3"></span>
+      <span data-hf-id="hf-boxc" class="cta06-ring cta06-ring-2"></span>
+      <span data-hf-id="hf-kct7" class="cta06-ring cta06-ring-1"></span>
+    </div>
+
+    <div data-hf-id="hf-dldt" id="cta06-card1" class="cta06-card clip" data-start="0" data-duration="1.8" data-track-index="1">
+      <h1 data-hf-id="hf-n36w" class="cta06-h1">Have a project in mind?</h1>
+    </div>
+
+    <div data-hf-id="hf-hfrc" id="cta06-card2" class="cta06-card clip" data-start="1.8" data-duration="1.4" data-track-index="2">
+      <h2 data-hf-id="hf-bcx7" class="cta06-h2">Let’s build the system that runs it.</h2>
+      <div data-hf-id="hf-qtnt" class="cta06-btn">Book a discovery call</div>
+    </div>
+
+    <div data-hf-id="hf-gv3s" id="cta06-card3" class="cta06-card clip" data-start="3.2" data-duration="2.027" data-track-index="3">
+      <div data-hf-id="hf-t33w" id="cta06-card3-inner" class="cta06-card3-inner">
+        <div data-hf-id="hf-nlum" class="cta06-accent-line"></div>
+        <div data-hf-id="hf-w0da" class="cta06-wordmark">Prince Caleb.</div>
+        <div data-hf-id="hf-9epe" class="cta06-domain">princecaleb.dev</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Scene 1 — card 1: gentle fade-in + subtle scale-up settle (~95%→100%, ease-out).
+    tl.fromTo(
+      "#cta06-card1 .cta06-h1",
+      { opacity: 0, scale: 0.95 },
+      { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" },
+      0,
+    );
+
+    // Scene 2 — card 2 arrives via the clip system's own instant hard cut at t=1.8s
+    // (full opacity, no crossfade, no entrance tween — deliberate, per the
+    // hard-cut-card-stack-to-logo card-chain variant of titlecard-reveal).
+
+    // Scene 3 — card 3 arrives the same way at t=3.2s, then holds to the final
+    // frame with a barely-perceptible continuous slow scale-up (micro-drift
+    // register) across the terminal hold.
+    tl.fromTo(
+      "#cta06-card3-inner",
+      { scale: 1 },
+      { scale: 1.018, duration: 5.227 - 3.2, ease: "sine.inOut" },
+      3.2,
+    );
+
+    window.__timelines["06-cta"] = tl;
+  </script>
+</template>

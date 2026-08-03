@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 6rem 8rem;
+          color: #00ff66;
+          font-family: "JetBrains Mono", monospace;
+        }
+        .s3-content { width: min(1100px, 100%); text-align: center; }
+        .s3-eyebrow {
+          margin-bottom: 1.25rem;
+          color: rgba(214, 255, 226, 0.78);
+          font-size: 0.8rem;
+          letter-spacing: 0.32em;
+          text-transform: uppercase;
+          opacity: 0;
+        }
+        .s3-terminal {
+          width: min(850px, 100%);
+          margin: 0 auto;
+          overflow: hidden;
+          border: 1px solid rgba(0, 255, 102, 0.22);
+          border-radius: 18px;
+          background: linear-gradient(180deg, rgba(9, 18, 12, 0.92), rgba(2, 5, 3, 0.95));
+          box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65), 0 0 60px rgba(0, 255, 102, 0.07);
+          opacity: 0;
+          transform: scale(0.97);
+        }
+        .s3-terminal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 48px;
+          padding: 0 1rem;
+          border-bottom: 1px solid rgba(0, 255, 102, 0.22);
+          background: rgba(255, 255, 255, 0.025);
+        }
+        .s3-dots { display: flex; gap: 0.48rem; }
+        .s3-dot { width: 10px; height: 10px; border-radius: 999px; }
+        .s3-dot:nth-child(1) { background: #ff5f57; }
+        .s3-dot:nth-child(2) { background: #febc2e; }
+        .s3-dot:nth-child(3) { background: #28c840; }
+        .s3-label { color: rgba(255, 255, 255, 0.34); font-size: 0.72rem; letter-spacing: 0.08em; }
+        .s3-body { min-height: 260px; padding: 2.4rem clamp(1.4rem, 4vw, 3rem); text-align: left; }
+        .s3-line { display: flex; flex-wrap: wrap; gap: 0.7rem; margin: 0 0 1rem; font-size: 1.02rem; line-height: 1.7; }
+        .s3-prompt { color: #4dfaff; }
+        .s3-typing {
+          display: inline-block;
+          max-width: 100%;
+          overflow: hidden;
+          white-space: nowrap;
+          border-right: 2px solid #00ff66;
+          width: 0;
+          color: #f5fff8;
+        }
+        .s3-ok { color: #00ff66; opacity: 0; }
+        .s3-status-label { color: #00ff66; }
+        .s3-status-value { color: #f5fff8; }
+        .s3-status-line { opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="s3" data-width="1920" data-height="1080" data-duration="3.760">
+        <div class="s3-content">
+          <p class="s3-eyebrow" id="s3-eyebrow">A new architecture</p>
+          <div class="s3-terminal" id="s3-terminal">
+            <div class="s3-terminal-header">
+              <div class="s3-dots"><span class="s3-dot"></span><span class="s3-dot"></span><span class="s3-dot"></span></div>
+              <span class="s3-label">builder-os initialization</span>
+              <span></span>
+            </div>
+            <div class="s3-body">
+              <p class="s3-line"><span class="s3-prompt">root@princecaleb:~#</span><span class="s3-typing" id="s3-typed">initialize builder_os --mode intelligent</span></p>
+              <p class="s3-line s3-ok" id="s3-ok1">[OK] Connecting systems...</p>
+              <p class="s3-line s3-ok" id="s3-ok2">[OK] Activating autonomous agents...</p>
+              <p class="s3-line s3-ok" id="s3-ok3">[OK] Synchronizing intelligence...</p>
+              <p class="s3-line s3-status-line" id="s3-status"><span class="s3-status-label">STATUS:</span> <span class="s3-status-value">ONLINE</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        tl.fromTo("#s3-eyebrow", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0);
+        tl.fromTo("#s3-terminal", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" }, 0.1);
+        tl.fromTo("#s3-typed", { width: 0 }, { width: "48ch", duration: 2.0, ease: "none" }, 0.4);
+        tl.fromTo("#s3-ok1", { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, 2.5);
+        tl.fromTo("#s3-ok2", { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, 2.68);
+        tl.fromTo("#s3-ok3", { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, 2.86);
+        tl.fromTo("#s3-status", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, 3.1);
+
+        window.__timelines["s3"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

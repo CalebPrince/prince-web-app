@@ -1,0 +1,33 @@
+{
+  "provider": "kokoro",
+  "speed": 1,
+  "lines": [
+    {
+      "id": "01",
+      "text": "Not a concept. It is already running."
+    },
+    {
+      "id": "02",
+      "text": "An enquiry comes in. The system answers, understands, books, and records the handoff."
+    },
+    {
+      "id": "03",
+      "text": "Lisa, Joan, Sharon, Jason — specialists at every handoff, working as one operating system."
+    },
+    {
+      "id": "04",
+      "text": "The workflows are live. The handoffs are visible. The proof is here to inspect."
+    },
+    {
+      "id": "05",
+      "text": "Put your first workflow to work. Visit princecaleb.dev."
+    }
+  ],
+  "bgm": {
+    "mode": "retrieve",
+    "query": "fast electronic tech pulse, confident and percussive",
+    "blob": "Prince Caleb builds real AI systems that are already running, not vague concepts",
+    "arc": "Demo Loop — claim → proof → workflow → operating system → CTA"
+  },
+  "voice": "am_michael"
+}
