@@ -178,31 +178,13 @@
       <div class="system-status"><span class="dot"></span><span>Interactive introduction</span></div>
     </header>
 
-    <main class="layout">
-      <div class="stage-terminal">
-        <section class="stage" aria-labelledby="welcome-title">
-        <article class="scene active final">
-          <div class="term-line show"><div class="eyebrow">WELCOME TO</div></div>
-          <div class="term-line show"><h1 class="headline" id="welcome-title">PRINCE CALEB</h1></div>
-          <div class="term-line show"><p class="copy">AI agents, automations and custom digital systems built for real business.</p></div>
-          <div class="final-shell show">
-            <a class="enter-frame" id="enterButton" href="home.html" aria-label="Enter the system">
-              <span class="enter-inner"><span id="buttonLabel">Enter website</span><span class="enter-arrow">→</span></span>
-            </a>
-          </div>
-        </article>
-        </section>
-      </div>
-    </main>
-
   </div>
 
-  <div class="transition" id="transition"><div class="transition-text" id="transitionText">OPENING WEBSITE...</div></div>
+  <div class="transition show" id="transition" role="status" aria-live="polite">
+    <div class="transition-text" id="transitionText">OPENING WEBSITE...</div>
+  </div>
 
   <script>
-    const enterButton = document.getElementById('enterButton');
-    const buttonLabel = document.getElementById('buttonLabel');
-    const transition = document.getElementById('transition');
     const transitionText = document.getElementById('transitionText');
 
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -218,21 +200,16 @@
       particles.appendChild(p);
     }
 
-    enterButton.addEventListener('click', async e => {
-      e.preventDefault();
-      const destination = enterButton.getAttribute('href');
-      enterButton.classList.add('loading');
-      buttonLabel.textContent = 'Opening website';
-      await sleep(400);
-      transition.classList.add('show');
-      transitionText.textContent = 'OPENING WEBSITE...';
+    const openWebsite = async () => {
       await sleep(850);
       transitionText.textContent = 'WELCOME';
       await sleep(650);
       transitionText.textContent = 'LOADING PRINCECALEB.DEV...';
       await sleep(750);
-      window.location.href = destination;
-    });
+      window.location.replace('home.html');
+    };
+
+    openWebsite();
   </script>
 </body>
 </html>
