@@ -143,6 +143,9 @@ $router->post('/api/v1/appointments/book', [AppointmentController::class, 'book'
 $router->post('/api/v1/ai/chat', [AiChatController::class, 'chat']);
 $router->post('/api/v1/liveavatar/embed', [LiveAvatarController::class, 'createEmbed']);
 $router->post('/api/v1/liveavatar/session-token', [LiveAvatarController::class, 'createSessionToken']);
+$router->post('/api/v1/liveavatar/sdk/v1/sessions/start', [LiveAvatarController::class, 'sdkStart']);
+$router->post('/api/v1/liveavatar/sdk/v1/sessions/stop', [LiveAvatarController::class, 'sdkStop']);
+$router->post('/api/v1/liveavatar/sdk/v1/sessions/keep-alive', [LiveAvatarController::class, 'sdkKeepAlive']);
 $router->get('/api/v1/chat/status', [LiveChatController::class, 'status']);
 $router->get('/api/v1/chat/session/{token}', [LiveChatController::class, 'session']);
 $router->post('/api/v1/chat/message', [LiveChatController::class, 'message']);

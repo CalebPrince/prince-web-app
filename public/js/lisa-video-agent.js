@@ -36,7 +36,10 @@
       video.setAttribute('aria-label', 'Live video conversation with Lisa, an AI assistant');
       mount.replaceChildren(video); mount.hidden = false;
       const sdk = window.LiveAvatarSDK;
-      session = new sdk.LiveAvatarSession(data.session_token, { voiceChat: true });
+      session = new sdk.LiveAvatarSession(data.session_token, {
+        voiceChat: true,
+        apiUrl: window.location.origin + '/api/v1/liveavatar/sdk'
+      });
       let streamReady = false;
       let connected = false;
       let greetingSent = false;

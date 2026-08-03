@@ -10,6 +10,10 @@ use App\Support\Settings;
 
 class LiveAvatarController
 {
+    public static function sdkStart(): void { self::proxySdkRequest('/v1/sessions/start'); }
+    public static function sdkStop(): void { self::proxySdkRequest('/v1/sessions/stop'); }
+    public static function sdkKeepAlive(): void { self::proxySdkRequest('/v1/sessions/keep-alive'); }
+
     /** POST /api/v1/liveavatar/session-token — issues a short-lived SDK token. */
     public static function createSessionToken(): void
     {
@@ -96,5 +100,30 @@ class LiveAvatarController
             Response::error('Lisa could not start the video call. Please try again shortly.', 502);
         }
         return $decoded;
+    }
+
+    private static function proxySdkRequest(string $path): void
+    {
+        RateLimitMiddleware::enforce('liveavatar_sdk_proxy', 180);
+        $authorization = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+        if (!preg_match('/^Bearer\s+[A-Za-z0-9._-]+$/', $authorization)) {
+            Response::error('A valid LiveAvatar session token is required.', 401);
+        }
+        $context = stream_context_create(['http' => [
+            'method' => 'POST',
+            'header' => "Authorization: {$authorization}\r\nContent-Type: application/json\r\nAccept: application/json\r\n",
+            'content' => '{}',
+            'ignore_errors' => true,
+            'timeout' => 30,
+        ]]);
+        $body = @file_get_contents('https://api.liveavatar.com' . $path, false, $context);
+        $statusLine = $http_response_header[0] ?? '';
+        $status = preg_match('/\s(\d{3})\s/', $statusLine, $match) ? (int) $match[1] : 502;
+        $decoded = is_string($body) ? json_decode($body, true) : null;
+        if (!is_array($decoded)) {
+            error_log('LiveAvatar SDK proxy returned an invalid response for ' . $path);
+            Response::error('LiveAvatar did not return a valid response.', 502);
+        }
+        Response::json($decoded, $status);
     }
 }
