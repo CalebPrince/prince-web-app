@@ -51,7 +51,7 @@ class ReportController
             'currency' => $currency,
             'revenue' => $revenue,
             'revenue_target' => self::revenueTarget($pdo),
-            'pipeline' => self::pipeline($pdo),
+            'pipeline' => self::pipeline($pdo, $from, $to),
             'automations' => self::automations($pdo),
             'bookings' => self::bookings($pdo),
             'lead_sources' => self::leadSources($pdo),
@@ -383,7 +383,7 @@ class ReportController
     }
 
     /** @return array<string,mixed> */
-    private static function pipeline(\PDO $pdo): array
+    private static function pipeline(\PDO $pdo, string $from, string $to): array
     {
         // Inquiry pipeline stages (new -> reviewing -> proposal_sent -> won/lost).
         $stageRaw = $pdo->query('SELECT pipeline_stage, COUNT(*) AS c FROM inquiries GROUP BY pipeline_stage')
@@ -413,6 +413,32 @@ class ReportController
             "SELECT COUNT(DISTINCT LOWER(email)) FROM payments WHERE status = 'success'"
         )->fetchColumn();
 
+        $countBetween = static function (string $sql) use ($pdo, $from, $to): int {
+            $stmt = $pdo->prepare($sql); $stmt->execute([$from, $to]); return (int) $stmt->fetchColumn();
+        };
+        // The compound query needs the same selected window for each ledger.
+        $touchStmt = $pdo->prepare("SELECT (SELECT COUNT(*) FROM outreach_sends WHERE date(sent_at) BETWEEN ? AND ?) + (SELECT COUNT(*) FROM call_log WHERE date(called_at) BETWEEN ? AND ?)");
+        $touchStmt->execute([$from, $to, $from, $to]);
+        $outreachTouches = (int) $touchStmt->fetchColumn();
+        $booked = $countBetween("SELECT COUNT(*) FROM appointments WHERE status!='cancelled' AND date(created_at) BETWEEN ? AND ?");
+        $periodProposals = $countBetween("SELECT COUNT(*) FROM proposals WHERE status IN ('sent','accepted','declined') AND date(created_at) BETWEEN ? AND ?");
+        $won = $countBetween("SELECT COUNT(*) FROM proposals WHERE status='accepted' AND date(accepted_at) BETWEEN ? AND ?");
+        $paymentsCollected = $countBetween("SELECT COUNT(*) FROM payments WHERE status='success' AND date(created_at) BETWEEN ? AND ?");
+        $activityFunnel = [
+            ['key'=>'touches','label'=>'Outreach touches','count'=>$outreachTouches,'href'=>'/admin/marketing-leads.html'],
+            ['key'=>'bookings','label'=>'Calls booked','count'=>$booked,'href'=>'/admin/appointments.html'],
+            ['key'=>'proposals','label'=>'Proposals sent','count'=>$periodProposals,'href'=>'/admin/proposals.html'],
+            ['key'=>'wins','label'=>'Deals won','count'=>$won,'href'=>'/admin/proposals.html'],
+            ['key'=>'payments','label'=>'Payments collected','count'=>$paymentsCollected,'href'=>'/admin/payments.html'],
+        ];
+        $weakest = null;
+        foreach ($activityFunnel as $index => &$step) {
+            $previous = $index > 0 ? $activityFunnel[$index - 1]['count'] : null;
+            $step['conversion'] = $previous > 0 ? round(($step['count'] / $previous) * 100, 1) : null;
+            if ($index > 0 && $previous > 0 && ($weakest === null || $step['conversion'] < $weakest['conversion'])) $weakest = ['from'=>$activityFunnel[$index-1]['label'],'to'=>$step['label'],'conversion'=>$step['conversion']];
+        }
+        unset($step);
+
         return [
             'stages' => $stages,
             'inquiries_total' => $inquiriesTotal,
@@ -423,6 +449,9 @@ class ReportController
             'paying_customers' => $payingCustomers,
             'win_rate' => $winRate,
             'avg_deal_size' => $avgDeal,
+            'activity_funnel' => $activityFunnel,
+            'activity_bottleneck' => $weakest,
+            'activity_period' => ['from'=>$from, 'to'=>$to],
             // Headline funnel for the chart: everyone in -> proposals out -> paid.
             'funnel' => [
                 ['label' => 'Inquiries', 'count' => $inquiriesTotal],

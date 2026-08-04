@@ -104,24 +104,11 @@ function renderPipeline(p, currency) {
   document.getElementById('stat-paying').textContent = p.paying_customers;
   document.getElementById('stat-avg-deal').textContent = p.avg_deal_size > 0 ? 'avg deal ' + formatMoney(p.avg_deal_size, currency) : 'no closed deals yet';
 
-  drawChart('funnel-chart', {
-    type: 'bar',
-    data: {
-      labels: p.funnel.map(f => f.label),
-      datasets: [{
-        label: 'Count',
-        data: p.funnel.map(f => f.count),
-        backgroundColor: ['#4f46e5', '#0ea5e9', '#10b981'],
-        borderRadius: 4,
-      }],
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
-    },
-  });
+  const steps=p.activity_funnel||[];
+  document.getElementById('activity-funnel-period').textContent=p.activity_period?`${p.activity_period.from} â€“ ${p.activity_period.to}`:'';
+  document.getElementById('activity-funnel').innerHTML=steps.map((step,index)=>`${index?`<div class="activity-funnel-handoff"><i class="bi bi-arrow-down"></i><span>${step.conversion===null?'No baseline':step.conversion+'%'}</span></div>`:''}<a class="activity-funnel-step" href="${esc(step.href)}"><span>${esc(step.label)}</span><strong>${step.count}</strong><small>${index===0?'Recorded volume':step.conversion===null?'No prior activity':step.conversion+'% from previous step'}</small></a>`).join('');
+  const bottleneck=p.activity_bottleneck, bottleneckBox=document.getElementById('activity-bottleneck');
+  bottleneckBox.innerHTML=bottleneck?`<i class="bi bi-exclamation-diamond"></i><span><strong>Weakest handoff: ${esc(bottleneck.from)} â†’ ${esc(bottleneck.to)}</strong><small>${bottleneck.conversion}% conversion. Review this transition before increasing activity above it.</small></span>`:`<i class="bi bi-info-circle"></i><span><strong>Not enough activity to identify a bottleneck</strong><small>Record actions throughout the selected period to establish a conversion baseline.</small></span>`;
 
   const stageLabels = { new: 'New', reviewing: 'Reviewing', proposal_sent: 'Proposal sent', won: 'Won', lost: 'Lost' };
   document.getElementById('pipeline-stages').innerHTML =
@@ -326,6 +313,8 @@ function exportReport(data) {
 
   lines.push(csvRow(['Pipeline funnel', 'Count']));
   data.pipeline.funnel.forEach(f => lines.push(csvRow([f.label, f.count])));
+  lines.push(csvRow([]), csvRow(['ACTIVITY TO REVENUE', 'Count', 'Conversion from previous']));
+  (data.pipeline.activity_funnel||[]).forEach(f => lines.push(csvRow([f.label, f.count, f.conversion===null?'':f.conversion+'%'])));
   lines.push(csvRow(['Win rate', data.pipeline.win_rate === null ? '' : Math.round(data.pipeline.win_rate * 100) + '%']));
   lines.push('');
 

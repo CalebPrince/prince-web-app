@@ -439,6 +439,7 @@ database/
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   draft_newsletters_from_blog.php    # Published blog posts -> Jason newsletter drafts, ready to review (cron, ~5-10 min)
   send_daily_brief.php            # Chief's daily brief on what every other agent did, emailed (cron, daily)
+  dispatch_agent_tasks.php        # leases due durable agent work; retries safely and records outcomes (cron, ~1 min)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
 storage/

@@ -223,8 +223,9 @@
     <div class="row g-4 mb-1">
       <div class="col-lg-6">
         <div class="admin-card p-4 h-100">
-          <h5 class="mb-3"><i class="bi bi-funnel me-2" style="color: var(--section-leads);"></i>Sales funnel</h5>
-          <canvas id="funnel-chart" height="150"></canvas>
+          <div class="activity-funnel-head"><div><h5 class="mb-1"><i class="bi bi-funnel me-2" style="color: var(--section-leads);"></i>Activity to revenue</h5><p>Recorded actions and outcomes for the selected period.</p></div><span id="activity-funnel-period"></span></div>
+          <div class="activity-funnel" id="activity-funnel"></div>
+          <div class="activity-bottleneck" id="activity-bottleneck"></div>
           <div id="pipeline-stages" class="mt-3"></div>
         </div>
       </div>

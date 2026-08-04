@@ -161,6 +161,30 @@ CREATE TABLE IF NOT EXISTS admin_tasks (
 );
 CREATE INDEX IF NOT EXISTS idx_admin_tasks_status_due ON admin_tasks (status, due_at);
 
+CREATE TABLE IF NOT EXISTS agent_tasks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL,
+  agent_key TEXT NOT NULL,
+  entity_type TEXT,
+  entity_id INTEGER,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued','leased','completed','failed','cancelled')),
+  priority INTEGER NOT NULL DEFAULT 0,
+  due_at TEXT NOT NULL DEFAULT (datetime('now')),
+  lease_token TEXT,
+  lease_expires_at TEXT,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  max_attempts INTEGER NOT NULL DEFAULT 3,
+  reschedule_reason TEXT,
+  outcome TEXT,
+  last_error TEXT,
+  completed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_dispatch ON agent_tasks (status, due_at, priority);
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_entity ON agent_tasks (entity_type, entity_id, kind);
+
 CREATE TABLE IF NOT EXISTS rate_limits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   ip_address TEXT NOT NULL,

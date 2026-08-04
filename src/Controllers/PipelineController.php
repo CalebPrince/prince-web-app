@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\Response;
+use App\Support\AgentTaskQueue;
 
 /** Unified, identity-deduplicated sales pipeline across every lead source. */
 class PipelineController
@@ -142,6 +143,7 @@ class PipelineController
         $stmt->execute($values);
         if ($stmt->rowCount() === 0) Response::error('Pipeline lead not found.', 404);
         if (array_key_exists('follow_up_at', $data)) $pdo->prepare("DELETE FROM notification_reads WHERE notification_key=?")->execute(['follow_up:'.$id]);
+        if (!empty($follow)) AgentTaskQueue::enqueue('lead_recheck','nurturer','pipeline_lead',$id,['next_action'=>$data['next_action']??null],str_replace('T',' ',$follow),200,$data['next_action']??'Follow up with this lead at the scheduled time.');
         ActivityLog::log($user, 'pipeline_lead_updated', 'pipeline_lead', $id, null, array_intersect_key($data, array_flip(['stage','next_action','follow_up_at'])));
         Response::json(['status' => 'updated']);
     }

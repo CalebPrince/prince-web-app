@@ -1205,6 +1205,18 @@ if (!in_array('activity_type', $taskColumns, true)) $pdo->exec('ALTER TABLE admi
 if (!in_array('estimated_value', $taskColumns, true)) $pdo->exec('ALTER TABLE admin_tasks ADD COLUMN estimated_value INTEGER NOT NULL DEFAULT 0');
 if (!in_array('currency', $taskColumns, true)) $pdo->exec("ALTER TABLE admin_tasks ADD COLUMN currency TEXT NOT NULL DEFAULT 'GHS'");
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_admin_tasks_status_due ON admin_tasks (status, due_at)');
+$pdo->exec("CREATE TABLE IF NOT EXISTS agent_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, agent_key TEXT NOT NULL,
+    entity_type TEXT, entity_id INTEGER, payload_json TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued','leased','completed','failed','cancelled')),
+    priority INTEGER NOT NULL DEFAULT 0, due_at TEXT NOT NULL DEFAULT (datetime('now')),
+    lease_token TEXT, lease_expires_at TEXT, attempts INTEGER NOT NULL DEFAULT 0,
+    max_attempts INTEGER NOT NULL DEFAULT 3, reschedule_reason TEXT, outcome TEXT,
+    last_error TEXT, completed_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+)");
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_agent_tasks_dispatch ON agent_tasks (status, due_at, priority)');
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_agent_tasks_entity ON agent_tasks (entity_type, entity_id, kind)');
 
 $projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');
 if (!in_array('contract_value', $projectColumns, true)) $pdo->exec('ALTER TABLE projects ADD COLUMN contract_value INTEGER NOT NULL DEFAULT 0');
