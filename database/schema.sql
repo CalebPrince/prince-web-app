@@ -151,6 +151,10 @@ CREATE TABLE IF NOT EXISTS admin_tasks (
   due_at TEXT,
   assignee TEXT,
   related_url TEXT,
+  is_revenue INTEGER NOT NULL DEFAULT 0,
+  activity_type TEXT,
+  estimated_value INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'GHS',
   completed_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

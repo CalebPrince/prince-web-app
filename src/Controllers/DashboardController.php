@@ -217,6 +217,7 @@ class DashboardController
         $targetRaw = Settings::get('monthly_revenue_target') ?: '0';
         $targetAmount = is_numeric($targetRaw) ? (int) round((float) $targetRaw * 100) : 0;
         $externalExpenses = self::externalExpenses($pdo);
+        $revenueActions = self::revenueActions($pdo);
 
         // Abuse signal: the rate_limits table already buckets requests per
         // IP/endpoint/hour. Surface the last 24h so spikes and repeat
@@ -267,6 +268,7 @@ class DashboardController
             'draft_projects' => $draftProjects,
             'upcoming_appointments' => $upcomingAppointments,
             'recent_payments' => $recentPayments,
+            'revenue_actions' => $revenueActions,
             'mode_summaries' => [
                 'operational' => [
                     'active_projects' => $activeProjects,
@@ -293,6 +295,46 @@ class DashboardController
     private static function moneyRows(array $rows): array
     {
         return array_map(fn($row) => ['currency' => $row['currency'], 'total' => (int) $row['total']], $rows);
+    }
+
+    /**
+     * A deliberately small execution queue: direct or near-direct paths to
+     * revenue, ordered by urgency. This derives from existing CRM records so
+     * it cannot drift into a second task system.
+     */
+    private static function revenueActions(\PDO $pdo): array
+    {
+        $items = [];
+        $add = static function (string $key, string $kind, string $title, string $detail, string $href, string $due, int $priority, int $value = 0, string $currency = 'GHS') use (&$items): void {
+            $items[] = compact('key', 'kind', 'title', 'detail', 'href', 'due', 'priority', 'value', 'currency');
+        };
+
+        foreach ($pdo->query("SELECT id,lead_key,next_action,follow_up_at,stage FROM pipeline_leads WHERE follow_up_at IS NOT NULL AND datetime(follow_up_at)<=datetime('now') AND stage NOT IN ('won','lost') ORDER BY datetime(follow_up_at) ASC LIMIT 20") as $row) {
+            $identity = str_starts_with($row['lead_key'], 'email:') ? substr($row['lead_key'], 6) : 'Lead #'.$row['id'];
+            $add('follow_up:'.$row['id'], 'Follow-up', 'Follow up with '.$identity, $row['next_action'] ?: 'Restart the conversation and agree the next step.', '/admin/pipeline.html?open='.$row['id'], $row['follow_up_at'], 0);
+        }
+
+        foreach ($pdo->query("SELECT id,lead_key,next_action,updated_at,stage FROM pipeline_leads WHERE stage NOT IN ('won','lost') AND follow_up_at IS NULL AND datetime(updated_at)<=datetime('now','-5 days') ORDER BY datetime(updated_at) ASC LIMIT 20") as $row) {
+            $identity = str_starts_with($row['lead_key'], 'email:') ? substr($row['lead_key'], 6) : 'Lead #'.$row['id'];
+            $add('stale:'.$row['id'], 'Stale lead', 'Choose the next move for '.$identity, $row['next_action'] ?: 'This opportunity has no scheduled follow-up.', '/admin/pipeline.html?open='.$row['id'], $row['updated_at'], 1);
+        }
+
+        foreach ($pdo->query("SELECT id,client_name,title,total_amount,currency,updated_at FROM proposals WHERE status='sent' AND datetime(updated_at)<=datetime('now','-3 days') ORDER BY datetime(updated_at) ASC LIMIT 20") as $row) {
+            $add('proposal:'.$row['id'], 'Proposal', 'Check in with '.$row['client_name'], $row['title'].' has been waiting for a response.', '/admin/proposals.html', $row['updated_at'], 1, (int) $row['total_amount'], $row['currency']);
+        }
+
+        foreach ($pdo->query("SELECT id,business_name,status,estimated_value,currency,updated_at FROM marketing_leads WHERE status IN ('audited','pitch_ready') ORDER BY is_high_priority DESC, datetime(updated_at) ASC LIMIT 20") as $row) {
+            $detail = $row['status'] === 'pitch_ready' ? 'The pitch is ready to review and send.' : 'Turn the completed audit into a direct pitch.';
+            $add('outreach:'.$row['id'], 'Outreach', 'Contact '.$row['business_name'], $detail, '/admin/marketing-leads.html', $row['updated_at'], 2, (int) $row['estimated_value'], $row['currency']);
+        }
+
+        usort($items, static fn(array $a, array $b): int => [$a['priority'], $a['due']] <=> [$b['priority'], $b['due']]);
+        $items = array_slice($items, 0, 10);
+        $values = [];
+        foreach ($items as $item) {
+            if ($item['value'] > 0) $values[$item['currency']] = ($values[$item['currency']] ?? 0) + $item['value'];
+        }
+        return ['count' => count($items), 'items' => $items, 'value_by_currency' => array_map(static fn(string $currency, int $total): array => compact('currency', 'total'), array_keys($values), array_values($values))];
     }
 
     private static function externalExpenses(\PDO $pdo): array

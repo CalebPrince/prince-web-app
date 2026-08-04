@@ -9,6 +9,7 @@ let pipelineLeads = [];
 let pipelineStages = Object.keys(PIPELINE_STAGE_META);
 let pipelineQuery = '';
 let pipelineSource = '';
+let pipelineFocus = 'all';
 
 function pipelineEsc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function pipelineInitials(name) { return String(name || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase(); }
@@ -22,10 +23,21 @@ function pipelineAttribution(lead) {
   else if (a.landing_path) label = `Landed on ${a.landing_path.split('?')[0]}`;
   return label ? `<div class="pipeline-attribution"><i class="bi bi-signpost-split"></i>${pipelineEsc(label)}</div>` : '';
 }
+function pipelineIsClosed(lead){return ['won','lost'].includes(lead.stage);}
+function pipelineIsDue(lead){return Boolean(lead.follow_up_at&&new Date(lead.follow_up_at).getTime()<=Date.now()&&!pipelineIsClosed(lead));}
+function pipelineIsStale(lead){const activity=Math.max(new Date(lead.latest_at).getTime(),new Date(lead.pipeline_updated_at||0).getTime());return Boolean(!pipelineIsClosed(lead)&&!lead.follow_up_at&&Date.now()-activity>=5*86400000);}
+function pipelineContactActions(lead, drawer=false) {
+  const phone=String(lead.phone||'').trim();const digits=phone.replace(/\D/g,'');const email=String(lead.email||'').trim();const actions=[];
+  if(phone)actions.push(`<a href="tel:${pipelineEsc(phone)}" aria-label="Call ${pipelineEsc(lead.name)}"><i class="bi bi-telephone"></i><span>${drawer?'Call':''}</span></a>`);
+  if(digits)actions.push(`<a href="https://wa.me/${digits}" target="_blank" rel="noopener" aria-label="WhatsApp ${pipelineEsc(lead.name)}"><i class="bi bi-whatsapp"></i><span>${drawer?'WhatsApp':''}</span></a>`);
+  if(email)actions.push(`<a href="mailto:${pipelineEsc(email)}" aria-label="Email ${pipelineEsc(lead.name)}"><i class="bi bi-envelope"></i><span>${drawer?'Email':''}</span></a>`);
+  actions.push(`<a href="/admin/proposals.html" aria-label="Open proposals"><i class="bi bi-file-earmark-plus"></i><span>${drawer?'Proposal':''}</span></a>`);
+  return `<nav class="pipeline-contact-actions ${drawer?'is-drawer':''}" aria-label="Contact actions">${actions.join('')}</nav>`;
+}
 function pipelineDrawer(lead) {
   const a=lead.attribution||{}; const sources=[...new Map(lead.sources.map(s=>[`${s.type}:${s.id}`,s])).values()];
   return `<header class="pipeline-drawer-header"><div><p class="pipeline-eyebrow mb-1">Lead record</p><h3 id="pipeline-drawer-title">${pipelineEsc(lead.name)}</h3><p>${pipelineEsc(lead.email||lead.phone||'No contact detail')}</p></div><button type="button" class="pipeline-drawer-close" aria-label="Close"><i class="bi bi-x-lg"></i></button></header>
-  <div class="pipeline-drawer-body"><section class="pipeline-detail-grid"><div><span>Stage</span><strong>${pipelineEsc(PIPELINE_STAGE_META[lead.stage]?.label||lead.stage)}</strong></div><div><span>Value</span><strong>${pipelineMoney(lead)||'—'}</strong></div><div><span>First seen</span><strong>${new Date(lead.created_at).toLocaleDateString()}</strong></div><div><span>Last activity</span><strong>${new Date(lead.latest_at).toLocaleDateString()}</strong></div></section>
+  <div class="pipeline-drawer-body">${pipelineContactActions(lead,true)}<section class="pipeline-detail-grid"><div><span>Stage</span><strong>${pipelineEsc(PIPELINE_STAGE_META[lead.stage]?.label||lead.stage)}</strong></div><div><span>Value</span><strong>${pipelineMoney(lead)||'—'}</strong></div><div><span>First seen</span><strong>${new Date(lead.created_at).toLocaleDateString()}</strong></div><div><span>Last activity</span><strong>${new Date(lead.latest_at).toLocaleDateString()}</strong></div></section>
   <section class="pipeline-detail-section"><h5>Latest context</h5><p>${pipelineEsc(lead.summary||'No activity summary')}</p></section>
   <section class="pipeline-detail-section"><h5>Source history</h5><div class="pipeline-source-timeline">${sources.map(s=>`<a href="${pipelineEsc(s.url)}"><i class="bi bi-arrow-up-right"></i><span><strong>${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type]||s.type)}</strong><small>Record #${s.id}</small></span></a>`).join('')}</div></section>
   ${(a.landing_path||a.referrer||a.utm_source)?`<section class="pipeline-detail-section"><h5>First-touch attribution</h5><dl class="pipeline-attribution-list">${a.landing_path?`<div><dt>Landing page</dt><dd>${pipelineEsc(a.landing_path)}</dd></div>`:''}${a.referrer?`<div><dt>Referrer</dt><dd>${pipelineEsc(a.referrer)}</dd></div>`:''}${a.utm_source?`<div><dt>Campaign</dt><dd>${pipelineEsc([a.utm_source,a.utm_medium,a.utm_campaign].filter(Boolean).join(' · '))}</dd></div>`:''}</dl></section>`:''}
@@ -35,21 +47,23 @@ function closePipelineDrawer(){document.getElementById('pipeline-drawer').classL
 function openPipelineDrawer(id){const lead=pipelineLeads.find(l=>Number(l.id)===Number(id));if(!lead)return;const drawer=document.getElementById('pipeline-drawer');document.getElementById('pipeline-drawer-content').innerHTML=pipelineDrawer(lead);drawer.classList.add('open');document.getElementById('pipeline-drawer-backdrop').classList.add('open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('.pipeline-drawer-close').addEventListener('click',closePipelineDrawer);drawer.querySelector('#pipeline-detail-form').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('pipeline-detail-status');status.textContent='Saving…';const payload={next_action:document.getElementById('pipeline-next-action').value,follow_up_at:document.getElementById('pipeline-follow-up').value,notes:document.getElementById('pipeline-notes').value};try{await api.patch(`/api/v1/admin/pipeline/${lead.id}`,payload);Object.assign(lead,payload);status.textContent='Saved';renderPipeline();}catch(err){status.textContent=err.message||'Could not save.';}});}
 function pipelineVisible() {
   const q = pipelineQuery.toLowerCase();
-  return pipelineLeads.filter(lead => (!pipelineSource || lead.sources.some(s => s.type === pipelineSource)) && (!q || [lead.name, lead.email, lead.phone, lead.summary].some(v => String(v || '').toLowerCase().includes(q))));
+  return pipelineLeads.filter(lead => (!pipelineSource || lead.sources.some(s => s.type === pipelineSource)) && (!q || [lead.name, lead.email, lead.phone, lead.summary].some(v => String(v || '').toLowerCase().includes(q))) && (pipelineFocus==='all'||(pipelineFocus==='due'&&pipelineIsDue(lead))||(pipelineFocus==='stale'&&pipelineIsStale(lead))));
 }
 function pipelineCard(lead) {
   const sources = [...new Map(lead.sources.map(s => [s.type, s])).values()];
-  const followUpDue = lead.follow_up_at && new Date(lead.follow_up_at).getTime() <= Date.now() && !['won','lost'].includes(lead.stage);
-  return `<article class="pipeline-card ${followUpDue?'pipeline-card-follow-up':''}" draggable="true" data-id="${lead.id}" tabindex="0">
+  const followUpDue = pipelineIsDue(lead);const stale=pipelineIsStale(lead);
+  return `<article class="pipeline-card ${followUpDue?'pipeline-card-follow-up':''} ${stale?'pipeline-card-stale':''}" draggable="true" data-id="${lead.id}" tabindex="0">
     <div class="pipeline-card-top"><span class="pipeline-card-avatar" style="--pipeline-hue:${(lead.id * 43) % 360}deg">${pipelineEsc(pipelineInitials(lead.name))}</span><div><h5>${pipelineEsc(lead.name)}</h5><div class="pipeline-card-contact">${pipelineEsc(lead.email || lead.phone || 'No contact detail')}</div></div>${lead.manual_stage ? '<i class="bi bi-hand-index-thumb pipeline-manual" title="Stage set manually"></i>' : ''}</div>
     <p>${pipelineEsc(lead.summary || 'No activity summary')}</p>
     ${pipelineAttribution(lead)}
+    ${pipelineContactActions(lead)}
     <div class="pipeline-card-sources">${sources.map(s => `<a href="${pipelineEsc(s.url)}" title="Open ${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type] || s.type)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s.type] || s.type)}</a>`).join('')}</div>
     <label class="pipeline-stage-picker"><span>Stage</span><select data-stage-picker="${lead.id}">${pipelineStages.map(stage => `<option value="${stage}" ${lead.stage === stage ? 'selected' : ''}>${PIPELINE_STAGE_META[stage].label}</option>`).join('')}</select></label>
-    ${followUpDue?'<div class="pipeline-follow-up-due"><i class="bi bi-alarm"></i>Follow-up due</div>':''}<footer><time>${new Date(lead.latest_at).toLocaleDateString(undefined, { month:'short', day:'numeric' })}</time>${pipelineMoney(lead) ? `<strong>${pipelineMoney(lead)}</strong>` : ''}</footer>
+    ${followUpDue?'<div class="pipeline-follow-up-due"><i class="bi bi-alarm"></i>Follow-up due</div>':stale?'<div class="pipeline-stale-due"><i class="bi bi-hourglass-split"></i>No next move scheduled</div>':''}<footer><time>${new Date(lead.latest_at).toLocaleDateString(undefined, { month:'short', day:'numeric' })}</time>${pipelineMoney(lead) ? `<strong>${pipelineMoney(lead)}</strong>` : ''}</footer>
   </article>`;
 }
 function renderPipeline() {
+  const active=pipelineLeads.filter(lead=>!pipelineIsClosed(lead));document.getElementById('pipeline-focus-all').textContent=pipelineLeads.length;document.getElementById('pipeline-focus-due').textContent=active.filter(pipelineIsDue).length;document.getElementById('pipeline-focus-stale').textContent=active.filter(pipelineIsStale).length;
   const leads = pipelineVisible();
   document.getElementById('pipeline-board').innerHTML = pipelineStages.map(stage => {
     const meta = PIPELINE_STAGE_META[stage]; const rows = leads.filter(l => l.stage === stage);
@@ -115,6 +129,7 @@ function wireNewLeadForm() {
     document.getElementById('pipeline-source-filter').insertAdjacentHTML('beforeend', sourceTypes.map(s => `<option value="${pipelineEsc(s)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s] || s)}</option>`).join(''));
     document.getElementById('pipeline-search').addEventListener('input', e => { pipelineQuery = e.target.value.trim(); renderPipeline(); });
     document.getElementById('pipeline-source-filter').addEventListener('change', e => { pipelineSource = e.target.value; renderPipeline(); });
+    document.querySelectorAll('[data-pipeline-focus]').forEach(button=>button.addEventListener('click',()=>{pipelineFocus=button.dataset.pipelineFocus;document.querySelectorAll('[data-pipeline-focus]').forEach(item=>item.classList.toggle('active',item===button));renderPipeline();}));
     document.getElementById('pipeline-drawer-backdrop').addEventListener('click',closePipelineDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closePipelineDrawer();});wireNewLeadForm();renderPipeline();const requestedId=Number(new URLSearchParams(location.search).get('open'));if(requestedId)openPipelineDrawer(requestedId);
   } catch(err) { const box=document.getElementById('pipeline-error'); box.textContent=err.message || 'Could not load the pipeline.'; box.classList.remove('d-none'); }
 })();

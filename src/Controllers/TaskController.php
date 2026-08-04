@@ -12,6 +12,7 @@ use App\Support\Response;
 class TaskController
 {
     private const PRIORITIES = ['low', 'normal', 'high', 'urgent'];
+    private const ACTIVITIES = ['call', 'follow_up', 'proposal', 'upsell', 'outreach', 'content', 'campaign'];
 
     public static function index(): void
     {
@@ -30,8 +31,8 @@ class TaskController
         $user = AuthMiddleware::requireAuth();
         $fields = self::validate(json_decode(file_get_contents('php://input'), true) ?? []);
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO admin_tasks (title, notes, priority, due_at, assignee, related_url) VALUES (?, ?, ?, ?, ?, ?)')
-            ->execute([$fields['title'], $fields['notes'], $fields['priority'], $fields['due_at'], $fields['assignee'], $fields['related_url']]);
+        $pdo->prepare('INSERT INTO admin_tasks (title, notes, priority, due_at, assignee, related_url, is_revenue, activity_type, estimated_value, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$fields['title'], $fields['notes'], $fields['priority'], $fields['due_at'], $fields['assignee'], $fields['related_url'], $fields['is_revenue'], $fields['activity_type'], $fields['estimated_value'], $fields['currency']]);
         $id = (int) $pdo->lastInsertId();
         ActivityLog::log($user, 'created', 'task', $id, $fields['title']);
         Response::json(['id' => $id, 'status' => 'created'], 201);
@@ -48,13 +49,15 @@ class TaskController
         if (!$task) Response::error('Task not found.', 404);
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        // Stored values use currency subunits; form/API input uses major units.
+        if (!array_key_exists('estimated_value', $data)) $task['estimated_value'] = ((int) ($task['estimated_value'] ?? 0)) / 100;
         $merged = array_merge($task, $data);
         $fields = self::validate($merged);
         $status = ($data['status'] ?? $task['status']) === 'completed' ? 'completed' : 'open';
         $completedAt = $status === 'completed' ? ($task['completed_at'] ?: date('Y-m-d H:i:s')) : null;
         $pdo->prepare(
-            "UPDATE admin_tasks SET title=?, notes=?, priority=?, status=?, due_at=?, assignee=?, related_url=?, completed_at=?, updated_at=datetime('now') WHERE id=?"
-        )->execute([$fields['title'], $fields['notes'], $fields['priority'], $status, $fields['due_at'], $fields['assignee'], $fields['related_url'], $completedAt, $id]);
+            "UPDATE admin_tasks SET title=?, notes=?, priority=?, status=?, due_at=?, assignee=?, related_url=?, is_revenue=?, activity_type=?, estimated_value=?, currency=?, completed_at=?, updated_at=datetime('now') WHERE id=?"
+        )->execute([$fields['title'], $fields['notes'], $fields['priority'], $status, $fields['due_at'], $fields['assignee'], $fields['related_url'], $fields['is_revenue'], $fields['activity_type'], $fields['estimated_value'], $fields['currency'], $completedAt, $id]);
         ActivityLog::log($user, 'updated', 'task', $id, $fields['title'], ['status' => $status]);
         Response::json(['status' => 'updated']);
     }
@@ -73,7 +76,7 @@ class TaskController
         Response::json(['status' => 'deleted']);
     }
 
-    /** @return array{title:string,notes:?string,priority:string,due_at:?string,assignee:?string,related_url:?string} */
+    /** @return array<string,mixed> */
     private static function validate(array $data): array
     {
         $title = trim((string) ($data['title'] ?? ''));
@@ -82,12 +85,20 @@ class TaskController
         $dueAt = trim((string) ($data['due_at'] ?? '')) ?: null;
         $assignee = trim((string) ($data['assignee'] ?? '')) ?: null;
         $relatedUrl = trim((string) ($data['related_url'] ?? '')) ?: null;
+        $isRevenue = filter_var($data['is_revenue'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+        $activityType = trim((string) ($data['activity_type'] ?? '')) ?: null;
+        $estimatedValue = $data['estimated_value'] ?? 0;
+        $currency = strtoupper(trim((string) ($data['currency'] ?? 'GHS')));
         if ($title === '' || mb_strlen($title) > 200) Response::error('Task title is required and must be under 200 characters.', 422);
         if ($notes !== null && mb_strlen($notes) > 5000) Response::error('Task notes are too long.', 422);
         if (!in_array($priority, self::PRIORITIES, true)) Response::error('Invalid task priority.', 422);
         if ($dueAt !== null && !preg_match('/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/', $dueAt)) Response::error('Invalid task due date.', 422);
         if ($assignee !== null && mb_strlen($assignee) > 120) Response::error('Assignee is too long.', 422);
         if ($relatedUrl !== null && (!str_starts_with($relatedUrl, '/') || str_starts_with($relatedUrl, '//'))) Response::error('Related link must be an internal path.', 422);
-        return ['title'=>$title,'notes'=>$notes,'priority'=>$priority,'due_at'=>$dueAt,'assignee'=>$assignee,'related_url'=>$relatedUrl];
+        if ($isRevenue && !in_array($activityType, self::ACTIVITIES, true)) Response::error('Choose a valid revenue activity.', 422);
+        if (!$isRevenue) $activityType = null;
+        if (!is_numeric($estimatedValue) || (float) $estimatedValue < 0 || (float) $estimatedValue > 999999999) Response::error('Enter a valid opportunity value.', 422);
+        if (!preg_match('/^[A-Z]{3}$/', $currency)) Response::error('Currency must be a three-letter code.', 422);
+        return ['title'=>$title,'notes'=>$notes,'priority'=>$priority,'due_at'=>$dueAt,'assignee'=>$assignee,'related_url'=>$relatedUrl,'is_revenue'=>$isRevenue,'activity_type'=>$activityType,'estimated_value'=>(int) round((float)$estimatedValue*100),'currency'=>$currency];
     }
 }

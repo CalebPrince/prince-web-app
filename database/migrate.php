@@ -1190,11 +1190,20 @@ $pdo->exec(
         due_at TEXT,
         assignee TEXT,
         related_url TEXT,
+        is_revenue INTEGER NOT NULL DEFAULT 0,
+        activity_type TEXT,
+        estimated_value INTEGER NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT 'GHS',
         completed_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )"
 );
+$taskColumns = array_column($pdo->query('PRAGMA table_info(admin_tasks)')->fetchAll(), 'name');
+if (!in_array('is_revenue', $taskColumns, true)) $pdo->exec('ALTER TABLE admin_tasks ADD COLUMN is_revenue INTEGER NOT NULL DEFAULT 0');
+if (!in_array('activity_type', $taskColumns, true)) $pdo->exec('ALTER TABLE admin_tasks ADD COLUMN activity_type TEXT');
+if (!in_array('estimated_value', $taskColumns, true)) $pdo->exec('ALTER TABLE admin_tasks ADD COLUMN estimated_value INTEGER NOT NULL DEFAULT 0');
+if (!in_array('currency', $taskColumns, true)) $pdo->exec("ALTER TABLE admin_tasks ADD COLUMN currency TEXT NOT NULL DEFAULT 'GHS'");
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_admin_tasks_status_due ON admin_tasks (status, due_at)');
 
 $projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');

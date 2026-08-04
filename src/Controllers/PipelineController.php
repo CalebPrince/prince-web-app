@@ -40,10 +40,10 @@ class PipelineController
             'manual', fn($r) => $r['initial_stage'], fn() => '/admin/pipeline.html', fn($r) => $r['summary'], true);
 
         $insert = $pdo->prepare('INSERT OR IGNORE INTO pipeline_leads (lead_key, stage) VALUES (?, ?)');
-        $autoUpdate = $pdo->prepare("UPDATE pipeline_leads SET stage=?, updated_at=datetime('now') WHERE lead_key=? AND manual_stage=0");
+        $autoUpdate = $pdo->prepare("UPDATE pipeline_leads SET stage=?, updated_at=datetime('now') WHERE lead_key=? AND manual_stage=0 AND stage<>?");
         foreach ($leads as $key => $lead) {
             $insert->execute([$key, $lead['inferred_stage']]);
-            $autoUpdate->execute([$lead['inferred_stage'], $key]);
+            $autoUpdate->execute([$lead['inferred_stage'], $key, $lead['inferred_stage']]);
         }
 
         $stored = [];
@@ -68,6 +68,7 @@ class PipelineController
             $lead['notes'] = (string) ($record['notes'] ?? '');
             $lead['next_action'] = (string) ($record['next_action'] ?? '');
             $lead['follow_up_at'] = $record['follow_up_at'] ?? null;
+            $lead['pipeline_updated_at'] = $record['updated_at'];
             $lead['attribution'] = null;
             foreach ($lead['sources'] as $source) {
                 $sourceKey = $source['type'] . ':' . $source['id'];

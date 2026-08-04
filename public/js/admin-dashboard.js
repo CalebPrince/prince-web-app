@@ -233,6 +233,28 @@ function renderAttention(items) {
   list.querySelectorAll('[data-notification-key]').forEach(link=>link.addEventListener('click',async event=>{event.preventDefault();try{await api.patch(`/api/v1/admin/notifications/${encodeURIComponent(link.dataset.notificationKey)}`,{});}catch(_){}location.href=link.href;}));
 }
 
+const REVENUE_ACTION_ICONS = { 'Follow-up':'bi-arrow-repeat', 'Stale lead':'bi-hourglass-split', Proposal:'bi-file-earmark-check', Outreach:'bi-send' };
+function renderRevenueActions(feed) {
+  const shell = document.getElementById('revenue-runway');
+  const list = document.getElementById('revenue-runway-list');
+  const items = feed?.items || [];
+  const value = summaryMoney(feed?.value_by_currency || [], '');
+  document.getElementById('revenue-runway-summary').innerHTML = items.length
+    ? `${items.length} direct next move${items.length === 1 ? '' : 's'}${value ? ` protecting <strong>${value}</strong> in visible opportunity value` : ''}.`
+    : 'Your immediate queue is clear. Add a next action to an active lead to keep momentum visible.';
+  shell.classList.toggle('is-clear', items.length === 0);
+  list.innerHTML = items.length ? items.map((item, index) => `<a class="revenue-action" href="${escapeHtml(item.href)}">
+    <span class="revenue-action-sequence">${String(index + 1).padStart(2, '0')}</span>
+    <span class="revenue-action-icon"><i class="bi ${REVENUE_ACTION_ICONS[item.kind] || 'bi-arrow-right'}"></i></span>
+    <span class="revenue-action-copy"><small>${escapeHtml(item.kind)}</small><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></span>
+    ${item.value > 0 ? `<span class="revenue-action-value">${escapeHtml(formatAmount(item.value, item.currency))}</span>` : ''}
+    <span class="revenue-action-cta">Act now <i class="bi bi-arrow-right"></i></span>
+  </a>`).join('') : `<div class="revenue-runway-clear"><i class="bi bi-check2-circle"></i><div><strong>No urgent revenue actions</strong><span>Open the pipeline and schedule the next move for a lead.</span></div><a href="/admin/pipeline.html">Plan next action</a></div>`;
+  document.getElementById('welcome-line').textContent = items.length
+    ? `${items.length} revenue action${items.length === 1 ? '' : 's'} ready â€” start with the first one.`
+    : 'No urgent revenue actions. Use the pipeline to prepare the next move.';
+}
+
 // Sales engine scoreboard (sales mode): today's quota progress, streak, and
 // a 14-day activity strip. Data comes from the outreach scoreboard endpoint;
 // a failure leaves the card at its placeholder dashes rather than breaking
@@ -301,4 +323,5 @@ async function loadScoreboard() {
     applyDashboardMode(dashboardMode, data.mode_summaries, user.email);
   }));
   applyDashboardMode(dashboardMode, data.mode_summaries, user.email);
+  renderRevenueActions(data.revenue_actions);
 })();
