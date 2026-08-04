@@ -577,6 +577,12 @@ CREATE TABLE IF NOT EXISTS beacon_social_leads (
   -- visible — the first real sweep surfaced Reddit threads from 2015 that read
   -- perfectly well until you decoded the URL.
   post_age TEXT,
+  -- Confidence gate: draft()/cron leads scoring below
+  -- BeaconController::AUTO_ACCEPT_THRESHOLD land as 'pending_review' instead
+  -- of silently reaching the pipeline or firing the marketing_pitch_sent
+  -- automation. chat() leads are always 'accepted' — Caleb already reviewed
+  -- those live in the conversation that logged them.
+  review_status TEXT NOT NULL DEFAULT 'accepted' CHECK (review_status IN ('accepted', 'pending_review')),
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at);

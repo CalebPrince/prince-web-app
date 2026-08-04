@@ -38,6 +38,19 @@ class BeaconController
     private const MAX_MESSAGE_LENGTH = 1000;
     private const MAX_CHAT_TRANSCRIPT_TURNS = 30;
 
+    /**
+     * The confidence gate for unsupervised leads (draft()/cron — nobody's
+     * watching when these get scored). At or above this, a lead is
+     * "accepted": it reaches the pipeline immediately and, if it carries a
+     * lead_email, fires the marketing_pitch_sent automation right away.
+     * Below it, the lead is still saved (so nothing found gets thrown away)
+     * but as 'pending_review' — held out of the pipeline and the automation
+     * until Caleb approves it. chat() leads skip this gate entirely: Caleb
+     * is already live in that conversation, so there's no unsupervised
+     * moment to guard against.
+     */
+    private const AUTO_ACCEPT_THRESHOLD = 70;
+
     /** POST /api/v1/agents/beacon/draft — body: {platform, username, post_content, post_url?, lead_email?} */
     public static function draft(): void
     {
@@ -136,25 +149,22 @@ class BeaconController
         }
         $draftedReply = SharedAgentTools::stripMarkdown((string) ($parsed['drafted_reply'] ?? ''));
         if ($qualified) {
+            $confidenceScore = (int) $parsed['confidence_score'];
+            $reviewStatus = $confidenceScore >= self::AUTO_ACCEPT_THRESHOLD ? 'accepted' : 'pending_review';
             $pdo->prepare(
-                'INSERT INTO beacon_social_leads (platform, username, lead_email, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO beacon_social_leads (platform, username, lead_email, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age, review_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([
                 $platform, $username, $leadEmail, $postContent, $postUrl,
-                (int) $parsed['confidence_score'], (string) $parsed['reasoning'], $draftedReply,
-                $source, $postAge,
+                $confidenceScore, (string) $parsed['reasoning'], $draftedReply,
+                $source, $postAge, $reviewStatus,
             ]);
 
             // Joan -> Jason: when the source supplies contact details, hand the
-            // warm lead to the existing email automation engine immediately.
-            // Only active, reviewed marketing-pitch automations send anything.
-            if ($leadEmail !== null) {
-                Automations::fire('marketing_pitch_sent', $leadEmail, [
-                    'name' => ltrim($username, '@'),
-                    'source' => 'beacon_social_lead',
-                    'lead_industry' => $platform . ' social lead',
-                    'last_action' => 'Posted on ' . $platform . ': ' . mb_substr($postContent, 0, 700),
-                    'nurturer_enabled' => true,
-                ], $pdo);
+            // warm lead to the existing email automation engine immediately —
+            // but only once it's actually accepted. A pending_review lead gets
+            // this fired later, from approveLead(), once Caleb has looked at it.
+            if ($leadEmail !== null && $reviewStatus === 'accepted') {
+                self::fireMarketingPitch($pdo, $leadEmail, $username, $platform, $postContent);
             }
         }
 
@@ -293,6 +303,50 @@ class BeaconController
         Response::json(['status' => 'flagged']);
     }
 
+    /**
+     * POST /api/v1/admin/beacon-leads/{id}/approve — Caleb reviewing a
+     * pending_review lead (confidence_score below AUTO_ACCEPT_THRESHOLD) and
+     * deciding it's genuinely worth acting on. Flips it to 'accepted' and,
+     * if it carries a lead_email, fires the same marketing_pitch_sent
+     * automation an auto-accepted lead would have fired immediately — just
+     * deferred until now instead of skipped.
+     */
+    public static function approveLead(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $id = (int) ($params['id'] ?? 0);
+
+        $stmt = $pdo->prepare(
+            "SELECT lead_email, username, platform, post_content FROM beacon_social_leads WHERE id = ? AND review_status = 'pending_review'"
+        );
+        $stmt->execute([$id]);
+        $lead = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$lead) {
+            Response::error('Lead not found, or already reviewed.', 404);
+        }
+
+        $pdo->prepare("UPDATE beacon_social_leads SET review_status = 'accepted' WHERE id = ?")->execute([$id]);
+
+        if ($lead['lead_email'] !== null) {
+            self::fireMarketingPitch($pdo, (string) $lead['lead_email'], (string) $lead['username'], (string) $lead['platform'], (string) $lead['post_content']);
+        }
+
+        Response::json(['status' => 'accepted']);
+    }
+
+    /** Shared by generateForPost() (immediate) and approveLead() (deferred). */
+    private static function fireMarketingPitch(\PDO $pdo, string $leadEmail, string $username, string $platform, string $postContent): void
+    {
+        Automations::fire('marketing_pitch_sent', $leadEmail, [
+            'name' => ltrim($username, '@'),
+            'source' => 'beacon_social_lead',
+            'lead_industry' => $platform . ' social lead',
+            'last_action' => 'Posted on ' . $platform . ': ' . mb_substr($postContent, 0, 700),
+            'nurturer_enabled' => true,
+        ], $pdo);
+    }
+
     private static function draftToolDeclarations(): array
     {
         return [
@@ -382,8 +436,12 @@ class BeaconController
         $postUrl = trim((string) ($args['post_url'] ?? '')) ?: null;
         $confidenceScore = (int) ($args['confidence_score'] ?? 0);
 
+        // Always 'accepted', regardless of confidence_score — this only ever
+        // gets called once Caleb, live in the conversation, has already
+        // agreed the lead is worth saving. The gate in generateForPost()
+        // exists for the unsupervised draft()/cron path, not this one.
         $pdo->prepare(
-            'INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            "INSERT INTO beacon_social_leads (platform, username, post_content, post_url, confidence_score, reasoning, drafted_reply, source, review_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'accepted')"
         )->execute([$platform, $username, $postContent, $postUrl, $confidenceScore, $reasoning, $draftedReply, 'chat']);
 
         return ['logged' => true];

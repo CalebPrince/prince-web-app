@@ -342,6 +342,7 @@ $router->post('/api/v1/admin/agents/sage/chat', [SageController::class, 'adminCh
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);
 $router->post('/api/v1/admin/beacon-leads/{id}/flag', [BeaconController::class, 'flagLead']);
+$router->post('/api/v1/admin/beacon-leads/{id}/approve', [BeaconController::class, 'approveLead']);
 $router->get('/api/v1/admin/beacon-spend', [BeaconController::class, 'adminSpend']);
 $router->get('/api/v1/admin/nurturer-new-leads', [NurturerController::class, 'adminNewLeads']);
 $router->post('/api/v1/admin/nurturer-replies/{id}/send', [NurturerController::class, 'adminSendReply']);

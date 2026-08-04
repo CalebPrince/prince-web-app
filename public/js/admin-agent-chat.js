@@ -362,7 +362,9 @@
       beaconLeadsEmpty.classList.toggle("d-none", leads.length > 0);
       leads.forEach((lead) => {
         const card = document.createElement("div");
-        card.className = "border rounded p-3";
+        // Pending leads get a warning-tinted border so they read as "needs a
+        // decision" at a glance, not just another line in the list.
+        card.className = "border rounded p-3" + (lead.review_status === "pending_review" ? " border-warning" : "");
         const sourceBadge = LEAD_SOURCE_LABEL[lead.source] || escapeHtml(lead.source);
         const link = lead.post_url
           ? ' — <a href="' + escapeHtml(lead.post_url) + '" target="_blank" rel="noopener">view post</a>'
@@ -372,14 +374,23 @@
         const age = lead.post_age
           ? ' · <span class="fst-italic">' + escapeHtml(lead.post_age) + "</span>"
           : "";
+        // Below BeaconController::AUTO_ACCEPT_THRESHOLD, the lead never
+        // reached the pipeline or fired the follow-up automation — this
+        // badge plus the Approve button below is the only place that happens.
+        const reviewBadge = lead.review_status === "pending_review"
+          ? ' <span class="badge bg-warning text-dark">Pending review</span>'
+          : "";
         card.innerHTML =
           '<div class="d-flex justify-content-between small text-muted-custom mb-1">'
           + '<span>' + escapeHtml(lead.platform) + " · @" + escapeHtml(lead.username) + link + "</span>"
-          + '<span>' + lead.confidence_score + "% · " + sourceBadge + age + "</span>"
+          + '<span>' + lead.confidence_score + "% · " + sourceBadge + age + reviewBadge + "</span>"
           + "</div>"
           + '<div class="small mb-2">' + escapeHtml(lead.reasoning) + "</div>"
           + '<div class="small fst-italic mb-2">' + escapeHtml(lead.drafted_reply) + "</div>"
           + '<button type="button" class="btn btn-sm btn-outline-secondary copy-reply-btn">Copy reply</button>'
+          + (lead.review_status === "pending_review"
+            ? '<button type="button" class="btn btn-sm btn-success ms-1 approve-lead-btn">Approve</button>'
+            : "")
           + '<button type="button" class="btn btn-sm btn-outline-warning ms-1 flag-lead-btn">Flag as false positive</button>'
           + '<button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-lead-btn">Delete</button>'
           + '<div class="flag-lead-form mt-2 d-none">'
@@ -401,6 +412,23 @@
           }
           setTimeout(() => { copyBtn.textContent = "Copy reply"; }, 2000);
         });
+
+        const approveBtn = card.querySelector(".approve-lead-btn");
+        if (approveBtn) {
+          approveBtn.addEventListener("click", async () => {
+            approveBtn.disabled = true;
+            approveBtn.textContent = "Approving...";
+            try {
+              await api.post("/api/v1/admin/beacon-leads/" + lead.id + "/approve", {});
+              lead.review_status = "accepted";
+              loadBeaconLeads();
+            } catch (err) {
+              alert(err.message);
+              approveBtn.disabled = false;
+              approveBtn.textContent = "Approve";
+            }
+          });
+        }
 
         const deleteBtn = card.querySelector(".delete-lead-btn");
         deleteBtn.addEventListener("click", async () => {

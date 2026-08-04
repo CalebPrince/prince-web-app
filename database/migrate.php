@@ -1092,6 +1092,16 @@ if (!in_array('lead_email', $beaconColumns, true)) {
     $pdo->exec('ALTER TABLE beacon_social_leads ADD COLUMN lead_email TEXT');
 }
 
+// Confidence gate: draft()/cron leads below BeaconController::AUTO_ACCEPT_THRESHOLD
+// land here as 'pending_review' instead of silently reaching the pipeline or
+// firing the marketing_pitch_sent automation. chat() leads are always
+// 'accepted' — Caleb already reviewed those live. Existing rows default to
+// 'accepted' since they were already treated that way before this column existed.
+$beaconReviewColumns = array_column($pdo->query('PRAGMA table_info(beacon_social_leads)')->fetchAll(), 'name');
+if (!in_array('review_status', $beaconReviewColumns, true)) {
+    $pdo->exec("ALTER TABLE beacon_social_leads ADD COLUMN review_status TEXT NOT NULL DEFAULT 'accepted' CHECK (review_status IN ('accepted', 'pending_review'))");
+}
+
 $pdo->exec(
     "CREATE TABLE IF NOT EXISTS newsletter_drafts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
