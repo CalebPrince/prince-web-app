@@ -82,6 +82,22 @@
     anchor.insertAdjacentElement('afterend', link);
   }
   injectTasksNav();
+  // Agent Queue only exists as a hardcoded link on its own page today, so add
+  // it here for every other admin page instead of editing each one — same
+  // reasoning as injectPipelineNav() above. Anchored right after Tasks,
+  // matching the order the queue's own static sidebar already uses.
+  function injectAgentQueueNav() {
+    const nav = document.querySelector('.admin-sidebar nav');
+    if (!nav || nav.querySelector('a[href="/admin/agent-tasks.html"]')) return;
+    const tasks = nav.querySelector('a[href="/admin/tasks.html"]');
+    if (!tasks) return;
+    const link = document.createElement('a');
+    link.href = '/admin/agent-tasks.html';
+    link.className = 'nav-link' + (location.pathname.endsWith('/admin/agent-tasks.html') ? ' active' : '');
+    link.innerHTML = '<i class="bi bi-cpu nav-icon" style="color: var(--section-blue)"></i><span class="nav-label">Agent Queue</span>';
+    tasks.insertAdjacentElement('afterend', link);
+  }
+  injectAgentQueueNav();
   function injectChiefNav() {
     const nav = document.querySelector('.admin-sidebar nav');
     if (!nav || nav.querySelector('a[href="/admin/chief.html"]')) return;
