@@ -19,6 +19,51 @@ final class LeadDiscovery
     private const MAX_SEARCHES_PER_RUN = 10;
     private const MAX_PAGE = 10;
 
+    /**
+     * Country name (as it appears in a Serper Places address string, always
+     * English) -> currency. Deliberately keyed off the real per-lead address
+     * rather than the search query text — a query can be phrased any way,
+     * but the address Places returns is ground truth for where the business
+     * actually is. Anything not in this table falls back to the global
+     * pricing_currency setting, so adding a new discovery country without
+     * a matching entry here degrades gracefully to the old single-currency
+     * behavior instead of breaking.
+     */
+    private const COUNTRY_CURRENCY = [
+        'ghana' => 'GHS',
+        'nigeria' => 'NGN',
+        'kenya' => 'KES',
+        'south africa' => 'ZAR',
+        'united states' => 'USD',
+        'usa' => 'USD',
+        'united kingdom' => 'GBP',
+        'uk' => 'GBP',
+        'canada' => 'CAD',
+        'australia' => 'AUD',
+        'germany' => 'EUR',
+        'france' => 'EUR',
+        'spain' => 'EUR',
+        'italy' => 'EUR',
+        'netherlands' => 'EUR',
+        'ireland' => 'EUR',
+        'portugal' => 'EUR',
+        'belgium' => 'EUR',
+        'egypt' => 'EGP',
+        'morocco' => 'MAD',
+        'tanzania' => 'TZS',
+        'uganda' => 'UGX',
+        'rwanda' => 'RWF',
+        "cote d'ivoire" => 'XOF',
+        'ivory coast' => 'XOF',
+        'senegal' => 'XOF',
+        'india' => 'INR',
+        'united arab emirates' => 'AED',
+        'uae' => 'AED',
+        'saudi arabia' => 'SAR',
+        'zambia' => 'ZMW',
+        'ethiopia' => 'ETB',
+    ];
+
     /** @return array{enabled:bool,ran:bool,added:int,searched:int,skipped:int,status:string} */
     public static function run(bool $force = false): array
     {
@@ -46,6 +91,7 @@ final class LeadDiscovery
         $pages = is_array($pages) ? $pages : [];
         $pdo = Database::get();
         $known = self::knownKeys($pdo);
+        $fallbackCurrency = strtoupper((string) (Settings::get('pricing_currency') ?: 'GHS'));
         $insert = $pdo->prepare(
             'INSERT INTO marketing_leads
                 (business_name, website_url, contact_phone, notes, estimated_value, currency)
@@ -96,7 +142,7 @@ final class LeadDiscovery
                     $url !== '' ? $url : null,
                     $phone !== '' ? mb_substr($phone, 0, 50) : null,
                     'Automatically discovered via Serper Places: ' . $query,
-                    strtoupper((string) (Settings::get('pricing_currency') ?: 'GHS')),
+                    self::currencyForAddress($lead['address'] ?? null, $fallbackCurrency),
                 ]);
                 if ($urlKey !== '') $known['urls'][$urlKey] = true;
                 if ($phoneKey !== '') $known['phones'][$phoneKey] = true;
@@ -135,6 +181,22 @@ final class LeadDiscovery
             if ($name !== '') $known['names'][$name] = true;
         }
         return $known;
+    }
+
+    /** Word-boundary match so e.g. "uk" can't false-positive inside an unrelated word. */
+    private static function currencyForAddress(?string $address, string $fallback): string
+    {
+        $address = trim((string) $address);
+        if ($address === '') {
+            return $fallback;
+        }
+        $haystack = mb_strtolower($address);
+        foreach (self::COUNTRY_CURRENCY as $country => $currency) {
+            if (preg_match('/\b' . preg_quote($country, '/') . '\b/u', $haystack)) {
+                return $currency;
+            }
+        }
+        return $fallback;
     }
 
     private static function urlKey(string $url): string
