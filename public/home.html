@@ -221,17 +221,12 @@
       <a href="/projects.html" class="btn-brand-outline">See client work</a>
       <a href="/testimonials.html" id="hero-rating" class="rating-pill d-none"></a>
     </div>
-    <div class="live-channel-rail hero-animate hero-animate-4" aria-label="Contact Prince Caleb">
-      <span class="live-channel-status"><i aria-hidden="true"></i> Lisa is live</span>
-      <a href="https://wa.me/233208049962" target="_blank" rel="noopener"><strong>Message Prince Caleb</strong><small>WhatsApp: +233 20 804 9962</small></a>
-    </div>
-    <div class="hero-proof-line d-flex flex-wrap align-items-center gap-2 gap-sm-3 mt-3 small text-muted-custom hero-animate hero-animate-4">
-      <span><strong id="hero-years-value" style="color: var(--ink);">12+</strong> years building production software</span>
-      <span aria-hidden="true">&middot;</span>
-      <span>Start with <strong style="color: var(--ink);">one useful workflow</strong></span>
-      <span aria-hidden="true">&middot;</span>
-      <span><strong style="color: var(--ink);">Clear scope</strong> before you commit</span>
-    </div>
+    <!-- Proof (the live demo widget) surfaces immediately after the two CTAs,
+         ahead of the WhatsApp rail below — on mobile this puts the strongest
+         halo-effect asset before ~2 screens of scrolling, and keeps the
+         first fold to 2 competing CTAs instead of 4. Desktop is unaffected:
+         .hero-side-stack is grid-placed into column 2 regardless of DOM
+         order (see @media (min-width: 992px) rule). -->
     <div class="hero-side-stack hero-animate hero-animate-4">
       <article class="hero-call-mockup" aria-label="Mockup of an AI voice agent handling a live booking call">
         <header class="system-window-bar">
@@ -275,6 +270,17 @@
           <span class="hero-demo-privacy">Microphone activates only after you tap.</span>
         </footer>
       </article>
+    </div>
+    <div class="hero-proof-line d-flex flex-wrap align-items-center gap-2 gap-sm-3 mt-3 small text-muted-custom hero-animate hero-animate-4">
+      <span><strong id="hero-years-value" style="color: var(--ink);">12+</strong> years building production software</span>
+      <span aria-hidden="true">&middot;</span>
+      <span>Start with <strong style="color: var(--ink);">one useful workflow</strong></span>
+      <span aria-hidden="true">&middot;</span>
+      <span><strong style="color: var(--ink);">Clear scope</strong> before you commit</span>
+    </div>
+    <div class="live-channel-rail hero-animate hero-animate-4" aria-label="Contact Prince Caleb">
+      <span class="live-channel-status"><i aria-hidden="true"></i> Lisa is live</span>
+      <a href="https://wa.me/233208049962" target="_blank" rel="noopener"><strong>Message Prince Caleb</strong><small>WhatsApp: +233 20 804 9962</small></a>
     </div>
   </div>
 </header>

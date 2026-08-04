@@ -4354,7 +4354,11 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   }
   .agency-service-row { grid-template-columns: 1fr; gap: 0.75rem; }
   .agency-media-grid { grid-template-columns: 1fr; }
-  .hero-call-footer { align-items: stretch; flex-direction: column; }
+  /* Reserve clearance from the fixed chat FAB (#ai-widget-toggle: 60px wide,
+     right: 1.5rem — occupies the bottom-right ~88px of the viewport at all
+     scroll positions) so the full-width demo button/privacy text never
+     render underneath it. */
+  .hero-call-footer { align-items: stretch; flex-direction: column; padding-right: 5.5rem; }
   .hero-demo-button { justify-content: center; }
   .hero-demo-privacy { max-width: none; text-align: left; }
 }
