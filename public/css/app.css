@@ -1656,6 +1656,9 @@ pre code.hljs {
 #ai-widget-toggle:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 20px 44px rgba(10, 11, 13, 0.22); }
 #ai-widget-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .ai-toggle-icon { width: 26px; height: 26px; }
+#ai-widget-toggle.lisa-chat-toggle { color:#62ff98; background:#0b0c0e; border:1px solid rgba(98,255,152,.48); }
+#ai-widget-toggle .lisa-profile-icon { width:34px; height:34px; }
+.lisa-profile-icon { fill:none; stroke:currentColor; }
 @media (prefers-reduced-motion: reduce) {
   #ai-widget-toggle { transition: none; }
 }
@@ -2115,7 +2118,7 @@ pre code.hljs {
 .agent-face--lg .agent-face-dot { width: 12px; height: 12px; border-width: 2.5px; }
 
 /* Per-agent gradient + glow — matches the original AgentAvatar mockup. */
-.agent-face--lisa .agent-face-core { background: linear-gradient(135deg, #14b8a6, #34d399 55%, #67e8f9); box-shadow: 0 0 15px rgba(20, 184, 166, 0.4); }
+.agent-face--lisa .agent-face-core { color:#62ff98; background:#0b0c0e; border-color:rgba(98,255,152,.48); box-shadow:0 0 15px rgba(98,255,152,.2); }
 .agent-face--lisa .agent-face-ring { border-color: #34d399; }
 .agent-face--beacon .agent-face-core { background: linear-gradient(135deg, #312e81, #7c3aed 55%, #d946ef); box-shadow: 0 0 15px rgba(124, 58, 237, 0.4); }
 .agent-face--beacon .agent-face-ring { border-color: #d946ef; }
@@ -3784,6 +3787,11 @@ button:not(:disabled):hover .cta-arrow-back { transform: translateX(-4px); }
   color: var(--bg);
   font: 700 0.7rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
+.call-avatar.lisa-profile-avatar { color:#62ff98; background:#0b0c0e; border:1px solid rgba(98,255,152,.48); box-shadow:0 0 0 4px rgba(98,255,152,.08); }
+.call-avatar.lisa-profile-avatar .lisa-profile-icon { width:2rem; height:2rem; }
+.agent-face--lisa .lisa-profile-icon { width:34px; height:34px; color:#62ff98; }
+.agent-face--sm.agent-face--lisa .lisa-profile-icon { width:27px; height:27px; }
+.agent-face--lg.agent-face--lisa .lisa-profile-icon { width:46px; height:46px; }
 .call-state { margin-left: auto; color: #16835a; font: 600 0.68rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-transform: uppercase; }
 .voice-wave { display: flex; align-items: center; justify-content: center; gap: 4px; height: 4rem; margin: 0 1rem; border-block: 1px solid var(--line); }
 .voice-wave i { width: 3px; height: 20%; background: var(--heading-color); border-radius: 999px; animation: voice-wave 1.1s ease-in-out infinite alternate; }

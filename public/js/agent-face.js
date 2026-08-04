@@ -18,18 +18,27 @@
     const key = AGENT_KEYS.includes(agentKey) ? agentKey : "lisa";
     const el = document.createElement("div");
     el.className = "agent-face agent-face--" + key + (size ? " agent-face--" + size : "");
-    el.innerHTML =
-      '<span class="agent-face-core">'
-      + '<span class="agent-face-sheen" aria-hidden="true"></span>'
-      + '<span class="agent-face-eyes" aria-hidden="true">'
-      +   '<span class="agent-face-eye"></span>'
-      +   '<span class="agent-face-eye"></span>'
-      + "</span>"
-      + '<span class="agent-face-mouth" aria-hidden="true"></span>'
-      + '<span class="agent-face-dot" aria-hidden="true"></span>'
-      + "</span>"
-      + '<span class="agent-face-ring" aria-hidden="true"></span>'
-      + '<span class="agent-face-ring" aria-hidden="true"></span>';
+    if (key === "lisa") {
+      el.innerHTML = '<span class="agent-face-core">'
+        + '<svg class="lisa-profile-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="M15 25h3l2.4-8 4.4 15 3.4-11 2.1 6H34"/><path d="M18 37c3.8 2.1 8.2 2.1 12 0"/></svg>'
+        + '<span class="agent-face-dot" aria-hidden="true"></span>'
+        + '</span>'
+        + '<span class="agent-face-ring" aria-hidden="true"></span>'
+        + '<span class="agent-face-ring" aria-hidden="true"></span>';
+    } else {
+      el.innerHTML =
+        '<span class="agent-face-core">'
+        + '<span class="agent-face-sheen" aria-hidden="true"></span>'
+        + '<span class="agent-face-eyes" aria-hidden="true">'
+        +   '<span class="agent-face-eye"></span>'
+        +   '<span class="agent-face-eye"></span>'
+        + "</span>"
+        + '<span class="agent-face-mouth" aria-hidden="true"></span>'
+        + '<span class="agent-face-dot" aria-hidden="true"></span>'
+        + "</span>"
+        + '<span class="agent-face-ring" aria-hidden="true"></span>'
+        + '<span class="agent-face-ring" aria-hidden="true"></span>';
+    }
 
     return {
       el,

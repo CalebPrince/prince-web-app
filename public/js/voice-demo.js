@@ -281,7 +281,7 @@
       name = status.assistant_name || name;
       voice = Object.assign({}, voice, status.voice || {});
       assistantName.textContent = name + " · AI voice agent";
-      avatar.textContent = name.slice(0, 2).toUpperCase();
+      avatar.setAttribute("aria-label", name + " AI assistant");
     } catch (_) {}
     if (!SR) {
       buttonLabel.textContent = "Try the demo";
