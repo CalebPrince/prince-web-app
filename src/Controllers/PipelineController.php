@@ -58,6 +58,13 @@ class PipelineController
                 $attribution[$row['source_type'] . ':' . $row['source_id']] = array_diff_key($row, ['source_type' => true, 'source_id' => true]);
             }
         }
+        $agentActivity = [];
+        $hasAgentTasks = $pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='agent_tasks'")->fetchColumn();
+        if ($hasAgentTasks) {
+            foreach ($pdo->query("SELECT id,kind,agent_key,entity_id,status,priority,due_at,attempts,max_attempts,reschedule_reason,outcome,last_error,completed_at,created_at,updated_at FROM agent_tasks WHERE entity_type='pipeline_lead' ORDER BY id DESC LIMIT 1000") as $row) {
+                $agentActivity[(int) $row['entity_id']][] = $row;
+            }
+        }
         $out = [];
         foreach ($leads as $key => $lead) {
             $record = $stored[$key] ?? null;
@@ -70,6 +77,7 @@ class PipelineController
             $lead['next_action'] = (string) ($record['next_action'] ?? '');
             $lead['follow_up_at'] = $record['follow_up_at'] ?? null;
             $lead['pipeline_updated_at'] = $record['updated_at'];
+            $lead['agent_activity'] = array_slice($agentActivity[(int) $record['id']] ?? [], 0, 20);
             $lead['attribution'] = null;
             foreach ($lead['sources'] as $source) {
                 $sourceKey = $source['type'] . ':' . $source['id'];
@@ -143,7 +151,11 @@ class PipelineController
         $stmt->execute($values);
         if ($stmt->rowCount() === 0) Response::error('Pipeline lead not found.', 404);
         if (array_key_exists('follow_up_at', $data)) $pdo->prepare("DELETE FROM notification_reads WHERE notification_key=?")->execute(['follow_up:'.$id]);
-        if (!empty($follow)) AgentTaskQueue::enqueue('lead_recheck','nurturer','pipeline_lead',$id,['next_action'=>$data['next_action']??null],str_replace('T',' ',$follow),200,$data['next_action']??'Follow up with this lead at the scheduled time.');
+        if (!empty($follow)) {
+            AgentTaskQueue::enqueue('lead_recheck','nurturer','pipeline_lead',$id,['next_action'=>$data['next_action']??null],str_replace('T',' ',$follow),200,$data['next_action']??'Follow up with this lead at the scheduled time.');
+        } elseif (array_key_exists('follow_up_at', $data)) {
+            $pdo->prepare("UPDATE agent_tasks SET status='cancelled',lease_token=NULL,lease_expires_at=NULL,reschedule_reason='Follow-up removed from the pipeline lead.',updated_at=datetime('now') WHERE kind='lead_recheck' AND entity_type='pipeline_lead' AND entity_id=? AND status IN ('queued','leased')")->execute([$id]);
+        }
         ActivityLog::log($user, 'pipeline_lead_updated', 'pipeline_lead', $id, null, array_intersect_key($data, array_flip(['stage','next_action','follow_up_at'])));
         Response::json(['status' => 'updated']);
     }
