@@ -1014,7 +1014,9 @@ class MarketingLeadController
             $enriched = EmailEnrichment::findEmail((string) $lead['website_url']);
             if ($enriched !== null) {
                 $found = $enriched['email'];
-                $source = "Hunter.io, confidence {$enriched['confidence']}%";
+                $verification = $enriched['verification'] ?? null;
+                $source = "Hunter.io, confidence {$enriched['confidence']}%"
+                    . ($verification !== null ? ", verifier: {$verification}" : ', verifier unavailable');
             }
         }
 
