@@ -323,13 +323,31 @@ class BeaconController
         $pdo = Database::get();
         $id = (int) ($params['id'] ?? 0);
 
+        if (!self::approveLeadById($pdo, $id)) {
+            Response::error('Lead not found, or already reviewed.', 404);
+        }
+
+        Response::json(['status' => 'accepted']);
+    }
+
+    /**
+     * The actual approve — flip to accepted, fire the deferred automation if
+     * a lead_email exists. Shared by approveLead() (one at a time, from the
+     * admin UI) and database/backfill_pending_review_leads.php (bulk,
+     * one-time, for whatever was sitting in pending_review before
+     * beacon_auto_accept_all existed). Returns false if the lead doesn't
+     * exist or was already reviewed, so the bulk script can report a real
+     * per-row outcome.
+     */
+    public static function approveLeadById(\PDO $pdo, int $id): bool
+    {
         $stmt = $pdo->prepare(
             "SELECT lead_email, username, platform, post_content FROM beacon_social_leads WHERE id = ? AND review_status = 'pending_review'"
         );
         $stmt->execute([$id]);
         $lead = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$lead) {
-            Response::error('Lead not found, or already reviewed.', 404);
+            return false;
         }
 
         $pdo->prepare("UPDATE beacon_social_leads SET review_status = 'accepted' WHERE id = ?")->execute([$id]);
@@ -338,7 +356,7 @@ class BeaconController
             self::fireMarketingPitch($pdo, (string) $lead['lead_email'], (string) $lead['username'], (string) $lead['platform'], (string) $lead['post_content']);
         }
 
-        Response::json(['status' => 'accepted']);
+        return true;
     }
 
     /** Shared by generateForPost() (immediate) and approveLead() (deferred). */
@@ -346,7 +364,13 @@ class BeaconController
     {
         Automations::fire('marketing_pitch_sent', $leadEmail, [
             'name' => ltrim($username, '@'),
-            'source' => 'beacon_social_lead',
+            // 'trigger' — drip_enrollments.source CHECK only allows
+            // ('manual', 'marketing_lead', 'trigger'). This used to say
+            // 'beacon_social_lead', which isn't a valid value: since
+            // enrollEmail() uses INSERT OR IGNORE, that CHECK violation was
+            // silently swallowed on every call, so no Beacon lead has ever
+            // actually been enrolled despite this appearing to succeed.
+            'source' => 'trigger',
             'lead_industry' => $platform . ' social lead',
             'last_action' => 'Posted on ' . $platform . ': ' . mb_substr($postContent, 0, 700),
             'nurturer_enabled' => true,

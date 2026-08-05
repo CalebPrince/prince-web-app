@@ -444,6 +444,7 @@ database/
   dispatch_agent_tasks.php        # leases due durable agent work; retries safely and records outcomes (cron, ~1 min)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
+  backfill_pending_review_leads.php  # one-time (not a cron): approves whatever's already sitting in pending_review after enabling beacon_auto_accept_all / outreach_auto_accept_all
 storage/
   backups/                  # dated SQLite snapshots written by backup_db.php (gitignored)
   db/portfolio.sqlite       # SQLite database file (gitignored)
