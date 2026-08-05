@@ -44,6 +44,7 @@ class SettingsController
         'nurturer_sequence_2_day_offset', 'nurturer_sequence_3_day_offset',
         'nurturer_reply_sync_enabled', 'nurturer_reply_auto_send',
         'beacon_discovery_enabled', 'beacon_discovery_frequency', 'beacon_discovery_last_run', 'beacon_discovery_keywords', 'beacon_discovery_recency',
+        'beacon_auto_accept_all', 'outreach_auto_accept_all', 'social_draft_auto_approve',
         'stale_lead_followup_enabled', 'stale_lead_followup_days',
         'composio_api_key',
         'composio_google_calendar_auth_config_id', 'composio_google_calendar_account_id',

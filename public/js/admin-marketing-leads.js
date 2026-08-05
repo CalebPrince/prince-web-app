@@ -1122,6 +1122,30 @@ async function loadCallList() {
 function wireOutreachPanel() {
   document.getElementById("call-list-modal").addEventListener("show.bs.modal", loadCallList);
 
+  // outreach_auto_accept_all is a generic Settings key, not one of the
+  // dedicated /api/v1/admin/outreach/settings fields, so it loads/saves
+  // directly against /api/v1/admin/settings rather than through
+  // saveOutreachSettings()/renderOutreachStats().
+  (async () => {
+    const toggle = document.getElementById("oe-auto-accept-all");
+    try {
+      const settings = await api.get("/api/v1/admin/settings");
+      toggle.checked = settings.outreach_auto_accept_all === "1";
+    } catch (err) { /* non-critical — leave unchecked if it fails */ }
+    toggle.addEventListener("change", async (e) => {
+      const on = e.target.checked;
+      try {
+        await api.put("/api/v1/admin/settings", { outreach_auto_accept_all: on ? "1" : "0" });
+        outreachMsg(on
+          ? "Borderline-fit leads (score 55-74) will now send without review."
+          : "Borderline-fit leads (score 55-74) will be held for review again.", true);
+      } catch (err) {
+        e.target.checked = !on;
+        outreachMsg(err.message || "Could not update this setting.", false);
+      }
+    });
+  })();
+
   document.getElementById("oe-enabled").addEventListener("change", async (e) => {
     const on = e.target.checked;
     if (await saveOutreachSettings({ enabled: on })) {

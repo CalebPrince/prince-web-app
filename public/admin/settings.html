@@ -556,7 +556,7 @@
       <div class="col-lg-6">
         <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-magic me-2" style="color: var(--section-system);"></i>Social post drafts</h5>
-          <p class="text-muted-custom small">Auto-drafts a social media post (see Admin &rarr; Social Drafts) from your latest published content, using the same AI keys configured above. You review and approve each one before it goes anywhere.</p>
+          <p class="text-muted-custom small">Auto-drafts a social media post (see Admin &rarr; Social Drafts) from your latest published content, using the same AI keys configured above.</p>
           <form id="social-draft-form">
             <div class="form-check mb-3">
               <input type="checkbox" class="form-check-input" id="social-draft-enabled">
@@ -568,6 +568,11 @@
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
               </select>
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="social-draft-auto-approve">
+              <label class="form-check-label" for="social-draft-auto-approve">Auto-approve and publish each draft</label>
+              <div class="form-text">Off: drafts sit on Admin &rarr; Social Drafts for you to review and approve by hand. On: each generated draft is approved immediately and publishes straight to LinkedIn (if connected) with no review step.</div>
             </div>
             <div id="social-draft-msg" class="alert py-2 small d-none"></div>
             <button type="submit" class="btn-brand">Save</button>

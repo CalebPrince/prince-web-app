@@ -199,6 +199,7 @@ async function saveSocialDraft(e) {
     await api.put("/api/v1/admin/settings", {
       social_draft_enabled: document.getElementById("social-draft-enabled").checked ? "1" : "",
       social_draft_frequency: document.getElementById("social-draft-frequency").value,
+      social_draft_auto_approve: document.getElementById("social-draft-auto-approve").checked ? "1" : "0",
     });
     showMsg("social-draft-msg", "Saved.", true);
   } catch (err) {
@@ -766,6 +767,7 @@ async function testAi() {
 
     document.getElementById("social-draft-enabled").checked = settings.social_draft_enabled === "1";
     document.getElementById("social-draft-frequency").value = settings.social_draft_frequency || "daily";
+    document.getElementById("social-draft-auto-approve").checked = settings.social_draft_auto_approve === "1";
 
     document.getElementById("booking-enabled").checked = settings.booking_enabled === "1";
     const bookingDays = (settings.booking_days || "").split(",").map(d => d.trim()).filter(Boolean);

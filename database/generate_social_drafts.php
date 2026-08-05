@@ -31,7 +31,12 @@ if ($frequency === 'weekly' && $lastRun) {
 $result = SocialDraftController::generateDraft();
 if ($result) {
     Settings::set('social_draft_last_run', gmdate('Y-m-d H:i:s'));
-    echo "1 social post draft generated (id {$result['id']}).\n";
+    if (Settings::get('social_draft_auto_approve') === '1') {
+        SocialDraftController::applyApproval(\App\Support\Database::get(), (int) $result['id']);
+        echo "1 social post draft generated and auto-approved (id {$result['id']}).\n";
+    } else {
+        echo "1 social post draft generated (id {$result['id']}).\n";
+    }
 } else {
     echo "Draft generation failed — check that an AI provider is configured and reachable.\n";
 }

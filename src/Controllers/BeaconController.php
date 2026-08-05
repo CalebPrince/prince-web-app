@@ -150,7 +150,13 @@ class BeaconController
         $draftedReply = SharedAgentTools::stripMarkdown((string) ($parsed['drafted_reply'] ?? ''));
         if ($qualified) {
             $confidenceScore = (int) $parsed['confidence_score'];
-            $reviewStatus = $confidenceScore >= self::AUTO_ACCEPT_THRESHOLD ? 'accepted' : 'pending_review';
+            // beacon_auto_accept_all lets an admin who wants maximum
+            // automation bypass this gate entirely — every qualified lead
+            // reaches the pipeline immediately, accepting the false-positive
+            // risk this threshold otherwise guards against. Toggled back off,
+            // the original confidence gate applies exactly as before.
+            $reviewStatus = (Settings::get('beacon_auto_accept_all') === '1' || $confidenceScore >= self::AUTO_ACCEPT_THRESHOLD)
+                ? 'accepted' : 'pending_review';
             $pdo->prepare(
                 'INSERT INTO beacon_social_leads (platform, username, lead_email, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age, review_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             )->execute([

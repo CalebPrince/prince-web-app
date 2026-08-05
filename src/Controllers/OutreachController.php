@@ -225,8 +225,11 @@ class OutreachController
             // to auto-send with no human ever having looked at it; a lead
             // that just barely cleared the bar gets drafted and held as
             // 'pending_review' instead, same principle as Beacon's
-            // AUTO_ACCEPT_THRESHOLD gate on unsupervised leads.
-            $reviewStatus = $fit['score'] >= 75 ? 'accepted' : 'pending_review';
+            // AUTO_ACCEPT_THRESHOLD gate on unsupervised leads. Same
+            // outreach_auto_accept_all bypass as Beacon's beacon_auto_accept_all
+            // for an admin who wants this gate off entirely.
+            $reviewStatus = (Settings::get('outreach_auto_accept_all') === '1' || $fit['score'] >= 75)
+                ? 'accepted' : 'pending_review';
 
             $email = trim((string) ($lead['contact_email'] ?? ''));
             $phone = trim((string) ($lead['contact_phone'] ?? ''));

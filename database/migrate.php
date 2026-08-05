@@ -1541,4 +1541,23 @@ if ($leadAttributionSql !== '' && !str_contains($leadAttributionSql, "'newslette
     echo "Rebuilt lead_attribution — source_type now allows 'newsletter'.\n";
 }
 
+// Maximum-automation defaults, requested explicitly: a borderline-confidence
+// lead (Beacon, Cold Outreach) reaches the pipeline/sends without waiting for
+// review, a freshly-generated social draft publishes immediately, and a
+// stale pipeline lead gets an auto-scheduled follow-up. INSERT OR IGNORE so
+// this only ever sets the *initial* value on first migrate after this
+// shipped — toggling any of these off later (Admin -> Settings, or the
+// switch on Admin -> Pipeline) sticks permanently; this block never
+// re-enables something already deliberately turned off.
+$autoAutomationDefaults = [
+    'beacon_auto_accept_all' => '1',
+    'outreach_auto_accept_all' => '1',
+    'social_draft_auto_approve' => '1',
+    'stale_lead_followup_enabled' => '1',
+];
+$autoAutomationSetting = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value) VALUES (?, ?)');
+foreach ($autoAutomationDefaults as $name => $value) {
+    $autoAutomationSetting->execute([$name, $value]);
+}
+
 echo "Schema applied.\n";

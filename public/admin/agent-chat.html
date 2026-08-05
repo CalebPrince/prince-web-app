@@ -187,6 +187,11 @@
         <label class="form-label">Search keywords <span class="text-muted-custom fw-normal">(one per line, e.g. <code>site:reddit.com "janky animation" OR "slow website" -inurl:forhire -inurl:slavelabour</code> — the <code>-inurl:</code> parts keep vendor-heavy subreddits where people advertise their own services out of the results)</span></label>
         <textarea class="form-control" id="beacon-discovery-keywords" rows="4"></textarea>
       </div>
+      <div class="form-check form-switch mt-3">
+        <input class="form-check-input" type="checkbox" id="beacon-auto-accept-all">
+        <label class="form-check-label" for="beacon-auto-accept-all">Auto-accept borderline-confidence leads</label>
+        <div class="form-text">Skips the pending_review hold for leads scoring below 70 confidence — every qualified lead reaches the pipeline (and its automation) immediately, no approval click needed.</div>
+      </div>
       <div id="beacon-discovery-msg" class="alert py-2 small d-none mt-3"></div>
       <button type="button" class="btn-brand mt-3" id="beacon-discovery-save">Save discovery settings</button>
     </div>

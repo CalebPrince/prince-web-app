@@ -62,6 +62,7 @@
   const beaconDiscoveryFrequency = document.getElementById("beacon-discovery-frequency");
   const beaconDiscoveryRecency = document.getElementById("beacon-discovery-recency");
   const beaconDiscoveryKeywords = document.getElementById("beacon-discovery-keywords");
+  const beaconAutoAcceptAll = document.getElementById("beacon-auto-accept-all");
   const beaconDiscoveryMsg = document.getElementById("beacon-discovery-msg");
   const beaconDiscoverySave = document.getElementById("beacon-discovery-save");
   const beaconSpendCard = document.getElementById("beacon-spend-card");
@@ -746,6 +747,7 @@
       beaconDiscoveryFrequency.value = settings.beacon_discovery_frequency || "daily";
       beaconDiscoveryRecency.value = settings.beacon_discovery_recency || "qdr:m";
       beaconDiscoveryKeywords.value = settings.beacon_discovery_keywords || "";
+      beaconAutoAcceptAll.checked = settings.beacon_auto_accept_all === "1";
       discoverySettingsLoaded = true;
     } catch (_) {
       // Quiet failure — admin can still retype and save.
@@ -761,6 +763,7 @@
         beacon_discovery_frequency: beaconDiscoveryFrequency.value,
         beacon_discovery_recency: beaconDiscoveryRecency.value,
         beacon_discovery_keywords: beaconDiscoveryKeywords.value,
+        beacon_auto_accept_all: beaconAutoAcceptAll.checked ? "1" : "0",
       });
       beaconDiscoveryMsg.className = "alert alert-success py-2 small mt-3";
       beaconDiscoveryMsg.textContent = "Saved.";

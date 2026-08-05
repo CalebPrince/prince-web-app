@@ -92,24 +92,39 @@ class SocialDraftController
             ->execute($values);
 
         if ($existing['status'] !== 'approved' && ($data['status'] ?? null) === 'approved') {
-            $stmt = $pdo->prepare('SELECT * FROM social_post_drafts WHERE id = ?');
-            $stmt->execute([$id]);
-            $fresh = $stmt->fetch();
-
-            IntegrationEvent::log('social_post_approved', [
-                'id' => (int) $fresh['id'],
-                'content' => $fresh['content'],
-                'short_content' => $fresh['short_content'],
-                'hashtags' => $fresh['hashtags'],
-                'image_url' => $fresh['image_url'],
-                'source_type' => $fresh['source_type'],
-            ]);
-            $pdo->prepare('UPDATE social_post_drafts SET sent_to_makecom = 1 WHERE id = ?')->execute([$id]);
-
-            self::publishToLinkedIn($pdo, $fresh);
+            self::applyApproval($pdo, $id);
         }
 
         Response::json(['status' => 'updated']);
+    }
+
+    /**
+     * The side effects of approving a draft — fires the social_post_approved
+     * integration event and publishes to LinkedIn if connected. Shared by
+     * the manual "Approve" click in update() and generate_social_drafts.php,
+     * which calls this immediately after generation when social_draft_auto_approve
+     * is on, so an auto-approved draft behaves identically to a hand-approved one.
+     */
+    public static function applyApproval(\PDO $pdo, int $id): void
+    {
+        $stmt = $pdo->prepare('SELECT * FROM social_post_drafts WHERE id = ?');
+        $stmt->execute([$id]);
+        $fresh = $stmt->fetch();
+        if (!$fresh) {
+            return;
+        }
+
+        IntegrationEvent::log('social_post_approved', [
+            'id' => (int) $fresh['id'],
+            'content' => $fresh['content'],
+            'short_content' => $fresh['short_content'],
+            'hashtags' => $fresh['hashtags'],
+            'image_url' => $fresh['image_url'],
+            'source_type' => $fresh['source_type'],
+        ]);
+        $pdo->prepare("UPDATE social_post_drafts SET status = 'approved', sent_to_makecom = 1, updated_at = datetime('now') WHERE id = ?")->execute([$id]);
+
+        self::publishToLinkedIn($pdo, $fresh);
     }
 
     /**
