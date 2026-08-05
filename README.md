@@ -431,6 +431,7 @@ database/
   send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
   check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
+  check_twilio_balance.php        # alerts by email + Attention panel when Twilio balance drops below threshold (cron, hourly)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
   sync_nurturer_replies.php       # Jason: imports replies, pauses drip, safely continues threads (cron, hourly)
@@ -1666,6 +1667,13 @@ One-time setup on a new host:
     discovery sweep when enabled, and with auto-draft on also prepares
     pitches/call scripts):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_cold_outreach.php > /dev/null`
+4n. Add a fourteenth cron job (hourly) for the Twilio low-balance alert (a
+    no-op until `twilio_account_sid`/`twilio_auth_token` are set under
+    Admin -> Settings -> Integrations). Calls and WhatsApp sending share one
+    Twilio balance, so this alerts by email once when it drops below the
+    configured threshold (default $10) and once more on recovery, and
+    surfaces a Billing item on the Attention panel while low:
+    `/usr/local/bin/php /home/<cpanel-user>/database/check_twilio_balance.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

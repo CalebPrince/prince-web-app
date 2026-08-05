@@ -8,14 +8,16 @@ aspect: 1920x1080
 language: en
 length: 30s
 angle: overwhelm-to-relief
-style_preset: light-theme (adapted from Buinee Co-Pilot reference project)
+style_preset: blue-professional structure, remixed onto princecaleb.dev's real dark-theme brand (near-black canvas #0b0c0e, signal-green #62ff98 accent, white text) — matches the portfolio site and the user's three prior HyperFrames ad projects (lisa-ai-assistant-ad, saas-checkout-conversion-ad, your-business-at-2am)
 ---
 
 ## Intent
 
 A ~30s promo ad for princecaleb.dev (Prince Caleb — AI voice agents, chatbots, and business automation). Story arc: overwhelm (missed calls, manual busywork, juggling apps) → relief (Prince Caleb's systems as the fix) → two tight feature beats (AI voice agents, business automations — websites folded in as a footnote, not a full beat) → CTA to book/get an estimate.
 
-Style reference: `D:\Websites\prince-web-app\video-assets\buinee-co-pilot\` (BRIEF.md, STORYBOARD.md-equivalent compositions, snapshots/contact-sheet-1.jpg, contact-sheet-2.jpg). Borrow its structure and visual grammar — clean cream/off-white **light theme**, serif display headline for taglines (Playfair Display equivalent), muted UI-mockup cards illustrating the product in action, minimal kinetic text reveals, logo-mark-centered CTA close — but do NOT reuse Buinee's own brand palette. This video uses princecaleb.dev's own real brand accent (green, pulled from live capture) on a light/cream canvas instead of princecaleb.dev's actual dark-theme site background. User explicitly corrected: light theme, not dark.
+Structural reference: `D:\Websites\prince-web-app\video-assets\buinee-co-pilot\` (BRIEF.md, compositions, snapshots/contact-sheet-1.jpg, contact-sheet-2.jpg) — borrowed its scene grammar (serif-weight display taglines, muted UI-mockup cards illustrating the product in action, minimal kinetic text reveals, logo-mark-centered CTA close), NOT its color palette. Colors instead match princecaleb.dev's own real dark-theme brand identity, confirmed by user after reviewing their existing HyperFrames project library in `videos/`.
+
+**Theme history (for future edits):** built light/cream first per an earlier explicit instruction, then switched to dark (near-black + signal-green) after the user reviewed their three prior ad projects and asked to match their established portfolio brand instead. `frame.md`'s `colors:` block and all six frame HTML files were re-skinned accordingly — if resuming this project, dark is the current, confirmed direction.
 
 ## Assets
 
@@ -24,7 +26,7 @@ Style reference: `D:\Websites\prince-web-app\video-assets\buinee-co-pilot\` (BRI
 ## Customizations
 
 - Adapt the Buinee reference's 4-scene arc (Overload → Enters → AI in Action → Relief & CTA) to 2 feature beats instead of 3, to fit a tighter ~30s runtime.
-- Light theme mandated by user (override of princecaleb.dev's own dark-theme site canvas).
+- Dark theme (near-black + signal-green), matching princecaleb.dev's real site and the user's existing ad portfolio — confirmed final after reviewing prior projects.
 
 ## Notes
 

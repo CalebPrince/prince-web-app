@@ -203,6 +203,7 @@
         <div class="admin-card p-4">
           <h5 class="mb-1"><i class="bi bi-plug me-2" style="color: var(--section-system);"></i>Integrations</h5>
           <p class="text-muted-custom small">Keys are stored in the database and take effect immediately — no file editing needed.</p>
+          <div id="capability-status" class="mb-3"></div>
           <form id="integrations-form">
             <div class="mb-3">
               <label class="form-label">Gemini API key <span class="text-muted-custom fw-normal">(powers Live Chat + prototypes)</span></label>
@@ -341,6 +342,20 @@
               <div class="col-12">
                 <div class="form-text">Mark these after the corresponding Twilio or Meta review is complete. They update the Voice Demo readiness checklist.</div>
               </div>
+            </div>
+            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
+              <div class="fw-semibold mb-2">Low-balance alert</div>
+              <div class="mb-2">
+                <label class="form-label" for="twilio-balance-alert-threshold">Alert threshold (USD)</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="twilio-balance-alert-threshold" placeholder="10.00">
+                <div class="form-text">
+                  Emails the notification address above, and messages your own WhatsApp number below (if configured), once when the Twilio
+                  balance drops below this amount, and once more when it recovers. Calls (inbound and outbound) and WhatsApp sending all draw
+                  from the same balance, so a drain from any one of them can silently stop all three. Requires
+                  <code>database/check_twilio_balance.php</code> on an hourly cron.
+                </div>
+              </div>
+              <div class="small text-muted-custom" id="twilio-balance-status">Balance not checked yet.</div>
             </div>
             <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
               <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
+use App\Support\AgentCapabilities;
 use App\Support\EmailTemplate;
 use App\Support\LisaInstructions;
 use App\Support\Mailer;
@@ -27,6 +28,7 @@ class SettingsController
         'twilio_whatsapp_production_approved',
         'twilio_whatsapp_post_call_enabled', 'twilio_whatsapp_post_call_content_sid',
         'twilio_whatsapp_post_call_template_status',
+        'twilio_balance_alert_threshold', 'twilio_last_balance', 'twilio_last_balance_currency', 'twilio_balance_checked_at',
         'integration_api_key', 'notification_email',
         'smtp_gmail_address', 'smtp_app_password', 'smtp_host', 'smtp_port', 'imap_host', 'mail_from', 'mail_from_name',
         'google_client_id',
@@ -165,6 +167,18 @@ class SettingsController
         Response::json($out);
     }
 
+    /**
+     * GET /api/v1/admin/agent-capabilities — which integrations are
+     * actually configured right now, and which agents depend on each, so
+     * a gap is visible here instead of only being discovered the next time
+     * an agent that needs it happens to run.
+     */
+    public static function capabilities(): void
+    {
+        AuthMiddleware::requireAuth();
+        Response::json(['capabilities' => AgentCapabilities::status()]);
+    }
+
     /** PUT /api/v1/admin/settings — body: any whitelisted keys */
     public static function adminUpdate(): void
     {
@@ -208,6 +222,10 @@ class SettingsController
             if ($key === 'weekly_billable_hours' && $value !== ''
                 && (!is_numeric($value) || (float) $value <= 0 || (float) $value > 168)) {
                 Response::error('Weekly billable hours must be a positive number, at most 168.', 422);
+            }
+            if ($key === 'twilio_balance_alert_threshold' && $value !== ''
+                && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999)) {
+                Response::error('Balance alert threshold must be a valid positive amount.', 422);
             }
             if ($key === 'revenue_target_currency') {
                 $value = strtoupper($value);

@@ -1331,6 +1331,14 @@ if (!in_array('unsubscribe_token', $marketingLeadColumns, true)) {
     $pdo->exec('ALTER TABLE marketing_leads ADD COLUMN unsubscribe_token TEXT');
 }
 
+// Confidence gate for the auto-draft path: a lead that only just cleared
+// LeadFitScorer's qualified bar (55-74) gets drafted but held out of
+// ELIGIBLE_SQL's autonomous send loop as 'pending_review' until a human
+// looks at it. Mirrors beacon_social_leads.review_status.
+if (!in_array('review_status', $marketingLeadColumns, true)) {
+    $pdo->exec("ALTER TABLE marketing_leads ADD COLUMN review_status TEXT NOT NULL DEFAULT 'accepted' CHECK (review_status IN ('accepted', 'pending_review'))");
+}
+
 // One row per lead the sender has emailed. UNIQUE(lead_id) guarantees a
 // prospect is cold-emailed at most once and lets the cron count today's
 // sends against the daily cap.

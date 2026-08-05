@@ -225,6 +225,7 @@ $router->delete('/api/v1/admin/sage-chats/{id}', [SageController::class, 'destro
 $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
 $router->post('/api/v1/admin/settings/test-email', [SettingsController::class, 'sendTestEmail']);
+$router->get('/api/v1/admin/agent-capabilities', [SettingsController::class, 'capabilities']);
 $router->get('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/refresh', [WhatsAppTemplateController::class, 'refresh']);

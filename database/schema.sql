@@ -472,6 +472,15 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   pitch_body TEXT,
   notes TEXT,
   is_high_priority INTEGER NOT NULL DEFAULT 0,
+  -- Confidence gate for the Cold Outreach auto-draft path: OutreachController
+  -- ::autoDraft() marks a pitch 'pending_review' when the lead only just
+  -- cleared LeadFitScorer's qualified bar (score 55-74) rather than scoring
+  -- as a genuine Strong fit (>=75) — drafted so nothing is thrown away, but
+  -- held out of ELIGIBLE_SQL's autonomous send loop until a human looks at
+  -- it. Human-triggered generatePitch() and strong-fit auto-drafts stay the
+  -- 'accepted' default — same accepted/pending_review contract as
+  -- beacon_social_leads.review_status.
+  review_status TEXT NOT NULL DEFAULT 'accepted' CHECK (review_status IN ('accepted', 'pending_review')),
   -- Per-lead opt-out token, minted the first time the Cold Outreach Engine
   -- emails this lead. The unsubscribe link in every automated pitch carries
   -- it; clicking it suppresses the address everywhere (see email_suppressions).

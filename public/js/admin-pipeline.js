@@ -52,6 +52,20 @@ function pipelineDrawer(lead) {
 }
 function closePipelineDrawer(){document.getElementById('pipeline-drawer').classList.remove('open');document.getElementById('pipeline-drawer-backdrop').classList.remove('open');document.getElementById('pipeline-drawer').setAttribute('aria-hidden','true');}
 function openPipelineDrawer(id){const lead=pipelineLeads.find(l=>Number(l.id)===Number(id));if(!lead)return;const drawer=document.getElementById('pipeline-drawer');document.getElementById('pipeline-drawer-content').innerHTML=pipelineDrawer(lead);drawer.classList.add('open');document.getElementById('pipeline-drawer-backdrop').classList.add('open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('.pipeline-drawer-close').addEventListener('click',closePipelineDrawer);drawer.querySelector('#pipeline-detail-form').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('pipeline-detail-status');status.textContent='Saving…';const payload={next_action:document.getElementById('pipeline-next-action').value,follow_up_at:document.getElementById('pipeline-follow-up').value,notes:document.getElementById('pipeline-notes').value};try{await api.patch(`/api/v1/admin/pipeline/${lead.id}`,payload);Object.assign(lead,payload);status.textContent='Saved';renderPipeline();}catch(err){status.textContent=err.message||'Could not save.';}});}
+// Reflects the current filter state into the URL (replaceState, not
+// pushState — a search-as-you-type field shouldn't spam browser history)
+// so a filtered view is copy-pasteable/bookmarkable. Defaults are omitted
+// entirely rather than written as e.g. focus=all, keeping shared URLs
+// clean. Any other param already on the URL (currently just ?open=<id>,
+// consumed once on load) is left untouched.
+function pipelineSyncUrl() {
+  const params = new URLSearchParams(location.search);
+  if (pipelineQuery) params.set('q', pipelineQuery); else params.delete('q');
+  if (pipelineSource) params.set('source', pipelineSource); else params.delete('source');
+  if (pipelineFocus && pipelineFocus !== 'all') params.set('focus', pipelineFocus); else params.delete('focus');
+  const qs = params.toString();
+  history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : ''));
+}
 function pipelineVisible() {
   const q = pipelineQuery.toLowerCase();
   return pipelineLeads.filter(lead => (!pipelineSource || lead.sources.some(s => s.type === pipelineSource)) && (!q || [lead.name, lead.email, lead.phone, lead.summary].some(v => String(v || '').toLowerCase().includes(q))) && (pipelineFocus==='all'||(pipelineFocus==='due'&&pipelineIsDue(lead))||(pipelineFocus==='stale'&&pipelineIsStale(lead))));
@@ -134,9 +148,19 @@ function wireNewLeadForm() {
     const data = await api.get('/api/v1/admin/pipeline'); pipelineLeads = data.leads || []; pipelineStages = data.stages || pipelineStages;
     const sourceTypes = [...new Set(pipelineLeads.flatMap(l => l.sources.map(s => s.type)))].sort();
     document.getElementById('pipeline-source-filter').insertAdjacentHTML('beforeend', sourceTypes.map(s => `<option value="${pipelineEsc(s)}">${pipelineEsc(PIPELINE_SOURCE_LABEL[s] || s)}</option>`).join(''));
-    document.getElementById('pipeline-search').addEventListener('input', e => { pipelineQuery = e.target.value.trim(); renderPipeline(); });
-    document.getElementById('pipeline-source-filter').addEventListener('change', e => { pipelineSource = e.target.value; renderPipeline(); });
-    document.querySelectorAll('[data-pipeline-focus]').forEach(button=>button.addEventListener('click',()=>{pipelineFocus=button.dataset.pipelineFocus;document.querySelectorAll('[data-pipeline-focus]').forEach(item=>item.classList.toggle('active',item===button));renderPipeline();}));
+    // Restore filter state from the URL before the first render, so a
+    // shared/bookmarked link reproduces the same filtered view.
+    const restoreParams = new URLSearchParams(location.search);
+    pipelineQuery = restoreParams.get('q') || '';
+    pipelineSource = restoreParams.get('source') || '';
+    pipelineFocus = restoreParams.get('focus') || 'all';
+    document.getElementById('pipeline-search').value = pipelineQuery;
+    if (pipelineSource) document.getElementById('pipeline-source-filter').value = pipelineSource;
+    document.querySelectorAll('[data-pipeline-focus]').forEach(item => item.classList.toggle('active', item.dataset.pipelineFocus === pipelineFocus));
+
+    document.getElementById('pipeline-search').addEventListener('input', e => { pipelineQuery = e.target.value.trim(); pipelineSyncUrl(); renderPipeline(); });
+    document.getElementById('pipeline-source-filter').addEventListener('change', e => { pipelineSource = e.target.value; pipelineSyncUrl(); renderPipeline(); });
+    document.querySelectorAll('[data-pipeline-focus]').forEach(button=>button.addEventListener('click',()=>{pipelineFocus=button.dataset.pipelineFocus;document.querySelectorAll('[data-pipeline-focus]').forEach(item=>item.classList.toggle('active',item===button));pipelineSyncUrl();renderPipeline();}));
     document.getElementById('pipeline-drawer-backdrop').addEventListener('click',closePipelineDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closePipelineDrawer();});wireNewLeadForm();renderPipeline();const requestedId=Number(new URLSearchParams(location.search).get('open'));if(requestedId)openPipelineDrawer(requestedId);
   } catch(err) { const box=document.getElementById('pipeline-error'); box.textContent=err.message || 'Could not load the pipeline.'; box.classList.remove('d-none'); }
 })();

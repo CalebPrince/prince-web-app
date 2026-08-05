@@ -101,6 +101,35 @@ async function savePassword(e) {
   }
 }
 
+// "Which integrations are actually configured right now, and which agents
+// depend on each" — surfaced here so a gap is visible before an agent that
+// needs it happens to run into it, instead of only discovered from a
+// buried error/degraded note somewhere else in the admin.
+async function loadCapabilityStatus() {
+  const box = document.getElementById("capability-status");
+  if (!box) return;
+  try {
+    const data = await api.get("/api/v1/admin/agent-capabilities");
+    const rows = Object.values(data.capabilities || {});
+    box.innerHTML = `
+      <div class="p-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
+        <div class="small fw-semibold mb-2">Capability status</div>
+        ${rows.map(cap => `
+          <div class="d-flex align-items-start gap-2 mb-1">
+            <span class="badge ${cap.available ? "bg-success" : "bg-secondary"}" style="margin-top:.15rem;">${cap.available ? "Ready" : "Not configured"}</span>
+            <div class="small">
+              <div>${cap.label}</div>
+              <div class="text-muted-custom">Used by: ${cap.used_by.join(", ")}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  } catch (_) {
+    // Quiet failure — this panel is a convenience, not the primary flow.
+  }
+}
+
 async function saveIntegrations(e) {
   e.preventDefault();
   try {
@@ -128,6 +157,7 @@ async function saveIntegrations(e) {
       twilio_whatsapp_number: document.getElementById("twilio-whatsapp-number").value.trim(),
       twilio_regulatory_approved: document.getElementById("twilio-regulatory-approved").checked ? "1" : "0",
       twilio_whatsapp_production_approved: document.getElementById("twilio-whatsapp-production-approved").checked ? "1" : "0",
+      twilio_balance_alert_threshold: document.getElementById("twilio-balance-alert-threshold").value.trim(),
       twilio_whatsapp_post_call_enabled: document.getElementById("twilio-whatsapp-post-call-enabled").checked ? "1" : "0",
       owner_whatsapp_number: document.getElementById("owner-whatsapp-number").value.trim(),
       twilio_voice_enabled: document.getElementById("twilio-voice-enabled").checked ? "1" : "0",
@@ -615,6 +645,7 @@ async function testAi() {
   document.getElementById("twofa-backup-done-btn").addEventListener("click", () => showTwofaView("enabled"));
 
   document.getElementById("integrations-form").addEventListener("submit", saveIntegrations);
+  loadCapabilityStatus();
   document.getElementById("test-ai-btn").addEventListener("click", testAi);
   document.getElementById("generate-api-key-btn").addEventListener("click", () => {
     const bytes = new Uint8Array(24);
@@ -670,6 +701,17 @@ async function testAi() {
     document.getElementById("twilio-whatsapp-number").value = settings.twilio_whatsapp_number || "";
     document.getElementById("twilio-regulatory-approved").checked = settings.twilio_regulatory_approved === "1";
     document.getElementById("twilio-whatsapp-production-approved").checked = settings.twilio_whatsapp_production_approved === "1";
+    document.getElementById("twilio-balance-alert-threshold").value = settings.twilio_balance_alert_threshold || "10";
+    {
+      const statusEl = document.getElementById("twilio-balance-status");
+      if (settings.twilio_last_balance) {
+        const currency = settings.twilio_last_balance_currency || "USD";
+        const checkedAt = settings.twilio_balance_checked_at
+          ? new Date(settings.twilio_balance_checked_at).toLocaleString()
+          : "unknown time";
+        statusEl.textContent = `Last checked balance: ${currency} ${settings.twilio_last_balance} (as of ${checkedAt})`;
+      }
+    }
     document.getElementById("twilio-whatsapp-post-call-enabled").checked = settings.twilio_whatsapp_post_call_enabled === "1";
     document.getElementById("owner-whatsapp-number").value = settings.owner_whatsapp_number || "";
     document.getElementById("twilio-voice-enabled").checked = settings.twilio_voice_enabled === "1";

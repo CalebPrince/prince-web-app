@@ -422,7 +422,7 @@ async function loadLeads() {
       <td>${fitScoreCell(lead)}</td>
       <td>${opportunityBadge(lead)}</td>
       <td>${contactabilityCell(lead)}</td>
-      <td><span class="status-pill-ai ${statusClass}">${escapeHtml(lead.status.replace("_", " "))}</span></td>
+      <td><span class="status-pill-ai ${statusClass}">${escapeHtml(lead.status.replace("_", " "))}</span>${lead.status === "pitch_ready" && lead.review_status === "pending_review" ? ' <span class="badge bg-warning text-dark" title="Auto-drafted with a borderline fit score — review before sending">Needs review</span>' : ""}</td>
       <td>${lastSignalCell(lead)}</td>
       <td class="text-end pe-3 lead-actions">
         <button type="button" class="btn btn-sm btn-brand open-account-btn" data-id="${lead.id}">Open account</button>

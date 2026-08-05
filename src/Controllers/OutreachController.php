@@ -220,6 +220,14 @@ class OutreachController
                 continue;
             }
 
+            // Qualified (>=55) is enough to draft — nothing found is thrown
+            // away. But only a genuine Strong fit (>=75) is confident enough
+            // to auto-send with no human ever having looked at it; a lead
+            // that just barely cleared the bar gets drafted and held as
+            // 'pending_review' instead, same principle as Beacon's
+            // AUTO_ACCEPT_THRESHOLD gate on unsupervised leads.
+            $reviewStatus = $fit['score'] >= 75 ? 'accepted' : 'pending_review';
+
             $email = trim((string) ($lead['contact_email'] ?? ''));
             $phone = trim((string) ($lead['contact_phone'] ?? ''));
 
@@ -233,12 +241,15 @@ class OutreachController
                 }
                 $pdo->prepare(
                     "UPDATE marketing_leads SET pitch_subject = ?, pitch_body = ?, pitch_channel = 'email',
-                     status = 'pitch_ready', updated_at = datetime('now') WHERE id = ?"
-                )->execute([$pitch['subject'], $pitch['body'], $lead['id']]);
+                     status = 'pitch_ready', review_status = ?, updated_at = datetime('now') WHERE id = ?"
+                )->execute([$pitch['subject'], $pitch['body'], $reviewStatus, $lead['id']]);
                 $emails++;
             } elseif ($phone !== '') {
                 // No reachable email but a phone number — prepare talking
                 // points for the call queue instead of dead-ending the lead.
+                // Calls always go through a human dialing anyway (no
+                // autonomous send path exists for phone), so the review gate
+                // doesn't apply here — it stays the 'accepted' default.
                 $script = MarketingLeadController::draftWhatsAppMessage((string) $lead['business_name'], $findings);
                 if ($script === null) {
                     continue;
@@ -708,6 +719,7 @@ class OutreachController
         "SELECT ml.* FROM marketing_leads ml
          WHERE ml.status = 'pitch_ready'
            AND COALESCE(ml.fit_score, 0) >= 55
+           AND ml.review_status = 'accepted'
            AND ml.is_high_priority = 0
            AND ml.pitch_channel = 'email'
            AND ml.contact_email IS NOT NULL AND trim(ml.contact_email) <> ''
