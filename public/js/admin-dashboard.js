@@ -251,7 +251,7 @@ function renderRevenueActions(feed) {
     <span class="revenue-action-cta">Act now <i class="bi bi-arrow-right"></i></span>
   </a>`).join('') : `<div class="revenue-runway-clear"><i class="bi bi-check2-circle"></i><div><strong>No urgent revenue actions</strong><span>Open the pipeline and schedule the next move for a lead.</span></div><a href="/admin/pipeline.html">Plan next action</a></div>`;
   document.getElementById('welcome-line').textContent = items.length
-    ? `${items.length} revenue action${items.length === 1 ? '' : 's'} ready â€” start with the first one.`
+    ? `${items.length} revenue action${items.length === 1 ? '' : 's'} ready — start with the first one.`
     : 'No urgent revenue actions. Use the pipeline to prepare the next move.';
 }
 

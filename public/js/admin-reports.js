@@ -105,7 +105,7 @@ function renderPipeline(p, currency) {
   document.getElementById('stat-avg-deal').textContent = p.avg_deal_size > 0 ? 'avg deal ' + formatMoney(p.avg_deal_size, currency) : 'no closed deals yet';
 
   const steps=p.activity_funnel||[];
-  document.getElementById('activity-funnel-period').textContent=p.activity_period?`${p.activity_period.from} â€“ ${p.activity_period.to}`:'';
+  document.getElementById('activity-funnel-period').textContent=p.activity_period?`${p.activity_period.from} – ${p.activity_period.to}`:'';
   document.getElementById('activity-funnel').innerHTML=steps.map((step,index)=>`${index?`<div class="activity-funnel-handoff"><i class="bi bi-arrow-down"></i><span>${step.conversion===null?'No baseline':step.conversion+'%'}</span></div>`:''}<a class="activity-funnel-step" href="${esc(step.href)}"><span>${esc(step.label)}</span><strong>${step.count}</strong><small>${index===0?'Recorded volume':step.conversion===null?'No prior activity':step.conversion+'% from previous step'}</small></a>`).join('');
   const bottleneck=p.activity_bottleneck, bottleneckBox=document.getElementById('activity-bottleneck');
   bottleneckBox.innerHTML=bottleneck?`<i class="bi bi-exclamation-diamond"></i><span><strong>Weakest handoff: ${esc(bottleneck.from)} â†’ ${esc(bottleneck.to)}</strong><small>${bottleneck.conversion}% conversion. Review this transition before increasing activity above it.</small></span>`:`<i class="bi bi-info-circle"></i><span><strong>Not enough activity to identify a bottleneck</strong><small>Record actions throughout the selected period to establish a conversion baseline.</small></span>`;
