@@ -20,6 +20,21 @@ class PipelineController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
+        Response::json(['leads' => self::buildUnifiedLeads($pdo), 'stages' => self::STAGES]);
+    }
+
+    /**
+     * The identity-deduplicated, source-merged lead list — the same data
+     * index() serves to the Pipeline board, extracted so a cron can apply
+     * the exact "stale" definition the UI already shows (see
+     * pipelineIsStale() in admin-pipeline.js: not closed, no follow_up_at,
+     * and max(latest_at, pipeline_updated_at) old enough) without a second,
+     * possibly-drifting implementation of what "stale" means.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public static function buildUnifiedLeads(\PDO $pdo): array
+    {
         $leads = [];
 
         self::collect($leads, $pdo->query("SELECT id, name, email, message, type, pipeline_stage, created_at FROM inquiries WHERE status != 'archived'")->fetchAll(),
@@ -89,7 +104,7 @@ class PipelineController
             $out[] = $lead;
         }
         usort($out, fn($a, $b) => strcmp($b['latest_at'], $a['latest_at']));
-        Response::json(['leads' => $out, 'stages' => self::STAGES]);
+        return $out;
     }
 
     public static function store(): void
@@ -153,14 +168,27 @@ class PipelineController
         $stmt = $pdo->prepare('UPDATE pipeline_leads SET '.implode(', ', $fields).' WHERE id=?');
         $stmt->execute($values);
         if ($stmt->rowCount() === 0) Response::error('Pipeline lead not found.', 404);
-        if (array_key_exists('follow_up_at', $data)) $pdo->prepare("DELETE FROM notification_reads WHERE notification_key=?")->execute(['follow_up:'.$id]);
-        if (!empty($follow)) {
-            AgentTaskQueue::enqueue('lead_recheck','nurturer','pipeline_lead',$id,['next_action'=>$data['next_action']??null],str_replace('T',' ',$follow),200,$data['next_action']??'Follow up with this lead at the scheduled time.');
-        } elseif (array_key_exists('follow_up_at', $data)) {
-            $pdo->prepare("UPDATE agent_tasks SET status='cancelled',lease_token=NULL,lease_expires_at=NULL,reschedule_reason='Follow-up removed from the pipeline lead.',updated_at=datetime('now') WHERE kind='lead_recheck' AND entity_type='pipeline_lead' AND entity_id=? AND status IN ('queued','leased')")->execute([$id]);
-        }
+        if (array_key_exists('follow_up_at', $data)) self::syncFollowUpQueue($pdo, $id, $follow ?: null, $data['next_action'] ?? null);
         ActivityLog::log($user, 'pipeline_lead_updated', 'pipeline_lead', $id, null, array_intersect_key($data, array_flip(['stage','next_action','follow_up_at'])));
         Response::json(['status' => 'updated']);
+    }
+
+    /**
+     * Keeps the Agent Queue and the Attention-panel follow-up notification in
+     * sync with a pipeline lead's follow_up_at — a non-null date schedules
+     * (or reschedules) a lead_recheck task and clears any earlier
+     * dismissal; clearing the date cancels whatever was pending. Shared by
+     * the manual PATCH endpoint and schedule_stale_lead_followups.php so
+     * an auto-scheduled follow-up behaves identically to a hand-set one.
+     */
+    public static function syncFollowUpQueue(\PDO $pdo, int $id, ?string $followUpAt, ?string $nextAction): void
+    {
+        $pdo->prepare("DELETE FROM notification_reads WHERE notification_key=?")->execute(['follow_up:'.$id]);
+        if (!empty($followUpAt)) {
+            AgentTaskQueue::enqueue('lead_recheck','nurturer','pipeline_lead',$id,['next_action'=>$nextAction],str_replace('T',' ',$followUpAt),200,$nextAction ?: 'Follow up with this lead at the scheduled time.');
+        } else {
+            $pdo->prepare("UPDATE agent_tasks SET status='cancelled',lease_token=NULL,lease_expires_at=NULL,reschedule_reason='Follow-up removed from the pipeline lead.',updated_at=datetime('now') WHERE kind='lead_recheck' AND entity_type='pipeline_lead' AND entity_id=? AND status IN ('queued','leased')")->execute([$id]);
+        }
     }
 
     private static function collect(array &$leads, array $rows, string $source, callable $stage, callable $url, callable $summary, bool $hasValue = false): void

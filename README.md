@@ -432,6 +432,7 @@ database/
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
   check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
   check_twilio_balance.php        # alerts by email + Attention panel when Twilio balance drops below threshold (cron, hourly)
+  schedule_stale_lead_followups.php  # auto-schedules a follow-up for active pipeline leads gone quiet too long (cron, daily; off by default)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
   sync_nurturer_replies.php       # Jason: imports replies, pauses drip, safely continues threads (cron, hourly)
@@ -1674,6 +1675,13 @@ One-time setup on a new host:
     configured threshold (default $10) and once more on recovery, and
     surfaces a Billing item on the Attention panel while low:
     `/usr/local/bin/php /home/<cpanel-user>/database/check_twilio_balance.php > /dev/null`
+4o. Add a fifteenth cron job (once a day) for stale-lead auto-follow-up (off
+    by default — toggle under Admin -> Pipeline). Any active pipeline lead
+    with no follow-up already set and no activity across any linked source
+    for the configured window (default 5 days) gets one auto-scheduled,
+    identical in effect to setting it by hand — same Agent Queue entry, same
+    Tasks-page entry once due:
+    `/usr/local/bin/php /home/<cpanel-user>/database/schedule_stale_lead_followups.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

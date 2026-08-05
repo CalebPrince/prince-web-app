@@ -44,6 +44,7 @@ class SettingsController
         'nurturer_sequence_2_day_offset', 'nurturer_sequence_3_day_offset',
         'nurturer_reply_sync_enabled', 'nurturer_reply_auto_send',
         'beacon_discovery_enabled', 'beacon_discovery_frequency', 'beacon_discovery_last_run', 'beacon_discovery_keywords', 'beacon_discovery_recency',
+        'stale_lead_followup_enabled', 'stale_lead_followup_days',
         'composio_api_key',
         'composio_google_calendar_auth_config_id', 'composio_google_calendar_account_id',
         'composio_gmail_auth_config_id', 'composio_gmail_account_id',
@@ -226,6 +227,10 @@ class SettingsController
             if ($key === 'twilio_balance_alert_threshold' && $value !== ''
                 && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999)) {
                 Response::error('Balance alert threshold must be a valid positive amount.', 422);
+            }
+            if ($key === 'stale_lead_followup_days' && $value !== ''
+                && (!ctype_digit($value) || (int) $value < 1 || (int) $value > 90)) {
+                Response::error('Stale-lead follow-up window must be a whole number of days between 1 and 90.', 422);
             }
             if ($key === 'revenue_target_currency') {
                 $value = strtoupper($value);

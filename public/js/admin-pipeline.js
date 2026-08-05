@@ -142,8 +142,34 @@ function wireNewLeadForm() {
     }
   });
 }
+async function wireStaleFollowupSettings() {
+  const enabledEl = document.getElementById('stale-followup-enabled');
+  const daysEl = document.getElementById('stale-followup-days');
+  const msgEl = document.getElementById('stale-followup-msg');
+  try {
+    const settings = await api.get('/api/v1/admin/settings');
+    enabledEl.checked = settings.stale_lead_followup_enabled === '1';
+    daysEl.value = settings.stale_lead_followup_days || '5';
+  } catch (err) {
+    // Non-fatal — the toggle just falls back to its unchecked/blank defaults.
+  }
+  document.getElementById('stale-followup-save').addEventListener('click', async () => {
+    try {
+      await api.put('/api/v1/admin/settings', {
+        stale_lead_followup_enabled: enabledEl.checked ? '1' : '0',
+        stale_lead_followup_days: daysEl.value.trim(),
+      });
+      msgEl.textContent = 'Saved.';
+      msgEl.className = 'alert py-2 small w-100 mb-0 alert-success';
+    } catch (err) {
+      msgEl.textContent = err.message || 'Could not save.';
+      msgEl.className = 'alert py-2 small w-100 mb-0 alert-danger';
+    }
+  });
+}
 (async function initPipeline(){
   const user = await requireAdminAuth(); if (!user) return; wireLogout();
+  wireStaleFollowupSettings();
   try {
     const data = await api.get('/api/v1/admin/pipeline'); pipelineLeads = data.leads || []; pipelineStages = data.stages || pipelineStages;
     const sourceTypes = [...new Set(pipelineLeads.flatMap(l => l.sources.map(s => s.type)))].sort();
