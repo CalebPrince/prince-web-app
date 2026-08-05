@@ -256,6 +256,10 @@
     renderRows();
     rowsEl.querySelector(".expense-ledger-row:last-child .expense-name")?.focus();
   });
+  // The actual save button lives in the Budget settings card in the other
+  // column — easy to miss after adding a service in the ledger card right
+  // above it. This mirrors that same submit rather than duplicating it.
+  document.getElementById("expense-save-ledger").addEventListener("click", () => form.requestSubmit());
   currencyEl.addEventListener("change", () => {
     syncFromRows();
     const nextCurrency = currencyEl.value;

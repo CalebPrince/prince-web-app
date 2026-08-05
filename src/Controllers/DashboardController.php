@@ -372,11 +372,29 @@ class DashboardController
             'Composio' => !empty(Settings::get('composio_api_key')),
             'Paystack' => !empty(Settings::get('paystack_secret_key')),
         ];
+        // Suggest each connected integration as a cost line at most once,
+        // ever — otherwise deleting a suggested (or same-named) row just
+        // brings it straight back on the next load, since the name would no
+        // longer appear in $items for the substring check below to find.
+        // 'external_expense_suggested_services' records every name this has
+        // already nudged about; once suggested, a user's deletion sticks.
         $names = strtolower(implode(' ', array_column($items, 'name')));
+        $alreadySuggested = array_filter(array_map('trim', explode(',', strtolower((string) Settings::get('external_expense_suggested_services')))));
+        $newlySuggested = [];
         foreach ($connected as $name => $isConnected) {
-            if ($isConnected && !str_contains($names, strtolower($name))) {
+            if (!$isConnected) continue;
+            $key = strtolower($name);
+            if (in_array($key, $alreadySuggested, true)) continue;
+            if (!str_contains($names, $key)) {
                 $items[] = ['name' => $name, 'amount' => null, 'type' => 'usage', 'connected' => true];
             }
+            $newlySuggested[] = $key;
+        }
+        if ($newlySuggested) {
+            Settings::set(
+                'external_expense_suggested_services',
+                trim(implode(',', $alreadySuggested) . ',' . implode(',', $newlySuggested), ',')
+            );
         }
 
         $fixed = 0;
