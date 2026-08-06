@@ -7,13 +7,14 @@ on:
 
 concurrency:
   group: deploy
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   # Syntax-check every PHP file before anything touches the server — a
   # push with a parse error must fail here, not take production down.
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -25,6 +26,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: lint
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
