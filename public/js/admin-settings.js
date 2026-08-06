@@ -149,6 +149,9 @@ async function saveIntegrations(e) {
       liveavatar_api_key: document.getElementById("liveavatar-api-key").value.trim(),
       liveavatar_avatar_id: document.getElementById("liveavatar-avatar-id").value.trim(),
       liveavatar_context_id: document.getElementById("liveavatar-context-id").value.trim(),
+      liveavatar_voice_id: document.getElementById("liveavatar-voice-id").value.trim(),
+      liveavatar_llm_bridge_secret: document.getElementById("liveavatar-llm-bridge-secret").value.trim(),
+      liveavatar_llm_configuration_id: document.getElementById("liveavatar-llm-configuration-id").value.trim(),
       whatsapp_provider: document.getElementById("whatsapp-provider").value,
       whapi_api_token: document.getElementById("whapi-api-token").value.trim(),
       whapi_webhook_secret: document.getElementById("whapi-webhook-secret").value.trim(),
@@ -694,6 +697,9 @@ async function testAi() {
     document.getElementById("liveavatar-api-key").value = settings.liveavatar_api_key || "";
     document.getElementById("liveavatar-avatar-id").value = settings.liveavatar_avatar_id || "";
     document.getElementById("liveavatar-context-id").value = settings.liveavatar_context_id || "";
+    document.getElementById("liveavatar-voice-id").value = settings.liveavatar_voice_id || "";
+    document.getElementById("liveavatar-llm-bridge-secret").value = settings.liveavatar_llm_bridge_secret || "";
+    document.getElementById("liveavatar-llm-configuration-id").value = settings.liveavatar_llm_configuration_id || "";
     document.getElementById("whatsapp-provider").value = settings.whatsapp_provider || "twilio";
     document.getElementById("whapi-api-token").value = settings.whapi_api_token || "";
     document.getElementById("whapi-webhook-secret").value = settings.whapi_webhook_secret || "";

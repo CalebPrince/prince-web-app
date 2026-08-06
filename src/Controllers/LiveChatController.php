@@ -167,14 +167,15 @@ class LiveChatController
     }
 
     /**
-     * Shared by the web widget (message()) and the WhatsApp webhook — runs one
-     * turn against Gemini -> OpenRouter -> Groq -> keyword/booking fallback and
-     * returns the reply plus which path served it. $transcript must already
-     * include the new user turn as its last entry.
+     * Shared by the web widget (message()), the WhatsApp webhook, and video
+     * Lisa's LiveAvatar custom-LLM bridge (LiveAvatarController::chatCompletions())
+     * — runs one turn against Gemini -> OpenRouter -> Groq -> keyword/booking
+     * fallback and returns the reply plus which path served it. $transcript
+     * must already include the new user turn as its last entry.
      *
      * @return array{reply: string, mode: string, provider: ?string, ready: bool}
      */
-    private static function generateReply(
+    public static function generateReply(
         string $message,
         array $transcript,
         array $projects,
@@ -942,7 +943,7 @@ class LiveChatController
         ], $pdo);
     }
 
-    private static function projectCatalog(\PDO $pdo): array
+    public static function projectCatalog(\PDO $pdo): array
     {
         return $pdo->query(
             "SELECT p.title, p.slug, p.summary, GROUP_CONCAT(t.name, ', ') AS tag_names

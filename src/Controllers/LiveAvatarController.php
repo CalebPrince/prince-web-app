@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\RateLimitMiddleware;
+use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
 
@@ -26,7 +27,7 @@ class LiveAvatarController
         $voiceId = Settings::get('liveavatar_voice_id') ?: '62bbb4b2-bb26-4727-bc87-cfb2bd4e0cc8';
         if (!$apiKey || !$avatarId || !$contextId) Response::error('Lisa video is not fully configured.', 503);
 
-        $result = self::request('https://api.liveavatar.com/v1/sessions/token', $apiKey, [
+        $payload = [
             'mode' => 'FULL',
             'avatar_id' => $avatarId,
             'avatar_persona' => [
@@ -35,11 +36,121 @@ class LiveAvatarController
                 'language' => 'en',
             ],
             'is_sandbox' => true,
-        ]);
+        ];
+        // When set (see scripts/setup_liveavatar_llm.php), routes the conversation
+        // through our own /api/v1/liveavatar/chat/completions bridge — the same
+        // generateReply() brain and tools as the web widget and WhatsApp — instead
+        // of LiveAvatar's internal LLM answering only from context_id.
+        $llmConfigurationId = Settings::get('liveavatar_llm_configuration_id');
+        if ($llmConfigurationId) {
+            $payload['llm_configuration_id'] = $llmConfigurationId;
+        }
+
+        $result = self::request('https://api.liveavatar.com/v1/sessions/token', $apiKey, $payload);
 
         $token = (string) ($result['data']['session_token'] ?? '');
         if ($token === '') Response::error('LiveAvatar returned no session token.', 502);
         Response::json(['session_token' => $token, 'sandbox' => true]);
+    }
+
+    /**
+     * POST /api/v1/liveavatar/chat/completions — the custom-LLM bridge LiveAvatar
+     * calls (per llm_configuration_id, set up by scripts/setup_liveavatar_llm.php)
+     * instead of its own internal model. OpenAI-compatible request/response shape
+     * is the only contract LiveAvatar requires; underneath, this just forwards
+     * into LiveChatController::generateReply() — the exact same brain and tools
+     * (log_inquiry, check_availability, book_appointment, signal_handoff, ...)
+     * the public web widget and WhatsApp already use, running in public
+     * (non-owner) mode.
+     *
+     * Authenticated with a static shared secret (liveavatar_llm_bridge_secret)
+     * sent as a Bearer token — this is a credential we mint ourselves and
+     * register with LiveAvatar as the secret_value for this llm_configuration,
+     * NOT the liveavatar_api_key used for the calls above.
+     *
+     * generateReply() is fully blocking (no token streaming exists anywhere in
+     * AiAgentEngine today), so a requested stream:true is faked as two SSE
+     * chat.completion.chunk frames around the complete reply rather than true
+     * incremental streaming — functionally correct, just not lower-latency.
+     */
+    public static function chatCompletions(): void
+    {
+        set_time_limit(135); // same worst-case provider-fallback budget as LiveChatController::message()
+        RateLimitMiddleware::enforce('liveavatar_llm_bridge', 300);
+
+        $expectedSecret = Settings::get('liveavatar_llm_bridge_secret');
+        $providedSecret = self::bearerToken();
+        if (!$expectedSecret || !$providedSecret || !hash_equals($expectedSecret, $providedSecret)) {
+            Response::error('Unauthorized', 401);
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $incoming = is_array($data['messages'] ?? null) ? $data['messages'] : [];
+
+        $transcript = [];
+        foreach ($incoming as $entry) {
+            $role = (string) ($entry['role'] ?? '');
+            $content = trim((string) ($entry['content'] ?? ''));
+            // generateReply() builds its own system prompt (buildSystemPrompt());
+            // a system entry here would just be LiveAvatar/OpenAI-client boilerplate.
+            if ($role !== 'user' && $role !== 'assistant') continue;
+            if ($content === '') continue;
+            $transcript[] = ['role' => $role, 'text' => $content];
+        }
+        if (empty($transcript) || end($transcript)['role'] !== 'user') {
+            Response::error('The last message must be from the user.', 422);
+        }
+        $message = end($transcript)['text'];
+
+        $pdo = Database::get();
+        $projects = LiveChatController::projectCatalog($pdo);
+        $result = LiveChatController::generateReply($message, $transcript, $projects, $pdo, false, []);
+
+        $completionId = 'chatcmpl-' . bin2hex(random_bytes(8));
+        $model = (string) ($data['model'] ?? 'lisa');
+
+        if (!empty($data['stream'])) {
+            self::streamChatCompletion($completionId, $model, $result['reply']);
+            return;
+        }
+
+        Response::json([
+            'id' => $completionId,
+            'object' => 'chat.completion',
+            'created' => time(),
+            'model' => $model,
+            'choices' => [[
+                'index' => 0,
+                'message' => ['role' => 'assistant', 'content' => $result['reply']],
+                'finish_reason' => 'stop',
+            ]],
+        ]);
+    }
+
+    /** Two-frame SSE fake-stream: the whole reply as one delta, then a closing chunk. See chatCompletions() doc. */
+    private static function streamChatCompletion(string $id, string $model, string $reply): void
+    {
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('X-Accel-Buffering: no');
+        while (ob_get_level() > 0) ob_end_flush();
+
+        $base = ['id' => $id, 'object' => 'chat.completion.chunk', 'created' => time(), 'model' => $model];
+        echo 'data: ' . json_encode($base + ['choices' => [['index' => 0, 'delta' => ['role' => 'assistant', 'content' => $reply], 'finish_reason' => null]]]) . "\n\n";
+        flush();
+        echo 'data: ' . json_encode($base + ['choices' => [['index' => 0, 'delta' => new \stdClass(), 'finish_reason' => 'stop']]]) . "\n\n";
+        flush();
+        echo "data: [DONE]\n\n";
+        flush();
+    }
+
+    private static function bearerToken(): ?string
+    {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (str_starts_with($header, 'Bearer ')) {
+            return substr($header, 7);
+        }
+        return null;
     }
 
     public static function createEmbed(): void
