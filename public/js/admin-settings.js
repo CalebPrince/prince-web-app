@@ -146,6 +146,7 @@ async function saveIntegrations(e) {
       elevenlabs_tts_model: document.getElementById("elevenlabs-tts-model").value.trim(),
       scout_elevenlabs_voice_id: document.getElementById("scout-elevenlabs-voice-id").value.trim(),
       liveavatar_enabled: document.getElementById("liveavatar-enabled").checked ? "1" : "0",
+      liveavatar_sandbox_enabled: document.getElementById("liveavatar-sandbox-enabled").checked ? "1" : "0",
       liveavatar_api_key: document.getElementById("liveavatar-api-key").value.trim(),
       liveavatar_avatar_id: document.getElementById("liveavatar-avatar-id").value.trim(),
       liveavatar_context_id: document.getElementById("liveavatar-context-id").value.trim(),
@@ -694,6 +695,8 @@ async function testAi() {
     document.getElementById("elevenlabs-tts-model").value = settings.elevenlabs_tts_model || "eleven_flash_v2_5";
     document.getElementById("scout-elevenlabs-voice-id").value = settings.scout_elevenlabs_voice_id || "";
     document.getElementById("liveavatar-enabled").checked = settings.liveavatar_enabled === "1";
+    // Defaults ON (matches the backend's fail-safe default) — only OFF when explicitly saved as "0".
+    document.getElementById("liveavatar-sandbox-enabled").checked = settings.liveavatar_sandbox_enabled !== "0";
     document.getElementById("liveavatar-api-key").value = settings.liveavatar_api_key || "";
     document.getElementById("liveavatar-avatar-id").value = settings.liveavatar_avatar_id || "";
     document.getElementById("liveavatar-context-id").value = settings.liveavatar_context_id || "";

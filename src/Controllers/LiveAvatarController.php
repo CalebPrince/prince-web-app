@@ -27,6 +27,7 @@ class LiveAvatarController
         $voiceId = Settings::get('liveavatar_voice_id') ?: '62bbb4b2-bb26-4727-bc87-cfb2bd4e0cc8';
         if (!$apiKey || !$avatarId || !$contextId) Response::error('Lisa video is not fully configured.', 503);
 
+        $sandbox = self::sandboxEnabled();
         $payload = [
             'mode' => 'FULL',
             'avatar_id' => $avatarId,
@@ -35,7 +36,7 @@ class LiveAvatarController
                 'context_id' => $contextId,
                 'language' => 'en',
             ],
-            'is_sandbox' => true,
+            'is_sandbox' => $sandbox,
         ];
         // When set (see scripts/setup_liveavatar_llm.php), routes the conversation
         // through our own /api/v1/liveavatar/chat/completions bridge — the same
@@ -50,7 +51,17 @@ class LiveAvatarController
 
         $token = (string) ($result['data']['session_token'] ?? '');
         if ($token === '') Response::error('LiveAvatar returned no session token.', 502);
-        Response::json(['session_token' => $token, 'sandbox' => true]);
+        Response::json(['session_token' => $token, 'sandbox' => $sandbox]);
+    }
+
+    /**
+     * Defaults to sandbox ON (free, no credits, but only LiveAvatar's single
+     * sandbox-eligible avatar works — see Admin -> Settings). Only real
+     * (billed) sessions once explicitly turned off via liveavatar_sandbox_enabled.
+     */
+    private static function sandboxEnabled(): bool
+    {
+        return Settings::get('liveavatar_sandbox_enabled') !== '0';
     }
 
     /**
@@ -169,7 +180,8 @@ class LiveAvatarController
         $contextId = Settings::get('liveavatar_context_id');
         if (!$apiKey || !$avatarId || !$contextId) Response::error('Lisa video is not fully configured.', 503);
 
-        $payload = json_encode(['avatar_id' => $avatarId, 'context_id' => $contextId, 'is_sandbox' => true]);
+        $sandbox = self::sandboxEnabled();
+        $payload = json_encode(['avatar_id' => $avatarId, 'context_id' => $contextId, 'is_sandbox' => $sandbox]);
         $context = stream_context_create(['http' => [
             'method' => 'POST',
             'header' => "X-API-KEY: {$apiKey}\r\nContent-Type: application/json\r\nAccept: application/json\r\n",
@@ -193,7 +205,7 @@ class LiveAvatarController
             error_log('LiveAvatar returned an invalid embed URL.');
             Response::error('Lisa returned an invalid video session.', 502);
         }
-        Response::json(['url' => $url, 'sandbox' => true]);
+        Response::json(['url' => $url, 'sandbox' => $sandbox]);
     }
 
     private static function request(string $url, string $apiKey, array $payload): array

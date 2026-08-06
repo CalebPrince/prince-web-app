@@ -75,7 +75,9 @@
         video.play().catch(function () {});
         poster.hidden = true; if (controls) controls.hidden = false;
         stage.classList.add('is-live'); state.textContent = 'Live'; button.textContent = 'Video chat active';
-        note.textContent = 'Lisa is an AI assistant. This preview runs in sandbox mode.';
+        note.textContent = data.sandbox
+          ? 'Lisa is an AI assistant. This preview runs in sandbox mode.'
+          : 'Lisa is an AI assistant.';
         streamReady = true;
         startKeepAlive();
         sendGreetingWhenReady();
