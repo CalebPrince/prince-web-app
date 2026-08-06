@@ -124,14 +124,19 @@ class TextToSpeechController
 
     /**
      * Expand business-specific abbreviations before synthesis. The visible
-     * chat copy keeps the compact currency code; only Lisa's spoken copy is
-     * changed, e.g. "GHS 600" becomes "600 Ghana cedis".
+     * chat copy keeps the compact currency code; only spoken copy is changed,
+     * e.g. "GHS 600" becomes "600 Ghana cedis". Public so any spoken channel
+     * (this endpoint's own read-aloud button, and video Lisa's LiveAvatar
+     * bridge in LiveAvatarController::chatCompletions()) can reuse it.
      */
-    private static function normalizeForSpeech(string $text): string
+    public static function normalizeForSpeech(string $text): string
     {
         $amount = '([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?)';
         $text = preg_replace('/\bGHS\s*' . $amount . '\b/i', '$1 Ghana cedis', $text) ?? $text;
         $text = preg_replace('/\b' . $amount . '\s*GHS\b/i', '$1 Ghana cedis', $text) ?? $text;
+        // Catch-all for any standalone "GHS" the amount-adjacent patterns above
+        // didn't border directly (e.g. "prices are in GHS").
+        $text = preg_replace('/\bGHS\b/i', 'Ghana cedis', $text) ?? $text;
         return $text;
     }
 }

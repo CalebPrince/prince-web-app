@@ -11,9 +11,27 @@
   const endButton = document.getElementById('lisa-video-end');
   let session = null;
   let muted = false;
+  let keepAliveTimer = null;
   if (!button || !stage || !poster || !mount || !state || !note || !window.LiveAvatarSDK) return;
 
+  // LiveAvatar sessions carry an idle timeout on the server side and expect
+  // the client to reset it periodically via session.keepAlive() — the SDK
+  // exposes the method but never calls it on its own timer. Without this,
+  // a session that's been open a few minutes (even mid-conversation) gets
+  // disconnected out from under the visitor. 30s is comfortably under any
+  // plausible timeout window without spamming the keep-alive endpoint.
+  function startKeepAlive() {
+    stopKeepAlive();
+    keepAliveTimer = window.setInterval(function () {
+      if (session) session.keepAlive().catch(function () {});
+    }, 30000);
+  }
+  function stopKeepAlive() {
+    if (keepAliveTimer) { window.clearInterval(keepAliveTimer); keepAliveTimer = null; }
+  }
+
   async function stopSession() {
+    stopKeepAlive();
     const activeSession = session;
     session = null;
     if (activeSession) { try { await activeSession.stop(); } catch (_) {} }
@@ -59,6 +77,7 @@
         stage.classList.add('is-live'); state.textContent = 'Live'; button.textContent = 'Video chat active';
         note.textContent = 'Lisa is an AI assistant. This preview runs in sandbox mode.';
         streamReady = true;
+        startKeepAlive();
         sendGreetingWhenReady();
       });
       session.on(sdk.SessionEvent.SESSION_STATE_CHANGED, function (nextState) {

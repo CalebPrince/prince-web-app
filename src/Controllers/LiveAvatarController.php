@@ -105,12 +105,16 @@ class LiveAvatarController
         $pdo = Database::get();
         $projects = LiveChatController::projectCatalog($pdo);
         $result = LiveChatController::generateReply($message, $transcript, $projects, $pdo, false, []);
+        // Video Lisa's reply is spoken by LiveAvatar's TTS, not read as chat
+        // copy — expand currency codes etc. the same way the web widget's
+        // read-aloud button already does (TextToSpeechController).
+        $reply = TextToSpeechController::normalizeForSpeech($result['reply']);
 
         $completionId = 'chatcmpl-' . bin2hex(random_bytes(8));
         $model = (string) ($data['model'] ?? 'lisa');
 
         if (!empty($data['stream'])) {
-            self::streamChatCompletion($completionId, $model, $result['reply']);
+            self::streamChatCompletion($completionId, $model, $reply);
             return;
         }
 
@@ -121,7 +125,7 @@ class LiveAvatarController
             'model' => $model,
             'choices' => [[
                 'index' => 0,
-                'message' => ['role' => 'assistant', 'content' => $result['reply']],
+                'message' => ['role' => 'assistant', 'content' => $reply],
                 'finish_reason' => 'stop',
             ]],
         ]);
