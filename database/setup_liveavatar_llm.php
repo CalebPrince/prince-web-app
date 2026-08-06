@@ -66,7 +66,13 @@ function liveavatarRequest(string $path, string $apiKey, array $payload): array
 
 echo "Registering bridge secret with LiveAvatar...\n";
 $secretResult = liveavatarRequest('/v1/secrets', $apiKey, [
-    'secret_type' => 'LLM_API_KEY',
+    // LiveAvatar's secret_type enum is provider-shaped (OPENAI_API_KEY,
+    // ELEVENLABS_API_KEY, GEMINI_API_KEY, FISH_API_KEY, CARTESIA_API_KEY) —
+    // there's no generic "custom LLM" value. Since base_url below points at
+    // our own OpenAI-*shaped* /chat/completions bridge (not real OpenAI),
+    // OPENAI_API_KEY is the correct type regardless of what's actually
+    // running behind it.
+    'secret_type' => 'OPENAI_API_KEY',
     'secret_value' => $bridgeSecret,
     'secret_name' => 'princecaleb.dev chat.completions bridge',
 ]);
