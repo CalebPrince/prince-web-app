@@ -183,7 +183,7 @@ class LiveAvatarController
         $status = preg_match('/\s(\d{3})\s/', $statusLine, $match) ? (int) $match[1] : 0;
         $decoded = is_string($body) ? json_decode($body, true) : null;
         if ($status < 200 || $status >= 300 || !is_array($decoded)) {
-            error_log('LiveAvatar embed request failed with HTTP ' . $status);
+            error_log('LiveAvatar embed request failed with HTTP ' . $status . ' — body: ' . substr((string) $body, 0, 2000));
             Response::error('Lisa could not start the video call. Please try again shortly.', 502);
         }
 
@@ -210,8 +210,11 @@ class LiveAvatarController
         $status = preg_match('/\s(\d{3})\s/', $statusLine, $match) ? (int) $match[1] : 0;
         $decoded = is_string($body) ? json_decode($body, true) : null;
         if ($status < 200 || $status >= 300 || !is_array($decoded)) {
-            $providerMessage = is_array($decoded) ? (string) ($decoded['message'] ?? $decoded['error'] ?? '') : '';
-            error_log('LiveAvatar request failed with HTTP ' . $status . ($providerMessage ? ': ' . $providerMessage : ''));
+            // Log the full raw body, not just a possibly-generic top-level
+            // message field — LiveAvatar's validation errors sometimes carry
+            // the real detail in a nested field (data/errors/etc.) that a
+            // "message"-only extract silently drops.
+            error_log('LiveAvatar request failed with HTTP ' . $status . ' — body: ' . substr((string) $body, 0, 2000));
             Response::error('Lisa could not start the video call. Please try again shortly.', 502);
         }
         return $decoded;
