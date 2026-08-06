@@ -28,6 +28,8 @@
 <meta name="twitter:title" content="Prince Caleb, AI Voice Agents, Chatbots &amp; Automation">
 <meta name="twitter:description" content="AI voice agents that answer business calls, chatbots, and workflow automations, engineered on 12+ years of custom web &amp; mobile development.">
 <meta name="twitter:image" content="https://princecaleb.dev/uploads/og-image.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -41,7 +43,7 @@
 }
 </script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="/css/app.css?v=20260805-hero-video-poster" rel="stylesheet">
+<link href="/css/app.css?v=20260806-upgrades-5-7" rel="stylesheet">
 <style>@view-transition { navigation: none; }</style>
 
 <style>
@@ -206,8 +208,13 @@
   </div>
 </div>
 
-<header class="hero agency-hero" id="main-content">
-  <div class="hero-video-panel d-none" id="hero-video-panel" aria-hidden="true"></div>
+<header class="hero agency-hero hero-glow hero-orbit" id="main-content">
+  <div class="hero-atmosphere" aria-hidden="true">
+    <span class="hero-orb hero-orb-1"></span>
+    <span class="hero-orb hero-orb-2"></span>
+    <span class="hero-orb hero-orb-3"></span>
+    <span class="hero-grid"></span>
+  </div>
   <div class="container">
     <span class="availability-pill d-none mb-3 hero-animate hero-animate-1" data-content="availability_badge"></span>
     <p class="eyebrow mb-3 hero-animate hero-animate-1" data-content="hero_eyebrow">// Stop losing enquiries to missed calls and slow follow-up</p>
@@ -217,9 +224,14 @@
       capture the right details and move serious enquiries towards a booking.
     </p>
     <div class="d-flex flex-wrap align-items-center gap-3 hero-animate hero-animate-4">
-      <a href="/book.html" class="btn-brand">Book a 20-minute call</a>
-      <a href="/projects.html" class="btn-brand-outline">See client work</a>
+      <a href="/book.html" class="btn-brand" id="hero-primary-cta">Book a 20-minute call</a>
+      <a href="/projects.html" class="btn-brand-outline" id="hero-secondary-cta">See client work</a>
       <a href="/testimonials.html" id="hero-rating" class="rating-pill d-none"></a>
+    </div>
+    <div class="hero-trust-rail hero-animate hero-animate-4" aria-label="Delivery trust signals">
+      <span><strong id="hero-trust-years">12+</strong> years shipping production software</span>
+      <span><strong id="hero-trust-projects">30+</strong> projects delivered</span>
+      <span><strong id="hero-trust-rating">98%</strong> client satisfaction</span>
     </div>
     <!-- Proof (the live demo widget) surfaces immediately after the two CTAs,
          ahead of the WhatsApp rail below — on mobile this puts the strongest
@@ -249,11 +261,17 @@
             <span id="voice-demo-speaker">Voice agent</span>
             <p id="voice-demo-transcript" aria-live="polite">Tap “Start voice demo,” then ask me what an AI voice agent could handle for your business.</p>
           </div>
+          <div class="voice-demo-prompts" id="voice-demo-prompts" aria-label="Suggested voice demo questions">
+            <button type="button" data-voice-prompt="How would an AI voice agent handle after-hours calls for my clinic?">After-hours calls</button>
+            <button type="button" data-voice-prompt="Can you qualify leads and book only serious appointments?">Lead qualification</button>
+            <button type="button" data-voice-prompt="What does setup look like for voice agent plus WhatsApp handoff?">Voice + WhatsApp handoff</button>
+          </div>
           <div class="system-outcome" id="voice-demo-outcome">
             <span>✓</span>
             <div>
               <strong>Uses the real site assistant</strong>
               <small>Your question is answered from Prince’s actual services and business information.</small>
+              <a href="/book.html?focus=voice-agent" class="hero-outcome-cta" id="hero-outcome-cta">Book this workflow</a>
             </div>
           </div>
           <form class="hero-demo-fallback d-none" id="voice-demo-form">
@@ -263,6 +281,11 @@
           </form>
         </div>
         <footer class="hero-call-footer">
+          <div class="voice-demo-timeline" id="voice-demo-timeline" aria-hidden="true">
+            <span data-step="listening">Listening</span>
+            <span data-step="thinking">Thinking</span>
+            <span data-step="speaking">Answering</span>
+          </div>
           <button type="button" class="hero-demo-button" id="voice-demo-start">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/></svg>
             <span>Start voice demo</span>
@@ -413,17 +436,17 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="container reveal">
-    <p class="eyebrow text-center mb-3">// What I build</p>
-    <div class="service-columns">
-        <div class="deck-card">
+<section class="section" data-story-chapter="1">
+  <div class="container">
+    <p class="eyebrow text-center mb-3 reveal">// What I build</p>
+    <div class="service-columns" data-motion-section data-motion-distance="74">
+        <div class="deck-card reveal">
           <div class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z"/><path d="M15 3a6 6 0 0 1 6 6"/><path d="M15 7a2 2 0 0 1 2 2"/></svg></div>
           <h3 class="h4 mb-3">AI agents</h3>
           <p class="text-muted-custom mb-4">Voice and chat agents that answer customers, qualify enquiries, manage bookings and hand over to your team when human judgement matters.</p>
           <a href="/services.html#track-01" class="deck-cta">Explore AI agents <span class="cta-arrow">&rarr;</span></a>
         </div>
-        <div class="deck-card d-none">
+        <div class="deck-card d-none reveal">
           <div class="service-icon mono">02</div>
           <h3 class="h4 mb-3" data-content="service_2_title">Autonomous AI Agents</h3>
           <p class="text-muted-custom mb-4" data-content="service_2_summary">Agents that scout leads, write follow-ups, draft proposals, and report daily, this site's own sales engine runs on agents I built. I build the same for your business.</p>
@@ -432,19 +455,19 @@
             <a href="/ai-adoption-ladder.html">See the 5 levels of AI adoption</a>
           </div>
         </div>
-        <div class="deck-card">
+        <div class="deck-card reveal">
           <div class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4a3.5 3.5 0 0 1 3.5 3.5v4"/><path d="M6.5 10v4A3.5 3.5 0 0 0 10 17.5h4"/></svg></div>
           <h3 class="h4 mb-3" data-content="service_3_title">Business Automations</h3>
           <p class="text-muted-custom mb-4" data-content="service_3_summary">Connect the tools you already use and kill the manual work between them, enquiries into your CRM, bookings into invoices, events into email, running quietly on schedule.</p>
           <a href="/services.html#track-03" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
-        <div class="deck-card d-none">
+        <div class="deck-card d-none reveal">
           <div class="service-icon mono">04</div>
           <h3 class="h4 mb-3">AI Chatbots &amp; Live Assistants</h3>
           <p class="text-muted-custom mb-4">24/7 chat that actually knows your business, trained on your real content, with clean human handoff. The live chat on this site is a working example, not a demo.</p>
           <a href="/services.html#track-04" class="deck-cta">Explore this service <span class="cta-arrow">&rarr;</span></a>
         </div>
-        <div class="deck-card">
+        <div class="deck-card reveal">
           <div class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="m8 10 2 2 5-5"/></svg></div>
           <h3 class="h4 mb-3">Custom Websites &amp; Mobile Apps</h3>
           <p class="text-muted-custom mb-4">Fast websites, focused web platforms and mobile applications built around how your customers and team actually work.</p>
@@ -454,7 +477,7 @@
   </div>
 </section>
 
-<section class="section home-process" aria-labelledby="home-process-title">
+<section class="section home-process" aria-labelledby="home-process-title" data-story-chapter="2">
   <div class="container">
     <div class="row mb-5 reveal">
       <div class="col-lg-7">
@@ -462,7 +485,7 @@
         <h2 class="display-5" id="home-process-title">From a costly problem to a working system.</h2>
       </div>
     </div>
-    <div class="home-process-grid">
+    <div class="home-process-grid" data-motion-section data-motion-distance="52">
       <article class="home-process-step reveal">
         <span>01</span><h3>Discover</h3>
         <p>We identify the bottleneck, the people affected and the result worth measuring.</p>
@@ -718,7 +741,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-story-chapter="3">
   <div class="container">
     <div class="row mb-4 reveal reveal-on-scroll">
       <div class="col-lg-7">
@@ -727,7 +750,7 @@
       </div>
     </div>
 
-    <div id="case-rows">
+    <div id="case-rows" data-motion-section data-motion-distance="68">
       <div class="case-row">
         <div class="row g-5 align-items-center">
           <div class="col-lg-6"><div class="skeleton" style="height: 220px;"></div></div>
@@ -874,7 +897,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section" data-story-chapter="4">
   <div class="container">
     <div class="row mb-4 reveal">
       <div class="col-lg-7">
@@ -885,7 +908,7 @@
     <div class="row g-4 d-none" id="home-testimonials-real"></div>
     <div class="row g-4" id="home-testimonials-fallback">
       <div class="col-md-4">
-        <div class="testimonial-card testimonial-list-card reveal">
+        <div class="testimonial-card testimonial-list-card reveal reveal-card">
           <div class="stars mb-2">★★★★★</div>
           <p class="testimonial-quote">"Prince took a vague idea and turned it into a real product in weeks, not months. He asked the right questions upfront so we never had to backtrack."</p>
           <div class="fw-semibold mt-3" style="color: var(--ink);">Amara K.</div>
@@ -893,7 +916,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="testimonial-card testimonial-list-card reveal reveal-delay-1">
+        <div class="testimonial-card testimonial-list-card reveal reveal-card reveal-delay-1">
           <div class="stars mb-2">★★★★★</div>
           <p class="testimonial-quote">"The performance difference was night and day. Our old site felt sluggish everywhere; the new one just feels instant, even on mobile."</p>
           <div class="fw-semibold mt-3" style="color: var(--ink);">David O.</div>
@@ -901,7 +924,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="testimonial-card testimonial-list-card reveal reveal-delay-2">
+        <div class="testimonial-card testimonial-list-card reveal reveal-card reveal-delay-2">
           <div class="stars mb-2">★★★★★</div>
           <p class="testimonial-quote">"Clear communication the entire way through, and the app has needed almost zero maintenance since launch. Exactly what we needed."</p>
           <div class="fw-semibold mt-3" style="color: var(--ink);">Maya T.</div>
@@ -915,8 +938,73 @@
   </div>
 </section>
 
-<section class="section text-center" style="border-top: 1px solid var(--line);">
-  <div class="container reveal">
+<section class="section" data-story-chapter="5">
+  <div class="container">
+    <div class="row mb-4 reveal reveal-on-scroll">
+      <div class="col-lg-8">
+        <span class="eyebrow d-block mb-2" data-content="faq_eyebrow">// Frequently asked</span>
+        <h2 class="display-6 mb-0" data-content="faq_title">Questions people ask before we start.</h2>
+      </div>
+    </div>
+
+    <div class="accordion faq-accordion reveal reveal-on-scroll" id="home-faq" data-motion-section data-motion-distance="36">
+      <div class="accordion-item">
+        <h3 class="accordion-header" id="faq-heading-1">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq-collapse-1" aria-expanded="true" aria-controls="faq-collapse-1" data-content="faq_1_question">
+            How quickly can we launch the first useful version?
+          </button>
+        </h3>
+        <div id="faq-collapse-1" class="accordion-collapse collapse show" aria-labelledby="faq-heading-1" data-bs-parent="#home-faq">
+          <div class="accordion-body" data-content="faq_1_answer">
+            Most projects start with one focused workflow and ship in 2 to 6 weeks depending on integrations, approvals, and how much existing process cleanup is needed.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h3 class="accordion-header" id="faq-heading-2">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-collapse-2" aria-expanded="false" aria-controls="faq-collapse-2" data-content="faq_2_question">
+            Do you only build AI agents, or full systems too?
+          </button>
+        </h3>
+        <div id="faq-collapse-2" class="accordion-collapse collapse" aria-labelledby="faq-heading-2" data-bs-parent="#home-faq">
+          <div class="accordion-body" data-content="faq_2_answer">
+            Both. I build voice and chat agents, automation pipelines, and the custom websites, dashboards, and portals those workflows need to run reliably.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h3 class="accordion-header" id="faq-heading-3">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-collapse-3" aria-expanded="false" aria-controls="faq-collapse-3" data-content="faq_3_question">
+            Can this integrate with our current tools?
+          </button>
+        </h3>
+        <div id="faq-collapse-3" class="accordion-collapse collapse" aria-labelledby="faq-heading-3" data-bs-parent="#home-faq">
+          <div class="accordion-body" data-content="faq_3_answer">
+            Yes. Typical integrations include calendars, CRMs, WhatsApp, email, payment tools, and internal reporting workflows. We map integration risk before implementation.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h3 class="accordion-header" id="faq-heading-4">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-collapse-4" aria-expanded="false" aria-controls="faq-collapse-4" data-content="faq_4_question">
+            What happens after launch?
+          </button>
+        </h3>
+        <div id="faq-collapse-4" class="accordion-collapse collapse" aria-labelledby="faq-heading-4" data-bs-parent="#home-faq">
+          <div class="accordion-body" data-content="faq_4_answer">
+            We review real usage, fix weak points, and iterate in small steps. The goal is measurable business outcomes, not shipping features and disappearing.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section text-center" style="border-top: 1px solid var(--line);" data-story-chapter="6">
+  <div class="container reveal reveal-cta cta-glow-pulse" data-motion-section data-motion-distance="42">
     <h2 class="display-6 mb-3">Stop letting good enquiries go cold.</h2>
     <p class="fs-5 text-muted-custom mb-4">Book a focused call. We’ll identify one workflow worth improving and the smallest useful system to solve it.</p>
     <div class="d-flex flex-wrap gap-3 justify-content-center">
@@ -942,6 +1030,11 @@
     <div id="home-newsletter-msg" class="alert py-2 small d-none mt-3 mx-auto" style="max-width: 400px;"></div>
   </div>
 </section>
+
+<div class="mobile-sticky-cta" id="mobile-sticky-cta" aria-label="Quick actions">
+  <a href="/book.html" class="btn-brand" id="mobile-sticky-primary">Book a call</a>
+  <a href="https://wa.me/233208049962" target="_blank" rel="noopener" class="btn-brand-outline" id="mobile-sticky-whatsapp">WhatsApp</a>
+</div>
 
 <footer class="site-footer">
   <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
@@ -981,14 +1074,15 @@
 <script src="/js/utility-dock.js"></script>
 <script src="/js/nav-dropdowns.js"></script>
 <script src="/js/mobile-nav.js"></script>
-<script src="/js/content.js"></script>
+<script src="/js/content.js?v=20260806-faq-dynamic"></script>
 <script src="/js/currency-switcher.js?v=20260728"></script>
-<script src="/js/animations.js"></script>
+<script src="/js/animations.js?v=20260806-upgrades-1-4-8-9"></script>
+<script type="module" src="/js/home-motion.js?v=20260806-upgrade-5-performance"></script>
 <script src="/js/hero-3d.js" defer></script>
-<script src="/js/home.js?v=20260731-system-browser"></script>
+<script src="/js/home.js?v=20260806-faq-dynamic-analytics-2"></script>
 <script src="/js/home-testimonials.js"></script>
 <script src="/js/elevenlabs-tts.js?v=20260731-length-fallback-fix"></script>
-<script src="/js/voice-demo.js?v=20260804-lisa-pulse"></script>
+<script src="/js/voice-demo.js?v=20260806-upgrade-7-prompts"></script>
 <script src="/js/ai-boot.js?v=20260804-lisa-pulse"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/pwa-register.js"></script>

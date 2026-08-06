@@ -27,6 +27,84 @@
     }
   });
 
+  // Homepage FAQ: render as many items as configured in admin. We keep the
+  // static markup in home.html as fallback, then replace it here only when
+  // valid question/answer pairs are present.
+  const faqRoot = document.getElementById("home-faq");
+  if (faqRoot) {
+    const FAQ_MAX_ITEMS = 12;
+    const rawCount = parseInt(content.faq_count || "", 10);
+    const targetCount = Number.isFinite(rawCount)
+      ? Math.min(FAQ_MAX_ITEMS, Math.max(1, rawCount))
+      : FAQ_MAX_ITEMS;
+
+    const items = [];
+    for (let i = 1; i <= targetCount; i += 1) {
+      const q = String(content[`faq_${i}_question`] || "").trim();
+      const a = String(content[`faq_${i}_answer`] || "").trim();
+      if (q && a) items.push({ q, a });
+    }
+
+    // Backward compatibility: if no saved item pairs are available, keep
+    // whatever is currently in the DOM (fallback copy or earlier bindings).
+    if (!items.length) {
+      faqRoot.querySelectorAll(".accordion-item").forEach(item => {
+        const q = item.querySelector(".accordion-button")?.textContent?.trim();
+        const a = item.querySelector(".accordion-body")?.textContent?.trim();
+        if (q && a) items.push({ q, a });
+      });
+    }
+
+    if (items.length) {
+      faqRoot.innerHTML = "";
+      items.forEach((entry, idx) => {
+        const n = idx + 1;
+        const isFirst = idx === 0;
+        const headingId = `faq-heading-${n}`;
+        const collapseId = `faq-collapse-${n}`;
+
+        const accordionItem = document.createElement("div");
+        accordionItem.className = "accordion-item";
+
+        const heading = document.createElement("h3");
+        heading.className = "accordion-header";
+        heading.id = headingId;
+
+        const button = document.createElement("button");
+        button.className = `accordion-button${isFirst ? "" : " collapsed"}`;
+        button.type = "button";
+        button.setAttribute("data-bs-toggle", "collapse");
+        button.setAttribute("data-bs-target", `#${collapseId}`);
+        button.setAttribute("aria-expanded", isFirst ? "true" : "false");
+        button.setAttribute("aria-controls", collapseId);
+        button.setAttribute("data-content", `faq_${n}_question`);
+        button.textContent = entry.q;
+
+        heading.appendChild(button);
+
+        const collapse = document.createElement("div");
+        collapse.id = collapseId;
+        collapse.className = `accordion-collapse collapse${isFirst ? " show" : ""}`;
+        collapse.setAttribute("aria-labelledby", headingId);
+        collapse.setAttribute("data-bs-parent", "#home-faq");
+
+        const body = document.createElement("div");
+        body.className = "accordion-body";
+        body.setAttribute("data-content", `faq_${n}_answer`);
+        body.textContent = entry.a;
+
+        collapse.appendChild(body);
+        accordionItem.appendChild(heading);
+        accordionItem.appendChild(collapse);
+        faqRoot.appendChild(accordionItem);
+      });
+    }
+
+    document.dispatchEvent(new CustomEvent("home:faq-updated", {
+      detail: { count: items.length },
+    }));
+  }
+
   // Social-proof block by the estimator CTA: only reveal it once a real
   // testimonial has been bound above, so an unconfigured site shows nothing
   // rather than a lone opening quote mark.
@@ -75,6 +153,15 @@
   const ANIMATION_STYLES = ["fade", "slide-up", "slide-left", "zoom", "none"];
   if (ANIMATION_STYLES.includes(content.animation_style)) {
     document.documentElement.setAttribute("data-animation-style", content.animation_style);
+  }
+
+  const HERO_ATMOSPHERE = ["low", "medium", "high"];
+  if (HERO_ATMOSPHERE.includes(content.hero_atmosphere_intensity)) {
+    document.documentElement.setAttribute("data-hero-atmosphere", content.hero_atmosphere_intensity);
+  }
+  const HERO_MOTION = ["subtle", "normal", "bold"];
+  if (HERO_MOTION.includes(content.hero_motion_strength)) {
+    document.documentElement.setAttribute("data-hero-motion", content.hero_motion_strength);
   }
 
   // Live Chat toggle button, on by default, hidden only if explicitly turned off
@@ -183,7 +270,7 @@
     }
   }
 
-  wireVideoPanel("hero-video-panel", content.hero_video_url, "Homepage hero video");
+  // Homepage hero now uses a CSS-driven atmospheric layer instead of video.
   wireVideoPanel("ai-demo-video-panel", content.live_demo_video_url, "AI live demo video");
 
   // Multi-paragraph blocks: blank-line-separated text becomes <p> elements

@@ -14,6 +14,8 @@
   const avatar = document.getElementById("voice-demo-avatar");
   const form = document.getElementById("voice-demo-form");
   const input = document.getElementById("voice-demo-input");
+  const promptButtons = document.querySelectorAll("[data-voice-prompt]");
+  const timelineSteps = document.querySelectorAll("#voice-demo-timeline [data-step]");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   let recognition = null;
@@ -36,6 +38,13 @@
     if (window.trackUiEvent) window.trackUiEvent("voice_demo_" + event);
   }
 
+  function setTimeline(mode) {
+    const activeStep = mode === "speaking" ? "speaking" : (mode === "thinking" ? "thinking" : (mode === "listening" ? "listening" : ""));
+    timelineSteps.forEach((step) => {
+      step.classList.toggle("is-active", step.dataset.step === activeStep);
+    });
+  }
+
   function setMode(mode, label, state) {
     shell.classList.remove("is-listening", "is-thinking", "is-speaking");
     wave.classList.remove("is-idle", "is-thinking");
@@ -44,7 +53,10 @@
     if (mode !== "idle") shell.classList.add("is-" + mode);
     statusText.textContent = label;
     stateText.textContent = state;
+    setTimeline(mode);
   }
+
+  setTimeline("idle");
 
   function startTimer() {
     stopTimer(false);
@@ -172,6 +184,7 @@
       }
       token = response.token || token;
       try { if (token) sessionStorage.setItem("voice_demo_token", token); } catch (_) {}
+      try { sessionStorage.setItem("voice_demo_answered", "1"); } catch (_) {}
       speakerText.textContent = name;
       transcriptText.textContent = response.reply.trim();
       speakReply(response.reply.trim());
@@ -263,6 +276,7 @@
     }
     if (!busy) {
       track("demo_started");
+      try { sessionStorage.setItem("voice_demo_started", "1"); } catch (_) {}
       startListening();
     }
   });
@@ -273,6 +287,17 @@
     if (!question) return;
     input.value = "";
     sendQuestion(question);
+  });
+
+  promptButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (busy) return;
+      const question = String(button.getAttribute("data-voice-prompt") || "").trim();
+      if (!question) return;
+      track("prompt_clicked");
+      try { sessionStorage.setItem("voice_demo_started", "1"); } catch (_) {}
+      sendQuestion(question);
+    });
   });
 
   (async function boot() {

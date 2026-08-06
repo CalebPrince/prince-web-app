@@ -8,6 +8,8 @@
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const supportsFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   const noIO = !("IntersectionObserver" in window);
+  const homeNav = document.body.classList.contains("home-page") ? document.querySelector(".site-nav") : null;
+  const homeHero = document.body.classList.contains("home-page") ? document.querySelector(".home-page .agency-hero") : null;
   const depthSelector = [
     ".service-card",
     ".project-card",
@@ -18,6 +20,8 @@
     ".planner-shell",
     ".capability-panel",
     ".ai-booking-panel",
+    ".deck-card",
+    ".home-process-step",
   ].join(",");
 
   const revealObserver =
@@ -116,6 +120,43 @@
     root.querySelectorAll(depthSelector).forEach(addDepthCard);
   }
 
+  function setupHomeNavScrollState() {
+    if (!homeNav) return;
+    let ticking = false;
+    let navOffset = 0;
+
+    function computeNavOffset() {
+      navOffset = Math.max(0, Math.round(homeNav.getBoundingClientRect().height));
+    }
+
+    function updateNavState() {
+      let shouldBeScrolled = window.scrollY > 12;
+      if (homeHero) {
+        const heroRect = homeHero.getBoundingClientRect();
+        shouldBeScrolled = heroRect.bottom <= (navOffset + 6);
+      }
+      homeNav.classList.toggle("is-scrolled", shouldBeScrolled);
+      homeNav.classList.toggle("is-on-hero", !shouldBeScrolled);
+      ticking = false;
+    }
+
+    computeNavOffset();
+    updateNavState();
+
+    window.addEventListener("scroll", () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(updateNavState);
+    }, { passive: true });
+
+    window.addEventListener("resize", () => {
+      computeNavOffset();
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(updateNavState);
+    });
+  }
+
   function setupHeroDepth() {
     if (prefersReducedMotion || !supportsFinePointer) return;
     const hero = document.querySelector(".home-page .agency-hero");
@@ -135,6 +176,59 @@
     });
   }
 
+  function setupStoryChapters() {
+    const chapters = Array.from(document.querySelectorAll("[data-story-chapter]"));
+    if (!chapters.length || noIO) return;
+
+    const activate = (active) => {
+      chapters.forEach((chapter) => chapter.classList.toggle("is-chapter-active", chapter === active));
+      if (active) document.body.setAttribute("data-active-story-chapter", active.getAttribute("data-story-chapter") || "");
+    };
+
+    const chapterObserver = new IntersectionObserver(
+      (entries) => {
+        let candidate = null;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          if (!candidate || entry.intersectionRatio > candidate.intersectionRatio) {
+            candidate = entry;
+          }
+        });
+        if (candidate) activate(candidate.target);
+      },
+      { threshold: [0.25, 0.45, 0.65], rootMargin: "-12% 0px -28% 0px" }
+    );
+
+    chapters.forEach((chapter) => chapterObserver.observe(chapter));
+
+    // Initial chapter state on first paint.
+    const inView = chapters.find((chapter) => {
+      const rect = chapter.getBoundingClientRect();
+      return rect.top < window.innerHeight * 0.62 && rect.bottom > window.innerHeight * 0.25;
+    });
+    if (inView) activate(inView);
+  }
+
+  function setupScrollMilestones() {
+    if (typeof window.trackUiEvent !== "function") return;
+    const fired = new Set();
+    const marks = [25, 50, 75, 100];
+
+    function updateMilestones() {
+      const maxScrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const depth = Math.min(100, Math.round((window.scrollY / maxScrollable) * 100));
+      marks.forEach((mark) => {
+        if (depth >= mark && !fired.has(mark)) {
+          fired.add(mark);
+          window.trackUiEvent("scroll_depth_" + mark);
+        }
+      });
+    }
+
+    updateMilestones();
+    window.addEventListener("scroll", updateMilestones, { passive: true });
+  }
+
   function scan(root) {
     root.querySelectorAll(".reveal, .reveal-on-scroll").forEach(watchReveal);
     root.querySelectorAll("[data-count-to]").forEach(watchCount);
@@ -142,6 +236,9 @@
   }
 
   scan(document);
+  setupHomeNavScrollState();
+  setupStoryChapters();
+  setupScrollMilestones();
   setupHeroDepth();
 
   new MutationObserver((mutations) => {

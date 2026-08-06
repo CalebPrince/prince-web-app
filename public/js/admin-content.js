@@ -1,9 +1,10 @@
 const CONTENT_FIELDS = [
-  "availability_badge", "hero_eyebrow", "hero_title", "hero_subtitle", "hero_video_url", "tech_badges",
+  "availability_badge", "hero_eyebrow", "hero_title", "hero_subtitle", "hero_atmosphere_intensity", "hero_motion_strength", "tech_badges",
   "hero_value_eyebrow",
   "hero_value_1_label", "hero_value_1_text",
   "hero_value_2_label", "hero_value_2_text",
   "hero_value_3_label", "hero_value_3_text",
+  "faq_eyebrow", "faq_title", "faq_count",
   "service_1_title", "service_1_summary", "service_1_desc",
   "service_2_title", "service_2_summary", "service_2_desc",
   "service_3_title", "service_3_summary", "service_3_desc",
@@ -53,6 +54,11 @@ const CONTENT_FIELDS = [
   "live_demo_video_url",
 ];
 
+const FAQ_MAX_ITEMS = 12;
+for (let i = 1; i <= FAQ_MAX_ITEMS; i += 1) {
+  CONTENT_FIELDS.push(`faq_${i}_question`, `faq_${i}_answer`);
+}
+
 function showContentMsg(text, ok) {
   const el = document.getElementById("content-msg");
   el.className = `alert py-2 small ${ok ? "alert-success" : "alert-danger"}`;
@@ -70,11 +76,142 @@ async function loadContent() {
     if (el) el.value = settings[key] || el.value || "";
   });
 
+  const faqCountInput = document.getElementById("faq_count");
+  if (faqCountInput && !settings.faq_count) {
+    let inferredCount = 4;
+    for (let i = FAQ_MAX_ITEMS; i >= 1; i -= 1) {
+      if ((settings[`faq_${i}_question`] || "").trim() || (settings[`faq_${i}_answer`] || "").trim()) {
+        inferredCount = i;
+        break;
+      }
+    }
+    faqCountInput.value = String(Math.max(1, inferredCount));
+  }
+  syncFaqRowsVisibility();
+
   // Brand logo previews — fall back to the committed defaults (same paths
   // SharedAgentTools::getBrandInfo() falls back to server-side) so the admin
   // sees the real logo even before ever saving anything on this page.
   setBrandLogoPreview("dark", settings.brand_logo_dark_url || "/uploads/brand/logo-dark.png");
   setBrandLogoPreview("white", settings.brand_logo_white_url || "/uploads/brand/logo-white.png");
+}
+
+function buildFaqEditorRows() {
+  const container = document.getElementById("faq-items-editor");
+  if (!container || container.dataset.ready === "1") return;
+
+  const defaults = {
+    1: {
+      q: "How quickly can we launch the first useful version?",
+      a: "Most projects start with one focused workflow and ship in 2 to 6 weeks depending on integrations, approvals, and how much existing process cleanup is needed.",
+    },
+    2: {
+      q: "Do you only build AI agents, or full systems too?",
+      a: "Both. I build voice and chat agents, automation pipelines, and the custom websites, dashboards, and portals those workflows need to run reliably.",
+    },
+    3: {
+      q: "Can this integrate with our current tools?",
+      a: "Yes. Typical integrations include calendars, CRMs, WhatsApp, email, payment tools, and internal reporting workflows. We map integration risk before implementation.",
+    },
+    4: {
+      q: "What happens after launch?",
+      a: "We review real usage, fix weak points, and iterate in small steps. The goal is measurable business outcomes, not shipping features and disappearing.",
+    },
+  };
+
+  for (let i = 1; i <= FAQ_MAX_ITEMS; i += 1) {
+    const row = document.createElement("div");
+    row.className = "faq-editor-item border rounded-3 p-3";
+    row.setAttribute("data-faq-row", String(i));
+
+    const heading = document.createElement("h6");
+    heading.className = "mb-2";
+    heading.textContent = `Question ${i}`;
+    row.appendChild(heading);
+
+    const question = document.createElement("input");
+    question.type = "text";
+    question.className = "form-control form-control-sm mb-2";
+    question.id = `faq_${i}_question`;
+    question.placeholder = (defaults[i] && defaults[i].q) || "Question text";
+    row.appendChild(question);
+
+    const answer = document.createElement("textarea");
+    answer.className = "form-control form-control-sm";
+    answer.id = `faq_${i}_answer`;
+    answer.rows = 2;
+    answer.placeholder = (defaults[i] && defaults[i].a) || "Answer text";
+    row.appendChild(answer);
+
+    container.appendChild(row);
+  }
+
+  container.dataset.ready = "1";
+}
+
+function getFaqCount() {
+  const input = document.getElementById("faq_count");
+  const raw = parseInt(input && input.value, 10);
+  const safe = Number.isFinite(raw) ? raw : 4;
+  return Math.min(FAQ_MAX_ITEMS, Math.max(1, safe));
+}
+
+function setFaqCount(count) {
+  const input = document.getElementById("faq_count");
+  if (!input) return;
+  const safe = Math.min(FAQ_MAX_ITEMS, Math.max(1, count));
+  input.value = String(safe);
+  syncFaqRowsVisibility();
+}
+
+function syncFaqRowsVisibility() {
+  const count = getFaqCount();
+  const countLabel = document.getElementById("faq-count-label");
+  const addBtn = document.getElementById("faq-add-item");
+  const removeBtn = document.getElementById("faq-remove-item");
+
+  document.querySelectorAll("[data-faq-row]").forEach(row => {
+    const index = parseInt(row.getAttribute("data-faq-row"), 10);
+    row.classList.toggle("d-none", index > count);
+  });
+
+  if (countLabel) countLabel.textContent = `(${count} active)`;
+  if (addBtn) addBtn.disabled = count >= FAQ_MAX_ITEMS;
+  if (removeBtn) removeBtn.disabled = count <= 1;
+}
+
+function wireFaqEditor() {
+  buildFaqEditorRows();
+
+  const addBtn = document.getElementById("faq-add-item");
+  const removeBtn = document.getElementById("faq-remove-item");
+  const countInput = document.getElementById("faq_count");
+
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      setFaqCount(getFaqCount() + 1);
+    });
+  }
+
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      const count = getFaqCount();
+      if (count <= 1) return;
+      const q = document.getElementById(`faq_${count}_question`);
+      const a = document.getElementById(`faq_${count}_answer`);
+      if (q) q.value = "";
+      if (a) a.value = "";
+      setFaqCount(count - 1);
+    });
+  }
+
+  if (countInput) {
+    countInput.addEventListener("change", () => {
+      setFaqCount(getFaqCount());
+    });
+  }
+
+  syncFaqRowsVisibility();
 }
 
 function setBrandLogoPreview(variant, path) {
@@ -242,6 +379,7 @@ function wireAgentVoicePreview(prefix, fallbackName, sampleLine) {
   wireLogout();
 
   document.getElementById("content-form").addEventListener("submit", saveContent);
+  wireFaqEditor();
   await loadContent();
   wireVoiceControls();
   wireAgentVoicePreview("beacon", "Joan", "This is how I'll sound when you talk to me in the admin console.");

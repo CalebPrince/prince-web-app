@@ -24,7 +24,7 @@
     if (t.signals.length && t.project_slug) {
       return `
         <div class="col-md-6">
-          <a href="/project.html?slug=${encodeURIComponent(t.project_slug)}" class="case-study-card reveal${delay}">
+          <a href="/project.html?slug=${encodeURIComponent(t.project_slug)}" class="case-study-card reveal reveal-card${delay}">
             <span class="case-study-eyebrow">Measured result</span>
             <p class="case-study-metric">${escapeHtmlLocal(t.signals[0])}</p>
             <p class="testimonial-quote case-study-quote">"${escapeHtmlLocal(t.quote)}"</p>
@@ -38,7 +38,7 @@
     }
     return `
       <div class="col-md-4">
-        <div class="testimonial-list-card reveal${delay}">
+        <div class="testimonial-list-card reveal reveal-card${delay}">
           <div class="stars mb-2">${'★'.repeat(t.rating || 0)}${'☆'.repeat(5 - (t.rating || 0))}</div>
           <p class="testimonial-quote">"${escapeHtmlLocal(t.quote)}"</p>
           <div class="fw-semibold mt-3" style="color: var(--ink);">${escapeHtmlLocal(t.client_name)}</div>

@@ -3,6 +3,222 @@
 // hero rating pill. Every block guards on its root element so this file is
 // inert on any other page.
 (function () {
+  // --- Hero variant testing -------------------------------------------------
+  const heroRoot = document.querySelector(".home-page .agency-hero");
+  if (heroRoot) {
+    const variants = {
+      voice: {
+        eyebrow: "// Never miss a call from a serious customer",
+        title: "AI voice agents that convert <span class=\"accent-word\">missed calls into booked jobs</span>.",
+        subtitle: "Deploy a trained voice assistant that answers instantly, qualifies enquiries, and books appointments while your team stays focused on delivery.",
+        primary: { label: "Book a voice-agent call", href: "/book.html?focus=voice-agent" },
+        secondary: { label: "See voice-agent examples", href: "/services.html#track-01" },
+      },
+      automation: {
+        eyebrow: "// Your team should not copy-paste between tools all day",
+        title: "Automate the busywork, keep the <span class=\"accent-word\">human judgment where it matters</span>.",
+        subtitle: "I build workflow automations that move enquiries, bookings, follow-ups, and updates across your stack without manual handoffs.",
+        primary: { label: "Map my workflow", href: "/contact.html?system=automation" },
+        secondary: { label: "Explore automations", href: "/services.html#track-03" },
+      },
+      platform: {
+        eyebrow: "// Build the software your workflow actually needs",
+        title: "Custom platforms designed to <span class=\"accent-word\">fit your operations, not force workarounds</span>.",
+        subtitle: "From client portals to internal dashboards, get purpose-built software connected to the tools your team already uses.",
+        primary: { label: "Scope my platform", href: "/contact.html?system=platform" },
+        secondary: { label: "See shipped platforms", href: "/projects.html" },
+      },
+    };
+
+    const keys = Object.keys(variants);
+    const params = new URLSearchParams(window.location.search);
+    const requested = String(params.get("hero") || "").toLowerCase();
+    const sessionKey = "home_hero_variant";
+    const fromSession = sessionStorage.getItem(sessionKey);
+    const fallback = keys[Math.floor(Math.random() * keys.length)];
+    const chosen = keys.includes(requested) ? requested : (keys.includes(fromSession) ? fromSession : fallback);
+    const selected = variants[chosen];
+    sessionStorage.setItem(sessionKey, chosen);
+    document.documentElement.setAttribute("data-hero-variant", chosen);
+
+    const eyebrowEl = heroRoot.querySelector("[data-content='hero_eyebrow']");
+    const titleEl = heroRoot.querySelector("[data-content='hero_title']");
+    const subtitleEl = heroRoot.querySelector("[data-content='hero_subtitle']");
+    const primaryCta = document.getElementById("hero-primary-cta");
+    const secondaryCta = document.getElementById("hero-secondary-cta");
+    const outcomeCta = document.getElementById("hero-outcome-cta");
+    const trustYears = document.getElementById("hero-trust-years");
+    const trustProjects = document.getElementById("hero-trust-projects");
+    const trustRating = document.getElementById("hero-trust-rating");
+    const mobileSticky = document.getElementById("mobile-sticky-cta");
+    const mobileStickyPrimary = document.getElementById("mobile-sticky-primary");
+    const mobileStickyWhatsapp = document.getElementById("mobile-sticky-whatsapp");
+
+    const applyVariant = () => {
+      if (eyebrowEl) eyebrowEl.textContent = selected.eyebrow;
+      if (titleEl) titleEl.innerHTML = selected.title;
+      if (subtitleEl) subtitleEl.textContent = selected.subtitle;
+      if (primaryCta) {
+        primaryCta.textContent = selected.primary.label;
+        primaryCta.setAttribute("href", selected.primary.href);
+      }
+      if (secondaryCta) {
+        secondaryCta.textContent = selected.secondary.label;
+        secondaryCta.setAttribute("href", selected.secondary.href);
+      }
+      if (mobileStickyPrimary) {
+        mobileStickyPrimary.textContent = selected.primary.label;
+        mobileStickyPrimary.setAttribute("href", selected.primary.href);
+      }
+      if (outcomeCta) {
+        outcomeCta.setAttribute("href", selected.primary.href);
+      }
+    };
+
+    const syncTrustRail = () => {
+      const years = document.getElementById("stat-years-count");
+      const projects = document.querySelector('.stat-item .stat-value[data-count-to="30"], .stat-item:nth-child(2) .stat-value');
+      const rating = document.querySelector('.stat-item .stat-value[data-count-suffix="%"]');
+      if (trustYears && years) {
+        const val = years.getAttribute("data-count-to") || "12";
+        const suffix = years.getAttribute("data-count-suffix") || "+";
+        trustYears.textContent = val + suffix;
+      }
+      if (trustProjects && projects) {
+        const val = projects.getAttribute("data-count-to");
+        const suffix = projects.getAttribute("data-count-suffix") || "+";
+        if (val) trustProjects.textContent = val + suffix;
+      }
+      if (trustRating && rating) {
+        const val = rating.getAttribute("data-count-to");
+        const suffix = rating.getAttribute("data-count-suffix") || "%";
+        if (val) trustRating.textContent = val + suffix;
+      }
+    };
+
+    applyVariant();
+    syncTrustRail();
+    // content.js can patch hero copy from API slightly later; re-assert once.
+    window.setTimeout(function () {
+      applyVariant();
+      syncTrustRail();
+    }, 650);
+
+    const seenKey = "home_hero_variant_seen_" + chosen;
+    if (!sessionStorage.getItem(seenKey)) {
+      sessionStorage.setItem(seenKey, "1");
+      if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_view");
+    }
+
+    if (primaryCta) {
+      primaryCta.addEventListener("click", () => {
+        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_primary");
+      });
+    }
+    if (secondaryCta) {
+      secondaryCta.addEventListener("click", () => {
+        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_secondary");
+      });
+    }
+    if (outcomeCta) {
+      outcomeCta.addEventListener("click", () => {
+        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_outcome");
+      });
+    }
+
+    if (mobileSticky) {
+      const toggleSticky = () => {
+        const isMobile = window.matchMedia("(max-width: 991.98px)").matches;
+        const show = isMobile && window.scrollY > 220;
+        mobileSticky.classList.toggle("is-visible", show);
+      };
+      toggleSticky();
+      window.addEventListener("scroll", toggleSticky, { passive: true });
+      window.addEventListener("resize", toggleSticky);
+      if (mobileStickyPrimary) {
+        mobileStickyPrimary.addEventListener("click", () => {
+          if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_mobile_primary");
+        });
+      }
+      if (mobileStickyWhatsapp) {
+        mobileStickyWhatsapp.addEventListener("click", () => {
+          const afterDemo = (() => {
+            try { return sessionStorage.getItem("voice_demo_started") === "1" || sessionStorage.getItem("voice_demo_answered") === "1"; }
+            catch (_) { return false; }
+          })();
+          if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_mobile_whatsapp" + (afterDemo ? "_after_demo" : ""));
+        });
+      }
+    }
+
+    const heroWhatsApp = heroRoot.querySelector('.live-channel-rail a[href*="wa.me"]');
+    if (heroWhatsApp) {
+      heroWhatsApp.addEventListener("click", () => {
+        const afterDemo = (() => {
+          try { return sessionStorage.getItem("voice_demo_started") === "1" || sessionStorage.getItem("voice_demo_answered") === "1"; }
+          catch (_) { return false; }
+        })();
+        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_whatsapp" + (afterDemo ? "_after_demo" : ""));
+      });
+    }
+  }
+
+  // --- Homepage FAQ interactions + SEO schema -----------------------------
+  const faqRoot = document.getElementById("home-faq");
+  if (faqRoot) {
+    const fired = new Set();
+    const bindFaqTracking = function () {
+      faqRoot.querySelectorAll(".accordion-collapse").forEach(panel => {
+        if (panel.dataset.analyticsBound === "1") return;
+        panel.dataset.analyticsBound = "1";
+        panel.addEventListener("shown.bs.collapse", function () {
+          const id = String(panel.id || "");
+          if (!id || fired.has(id)) return;
+          fired.add(id);
+          if (window.trackUiEvent) window.trackUiEvent("faq_open_" + id.replace(/[^a-z0-9_\-]/gi, "").toLowerCase());
+        });
+      });
+    };
+
+    const refreshFaqSchema = function () {
+      const existing = document.getElementById("home-faq-schema");
+      if (existing) existing.remove();
+
+      const entities = [];
+      faqRoot.querySelectorAll(".accordion-item").forEach(item => {
+        const q = item.querySelector(".accordion-button")?.textContent?.trim();
+        const a = item.querySelector(".accordion-body")?.textContent?.trim();
+        if (!q || !a) return;
+        entities.push({
+          "@type": "Question",
+          "name": q,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": a,
+          },
+        });
+      });
+
+      if (!entities.length) return;
+      const script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.id = "home-faq-schema";
+      script.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": entities,
+      });
+      document.head.appendChild(script);
+    };
+
+    bindFaqTracking();
+    refreshFaqSchema();
+    document.addEventListener("home:faq-updated", function () {
+      bindFaqTracking();
+      refreshFaqSchema();
+    });
+  }
+
   // --- Scope planner -------------------------------------------------------
   const hoursEl = document.getElementById("planner-hours");
   if (hoursEl) {
