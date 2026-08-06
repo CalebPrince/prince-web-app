@@ -102,7 +102,8 @@
   // Shared by every admin-configurable video slot (hero background, about
   // intro, AI demo panel, ...): takes a direct .mp4/.webm/.ogg URL or a
   // YouTube/Vimeo link and returns an autoplaying, muted, looping <video> or
-  // background-mode <iframe> ready to drop into a panel.
+  // background-mode <iframe> ready to drop into a panel, plus a poster image
+  // URL (when derivable) so the panel isn't blank while the embed spins up.
   function buildBackgroundVideo(urlValue, label) {
     let url;
     try {
@@ -127,19 +128,25 @@
       video.playsInline = true;
       video.preload = "metadata";
       video.setAttribute("aria-label", label);
-      return video;
+      return { el: video, poster: null };
     }
 
     let embedUrl = "";
+    let poster = null;
     if (host === "youtu.be" && pathParts[0]) {
       const id = pathParts[0];
       embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&modestbranding=1&rel=0&playsinline=1`;
+      poster = `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
     } else if ((host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") && (url.searchParams.get("v") || pathParts.includes("embed") || pathParts.includes("shorts"))) {
       const id = url.searchParams.get("v") || pathParts[pathParts.indexOf("embed") + 1] || pathParts[pathParts.indexOf("shorts") + 1];
-      if (id) embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&modestbranding=1&rel=0&playsinline=1`;
+      if (id) {
+        embedUrl = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&modestbranding=1&rel=0&playsinline=1`;
+        poster = `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
+      }
     } else if (host === "vimeo.com" && pathParts[0]) {
       const id = pathParts[0] === "video" ? pathParts[1] : pathParts[0];
       if (/^\d+$/.test(id || "")) embedUrl = `https://player.vimeo.com/video/${encodeURIComponent(id)}?autoplay=1&muted=1&loop=1&background=1`;
+      // No poster: Vimeo thumbnails require an oEmbed round-trip we'd rather not add here.
     } else {
       embedUrl = url.href;
     }
@@ -152,16 +159,26 @@
     iframe.allow = "autoplay; encrypted-media; picture-in-picture";
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
-    return iframe;
+    return { el: iframe, poster };
   }
 
   function wireVideoPanel(elementId, urlValue, label) {
     const panel = document.getElementById(elementId);
     if (!panel || !urlValue) return;
-    const media = buildBackgroundVideo(urlValue, label);
-    if (media) {
+    const built = buildBackgroundVideo(urlValue, label);
+    if (built && built.el) {
       panel.innerHTML = "";
-      panel.appendChild(media);
+      // Painted immediately (no network round-trip for a YouTube ID's
+      // thumbnail path), so it covers the panel's dark ground the instant
+      // the embed is wired in, instead of a black hero until the iframe
+      // itself finishes loading.
+      if (built.poster) {
+        const posterEl = document.createElement("div");
+        posterEl.className = "hero-video-poster";
+        posterEl.style.backgroundImage = `url("${built.poster}")`;
+        panel.appendChild(posterEl);
+      }
+      panel.appendChild(built.el);
       panel.classList.remove("d-none");
     }
   }
