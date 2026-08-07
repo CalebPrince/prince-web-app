@@ -202,6 +202,75 @@
       <div id="beacon-spend-body" class="small text-muted-custom">Loading…</div>
     </div>
 
+    <div class="admin-card p-4 mt-4 d-none" id="beacon-apify-card">
+      <h5 class="mb-3"><i class="bi bi-linkedin me-2"></i>LinkedIn Engagement Scraper</h5>
+      <div class="form-text mb-3">A second, higher-signal lead source: runs on a cron (<code>database/run_beacon_apify_discovery.php</code>) against the tracked profiles below, pulling each one's newest posts, then everyone who reacted to or commented on them — via <a href="https://apify.com" target="_blank" rel="noopener">Apify</a>, an API key away in Settings -&gt; Integrations. Every engager is scored on ICP fit (their own headline, not the post) and joins the same qualified-lead queue and digest as regular Beacon discovery. Needs an Apify API key configured, plus one actor for "get a profile's posts" and one for "get a post's reactions/comments" — pick any from the Apify Store and paste their actor IDs below.</div>
+      <div class="row g-3 align-items-end">
+        <div class="col-sm-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="beacon-apify-enabled">
+            <label class="form-check-label" for="beacon-apify-enabled">Enabled</label>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <label class="form-label">Frequency</label>
+          <select class="form-select" id="beacon-apify-frequency">
+            <option value="hourly">Hourly</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="form-label">Tracked LinkedIn profiles <span class="text-muted-custom fw-normal">(one URL per line — creators/companies whose audience skews toward your target customers, e.g. <code>https://www.linkedin.com/in/someone/</code>; 10-20 is plenty)</span></label>
+        <textarea class="form-control" id="beacon-apify-profiles" rows="4" placeholder="https://www.linkedin.com/in/someone/&#10;https://www.linkedin.com/company/somewhere/"></textarea>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-sm-6">
+          <label class="form-label">Profile-posts actor ID</label>
+          <input type="text" class="form-control" id="beacon-apify-actor-posts" placeholder="e.g. apimaestro/linkedin-profile-posts">
+          <div class="form-text">An Apify actor that returns a profile's newest posts.</div>
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label">Post-engagers actor ID</label>
+          <input type="text" class="form-control" id="beacon-apify-actor-engagers" placeholder="e.g. apimaestro/linkedin-post-reactions">
+          <div class="form-text">An Apify actor that returns a post's reactions/comments.</div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <details>
+          <summary class="text-muted-custom small" style="cursor:pointer;">Advanced: actor input templates</summary>
+          <div class="form-text mb-2 mt-2">Every actor on Apify expects slightly different input field names — these templates are sent as-is, with <code>{{PROFILE_URL}}</code>/<code>{{POSTS_LIMIT}}</code> and <code>{{POST_URL}}</code>/<code>{{ENGAGERS_LIMIT}}</code> substituted in. Check your chosen actor's own documentation for its real input schema and adjust these to match — the defaults are a starting guess, not a guarantee.</div>
+          <label class="form-label small">Profile-posts actor input (JSON)</label>
+          <textarea class="form-control mb-2" id="beacon-apify-actor-posts-input" rows="2" placeholder='{"profileUrls": ["{{PROFILE_URL}}"], "limit": {{POSTS_LIMIT}}}'></textarea>
+          <label class="form-label small">Post-engagers actor input (JSON)</label>
+          <textarea class="form-control" id="beacon-apify-actor-engagers-input" rows="2" placeholder='{"postUrls": ["{{POST_URL}}"], "limit": {{ENGAGERS_LIMIT}}}'></textarea>
+        </details>
+      </div>
+      <div class="row g-3 mt-1">
+        <div class="col-sm-4">
+          <label class="form-label small">Posts per profile</label>
+          <input type="number" min="1" max="10" class="form-control" id="beacon-apify-posts-per-profile">
+        </div>
+        <div class="col-sm-4">
+          <label class="form-label small">Engagers per post</label>
+          <input type="number" min="1" max="200" class="form-control" id="beacon-apify-engagers-per-post">
+        </div>
+        <div class="col-sm-4">
+          <label class="form-label small">Max new engagers / run</label>
+          <input type="number" min="1" max="100" class="form-control" id="beacon-apify-max-engagers-per-run">
+        </div>
+      </div>
+      <div id="beacon-apify-msg" class="alert py-2 small d-none mt-3"></div>
+      <button type="button" class="btn-brand mt-3" id="beacon-apify-save">Save LinkedIn scraper settings</button>
+    </div>
+
+    <div class="admin-card p-4 mt-4 d-none" id="beacon-apify-spend-card">
+      <h5 class="mb-1"><i class="bi bi-cash-coin me-2"></i>What the LinkedIn scraper is costing</h5>
+      <p class="small text-muted-custom mb-3">Each tracked profile costs at least one Apify call (posts), plus one more per new post found (engagers). Every new engager scored costs an AI call.</p>
+      <div id="beacon-apify-spend-body" class="small text-muted-custom">Loading…</div>
+    </div>
+
     <div class="admin-card p-4 mt-4 d-none" id="beacon-leads-card">
       <h5 class="mb-3"><i class="bi bi-bullseye me-2"></i>Recent qualified leads</h5>
       <div id="beacon-leads-empty" class="text-muted-custom small d-none">No qualified leads logged yet — they'll show up here once Beacon saves one from draft() or you log one mid-chat.</div>
@@ -245,6 +314,6 @@
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
 <script src="/js/agent-face.js?v=20260731-scout-face"></script>
 <script src="/js/elevenlabs-tts.js?v=20260731-length-fallback-fix"></script>
-<script src="/js/admin-agent-chat.js?v=20260731-length-fallback-fix"></script>
+<script src="/js/admin-agent-chat.js?v=20260807-apify-engagement"></script>
 </body>
 </html>

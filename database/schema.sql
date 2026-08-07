@@ -566,8 +566,10 @@ CREATE INDEX IF NOT EXISTS idx_call_log_called_at ON call_log (called_at);
 -- Social posts/comments Beacon has judged worth a reply. source distinguishes
 -- leads the automated draft() pipeline logged deterministically (qualified
 -- === true in its JSON output), ones found by the scheduled discovery cron
--- (run_beacon_discovery.php), and ones logged via the log_qualified_lead
--- tool during a direct chat() conversation.
+-- (run_beacon_discovery.php), ones logged via the log_qualified_lead tool
+-- during a direct chat() conversation, and ones found by scraping engagers
+-- off tracked LinkedIn creators' posts (run_beacon_apify_discovery.php) —
+-- an ICP-fit judgment on a profile, not a buying-intent judgment on a post.
 CREATE TABLE IF NOT EXISTS beacon_social_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   platform TEXT NOT NULL,
@@ -578,7 +580,7 @@ CREATE TABLE IF NOT EXISTS beacon_social_leads (
   confidence_score INTEGER NOT NULL,
   reasoning TEXT NOT NULL,
   drafted_reply TEXT NOT NULL,
-  source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron')),
+  source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron', 'linkedin_engagement')),
   -- How old the post was when found, as Serper reports it ("3 years ago").
   -- Human text, not a date: it's for reading, not sorting. NULL for draft()/
   -- chat() leads, where no search result supplied one. Worth storing because
@@ -670,6 +672,45 @@ CREATE TABLE IF NOT EXISTS beacon_runs (
     CHECK (outcome IN ('ok', 'capped', 'search_failed', 'scoring_gave_up'))
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_runs_ran ON beacon_runs (ran_at);
+
+-- LinkedIn posts run_beacon_apify_discovery.php has already pulled engagers
+-- from, keyed by post URL so the same post (found again off a tracked
+-- profile on a later run) isn't re-scraped and re-billed to Apify.
+CREATE TABLE IF NOT EXISTS beacon_scraped_posts (
+  post_url TEXT PRIMARY KEY,
+  scraped_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Individual engagers already evaluated for a given post — separate from
+-- beacon_scraped_posts because the same person can plausibly be re-evaluated
+-- against a different post later (fresh signal), just never re-scored twice
+-- against the same one. engager_key is the profile URL when the scrape
+-- returned one, else a name+headline fallback (see run_beacon_apify_discovery.php).
+CREATE TABLE IF NOT EXISTS beacon_engagement_seen (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_url TEXT NOT NULL,
+  engager_key TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (post_url, engager_key)
+);
+
+-- One row per run_beacon_apify_discovery.php execution that got as far as
+-- calling Apify — mirrors beacon_runs, since Apify actor calls cost real
+-- money per run and are otherwise invisible the same way Serper spend was
+-- before beacon_runs existed.
+CREATE TABLE IF NOT EXISTS beacon_apify_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ran_at TEXT NOT NULL DEFAULT (datetime('now')),
+  profiles_scanned INTEGER NOT NULL DEFAULT 0,
+  posts_found INTEGER NOT NULL DEFAULT 0,
+  engagers_scanned INTEGER NOT NULL DEFAULT 0,
+  qualified INTEGER NOT NULL DEFAULT 0,
+  api_call_failures INTEGER NOT NULL DEFAULT 0,
+  score_failures INTEGER NOT NULL DEFAULT 0,
+  outcome TEXT NOT NULL DEFAULT 'ok'
+    CHECK (outcome IN ('ok', 'capped', 'apify_failed', 'scoring_gave_up'))
+);
+CREATE INDEX IF NOT EXISTS idx_beacon_apify_runs_ran ON beacon_apify_runs (ran_at);
 
 -- Client portal accounts. Rows are provisioned by an admin invite (from a
 -- proposal), never self-signup — password_hash stays NULL until the client

@@ -479,6 +479,11 @@
               <div class="form-text">Optional fallback for the Cold Outreach Engine: when a lead's website publishes no email, Hunter's domain search can supply one it has actually verified (confidence-gated — low-confidence pattern guesses are rejected, so nothing is ever invented). Leave empty to rely only on emails published on the lead's own site.</div>
             </div>
             <div class="mb-3">
+              <label class="form-label">Apify API key <span class="text-muted-custom fw-normal">(optional — LinkedIn engagement scraping)</span></label>
+              <input type="password" class="form-control" id="apify-key" placeholder="Paste your Apify API key" autocomplete="off">
+              <div class="form-text">Powers Beacon's LinkedIn Engagement Scraper (configure the tracked profile list and actors in Admin -> Joan/Beacon). Get a key at apify.com — you'll also need to pick a "LinkedIn profile posts" actor and a "LinkedIn post reactions/comments" actor from the Apify Store.</div>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Slack webhook URL <span class="text-muted-custom fw-normal">(inquiry notifications)</span></label>
               <input type="password" class="form-control" id="slack-url" placeholder="https://hooks.slack.com/services/..." autocomplete="off">
             </div>

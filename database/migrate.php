@@ -984,6 +984,7 @@ if ($beaconLeadsSql && !str_contains($beaconLeadsSql, "'cron'")) {
     );
 }
 
+
 // Deliberately after the rebuild above, which recreates the table from an
 // explicit column list — adding post_age first would just get dropped on any
 // database still carrying the pre-'cron' CHECK.
@@ -1084,6 +1085,40 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_beacon_lead_feedback_created ON beacon_lead_feedback (created_at)');
 
+// New tables for run_beacon_apify_discovery.php — plain CREATE TABLE IF NOT
+// EXISTS (already in schema.sql for fresh installs) is all an existing
+// database needs too.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS beacon_scraped_posts (
+        post_url TEXT PRIMARY KEY,
+        scraped_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS beacon_engagement_seen (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_url TEXT NOT NULL,
+        engager_key TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE (post_url, engager_key)
+    )"
+);
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS beacon_apify_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ran_at TEXT NOT NULL DEFAULT (datetime('now')),
+        profiles_scanned INTEGER NOT NULL DEFAULT 0,
+        posts_found INTEGER NOT NULL DEFAULT 0,
+        engagers_scanned INTEGER NOT NULL DEFAULT 0,
+        qualified INTEGER NOT NULL DEFAULT 0,
+        api_call_failures INTEGER NOT NULL DEFAULT 0,
+        score_failures INTEGER NOT NULL DEFAULT 0,
+        outcome TEXT NOT NULL DEFAULT 'ok'
+            CHECK (outcome IN ('ok', 'capped', 'apify_failed', 'scoring_gave_up'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_beacon_apify_runs_ran ON beacon_apify_runs (ran_at)');
+
 // Optional contact detail supplied by Joan/external social discovery. When
 // present on a qualified lead Beacon can pass it straight into Jason's
 // existing Nurturer automation without changing older discovery callers.
@@ -1100,6 +1135,39 @@ if (!in_array('lead_email', $beaconColumns, true)) {
 $beaconReviewColumns = array_column($pdo->query('PRAGMA table_info(beacon_social_leads)')->fetchAll(), 'name');
 if (!in_array('review_status', $beaconReviewColumns, true)) {
     $pdo->exec("ALTER TABLE beacon_social_leads ADD COLUMN review_status TEXT NOT NULL DEFAULT 'accepted' CHECK (review_status IN ('accepted', 'pending_review'))");
+}
+
+// Same rebuild-for-CHECK pattern as above, widening it a second time for
+// run_beacon_apify_discovery.php's 'linkedin_engagement' source. Deliberately
+// here, after the lead_email/post_age/review_status ALTERs above, so the
+// column list below (needed for both the CREATE and the INSERT...SELECT)
+// matches what an upgrading database actually has by this point.
+$beaconLeadsSql2 = $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'beacon_social_leads'"
+)->fetchColumn();
+if ($beaconLeadsSql2 && !str_contains($beaconLeadsSql2, "'linkedin_engagement'")) {
+    rebuildTable(
+        $pdo,
+        'beacon_social_leads',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            platform TEXT NOT NULL,
+            username TEXT NOT NULL,
+            lead_email TEXT,
+            post_content TEXT NOT NULL,
+            post_url TEXT,
+            confidence_score INTEGER NOT NULL,
+            reasoning TEXT NOT NULL,
+            drafted_reply TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT 'draft' CHECK (source IN ('draft', 'chat', 'cron', 'linkedin_engagement')),
+            post_age TEXT,
+            review_status TEXT NOT NULL DEFAULT 'accepted' CHECK (review_status IN ('accepted', 'pending_review')),
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, platform, username, lead_email, post_content, post_url, confidence_score, reasoning,
+         drafted_reply, source, post_age, review_status, created_at',
+        ['CREATE INDEX IF NOT EXISTS idx_beacon_social_leads_created ON beacon_social_leads (created_at)']
+    );
 }
 
 $pdo->exec(

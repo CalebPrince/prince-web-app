@@ -346,6 +346,7 @@ $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'de
 $router->post('/api/v1/admin/beacon-leads/{id}/flag', [BeaconController::class, 'flagLead']);
 $router->post('/api/v1/admin/beacon-leads/{id}/approve', [BeaconController::class, 'approveLead']);
 $router->get('/api/v1/admin/beacon-spend', [BeaconController::class, 'adminSpend']);
+$router->get('/api/v1/admin/beacon-apify-spend', [BeaconController::class, 'adminApifySpend']);
 $router->get('/api/v1/admin/nurturer-new-leads', [NurturerController::class, 'adminNewLeads']);
 $router->post('/api/v1/admin/nurturer-replies/{id}/send', [NurturerController::class, 'adminSendReply']);
 $router->get('/api/v1/admin/reports/summary', [ReportController::class, 'summary']);

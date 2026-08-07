@@ -174,6 +174,7 @@ async function saveIntegrations(e) {
       twilio_conversation_relay_voice: document.getElementById("twilio-conversation-relay-voice").value.trim(),
       serper_api_key: document.getElementById("serper-key").value.trim(),
       hunter_api_key: document.getElementById("hunter-key").value.trim(),
+      apify_api_key: document.getElementById("apify-key").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
       integration_api_key: document.getElementById("integration-api-key").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
@@ -734,6 +735,7 @@ async function testAi() {
     document.getElementById("twilio-conversation-relay-voice").value = settings.twilio_conversation_relay_voice || "Xb7hH8MSUJpSbSDYk0k2";
     document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("hunter-key").value = settings.hunter_api_key || "";
+    document.getElementById("apify-key").value = settings.apify_api_key || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";

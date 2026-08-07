@@ -17,7 +17,7 @@ class SettingsController
 {
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
-        'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'slack_webhook_url',
+        'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'slack_webhook_url',
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'owner_whatsapp_number',
         'twilio_voice_enabled', 'twilio_voice_number', 'owner_voice_number', 'twilio_voice_tts_voice', 'twilio_regulatory_approved',
@@ -46,6 +46,10 @@ class SettingsController
         'nurturer_reply_sync_enabled', 'nurturer_reply_auto_send',
         'beacon_discovery_enabled', 'beacon_discovery_frequency', 'beacon_discovery_last_run', 'beacon_discovery_keywords', 'beacon_discovery_recency',
         'beacon_auto_accept_all', 'outreach_auto_accept_all', 'social_draft_auto_approve',
+        'beacon_apify_enabled', 'beacon_apify_frequency', 'beacon_apify_last_run', 'beacon_apify_last_status',
+        'beacon_apify_profiles', 'beacon_apify_actor_posts', 'beacon_apify_actor_posts_input',
+        'beacon_apify_actor_engagers', 'beacon_apify_actor_engagers_input',
+        'beacon_apify_posts_per_profile', 'beacon_apify_engagers_per_post', 'beacon_apify_max_engagers_per_run',
         'stale_lead_followup_enabled', 'stale_lead_followup_days',
         'composio_api_key',
         'composio_google_calendar_auth_config_id', 'composio_google_calendar_account_id',

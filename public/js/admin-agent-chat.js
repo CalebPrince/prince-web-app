@@ -67,6 +67,21 @@
   const beaconDiscoverySave = document.getElementById("beacon-discovery-save");
   const beaconSpendCard = document.getElementById("beacon-spend-card");
   const beaconSpendBody = document.getElementById("beacon-spend-body");
+  const beaconApifyCard = document.getElementById("beacon-apify-card");
+  const beaconApifyEnabled = document.getElementById("beacon-apify-enabled");
+  const beaconApifyFrequency = document.getElementById("beacon-apify-frequency");
+  const beaconApifyProfiles = document.getElementById("beacon-apify-profiles");
+  const beaconApifyActorPosts = document.getElementById("beacon-apify-actor-posts");
+  const beaconApifyActorEngagers = document.getElementById("beacon-apify-actor-engagers");
+  const beaconApifyActorPostsInput = document.getElementById("beacon-apify-actor-posts-input");
+  const beaconApifyActorEngagersInput = document.getElementById("beacon-apify-actor-engagers-input");
+  const beaconApifyPostsPerProfile = document.getElementById("beacon-apify-posts-per-profile");
+  const beaconApifyEngagersPerPost = document.getElementById("beacon-apify-engagers-per-post");
+  const beaconApifyMaxEngagersPerRun = document.getElementById("beacon-apify-max-engagers-per-run");
+  const beaconApifyMsg = document.getElementById("beacon-apify-msg");
+  const beaconApifySave = document.getElementById("beacon-apify-save");
+  const beaconApifySpendCard = document.getElementById("beacon-apify-spend-card");
+  const beaconApifySpendBody = document.getElementById("beacon-apify-spend-body");
   const nurturerLeadsCard = document.getElementById("nurturer-leads-card");
   const nurturerLeadsList = document.getElementById("nurturer-leads-list");
   const nurturerLeadsEmpty = document.getElementById("nurturer-leads-empty");
@@ -354,6 +369,7 @@
     chat: "logged in chat",
     cron: "found by discovery",
     draft: "from draft()",
+    linkedin_engagement: "LinkedIn engagement",
   };
 
   async function loadBeaconLeads() {
@@ -514,6 +530,43 @@
       beaconSpendBody.innerHTML = line("Last 7 days", s.last_7_days) + line("Last 30 days", s.last_30_days) + runs;
     } catch (_) {
       beaconSpendBody.textContent = "Couldn't load spend figures.";
+    }
+  }
+
+  const APIFY_RUN_OUTCOME_LABEL = {
+    ok: "completed",
+    capped: "hit the cap",
+    apify_failed: "Apify calls failed",
+    scoring_gave_up: "providers down",
+  };
+
+  async function loadBeaconApifySpend() {
+    try {
+      const s = await api.get("/api/v1/admin/beacon-apify-spend");
+      const line = (label, w) =>
+        "<div><strong>" + label + ":</strong> " + w.runs + " run(s) · "
+        + w.profiles_scanned + " profile(s) · "
+        + w.posts_found + " post(s) found · "
+        + (w.scored + w.score_failures) + " AI call(s)"
+        + (w.score_failures ? " (" + w.score_failures + " failed)" : "")
+        + (w.api_call_failures ? " · " + w.api_call_failures + " Apify call(s) failed" : "")
+        + " · " + w.qualified + " qualified</div>";
+
+      const runs = s.recent_runs.length
+        ? '<table class="table table-sm mb-0 mt-3"><thead><tr><th class="ps-0">Run</th><th>Profiles</th><th>Posts</th><th>Scored</th><th>Qualified</th><th>Outcome</th></tr></thead><tbody>'
+          + s.recent_runs.map(r =>
+            "<tr><td class='ps-0'>" + new Date(r.ran_at + "Z").toLocaleString() + "</td>"
+            + "<td>" + r.profiles_scanned + "</td>"
+            + "<td>" + r.posts_found + "</td>"
+            + "<td>" + r.engagers_scanned + (r.score_failures ? " <span class='text-danger'>+" + r.score_failures + " failed</span>" : "") + "</td>"
+            + "<td>" + r.qualified + "</td>"
+            + "<td>" + (APIFY_RUN_OUTCOME_LABEL[r.outcome] || escapeHtml(r.outcome)) + "</td></tr>").join("")
+          + "</tbody></table>"
+        : "<div class='mt-2'>No runs recorded yet — the cron logs one each time it calls Apify.</div>";
+
+      beaconApifySpendBody.innerHTML = line("Last 7 days", s.last_7_days) + line("Last 30 days", s.last_30_days) + runs;
+    } catch (_) {
+      beaconApifySpendBody.textContent = "Couldn't load spend figures.";
     }
   }
 
@@ -715,6 +768,8 @@
     beaconLeadsCard.classList.toggle("d-none", !isBeacon);
     beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
     beaconSpendCard.classList.toggle("d-none", !isBeacon);
+    beaconApifyCard.classList.toggle("d-none", !isBeacon);
+    beaconApifySpendCard.classList.toggle("d-none", !isBeacon);
     nurturerLeadsCard.classList.toggle("d-none", !isNurturer);
     proposalAwaitingCard.classList.toggle("d-none", !isProposal);
     lisaChatsCard.classList.toggle("d-none", !isLisa);
@@ -722,6 +777,7 @@
     if (isBeacon) {
       loadBeaconLeads();
       loadBeaconSpend();
+      loadBeaconApifySpend();
     }
     if (isNurturer) {
       loadNurturerNewLeads();
@@ -774,6 +830,56 @@
       beaconDiscoveryMsg.classList.remove("d-none");
     } finally {
       beaconDiscoverySave.disabled = false;
+    }
+  });
+
+  // ---- Beacon's LinkedIn Engagement Scraper settings ----
+  let apifySettingsLoaded = false;
+  async function loadBeaconApifySettings() {
+    if (apifySettingsLoaded) return;
+    try {
+      const settings = await api.get("/api/v1/admin/settings");
+      beaconApifyEnabled.checked = settings.beacon_apify_enabled === "1";
+      beaconApifyFrequency.value = settings.beacon_apify_frequency || "daily";
+      beaconApifyProfiles.value = settings.beacon_apify_profiles || "";
+      beaconApifyActorPosts.value = settings.beacon_apify_actor_posts || "";
+      beaconApifyActorEngagers.value = settings.beacon_apify_actor_engagers || "";
+      beaconApifyActorPostsInput.value = settings.beacon_apify_actor_posts_input || "";
+      beaconApifyActorEngagersInput.value = settings.beacon_apify_actor_engagers_input || "";
+      beaconApifyPostsPerProfile.value = settings.beacon_apify_posts_per_profile || "2";
+      beaconApifyEngagersPerPost.value = settings.beacon_apify_engagers_per_post || "50";
+      beaconApifyMaxEngagersPerRun.value = settings.beacon_apify_max_engagers_per_run || "20";
+      apifySettingsLoaded = true;
+    } catch (_) {
+      // Quiet failure — admin can still retype and save.
+    }
+  }
+
+  beaconApifySave.addEventListener("click", async () => {
+    beaconApifyMsg.classList.add("d-none");
+    beaconApifySave.disabled = true;
+    try {
+      await api.put("/api/v1/admin/settings", {
+        beacon_apify_enabled: beaconApifyEnabled.checked ? "1" : "0",
+        beacon_apify_frequency: beaconApifyFrequency.value,
+        beacon_apify_profiles: beaconApifyProfiles.value,
+        beacon_apify_actor_posts: beaconApifyActorPosts.value.trim(),
+        beacon_apify_actor_engagers: beaconApifyActorEngagers.value.trim(),
+        beacon_apify_actor_posts_input: beaconApifyActorPostsInput.value.trim(),
+        beacon_apify_actor_engagers_input: beaconApifyActorEngagersInput.value.trim(),
+        beacon_apify_posts_per_profile: beaconApifyPostsPerProfile.value,
+        beacon_apify_engagers_per_post: beaconApifyEngagersPerPost.value,
+        beacon_apify_max_engagers_per_run: beaconApifyMaxEngagersPerRun.value,
+      });
+      beaconApifyMsg.className = "alert alert-success py-2 small mt-3";
+      beaconApifyMsg.textContent = "Saved.";
+      beaconApifyMsg.classList.remove("d-none");
+    } catch (err) {
+      beaconApifyMsg.className = "alert alert-danger py-2 small mt-3";
+      beaconApifyMsg.textContent = err.message;
+      beaconApifyMsg.classList.remove("d-none");
+    } finally {
+      beaconApifySave.disabled = false;
     }
   });
 
@@ -858,7 +964,7 @@
       resetConversation();
       updateLeadsPanelVisibility();
       updateAdaPanelVisibility();
-      if (activeAgent === "beacon") loadBeaconDiscoverySettings();
+      if (activeAgent === "beacon") { loadBeaconDiscoverySettings(); loadBeaconApifySettings(); }
     });
   });
 

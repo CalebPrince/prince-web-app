@@ -122,14 +122,8 @@ class BeaconController
             return null;
         }
 
-        $stripped = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['reply']));
-        $parsed = json_decode($stripped, true);
-        if (!is_array($parsed)
-            || !array_key_exists('qualified', $parsed)
-            || !is_numeric($parsed['confidence_score'] ?? null)
-            || empty($parsed['reasoning'])
-        ) {
-            error_log('Beacon generateForPost: could not parse JSON from model output: ' . substr($stripped, 0, 800));
+        $parsed = self::parseQualificationJson($result['reply']);
+        if ($parsed === null) {
             return null;
         }
 
@@ -138,41 +132,12 @@ class BeaconController
         // decision left for a tool to make (and no risk of it "forgetting").
         $qualified = (bool) $parsed['qualified'];
 
-        // drafted_reply is only required when qualified: the prompt asks for an
-        // empty one on a rejection (no point drafting a reply nobody sends), so
-        // demanding it unconditionally would misread every correct rejection as
-        // a parse failure and return null — which run_beacon_discovery.php would
-        // then log as a hard error.
-        if ($qualified && empty($parsed['drafted_reply'])) {
-            error_log('Beacon generateForPost: qualified lead with no drafted_reply: ' . substr($stripped, 0, 800));
-            return null;
-        }
-        $draftedReply = SharedAgentTools::stripMarkdown((string) ($parsed['drafted_reply'] ?? ''));
-        if ($qualified) {
-            $confidenceScore = (int) $parsed['confidence_score'];
-            // beacon_auto_accept_all lets an admin who wants maximum
-            // automation bypass this gate entirely — every qualified lead
-            // reaches the pipeline immediately, accepting the false-positive
-            // risk this threshold otherwise guards against. Toggled back off,
-            // the original confidence gate applies exactly as before.
-            $reviewStatus = (Settings::get('beacon_auto_accept_all') === '1' || $confidenceScore >= self::AUTO_ACCEPT_THRESHOLD)
-                ? 'accepted' : 'pending_review';
-            $pdo->prepare(
-                'INSERT INTO beacon_social_leads (platform, username, lead_email, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age, review_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-            )->execute([
-                $platform, $username, $leadEmail, $postContent, $postUrl,
-                $confidenceScore, (string) $parsed['reasoning'], $draftedReply,
-                $source, $postAge, $reviewStatus,
-            ]);
-
-            // Joan -> Jason: when the source supplies contact details, hand the
-            // warm lead to the existing email automation engine immediately —
-            // but only once it's actually accepted. A pending_review lead gets
-            // this fired later, from approveLead(), once Caleb has looked at it.
-            if ($leadEmail !== null && $reviewStatus === 'accepted') {
-                self::fireMarketingPitch($pdo, $leadEmail, $username, $platform, $postContent);
-            }
-        }
+        // persistIfQualified() is shared with generateForEngagement() — same
+        // confidence gate, review queue, and marketing_pitch_sent automation
+        // regardless of which prompt produced the qualification.
+        $draftedReply = self::persistIfQualified(
+            $pdo, $qualified, $parsed, $platform, $username, $postContent, $postUrl, $source, $postAge, $leadEmail
+        );
 
         return [
             'qualified' => $qualified,
@@ -180,6 +145,157 @@ class BeaconController
             'reasoning' => (string) $parsed['reasoning'],
             'drafted_reply' => $draftedReply,
         ];
+    }
+
+    /**
+     * Core generation for a LinkedIn engagement lead — an ICP-fit judgment on
+     * a profile that reacted to or commented on a tracked creator's post, not
+     * a buying-intent judgment on a post the prospect wrote themselves (that's
+     * generateForPost()). Shares the same qualified/confidence_score/
+     * reasoning/drafted_reply JSON contract and the same confidence gate +
+     * pipeline persistence, so every downstream consumer (admin UI,
+     * marketing_pitch_sent automation, spend tracking) treats this exactly
+     * like any other Beacon lead — only the qualification question and
+     * prompt differ. Called from run_beacon_apify_discovery.php.
+     *
+     * @param string $engagementType 'comment' or 'reaction'
+     * @return array{qualified:bool,confidence_score:int,reasoning:string,drafted_reply:string}|null null only on a hard failure
+     */
+    public static function generateForEngagement(
+        string $engagerName,
+        ?string $engagerHeadline,
+        ?string $engagerProfileUrl,
+        string $engagementType,
+        ?string $commentText,
+        string $sourcePostUrl,
+        string $sourcePostAuthor,
+        string $sourcePostTopic
+    ): ?array {
+        $pdo = Database::get();
+        $userPrompt = self::buildEngagementUserPrompt(
+            $engagerName, $engagerHeadline, $engagementType, $commentText, $sourcePostAuthor, $sourcePostTopic
+        );
+
+        // No tools, same reasoning as generateForPost()'s cron branch: this
+        // runs unattended over a batch of engagers, and grounding round-trips
+        // aren't worth spending on a profile snippet this thin.
+        $result = AiAgentEngine::run(
+            self::buildEngagementSystemPrompt(),
+            self::draftToolDeclarations(),
+            fn(string $name, array $args) => self::runTool($name, $args, $pdo),
+            [['role' => 'user', 'text' => $userPrompt]],
+            null,
+            null,
+            1
+        );
+        if ($result['reply'] === null) {
+            return null;
+        }
+
+        $parsed = self::parseQualificationJson($result['reply']);
+        if ($parsed === null) {
+            return null;
+        }
+
+        $qualified = (bool) $parsed['qualified'];
+        $postContent = self::engagementDescription(
+            $engagerName, $engagerHeadline, $engagementType, $commentText, $sourcePostAuthor, $sourcePostTopic
+        );
+        // post_url stores the engager's own profile (what Caleb would actually
+        // click to look them up) rather than the source post — falls back to
+        // the post when a scrape didn't return a profile URL.
+        $draftedReply = self::persistIfQualified(
+            $pdo, $qualified, $parsed, 'LinkedIn', $engagerName, $postContent,
+            $engagerProfileUrl ?: $sourcePostUrl, 'linkedin_engagement', null, null
+        );
+
+        return [
+            'qualified' => $qualified,
+            'confidence_score' => (int) $parsed['confidence_score'],
+            'reasoning' => (string) $parsed['reasoning'],
+            'drafted_reply' => $draftedReply,
+        ];
+    }
+
+    /**
+     * Shared JSON-contract parsing for generateForPost() and
+     * generateForEngagement() — same {qualified, confidence_score, reasoning,
+     * drafted_reply} shape either way, only the prompt that produced it
+     * differs. drafted_reply is only required when qualified: both prompts
+     * ask for an empty one on a rejection, so demanding it unconditionally
+     * would misread every correct rejection as a parse failure.
+     *
+     * @return array{qualified:mixed,confidence_score:mixed,reasoning:mixed,drafted_reply:mixed}|null
+     */
+    private static function parseQualificationJson(string $reply): ?array
+    {
+        $stripped = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $reply));
+        $parsed = json_decode($stripped, true);
+        if (!is_array($parsed)
+            || !array_key_exists('qualified', $parsed)
+            || !is_numeric($parsed['confidence_score'] ?? null)
+            || empty($parsed['reasoning'])
+        ) {
+            error_log('BeaconController: could not parse JSON from model output: ' . substr($stripped, 0, 800));
+            return null;
+        }
+        if ((bool) $parsed['qualified'] && empty($parsed['drafted_reply'])) {
+            error_log('BeaconController: qualified lead with no drafted_reply: ' . substr($stripped, 0, 800));
+            return null;
+        }
+        return $parsed;
+    }
+
+    /**
+     * Shared persistence for generateForPost() and generateForEngagement() —
+     * inserts a qualified lead through the same confidence gate, review
+     * queue, and marketing_pitch_sent automation regardless of which prompt
+     * qualified it. Returns the sanitized drafted_reply either way (still
+     * useful to the caller when not qualified, e.g. for logging), since both
+     * public methods return it in their result array.
+     */
+    private static function persistIfQualified(
+        \PDO $pdo,
+        bool $qualified,
+        array $parsed,
+        string $platform,
+        string $username,
+        string $postContent,
+        ?string $postUrl,
+        string $source,
+        ?string $postAge,
+        ?string $leadEmail
+    ): string {
+        $draftedReply = SharedAgentTools::stripMarkdown((string) ($parsed['drafted_reply'] ?? ''));
+        if (!$qualified) {
+            return $draftedReply;
+        }
+
+        $confidenceScore = (int) $parsed['confidence_score'];
+        // beacon_auto_accept_all lets an admin who wants maximum automation
+        // bypass this gate entirely — every qualified lead reaches the
+        // pipeline immediately, accepting the false-positive risk this
+        // threshold otherwise guards against. Toggled back off, the original
+        // confidence gate applies exactly as before.
+        $reviewStatus = (Settings::get('beacon_auto_accept_all') === '1' || $confidenceScore >= self::AUTO_ACCEPT_THRESHOLD)
+            ? 'accepted' : 'pending_review';
+        $pdo->prepare(
+            'INSERT INTO beacon_social_leads (platform, username, lead_email, post_content, post_url, confidence_score, reasoning, drafted_reply, source, post_age, review_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $platform, $username, $leadEmail, $postContent, $postUrl,
+            $confidenceScore, (string) $parsed['reasoning'], $draftedReply,
+            $source, $postAge, $reviewStatus,
+        ]);
+
+        // Joan -> Jason: when the source supplies contact details, hand the
+        // warm lead to the existing email automation engine immediately —
+        // but only once it's actually accepted. A pending_review lead gets
+        // this fired later, from approveLead(), once Caleb has looked at it.
+        if ($leadEmail !== null && $reviewStatus === 'accepted') {
+            self::fireMarketingPitch($pdo, $leadEmail, $username, $platform, $postContent);
+        }
+
+        return $draftedReply;
     }
 
     /**
@@ -259,6 +375,41 @@ class BeaconController
             'recent_runs' => $pdo->query(
                 'SELECT ran_at, searches_run, results_scanned, qualified, score_failures, outcome
                  FROM beacon_runs ORDER BY ran_at DESC LIMIT 10'
+            )->fetchAll(),
+        ]);
+    }
+
+    /**
+     * GET /api/v1/admin/beacon-apify-spend — what LinkedIn engagement
+     * discovery has cost, from beacon_apify_runs. Mirrors adminSpend() —
+     * Apify bills per actor call the same way Serper bills per search, and
+     * was otherwise just as invisible before this table existed.
+     */
+    public static function adminApifySpend(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+
+        $window = static function (string $since) use ($pdo): array {
+            $row = $pdo->query(
+                "SELECT COUNT(*) AS runs,
+                        COALESCE(SUM(profiles_scanned), 0) AS profiles_scanned,
+                        COALESCE(SUM(posts_found), 0) AS posts_found,
+                        COALESCE(SUM(engagers_scanned), 0) AS scored,
+                        COALESCE(SUM(qualified), 0) AS qualified,
+                        COALESCE(SUM(api_call_failures), 0) AS api_call_failures,
+                        COALESCE(SUM(score_failures), 0) AS score_failures
+                 FROM beacon_apify_runs WHERE ran_at >= datetime('now', '{$since}')"
+            )->fetch(\PDO::FETCH_ASSOC);
+            return array_map('intval', $row);
+        };
+
+        Response::json([
+            'last_7_days' => $window('-7 days'),
+            'last_30_days' => $window('-30 days'),
+            'recent_runs' => $pdo->query(
+                'SELECT ran_at, profiles_scanned, posts_found, engagers_scanned, qualified, api_call_failures, score_failures, outcome
+                 FROM beacon_apify_runs ORDER BY ran_at DESC LIMIT 10'
             )->fetchAll(),
         ]);
     }
@@ -573,6 +724,99 @@ class BeaconController
             . "  \"drafted_reply\": \"[Your drafted reply here. Use line breaks `\\n` naturally. Keep it under 280 characters if the platform is X, or up to 3 short paragraphs if Reddit/LinkedIn. Set this to an empty string if qualified is false — don't draft a reply to a post you're rejecting.]\"\n"
             . "}\n\n"
             . "Return JSON only — no markdown fences, no commentary.";
+    }
+
+    private static function buildEngagementSystemPrompt(): string
+    {
+        $name = Settings::get('beacon_assistant_name') ?: 'Joan';
+        $genderLine = self::genderLine((string) Settings::get('beacon_voice_gender'));
+
+        return "You are {$name}, an AI-powered growth assistant for Prince Caleb, a solo developer who builds AI voice "
+            . "agents, chatbots, and business automations on 12+ years of custom web & mobile engineering, and runs princecaleb.dev.{$genderLine}\n\n"
+            . "Your objective here is different from reviewing a post someone wrote: you're evaluating a LinkedIn "
+            . "profile based on how they engaged (reacted or commented) with a post published by one of Caleb's "
+            . "tracked creator accounts — someone whose audience skews toward Caleb's target customers. The "
+            . "engagement itself is only a weak signal of topical interest; the real test is whether the "
+            . "engager's OWN profile (their headline/title) suggests they could plausibly hire Caleb — a "
+            . "decision-maker for a real business, not a peer in his own field. A comment is stronger evidence "
+            . "than a bare reaction — weigh its actual content more heavily than the fact that it exists.\n\n"
+            . "You have tools available: get_site_info (Caleb's real bio, services, and tech stack) and "
+            . "search_content (his real past projects/blog posts) — use them if you need grounding, though a "
+            . "profile snippet this short rarely calls for it.\n\n"
+            . "CRITICAL RULES:\n"
+            . "1. Qualify based on ICP fit (who this person plausibly is and what they could plausibly buy), "
+            . "NOT on how relevant the original post was — most LinkedIn engagement is passive and means "
+            . "nothing on its own.\n"
+            . "2. Do NOT qualify: a headline that reads like another developer, freelancer, or agency (a "
+            . "competitor, not a customer); a student, job-seeker, or a headline unrelated to running or "
+            . "operating a business; a company/brand page rather than a real person (unless their own headline "
+            . "is a decision-maker role — Founder, CEO, Operations Manager, etc.); an engagement with no "
+            . "headline and no comment text at all, where there is genuinely nothing to judge — reject rather "
+            . "than guess.\n"
+            . "3. A bare reaction paired with a thin or ambiguous headline should skew the confidence_score LOW "
+            . "rather than being guessed high — the score is Caleb's signal for how sure you are, not how "
+            . "hopeful you are.\n"
+            . "4. drafted_reply here is NOT a reply to the post — it's a short, low-pressure LinkedIn comment "
+            . "or connection-request note Caleb could personally send this specific person, referencing the "
+            . "post they engaged with and, if they left one, their own comment. Under 300 characters, no "
+            . "agency language, no generic pitch. Empty string when qualified is false.";
+    }
+
+    private static function buildEngagementUserPrompt(
+        string $engagerName,
+        ?string $engagerHeadline,
+        string $engagementType,
+        ?string $commentText,
+        string $sourcePostAuthor,
+        string $sourcePostTopic
+    ): string {
+        $headlineLine = $engagerHeadline !== null && trim($engagerHeadline) !== ''
+            ? "- Their LinkedIn headline/title: {$engagerHeadline}\n"
+            : "- Their LinkedIn headline/title: (not available)\n";
+        $commentLine = $commentText !== null && trim($commentText) !== ''
+            ? "- What they wrote in their comment: \"{$commentText}\"\n"
+            : '';
+        $engagementLine = $engagementType === 'comment'
+            ? 'Commented on the post'
+            : 'Reacted to the post (like/celebrate/etc — no comment text)';
+
+        return "INPUT DATA:\n"
+            . "- Name: {$engagerName}\n"
+            . $headlineLine
+            . "- Engagement type: {$engagementLine}\n"
+            . $commentLine
+            . "- The post they engaged with was published by: {$sourcePostAuthor}\n"
+            . "- What that post was about: {$sourcePostTopic}\n\n"
+            . "QUALIFY THIS PROFILE — the test is ICP fit, not topical relevance to the post:\n"
+            . "Qualify ONLY if this person's own headline/title suggests they could plausibly hire Caleb — "
+            . "someone who owns, runs, or makes purchasing/hiring decisions for a business or team, not "
+            . "someone who builds the same things Caleb builds.\n\n"
+            . "Provide your output exactly in this JSON format:\n\n"
+            . "{\n"
+            . "  \"qualified\": true, // true ONLY if their profile suggests real ICP fit — apply the rule above\n"
+            . "  \"confidence_score\": 85, // 1-100: how strong the ICP fit is — lower when the signal is thin (bare reaction, vague headline)\n"
+            . "  \"reasoning\": \"Brief explanation of what about THIS PROFILE makes them a plausible customer — not what makes the post relevant.\",\n"
+            . "  \"drafted_reply\": \"[A short, personal LinkedIn comment or connection note Caleb could send, referencing the post and their own comment if they left one. Use line breaks `\\n` naturally. Under 300 characters. Empty string if qualified is false.]\"\n"
+            . "}\n\n"
+            . "Return JSON only — no markdown fences, no commentary.";
+    }
+
+    /** post_content stored on the lead row — a readable one-line summary of what the engagement was. */
+    private static function engagementDescription(
+        string $engagerName,
+        ?string $engagerHeadline,
+        string $engagementType,
+        ?string $commentText,
+        string $sourcePostAuthor,
+        string $sourcePostTopic
+    ): string {
+        $headline = $engagerHeadline !== null && trim($engagerHeadline) !== '' ? " ({$engagerHeadline})" : '';
+        $comment = trim((string) $commentText);
+        $action = $engagementType === 'comment' && $comment !== ''
+            ? "commented \"{$comment}\""
+            : ($engagementType === 'comment' ? 'commented' : 'reacted to');
+
+        return "{$engagerName}{$headline} {$action} on a LinkedIn post by {$sourcePostAuthor} about: {$sourcePostTopic}";
     }
 
     /**

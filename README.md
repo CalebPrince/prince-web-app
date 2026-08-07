@@ -438,6 +438,7 @@ database/
   sync_nurturer_replies.php       # Jason: imports replies, pauses drip, safely continues threads (cron, hourly)
   send_cold_outreach.php          # Cold Outreach Engine: sends reviewed marketing-lead pitches, capped/day (cron, hourly)
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
+  run_beacon_apify_discovery.php  # tracked LinkedIn profiles -> Apify engagers -> ICP-fit scoring -> qualified-lead digest (cron, hourly)
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   draft_newsletters_from_blog.php    # Published blog posts -> Jason newsletter drafts, ready to review (cron, ~5-10 min)
   send_daily_brief.php            # Chief's daily brief on what every other agent did, emailed (cron, daily)
@@ -1683,6 +1684,15 @@ One-time setup on a new host:
     identical in effect to setting it by hand — same Agent Queue entry, same
     Tasks-page entry once due:
     `/usr/local/bin/php /home/<cpanel-user>/database/schedule_stale_lead_followups.php > /dev/null`
+4p. Add a sixteenth cron job (hourly) for Beacon's second lead source — a
+    no-op until enabled under Admin -> Talk to Agents -> Beacon, with an
+    `apify_api_key` set under Admin -> Settings -> Integrations, and at
+    least one tracked LinkedIn profile plus both Apify actor IDs configured.
+    Same "hourly cron, self-checked cadence" pattern as 4i: pulls the
+    newest posts from each tracked profile, scrapes who reacted/commented,
+    scores each engager on ICP fit, and feeds anything qualified into the
+    same beacon_social_leads queue and digest as regular Beacon discovery:
+    `/usr/local/bin/php /home/<cpanel-user>/database/run_beacon_apify_discovery.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public
