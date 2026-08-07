@@ -112,6 +112,20 @@ $projects = [
         'cover_image_path' => '/uploads/benas-hub.jpeg',
         'tags' => ['Python', 'Flask', 'JavaScript', 'Bootstrap 5', 'SQLite', 'Paystack'],
     ],
+    [
+        'slug' => 'opskeep',
+        'title' => 'Opskeep',
+        'summary' => 'Open-source Agent Skills pack that installs operator workflows — winning work, scoping it, delivering it, getting paid, keeping clients, and improving — directly into the AI coding agent you already use.',
+        'case_study_body' =>
+            "AI coding agents are excellent at the craft — they write the code, ship the feature, close the ticket. What they don't know is how to run the business around that work: chasing an invoice, following up a client, keeping a pipeline full, or turning a finished job into a repeatable process. That operator half of the job still fell entirely on the human, every time, from scratch.\n\n" .
+            "Opskeep closes that gap by installing operator know-how as a skill pack directly into the agent already open — Claude Code, Cursor, Codex CLI, or Cline. It ships six business-lane skills (get work, define work, deliver work, get paid, keep clients, improve operations) plus meta skills for setup, memory, and automations, each one a folder of Markdown following the open Agent Skills standard, installable with a single command. A companion MCP server exposes reminders and time-tracking as callable tools for agents that want to act on the workflow, not just read about it.\n\n" .
+            "The whole business-lane pack is MIT-licensed and free to run entirely inside a user's own agent — no server, no account. A paid Pro tier adds the pieces that genuinely need server-side infrastructure: hosted customer replies and follow-up reminders, server-rendered audio session recaps, cross-session time/expense sync, and managed connectors (WhatsApp, Slack, GitHub, Gmail, Stripe, Notion, Linear, and more) for teams that want it always-on rather than session-triggered.",
+        'category' => 'custom_solution',
+        'live_url' => null,
+        'repo_url' => 'https://github.com/CalebPrince/opskeep-skills',
+        'cover_image_path' => '/uploads/opskeep-real.png',
+        'tags' => ['Node.js', 'Agent Skills', 'MCP', 'Open Source', 'CLI'],
+    ],
 ];
 
 function upsertTag(\PDO $pdo, string $name): int
