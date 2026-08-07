@@ -7,7 +7,7 @@
 // ai-widget.js (Lisa's widget header) and admin-agent-chat.js (the
 // Beacon/Dossier/Nurturer/Proposal admin console).
 (function () {
-  const AGENT_KEYS = ["lisa", "beacon", "dossier", "nurturer", "proposal", "content", "arch", "sketch", "ada", "chief", "scout", "sage"];
+  const AGENT_KEYS = ["lisa", "beacon", "dossier", "nurturer", "proposal", "content", "arch", "sketch", "ada", "chief", "scout", "sage", "radar"];
 
   /**
    * @param {'lisa'|'beacon'|'dossier'|'nurturer'|'proposal'|'content'} agentKey

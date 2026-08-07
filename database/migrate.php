@@ -450,6 +450,9 @@ if (!in_array('published_at', $socialDraftColumns, true)) {
 if (!in_array('publish_error', $socialDraftColumns, true)) {
     $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN publish_error TEXT');
 }
+if (!in_array('linkedin_post_urn', $socialDraftColumns, true)) {
+    $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN linkedin_post_urn TEXT');
+}
 
 $clientColumns = array_column($pdo->query('PRAGMA table_info(clients)')->fetchAll(), 'name');
 if (!in_array('phone', $clientColumns, true)) {
@@ -1118,6 +1121,21 @@ $pdo->exec(
     )"
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_beacon_apify_runs_ran ON beacon_apify_runs (ran_at)');
+
+// Radar's drafted-DM queue — plain CREATE TABLE IF NOT EXISTS (already in
+// schema.sql for fresh installs) is all an existing database needs too.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS radar_dm_drafts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        target_name TEXT NOT NULL,
+        target_headline TEXT,
+        target_profile_url TEXT,
+        source_post_url TEXT,
+        drafted_message TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_radar_dm_drafts_created ON radar_dm_drafts (created_at)');
 
 // Optional contact detail supplied by Joan/external social discovery. When
 // present on a qualified lead Beacon can pass it straight into Jason's

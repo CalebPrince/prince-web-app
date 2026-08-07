@@ -161,8 +161,15 @@ class SocialDraftController
         foreach ($variants as $payload) {
             $result = Composio::executeTool($tool, $accountId, $payload);
             if ($result !== null) {
-                $pdo->prepare("UPDATE social_post_drafts SET published_at = datetime('now'), publish_error = NULL WHERE id = ?")
-                    ->execute([$draft['id']]);
+                // Field name for the created post's ID/URN isn't confirmed
+                // against a live account either (same caveat as the payload
+                // variants above) — try the plausible candidates and store
+                // whichever is present, so Radar's stats lookup has something
+                // to query even if the exact field name needs adjusting later.
+                $urn = self::extractPostUrn($result);
+                $pdo->prepare(
+                    "UPDATE social_post_drafts SET published_at = datetime('now'), publish_error = NULL, linkedin_post_urn = ? WHERE id = ?"
+                )->execute([$urn, $draft['id']]);
                 Settings::set('composio_linkedin_last_error', '');
                 return;
             }
@@ -173,6 +180,18 @@ class SocialDraftController
             ->execute([$lastError, $draft['id']]);
         Settings::set('composio_linkedin_last_error', date('c') . ' - LinkedIn publish failed using ' . $tool . ': ' . $lastError);
         error_log("Composio LinkedIn publish failed for draft {$draft['id']} using {$tool}: {$lastError}");
+    }
+
+    /** @param array<string,mixed> $result Composio::executeTool()'s decoded response */
+    private static function extractPostUrn(array $result): ?string
+    {
+        foreach (['id', 'postId', 'post_id', 'urn', 'shareUrn', 'activityUrn'] as $key) {
+            $value = $result['data'][$key] ?? $result[$key] ?? null;
+            if (is_string($value) && $value !== '') {
+                return $value;
+            }
+        }
+        return null;
     }
 
     /** DELETE /api/v1/admin/social-drafts/{id} */

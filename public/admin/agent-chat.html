@@ -116,6 +116,7 @@
       <button type="button" class="agent-tab" id="tab-scout" data-agent="scout"><i class="bi bi-stars me-1"></i>Scout</button>
       <button type="button" class="agent-tab" id="tab-reel" data-agent="reel"><i class="bi bi-film me-1"></i>Reel</button>
       <button type="button" class="agent-tab" id="tab-sage" data-agent="sage"><i class="bi bi-lightbulb me-1"></i>Sage</button>
+      <button type="button" class="agent-tab" id="tab-radar" data-agent="radar"><i class="bi bi-broadcast me-1"></i>Radar</button>
     </div>
 
     <div class="admin-card p-4">
@@ -271,6 +272,13 @@
       <div id="beacon-apify-spend-body" class="small text-muted-custom">Loading…</div>
     </div>
 
+    <div class="admin-card p-4 mt-4 d-none" id="radar-drafts-card">
+      <h5 class="mb-3"><i class="bi bi-broadcast me-2"></i>Drafted outreach DMs</h5>
+      <div class="form-text mb-3">Radar never sends these — copy the message and send it yourself from your own LinkedIn. "View post" links back to whatever prompted the outreach, same as Beacon's leads.</div>
+      <div id="radar-drafts-empty" class="text-muted-custom small d-none">No drafts yet — ask Radar to draft an outreach message for someone and it'll show up here.</div>
+      <div id="radar-drafts-list" class="d-flex flex-column gap-3"></div>
+    </div>
+
     <div class="admin-card p-4 mt-4 d-none" id="beacon-leads-card">
       <h5 class="mb-3"><i class="bi bi-bullseye me-2"></i>Recent qualified leads</h5>
       <div id="beacon-leads-empty" class="text-muted-custom small d-none">No qualified leads logged yet — they'll show up here once Beacon saves one from draft() or you log one mid-chat.</div>
@@ -312,8 +320,8 @@
 <script src="/js/theme.js?v=20260730-site-default"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/agent-face.js?v=20260731-scout-face"></script>
+<script src="/js/agent-face.js?v=20260807-radar-face"></script>
 <script src="/js/elevenlabs-tts.js?v=20260731-length-fallback-fix"></script>
-<script src="/js/admin-agent-chat.js?v=20260807-apify-engagement"></script>
+<script src="/js/admin-agent-chat.js?v=20260807-radar-dm-drafts"></script>
 </body>
 </html>

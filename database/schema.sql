@@ -712,6 +712,22 @@ CREATE TABLE IF NOT EXISTS beacon_apify_runs (
 );
 CREATE INDEX IF NOT EXISTS idx_beacon_apify_runs_ran ON beacon_apify_runs (ran_at);
 
+-- Outreach DM drafts Radar has written with Caleb, per person — never sent
+-- automatically (no LinkedIn messaging API is available to this app; see
+-- RadarController's docblock). Caleb copies drafted_message and sends it
+-- himself. source_post_url links back to whatever post prompted the
+-- outreach, same idea as beacon_social_leads.post_url.
+CREATE TABLE IF NOT EXISTS radar_dm_drafts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  target_name TEXT NOT NULL,
+  target_headline TEXT,
+  target_profile_url TEXT,
+  source_post_url TEXT,
+  drafted_message TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_radar_dm_drafts_created ON radar_dm_drafts (created_at);
+
 -- Client portal accounts. Rows are provisioned by an admin invite (from a
 -- proposal), never self-signup — password_hash stays NULL until the client
 -- completes /client/setup.html?token=..., mirroring how proposals.token
@@ -794,6 +810,11 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
   -- the admin can see why nothing went out.
   published_at TEXT,
   publish_error TEXT,
+  -- The post ID/URN Composio's create-post response returned, when it did —
+  -- captured so a later stats lookup (Radar's get_linkedin_post_performance)
+  -- has something to query against. NULL for anything published before this
+  -- column existed, or if the create response never included one.
+  linkedin_post_urn TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

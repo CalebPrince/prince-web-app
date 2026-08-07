@@ -13,6 +13,7 @@
     scout: { label: "Scout", nameKey: "scout_assistant_name", genderKey: "scout_voice_gender", accentKey: "scout_voice_accent", fallbackName: "Scout" },
     reel: { label: "Reel", nameKey: "reel_assistant_name", genderKey: "reel_voice_gender", accentKey: "reel_voice_accent", fallbackName: "Reel" },
     sage: { label: "Sage", nameKey: "sage_assistant_name", genderKey: "sage_voice_gender", accentKey: "sage_voice_accent", fallbackName: "Sage" },
+    radar: { label: "Radar", nameKey: "radar_assistant_name", genderKey: "radar_voice_gender", accentKey: "radar_voice_accent", fallbackName: "Radar" },
   };
 
   // Files staged for the next message. Only Ada reads documents, so the
@@ -54,6 +55,9 @@
   const sendBtn = document.getElementById("agent-chat-send");
   const micBtn = document.getElementById("agent-mic-btn");
   const autoSpeakBtn = document.getElementById("agent-autospeak-btn");
+  const radarDraftsCard = document.getElementById("radar-drafts-card");
+  const radarDraftsList = document.getElementById("radar-drafts-list");
+  const radarDraftsEmpty = document.getElementById("radar-drafts-empty");
   const beaconLeadsCard = document.getElementById("beacon-leads-card");
   const beaconLeadsList = document.getElementById("beacon-leads-list");
   const beaconLeadsEmpty = document.getElementById("beacon-leads-empty");
@@ -570,6 +574,60 @@
     }
   }
 
+  // ---- Radar's "Drafted outreach DMs" panel ----
+  async function loadRadarDrafts() {
+    try {
+      const drafts = await api.get("/api/v1/admin/radar-dm-drafts");
+      radarDraftsList.innerHTML = "";
+      radarDraftsEmpty.classList.toggle("d-none", drafts.length > 0);
+      drafts.forEach((draft) => {
+        const card = document.createElement("div");
+        card.className = "border rounded p-3";
+        const profileLink = draft.target_profile_url
+          ? ' — <a href="' + escapeHtml(draft.target_profile_url) + '" target="_blank" rel="noopener">view profile</a>'
+          : "";
+        const postLink = draft.source_post_url
+          ? ' — <a href="' + escapeHtml(draft.source_post_url) + '" target="_blank" rel="noopener">view post</a>'
+          : "";
+        const headline = draft.target_headline ? " · " + escapeHtml(draft.target_headline) : "";
+        card.innerHTML =
+          '<div class="small text-muted-custom mb-1">' + escapeHtml(draft.target_name) + headline + profileLink + postLink + "</div>"
+          + '<div class="small fst-italic mb-2">' + escapeHtml(draft.drafted_message) + "</div>"
+          + '<button type="button" class="btn btn-sm btn-outline-secondary copy-draft-btn">Copy message</button>'
+          + '<button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-draft-btn">Delete</button>';
+
+        const copyBtn = card.querySelector(".copy-draft-btn");
+        copyBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(draft.drafted_message);
+            copyBtn.textContent = "Copied";
+          } catch (_) {
+            copyBtn.textContent = "Copy failed";
+          }
+          setTimeout(() => { copyBtn.textContent = "Copy message"; }, 2000);
+        });
+
+        const deleteBtn = card.querySelector(".delete-draft-btn");
+        deleteBtn.addEventListener("click", async () => {
+          if (!confirm("Delete this draft?")) return;
+          deleteBtn.disabled = true;
+          try {
+            await api.delete("/api/v1/admin/radar-dm-drafts/" + draft.id);
+            card.remove();
+            radarDraftsEmpty.classList.toggle("d-none", radarDraftsList.children.length > 0);
+          } catch (err) {
+            alert(err.message);
+            deleteBtn.disabled = false;
+          }
+        });
+
+        radarDraftsList.appendChild(card);
+      });
+    } catch (_) {
+      // Quiet failure — this panel is a convenience, not the primary flow.
+    }
+  }
+
   // ---- Nurturer's "New & unfollowed-up leads" panel ----
   async function loadNurturerNewLeads() {
     try {
@@ -765,6 +823,7 @@
     const isProposal = activeAgent === "proposal";
     const isLisa = activeAgent === "lisa";
     const isContent = activeAgent === "content";
+    const isRadar = activeAgent === "radar";
     beaconLeadsCard.classList.toggle("d-none", !isBeacon);
     beaconDiscoveryCard.classList.toggle("d-none", !isBeacon);
     beaconSpendCard.classList.toggle("d-none", !isBeacon);
@@ -774,10 +833,14 @@
     proposalAwaitingCard.classList.toggle("d-none", !isProposal);
     lisaChatsCard.classList.toggle("d-none", !isLisa);
     contentDraftsCard.classList.toggle("d-none", !isContent);
+    radarDraftsCard.classList.toggle("d-none", !isRadar);
     if (isBeacon) {
       loadBeaconLeads();
       loadBeaconSpend();
       loadBeaconApifySpend();
+    }
+    if (isRadar) {
+      loadRadarDrafts();
     }
     if (isNurturer) {
       loadNurturerNewLeads();
@@ -935,6 +998,8 @@
       if (activeAgent === "content") loadContentDrafts();
       // A reply may have logged a new lead via the log_qualified_lead tool.
       if (activeAgent === "beacon") loadBeaconLeads();
+      // A reply may have saved a new DM draft via the save_dm_draft tool.
+      if (activeAgent === "radar") loadRadarDrafts();
     } catch (err) {
       msgEl.textContent = err.message;
       msgEl.classList.remove("d-none");
