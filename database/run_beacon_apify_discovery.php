@@ -68,10 +68,15 @@ if ($actorPosts === '' || $actorEngagers === '') {
     exit;
 }
 
+// Defaults match harvestapi/linkedin-profile-posts and apimaestro's combined
+// comments+reactions actor (both verified against their real Apify Store
+// input schemas 2026-08-07 — see beacon-nurturer-agents.md memory) — a real
+// working starting point, not a guess, though still worth re-checking if
+// either actor's own schema changes.
 $postsInputTemplate = (string) (Settings::get('beacon_apify_actor_posts_input')
-    ?: '{"profileUrls": ["{{PROFILE_URL}}"], "limit": {{POSTS_LIMIT}}}');
+    ?: '{"targetUrls": ["{{PROFILE_URL}}"], "maxPosts": {{POSTS_LIMIT}}}');
 $engagersInputTemplate = (string) (Settings::get('beacon_apify_actor_engagers_input')
-    ?: '{"postUrls": ["{{POST_URL}}"], "limit": {{ENGAGERS_LIMIT}}}');
+    ?: '{"postIds": ["{{POST_URL}}"], "limit": {{ENGAGERS_LIMIT}}}');
 
 $frequency = Settings::get('beacon_apify_frequency') ?: 'daily';
 $lastRun = Settings::get('beacon_apify_last_run');

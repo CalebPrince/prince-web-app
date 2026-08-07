@@ -228,13 +228,13 @@
       <div class="row g-3 mt-1">
         <div class="col-sm-6">
           <label class="form-label">Profile-posts actor ID</label>
-          <input type="text" class="form-control" id="beacon-apify-actor-posts" placeholder="e.g. apimaestro/linkedin-profile-posts">
-          <div class="form-text">An Apify actor that returns a profile's newest posts.</div>
+          <input type="text" class="form-control" id="beacon-apify-actor-posts" placeholder="harvestapi/linkedin-profile-posts">
+          <div class="form-text">Suggested: <code>harvestapi/linkedin-profile-posts</code> — returns a profile's newest posts, matches the default input template below.</div>
         </div>
         <div class="col-sm-6">
           <label class="form-label">Post-engagers actor ID</label>
-          <input type="text" class="form-control" id="beacon-apify-actor-engagers" placeholder="e.g. apimaestro/linkedin-post-reactions">
-          <div class="form-text">An Apify actor that returns a post's reactions/comments.</div>
+          <input type="text" class="form-control" id="beacon-apify-actor-engagers" placeholder="apimaestro/linkedin-post-comments-replies-engagements-scraper-no-cookies">
+          <div class="form-text">Suggested: <code>apimaestro/linkedin-post-comments-replies-engagements-scraper-no-cookies</code> — returns commenters (with their reaction counts); doesn't surface people who only reacted without commenting.</div>
         </div>
       </div>
       <div class="mt-3">
@@ -242,9 +242,9 @@
           <summary class="text-muted-custom small" style="cursor:pointer;">Advanced: actor input templates</summary>
           <div class="form-text mb-2 mt-2">Every actor on Apify expects slightly different input field names — these templates are sent as-is, with <code>{{PROFILE_URL}}</code>/<code>{{POSTS_LIMIT}}</code> and <code>{{POST_URL}}</code>/<code>{{ENGAGERS_LIMIT}}</code> substituted in. Check your chosen actor's own documentation for its real input schema and adjust these to match — the defaults are a starting guess, not a guarantee.</div>
           <label class="form-label small">Profile-posts actor input (JSON)</label>
-          <textarea class="form-control mb-2" id="beacon-apify-actor-posts-input" rows="2" placeholder='{"profileUrls": ["{{PROFILE_URL}}"], "limit": {{POSTS_LIMIT}}}'></textarea>
+          <textarea class="form-control mb-2" id="beacon-apify-actor-posts-input" rows="2" placeholder='{"targetUrls": ["{{PROFILE_URL}}"], "maxPosts": {{POSTS_LIMIT}}}'></textarea>
           <label class="form-label small">Post-engagers actor input (JSON)</label>
-          <textarea class="form-control" id="beacon-apify-actor-engagers-input" rows="2" placeholder='{"postUrls": ["{{POST_URL}}"], "limit": {{ENGAGERS_LIMIT}}}'></textarea>
+          <textarea class="form-control" id="beacon-apify-actor-engagers-input" rows="2" placeholder='{"postIds": ["{{POST_URL}}"], "limit": {{ENGAGERS_LIMIT}}}'></textarea>
         </details>
       </div>
       <div class="row g-3 mt-1">
