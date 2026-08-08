@@ -179,7 +179,12 @@ class SocialDraftController
                 // against a live account yet — try the plausible candidates
                 // and store whichever is present, so Radar's stats lookup has
                 // something to query even if the exact field name needs
-                // adjusting later.
+                // adjusting later. Logging the full raw response here (once,
+                // on the success path only — the failure path already logs
+                // its own errors) so the real shape can be read from Error
+                // Logs instead of guessed at again, the same way the missing
+                // 'author' field was diagnosed.
+                error_log("Composio LinkedIn publish succeeded for draft {$draft['id']}, raw response: " . json_encode($result));
                 $urn = self::extractPostUrn($result);
                 self::writeWithRetry(
                     $pdo,
