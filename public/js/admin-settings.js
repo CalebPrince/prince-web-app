@@ -703,6 +703,19 @@ async function testAi() {
     document.getElementById("elevenlabs-webhook-secret").value =
       Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
   });
+  document.getElementById("copy-elevenlabs-secret")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const value = document.getElementById("elevenlabs-webhook-secret").value;
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      const icon = btn.querySelector("i");
+      icon.className = "bi bi-check2";
+      setTimeout(() => { icon.className = "bi bi-clipboard"; }, 1500);
+    } catch (err) {
+      alert("Could not copy automatically — select the field manually and copy.");
+    }
+  });
   const user = await requireAdminAuth();
   if (!user) return;
   wireLogout();
