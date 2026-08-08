@@ -432,13 +432,20 @@ class LiveChatController
     public static function elevenLabsInitWebhook(): void
     {
         if (!self::verifyElevenLabsSecret()) {
+            error_log(sprintf(
+                'ElevenLabs init webhook rejected: whatsapp_provider=%s, secret header present=%s',
+                Settings::get('whatsapp_provider') ?: '(empty)',
+                isset($_SERVER['HTTP_X_ELEVENLABS_SECRET']) ? 'yes' : 'no'
+            ));
             Response::error('Invalid webhook secret.', 403);
         }
 
-        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $rawBody = (string) file_get_contents('php://input');
+        $payload = json_decode($rawBody, true) ?? [];
         $callerId = trim((string) ($payload['caller_id'] ?? $payload['from'] ?? ''));
         $digits = self::normalizePhoneDigits($callerId);
         if ($digits === '') {
+            error_log('ElevenLabs init webhook: missing caller_id, raw payload=' . substr($rawBody, 0, 500));
             Response::error('Missing caller_id.', 422);
         }
         $token = 'whatsapp:+' . $digits;
@@ -494,17 +501,25 @@ class LiveChatController
     public static function elevenLabsToolWebhook(): void
     {
         if (!self::verifyElevenLabsSecret()) {
+            error_log(sprintf(
+                'ElevenLabs tool webhook rejected: tool_name=%s, whatsapp_provider=%s, secret header present=%s',
+                (string) ($_GET['tool_name'] ?? '(none)'),
+                Settings::get('whatsapp_provider') ?: '(empty)',
+                isset($_SERVER['HTTP_X_ELEVENLABS_SECRET']) ? 'yes' : 'no'
+            ));
             Response::error('Invalid webhook secret.', 403);
         }
 
         $name = trim((string) ($_GET['tool_name'] ?? ''));
-        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $rawBody = (string) file_get_contents('php://input');
+        $payload = json_decode($rawBody, true) ?? [];
         if ($name === '') {
             $name = trim((string) ($payload['tool_name'] ?? $payload['name'] ?? ''));
         }
         $args = is_array($payload['parameters'] ?? null) ? $payload['parameters'] : $payload;
         $token = trim((string) ($_GET['session_token'] ?? $args['session_token'] ?? ''));
         if ($name === '') {
+            error_log('ElevenLabs tool webhook: missing tool_name, query=' . http_build_query($_GET) . ', raw body=' . substr($rawBody, 0, 500));
             Response::error('Missing tool_name.', 422);
         }
 
@@ -525,6 +540,11 @@ class LiveChatController
     {
         $rawBody = file_get_contents('php://input');
         if (!self::verifyElevenLabsHmacSignature($rawBody)) {
+            error_log(sprintf(
+                'ElevenLabs post-call webhook rejected: whatsapp_provider=%s, signature header present=%s',
+                Settings::get('whatsapp_provider') ?: '(empty)',
+                isset($_SERVER['HTTP_ELEVENLABS_SIGNATURE']) ? 'yes' : 'no'
+            ));
             Response::error('Invalid webhook signature.', 403);
         }
 
