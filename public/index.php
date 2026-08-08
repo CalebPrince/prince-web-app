@@ -391,6 +391,7 @@ $router->post('/api/v1/admin/error-logs/delete-entry', [ErrorLogController::clas
 $router->post('/api/v1/admin/error-logs/clear', [ErrorLogController::class, 'clear']);
 $router->get('/api/v1/admin/composio/status', [ComposioController::class, 'status']);
 $router->get('/api/v1/admin/composio/connected-account-details', [ComposioController::class, 'connectedAccountDetails']);
+$router->get('/api/v1/admin/composio/linkedin-author-urn', [ComposioController::class, 'linkedinAuthorUrn']);
 $router->post('/api/v1/admin/composio/connect', [ComposioController::class, 'connect']);
 $router->post('/api/v1/admin/composio/disconnect', [ComposioController::class, 'disconnect']);
 

@@ -586,6 +586,23 @@ async function loadComposioAccounts() {
   }
 }
 
+async function fetchLinkedInAuthorUrn() {
+  const btn = document.getElementById("fetch-linkedin-urn-btn");
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Looking up…";
+  try {
+    const result = await api.get("/api/v1/admin/composio/linkedin-author-urn");
+    document.getElementById("composio-linkedin-author-urn").value = result.urn;
+    showMsg("integrations-msg", `Found it: ${result.urn}. Click "Save Integrations" to keep it.`, true);
+  } catch (err) {
+    showMsg("integrations-msg", err.message, false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+}
+
 async function showComposioDetails(toolkit) {
   const pre = document.getElementById(`composio-details-${toolkit}`);
   if (!pre) return;
@@ -828,6 +845,8 @@ async function testAi() {
     document.getElementById("animation_style").value = settings.animation_style || "slide-up";
     await loadWhatsAppTemplate();
   } catch (_) { /* fields stay empty */ }
+
+  document.getElementById("fetch-linkedin-urn-btn").addEventListener("click", fetchLinkedInAuthorUrn);
 
   await loadComposioAccounts();
 })();

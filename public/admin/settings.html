@@ -563,8 +563,11 @@
               </div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">LinkedIn author URN</label>
-                <input type="text" class="form-control" id="composio-linkedin-author-urn" placeholder="urn:li:person:xxxxxxxx" autocomplete="off">
-                <div class="form-text">Required by LinkedIn's post API. Find it via Composio's connected-account details, or LinkedIn's own API docs, for the account connected above.</div>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="composio-linkedin-author-urn" placeholder="urn:li:person:xxxxxxxx" autocomplete="off">
+                  <button type="button" class="btn btn-outline-secondary" id="fetch-linkedin-urn-btn">Auto-fill</button>
+                </div>
+                <div class="form-text">Required by LinkedIn's post API. "Auto-fill" looks it up via LinkedIn's own profile endpoint through the connected account above — requires LinkedIn to be connected first.</div>
               </div>
             </div>
             <div id="integrations-msg" class="alert py-2 small d-none"></div>

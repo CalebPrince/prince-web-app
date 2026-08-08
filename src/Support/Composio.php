@@ -194,8 +194,10 @@ class Composio
      */
     public static function executeProxy(string $connectedAccountId, string $endpoint, string $method, array $parameters = [], ?array $body = null): ?array
     {
+        self::$lastError = null;
         $apiKey = Settings::get('composio_api_key');
         if (empty($apiKey)) {
+            self::$lastError = 'Missing Composio API key.';
             return null;
         }
 
