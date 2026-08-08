@@ -77,6 +77,24 @@ class ComposioController
         Response::json($details);
     }
 
+    /** GET /api/v1/admin/composio/toolkit-tools?toolkit=xxx — real tool slugs Composio exposes, for finding a working action instead of guessing one */
+    public static function toolkitTools(): void
+    {
+        AuthMiddleware::requireAuth();
+        $toolkit = (string) ($_GET['toolkit'] ?? '');
+
+        if (!isset(self::TOOLKITS[$toolkit])) {
+            Response::error('Unknown toolkit.', 422);
+        }
+
+        $tools = Composio::listToolkitTools($toolkit);
+        if ($tools === null) {
+            Response::error(Composio::lastError() ?: 'Could not list tools for that toolkit.', 502);
+        }
+
+        Response::json($tools);
+    }
+
     /**
      * GET /api/v1/admin/composio/linkedin-author-urn — calls LinkedIn's own
      * OpenID userinfo endpoint through Composio's proxy (using the stored

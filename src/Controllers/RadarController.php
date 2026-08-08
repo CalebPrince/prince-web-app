@@ -326,6 +326,20 @@ class RadarController
             return ['note' => 'No LinkedIn account is connected via Composio yet (Admin -> Settings -> Integrations).'];
         }
 
+        // LINKEDIN_GET_SHARE_STATISTICS (the original guess) is confirmed
+        // NOT a real Composio tool — it 404s with Tool_ToolNotFound on a
+        // live account. Rather than guess another slug, this is now driven
+        // by a setting Caleb fills in after using Settings' "List available
+        // LinkedIn tools" lookup to find whatever Composio actually exposes
+        // for LinkedIn analytics (if anything — LinkedIn's real stats APIs
+        // are typically Marketing-Platform/organization-scoped, so a
+        // personal-profile equivalent may not exist at all).
+        $statsTool = Settings::get('composio_linkedin_stats_tool');
+        if (empty($statsTool)) {
+            return ['note' => 'No LinkedIn stats tool is configured yet (Admin -> Settings -> Integrations -> '
+                . '"List available LinkedIn tools" to find one, if Composio exposes one for personal posts).'];
+        }
+
         $rows = $pdo->query(
             "SELECT id, content, published_at, linkedin_post_urn FROM social_post_drafts
              WHERE published_at IS NOT NULL ORDER BY published_at DESC LIMIT 5"
@@ -350,7 +364,7 @@ class RadarController
             }
 
             $result = Composio::executeTool(
-                'LINKEDIN_GET_SHARE_STATISTICS',
+                $statsTool,
                 $accountId,
                 ['shareUrn' => $row['linkedin_post_urn']]
             );
@@ -366,7 +380,7 @@ class RadarController
 
         return $anyStatsFound
             ? ['posts' => $out]
-            : ['posts' => $out, 'note' => 'Stats lookups failed for every post — the Composio LINKEDIN_GET_SHARE_STATISTICS '
-                . 'tool slug/response shape may need adjusting once tested against a real account.'];
+            : ['posts' => $out, 'note' => "Stats lookups failed for every post using tool \"{$statsTool}\" — check Admin -> "
+                . 'Error Logs for the specific Composio error.'];
     }
 }

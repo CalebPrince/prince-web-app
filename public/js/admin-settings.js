@@ -191,6 +191,7 @@ async function saveIntegrations(e) {
       composio_slack_channel: document.getElementById("composio-slack-channel").value.trim(),
       composio_linkedin_post_tool: document.getElementById("composio-linkedin-post-tool").value.trim(),
       composio_linkedin_author_urn: document.getElementById("composio-linkedin-author-urn").value.trim(),
+      composio_linkedin_stats_tool: document.getElementById("composio-linkedin-stats-tool").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
     await loadComposioAccounts();
@@ -586,6 +587,25 @@ async function loadComposioAccounts() {
   }
 }
 
+async function listLinkedInTools() {
+  const btn = document.getElementById("list-linkedin-tools-btn");
+  const pre = document.getElementById("linkedin-tools-list");
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Loading…";
+  pre.textContent = "Loading…";
+  pre.classList.remove("d-none");
+  try {
+    const tools = await api.get("/api/v1/admin/composio/toolkit-tools?toolkit=linkedin");
+    pre.textContent = JSON.stringify(tools, null, 2);
+  } catch (err) {
+    pre.textContent = "Error: " + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+}
+
 async function fetchLinkedInAuthorUrn() {
   const btn = document.getElementById("fetch-linkedin-urn-btn");
   const old = btn.textContent;
@@ -801,6 +821,7 @@ async function testAi() {
     document.getElementById("composio-slack-channel").value = settings.composio_slack_channel || "";
     document.getElementById("composio-linkedin-post-tool").value = settings.composio_linkedin_post_tool || "";
     document.getElementById("composio-linkedin-author-urn").value = settings.composio_linkedin_author_urn || "";
+    document.getElementById("composio-linkedin-stats-tool").value = settings.composio_linkedin_stats_tool || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 
     document.getElementById("widget-live-chat-enabled").checked = settings.live_chat_enabled !== "0";
@@ -847,6 +868,7 @@ async function testAi() {
   } catch (_) { /* fields stay empty */ }
 
   document.getElementById("fetch-linkedin-urn-btn").addEventListener("click", fetchLinkedInAuthorUrn);
+  document.getElementById("list-linkedin-tools-btn").addEventListener("click", listLinkedInTools);
 
   await loadComposioAccounts();
 })();

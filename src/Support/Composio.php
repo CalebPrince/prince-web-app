@@ -183,6 +183,45 @@ class Composio
     }
 
     /**
+     * Lists real tool slugs Composio exposes for a toolkit — for discovering
+     * the correct slug (e.g. for LinkedIn analytics) instead of guessing one
+     * that may not exist, the way LINKEDIN_GET_SHARE_STATISTICS turned out
+     * to 404 on a live account. Query param name/endpoint isn't confirmed
+     * (same caveat as the rest of this class), so this tries a couple of
+     * plausible shapes.
+     *
+     * @return array<int,array<string,mixed>>|null list of tool objects (slug, description, etc.), or null on failure
+     */
+    public static function listToolkitTools(string $toolkitSlug): ?array
+    {
+        self::$lastError = null;
+        $apiKey = Settings::get('composio_api_key');
+        if (empty($apiKey)) {
+            self::$lastError = 'Missing Composio API key.';
+            return null;
+        }
+
+        $urls = [
+            self::API_BASE . '/tools?toolkit_slug=' . rawurlencode($toolkitSlug) . '&limit=100',
+            self::API_BASE . '/tools?toolkits=' . rawurlencode($toolkitSlug) . '&limit=100',
+            self::API_BASE_V31 . '/tools?toolkit_slug=' . rawurlencode($toolkitSlug) . '&limit=100',
+        ];
+
+        foreach ($urls as $url) {
+            $response = self::request('GET', $url, $apiKey);
+            if ($response === null) {
+                continue;
+            }
+            $items = $response['items'] ?? $response['data'] ?? (array_is_list($response) ? $response : null);
+            if (is_array($items)) {
+                return $items;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Confirmed-real fallback: proxies a raw HTTP call straight through to
      * the third-party API (e.g. LinkedIn's own REST endpoints), using
      * Composio-managed OAuth credentials for the given connected account.
