@@ -479,16 +479,31 @@ class LiveChatController
      * set in elevenLabsInitWebhook() above) so the call lands in the same
      * chat_sessions thread as the rest of the conversation.
      */
+    /**
+     * ElevenLabs' webhook tools populate the request body directly from the
+     * tool's own declared parameter schema — there's no generic envelope
+     * like {"tool_name": ..., "parameters": {...}}. So each of Lisa's tools
+     * (check_availability, book_appointment, etc.) needs its own webhook
+     * configured in the ElevenLabs agent, all pointing at this same URL but
+     * with a distinct ?tool_name=... query string, e.g.
+     * ".../elevenlabs-tool?tool_name=check_availability". The body is
+     * treated as that tool's args as-is (falling back to a {parameters:...}
+     * wrapper if ElevenLabs does nest it that way for some tool types —
+     * unconfirmed against a live call yet).
+     */
     public static function elevenLabsToolWebhook(): void
     {
         if (!self::verifyElevenLabsSecret()) {
             Response::error('Invalid webhook secret.', 403);
         }
 
+        $name = trim((string) ($_GET['tool_name'] ?? ''));
         $payload = json_decode(file_get_contents('php://input'), true) ?? [];
-        $name = trim((string) ($payload['tool_name'] ?? $payload['name'] ?? ''));
-        $args = is_array($payload['parameters'] ?? $payload['args'] ?? null) ? ($payload['parameters'] ?? $payload['args']) : [];
-        $token = trim((string) ($payload['session_token'] ?? $args['session_token'] ?? ''));
+        if ($name === '') {
+            $name = trim((string) ($payload['tool_name'] ?? $payload['name'] ?? ''));
+        }
+        $args = is_array($payload['parameters'] ?? null) ? $payload['parameters'] : $payload;
+        $token = trim((string) ($_GET['session_token'] ?? $args['session_token'] ?? ''));
         if ($name === '') {
             Response::error('Missing tool_name.', 422);
         }

@@ -346,7 +346,7 @@
                 </div>
                 <div class="form-text">
                   Conversation initiation webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-init</code> — add custom header <code>X-ElevenLabs-Secret</code> set to this value.<br>
-                  Tool webhook (configure per-tool in the agent, all pointing here): <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-tool</code> — same custom header.
+                  Tool webhooks: in the agent's <strong>Tools</strong> section (separate from the webhooks above), add one webhook tool per capability, each pointing at <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-tool?tool_name=check_availability</code> (swap the tool_name value per tool — e.g. <code>book_appointment</code>, <code>log_inquiry</code>, <code>get_site_info</code>), same custom header as above. Optionally add <code>&session_token={{session_token}}</code> to the URL so bookings land in the right conversation thread.
                 </div>
               </div>
               <div class="mb-0">
