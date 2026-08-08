@@ -104,6 +104,14 @@ function openDraftModal(id) {
   updateImagePreview();
   document.getElementById('draft-modal-alert').classList.add('d-none');
 
+  const urnWrap = document.getElementById('draft-urn-wrap');
+  if (draft.linkedin_post_urn) {
+    document.getElementById('draft-urn').value = draft.linkedin_post_urn;
+    urnWrap.classList.remove('d-none');
+  } else {
+    urnWrap.classList.add('d-none');
+  }
+
   const approveBtn = document.getElementById('draft-approve-btn');
   approveBtn.textContent = draft.status === 'approved' ? 'Already approved' : 'Approve';
   approveBtn.disabled = draft.status === 'approved';
