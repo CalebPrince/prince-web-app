@@ -458,8 +458,37 @@ class LiveChatController
         }
 
         $isOwner = self::isOwnerWhatsAppNumber($token);
+        // Logged unconditionally (not just on failure) so a real owner-recognition
+        // mismatch is provable from actual data — e.g. Ghana numbers commonly get
+        // saved in local (0XXXXXXXXX) vs international (233XXXXXXXXX) format, and
+        // the exact-digit-match in isOwnerWhatsAppNumber() won't reconcile those.
+        error_log(sprintf(
+            'ElevenLabs init webhook: raw caller_id=%s, normalized digits=%s, is_owner=%s',
+            $callerId,
+            $digits,
+            $isOwner ? 'true' : 'false'
+        ));
         $projects = self::projectCatalog($pdo);
         $systemPrompt = self::buildSystemPrompt($projects, $isOwner);
+
+        // Each WhatsApp message starts a brand-new ElevenLabs "conversation" —
+        // confirmed live (2026-08-08), every message got its own separate entry
+        // in ElevenLabs' Conversations list rather than one continuing thread —
+        // so unlike Twilio/Whapi (which pass the full transcript into every
+        // AiAgentEngine::run() call), this webhook is the only place prior
+        // WhatsApp history can reach Lisa at all. Without this, every message
+        // was effectively amnesiac regardless of what was said moments earlier.
+        $priorTranscript = json_decode((string) ($session['transcript_json'] ?? '[]'), true) ?: [];
+        if ($priorTranscript) {
+            $priorTranscript = self::rollingTranscript($priorTranscript);
+            $history = implode("\n", array_map(
+                fn($t) => ($t['role'] === 'user' ? 'Visitor' : 'Lisa') . ': ' . $t['text'],
+                $priorTranscript
+            ));
+            $systemPrompt .= "\n\nEARLIER IN THIS WHATSAPP CONVERSATION (already happened — do not repeat "
+                . "questions already answered here, and do not greet the visitor again if you already have):\n"
+                . $history;
+        }
 
         Response::json([
             'type' => 'conversation_initiation_client_data',
@@ -558,21 +587,28 @@ class LiveChatController
         }
         $token = 'whatsapp:+' . $digits;
 
-        $transcript = [];
+        $newTurns = [];
         foreach ($rawTurns as $turn) {
             if (!is_array($turn)) continue;
             $role = (string) ($turn['role'] ?? '');
             $text = trim((string) ($turn['message'] ?? $turn['text'] ?? ''));
             if ($text === '') continue;
-            $transcript[] = ['role' => in_array($role, ['agent', 'assistant'], true) ? 'assistant' : 'user', 'text' => $text];
+            $newTurns[] = ['role' => in_array($role, ['agent', 'assistant'], true) ? 'assistant' : 'user', 'text' => $text];
         }
-        if (!$transcript) {
+        if (!$newTurns) {
             Response::json(['ok' => false, 'reason' => 'Empty transcript.']);
             return;
         }
 
         $pdo = Database::get();
         $session = self::findOrCreateSessionByExactToken($pdo, $token);
+        // Each WhatsApp message is its own isolated ElevenLabs conversation
+        // (see elevenLabsInitWebhook()'s docblock), so $newTurns here is only
+        // this one exchange — saveTranscript() must append onto the session's
+        // existing history, not replace it, or every message after the first
+        // would silently erase everything said before it.
+        $priorTranscript = json_decode((string) ($session['transcript_json'] ?? '[]'), true) ?: [];
+        $transcript = self::rollingTranscript(array_merge($priorTranscript, $newTurns));
         self::saveTranscript($pdo, (int) $session['id'], $transcript);
         self::markChatUnread($pdo, (int) $session['id']);
         Response::json(['ok' => true]);
