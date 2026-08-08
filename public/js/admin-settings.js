@@ -158,6 +158,7 @@ async function saveIntegrations(e) {
       whapi_webhook_secret: document.getElementById("whapi-webhook-secret").value.trim(),
       elevenlabs_whatsapp_agent_id: document.getElementById("elevenlabs-whatsapp-agent-id").value.trim(),
       elevenlabs_webhook_secret: document.getElementById("elevenlabs-webhook-secret").value.trim(),
+      elevenlabs_postcall_signing_secret: document.getElementById("elevenlabs-postcall-signing-secret").value.trim(),
       twilio_auth_token: document.getElementById("twilio-auth-token").value.trim(),
       twilio_account_sid: document.getElementById("twilio-account-sid").value.trim(),
       twilio_whatsapp_number: document.getElementById("twilio-whatsapp-number").value.trim(),
@@ -790,6 +791,7 @@ async function testAi() {
     document.getElementById("whapi-webhook-secret").value = settings.whapi_webhook_secret || "";
     document.getElementById("elevenlabs-whatsapp-agent-id").value = settings.elevenlabs_whatsapp_agent_id || "";
     document.getElementById("elevenlabs-webhook-secret").value = settings.elevenlabs_webhook_secret || "";
+    document.getElementById("elevenlabs-postcall-signing-secret").value = settings.elevenlabs_postcall_signing_secret || "";
     document.getElementById("twilio-auth-token").value = settings.twilio_auth_token || "";
     document.getElementById("twilio-account-sid").value = settings.twilio_account_sid || "";
     document.getElementById("twilio-whatsapp-number").value = settings.twilio_whatsapp_number || "";

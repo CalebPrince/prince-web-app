@@ -332,22 +332,29 @@
             </div>
             <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
               <h6 class="mb-2">ElevenLabs WhatsApp (voice + chat)</h6>
-              <p class="text-muted-custom small mb-3">Set up the WhatsApp number in ElevenLabs' Agents dashboard first (connect it to a Meta Business Portfolio, enable voice calls). Then point that agent's three webhooks at the URLs below, each with header <code>X-ElevenLabs-Secret</code> set to the secret here.</p>
+              <p class="text-muted-custom small mb-3">Set up the WhatsApp number in ElevenLabs' Agents dashboard first (connect it to a Meta Business Portfolio, enable voice calls). Two different auth styles below — the init/tool webhooks use a secret <em>you</em> create and paste into ElevenLabs as a custom header; the post-call webhook uses a secret <em>ElevenLabs</em> generates that you paste in here instead.</p>
               <div class="mb-3">
                 <label class="form-label" for="elevenlabs-whatsapp-agent-id">ElevenLabs agent ID <span class="text-muted-custom fw-normal">(reference)</span></label>
                 <input type="text" class="form-control" id="elevenlabs-whatsapp-agent-id" autocomplete="off" placeholder="agent_...">
               </div>
-              <div class="mb-0">
-                <label class="form-label" for="elevenlabs-webhook-secret">ElevenLabs webhook secret</label>
+              <div class="mb-3">
+                <label class="form-label" for="elevenlabs-webhook-secret">ElevenLabs webhook secret <span class="text-muted-custom fw-normal">(you create this)</span></label>
                 <div class="input-group">
                   <input type="password" class="form-control" id="elevenlabs-webhook-secret" autocomplete="new-password" placeholder="Create a long random secret">
                   <button type="button" class="btn btn-outline-secondary" id="generate-elevenlabs-secret">Generate</button>
                   <button type="button" class="btn btn-outline-secondary" id="copy-elevenlabs-secret" title="Copy to clipboard"><i class="bi bi-clipboard"></i></button>
                 </div>
                 <div class="form-text">
-                  Conversation initiation webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-init</code><br>
-                  Tool webhook (configure per-tool in the agent, all pointing here): <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-tool</code><br>
-                  Post-call webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-post-call</code>
+                  Conversation initiation webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-init</code> — add custom header <code>X-ElevenLabs-Secret</code> set to this value.<br>
+                  Tool webhook (configure per-tool in the agent, all pointing here): <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-tool</code> — same custom header.
+                </div>
+              </div>
+              <div class="mb-0">
+                <label class="form-label" for="elevenlabs-postcall-signing-secret">Post-call webhook signing secret <span class="text-muted-custom fw-normal">(ElevenLabs generates this)</span></label>
+                <input type="password" class="form-control" id="elevenlabs-postcall-signing-secret" autocomplete="new-password" placeholder="Paste the secret ElevenLabs shows when you create this webhook">
+                <div class="form-text">
+                  Post-call webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-post-call</code>.
+                  When you add this URL in the agent's post-call webhook settings, ElevenLabs generates its own signing secret and shows it once — paste that value here (don't invent one, and don't add a custom header for this one).
                 </div>
               </div>
             </div>
@@ -1098,6 +1105,6 @@
 <script src="/js/theme.js?v=20260730-site-default"></script>
 <script src="/js/admin-auth.js?v=20260719"></script>
 <script src="/js/admin-nav-badges.js?v=20260719"></script>
-<script src="/js/admin-settings.js?v=20260808-copy-secret"></script>
+<script src="/js/admin-settings.js?v=20260808-postcall-hmac"></script>
 </body>
 </html>

@@ -508,11 +508,12 @@ class LiveChatController
      */
     public static function elevenLabsPostCallWebhook(): void
     {
-        if (!self::verifyElevenLabsSecret()) {
-            Response::error('Invalid webhook secret.', 403);
+        $rawBody = file_get_contents('php://input');
+        if (!self::verifyElevenLabsHmacSignature($rawBody)) {
+            Response::error('Invalid webhook signature.', 403);
         }
 
-        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $payload = json_decode($rawBody, true) ?? [];
         $callerId = trim((string) ($payload['caller_id'] ?? $payload['from'] ?? ''));
         $rawTurns = $payload['transcript'] ?? $payload['messages'] ?? $payload['conversation'] ?? [];
         $digits = self::normalizePhoneDigits($callerId);
@@ -543,11 +544,14 @@ class LiveChatController
     }
 
     /**
-     * All three ElevenLabs WhatsApp webhooks above share this check — a
-     * simple shared secret (set the same value in Settings and in each
-     * webhook's config on ElevenLabs' side) rather than HMAC signature
-     * verification, matching the whapiWebhook() pattern above. Could be
-     * upgraded to verify ElevenLabs' own signing header once confirmed live.
+     * elevenLabsInitWebhook() and elevenLabsToolWebhook() above share this
+     * check — a simple custom shared secret (set the same value in Settings
+     * and as a custom header in each webhook/tool's config on ElevenLabs'
+     * side), matching the whapiWebhook() pattern above. This does NOT apply
+     * to elevenLabsPostCallWebhook() — that one uses ElevenLabs' own
+     * HMAC-signed webhooks instead (see verifyElevenLabsHmacSignature()
+     * below), confirmed live: ElevenLabs auto-generates a signing secret per
+     * post-call webhook rather than letting you set a custom header on it.
      */
     private static function verifyElevenLabsSecret(): bool
     {
@@ -557,6 +561,49 @@ class LiveChatController
         $expected = trim((string) Settings::get('elevenlabs_webhook_secret'));
         $provided = trim((string) ($_SERVER['HTTP_X_ELEVENLABS_SECRET'] ?? ''));
         return $expected !== '' && $provided !== '' && hash_equals($expected, $provided);
+    }
+
+    /**
+     * Confirmed live (2026-08-08): ElevenLabs' post-call webhook is
+     * HMAC-signed like Stripe's — it auto-generates its own secret (shown
+     * once when the webhook is created in their dashboard, stored here as
+     * elevenlabs_postcall_signing_secret) and sends header
+     * "ElevenLabs-Signature: t=<unix_timestamp>,v0=<hex hmac-sha256>".
+     * Signed payload format (timestamp + "." + raw body) mirrors Stripe's
+     * well-documented convention, which their SDK's constructEvent()
+     * appears to follow — not independently confirmed against a real
+     * delivery yet, so check Admin -> Error Logs after the first live
+     * post-call event and adjust the concatenation here if signatures don't
+     * match. The 30-minute timestamp tolerance matches ElevenLabs' own SDK.
+     */
+    private static function verifyElevenLabsHmacSignature(string $rawBody): bool
+    {
+        if (Settings::get('whatsapp_provider') !== 'elevenlabs') {
+            return false;
+        }
+        $secret = trim((string) Settings::get('elevenlabs_postcall_signing_secret'));
+        $header = trim((string) ($_SERVER['HTTP_ELEVENLABS_SIGNATURE'] ?? ''));
+        if ($secret === '' || $header === '') {
+            return false;
+        }
+
+        $parts = [];
+        foreach (explode(',', $header) as $piece) {
+            [$key, $val] = array_pad(explode('=', $piece, 2), 2, '');
+            $parts[trim($key)] = trim($val);
+        }
+        $timestamp = $parts['t'] ?? '';
+        $signature = $parts['v0'] ?? '';
+        if ($timestamp === '' || $signature === '' || !ctype_digit($timestamp)) {
+            return false;
+        }
+        if (abs(time() - (int) $timestamp) > 1800) {
+            error_log('ElevenLabs post-call webhook rejected: signature timestamp outside 30-minute tolerance.');
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp . '.' . $rawBody, $secret);
+        return hash_equals($expected, $signature);
     }
 
     /** Empty $message sends no reply at all (Twilio just gets an ack) — used when there's nothing worth saying. */
