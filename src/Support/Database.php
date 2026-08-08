@@ -22,7 +22,7 @@ class Database
             // Shared hosting can run several PHP workers and cron jobs against
             // the same SQLite file. Wait briefly for a writer instead of
             // immediately throwing "database is locked" under normal overlap.
-            $pdo->exec('PRAGMA busy_timeout = 5000');
+            $pdo->exec('PRAGMA busy_timeout = 15000');
             $pdo->exec('PRAGMA journal_mode = WAL');
             self::$instance = $pdo;
         }

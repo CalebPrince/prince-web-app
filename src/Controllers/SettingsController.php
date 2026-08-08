@@ -59,7 +59,7 @@ class SettingsController
         'composio_google_calendar_booking_tool', 'composio_google_calendar_id',
         'composio_gmail_booking_tool', 'composio_gmail_booking_to',
         'composio_slack_booking_tool', 'composio_slack_channel',
-        'composio_linkedin_post_tool',
+        'composio_linkedin_post_tool', 'composio_linkedin_author_urn',
         'composio_google_calendar_last_error', 'composio_gmail_last_error',
         'composio_slack_last_error', 'composio_linkedin_last_error',
         'email_tpl_payment_success_subject', 'email_tpl_payment_success_html', 'email_tpl_payment_success_text',

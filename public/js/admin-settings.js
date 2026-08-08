@@ -190,6 +190,7 @@ async function saveIntegrations(e) {
       composio_slack_booking_tool: document.getElementById("composio-slack-booking-tool").value.trim(),
       composio_slack_channel: document.getElementById("composio-slack-channel").value.trim(),
       composio_linkedin_post_tool: document.getElementById("composio-linkedin-post-tool").value.trim(),
+      composio_linkedin_author_urn: document.getElementById("composio-linkedin-author-urn").value.trim(),
     });
     showMsg("integrations-msg", "Saved — Live Chat will use the new keys immediately.", true);
     await loadComposioAccounts();
@@ -760,6 +761,7 @@ async function testAi() {
     document.getElementById("composio-slack-booking-tool").value = settings.composio_slack_booking_tool || "";
     document.getElementById("composio-slack-channel").value = settings.composio_slack_channel || "";
     document.getElementById("composio-linkedin-post-tool").value = settings.composio_linkedin_post_tool || "";
+    document.getElementById("composio-linkedin-author-urn").value = settings.composio_linkedin_author_urn || "";
     document.getElementById("maintenance-enabled").checked = !!settings.maintenance_mode;
 
     document.getElementById("widget-live-chat-enabled").checked = settings.live_chat_enabled !== "0";

@@ -129,12 +129,10 @@ class SocialDraftController
 
     /**
      * Best-effort direct LinkedIn post via Composio, run on approval — never
-     * blocks or fails the approval itself. Composio's exact LinkedIn tool
-     * slug/payload shape isn't confirmed against a live account yet (same
-     * caveat as the booking actions in AppointmentController), so this tries
-     * a couple of plausible field-name variants and records whichever
-     * succeeded — or the last error, so Caleb can see why nothing posted —
-     * in published_at/publish_error rather than failing silently.
+     * blocks or fails the approval itself. Payload shape (author/commentary/
+     * visibility) is confirmed against a live account's 400 response; records
+     * success or the last error in published_at/publish_error rather than
+     * failing silently.
      */
     private static function publishToLinkedIn(\PDO $pdo, array $draft): void
     {
@@ -147,16 +145,26 @@ class SocialDraftController
         }
         $tool = Settings::get('composio_linkedin_post_tool') ?: 'LINKEDIN_CREATE_LINKED_IN_POST';
 
+        // Confirmed against a live account (2026-08-08): LinkedIn's post API
+        // rejects requests missing 'author' (the poster's URN) — the earlier
+        // guessed payload shapes below all 400'd with "Following fields are
+        // missing: {'commentary', 'author'}". No point retrying without it.
+        $authorUrn = Settings::get('composio_linkedin_author_urn');
+        if (empty($authorUrn)) {
+            self::writeWithRetry(
+                $pdo,
+                'UPDATE social_post_drafts SET publish_error = ? WHERE id = ?',
+                ['LinkedIn author URN not set — add it in Settings > Integrations (composio_linkedin_author_urn).', $draft['id']]
+            );
+            return;
+        }
+
         $text = trim((string) $draft['content']);
         if (!empty($draft['hashtags'])) {
             $text .= "\n\n" . trim((string) $draft['hashtags']);
         }
 
-        $variants = [
-            ['text' => $text],
-            ['commentary' => $text, 'visibility' => 'PUBLIC'],
-            ['content' => $text],
-        ];
+        $payload = ['author' => $authorUrn, 'commentary' => $text, 'visibility' => 'PUBLIC'];
 
         // Wrapped in try/catch: shared hosting runs several PHP workers and
         // cron jobs against the same SQLite file, and a lock that outlasts
@@ -165,31 +173,60 @@ class SocialDraftController
         // approval itself, a DB write failure here should degrade to a log
         // line, not a 500 that also wipes out the approval's own status update.
         try {
-            foreach ($variants as $payload) {
-                $result = Composio::executeTool($tool, $accountId, $payload);
-                if ($result !== null) {
-                    // Field name for the created post's ID/URN isn't confirmed
-                    // against a live account either (same caveat as the payload
-                    // variants above) — try the plausible candidates and store
-                    // whichever is present, so Radar's stats lookup has something
-                    // to query even if the exact field name needs adjusting later.
-                    $urn = self::extractPostUrn($result);
-                    $pdo->prepare(
-                        "UPDATE social_post_drafts SET published_at = datetime('now'), publish_error = NULL, linkedin_post_urn = ? WHERE id = ?"
-                    )->execute([$urn, $draft['id']]);
-                    Settings::set('composio_linkedin_last_error', '');
-                    return;
-                }
+            $result = Composio::executeTool($tool, $accountId, $payload);
+            if ($result !== null) {
+                // Field name for the created post's ID/URN isn't confirmed
+                // against a live account yet — try the plausible candidates
+                // and store whichever is present, so Radar's stats lookup has
+                // something to query even if the exact field name needs
+                // adjusting later.
+                $urn = self::extractPostUrn($result);
+                self::writeWithRetry(
+                    $pdo,
+                    "UPDATE social_post_drafts SET published_at = datetime('now'), publish_error = NULL, linkedin_post_urn = ? WHERE id = ?",
+                    [$urn, $draft['id']]
+                );
+                Settings::set('composio_linkedin_last_error', '');
+                return;
             }
 
             $lastError = Composio::lastError() ?: 'No detailed Composio error was returned.';
-            $pdo->prepare('UPDATE social_post_drafts SET publish_error = ? WHERE id = ?')
-                ->execute([$lastError, $draft['id']]);
+            self::writeWithRetry(
+                $pdo,
+                'UPDATE social_post_drafts SET publish_error = ? WHERE id = ?',
+                [$lastError, $draft['id']]
+            );
             Settings::set('composio_linkedin_last_error', date('c') . ' - LinkedIn publish failed using ' . $tool . ': ' . $lastError);
             error_log("Composio LinkedIn publish failed for draft {$draft['id']} using {$tool}: {$lastError}");
         } catch (\Throwable $e) {
             error_log("Composio LinkedIn publish for draft {$draft['id']} threw: " . $e->getMessage());
         }
+    }
+
+    /**
+     * social_post_drafts sees concurrent writes from the admin UI, the
+     * generate_social_drafts.php cron, and this best-effort publish step —
+     * SQLite's busy_timeout (see Database::get()) already waits out most
+     * overlap, but a handful of "database is locked" errors have still
+     * reached this exact write in production. A few short retries here are
+     * cheap insurance so the whole point of this method — recording *why*
+     * a post did or didn't go through — doesn't itself get lost to a lock.
+     */
+    private static function writeWithRetry(\PDO $pdo, string $sql, array $params, int $attempts = 3): bool
+    {
+        for ($i = 1; $i <= $attempts; $i++) {
+            try {
+                $pdo->prepare($sql)->execute($params);
+                return true;
+            } catch (\PDOException $e) {
+                if ($i === $attempts || !str_contains($e->getMessage(), 'database is locked')) {
+                    error_log('writeWithRetry giving up: ' . $e->getMessage());
+                    return false;
+                }
+                usleep(300000 * $i);
+            }
+        }
+        return false;
     }
 
     /** @param array<string,mixed> $result Composio::executeTool()'s decoded response */
