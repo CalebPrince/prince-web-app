@@ -163,14 +163,26 @@
     gap: 1.6rem clamp(1.6rem, 4vw, 3rem);
   }
   .powered-by-item {
-    font: 600 .95rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    letter-spacing: .02em;
-    color: var(--muted);
-    opacity: .7;
-    transition: opacity .2s ease, color .2s ease;
-    white-space: nowrap;
+    height: 22px;
+    width: auto;
+    max-width: 110px;
+    object-fit: contain;
+    /* <img>-loaded SVGs don't inherit page CSS color/currentColor, so most
+       source logos render at their own fixed dark color — grayscale+darken
+       reads fine against this site's light themes as-is. */
+    filter: grayscale(1) brightness(.35);
+    opacity: .6;
+    transition: opacity .2s ease, filter .2s ease;
   }
-  .powered-by-item:hover { opacity: 1; color: var(--ink); }
+  .powered-by-item:hover { opacity: 1; }
+  .powered-by-item-heygen { height: 26px; }
+  /* Dark/midnight themes: same fix .btn-close already uses elsewhere in
+     this file — invert so dark-on-transparent logo marks read as light
+     silhouettes instead of nearly vanishing against the dark background. */
+  [data-theme="dark"] .powered-by-item,
+  [data-theme="midnight"] .powered-by-item {
+    filter: invert(1) grayscale(1) brightness(1.7);
+  }
 </style>
 </head>
 <body class="home-page">
@@ -329,21 +341,20 @@
   <div class="container">
     <p class="eyebrow text-center mb-4">// Built on real, proven infrastructure</p>
     <div class="powered-by-grid">
-      <span class="powered-by-item">Anthropic</span>
-      <span class="powered-by-item">OpenRouter</span>
-      <span class="powered-by-item">Groq</span>
-      <span class="powered-by-item">ElevenLabs</span>
-      <span class="powered-by-item">Google</span>
-      <span class="powered-by-item">Meta</span>
-      <span class="powered-by-item">Twilio</span>
-      <span class="powered-by-item">Whapi</span>
-      <span class="powered-by-item">Composio</span>
-      <span class="powered-by-item">Apify</span>
-      <span class="powered-by-item">Paystack</span>
-      <span class="powered-by-item">Hunter.io</span>
-      <span class="powered-by-item">HeyGen</span>
-      <span class="powered-by-item">LiveAvatar</span>
-      <span class="powered-by-item">Fly.io</span>
+      <img class="powered-by-item" src="/img/logos/anthropic.svg" alt="Anthropic" width="110" height="24">
+      <img class="powered-by-item" src="/img/logos/openrouter.svg" alt="OpenRouter" width="110" height="24">
+      <img class="powered-by-item" src="/img/logos/groq.svg" alt="Groq" width="110" height="24">
+      <img class="powered-by-item" src="/img/logos/elevenlabs.svg" alt="ElevenLabs" width="110" height="24">
+      <img class="powered-by-item" src="/img/logos/google.svg" alt="Google" width="90" height="24">
+      <img class="powered-by-item" src="/img/logos/meta.svg" alt="Meta" width="90" height="24">
+      <img class="powered-by-item" src="/img/logos/twilio.svg" alt="Twilio" width="90" height="24">
+      <img class="powered-by-item" src="/img/logos/whapi.svg" alt="Whapi" width="110" height="24">
+      <img class="powered-by-item" src="/img/logos/composio.svg" alt="Composio" width="110" height="24">
+      <img class="powered-by-item" src="/img/logos/apify.svg" alt="Apify" width="90" height="24">
+      <img class="powered-by-item" src="/img/logos/paystack.svg" alt="Paystack" width="110" height="24">
+      <img class="powered-by-item" src="/img/logos/hunter.svg" alt="Hunter.io" width="90" height="24">
+      <img class="powered-by-item powered-by-item-heygen" src="/img/logos/heygen.png" alt="HeyGen (LiveAvatar)" width="34" height="24">
+      <img class="powered-by-item" src="/img/logos/flydotio.svg" alt="Fly.io" width="90" height="24">
     </div>
   </div>
 </section>
