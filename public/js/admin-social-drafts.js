@@ -166,7 +166,17 @@ async function saveDraft(extra = {}) {
   document.getElementById('draft-approve-btn').addEventListener('click', async () => {
     try {
       await saveDraft({ status: 'approved' });
-      draftModal.hide();
+      const updated = currentDrafts.find(d => d.id === currentDraftId);
+      const approveBtn = document.getElementById('draft-approve-btn');
+      approveBtn.textContent = 'Already approved';
+      approveBtn.disabled = true;
+      if (updated?.published_at) {
+        showModalAlert('Approved and posted to LinkedIn.', false);
+      } else if (updated?.publish_error) {
+        showModalAlert('Approved, but the LinkedIn post failed: ' + updated.publish_error, true);
+      } else {
+        showModalAlert('Approved. LinkedIn posting was not attempted — check that Composio and a LinkedIn account are connected in Settings.', true);
+      }
     } catch (err) {
       showModalAlert(err.message, true);
     }
