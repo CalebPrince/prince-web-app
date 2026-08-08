@@ -158,28 +158,38 @@ class SocialDraftController
             ['content' => $text],
         ];
 
-        foreach ($variants as $payload) {
-            $result = Composio::executeTool($tool, $accountId, $payload);
-            if ($result !== null) {
-                // Field name for the created post's ID/URN isn't confirmed
-                // against a live account either (same caveat as the payload
-                // variants above) — try the plausible candidates and store
-                // whichever is present, so Radar's stats lookup has something
-                // to query even if the exact field name needs adjusting later.
-                $urn = self::extractPostUrn($result);
-                $pdo->prepare(
-                    "UPDATE social_post_drafts SET published_at = datetime('now'), publish_error = NULL, linkedin_post_urn = ? WHERE id = ?"
-                )->execute([$urn, $draft['id']]);
-                Settings::set('composio_linkedin_last_error', '');
-                return;
+        // Wrapped in try/catch: shared hosting runs several PHP workers and
+        // cron jobs against the same SQLite file, and a lock that outlasts
+        // Database's busy_timeout throws PDOException. Since this whole
+        // method is documented as best-effort and must never fail the
+        // approval itself, a DB write failure here should degrade to a log
+        // line, not a 500 that also wipes out the approval's own status update.
+        try {
+            foreach ($variants as $payload) {
+                $result = Composio::executeTool($tool, $accountId, $payload);
+                if ($result !== null) {
+                    // Field name for the created post's ID/URN isn't confirmed
+                    // against a live account either (same caveat as the payload
+                    // variants above) — try the plausible candidates and store
+                    // whichever is present, so Radar's stats lookup has something
+                    // to query even if the exact field name needs adjusting later.
+                    $urn = self::extractPostUrn($result);
+                    $pdo->prepare(
+                        "UPDATE social_post_drafts SET published_at = datetime('now'), publish_error = NULL, linkedin_post_urn = ? WHERE id = ?"
+                    )->execute([$urn, $draft['id']]);
+                    Settings::set('composio_linkedin_last_error', '');
+                    return;
+                }
             }
-        }
 
-        $lastError = Composio::lastError() ?: 'No detailed Composio error was returned.';
-        $pdo->prepare('UPDATE social_post_drafts SET publish_error = ? WHERE id = ?')
-            ->execute([$lastError, $draft['id']]);
-        Settings::set('composio_linkedin_last_error', date('c') . ' - LinkedIn publish failed using ' . $tool . ': ' . $lastError);
-        error_log("Composio LinkedIn publish failed for draft {$draft['id']} using {$tool}: {$lastError}");
+            $lastError = Composio::lastError() ?: 'No detailed Composio error was returned.';
+            $pdo->prepare('UPDATE social_post_drafts SET publish_error = ? WHERE id = ?')
+                ->execute([$lastError, $draft['id']]);
+            Settings::set('composio_linkedin_last_error', date('c') . ' - LinkedIn publish failed using ' . $tool . ': ' . $lastError);
+            error_log("Composio LinkedIn publish failed for draft {$draft['id']} using {$tool}: {$lastError}");
+        } catch (\Throwable $e) {
+            error_log("Composio LinkedIn publish for draft {$draft['id']} threw: " . $e->getMessage());
+        }
     }
 
     /** @param array<string,mixed> $result Composio::executeTool()'s decoded response */
