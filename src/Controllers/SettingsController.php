@@ -19,6 +19,7 @@ class SettingsController
     private const ADMIN_ONLY_KEYS = [
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'slack_webhook_url',
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret',
+        'elevenlabs_webhook_secret', 'elevenlabs_whatsapp_agent_id',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'owner_whatsapp_number',
         'twilio_voice_enabled', 'twilio_voice_number', 'owner_voice_number', 'twilio_voice_tts_voice', 'twilio_regulatory_approved',
         'twilio_conversation_relay_enabled', 'twilio_conversation_relay_url', 'twilio_conversation_relay_secret',
@@ -222,11 +223,14 @@ class SettingsController
             if ($key === 'chat_persona' && mb_strlen($value) > LisaInstructions::MAX_LENGTH) {
                 Response::error('Lisa custom instructions must be 4,000 characters or fewer.', 422);
             }
-            if ($key === 'whatsapp_provider' && !in_array($value, ['twilio', 'whapi'], true)) {
-                Response::error('Choose Twilio or Whapi as the WhatsApp provider.', 422);
+            if ($key === 'whatsapp_provider' && !in_array($value, ['twilio', 'whapi', 'elevenlabs'], true)) {
+                Response::error('Choose Twilio, Whapi, or ElevenLabs as the WhatsApp provider.', 422);
             }
             if ($key === 'whapi_webhook_secret' && $value !== '' && mb_strlen($value) < 24) {
                 Response::error('The Whapi webhook secret must be at least 24 characters.', 422);
+            }
+            if ($key === 'elevenlabs_webhook_secret' && $value !== '' && mb_strlen($value) < 24) {
+                Response::error('The ElevenLabs webhook secret must be at least 24 characters.', 422);
             }
             if ($key === 'smtp_port' && $value !== ''
                 && (!is_numeric($value) || (int) $value < 1 || (int) $value > 65535)) {

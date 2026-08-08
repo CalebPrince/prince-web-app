@@ -156,6 +156,8 @@ async function saveIntegrations(e) {
       whatsapp_provider: document.getElementById("whatsapp-provider").value,
       whapi_api_token: document.getElementById("whapi-api-token").value.trim(),
       whapi_webhook_secret: document.getElementById("whapi-webhook-secret").value.trim(),
+      elevenlabs_whatsapp_agent_id: document.getElementById("elevenlabs-whatsapp-agent-id").value.trim(),
+      elevenlabs_webhook_secret: document.getElementById("elevenlabs-webhook-secret").value.trim(),
       twilio_auth_token: document.getElementById("twilio-auth-token").value.trim(),
       twilio_account_sid: document.getElementById("twilio-account-sid").value.trim(),
       twilio_whatsapp_number: document.getElementById("twilio-whatsapp-number").value.trim(),
@@ -695,6 +697,12 @@ async function testAi() {
     document.getElementById("whapi-webhook-secret").value =
       Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
   });
+  document.getElementById("generate-elevenlabs-secret")?.addEventListener("click", () => {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    document.getElementById("elevenlabs-webhook-secret").value =
+      Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
+  });
   const user = await requireAdminAuth();
   if (!user) return;
   wireLogout();
@@ -767,6 +775,8 @@ async function testAi() {
     document.getElementById("whatsapp-provider").value = settings.whatsapp_provider || "twilio";
     document.getElementById("whapi-api-token").value = settings.whapi_api_token || "";
     document.getElementById("whapi-webhook-secret").value = settings.whapi_webhook_secret || "";
+    document.getElementById("elevenlabs-whatsapp-agent-id").value = settings.elevenlabs_whatsapp_agent_id || "";
+    document.getElementById("elevenlabs-webhook-secret").value = settings.elevenlabs_webhook_secret || "";
     document.getElementById("twilio-auth-token").value = settings.twilio_auth_token || "";
     document.getElementById("twilio-account-sid").value = settings.twilio_account_sid || "";
     document.getElementById("twilio-whatsapp-number").value = settings.twilio_whatsapp_number || "";

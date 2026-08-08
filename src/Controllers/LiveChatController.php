@@ -282,7 +282,7 @@ class LiveChatController
     public static function whatsappWebhook(): void
     {
         set_time_limit(135);
-        if (Settings::get('whatsapp_provider') === 'whapi') {
+        if (in_array(Settings::get('whatsapp_provider'), ['whapi', 'elevenlabs'], true)) {
             self::respondTwiml('');
             return;
         }
@@ -408,6 +408,155 @@ class LiveChatController
             $processed++;
         }
         Response::json(['ok' => true, 'processed' => $processed]);
+    }
+
+    /**
+     * POST /api/v1/whatsapp/elevenlabs-init — ElevenLabs' "Conversation
+     * Initiation Client Data" webhook, called once when a WhatsApp voice
+     * call or chat starts on the number connected to an ElevenLabs Agent.
+     * Unlike the Twilio/Whapi webhooks above, ElevenLabs runs the actual
+     * turn-by-turn conversation itself (its own LLM loop) — this endpoint's
+     * only job is to hand it Lisa's real, current system prompt so the
+     * WhatsApp voice channel stays "one brain" with every other Lisa
+     * surface rather than drifting from a copy pasted into ElevenLabs' own
+     * dashboard. Mid-conversation tool calls land on elevenLabsToolWebhook()
+     * below; the finished transcript lands on elevenLabsPostCallWebhook().
+     *
+     * Exact request/response field names are ElevenLabs' documented shape as
+     * of 2026-08 (caller_id/agent_id/called_number in, dynamic_variables +
+     * conversation_config_override.agent.prompt.prompt out) but unconfirmed
+     * against a live call — same caveat as this app's other third-party
+     * integrations until exercised for real. Check Admin -> Error Logs after
+     * the first real WhatsApp call and adjust field names here if needed.
+     */
+    public static function elevenLabsInitWebhook(): void
+    {
+        if (!self::verifyElevenLabsSecret()) {
+            Response::error('Invalid webhook secret.', 403);
+        }
+
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $callerId = trim((string) ($payload['caller_id'] ?? $payload['from'] ?? ''));
+        $digits = self::normalizePhoneDigits($callerId);
+        if ($digits === '') {
+            Response::error('Missing caller_id.', 422);
+        }
+        $token = 'whatsapp:+' . $digits;
+
+        $pdo = Database::get();
+        $session = self::findOrCreateSessionByExactToken($pdo, $token);
+        if (empty($session['client_phone'])) {
+            $pdo->prepare('UPDATE chat_sessions SET client_phone = ? WHERE id = ?')
+                ->execute(['+' . $digits, $session['id']]);
+        }
+
+        $isOwner = self::isOwnerWhatsAppNumber($token);
+        $projects = self::projectCatalog($pdo);
+        $systemPrompt = self::buildSystemPrompt($projects, $isOwner);
+
+        Response::json([
+            'type' => 'conversation_initiation_client_data',
+            'dynamic_variables' => [
+                'caller_phone' => '+' . $digits,
+                'session_token' => $token,
+                'is_owner' => $isOwner ? 'true' : 'false',
+            ],
+            'conversation_config_override' => [
+                'agent' => [
+                    'prompt' => ['prompt' => $systemPrompt],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * POST /api/v1/whatsapp/elevenlabs-tool — generic dispatcher for
+     * ElevenLabs webhook/server tools, so tool logic (booking, availability,
+     * lead capture, etc.) is only ever written once in runTool() rather than
+     * duplicated for this channel. Each tool must be configured individually
+     * in the ElevenLabs agent dashboard to call this URL, passing the tool's
+     * own name and args plus {{session_token}} (from the dynamic variable
+     * set in elevenLabsInitWebhook() above) so the call lands in the same
+     * chat_sessions thread as the rest of the conversation.
+     */
+    public static function elevenLabsToolWebhook(): void
+    {
+        if (!self::verifyElevenLabsSecret()) {
+            Response::error('Invalid webhook secret.', 403);
+        }
+
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $name = trim((string) ($payload['tool_name'] ?? $payload['name'] ?? ''));
+        $args = is_array($payload['parameters'] ?? $payload['args'] ?? null) ? ($payload['parameters'] ?? $payload['args']) : [];
+        $token = trim((string) ($payload['session_token'] ?? $args['session_token'] ?? ''));
+        if ($name === '') {
+            Response::error('Missing tool_name.', 422);
+        }
+
+        $pdo = Database::get();
+        $isOwner = $token !== '' && self::isOwnerWhatsAppNumber($token);
+        $result = self::runTool($name, $args, $pdo, $isOwner);
+        Response::json($result);
+    }
+
+    /**
+     * POST /api/v1/whatsapp/elevenlabs-post-call — ElevenLabs' post-call
+     * webhook, called once the WhatsApp call/chat ends with the full
+     * transcript. Folds it into the same chat_sessions record used
+     * everywhere else so it shows up in Admin -> Chat Leads like any other
+     * Lisa conversation, rather than living only in ElevenLabs' own history.
+     */
+    public static function elevenLabsPostCallWebhook(): void
+    {
+        if (!self::verifyElevenLabsSecret()) {
+            Response::error('Invalid webhook secret.', 403);
+        }
+
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        $callerId = trim((string) ($payload['caller_id'] ?? $payload['from'] ?? ''));
+        $rawTurns = $payload['transcript'] ?? $payload['messages'] ?? $payload['conversation'] ?? [];
+        $digits = self::normalizePhoneDigits($callerId);
+        if ($digits === '' || !is_array($rawTurns)) {
+            Response::json(['ok' => false, 'reason' => 'Missing caller_id or transcript.']);
+            return;
+        }
+        $token = 'whatsapp:+' . $digits;
+
+        $transcript = [];
+        foreach ($rawTurns as $turn) {
+            if (!is_array($turn)) continue;
+            $role = (string) ($turn['role'] ?? '');
+            $text = trim((string) ($turn['message'] ?? $turn['text'] ?? ''));
+            if ($text === '') continue;
+            $transcript[] = ['role' => in_array($role, ['agent', 'assistant'], true) ? 'assistant' : 'user', 'text' => $text];
+        }
+        if (!$transcript) {
+            Response::json(['ok' => false, 'reason' => 'Empty transcript.']);
+            return;
+        }
+
+        $pdo = Database::get();
+        $session = self::findOrCreateSessionByExactToken($pdo, $token);
+        self::saveTranscript($pdo, (int) $session['id'], $transcript);
+        self::markChatUnread($pdo, (int) $session['id']);
+        Response::json(['ok' => true]);
+    }
+
+    /**
+     * All three ElevenLabs WhatsApp webhooks above share this check — a
+     * simple shared secret (set the same value in Settings and in each
+     * webhook's config on ElevenLabs' side) rather than HMAC signature
+     * verification, matching the whapiWebhook() pattern above. Could be
+     * upgraded to verify ElevenLabs' own signing header once confirmed live.
+     */
+    private static function verifyElevenLabsSecret(): bool
+    {
+        if (Settings::get('whatsapp_provider') !== 'elevenlabs') {
+            return false;
+        }
+        $expected = trim((string) Settings::get('elevenlabs_webhook_secret'));
+        $provided = trim((string) ($_SERVER['HTTP_X_ELEVENLABS_SECRET'] ?? ''));
+        return $expected !== '' && $provided !== '' && hash_equals($expected, $provided);
     }
 
     /** Empty $message sends no reply at all (Twilio just gets an ack) — used when there's nothing worth saying. */

@@ -308,7 +308,9 @@
                 <select class="form-select" id="whatsapp-provider">
                   <option value="twilio">Twilio (official Business API)</option>
                   <option value="whapi">Whapi.Cloud sandbox (temporary)</option>
+                  <option value="elevenlabs">ElevenLabs (native voice + chat)</option>
                 </select>
+                <div class="form-text">Only one provider handles the live number at a time — switching here stops the others from processing incoming messages/calls, it does not disconnect them elsewhere.</div>
               </div>
               <div class="mb-3">
                 <label class="form-label" for="whapi-api-token">Whapi channel API token</label>
@@ -325,6 +327,26 @@
                   Webhook: <code>https://princecaleb.dev/api/v1/whatsapp/whapi-webhook</code>.
                   Subscribe to <code>messages</code> and add custom header <code>X-Whapi-Secret</code> with this exact value.
                   The free sandbox allows only five active conversations per month.
+                </div>
+              </div>
+            </div>
+            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
+              <h6 class="mb-2">ElevenLabs WhatsApp (voice + chat)</h6>
+              <p class="text-muted-custom small mb-3">Set up the WhatsApp number in ElevenLabs' Agents dashboard first (connect it to a Meta Business Portfolio, enable voice calls). Then point that agent's three webhooks at the URLs below, each with header <code>X-ElevenLabs-Secret</code> set to the secret here.</p>
+              <div class="mb-3">
+                <label class="form-label" for="elevenlabs-whatsapp-agent-id">ElevenLabs agent ID <span class="text-muted-custom fw-normal">(reference)</span></label>
+                <input type="text" class="form-control" id="elevenlabs-whatsapp-agent-id" autocomplete="off" placeholder="agent_...">
+              </div>
+              <div class="mb-0">
+                <label class="form-label" for="elevenlabs-webhook-secret">ElevenLabs webhook secret</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="elevenlabs-webhook-secret" autocomplete="new-password" placeholder="Create a long random secret">
+                  <button type="button" class="btn btn-outline-secondary" id="generate-elevenlabs-secret">Generate</button>
+                </div>
+                <div class="form-text">
+                  Conversation initiation webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-init</code><br>
+                  Tool webhook (configure per-tool in the agent, all pointing here): <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-tool</code><br>
+                  Post-call webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-post-call</code>
                 </div>
               </div>
             </div>
