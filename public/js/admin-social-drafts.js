@@ -105,12 +105,8 @@ function openDraftModal(id) {
   document.getElementById('draft-modal-alert').classList.add('d-none');
 
   const urnWrap = document.getElementById('draft-urn-wrap');
-  if (draft.linkedin_post_urn) {
-    document.getElementById('draft-urn').value = draft.linkedin_post_urn;
-    urnWrap.classList.remove('d-none');
-  } else {
-    urnWrap.classList.add('d-none');
-  }
+  document.getElementById('draft-urn').value = draft.linkedin_post_urn || '';
+  urnWrap.classList.toggle('d-none', !draft.published_at);
 
   const approveBtn = document.getElementById('draft-approve-btn');
   approveBtn.textContent = draft.status === 'approved' ? 'Already approved' : 'Approve';
@@ -132,6 +128,7 @@ async function saveDraft(extra = {}) {
     short_content: document.getElementById('draft-short-content').value.trim(),
     hashtags: document.getElementById('draft-hashtags').value.trim(),
     image_url: document.getElementById('draft-image-url').value.trim(),
+    linkedin_post_urn: document.getElementById('draft-urn').value.trim(),
     ...extra,
   };
   await api.patch(`/api/v1/admin/social-drafts/${currentDraftId}`, payload);

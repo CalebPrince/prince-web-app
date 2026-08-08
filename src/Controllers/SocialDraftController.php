@@ -70,7 +70,7 @@ class SocialDraftController
 
         $fields = [];
         $values = [];
-        foreach (['content', 'short_content', 'hashtags', 'image_url'] as $key) {
+        foreach (['content', 'short_content', 'hashtags', 'image_url', 'linkedin_post_urn'] as $key) {
             if (array_key_exists($key, $data)) {
                 $fields[] = "$key = ?";
                 $values[] = trim((string) $data[$key]) !== '' ? trim((string) $data[$key]) : null;
@@ -234,10 +234,20 @@ class SocialDraftController
         return false;
     }
 
-    /** @param array<string,mixed> $result Composio::executeTool()'s decoded response */
+    /**
+     * Confirmed against a live account (2026-08-08): LinkedIn's Posts API
+     * returns the new post's ID only in the x-restli-id response header, not
+     * the JSON body — Composio surfaces it as data.x_restli_id, already
+     * formatted as a full share URN (e.g. "urn:li:share:749..."), which is
+     * exactly the shape RadarController's LINKEDIN_GET_SHARE_STATISTICS
+     * lookup expects for its shareUrn parameter. The other keys are kept as
+     * a fallback in case Composio's shape varies by tool/account.
+     *
+     * @param array<string,mixed> $result Composio::executeTool()'s decoded response
+     */
     private static function extractPostUrn(array $result): ?string
     {
-        foreach (['id', 'postId', 'post_id', 'urn', 'shareUrn', 'activityUrn'] as $key) {
+        foreach (['x_restli_id', 'id', 'postId', 'post_id', 'urn', 'shareUrn', 'activityUrn'] as $key) {
             $value = $result['data'][$key] ?? $result[$key] ?? null;
             if (is_string($value) && $value !== '') {
                 return $value;
