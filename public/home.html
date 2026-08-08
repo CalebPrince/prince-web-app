@@ -154,6 +154,23 @@
     .home-process-step { min-height: 0; }
     .home-process-step > span { margin-bottom: 1.5rem; }
   }
+  .powered-by-section { padding: 3rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .powered-by-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1.6rem clamp(1.6rem, 4vw, 3rem);
+  }
+  .powered-by-item {
+    font: 600 .95rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .02em;
+    color: var(--muted);
+    opacity: .7;
+    transition: opacity .2s ease, color .2s ease;
+    white-space: nowrap;
+  }
+  .powered-by-item:hover { opacity: 1; color: var(--ink); }
 </style>
 </head>
 <body class="home-page">
@@ -307,6 +324,29 @@
     </div>
   </div>
 </header>
+
+<section class="powered-by-section">
+  <div class="container">
+    <p class="eyebrow text-center mb-4">// Built on real, proven infrastructure</p>
+    <div class="powered-by-grid">
+      <span class="powered-by-item">Anthropic</span>
+      <span class="powered-by-item">OpenRouter</span>
+      <span class="powered-by-item">Groq</span>
+      <span class="powered-by-item">ElevenLabs</span>
+      <span class="powered-by-item">Google</span>
+      <span class="powered-by-item">Meta</span>
+      <span class="powered-by-item">Twilio</span>
+      <span class="powered-by-item">Whapi</span>
+      <span class="powered-by-item">Composio</span>
+      <span class="powered-by-item">Apify</span>
+      <span class="powered-by-item">Paystack</span>
+      <span class="powered-by-item">Hunter.io</span>
+      <span class="powered-by-item">HeyGen</span>
+      <span class="powered-by-item">LiveAvatar</span>
+      <span class="powered-by-item">Fly.io</span>
+    </div>
+  </div>
+</section>
 
 <section class="home-os-conversion d-none" aria-labelledby="home-os-title">
   <div class="container">
