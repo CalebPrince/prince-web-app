@@ -162,27 +162,44 @@
     align-items: center;
     gap: 1.6rem clamp(1.6rem, 4vw, 3rem);
   }
+  /* Each brand pairs its logo image with real CSS text for the name —
+     several source logos are icon-only (no name in the image at all), and
+     an image's own baked-in text is subject to the dark-theme invert
+     filter below washing out thin strokes at this display size. Text
+     rendered as normal DOM content instead of image pixels is guaranteed
+     legible and theme-correct regardless of what any individual logo file
+     contains. */
+  .powered-by-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    opacity: .65;
+    transition: opacity .2s ease;
+  }
+  .powered-by-brand:hover { opacity: 1; }
   .powered-by-item {
-    height: 22px;
+    height: 18px;
     width: auto;
-    max-width: 110px;
     object-fit: contain;
     /* <img>-loaded SVGs don't inherit page CSS color/currentColor, so most
        source logos render at their own fixed dark color — grayscale+darken
        reads fine against this site's light themes as-is. */
     filter: grayscale(1) brightness(.35);
-    opacity: .6;
-    transition: opacity .2s ease, filter .2s ease;
   }
-  .powered-by-item:hover { opacity: 1; }
-  .powered-by-item-heygen { height: 26px; }
   /* Dark/midnight themes: same fix .btn-close already uses elsewhere in
      this file — invert so dark-on-transparent logo marks read as light
      silhouettes instead of nearly vanishing against the dark background. */
   [data-theme="dark"] .powered-by-item,
   [data-theme="midnight"] .powered-by-item {
-    filter: invert(1) grayscale(1) brightness(1.7);
+    filter: invert(1) grayscale(1) brightness(1.4);
   }
+  .powered-by-name {
+    font: 600 .85rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .02em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .powered-by-brand:hover .powered-by-name { color: var(--ink); }
 </style>
 </head>
 <body class="home-page">
@@ -341,20 +358,20 @@
   <div class="container">
     <p class="eyebrow text-center mb-4">// Built on real, proven infrastructure</p>
     <div class="powered-by-grid">
-      <img class="powered-by-item" src="/img/logos/anthropic.svg" alt="Anthropic" width="110" height="24">
-      <img class="powered-by-item" src="/img/logos/openrouter.svg" alt="OpenRouter" width="110" height="24">
-      <img class="powered-by-item" src="/img/logos/groq.svg" alt="Groq" width="110" height="24">
-      <img class="powered-by-item" src="/img/logos/elevenlabs.svg" alt="ElevenLabs" width="110" height="24">
-      <img class="powered-by-item" src="/img/logos/google.svg" alt="Google" width="90" height="24">
-      <img class="powered-by-item" src="/img/logos/meta.svg" alt="Meta" width="90" height="24">
-      <img class="powered-by-item" src="/img/logos/twilio.svg" alt="Twilio" width="90" height="24">
-      <img class="powered-by-item" src="/img/logos/whapi.svg" alt="Whapi" width="110" height="24">
-      <img class="powered-by-item" src="/img/logos/composio.svg" alt="Composio" width="110" height="24">
-      <img class="powered-by-item" src="/img/logos/apify.svg" alt="Apify" width="90" height="24">
-      <img class="powered-by-item" src="/img/logos/paystack.svg" alt="Paystack" width="110" height="24">
-      <img class="powered-by-item" src="/img/logos/hunter.svg" alt="Hunter.io" width="90" height="24">
-      <img class="powered-by-item powered-by-item-heygen" src="/img/logos/heygen.png" alt="HeyGen (LiveAvatar)" width="34" height="24">
-      <img class="powered-by-item" src="/img/logos/flydotio.svg" alt="Fly.io" width="90" height="24">
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/anthropic.svg" alt="" width="18" height="18"><span class="powered-by-name">Anthropic</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/openrouter.svg" alt="" width="18" height="18"><span class="powered-by-name">OpenRouter</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/groq.svg" alt="" width="63" height="18"><span class="powered-by-name">Groq</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/elevenlabs.svg" alt="" width="18" height="18"><span class="powered-by-name">ElevenLabs</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/google.svg" alt="" width="18" height="18"><span class="powered-by-name">Google</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/meta.svg" alt="" width="18" height="18"><span class="powered-by-name">Meta</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/twilio.svg" alt="" width="18" height="18"><span class="powered-by-name">Twilio</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/whapi.svg" alt="" width="77" height="18"><span class="powered-by-name">Whapi</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/composio.svg" alt="" width="93" height="18"><span class="powered-by-name">Composio</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/apify.svg" alt="" width="66" height="18"><span class="powered-by-name">Apify</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/paystack.svg" alt="" width="101" height="18"><span class="powered-by-name">Paystack</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/hunter.svg" alt="" width="99" height="18"><span class="powered-by-name">Hunter.io</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/heygen.png" alt="" width="26" height="18"><span class="powered-by-name">HeyGen</span></span>
+      <span class="powered-by-brand"><img class="powered-by-item" src="/img/logos/flydotio.svg" alt="" width="27" height="18"><span class="powered-by-name">Fly.io</span></span>
     </div>
   </div>
 </section>
