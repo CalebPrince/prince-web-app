@@ -623,6 +623,16 @@ class LiveChatController
      * HMAC-signed webhooks instead (see verifyElevenLabsHmacSignature()
      * below), confirmed live: ElevenLabs auto-generates a signing secret per
      * post-call webhook rather than letting you set a custom header on it.
+     *
+     * Confirmed live (2026-08-08): the custom X-ElevenLabs-Secret header
+     * reliably reaches elevenLabsInitWebhook() (its config lives in the
+     * agent's single Security-tab webhook field), but NOT
+     * elevenLabsToolWebhook() — logging showed "secret header present=no"
+     * even though the header was visibly configured on the tool itself in
+     * ElevenLabs' UI. Rather than chase why webhook-tool headers aren't
+     * honored on their end, this also accepts the secret as a ?secret=
+     * query parameter, which — like tool_name and session_token — is
+     * confirmed to reach this endpoint correctly.
      */
     private static function verifyElevenLabsSecret(): bool
     {
@@ -630,8 +640,15 @@ class LiveChatController
             return false;
         }
         $expected = trim((string) Settings::get('elevenlabs_webhook_secret'));
+        if ($expected === '') {
+            return false;
+        }
         $provided = trim((string) ($_SERVER['HTTP_X_ELEVENLABS_SECRET'] ?? ''));
-        return $expected !== '' && $provided !== '' && hash_equals($expected, $provided);
+        if ($provided !== '' && hash_equals($expected, $provided)) {
+            return true;
+        }
+        $queryProvided = trim((string) ($_GET['secret'] ?? ''));
+        return $queryProvided !== '' && hash_equals($expected, $queryProvided);
     }
 
     /**
