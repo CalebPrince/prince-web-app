@@ -96,12 +96,13 @@ class ComposioController
     }
 
     /**
-     * GET /api/v1/admin/composio/linkedin-author-urn — calls LinkedIn's own
-     * OpenID userinfo endpoint through Composio's proxy (using the stored
-     * OAuth token server-side, never exposed here) and returns the member's
-     * "sub" claim, which is the ID LinkedIn's post API expects as
-     * urn:li:person:{sub}. Requires the 'openid'/'profile' scopes, which
-     * connect() already requests.
+     * GET /api/v1/admin/composio/linkedin-author-urn — resolves the member
+     * ID LinkedIn's post API expects as urn:li:person:{id}. Prefers
+     * Composio's own maintained LINKEDIN_GET_MY_INFO tool (confirmed to
+     * exist via the "List available LinkedIn tools" lookup — it wraps
+     * LinkedIn's /v2/userinfo and documents an 'author_id' derived from
+     * 'sub'), falling back to proxying that same endpoint directly if the
+     * tool's response shape doesn't match what's expected here.
      */
     public static function linkedinAuthorUrn(): void
     {
@@ -112,16 +113,30 @@ class ComposioController
             Response::error('LinkedIn is not connected yet.', 422);
         }
 
-        $result = Composio::executeProxy($accountId, '/v2/userinfo', 'GET');
-        $sub = $result['data']['sub'] ?? $result['sub'] ?? null;
-        if (empty($sub)) {
-            Response::error(
-                Composio::lastError() ?: 'LinkedIn did not return a profile ID — check the connected account has the "openid"/"profile" scopes.',
-                502
-            );
+        $result = Composio::executeTool('LINKEDIN_GET_MY_INFO', $accountId, []);
+        $info = $result['data']['response_dict'] ?? $result['data'] ?? $result ?? [];
+        $authorId = $info['author_id'] ?? null;
+        $sub = $info['sub'] ?? null;
+
+        if (empty($authorId) && empty($sub)) {
+            // Tool result didn't have what we expected — fall back to the
+            // raw endpoint proxy rather than failing outright.
+            $proxied = Composio::executeProxy($accountId, '/v2/userinfo', 'GET');
+            $sub = $proxied['data']['sub'] ?? $proxied['sub'] ?? null;
         }
 
-        Response::json(['urn' => 'urn:li:person:' . $sub]);
+        if (!empty($authorId)) {
+            $urn = str_starts_with($authorId, 'urn:li:') ? $authorId : 'urn:li:person:' . $authorId;
+            Response::json(['urn' => $urn]);
+        }
+        if (!empty($sub)) {
+            Response::json(['urn' => 'urn:li:person:' . $sub]);
+        }
+
+        Response::error(
+            Composio::lastError() ?: 'LinkedIn did not return a profile ID — check the connected account has the "openid"/"profile" scopes.',
+            502
+        );
     }
 
     /** POST /api/v1/admin/composio/connect — body: {toolkit} */

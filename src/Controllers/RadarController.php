@@ -31,12 +31,15 @@ use App\Support\SharedAgentTools;
  * 2. get_pipeline_report — real counts from Beacon's leads/spend and the
  *    Cold Outreach Engine's scoreboard (OutreachController::computeScoreboard,
  *    reused rather than re-derived), never an invented figure.
- * 3. get_linkedin_post_performance — best-effort Composio stats lookup on
- *    Caleb's own recently published posts (linkedin_post_urn, captured by
- *    SocialDraftController on publish). Composio's LinkedIn integration is
- *    untested against a live account in this codebase (see Composio.php's
- *    docblock) — this degrades to an explanatory note rather than failing
- *    the whole turn if the tool slug/response shape needs adjusting.
+ * 3. get_linkedin_post_performance — stats lookup on Caleb's own recently
+ *    published posts (linkedin_post_urn, captured by SocialDraftController
+ *    on publish). Confirmed live (2026-08-08) that Composio's LinkedIn
+ *    toolkit has no analytics/statistics tool at all — only create post,
+ *    delete post, get company info, get my info — so this is driven by a
+ *    Settings key (composio_linkedin_stats_tool) that's empty by default
+ *    and degrades to an explanatory note rather than calling a slug known
+ *    not to exist. Would need Composio to add such a tool, or a different
+ *    approach entirely, to actually work.
  */
 class RadarController
 {
@@ -248,9 +251,11 @@ class RadarController
         return [
             'name' => 'get_linkedin_post_performance',
             'description' => 'Get engagement stats (reactions, comments) for Caleb\'s most recently published '
-                . 'LinkedIn posts, via the Composio LinkedIn connection. Best-effort — this integration has not '
-                . 'been exercised against a live account yet, so a failure here is expected sometimes; report it '
-                . 'plainly rather than inventing numbers.',
+                . 'LinkedIn posts, via the Composio LinkedIn connection. As of the last check, Composio\'s LinkedIn '
+                . 'toolkit exposes no analytics/statistics action at all (only create post, delete post, get '
+                . 'company info, get my info) — LinkedIn\'s real stats APIs are typically restricted to '
+                . 'organization pages, not personal profiles. Expect this to come back empty; report that plainly '
+                . 'as a current limitation rather than implying it is a bug being worked on or inventing numbers.',
             'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
         ];
     }
