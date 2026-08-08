@@ -390,6 +390,7 @@ $router->get('/api/v1/admin/error-logs', [ErrorLogController::class, 'index']);
 $router->post('/api/v1/admin/error-logs/delete-entry', [ErrorLogController::class, 'deleteEntry']);
 $router->post('/api/v1/admin/error-logs/clear', [ErrorLogController::class, 'clear']);
 $router->get('/api/v1/admin/composio/status', [ComposioController::class, 'status']);
+$router->get('/api/v1/admin/composio/connected-account-details', [ComposioController::class, 'connectedAccountDetails']);
 $router->post('/api/v1/admin/composio/connect', [ComposioController::class, 'connect']);
 $router->post('/api/v1/admin/composio/disconnect', [ComposioController::class, 'disconnect']);
 

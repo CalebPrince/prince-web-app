@@ -55,6 +55,28 @@ class ComposioController
         Response::json($out);
     }
 
+    /** GET /api/v1/admin/composio/connected-account-details?toolkit=xxx — raw payload, for finding fields like the LinkedIn author URN */
+    public static function connectedAccountDetails(): void
+    {
+        AuthMiddleware::requireAuth();
+        $toolkit = (string) ($_GET['toolkit'] ?? '');
+
+        if (!isset(self::TOOLKITS[$toolkit])) {
+            Response::error('Unknown toolkit.', 422);
+        }
+        $accountId = Settings::get("composio_{$toolkit}_account_id");
+        if (empty($accountId)) {
+            Response::error('That toolkit is not connected yet.', 422);
+        }
+
+        $details = Composio::getConnectedAccountRaw($accountId);
+        if ($details === null) {
+            Response::error(Composio::lastError() ?: 'Could not fetch connected account details.', 502);
+        }
+
+        Response::json($details);
+    }
+
     /** POST /api/v1/admin/composio/connect — body: {toolkit} */
     public static function connect(): void
     {

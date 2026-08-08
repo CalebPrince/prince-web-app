@@ -100,6 +100,24 @@ class Composio
     }
 
     /**
+     * Full raw connected-account payload — used by the admin UI to let Caleb
+     * inspect whatever profile fields Composio actually returned (e.g. to
+     * find the LinkedIn author URN) without needing to leave the app or use
+     * curl, since the exact field name isn't confirmed ahead of time.
+     *
+     * @return array<string,mixed>|null
+     */
+    public static function getConnectedAccountRaw(string $connectedAccountId): ?array
+    {
+        $apiKey = Settings::get('composio_api_key');
+        if (empty($apiKey) || $connectedAccountId === '') {
+            return null;
+        }
+
+        return self::request('GET', self::API_BASE . '/connected_accounts/' . rawurlencode($connectedAccountId), $apiKey);
+    }
+
+    /**
      * Calls a named Composio tool/action against a connected account.
      * Endpoint/payload shape is a
      * best-effort guess pending live confirmation — see class docblock.

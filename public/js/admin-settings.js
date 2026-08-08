@@ -559,12 +559,14 @@ async function loadComposioAccounts() {
               <span class="status-pill ${display.cls}">${escapeHtml(display.text)}</span>
             </div>
             <div class="d-flex gap-2">
+              ${acct.account_id ? `<button type="button" class="btn btn-sm btn-outline-secondary composio-details-btn" data-toolkit="${slug}">View raw details</button>` : ""}
               ${acct.account_id
                 ? `<button type="button" class="btn btn-sm btn-outline-danger composio-disconnect-btn" data-toolkit="${slug}">Disconnect</button>`
                 : `<button type="button" class="btn btn-sm btn-outline-secondary composio-connect-btn" data-toolkit="${slug}" ${canConnect ? "" : "disabled"} title="${canConnect ? "" : "Add an Auth Config ID above first"}">Connect</button>`}
             </div>
           </div>
           ${acct.last_error ? `<div class="alert alert-warning py-2 small mt-2 mb-0"><strong>Last booking action error:</strong> ${escapeHtml(acct.last_error)}</div>` : ""}
+          <pre class="small bg-body-secondary p-2 rounded d-none mt-2 mb-0" id="composio-details-${slug}" style="max-height: 300px; overflow: auto;"></pre>
         </div>
       `;
     }).join("");
@@ -575,9 +577,29 @@ async function loadComposioAccounts() {
     list.querySelectorAll(".composio-disconnect-btn").forEach(btn => {
       btn.addEventListener("click", () => disconnectComposio(btn.dataset.toolkit));
     });
+    list.querySelectorAll(".composio-details-btn").forEach(btn => {
+      btn.addEventListener("click", () => showComposioDetails(btn.dataset.toolkit));
+    });
   } catch (err) {
     list.innerHTML = "";
     showMsg("composio-msg", err.message, false);
+  }
+}
+
+async function showComposioDetails(toolkit) {
+  const pre = document.getElementById(`composio-details-${toolkit}`);
+  if (!pre) return;
+  if (!pre.classList.contains("d-none")) {
+    pre.classList.add("d-none");
+    return;
+  }
+  pre.textContent = "Loading…";
+  pre.classList.remove("d-none");
+  try {
+    const details = await api.get(`/api/v1/admin/composio/connected-account-details?toolkit=${encodeURIComponent(toolkit)}`);
+    pre.textContent = JSON.stringify(details, null, 2);
+  } catch (err) {
+    pre.textContent = "Error: " + err.message;
   }
 }
 
