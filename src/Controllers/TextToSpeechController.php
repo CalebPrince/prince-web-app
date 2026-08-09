@@ -110,7 +110,13 @@ class TextToSpeechController
         $error = curl_error($curl);
 
         if ($audio === false || $status < 200 || $status >= 300) {
-            error_log('ElevenLabs TTS failed: HTTP ' . $status . ($error ? ' - ' . $error : ''));
+            $detail = is_string($audio) ? mb_substr($audio, 0, 500) : '';
+            error_log(
+                'ElevenLabs TTS failed: HTTP ' . $status
+                . ' voice=' . $voiceId . ' key_len=' . strlen($apiKey)
+                . ($error ? ' curl_error=' . $error : '')
+                . ($detail !== '' ? ' body=' . $detail : '')
+            );
             Response::error('Natural speech is temporarily unavailable.', 502);
         }
 
