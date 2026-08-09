@@ -1170,43 +1170,15 @@ class MarketingLeadController
     {
         $context = self::findingsContext($findings);
 
-        $prompt = "You are drafting the BODY of a short, honest cold outreach email from Prince Caleb, a solo developer "
-            . "who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering, "
-            . "to a business called \"{$businessName}\".\n\n{$context}\n\n"
-            . "Draft it the way Sage — Caleb's own marketing-frameworks specialist — would, synthesizing whichever of "
-            . "these actually fit rather than checking off all five: Hormozi's insistence on a clear, specific value "
-            . "equation over vague benefit language; Cialdini's ethical influence principles (real social proof, "
-            . "real authority, never manufactured urgency or scarcity); Ogilvy's plain, no-hype clarity in the "
-            . "headline/opening line over cleverness; Brunson's sense of matching the message to where this specific "
-            . "reader already is (a cold stranger, not a warm lead); and Godin's permission-based, one-clear-next-step "
-            . "restraint. Never name these frameworks in the email itself — apply them, don't cite them.\n\n"
-            . "Structure: lead with one useful, specific observation tied to what's actually true above. Then use "
-            . "1-2 sentences to show the practical improvement or free private walkthrough being offered, followed by a short \"here's how I can "
-            . "help\" offer mentioning relevant services in general terms (AI voice agents that answer business "
-            . "calls, WhatsApp/chat assistants, workflow automation, and connected booking or follow-up systems). "
-            . "Mention custom web or mobile engineering only when the verified findings make that foundation relevant "
-            . "WITHOUT claiming specific problems that weren't verified "
-            . "above, then a low-pressure closing line inviting a reply.\n\n"
-            . "Rules: 4-6 short sentences total, value-first, friendly and specific, never salesy or hyperbolic, no invented "
-            . "statistics, no false urgency, no claims of financial harm or lost business you can't verify. "
-            . "Do NOT include a sign-off or any contact details — those are appended separately.\n\n"
-            . SharedAgentTools::publicContactContext() . "\n\n"
-            . "Respond as JSON only: {\"subject\": \"...\", \"body\": \"...\"} — no markdown fences, no commentary.";
-
-        $text = AiText::generate($prompt, null, 20);
-        if ($text === null) {
-            error_log('Marketing lead pitch: all configured AI providers (Gemini/OpenRouter/Groq) failed.');
+        // Runs through Sage's actual persona/tools/AiAgentEngine — the same
+        // brain visitors talk to on the site, not a separate prompt that
+        // only imitated her voice.
+        $pitch = SageController::draftOutreachPitch($businessName, $context);
+        if ($pitch === null) {
             return null;
         }
 
-        $text = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $text));
-        $parsed = json_decode($text, true);
-        if (!is_array($parsed) || empty($parsed['subject']) || empty($parsed['body'])) {
-            error_log('Marketing lead pitch: could not parse JSON from model output: ' . substr($text, 0, 800));
-            return null;
-        }
-
-        $body = (string) $parsed['body'];
+        $body = $pitch['body'];
         $campaign = 'cold_outreach_lead_' . ($leadId ?? 'unknown');
         // Fixed, factual line rather than a prompt instruction — guarantees
         // it's always present and worded exactly right, never dropped or
@@ -1227,7 +1199,7 @@ class MarketingLeadController
             $body .= "\n\nFor context, a similar business, {$caseStudy['client_name']} ({$caseStudy['project_title']}), saw: {$caseStudy['metric']}. Full write-up: {$taggedCaseStudyUrl}";
         }
         return [
-            'subject' => (string) $parsed['subject'],
+            'subject' => $pitch['subject'],
             'body' => $body . "\n\n" . self::signatureBlock(),
         ];
     }

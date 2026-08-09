@@ -193,6 +193,64 @@ class SageController
         return ['status' => 'recorded'];
     }
 
+    /**
+     * Cold-outreach email pitch for the Marketing Lead Outreach Engine, run
+     * through Sage's real persona, tools, and AiAgentEngine instead of a
+     * separate prompt that only imitated her voice ("draft it the way Sage
+     * would"). Subject/body only — MarketingLeadController::draftPitch()
+     * still appends the demo link, case study, transparency line, and
+     * signature; none of that is Sage's voice, it's fixed factual copy that
+     * must never vary between drafts.
+     */
+    public static function draftOutreachPitch(string $businessName, string $findingsContext): ?array
+    {
+        $task = "Draft the BODY of a short, honest cold outreach email from Prince Caleb to a business called "
+            . "\"{$businessName}\". This is a one-shot drafting task, not a conversation — do not ask a "
+            . "clarifying question, just produce the best draft you can from what's given below.\n\n"
+            . "{$findingsContext}\n\n"
+            . "Structure: lead with one useful, specific observation tied to what's actually true above. Then use "
+            . "1-2 sentences to show the practical improvement or free private walkthrough being offered, followed "
+            . "by a short \"here's how I can help\" offer mentioning relevant services in general terms (AI voice "
+            . "agents that answer business calls, WhatsApp/chat assistants, workflow automation, and connected "
+            . "booking or follow-up systems). Mention custom web or mobile engineering only when the verified "
+            . "findings make that foundation relevant WITHOUT claiming specific problems that weren't verified "
+            . "above, then a low-pressure closing line inviting a reply.\n\n"
+            . "Rules: 4-6 short sentences total, value-first, friendly and specific, never salesy or hyperbolic, "
+            . "no invented statistics, no false urgency, no claims of financial harm or lost business you can't "
+            . "verify. Do NOT include a sign-off or any contact details — those are appended separately.\n\n"
+            . "Respond as JSON only: {\"subject\": \"...\", \"body\": \"...\"} — no markdown fences, no commentary.";
+
+        $pdo = Database::get();
+        $result = AiAgentEngine::run(
+            self::buildChatSystemPrompt(false),
+            [
+                SharedAgentTools::siteInfoToolDeclaration(),
+                SharedAgentTools::searchContentToolDeclaration(),
+            ],
+            fn(string $name, array $args) => match ($name) {
+                'get_site_info' => SharedAgentTools::getSiteInfo(),
+                'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+                default => ['error' => 'Unknown tool.'],
+            },
+            [['role' => 'user', 'text' => $task]]
+        );
+
+        $text = $result['reply'] ?? null;
+        if ($text === null) {
+            error_log('Sage outreach pitch: all configured AI providers failed.');
+            return null;
+        }
+
+        $text = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $text));
+        $parsed = json_decode($text, true);
+        if (!is_array($parsed) || empty($parsed['subject']) || empty($parsed['body'])) {
+            error_log('Sage outreach pitch: could not parse JSON from model output: ' . substr($text, 0, 800));
+            return null;
+        }
+
+        return ['subject' => (string) $parsed['subject'], 'body' => (string) $parsed['body']];
+    }
+
     private static function buildChatSystemPrompt(bool $isOwner = false): string
     {
         $name = Settings::get('sage_assistant_name') ?: 'Sage';
