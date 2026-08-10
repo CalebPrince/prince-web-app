@@ -51,6 +51,67 @@ These edits use the existing settings/content API and `settings` table; no
 database schema, migrations, seed data, or stored records were changed for
 this redesign.
 
+## Twilio fully removed — ElevenLabs now runs every calling and WhatsApp surface (2026-08-10 upgrade)
+
+The Twilio account is being closed entirely. Every remaining Twilio-dependent
+code path was replaced or deleted, not just gated behind a toggle:
+
+- **Outbound Marketing Lead calls** — `OutreachController::initiateAiCall()`
+  now places calls through ElevenLabs' SIP-trunk outbound-call API
+  (`POST /v1/convai/sip-trunk/outbound-call`) instead of Twilio's REST API.
+  Every existing guardrail carries over unchanged: admin approval +
+  recipient-consent confirmation required, a hard cap of five AI calls/day,
+  and a 15-minute duplicate-call guard.
+- **Inbound public voice line and outbound call conversation handling** — a
+  new `VoiceDemoController` webhook trio (`elevenlabs/init`,
+  `elevenlabs/tool`, `elevenlabs/post-call`) mirrors the pattern already
+  proven on WhatsApp voice: ElevenLabs runs the actual conversation turn
+  loop on its own hosted LLM, calling back into these endpoints for the real,
+  current system prompt, tool execution (`check_availability`,
+  `book_appointment`, and new consent/opt-out tools), and the finished
+  transcript. Owner-number recognition, booked-appointment confirmation, and
+  the WhatsApp/email post-call follow-up queue all carry over unchanged.
+  Consent capture and opt-out/callback logging moved from Twilio's
+  per-utterance regex scanning (only possible because Twilio handed control
+  back to PHP after every turn) to explicit tools the agent calls
+  mid-conversation, the same pattern WhatsApp's `book_appointment` already
+  used — plus a same-post-call fallback that logs a `no_answer` call
+  attempt for any call that connects but never produces a real exchange.
+- **WhatsApp** — `whatsapp_provider` no longer accepts `twilio`; it's Whapi
+  or ElevenLabs only. The Twilio inbound-message webhook and its
+  request-signature verification are gone.
+- **Owner operational alerts** (`WhatsAppNotifier`) now send only through
+  Whapi. The Twilio Content API-powered "Lisa post-call WhatsApp summary"
+  feature (`WhatsAppTemplateManager`, `WhatsAppTemplateController`,
+  `database/process_whatsapp_call_followups.php`) had no non-Twilio
+  equivalent and was removed outright, along with the Twilio low-balance
+  alert cron (`database/check_twilio_balance.php`) and its Attention-panel
+  notification, the Twilio call-status reconciliation helper
+  (`CallOutcomeSync` — its logic is now inline in the ElevenLabs post-call
+  webhook), and the `voice-relay/` ConversationRelay WebSocket companion
+  app (deleted entirely — ElevenLabs terminates its own call audio and
+  calls PHP webhooks directly, the same way WhatsApp voice already did, so
+  no relay bridge is needed).
+- **Admin Settings** — the Twilio Voice/WhatsApp panels, the
+  ConversationRelay sub-panel, the low-balance alert card, and the post-call
+  summary panel are gone, replaced by a single "ElevenLabs Phone (SIP
+  trunk)" panel (phone agent ID, phone number ID, and two webhook secrets —
+  independent from the ElevenLabs WhatsApp panel's agent/secrets, since a
+  WhatsApp number and a real SIP-trunked phone number are two different
+  ElevenLabs integrations even when they end up being the same physical
+  number).
+- **Numbers** — the public AI voice line and the Ghana WhatsApp number are
+  no longer Twilio-hosted. Reaching feature parity on phone calling requires
+  a non-Twilio SIP trunk provider (e.g. Telnyx) connected to ElevenLabs;
+  until that's configured, `telephony_enabled` in Voice Demo reporting stays
+  false and outbound Lisa calls to leads will fail with a clear setup error
+  rather than silently doing nothing.
+
+No database migration is required — `telephony_calls.provider` was already
+a free-text column (every insert just used to hardcode `'twilio'`; new rows
+write `'elevenlabs'`), and every new Settings key is a plain row in the
+existing flexible `settings` table.
+
 ## Radar, ElevenLabs WhatsApp, and LinkedIn publishing hardening (2026-08-08 upgrade)
 
 - **Radar** — a seventh admin-only chat agent (`RadarController`, Talk to
@@ -73,11 +134,11 @@ this redesign.
   get company info, get my info) — so it's gated behind an empty-by-default
   Settings key and degrades to an explanatory note rather than calling a
   tool slug known not to exist.
-- **ElevenLabs native WhatsApp voice+chat channel** — Twilio can carry
-  WhatsApp chat but not WhatsApp voice calls; ElevenLabs' Agents platform
-  can do both natively on one number, at the cost of its own hosted LLM
-  running the live conversation loop instead of this app's `AiAgentEngine`.
-  Kept on one shared brain via three webhooks ElevenLabs calls back into:
+- **ElevenLabs native WhatsApp voice+chat channel** — ElevenLabs' Agents
+  platform handles both WhatsApp chat and WhatsApp voice calls natively on
+  one number, at the cost of its own hosted LLM running the live
+  conversation loop instead of this app's `AiAgentEngine`. Kept on one
+  shared brain via three webhooks ElevenLabs calls back into:
   `elevenlabs-init` returns Lisa's real, current system prompt
   (`buildSystemPrompt()`, same as every other surface) as a
   `conversation_config_override`; `elevenlabs-tool` is a generic dispatcher
@@ -86,8 +147,8 @@ this redesign.
   finished transcript into the same `chat_sessions` table, so WhatsApp
   voice calls show up in Admin -> Chat Leads like any other Lisa
   conversation. `whatsapp_provider` gained a third value (`elevenlabs`)
-  alongside `twilio`/`whapi`, with mutual-exclusion guards so only the
-  selected provider's webhook processes a given number.
+  alongside `whapi`, with mutual-exclusion guards so only the selected
+  provider's webhook processes a given number.
 - **LinkedIn publishing hardened** — `ComposioController` now discovers
   real LinkedIn tool slugs from Composio's catalog instead of guessing
   them, prefers Composio's maintained `LINKEDIN_GET_MY_INFO` tool (falling
@@ -104,7 +165,7 @@ this redesign.
 - **"Powered by" infrastructure strip** on the homepage — real brand
   SVG/PNG marks (sourced from each service's own site or Simple Icons)
   for the third-party services the platform is actually built on
-  (Anthropic, OpenRouter, ElevenLabs, Composio, Apify, Twilio, Paystack,
+  (Anthropic, OpenRouter, ElevenLabs, Composio, Apify, Paystack,
   Whapi, HeyGen/LiveAvatar, Hunter, Fly.io, Google, Meta, Groq), each
   paired with real CSS text since `<img>`-loaded SVGs don't inherit page
   CSS color.
@@ -323,38 +384,26 @@ mobile-app delivery. This section consolidates every change shipped in commits
 
 ### Production voice agent and calling controls
 
-- The browser voice demo remains side-effect-free, while Twilio endpoints let
-  Lisa answer the public customer-service line and make individually approved
-  Marketing Leads calls.
-- Production-readiness settings track the Twilio Account SID, Auth Token,
-  purchased voice number, owner-recognition number, enabled state, and webhook
-  setup without exposing credentials publicly.
-- Incoming calls can recognize the configured owner number for a personalized
-  greeting. Recognition is context only and never authorizes private data or
-  sensitive actions.
-- Voice logs record incoming and outgoing numbers, direction, status, duration,
-  start time, and any linked marketing lead. They are visible in the Voice
-  Demo admin view alongside recent browser voice activity.
-- Phone speech has independent gender/voice settings and defaults to a British
-  female Amazon Polly voice rather than relying on the browser demo voice.
-- Natural-call mode can now route Twilio through the deployable
-  `voice-relay/` WebSocket companion. ConversationRelay supplies ElevenLabs UK
-  speech, Deepgram transcription, interruption support, backchannel filtering,
-  and faster turn detection while the PHP application remains authoritative
-  for Lisa's prompts, owner recognition, transcripts, lead context, opt-outs,
-  callbacks, and call logs. The existing `<Gather>` flow remains the automatic
-  fallback until the relay is configured and explicitly enabled.
-  The default relay voice is Alice (`Xb7hH8MSUJpSbSDYk0k2`), a British female
-  voice; the voice ID remains editable in Admin Settings.
-- The telephony migration was reordered so existing installations add
-  `marketing_lead_id` before creating dependent indexes; migrations remain
-  safe to re-run.
+This section originally described a phone-calling implementation superseded
+by the 2026-08-10 upgrade above — the browser voice demo still answers
+side-effect-free, and Lisa still answers the public customer-service line
+and makes individually approved Marketing Leads calls, but the underlying
+telephony provider, admin settings, and audio-bridging companion described
+in this section no longer exist in that form. See "Twilio fully removed"
+near the top of this file for the current implementation. What's still true
+from this release: incoming calls can recognize the configured owner number
+for a personalized greeting (recognition is context only and never
+authorizes private data or sensitive actions), voice logs record incoming
+and outgoing numbers, direction, status, duration, start time, and any
+linked marketing lead in the Voice Demo admin view, and the telephony
+migration was reordered so existing installations add `marketing_lead_id`
+before creating dependent indexes.
 
 ### WhatsApp and public contact rollout
 
-- Twilio WhatsApp inbound messaging uses `/api/v1/whatsapp/webhook`; each new
-  message reopens its conversation as unread and resets any previously
-  dismissed notification for that thread.
+- WhatsApp inbound messaging (now via Whapi or ElevenLabs — see "Twilio fully
+  removed" above) reopens its conversation as unread and resets any
+  previously dismissed notification for that thread on every new message.
 - Site Content holds the authoritative public WhatsApp link and wording.
   Homepage, Contact, clinic voice-agent, and relevant service surfaces expose
   consistent Call Lisa and WhatsApp Lisa actions.
@@ -515,7 +564,6 @@ database/
   send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
   check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
-  check_twilio_balance.php        # alerts by email + Attention panel when Twilio balance drops below threshold (cron, hourly)
   schedule_stale_lead_followups.php  # auto-schedules a follow-up for active pipeline leads gone quiet too long (cron, daily; off by default)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
@@ -788,17 +836,16 @@ storage/
     robocalls by itself); every attempt is logged to `call_log`
     (`OutreachController::logCall()`) — no-answer/voicemail/callback keep the
     lead queued, connected/interested/not-interested/wrong-number close it
-    out. Twilio `no-answer`, `busy`, `failed`, and `canceled` results from an
-    approved Lisa call are synchronized automatically by `CallOutcomeSync`;
-    they create one idempotent `no_answer` attempt and leave the lead
-    `pitch_ready`, so it returns to the call list for a later retry. A Twilio
-    `completed` call whose linked voice session captured no speech is treated
-    the same way: carrier completion only proves the greeting played, not that
-    a conversation happened. Completed calls with actual transcript turns are
-    left for a human-reviewed outcome. Opening
-    the call list also reconciles older final statuses that arrived before
-    this behavior was deployed. "Calls today" counts alongside "sent today" on the panel, so the
-    daily ritual is emails + calls, matching what the leads actually are.
+    out. A no-answer/busy/failed/canceled result, or a completed call whose
+    linked voice session captured no speech, is logged automatically as one
+    idempotent `no_answer` attempt (inline in `VoiceDemoController`'s
+    ElevenLabs post-call webhook — see "Twilio fully removed" above) and
+    leaves the lead `pitch_ready`, so it returns to the call list for a
+    later retry: carrier completion only proves the greeting played, not
+    that a conversation happened. Completed calls with actual transcript
+    turns are left for a human-reviewed outcome. "Calls today" counts
+    alongside "sent today" on the panel, so the daily ritual is emails +
+    calls, matching what the leads actually are.
 
     The **scoreboard** (Sales mode on `/admin/dashboard.html`,
     `OutreachController::computeScoreboard()`) is the accountability half:
@@ -915,21 +962,16 @@ storage/
     Caleb supplies his own introduction for a manual call, while the outbound
     voice prompt requires Lisa to identify herself as an AI assistant calling
     on Caleb's behalf and explicitly ignores any legacy first-person wording.
-    Outbound call creation deliberately does not use synchronous Twilio
-    answering-machine detection: it can hold the answer webhook while a real
-    person hears silence. Lisa's disclosure now plays first as a standalone
-    `<Say>`, followed by a six-second speech `<Gather>`, so an answered call
-    always receives the opening before the system begins listening. The
-    outbound opening now front-loads Lisa's identity and the reason for the
-    call before small talk. If Conversation Relay is interrupted by an early
-    "hello", the first generated turn repeats that disclosure once and moves
-    directly into the reviewed, lead-specific reason for calling.
-    Phone dialogue allows about twenty exchanges (`MAX_TURNS = 40` transcript
-    messages), waits ten seconds for the caller to begin speaking, responds to
-    what they said before asking one question, and avoids repeating identity,
-    service lists, and canned closings. Settings also exposes Twilio's UK
-    female `Polly.Amy-Generative` voice as an optional public-beta upgrade;
-    standard Emma remains available for lower-cost/stable operation.
+    The outbound opening front-loads Lisa's identity and the reason for the
+    call before small talk — the prompt (`VoiceDemoController::prompt('outbound', ...)`,
+    reused directly by `OutreachController::initiateAiCall()` for the
+    ElevenLabs conversation override) instructs the agent to state that
+    disclosure first if the welcome greeting is interrupted by an early
+    "hello", rather than starting with small talk. Phone dialogue avoids
+    repeating identity, service lists, and canned closings, and responds to
+    what the caller said before asking one question at a time. ElevenLabs
+    owns turn-taking, interruption handling, and the configured phone-agent
+    voice directly — see "Twilio fully removed" above.
     **Lisa instruction desk** in Admin Settings stores one owner-controlled
     instruction layer (`chat_persona`) for Lisa. Changes apply from her next
     response across public live chat, WhatsApp, verified-owner chat, Talk to
@@ -1138,8 +1180,9 @@ storage/
     Management if the workspace restricts unapproved third-party apps —
     without that, the message is silently dropped with no error surfaced
     anywhere. WhatsApp Business via Composio was tried and removed — too
-    much setup friction for what it added, in favor of the Twilio
-    integration instead (#31/#32 above, Lisa on WhatsApp). LinkedIn connect
+    much setup friction for what it added, in favor of the dedicated
+    WhatsApp provider integration instead (#31/#32 above, Lisa on WhatsApp).
+    LinkedIn connect
     flow built, not yet exercised live** — see #30 above for what it's
     wired to do once connected.
 34. **Client-side error capture** (`ClientErrorController::log()`,
@@ -1760,21 +1803,14 @@ One-time setup on a new host:
     discovery sweep when enabled, and with auto-draft on also prepares
     pitches/call scripts):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_cold_outreach.php > /dev/null`
-4n. Add a fourteenth cron job (hourly) for the Twilio low-balance alert (a
-    no-op until `twilio_account_sid`/`twilio_auth_token` are set under
-    Admin -> Settings -> Integrations). Calls and WhatsApp sending share one
-    Twilio balance, so this alerts by email once when it drops below the
-    configured threshold (default $10) and once more on recovery, and
-    surfaces a Billing item on the Attention panel while low:
-    `/usr/local/bin/php /home/<cpanel-user>/database/check_twilio_balance.php > /dev/null`
-4o. Add a fifteenth cron job (once a day) for stale-lead auto-follow-up (off
+4n. Add a fourteenth cron job (once a day) for stale-lead auto-follow-up (off
     by default — toggle under Admin -> Pipeline). Any active pipeline lead
     with no follow-up already set and no activity across any linked source
     for the configured window (default 5 days) gets one auto-scheduled,
     identical in effect to setting it by hand — same Agent Queue entry, same
     Tasks-page entry once due:
     `/usr/local/bin/php /home/<cpanel-user>/database/schedule_stale_lead_followups.php > /dev/null`
-4p. Add a sixteenth cron job (hourly) for Beacon's second lead source — a
+4o. Add a fifteenth cron job (hourly) for Beacon's second lead source — a
     no-op until enabled under Admin -> Talk to Agents -> Beacon, with an
     `apify_api_key` set under Admin -> Settings -> Integrations, and at
     least one tracked LinkedIn profile plus both Apify actor IDs configured.
@@ -1825,32 +1861,31 @@ One-time setup on a new host:
   touches it, re-run `php database/migrate.php` on the server (it's
   idempotent: `CREATE TABLE IF NOT EXISTS` for new tables, guarded
   `ALTER TABLE ADD COLUMN` checks for columns added to existing tables).
-# Clinic web demo and Twilio customer-service voice
+# Clinic web demo and ElevenLabs customer-service voice
 
 The clinic landing page uses a dedicated, side-effect-free browser demo. The
-Twilio phone endpoints use Lisa as Prince Caleb's inbound customer-service
+ElevenLabs phone webhooks use Lisa as Prince Caleb's inbound customer-service
 agent; they are not used by the Marketing Leads call queue:
 
 - `POST /api/v1/voice-demo/message` — web demo conversation
 - `POST /api/v1/voice-demo/event` — product/conversion events
-- `POST /api/v1/voice/twilio/incoming` — Twilio incoming Voice webhook
-- `POST /api/v1/voice/twilio/turn` — speech-turn continuation
-- `POST /api/v1/voice/twilio/status` — call status callback
+- `POST /api/v1/voice/elevenlabs/init` — conversation-initiation webhook, returns Lisa's current system prompt
+- `POST /api/v1/voice/elevenlabs/tool` — generic tool dispatcher (availability, booking, consent capture, opt-out)
+- `POST /api/v1/voice/elevenlabs/post-call` — finished-transcript webhook, HMAC-signed by ElevenLabs
 - `GET /api/v1/admin/voice-demo/stats` — authenticated reporting
 
 After deployment:
 
 1. Run `php database/migrate.php` so the voice-demo/event/call tables exist.
-2. In Admin → Settings, save the Twilio Auth Token, Voice number, and optional
-   Owner voice number, then enable the customer-service voice agent. Calls from
-   the owner number receive an owner-aware greeting, but caller ID matching is
-   never treated as authorization for private data or sensitive actions.
-   The phone voice can be selected independently; it defaults to the British
-   female Amazon Polly Emma voice and applies to inbound and outbound speech.
-3. In Twilio Console, set the number's incoming-call webhook to
-   `https://princecaleb.dev/api/v1/voice/twilio/incoming` using POST.
-4. Set its status callback to
-   `https://princecaleb.dev/api/v1/voice/twilio/status` using POST.
+2. Connect a SIP trunk number to ElevenLabs (see "Twilio fully removed"
+   above), create/select a phone agent there, and point its webhooks at the
+   three URLs above.
+3. In Admin → Settings, save the ElevenLabs phone agent ID, phone number ID,
+   and the two webhook secrets (one you create, one ElevenLabs generates).
+   Save an optional Owner voice number so calls from that number receive an
+   owner-aware greeting — caller ID matching is never treated as
+   authorization for private data or sensitive actions. The phone voice is
+   configured directly on the ElevenLabs agent rather than in this app.
 
 The browser demo deliberately has no tools and cannot create bookings,
 inquiries, messages, or handoffs. It demonstrates those workflows
@@ -1860,22 +1895,22 @@ questions about Prince Caleb's services but also does not yet perform bookings
 or transfers. Marketing Leads prepares call scripts and supports a manual
 `tel:` call or one approval-gated Lisa call. The AI-call action requires the
 admin to confirm that the recipient requested or consented, places exactly one
-Twilio call, identifies Lisa as an AI assistant, and honors stop/call-later
-requests. Lisa calls have a separate hard limit of five per day. Generated
-phone-only leads are drafted into this approval queue, while leads with a
-usable email stay in the email path and its separate 50/day cap. No cron task
-or batch process can initiate outbound voice calls.
+call via ElevenLabs, identifies Lisa as an AI assistant, and honors
+stop/call-later requests. Lisa calls have a separate hard limit of five per
+day. Generated phone-only leads are drafted into this approval queue, while
+leads with a usable email stay in the email path and its separate 50/day cap.
+No cron task or batch process can initiate outbound voice calls.
 
-Admin → Voice Demo shows the 100 most recent Twilio call records, including
+Admin → Voice Demo shows the 100 most recent call records, including
 direction, caller number, destination number, status, duration, linked lead,
 and start time for both inbound and outbound calls.
 
-Phone ConversationRelay turns and the public voice demo use a low-latency AI
-path: Groq is tried first, followed by tightly timed Gemini and OpenRouter
-fallbacks. Text chat retains the longer reliability-oriented fallback
-budgets. ElevenLabs website speech also uses a shorter connection/response
-budget, and the Fly relay stops waiting after 25 seconds instead of holding a
-silent call for more than a minute.
+The public web voice demo uses a low-latency AI path: Groq is tried first,
+followed by tightly timed Gemini and OpenRouter fallbacks. Text chat retains
+the longer reliability-oriented fallback budgets. ElevenLabs website speech
+also uses a shorter connection/response budget. Phone conversations run
+entirely on ElevenLabs' own hosted LLM turn loop rather than this app's
+low-latency path — see "Twilio fully removed" above.
 
 Every new inbound web-chat or WhatsApp message reopens its conversation as
 unread and clears any earlier bell dismissal for that thread. Lisa treats the
