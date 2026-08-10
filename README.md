@@ -51,6 +51,73 @@ These edits use the existing settings/content API and `settings` table; no
 database schema, migrations, seed data, or stored records were changed for
 this redesign.
 
+## Radar, ElevenLabs WhatsApp, and LinkedIn publishing hardening (2026-08-08 upgrade)
+
+- **Radar** — a seventh admin-only chat agent (`RadarController`, Talk to
+  Agents console) covering the safe subset of "LinkedIn AI agent"
+  capabilities. It deliberately does **not** send messages or connect to
+  anyone: LinkedIn's official API surface (via the existing Composio
+  connection) has no messaging action at all, so real DM outreach would
+  need an unofficial third-party automation tool and the account-ban risk
+  that comes with it. Instead Radar covers three grounded capabilities —
+  `analyze_linkedin_url` (real profile/company data via the same Apify
+  actor Beacon's engagement scraper already uses, falling back to pasted
+  text when Apify isn't configured), `get_pipeline_report` (real counts
+  from Beacon's leads/spend and the Cold Outreach Engine's scoreboard,
+  reused rather than re-derived, never an invented figure), and drafting
+  outreach DMs for Caleb to copy and send himself, with a review queue
+  linking back to the source post/profile (same pattern as Beacon's
+  drafted replies). A fourth capability, `get_linkedin_post_performance`,
+  is confirmed impossible as of 2026-08-08 — Composio's LinkedIn toolkit
+  has no analytics/statistics tool at all (only create post, delete post,
+  get company info, get my info) — so it's gated behind an empty-by-default
+  Settings key and degrades to an explanatory note rather than calling a
+  tool slug known not to exist.
+- **ElevenLabs native WhatsApp voice+chat channel** — Twilio can carry
+  WhatsApp chat but not WhatsApp voice calls; ElevenLabs' Agents platform
+  can do both natively on one number, at the cost of its own hosted LLM
+  running the live conversation loop instead of this app's `AiAgentEngine`.
+  Kept on one shared brain via three webhooks ElevenLabs calls back into:
+  `elevenlabs-init` returns Lisa's real, current system prompt
+  (`buildSystemPrompt()`, same as every other surface) as a
+  `conversation_config_override`; `elevenlabs-tool` is a generic dispatcher
+  onto the existing `runTool()` so booking/availability/lead-capture logic
+  isn't duplicated for this channel; `elevenlabs-post-call` folds the
+  finished transcript into the same `chat_sessions` table, so WhatsApp
+  voice calls show up in Admin -> Chat Leads like any other Lisa
+  conversation. `whatsapp_provider` gained a third value (`elevenlabs`)
+  alongside `twilio`/`whapi`, with mutual-exclusion guards so only the
+  selected provider's webhook processes a given number.
+- **LinkedIn publishing hardened** — `ComposioController` now discovers
+  real LinkedIn tool slugs from Composio's catalog instead of guessing
+  them, prefers Composio's maintained `LINKEDIN_GET_MY_INFO` tool (falling
+  back to proxying LinkedIn's userinfo endpoint directly) to auto-fill the
+  author URN the post API requires, captures the real published post URN
+  for display in the Social Drafts review modal and manual backfill, and
+  no longer lets a SQLite lock during publish crash the approval request.
+- **Marketing-lead pitch drafting now runs through Sage for real** —
+  `MarketingLeadController::draftPitch()` previously built its own
+  standalone prompt instructing the model to write "the way Sage would."
+  It now calls `SageController::draftOutreachPitch()`, which runs the task
+  through Sage's actual persona, tools, and `AiAgentEngine` — the same
+  brain visitors talk to, not a copy of it.
+- **"Powered by" infrastructure strip** on the homepage — real brand
+  SVG/PNG marks (sourced from each service's own site or Simple Icons)
+  for the third-party services the platform is actually built on
+  (Anthropic, OpenRouter, ElevenLabs, Composio, Apify, Twilio, Paystack,
+  Whapi, HeyGen/LiveAvatar, Hunter, Fly.io, Google, Meta, Groq), each
+  paired with real CSS text since `<img>`-loaded SVGs don't inherit page
+  CSS color.
+- **WhatsApp contact routing fixed** — the contact page and Lisa's own
+  public grounding both previously pointed visitors at Caleb's personal
+  WhatsApp number; both now point at Lisa's number
+  (`+233 53 580 1359`, the Ghana number connected via ElevenLabs) so
+  visitors reach the 24/7 AI agent directly, with an explicit
+  `signal_handoff` fallback if someone insists on reaching Caleb himself.
+
+No database migration is required beyond Radar's own new settings/table
+rows (`php database/migrate.php` picks them up automatically).
+
 ## AI marketing agents and video pipeline (2026-08-01 upgrade)
 
 Two new named agents joined the existing team, a from-scratch HyperFrames
@@ -403,7 +470,24 @@ src/
                             AuthController, AiChatController, LiveChatController,
                             ContentAgentController, ContentStudioController,
                             ReportController, TeamController, ProposalDraftController,
-                            and more
+                            agent controllers — SageController (Sage),
+                            ScoutController (Scout), ReelController (Reel),
+                            BeaconController (Beacon), NurturerController
+                            (Nurturer/Jason), OutreachController (Cold
+                            Outreach Engine), DossierController (Dossier),
+                            RadarController (Radar), ProposalAgentController
+                            (Ledger), LiveAvatarController (video Lisa) —
+                            plus AgentTaskController, AutomationController,
+                            ComposioController, DashboardController,
+                            AccountDemoController, ActivityLogController,
+                            AnalyticsController, DripController,
+                            ErrorLogController, InboxController,
+                            InvoiceController, PipelineController,
+                            SearchController, SketchController,
+                            SubscriptionController, TaskController,
+                            TextToSpeechController, UptimeController,
+                            VoiceDemoController, WhatsAppTemplateController,
+                            ContactsController, ClientErrorController
   Middleware/              # AuthMiddleware (admin JWT), ClientAuthMiddleware
                             (client portal JWT, isolated via a `type` claim —
                             see #27), RateLimitMiddleware
@@ -439,13 +523,19 @@ database/
   send_cold_outreach.php          # Cold Outreach Engine: sends reviewed marketing-lead pitches, capped/day (cron, hourly)
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
   run_beacon_apify_discovery.php  # tracked LinkedIn profiles -> Apify engagers -> ICP-fit scoring -> qualified-lead digest (cron, hourly)
+  discover_marketing_leads.php    # standalone runner for the same daily-gated Marketing Leads discovery send_cold_outreach.php already invokes (testing/dedicated cron; --force to bypass the gate)
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   draft_newsletters_from_blog.php    # Published blog posts -> Jason newsletter drafts, ready to review (cron, ~5-10 min)
+  send_newsletters.php            # sends drafted-but-unsent newsletters to all subscribers, once each (cron, after draft_newsletters_from_blog.php)
   send_daily_brief.php            # Chief's daily brief on what every other agent did, emailed (cron, daily)
   dispatch_agent_tasks.php        # leases due durable agent work; retries safely and records outcomes (cron, ~1 min)
+  process_whatsapp_call_followups.php  # sends the post-call WhatsApp follow-up template after a Lisa voice call (cron)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
   backfill_pending_review_leads.php  # one-time (not a cron): approves whatever's already sitting in pending_review after enabling beacon_auto_accept_all / outreach_auto_accept_all
+  setup_liveavatar_llm.php        # one-time: registers this app's own chat-completions endpoint with LiveAvatar as video Lisa's custom-LLM bridge
+  send_test_email.php             # one-off: sends a real branded email template to a test inbox for visual review
+  test_owner_whatsapp.php         # CLI-only smoke test for the two owner-WhatsApp notification paths
 storage/
   backups/                  # dated SQLite snapshots written by backup_db.php (gitignored)
   db/portfolio.sqlite       # SQLite database file (gitignored)
