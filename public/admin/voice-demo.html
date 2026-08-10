@@ -83,25 +83,16 @@
       <div class="col-xl-5"><section class="admin-card p-4 h-100"><h5 class="mb-3">Phone activation</h5><div id="voice-phone-status"></div></section></div>
     </div>
     <div class="row g-4 mb-4">
-      <div class="col-xl-5">
-        <section class="admin-card p-4 h-100">
-          <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
-            <h5 class="mb-0">WhatsApp activation</h5>
-            <span class="badge text-bg-success">Sandbox tested</span>
-          </div>
-          <div id="whatsapp-production-status"></div>
-        </section>
-      </div>
-      <div class="col-xl-7">
+      <div class="col-12">
         <section class="admin-card p-4 h-100">
           <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
             <div>
-              <h5 class="mb-1">Production readiness</h5>
-              <p class="small text-muted-custom mb-0">Local configuration updates automatically. Approval items are completed in Twilio and Meta.</p>
+              <h5 class="mb-1">ElevenLabs phone readiness</h5>
+              <p class="small text-muted-custom mb-0">Local configuration updates automatically. The SIP trunk and phone agent are configured in ElevenLabs' own dashboard.</p>
             </div>
             <a href="/admin/settings.html" class="btn btn-outline-secondary btn-sm">Open settings</a>
           </div>
-          <div id="twilio-readiness" class="d-grid gap-2"></div>
+          <div id="elevenlabs-phone-readiness" class="d-grid gap-2"></div>
         </section>
       </div>
     </div>
@@ -118,7 +109,7 @@
     <section class="admin-card p-0 overflow-hidden mb-4">
       <div class="p-4 border-bottom d-flex flex-wrap justify-content-between align-items-start gap-3">
         <div>
-          <p class="eyebrow mb-1">Twilio line activity</p>
+          <p class="eyebrow mb-1">Phone line activity</p>
           <h5 class="mb-1">Call logs</h5>
           <p class="text-muted-custom small mb-0">Every number that called Lisa and every number Lisa called, newest first.</p>
         </div>

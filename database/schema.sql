@@ -1141,7 +1141,7 @@ CREATE TABLE IF NOT EXISTS telephony_calls (
   provider_call_id TEXT UNIQUE NOT NULL,
   session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
   marketing_lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
-  provider TEXT NOT NULL DEFAULT 'twilio',
+  provider TEXT NOT NULL DEFAULT 'elevenlabs',
   direction TEXT NOT NULL DEFAULT 'inbound',
   from_number TEXT,
   to_number TEXT,

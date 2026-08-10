@@ -7,16 +7,19 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\AiAgentEngine;
-use App\Support\CallOutcomeSync;
 use App\Support\Database;
 use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
 
 /**
- * Side-effect-free clinic web demo plus the Twilio customer-service front door.
- * Browser demos remain read-only. Verified Twilio calls receive a narrowly
- * scoped action set for availability and confirmed bookings.
+ * Side-effect-free clinic web demo plus the ElevenLabs customer-service phone
+ * agent (inbound public line and approved outbound calls to Marketing Leads).
+ * ElevenLabs runs the actual call's conversation turn loop on its own hosted
+ * LLM — this controller's job is supplying the real, current system prompt
+ * at call start, executing tool calls the agent makes during the call, and
+ * folding the finished transcript back into storage once it ends, the same
+ * pattern LiveChatController already uses for WhatsApp voice+chat.
  */
 final class VoiceDemoController
 {
@@ -47,7 +50,7 @@ final class VoiceDemoController
         }
 
         $transcript[] = ['role' => 'user', 'text' => $message];
-        $result = self::reply($transcript, 'web');
+        $result = self::reply($transcript);
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
         self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
         self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'web']);
@@ -85,285 +88,279 @@ final class VoiceDemoController
         Response::json(['status' => 'ok'], 201);
     }
 
-    public static function incomingCall(): void
+    /**
+     * POST /api/v1/voice/elevenlabs/init — ElevenLabs' "Conversation
+     * Initiation Client Data" webhook, called when a call starts on the
+     * phone number connected to Lisa's ElevenLabs phone agent. Mirrors
+     * LiveChatController::elevenLabsInitWebhook() for WhatsApp: returns
+     * Lisa's real, current system prompt as a conversation_config_override
+     * so ElevenLabs' hosted LLM never runs on a stale or duplicated copy.
+     *
+     * Outbound calls placed by OutreachController::initiateAiCall() already
+     * pass a conversation_config_override directly in the outbound-call API
+     * request, so this webhook is primarily for genuinely inbound calls. If
+     * ElevenLabs also fires it for an outbound-initiated conversation, a
+     * `lead_id` dynamic variable (present only on outbound calls) is used to
+     * rebuild the same 'outbound' prompt instead of the inbound 'phone' one.
+     * Field names are ElevenLabs' documented shape, unconfirmed against a
+     * live call — check Admin -> Error Logs after the first real call.
+     */
+    public static function elevenLabsInitWebhook(): void
     {
-        if (!self::verifyTwilio() || Settings::get('twilio_voice_enabled') !== '1') {
+        if (!self::verifyElevenLabsPhoneSecret()) {
             http_response_code(403);
             exit;
         }
-        $callSid = trim((string) ($_POST['CallSid'] ?? ''));
-        $from = trim((string) ($_POST['From'] ?? ''));
-        if ($callSid === '') {
-            http_response_code(422);
-            exit;
-        }
-        $pdo = Database::get();
-        $token = 'tel_' . hash('sha256', $callSid);
-        $session = self::session($pdo, $token, 'phone', 'clinic');
-        $isOwner = self::isOwnerNumber($from);
-        $pdo->prepare(
-            "INSERT OR IGNORE INTO telephony_calls
-             (provider_call_id, session_id, provider, from_number, to_number, status)
-             VALUES (?, ?, 'twilio', ?, ?, 'in-progress')"
-        )->execute([$callSid, $session['id'], $from ?: null, trim((string) ($_POST['To'] ?? '')) ?: null]);
-        self::twimlGather(
-            $isOwner
-                ? "Hi Prince Caleb, welcome back. You're speaking with Lisa, your AI customer service assistant. How can I help?"
-                : "Hello, you've reached Prince Caleb's AI customer service assistant, Lisa. "
-                    . "I can help with AI voice agents, WhatsApp assistants, workflow automation, and custom systems. "
-                    . "How can I help?"
-        );
-    }
-
-    public static function outboundCall(): void
-    {
-        if (!self::verifyTwilio() || Settings::get('twilio_voice_enabled') !== '1') {
-            http_response_code(403);
-            exit;
-        }
-        $callSid = trim((string) ($_POST['CallSid'] ?? ''));
-        $leadId = max(0, (int) ($_GET['lead'] ?? 0));
-        if ($callSid === '' || $leadId === 0) {
-            http_response_code(422);
-            exit;
-        }
+        $rawBody = file_get_contents('php://input');
+        $data = json_decode($rawBody, true) ?? [];
+        $dynamicVars = is_array($data['dynamic_variables'] ?? null) ? $data['dynamic_variables'] : [];
+        $callId = trim((string) ($data['conversation_id'] ?? $data['call_sid'] ?? ''));
+        $leadId = max(0, (int) ($dynamicVars['lead_id'] ?? 0));
 
         $pdo = Database::get();
-        $stmt = $pdo->prepare(
-            "SELECT id, business_name, contact_name, pitch_body FROM marketing_leads
-             WHERE id = ? AND status = 'pitch_ready' AND pitch_channel = 'phone'"
-        );
-        $stmt->execute([$leadId]);
-        $lead = $stmt->fetch();
-        if (!$lead) {
-            self::twimlSay('This approved call is no longer available. Goodbye.');
-            return;
+
+        if ($leadId > 0) {
+            $context = [
+                'business_name' => (string) ($dynamicVars['business_name'] ?? ''),
+                'contact_name' => (string) ($dynamicVars['contact_name'] ?? ''),
+                'contact_email' => (string) ($dynamicVars['contact_email'] ?? ''),
+                'website_url' => (string) ($dynamicVars['website_url'] ?? ''),
+                'pitch_body' => (string) ($dynamicVars['pitch_body'] ?? ''),
+                'is_first_turn' => true,
+            ];
+            $systemPrompt = self::prompt('outbound', $context);
+        } else {
+            $callerId = trim((string) ($data['caller_id'] ?? $data['from_number'] ?? $data['from'] ?? ''));
+            if ($callerId === '') {
+                error_log('ElevenLabs phone init webhook: missing caller_id, raw payload=' . substr($rawBody, 0, 500));
+            }
+            $systemPrompt = self::prompt('phone', ['is_owner' => self::isOwnerNumber($callerId)]);
         }
 
-        $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'outreach');
-        $pdo->prepare(
-            "INSERT OR IGNORE INTO telephony_calls
-             (provider_call_id, session_id, marketing_lead_id, provider, direction, from_number, to_number, status, consent_confirmed_at)
-             VALUES (?, ?, ?, 'twilio', 'outbound', ?, ?, 'in-progress', datetime('now'))"
-        )->execute([
-            $callSid,
-            $session['id'],
-            $leadId,
-            trim((string) ($_POST['From'] ?? '')) ?: null,
-            trim((string) ($_POST['To'] ?? '')) ?: null,
+        if ($callId !== '') {
+            $session = self::session(
+                $pdo,
+                'tel_' . hash('sha256', $callId),
+                'phone',
+                $leadId > 0 ? 'outreach' : 'clinic'
+            );
+            if ($leadId > 0) {
+                // OutreachController::initiateAiCall() already inserted this
+                // row when it placed the call; just attach the session.
+                $pdo->prepare(
+                    "UPDATE telephony_calls SET session_id = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
+                )->execute([$session['id'], $callId]);
+            } else {
+                $pdo->prepare(
+                    "INSERT OR IGNORE INTO telephony_calls
+                     (provider_call_id, session_id, provider, status, from_number)
+                     VALUES (?, ?, 'elevenlabs', 'in-progress', ?)"
+                )->execute([$callId, $session['id'], $callerId ?: null]);
+            }
+        }
+
+        Response::json([
+            'type' => 'conversation_initiation_client_data',
+            'dynamic_variables' => ['call_id' => $callId],
+            'conversation_config_override' => [
+                'agent' => ['prompt' => ['prompt' => $systemPrompt]],
+            ],
         ]);
-        $pdo->prepare(
-            "UPDATE telephony_calls SET session_id = ?, marketing_lead_id = ?, direction = 'outbound',
-             status = 'in-progress', updated_at = datetime('now') WHERE provider_call_id = ?"
-        )->execute([$session['id'], $leadId, $callSid]);
-
-        $contactName = trim((string) ($lead['contact_name'] ?? ''));
-        $nameGreeting = $contactName !== '' ? "Hello, may I speak with {$contactName}? " : 'Hello. ';
-        self::twimlGather(
-            $nameGreeting . "This is Lisa, Prince Caleb's AI assistant. I'm calling on his behalf with a customer-service "
-            . "improvement idea prepared for {$lead['business_name']}. Is now a good time for a brief conversation?"
-        );
-    }
-
-    public static function callTurn(): void
-    {
-        set_time_limit(90);
-        if (!self::verifyTwilio() || Settings::get('twilio_voice_enabled') !== '1') {
-            http_response_code(403);
-            exit;
-        }
-        $callSid = trim((string) ($_POST['CallSid'] ?? ''));
-        $speech = trim((string) ($_POST['SpeechResult'] ?? ''));
-        if ($callSid === '' || $speech === '') {
-            self::twimlGather("I didn't catch that. Please say your question again.");
-            return;
-        }
-        RateLimitMiddleware::enforce('voice_phone_' . preg_replace('/\W/', '', $callSid), 30);
-        $pdo = Database::get();
-        $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
-        $callStmt = $pdo->prepare(
-            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.contact_email, ml.website_url, ml.pitch_body
-             FROM telephony_calls tc
-             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
-             WHERE tc.provider_call_id = ?"
-        );
-        $callStmt->execute([$callSid]);
-        $callContext = $callStmt->fetch() ?: [];
-        $isOutbound = ($callContext['direction'] ?? '') === 'outbound' && !empty($callContext['id']);
-        $callContext['is_owner'] = !$isOutbound
-            && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
-        $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
-        self::captureWhatsAppConsent($pdo, $callSid, $speech, $transcript, $callContext);
-        self::captureEmailConsent($pdo, $callSid, $speech, $transcript, $callContext);
-        if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
-            $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
-            $transcript[] = ['role' => 'assistant', 'text' => "Understood. We won't call again. Goodbye."];
-            self::save($pdo, (int) $session['id'], $transcript, null);
-            $pdo->prepare("UPDATE marketing_leads SET status = 'rejected', updated_at = datetime('now') WHERE id = ?")
-                ->execute([(int) $callContext['id']]);
-            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'not_interested', ?)")
-                ->execute([(int) $callContext['id'], 'Opted out during Lisa AI call']);
-            self::twimlSay("Understood. We won't call again. Goodbye.");
-            return;
-        }
-        if ($isOutbound && preg_match('/\b(call (me )?later|not (a )?good time|not now|busy right now)\b/i', $speech)) {
-            $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
-            $transcript[] = ['role' => 'assistant', 'text' => 'Of course. Goodbye.'];
-            self::save($pdo, (int) $session['id'], $transcript, null);
-            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'callback', ?)")
-                ->execute([(int) $callContext['id'], 'Recipient asked to be contacted later during Lisa AI call']);
-            self::twimlSay('Of course. Goodbye.');
-            return;
-        }
-        if (count($transcript) >= self::MAX_TURNS) {
-            self::twimlSay("Thank you for your time. This call has reached its conversation limit. Goodbye.");
-            return;
-        }
-        $transcript[] = ['role' => 'user', 'text' => mb_substr($speech, 0, 500)];
-        $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $callContext);
-        $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
-        self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
-        self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'phone']);
-        self::record($pdo, (int) $session['id'], 'answer_received', ['channel' => 'phone', 'provider' => $result['provider']]);
-        self::twimlGather($result['reply']);
     }
 
     /**
-     * Internal HTTP bridge used by the stateless ConversationRelay companion.
-     * Twilio audio never reaches this endpoint: it accepts a final transcript
-     * and returns Lisa's next text response while keeping the PHP app as the
-     * source of truth for prompts, safety decisions, and stored call history.
+     * POST /api/v1/voice/elevenlabs/tool — generic dispatcher for ElevenLabs
+     * webhook tools, mirroring LiveChatController::elevenLabsToolWebhook().
+     * Each capability (check_availability, book_appointment, the
+     * consent/opt-out tools below) needs its own webhook tool configured in
+     * the ElevenLabs phone agent, all pointing at this same URL with a
+     * distinct ?tool_name=... query string, e.g.
+     * ".../elevenlabs/tool?tool_name=book_appointment".
      */
-    public static function relayTurn(): void
+    public static function elevenLabsToolWebhook(): void
     {
-        set_time_limit(90);
-        $configuredSecret = trim((string) Settings::get('twilio_conversation_relay_secret'));
-        $providedSecret = trim((string) ($_SERVER['HTTP_X_RELAY_SECRET'] ?? ''));
-        if (
-            Settings::get('twilio_voice_enabled') !== '1'
-            || Settings::get('twilio_conversation_relay_enabled') !== '1'
-            || $configuredSecret === ''
-            || $providedSecret === ''
-            || !hash_equals($configuredSecret, $providedSecret)
-        ) {
-            Response::error('Relay authorization failed.', 403);
-        }
-
-        $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $callSid = mb_substr(trim((string) ($data['call_sid'] ?? '')), 0, 80);
-        $speech = mb_substr(trim((string) ($data['speech'] ?? '')), 0, 500);
-        if ($callSid === '' || $speech === '') {
-            Response::error('call_sid and speech are required.', 422);
-        }
-        RateLimitMiddleware::enforce('voice_relay_' . preg_replace('/\W/', '', $callSid), 40);
-
-        $pdo = Database::get();
-        $session = self::session($pdo, 'tel_' . hash('sha256', $callSid), 'phone', 'clinic');
-        $callStmt = $pdo->prepare(
-            "SELECT tc.direction, tc.from_number, tc.to_number, ml.id, ml.business_name, ml.contact_name, ml.contact_email, ml.website_url, ml.pitch_body
-             FROM telephony_calls tc
-             LEFT JOIN marketing_leads ml ON ml.id = tc.marketing_lead_id
-             WHERE tc.provider_call_id = ?"
-        );
-        $callStmt->execute([$callSid]);
-        $callContext = $callStmt->fetch() ?: [];
-        $isOutbound = ($callContext['direction'] ?? '') === 'outbound' && !empty($callContext['id']);
-        $callContext['is_owner'] = !$isOutbound
-            && self::isOwnerNumber((string) ($callContext['from_number'] ?? ''));
-        $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
-        self::captureWhatsAppConsent($pdo, $callSid, $speech, $transcript, $callContext);
-        self::captureEmailConsent($pdo, $callSid, $speech, $transcript, $callContext);
-
-        if ($isOutbound && preg_match('/\b(stop calling|do not call|don\'t call|remove me|not interested)\b/i', $speech)) {
-            $reply = "Understood. We won't call again. Goodbye.";
-            $transcript[] = ['role' => 'user', 'text' => $speech];
-            $transcript[] = ['role' => 'assistant', 'text' => $reply];
-            self::save($pdo, (int) $session['id'], $transcript, null);
-            $pdo->prepare("UPDATE marketing_leads SET status = 'rejected', updated_at = datetime('now') WHERE id = ?")
-                ->execute([(int) $callContext['id']]);
-            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'not_interested', ?)")
-                ->execute([(int) $callContext['id'], 'Opted out during Lisa AI call']);
-            Response::json(['reply' => $reply, 'end' => true]);
-        }
-        if ($isOutbound && preg_match('/\b(call (me )?later|not (a )?good time|not now|busy right now)\b/i', $speech)) {
-            $reply = 'Of course. Goodbye.';
-            $transcript[] = ['role' => 'user', 'text' => $speech];
-            $transcript[] = ['role' => 'assistant', 'text' => $reply];
-            self::save($pdo, (int) $session['id'], $transcript, null);
-            $pdo->prepare("INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, 'callback', ?)")
-                ->execute([(int) $callContext['id'], 'Recipient asked to be contacted later during Lisa AI call']);
-            Response::json(['reply' => $reply, 'end' => true]);
-        }
-        if (count($transcript) >= self::MAX_TURNS) {
-            Response::json([
-                'reply' => 'Thank you for your time. This call has reached its conversation limit. Goodbye.',
-                'end' => true,
-            ]);
-        }
-        if (self::callerFinishedConversation($speech)) {
-            $reply = "You're welcome. Thank you for calling. Goodbye.";
-            $transcript[] = ['role' => 'user', 'text' => $speech];
-            $transcript[] = ['role' => 'assistant', 'text' => $reply];
-            self::save($pdo, (int) $session['id'], $transcript, null);
-            self::record($pdo, (int) $session['id'], 'answer_received', [
-                'channel' => 'conversation_relay',
-                'conversation_complete' => true,
-            ]);
-            Response::json(['reply' => $reply, 'end' => true]);
-        }
-
-        $transcript[] = ['role' => 'user', 'text' => $speech];
-        $result = self::reply($transcript, $isOutbound ? 'outbound' : 'phone', $callContext);
-        $bookingConfirmed = !empty($result['booking_confirmed']);
-        $endConversation = $bookingConfirmed || self::assistantFinishedConversation($result['reply']);
-        $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
-        self::save($pdo, (int) $session['id'], $transcript, $result['provider']);
-        self::record($pdo, (int) $session['id'], 'question_sent', ['channel' => 'conversation_relay']);
-        self::record($pdo, (int) $session['id'], 'answer_received', [
-            'channel' => 'conversation_relay',
-            'provider' => $result['provider'],
-        ]);
-        Response::json([
-            'reply' => $result['reply'],
-            'end' => $endConversation,
-            'booking_confirmed' => $bookingConfirmed,
-        ]);
-    }
-
-    public static function callStatus(): void
-    {
-        if (!self::verifyTwilio()) {
+        if (!self::verifyElevenLabsPhoneSecret()) {
             http_response_code(403);
             exit;
         }
+        $rawBody = file_get_contents('php://input');
+        $payload = json_decode($rawBody, true) ?? [];
+        $name = trim((string) ($_GET['tool_name'] ?? $payload['tool_name'] ?? $payload['name'] ?? ''));
+        $args = is_array($payload['parameters'] ?? null) ? $payload['parameters'] : $payload;
+        $callId = trim((string) ($_GET['call_id'] ?? $payload['call_id'] ?? $payload['conversation_id'] ?? ''));
+        if ($name === '') {
+            error_log('ElevenLabs phone tool webhook: missing tool_name, query=' . http_build_query($_GET) . ', raw body=' . substr($rawBody, 0, 500));
+            Response::json(['error' => 'Unknown phone action.']);
+            return;
+        }
+
         $pdo = Database::get();
-        $callSid = trim((string) ($_POST['CallSid'] ?? ''));
-        $callStatus = mb_substr(trim((string) ($_POST['CallStatus'] ?? 'unknown')), 0, 40);
+        try {
+            if ($name === 'check_availability') {
+                Response::json(AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')));
+                return;
+            }
+            if ($name === 'check_availability_range') {
+                Response::json(AppointmentController::getAvailableDateRange(
+                    (string) ($args['start_date'] ?? ''),
+                    (string) ($args['end_date'] ?? '')
+                ));
+                return;
+            }
+            if ($name === 'book_appointment') {
+                Response::json(AppointmentController::createBooking($args));
+                return;
+            }
+            if ($name === 'capture_whatsapp_followup_consent' && $callId !== '') {
+                $number = self::normalizePhoneNumber((string) ($args['number'] ?? ''));
+                if (preg_match('/^\+[1-9]\d{7,14}$/', $number)) {
+                    $pdo->prepare(
+                        "UPDATE telephony_calls SET whatsapp_followup_consent_at = datetime('now'),
+                         whatsapp_followup_number = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
+                    )->execute([$number, $callId]);
+                }
+                Response::json(['success' => true]);
+                return;
+            }
+            if ($name === 'capture_email_followup_consent' && $callId !== '') {
+                $email = trim((string) ($args['email'] ?? ''));
+                if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $pdo->prepare(
+                        "UPDATE telephony_calls SET email_followup_consent_at = datetime('now'),
+                         email_followup_address = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
+                    )->execute([$email, $callId]);
+                }
+                Response::json(['success' => true]);
+                return;
+            }
+            if ($name === 'log_opt_out' && $callId !== '') {
+                self::logOutboundOutcome($pdo, $callId, 'not_interested', 'Opted out during Lisa AI call', true);
+                Response::json(['success' => true]);
+                return;
+            }
+            if ($name === 'log_callback_request' && $callId !== '') {
+                self::logOutboundOutcome($pdo, $callId, 'callback', 'Recipient asked to be contacted later during Lisa AI call', false);
+                Response::json(['success' => true]);
+                return;
+            }
+            Response::json(['error' => 'Unknown phone action.']);
+        } catch (\Throwable $e) {
+            error_log(sprintf('ElevenLabs phone tool "%s" failed: %s', $name, $e->getMessage()));
+            Response::json(['error' => 'The action could not be completed.']);
+        }
+    }
+
+    private static function logOutboundOutcome(\PDO $pdo, string $callId, string $outcome, string $notes, bool $reject): void
+    {
+        $stmt = $pdo->prepare('SELECT marketing_lead_id FROM telephony_calls WHERE provider_call_id = ?');
+        $stmt->execute([$callId]);
+        $leadId = (int) ($stmt->fetchColumn() ?: 0);
+        if ($leadId <= 0) {
+            return;
+        }
+        if ($reject) {
+            $pdo->prepare("UPDATE marketing_leads SET status = 'rejected', updated_at = datetime('now') WHERE id = ?")
+                ->execute([$leadId]);
+        }
+        $pdo->prepare('INSERT INTO call_log (lead_id, outcome, notes) VALUES (?, ?, ?)')
+            ->execute([$leadId, $outcome, $notes]);
+    }
+
+    /**
+     * POST /api/v1/voice/elevenlabs/post-call — ElevenLabs' post-call
+     * webhook with the full finished transcript. HMAC-verified like Stripe's
+     * (see verifyElevenLabsPhoneHmacSignature()), mirroring
+     * LiveChatController::elevenLabsPostCallWebhook() for WhatsApp.
+     */
+    public static function elevenLabsPostCallWebhook(): void
+    {
+        $rawBody = file_get_contents('php://input');
+        if (!self::verifyElevenLabsPhoneHmacSignature($rawBody)) {
+            http_response_code(403);
+            exit;
+        }
+        $data = json_decode($rawBody, true) ?? [];
+        $callId = trim((string) ($data['conversation_id'] ?? $data['call_sid'] ?? ''));
+        if ($callId === '') {
+            http_response_code(422);
+            exit;
+        }
+        $rawTurns = $data['transcript'] ?? $data['messages'] ?? $data['conversation'] ?? [];
+        $rawTurns = is_array($rawTurns) ? $rawTurns : [];
+        $durationSeconds = max(0, (int) ($data['call_duration_secs'] ?? $data['duration_seconds'] ?? 0));
+        $status = mb_substr(trim((string) ($data['status'] ?? 'completed')), 0, 40);
+
+        $pdo = Database::get();
+        $session = self::session($pdo, 'tel_' . hash('sha256', $callId), 'phone', 'clinic');
+        $transcript = json_decode((string) $session['transcript_json'], true) ?: [];
+        foreach ($rawTurns as $turn) {
+            if (!is_array($turn)) {
+                continue;
+            }
+            $role = in_array(($turn['role'] ?? ''), ['agent', 'assistant'], true) ? 'assistant' : 'user';
+            $text = trim((string) ($turn['message'] ?? $turn['text'] ?? ''));
+            if ($text === '') {
+                continue;
+            }
+            $transcript[] = ['role' => $role, 'text' => mb_substr($text, 0, 500)];
+        }
+        self::save($pdo, (int) $session['id'], $transcript, 'elevenlabs');
+        self::record($pdo, (int) $session['id'], 'answer_received', ['channel' => 'phone', 'provider' => 'elevenlabs']);
+
         $pdo->prepare(
-            'UPDATE telephony_calls SET status = ?, duration_seconds = ?, updated_at = datetime(\'now\') WHERE provider_call_id = ?'
-        )->execute([
-            $callStatus,
-            max(0, (int) ($_POST['CallDuration'] ?? 0)),
-            $callSid,
-        ]);
-        $attemptLogged = CallOutcomeSync::record($pdo, $callSid, $callStatus);
-        $followupQueued = $callStatus === 'completed' && self::queuePostCallFollowup($pdo, $callSid);
-        Response::json([
-            'status' => 'ok',
-            'attempt_logged' => $attemptLogged,
-            'whatsapp_followup_queued' => $followupQueued,
-        ]);
+            "UPDATE telephony_calls SET status = ?, duration_seconds = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
+        )->execute([$status, $durationSeconds, $callId]);
+
+        self::logNoOutcomeCallAttempt($pdo, $callId, $status, $transcript);
+        self::queuePostCallFollowup($pdo, $callId);
+        Response::json(['status' => 'ok']);
+    }
+
+    /**
+     * A completed-but-silent call, or one that never really connected
+     * (no-answer/busy/failed/canceled), needs a call_log attempt logged so
+     * the lead returns to the call queue for retry instead of vanishing
+     * silently — a real conversation gets a real, human-reviewed outcome
+     * from the tool calls above instead, never guessed here. Idempotent via
+     * the exact-notes-text match, since the queue/init endpoints may see the
+     * same finished call more than once.
+     */
+    private static function logNoOutcomeCallAttempt(\PDO $pdo, string $callId, string $status, array $transcript): void
+    {
+        $stmt = $pdo->prepare(
+            'SELECT marketing_lead_id FROM telephony_calls WHERE provider_call_id = ? AND direction = \'outbound\''
+        );
+        $stmt->execute([$callId]);
+        $leadId = (int) ($stmt->fetchColumn() ?: 0);
+        if ($leadId < 1) {
+            return;
+        }
+        $hasUserTurn = (bool) array_filter(
+            $transcript,
+            static fn($turn): bool => is_array($turn) && ($turn['role'] ?? '') === 'user'
+        );
+        if ($hasUserTurn) {
+            return; // A real conversation happened; leave the outcome to the reviewed tool calls above.
+        }
+        $detail = strtolower($status) === 'completed'
+            ? 'The call connected and completed, but the recipient gave no speech response.'
+            : "The call did not result in a conversation (status: {$status}).";
+        $note = sprintf('Lisa AI call: %s ElevenLabs status: %s. Conversation ID: %s', $detail, $status, $callId);
+        $pdo->prepare(
+            "INSERT INTO call_log (lead_id, outcome, notes)
+             SELECT ?, 'no_answer', ?
+             WHERE NOT EXISTS (SELECT 1 FROM call_log WHERE lead_id = ? AND notes = ?)"
+        )->execute([$leadId, $note, $leadId, $note]);
     }
 
     public static function adminStats(): void
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $authTokenConfigured = trim((string) Settings::get('twilio_auth_token')) !== '';
-        $accountSidConfigured = trim((string) Settings::get('twilio_account_sid')) !== '';
-        $whatsappNumber = trim((string) Settings::get('twilio_whatsapp_number'));
-        $voiceNumber = trim((string) Settings::get('twilio_voice_number'));
-        $voiceEnabled = Settings::get('twilio_voice_enabled') === '1';
+        $phoneAgentConfigured = trim((string) Settings::get('elevenlabs_phone_agent_id')) !== '';
+        $phoneNumberConfigured = trim((string) Settings::get('elevenlabs_phone_number_id')) !== '';
+        $webhookSecretConfigured = trim((string) Settings::get('elevenlabs_phone_webhook_secret')) !== '';
+        $postcallSecretConfigured = trim((string) Settings::get('elevenlabs_phone_postcall_signing_secret')) !== '';
         $summary = $pdo->query(
             "SELECT
                 COUNT(*) AS sessions,
@@ -441,16 +438,9 @@ final class VoiceDemoController
             'events' => $events,
             'recent' => $recent,
             'call_logs' => $callLogs,
-            'telephony_enabled' => $voiceEnabled && $authTokenConfigured && $voiceNumber !== '',
-            'voice_number' => $voiceNumber ?: null,
-            'webhook_url' => 'https://princecaleb.dev/api/v1/voice/twilio/incoming',
-            'status_callback_url' => 'https://princecaleb.dev/api/v1/voice/twilio/status',
-            'whatsapp' => [
-                'sandbox_tested' => true,
-                'configured' => $authTokenConfigured && $whatsappNumber !== '',
-                'number' => $whatsappNumber ?: null,
-                'webhook_url' => 'https://princecaleb.dev/api/v1/whatsapp/webhook',
-            ],
+            'telephony_enabled' => $phoneAgentConfigured && $phoneNumberConfigured,
+            'webhook_url' => 'https://princecaleb.dev/api/v1/voice/elevenlabs/init',
+            'post_call_webhook_url' => 'https://princecaleb.dev/api/v1/voice/elevenlabs/post-call',
             'marketing_calls' => [
                 'queued' => $callQueue,
                 'logged_today' => $callsToday,
@@ -461,179 +451,28 @@ final class VoiceDemoController
                 'approval_gated_ai_calls' => true,
             ],
             'readiness' => [
-                ['label' => 'Twilio Account SID saved', 'complete' => $accountSidConfigured],
-                ['label' => 'Twilio Auth Token saved', 'complete' => $authTokenConfigured],
-                ['label' => 'WhatsApp sender number saved', 'complete' => $whatsappNumber !== ''],
-                ['label' => 'WhatsApp sandbox tested with Lisa', 'complete' => true],
-                ['label' => 'Regulatory Bundle approved', 'complete' => Settings::get('twilio_regulatory_approved') === '1', 'external' => true],
-                ['label' => 'Production WhatsApp sender approved', 'complete' => Settings::get('twilio_whatsapp_production_approved') === '1', 'external' => true],
-                ['label' => 'Voice number saved', 'complete' => $voiceNumber !== ''],
-                ['label' => 'Customer-service voice agent enabled', 'complete' => $voiceEnabled],
-                [
-                    'label' => 'Natural ConversationRelay configured',
-                    'complete' => self::conversationRelayReady(),
-                    'external' => true,
-                ],
+                ['label' => 'ElevenLabs phone agent ID saved', 'complete' => $phoneAgentConfigured],
+                ['label' => 'ElevenLabs phone number ID saved', 'complete' => $phoneNumberConfigured],
+                ['label' => 'Phone webhook secret saved', 'complete' => $webhookSecretConfigured],
+                ['label' => 'Post-call signing secret saved', 'complete' => $postcallSecretConfigured],
             ],
         ]);
     }
 
-    /** @return array{reply:string,provider:?string,mode:string,booking_confirmed:bool} */
-    private static function reply(array $transcript, string $channel = 'web', ?array $context = null): array
+    /** @return array{reply:string,provider:?string,mode:string} */
+    private static function reply(array $transcript): array
     {
-        if ($channel === 'outbound') {
-            $context ??= [];
-            $context['is_first_turn'] = !array_filter(
-                $transcript,
-                static fn(mixed $turn): bool => is_array($turn) && ($turn['role'] ?? '') === 'assistant'
-            );
-        }
-        $systemPrompt = self::prompt($channel, $context);
-
-        $bookingResult = null;
-        $voiceToolsEnabled = in_array($channel, ['phone', 'outbound'], true);
-        $tools = $voiceToolsEnabled ? self::voiceToolDeclarations() : [];
-        $toolExecutor = static function (string $name, array $args) use (
-            &$bookingResult,
-            $transcript,
-            $context
-        ): array {
-            try {
-                if ($name === 'check_availability') {
-                    return AppointmentController::getAvailableSlots((string) ($args['date'] ?? ''));
-                }
-                if ($name === 'check_availability_range') {
-                    return AppointmentController::getAvailableDateRange(
-                        (string) ($args['start_date'] ?? ''),
-                        (string) ($args['end_date'] ?? '')
-                    );
-                }
-                if ($name === 'book_appointment') {
-                    if (!self::bookingConfirmationGiven($transcript)) {
-                        return ['success' => false, 'error' => 'Read the exact date, time, and timezone back to the caller and wait for an explicit confirmation first.'];
-                    }
-                    $args['phone'] = trim((string) ($args['phone'] ?? '')) ?: self::callPartyNumber($context ?? []);
-                    $args['name'] = trim((string) ($args['name'] ?? ''))
-                        ?: trim((string) (($context ?? [])['contact_name'] ?? ''));
-                    $trustedEmail = self::trustedBookingEmail($transcript, $context ?? []);
-                    if ($trustedEmail === '') {
-                        return [
-                            'success' => false,
-                            'error' => 'No verified email is available. Ask the caller for their real email, read it back, and wait for them to confirm it before booking.',
-                        ];
-                    }
-                    // Never trust an address invented in tool arguments. Only
-                    // book with an address sourced from the reviewed lead or
-                    // explicitly read back and confirmed during this call.
-                    $args['email'] = $trustedEmail;
-                    $bookingResult = AppointmentController::createBooking($args);
-                    if (!empty($bookingResult['success'])) {
-                        $bookingResult['name'] = $args['name'];
-                        $bookingResult['email'] = $trustedEmail;
-                    }
-                    return $bookingResult;
-                }
-                return ['error' => 'Unknown phone action.'];
-            } catch (\Throwable $e) {
-                error_log(sprintf('Voice Lisa tool "%s" failed: %s', $name, $e->getMessage()));
-                return ['error' => 'The action could not be completed.'];
-            }
-        };
-        // Once the caller has explicitly confirmed the exact read-back, do
-        // not leave the final action to model discretion. Models can choose
-        // to ask the same confirmation again instead of calling the tool,
-        // creating an audible loop. Execute the validated booking
-        // deterministically when all required values can be recovered.
-        if ($voiceToolsEnabled
-            && self::bookingConfirmationGiven($transcript)
-            && ($confirmedArgs = self::confirmedBookingArguments($transcript, $context ?? [])) !== null) {
-            $bookingResult = $toolExecutor('book_appointment', $confirmedArgs);
-        }
-
-        $result = is_array($bookingResult) && !empty($bookingResult['success'])
-            ? ['reply' => null, 'provider' => null, 'mode' => 'fallback']
-            : AiAgentEngine::runLowLatency(
-                $systemPrompt,
-                $tools,
-                $toolExecutor,
-                $transcript,
-                $voiceToolsEnabled ? 2 : 1
-            );
-        if (is_array($bookingResult) && !empty($bookingResult['success'])) {
-            $contactName = trim((string) ($bookingResult['name'] ?? ''));
-            $thanks = $contactName !== '' ? ' Thank you, ' . $contactName . '.' : ' Thank you.';
-            $result['reply'] = sprintf(
-                'Your booking is confirmed for %s at %s, %s. A confirmation email is on its way.%s Have a great day. Goodbye.',
-                (string) $bookingResult['date'],
-                (string) $bookingResult['time'],
-                (string) $bookingResult['timezone'],
-                $thanks
-            );
-        } elseif ($voiceToolsEnabled && ($identityPrompt = self::requiredBookingIdentityPrompt(
-            $transcript,
-            $context ?? [],
-            (string) ($result['reply'] ?? '')
-        )) !== null) {
-            $result['reply'] = $identityPrompt;
-        } elseif ($voiceToolsEnabled && self::containsUnverifiedActionClaim((string) ($result['reply'] ?? ''))) {
-            $result['reply'] = 'I have your preferred time, but it is not booked or confirmed yet. I need your name, email, an available exact time, and your clear confirmation before I can create the booking.';
-        }
+        $systemPrompt = self::prompt('web');
+        $noopExecutor = static fn(string $name, array $args): array => ['error' => 'No tools available.'];
+        $result = AiAgentEngine::runLowLatency($systemPrompt, [], $noopExecutor, $transcript, 1);
         if (!is_string($result['reply']) || trim($result['reply']) === '') {
-            $result['reply'] = in_array($channel, ['phone', 'outbound'], true)
-                ? "The customer service assistant is temporarily unavailable. Please use the contact or booking option on princecaleb.dev."
-                : "I can demonstrate routine call handling, appointment intake, approved clinic FAQs, "
-                    . "and safe staff handoffs. The AI service is temporarily unavailable, but the demo never performs real actions.";
+            $result['reply'] = "I can demonstrate routine call handling, appointment intake, approved clinic FAQs, "
+                . "and safe staff handoffs. The AI service is temporarily unavailable, but the demo never performs real actions.";
         }
         return [
             'reply' => trim($result['reply']),
             'provider' => $result['provider'],
             'mode' => $result['mode'],
-            'booking_confirmed' => is_array($bookingResult) && !empty($bookingResult['success']),
-        ];
-    }
-
-    private static function voiceToolDeclarations(): array
-    {
-        return [
-            [
-                'name' => 'check_availability',
-                'description' => 'Check real appointment availability for one exact date before offering times. If more than four slots are returned, ask for a morning or afternoon preference and offer at most four exact times.',
-                'parameters' => [
-                    'type' => 'OBJECT',
-                    'properties' => [
-                        'date' => ['type' => 'STRING', 'description' => 'Date in YYYY-MM-DD format.'],
-                    ],
-                    'required' => ['date'],
-                ],
-            ],
-            [
-                'name' => 'book_appointment',
-                'description' => 'Create a real booking only after the caller has supplied a real name and email, selected an exact returned slot, heard the exact date/time/timezone read back, and explicitly confirmed it.',
-                'parameters' => [
-                    'type' => 'OBJECT',
-                    'properties' => [
-                        'name' => ['type' => 'STRING'],
-                        'email' => ['type' => 'STRING'],
-                        'phone' => ['type' => 'STRING'],
-                        'date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
-                        'time' => ['type' => 'STRING', 'description' => 'Exact HH:MM value returned by check_availability.'],
-                        'topic' => ['type' => 'STRING'],
-                    ],
-                    'required' => ['name', 'email', 'date', 'time'],
-                ],
-            ],
-            [
-                'name' => 'check_availability_range',
-                'description' => 'Check real open dates and exact slots across a requested range of up to 14 days. Summarize dates first and never read every time across every day.',
-                'parameters' => [
-                    'type' => 'OBJECT',
-                    'properties' => [
-                        'start_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
-                        'end_date' => ['type' => 'STRING', 'description' => 'YYYY-MM-DD'],
-                    ],
-                    'required' => ['start_date', 'end_date'],
-                ],
-            ],
         ];
     }
 
@@ -673,7 +512,9 @@ final class VoiceDemoController
                 . "contact name, "
                 . "your identity, the full service list, or a canned closing on every turn. Use no markdown, lists, "
                 . "emoji, or spoken URLs. Immediately respect no, not interested, stop, "
-                . "or a request to call later; do not pressure, argue, or continue pitching. Never hide that you are "
+                . "or a request to call later; do not pressure, argue, or continue pitching — call the log_opt_out "
+                . "tool for a firm no, or log_callback_request if they ask to be called later, then say goodbye. "
+                . "Never hide that you are "
                 . "an AI assistant. Do not collect sensitive information, payment details, passwords, IDs, or health "
                 . "information. You can check real availability and create a real booking using your tools. Never "
                 . "claim a booking, email, calendar event, Slack alert, saved note, or notification succeeded unless "
@@ -682,7 +523,8 @@ final class VoiceDemoController
                 . "an explicit yes. A vague response does not confirm a slot. When a reviewed email is provided below, "
                 . "ask the person to confirm it is still the right email; never read the full address aloud first. "
                 . "You may offer a WhatsApp or email summary "
-                . "after the person shows interest. Ask clearly which channel they permit. Only offer email when the "
+                . "after the person shows interest. Ask clearly which channel they permit, then call "
+                . "capture_whatsapp_followup_consent or capture_email_followup_consent with the confirmed detail. Only offer email when the "
                 . "reviewed lead has an email on file; never ask someone to spell an email address aloud. "
                 . "For WhatsApp, ask whether Lisa may send it to the number on this call. "
                 . "Never say it was sent during the call; after explicit agreement say it will be sent after the call. "
@@ -725,7 +567,8 @@ final class VoiceDemoController
                 . "yes. Ask the caller to spell their email, repeat it back carefully, and obtain confirmation before "
                 . "using it. A vague answer such as right, okay, or go ahead after multiple options is not confirmation. "
                 . "You cannot transfer calls. You may offer a WhatsApp summary after the caller "
-                . "shows interest. Ask clearly whether Lisa may send it to the number on this call. Email summaries "
+                . "shows interest. Ask clearly whether Lisa may send it to the number on this call, then call "
+                . "capture_whatsapp_followup_consent with the confirmed number. Email summaries "
                 . "are only available when a reviewed outbound lead already has a valid email on file. Never ask an "
                 . "inbound caller to spell an email address aloud. Never say a follow-up was "
                 . "sent during the call; after explicit agreement say it will be sent after the call. If a caller wants to proceed, ask "
@@ -746,6 +589,12 @@ final class VoiceDemoController
             . "Do not ask for a real name, phone, email, patient number, symptoms, or health history. "
             . "You may answer questions about implementation, privacy-by-design, human handoff, and Prince's services."
             . LisaInstructions::promptBlock('website voice demos');
+    }
+
+    /** Builds the outbound system prompt for a reviewed Marketing Lead call, used by OutreachController::initiateAiCall(). */
+    public static function outboundPrompt(array $context): string
+    {
+        return self::prompt('outbound', $context + ['is_first_turn' => true]);
     }
 
     private static function session(\PDO $pdo, string $token, string $channel, string $niche): array
@@ -777,7 +626,7 @@ final class VoiceDemoController
             ->execute([$sessionId, $event, json_encode($meta, JSON_UNESCAPED_UNICODE)]);
     }
 
-    private static function isOwnerNumber(string $number): bool
+    public static function isOwnerNumber(string $number): bool
     {
         $ownerNumber = self::normalizePhoneNumber((string) Settings::get('owner_voice_number'));
         return $ownerNumber !== '' && hash_equals($ownerNumber, self::normalizePhoneNumber($number));
@@ -789,282 +638,6 @@ final class VoiceDemoController
         if ($number === '') return '';
         $digits = preg_replace('/\D+/', '', $number) ?? '';
         return $digits === '' ? '' : '+' . $digits;
-    }
-
-    private static function bookingConfirmationGiven(array $transcript): bool
-    {
-        $lastUser = '';
-        $previousAssistant = '';
-        foreach (array_reverse($transcript) as $turn) {
-            if ($lastUser === '' && ($turn['role'] ?? '') === 'user') {
-                $lastUser = trim((string) ($turn['text'] ?? ''));
-                continue;
-            }
-            if ($lastUser !== '' && ($turn['role'] ?? '') === 'assistant') {
-                $previousAssistant = trim((string) ($turn['text'] ?? ''));
-                break;
-            }
-        }
-        $explicitYes = preg_match(
-            '/^\s*(?:yes|yes please|correct|confirmed|I confirm|that(?:\'s| is) correct|please book it)\b/i',
-            $lastUser
-        ) === 1;
-        // The preceding question must explicitly ask permission to create
-        // the appointment. Merely confirming a name/email in a sentence
-        // which also happens to mention "booking" is not final consent.
-        $asksToBook = preg_match(
-            '/\b(?:may I|can I|shall I|should I)\s+(?:go ahead and\s+)?book\b|'
-            . '\bready (?:for me )?to book\b|'
-            . '\b(?:does|is)\b.{0,45}\b(?:sound|correct)\b.{0,25}\bto book\b|'
-            . '\bplease confirm\b.{0,80}\b(?:before|and)\b.{0,25}\bbook\b/i',
-            $previousAssistant
-        ) === 1;
-        $readBack = $asksToBook
-            && preg_match('/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/i', $previousAssistant) === 1
-            && preg_match('/\b(?:Africa\/Accra|GMT|UTC|time(?:zone)?)\b/i', $previousAssistant) === 1
-            && preg_match('/\b(?:20\d{2}|\d{4}-\d{2}-\d{2})\b/', $previousAssistant) === 1;
-        return $explicitYes && $readBack;
-    }
-
-    private static function requiredBookingIdentityPrompt(
-        array $transcript,
-        array $context,
-        string $proposedReply
-    ): ?string {
-        $allText = strtolower(implode(' ', array_map(
-            static fn(array $turn): string => (string) ($turn['text'] ?? ''),
-            array_filter($transcript, 'is_array')
-        )));
-        if (!preg_match('/\b(?:book|booking|appointment|schedule|follow-up call|call back|callback)\b/i', $allText)) {
-            return null;
-        }
-
-        $userText = implode(' ', array_map(
-            static fn(array $turn): string => ($turn['role'] ?? '') === 'user'
-                ? (string) ($turn['text'] ?? '')
-                : '',
-            array_filter($transcript, 'is_array')
-        ));
-        $hasEmail = filter_var(trim((string) ($context['contact_email'] ?? '')), FILTER_VALIDATE_EMAIL)
-            || preg_match('/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i', $userText) === 1
-            || self::confirmedEmailInTranscript($transcript);
-        $hasName = trim((string) ($context['contact_name'] ?? '')) !== ''
-            || preg_match('/\b(?:my name is|this is|I am|I\'m)\s+([a-z][a-z .\'-]{1,80})/i', $userText) === 1;
-        if ($hasName && $hasEmail) return null;
-
-        $replyAlreadyAsks = (!$hasName && preg_match('/\b(?:your|full)\s+name\b/i', $proposedReply))
-            || (!$hasEmail && stripos($proposedReply, 'email') !== false);
-        if ($replyAlreadyAsks) return null;
-        if (!$hasName && !$hasEmail) {
-            return 'Before I check and confirm a booking, may I have your full name and email address? Please spell the email slowly so I can repeat it back accurately.';
-        }
-        if (!$hasName) {
-            return 'Before I check and confirm the booking, may I have your full name?';
-        }
-        return 'Before I check and confirm the booking, may I have your email address? Please spell it slowly so I can repeat it back accurately.';
-    }
-
-    /**
-     * Spoken email addresses often arrive across several transcription turns.
-     * Accept the normalized address only when Lisa read a syntactically valid
-     * address back and the caller explicitly confirmed that immediately after.
-     */
-    private static function confirmedEmailInTranscript(array $transcript): bool
-    {
-        return self::confirmedEmailAddress($transcript) !== '';
-    }
-
-    private static function confirmedEmailAddress(array $transcript): string
-    {
-        $pendingEmail = '';
-        $confirmedEmail = '';
-        foreach ($transcript as $turn) {
-            if (!is_array($turn)) continue;
-            $role = (string) ($turn['role'] ?? '');
-            $text = trim((string) ($turn['text'] ?? ''));
-
-            if ($role === 'assistant') {
-                $pendingEmail = preg_match(
-                    '/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i',
-                    $text,
-                    $matches
-                ) === 1 ? strtolower($matches[0]) : '';
-                continue;
-            }
-
-            if ($role === 'user' && $pendingEmail !== '') {
-                if (preg_match(
-                    '/^\s*(?:yes|yes please|correct|confirmed|that(?:\'s| is) right|that(?:\'s| is) correct|right)\b/i',
-                    $text
-                ) === 1) {
-                    $confirmedEmail = $pendingEmail;
-                }
-                $pendingEmail = '';
-            }
-        }
-        return $confirmedEmail;
-    }
-
-    private static function trustedBookingEmail(array $transcript, array $context): string
-    {
-        $confirmed = self::confirmedEmailAddress($transcript);
-        if ($confirmed !== '') return $confirmed;
-
-        $reviewed = strtolower(trim((string) ($context['contact_email'] ?? '')));
-        if (filter_var($reviewed, FILTER_VALIDATE_EMAIL)
-            && !self::isExampleEmailAddress($reviewed)) {
-            return $reviewed;
-        }
-        return '';
-    }
-
-    /** @return array{name:string,email:string,phone:string,date:string,time:string,topic:string}|null */
-    private static function confirmedBookingArguments(array $transcript, array $context): ?array
-    {
-        $previousAssistant = '';
-        foreach (array_reverse($transcript) as $turn) {
-            if (($turn['role'] ?? '') === 'assistant') {
-                $previousAssistant = trim((string) ($turn['text'] ?? ''));
-                break;
-            }
-        }
-        if ($previousAssistant === '') return null;
-
-        $date = '';
-        if (preg_match('/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/', $previousAssistant, $match)) {
-            $date = sprintf('%04d-%02d-%02d', (int) $match[1], (int) $match[2], (int) $match[3]);
-        } elseif (preg_match('/\b(\d{1,2})\s*[,\/-]\s*(\d{1,2})\s*[,\/-]\s*(20\d{2})\b/', $previousAssistant, $match)) {
-            $date = sprintf('%04d-%02d-%02d', (int) $match[3], (int) $match[2], (int) $match[1]);
-        }
-
-        $time = '';
-        if (preg_match('/\b([01]?\d|2[0-3]):([0-5]\d)\b/', $previousAssistant, $match)) {
-            $time = sprintf('%02d:%02d', (int) $match[1], (int) $match[2]);
-        } elseif (preg_match('/\b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(AM|PM)\b/i', $previousAssistant, $match)) {
-            $hour = (int) $match[1] % 12;
-            if (strtoupper($match[3]) === 'PM') $hour += 12;
-            $time = sprintf('%02d:%02d', $hour, isset($match[2]) && $match[2] !== '' ? (int) $match[2] : 0);
-        }
-
-        $name = trim((string) ($context['contact_name'] ?? ''));
-        if ($name === '') {
-            foreach ($transcript as $turn) {
-                if (($turn['role'] ?? '') !== 'user') continue;
-                if (preg_match(
-                    '/\b(?:my name is|this is|I am|I\'m)\s+([a-z][a-z .\'-]{1,80})/i',
-                    (string) ($turn['text'] ?? ''),
-                    $match
-                )) {
-                    $name = trim($match[1]);
-                    break;
-                }
-            }
-        }
-
-        $email = self::trustedBookingEmail($transcript, $context);
-        if ($date === '' || $time === '' || $name === '' || $email === '') return null;
-
-        return [
-            'name' => $name,
-            'email' => $email,
-            'phone' => self::callPartyNumber($context),
-            'date' => $date,
-            'time' => $time,
-            'topic' => trim((string) ($context['business_name'] ?? 'Consultation')),
-        ];
-    }
-
-    private static function isExampleEmailAddress(string $email): bool
-    {
-        $domain = strtolower((string) substr(strrchr($email, '@') ?: '', 1));
-        return in_array($domain, ['example.com', 'example.org', 'example.net'], true);
-    }
-
-    private static function callPartyNumber(array $context): string
-    {
-        $number = ($context['direction'] ?? '') === 'outbound'
-            ? (string) ($context['to_number'] ?? '')
-            : (string) ($context['from_number'] ?? '');
-        return self::normalizePhoneNumber($number);
-    }
-
-    private static function containsUnverifiedActionClaim(string $reply): bool
-    {
-        if ($reply === '') return false;
-        if (preg_match('/\b(?:not|isn\'t|is not|cannot|can\'t)\s+(?:yet\s+)?(?:booked|confirmed|scheduled|sent|saved)\b/i', $reply)) {
-            return false;
-        }
-        return preg_match(
-            '/\b(?:is|has been|you(?:\'re| are))\s+(?:booked|confirmed|scheduled)\b|'
-            . '\bI(?:\'ll| will)\s+(?:make a note|let Prince Caleb know|schedule|book|notify)\b|'
-            . '\bPrince Caleb will reach out\b|'
-            . '\b(?:confirmation email|calendar invite|Slack alert)\s+(?:is|has been|was)\s+(?:sent|created)\b/i',
-            $reply
-        ) === 1;
-    }
-
-    private static function captureWhatsAppConsent(
-        \PDO $pdo,
-        string $callSid,
-        string $speech,
-        array $transcript,
-        array $callContext
-    ): void {
-        if (preg_match('/\b(?:do not|don\'t|no|not)\b.{0,25}\bwhatsapp\b/i', $speech)) return;
-        $explicit = preg_match(
-            '/\b(?:send|message|share)\b.{0,35}\b(?:whatsapp|summary|details)\b|\bwhatsapp\b.{0,35}\b(?:send|message|share)\b/i',
-            $speech
-        ) === 1;
-        $lastAssistant = '';
-        foreach (array_reverse($transcript) as $turn) {
-            if (($turn['role'] ?? '') === 'assistant') {
-                $lastAssistant = (string) ($turn['text'] ?? '');
-                break;
-            }
-        }
-        $acceptedOffer = stripos($lastAssistant, 'whatsapp') !== false
-            && preg_match('/^\s*(?:yes|yeah|sure|okay|ok|please|that(?:\'s| is) fine|go ahead)\b/i', $speech) === 1;
-        if (!$explicit && !$acceptedOffer) return;
-
-        $number = ($callContext['direction'] ?? '') === 'outbound'
-            ? (string) ($callContext['to_number'] ?? '')
-            : (string) ($callContext['from_number'] ?? '');
-        $number = self::normalizePhoneNumber($number);
-        if (!preg_match('/^\+[1-9]\d{7,14}$/', $number)) return;
-        $pdo->prepare(
-            "UPDATE telephony_calls SET whatsapp_followup_consent_at = datetime('now'),
-             whatsapp_followup_number = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
-        )->execute([$number, $callSid]);
-    }
-
-    private static function captureEmailConsent(
-        \PDO $pdo,
-        string $callSid,
-        string $speech,
-        array $transcript,
-        array $callContext
-    ): void {
-        $email = trim((string) ($callContext['contact_email'] ?? ''));
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return;
-        if (preg_match('/\b(?:do not|don\'t|no|not)\b.{0,25}\bemail\b/i', $speech)) return;
-        $explicit = preg_match(
-            '/\b(?:send|message|share|email)\b.{0,35}\b(?:email|summary|details)\b/i',
-            $speech
-        ) === 1;
-        $lastAssistant = '';
-        foreach (array_reverse($transcript) as $turn) {
-            if (($turn['role'] ?? '') === 'assistant') {
-                $lastAssistant = (string) ($turn['text'] ?? '');
-                break;
-            }
-        }
-        $acceptedOffer = stripos($lastAssistant, 'email') !== false
-            && preg_match('/^\s*(?:yes|yeah|sure|okay|ok|please|that(?:\'s| is) fine|go ahead)\b/i', $speech) === 1;
-        if (!$explicit && !$acceptedOffer) return;
-        $pdo->prepare(
-            "UPDATE telephony_calls SET email_followup_consent_at = datetime('now'),
-             email_followup_address = ?, updated_at = datetime('now') WHERE provider_call_id = ?"
-        )->execute([$email, $callSid]);
     }
 
     private static function queuePostCallFollowup(\PDO $pdo, string $callSid): bool
@@ -1097,105 +670,56 @@ final class VoiceDemoController
         return true;
     }
 
-    private static function callerFinishedConversation(string $speech): bool
+    /**
+     * Custom secret you create and set as a header/query param on the
+     * ElevenLabs phone agent's init/tool webhooks. Mirrors
+     * LiveChatController::verifyElevenLabsSecret() (WhatsApp), including its
+     * query-string fallback for the tool webhook, which ElevenLabs is
+     * confirmed (2026-08-08, WhatsApp channel) to not reliably send as a
+     * header on tool calls.
+     */
+    private static function verifyElevenLabsPhoneSecret(): bool
     {
-        return preg_match(
-            '/\b(?:goodbye|bye(?:\s+bye)?|that(?:\'s| is) all|that will be all|'
-            . 'nothing else|no,?\s+thanks|no,?\s+thank you|thanks,?\s+bye|'
-            . 'thank you,?\s+bye|we(?:\'re| are) done|end the call|hang up)\b/i',
-            $speech
-        ) === 1;
-    }
-
-    private static function assistantFinishedConversation(string $reply): bool
-    {
-        return preg_match(
-            '/\b(?:goodbye|bye-bye|have a (?:good|great|lovely|wonderful) '
-            . '(?:day|evening|weekend)|speak (?:to you )?soon)\b/i',
-            $reply
-        ) === 1;
-    }
-
-    private static function verifyTwilio(): bool
-    {
-        $authToken = Settings::get('twilio_auth_token');
-        $signature = $_SERVER['HTTP_X_TWILIO_SIGNATURE'] ?? '';
-        if (!$authToken || $signature === '') return false;
-        $scheme = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https' : 'http';
-        $url = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '');
-        $params = $_POST;
-        ksort($params);
-        $data = $url;
-        foreach ($params as $key => $value) $data .= $key . $value;
-        return hash_equals($signature, base64_encode(hash_hmac('sha1', $data, (string) $authToken, true)));
-    }
-
-    private static function twimlGather(string $message): void
-    {
-        if (self::conversationRelayReady()) {
-            self::twimlConversationRelay($message);
-            return;
-        }
-        header('Content-Type: text/xml; charset=utf-8');
-        $action = '/api/v1/voice/twilio/turn';
-        $voice = self::twilioVoice();
-        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="'
-            . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '" language="en-GB">'
-            . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8')
-            . '</Say><Gather input="speech" action="' . $action
-            . '" method="POST" timeout="10" speechTimeout="auto" language="en-GB"></Gather><Say voice="'
-            . htmlspecialchars($voice, ENT_XML1 | ENT_QUOTES, 'UTF-8')
-            . '" language="en-GB">I did not hear a response. Goodbye.</Say></Response>';
-    }
-
-    private static function twimlConversationRelay(string $welcomeGreeting): void
-    {
-        header('Content-Type: text/xml; charset=utf-8');
-        $url = trim((string) Settings::get('twilio_conversation_relay_url'));
-        $voice = trim((string) Settings::get('twilio_conversation_relay_voice'));
-        if ($voice === '') {
-            $voice = 'Xb7hH8MSUJpSbSDYk0k2';
-        }
-        $xml = static fn (string $value): string =>
-            htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Connect>'
-            . '<ConversationRelay url="' . $xml($url) . '"'
-            . ' welcomeGreeting="' . $xml($welcomeGreeting) . '"'
-            . ' welcomeGreetingInterruptible="speech" language="en-GB"'
-            . ' ttsProvider="ElevenLabs" voice="' . $xml($voice) . '"'
-            . ' transcriptionProvider="Deepgram" speechModel="nova-3-general"'
-            . ' interruptible="speech" interruptSensitivity="medium"'
-            . ' reportInputDuringAgentSpeech="speech" ignoreBackchannel="true"'
-            . ' speechTimeout="900" elevenlabsTextNormalization="on"'
-            . ' events="speaker-events tokens-played" />'
-            . '</Connect></Response>';
-    }
-
-    private static function conversationRelayReady(): bool
-    {
-        if (Settings::get('twilio_conversation_relay_enabled') !== '1') {
+        $expected = trim((string) Settings::get('elevenlabs_phone_webhook_secret'));
+        if ($expected === '') {
             return false;
         }
-        $url = trim((string) Settings::get('twilio_conversation_relay_url'));
-        $secret = trim((string) Settings::get('twilio_conversation_relay_secret'));
-        return $secret !== '' && filter_var($url, FILTER_VALIDATE_URL) !== false
-            && str_starts_with(strtolower($url), 'wss://');
+        $provided = trim((string) ($_SERVER['HTTP_X_ELEVENLABS_SECRET'] ?? ''));
+        if ($provided !== '' && hash_equals($expected, $provided)) {
+            return true;
+        }
+        $queryProvided = trim((string) ($_GET['secret'] ?? ''));
+        return $queryProvided !== '' && hash_equals($expected, $queryProvided);
     }
 
-    private static function twimlSay(string $message): void
+    /**
+     * ElevenLabs-generated HMAC secret for the post-call webhook, Stripe-style
+     * signing. Mirrors LiveChatController::verifyElevenLabsHmacSignature().
+     */
+    private static function verifyElevenLabsPhoneHmacSignature(string $rawBody): bool
     {
-        header('Content-Type: text/xml; charset=utf-8');
-        echo '<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="'
-            . htmlspecialchars(self::twilioVoice(), ENT_XML1 | ENT_QUOTES, 'UTF-8')
-            . '" language="en-GB">'
-            . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Say></Response>';
-    }
+        $secret = trim((string) Settings::get('elevenlabs_phone_postcall_signing_secret'));
+        $header = trim((string) ($_SERVER['HTTP_ELEVENLABS_SIGNATURE'] ?? ''));
+        if ($secret === '' || $header === '') {
+            return false;
+        }
 
-    private static function twilioVoice(): string
-    {
-        $voice = trim((string) Settings::get('twilio_voice_tts_voice'));
-        $allowed = ['Polly.Amy-Generative', 'Polly.Emma', 'Polly.Amy', 'Polly.Brian', 'woman', 'man'];
-        return in_array($voice, $allowed, true) ? $voice : 'Polly.Emma';
+        $parts = [];
+        foreach (explode(',', $header) as $piece) {
+            [$key, $val] = array_pad(explode('=', $piece, 2), 2, '');
+            $parts[trim($key)] = trim($val);
+        }
+        $timestamp = $parts['t'] ?? '';
+        $signature = $parts['v0'] ?? '';
+        if ($timestamp === '' || $signature === '' || !ctype_digit($timestamp)) {
+            return false;
+        }
+        if (abs(time() - (int) $timestamp) > 1800) {
+            error_log('ElevenLabs phone post-call webhook rejected: signature timestamp outside 30-minute tolerance.');
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp . '.' . $rawBody, $secret);
+        return hash_equals($expected, $signature);
     }
 }

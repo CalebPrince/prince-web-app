@@ -264,86 +264,6 @@ class LiveChatController
     }
 
     /**
-     * POST /api/v1/whatsapp/webhook — Twilio's incoming-message webhook.
-     * Lisa on WhatsApp: same brain as the web widget (generateReply(), same
-     * tools including signal_handoff for a human handoff), just a different
-     * front door. The session is keyed by the visitor's WhatsApp number
-     * itself (e.g. "whatsapp:+14155551234") via findOrCreateSessionByExactToken() —
-     * so a returning number resumes its own thread automatically, same as a
-     * saved browser token does for the web widget. Every WhatsApp thread
-     * also shows up in Admin -> Chat Leads alongside web ones.
-     *
-     * Replies via TwiML in the webhook response itself (Twilio's supported
-     * way to answer an incoming message synchronously) rather than a
-     * separate outbound API call — simpler, and needs only the Auth Token
-     * (for verifying the request really came from Twilio), not the Account
-     * SID or a REST call.
-     */
-    public static function whatsappWebhook(): void
-    {
-        set_time_limit(135);
-        if (in_array(Settings::get('whatsapp_provider'), ['whapi', 'elevenlabs'], true)) {
-            self::respondTwiml('');
-            return;
-        }
-
-        $authToken = Settings::get('twilio_auth_token');
-        if (empty($authToken) || !self::verifyTwilioSignature($authToken)) {
-            http_response_code(403);
-            exit;
-        }
-
-        $from = trim((string) ($_POST['From'] ?? '')); // e.g. "whatsapp:+14155551234"
-        $body = trim((string) ($_POST['Body'] ?? ''));
-        $profileName = trim((string) ($_POST['ProfileName'] ?? ''));
-
-        if ($from === '' || $body === '' || mb_strlen($body) > 1000) {
-            self::respondTwiml('');
-            return;
-        }
-
-        // Keyed per WhatsApp number (not IP) — the number itself is already
-        // a stable, hard-to-spoof identity here (Twilio only forwards real
-        // WhatsApp messages, verified above).
-        RateLimitMiddleware::enforce('whatsapp_' . preg_replace('/[^a-zA-Z0-9]/', '', $from), 30);
-
-        $pdo = Database::get();
-        $session = self::findOrCreateSessionByExactToken($pdo, $from);
-        $transcript = json_decode($session['transcript_json'], true) ?: [];
-
-        if (empty($session['client_phone'])) {
-            // Strip the "whatsapp:" prefix for display — Admin -> Chat Leads
-            // builds a tel: link straight from client_phone, which a raw
-            // "whatsapp:+14155551234" would break. The session's actual
-            // token (used for lookups above) keeps the prefixed form.
-            $displayPhone = preg_replace('/^whatsapp:/', '', $from);
-            $pdo->prepare('UPDATE chat_sessions SET client_phone = ?, client_name = ? WHERE id = ?')
-                ->execute([$displayPhone, $profileName !== '' ? $profileName : null, $session['id']]);
-        }
-
-        $transcript = self::rollingTranscript($transcript);
-
-        // Verified by matching Twilio's real, unspoofable From number against
-        // the admin-configured owner number — never inferred from message
-        // text (anyone could type "I'm Prince"), only from the phone itself.
-        $isOwner = self::isOwnerWhatsAppNumber($from);
-
-        $transcript[] = ['role' => 'user', 'text' => $body];
-        $projects = self::projectCatalog($pdo);
-        $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
-            'name' => $profileName,
-            'phone' => preg_replace('/^whatsapp:/', '', $from),
-        ]);
-
-        $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
-        $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
-        self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
-        self::markChatUnread($pdo, (int) $session['id']);
-
-        self::respondTwiml($result['reply']);
-    }
-
-    /**
      * Whapi.Cloud linked-device webhook. A private custom header configured
      * in Whapi authenticates callbacks, and message IDs prevent retry loops.
      */
@@ -414,7 +334,7 @@ class LiveChatController
      * POST /api/v1/whatsapp/elevenlabs-init — ElevenLabs' "Conversation
      * Initiation Client Data" webhook, called once when a WhatsApp voice
      * call or chat starts on the number connected to an ElevenLabs Agent.
-     * Unlike the Twilio/Whapi webhooks above, ElevenLabs runs the actual
+     * Unlike the Whapi webhook above, ElevenLabs runs the actual
      * turn-by-turn conversation itself (its own LLM loop) — this endpoint's
      * only job is to hand it Lisa's real, current system prompt so the
      * WhatsApp voice channel stays "one brain" with every other Lisa
@@ -474,7 +394,7 @@ class LiveChatController
         // Each WhatsApp message starts a brand-new ElevenLabs "conversation" —
         // confirmed live (2026-08-08), every message got its own separate entry
         // in ElevenLabs' Conversations list rather than one continuing thread —
-        // so unlike Twilio/Whapi (which pass the full transcript into every
+        // so unlike Whapi (which passes the full transcript into every
         // AiAgentEngine::run() call), this webhook is the only place prior
         // WhatsApp history can reach Lisa at all. Without this, every message
         // was effectively amnesiac regardless of what was said moments earlier.
@@ -694,15 +614,6 @@ class LiveChatController
         return hash_equals($expected, $signature);
     }
 
-    /** Empty $message sends no reply at all (Twilio just gets an ack) — used when there's nothing worth saying. */
-    private static function respondTwiml(string $message): void
-    {
-        header('Content-Type: text/xml; charset=utf-8');
-        echo '<?xml version="1.0" encoding="UTF-8"?><Response>'
-            . ($message !== '' ? '<Message>' . htmlspecialchars($message, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</Message>' : '')
-            . '</Response>';
-    }
-
     /** Digits only, so "whatsapp:+1 (415) 555-1234" and "+14155551234" compare equal. */
     private static function normalizePhoneDigits(string $phone): string
     {
@@ -723,35 +634,6 @@ class LiveChatController
             if ($saved !== '' && hash_equals($saved, $incoming)) return true;
         }
         return false;
-    }
-
-    /**
-     * Verifies the X-Twilio-Signature header per Twilio's documented
-     * algorithm: base64(HMAC-SHA1(authToken, requestUrl . sortedPostParams)).
-     * Rejects the request outright (caller responds 403) if this fails, so
-     * an attacker can't feed arbitrary "incoming WhatsApp messages" into
-     * Lisa's tool-calling pipeline just by POSTing to this URL directly.
-     */
-    private static function verifyTwilioSignature(string $authToken): bool
-    {
-        $signature = $_SERVER['HTTP_X_TWILIO_SIGNATURE'] ?? '';
-        if ($signature === '') {
-            return false;
-        }
-
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ? 'https' : 'http';
-        $url = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '');
-
-        $params = $_POST;
-        ksort($params);
-        $data = $url;
-        foreach ($params as $key => $value) {
-            $data .= $key . $value;
-        }
-
-        $expected = base64_encode(hash_hmac('sha1', $data, $authToken, true));
-        return hash_equals($expected, $signature);
     }
 
     /** GET /api/v1/chat/session/{token} — rehydrates a session for the prototype generator page */
@@ -1480,7 +1362,7 @@ class LiveChatController
 
         if ($isOwner) {
             // Verified via WhatsApp sender number matching Settings' owner_whatsapp_number
-            // (Twilio guarantees the From number is real) — never trust a plain claim of
+            // (the provider guarantees the From number is real) — never trust a plain claim of
             // "I'm Prince" in message text alone, since anyone could type that.
             $system .= "\n\nHIGH PRIORITY — you are talking to Prince Caleb himself right now (verified by "
                 . "his own phone number), not a visitor or prospective client. He built you and runs this "
@@ -1656,7 +1538,7 @@ class LiveChatController
             $tools[] = [
                 'name' => 'get_recent_calls',
                 'description' => 'Owner-only: read the real recent phone-call records, including approved Lisa '
-                    . 'outbound calls and their Twilio status. Use when Prince asks whether Lisa called a named '
+                    . 'outbound calls and their status. Use when Prince asks whether Lisa called a named '
                     . 'business, what happened to a recent call, or asks to see recent call activity.',
                 'parameters' => [
                     'type' => 'OBJECT',

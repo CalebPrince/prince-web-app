@@ -150,7 +150,6 @@ $pricingInsertStmt = $pdo->prepare('INSERT OR IGNORE INTO settings (name, value)
 $pricingInsertStmt->execute(['contact_phone', '+233 20 804 9962']);
 $pricingInsertStmt->execute(['ai_voice_public_number', '+44 7462 190814']);
 $pricingInsertStmt->execute(['social_whatsapp', 'https://wa.me/233535801359']);
-$pricingInsertStmt->execute(['twilio_whatsapp_number', 'whatsapp:+233535801359']);
 $personalNotificationSettings = [
     'owner_whatsapp_number' => '+233208049962',
     'notification_email' => 'hello@princecaleb.dev',
@@ -163,7 +162,6 @@ foreach ($personalNotificationSettings as $name => $value) {
     )->execute([$name, $value]);
 }
 $pricingUpdateStmt->execute(['https://wa.me/233535801359', 'social_whatsapp', 'https://wa.me/447462190814']);
-$pricingUpdateStmt->execute(['whatsapp:+233535801359', 'twilio_whatsapp_number', 'whatsapp:+447462190814']);
 foreach ($pricingOfferInserts as $name => $value) {
     $pricingInsertStmt->execute([$name, $value]);
 }
@@ -1520,7 +1518,7 @@ $pdo->exec(
         provider_call_id TEXT UNIQUE NOT NULL,
         session_id INTEGER NULL REFERENCES voice_demo_sessions(id) ON DELETE SET NULL,
         marketing_lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
-        provider TEXT NOT NULL DEFAULT 'twilio',
+        provider TEXT NOT NULL DEFAULT 'elevenlabs',
         direction TEXT NOT NULL DEFAULT 'inbound',
         from_number TEXT,
         to_number TEXT,

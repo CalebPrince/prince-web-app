@@ -18,19 +18,13 @@ class SettingsController
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'slack_webhook_url',
-        'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret',
+        'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'elevenlabs_webhook_secret', 'elevenlabs_whatsapp_agent_id', 'elevenlabs_postcall_signing_secret',
-        'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'owner_whatsapp_number',
-        'twilio_voice_enabled', 'twilio_voice_number', 'owner_voice_number', 'twilio_voice_tts_voice', 'twilio_regulatory_approved',
-        'twilio_conversation_relay_enabled', 'twilio_conversation_relay_url', 'twilio_conversation_relay_secret',
-        'twilio_conversation_relay_voice',
+        'elevenlabs_phone_agent_id', 'elevenlabs_phone_number_id',
+        'elevenlabs_phone_webhook_secret', 'elevenlabs_phone_postcall_signing_secret',
         'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model', 'scout_elevenlabs_voice_id',
         'liveavatar_enabled', 'liveavatar_api_key', 'liveavatar_avatar_id', 'liveavatar_context_id', 'liveavatar_voice_id',
         'liveavatar_llm_bridge_secret', 'liveavatar_llm_configuration_id', 'liveavatar_sandbox_enabled',
-        'twilio_whatsapp_production_approved',
-        'twilio_whatsapp_post_call_enabled', 'twilio_whatsapp_post_call_content_sid',
-        'twilio_whatsapp_post_call_template_status',
-        'twilio_balance_alert_threshold', 'twilio_last_balance', 'twilio_last_balance_currency', 'twilio_balance_checked_at',
         'integration_api_key', 'notification_email',
         'smtp_gmail_address', 'smtp_app_password', 'smtp_host', 'smtp_port', 'imap_host', 'mail_from', 'mail_from_name',
         'google_client_id',
@@ -223,14 +217,17 @@ class SettingsController
             if ($key === 'chat_persona' && mb_strlen($value) > LisaInstructions::MAX_LENGTH) {
                 Response::error('Lisa custom instructions must be 4,000 characters or fewer.', 422);
             }
-            if ($key === 'whatsapp_provider' && !in_array($value, ['twilio', 'whapi', 'elevenlabs'], true)) {
-                Response::error('Choose Twilio, Whapi, or ElevenLabs as the WhatsApp provider.', 422);
+            if ($key === 'whatsapp_provider' && !in_array($value, ['whapi', 'elevenlabs'], true)) {
+                Response::error('Choose Whapi or ElevenLabs as the WhatsApp provider.', 422);
             }
             if ($key === 'whapi_webhook_secret' && $value !== '' && mb_strlen($value) < 24) {
                 Response::error('The Whapi webhook secret must be at least 24 characters.', 422);
             }
             if ($key === 'elevenlabs_webhook_secret' && $value !== '' && mb_strlen($value) < 24) {
                 Response::error('The ElevenLabs webhook secret must be at least 24 characters.', 422);
+            }
+            if ($key === 'elevenlabs_phone_webhook_secret' && $value !== '' && mb_strlen($value) < 24) {
+                Response::error('The ElevenLabs phone webhook secret must be at least 24 characters.', 422);
             }
             if ($key === 'smtp_port' && $value !== ''
                 && (!is_numeric($value) || (int) $value < 1 || (int) $value > 65535)) {
@@ -247,10 +244,6 @@ class SettingsController
             if ($key === 'weekly_billable_hours' && $value !== ''
                 && (!is_numeric($value) || (float) $value <= 0 || (float) $value > 168)) {
                 Response::error('Weekly billable hours must be a positive number, at most 168.', 422);
-            }
-            if ($key === 'twilio_balance_alert_threshold' && $value !== ''
-                && (!is_numeric($value) || (float) $value < 0 || (float) $value > 999999)) {
-                Response::error('Balance alert threshold must be a valid positive amount.', 422);
             }
             if ($key === 'stale_lead_followup_days' && $value !== ''
                 && (!ctype_digit($value) || (int) $value < 1 || (int) $value > 90)) {

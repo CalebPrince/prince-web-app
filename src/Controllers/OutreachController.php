@@ -6,7 +6,6 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\Automations;
-use App\Support\CallOutcomeSync;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\LeadDiscovery;
@@ -477,7 +476,6 @@ class OutreachController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        CallOutcomeSync::reconcile($pdo);
 
         $rows = $pdo->query(
             "SELECT ml.id, ml.business_name, ml.contact_name, ml.contact_phone, ml.website_url, ml.pitch_body,
@@ -505,9 +503,10 @@ class OutreachController
     /**
      * POST /api/v1/admin/outreach/ai-call/{id}
      *
-     * Places exactly one admin-approved Twilio call. This endpoint is never
-     * called by cron or the outreach sender. The admin must confirm that the
-     * recipient requested or consented to the call in the request body.
+     * Places exactly one admin-approved call via ElevenLabs' SIP-trunk
+     * outbound-call API. This endpoint is never called by cron or the
+     * outreach sender. The admin must confirm that the recipient requested
+     * or consented to the call in the request body.
      */
     public static function initiateAiCall(array $params): void
     {
@@ -520,7 +519,7 @@ class OutreachController
         $pdo = Database::get();
         $leadId = (int) ($params['id'] ?? 0);
         $stmt = $pdo->prepare(
-            "SELECT id, business_name, contact_name, contact_phone, pitch_body, status, pitch_channel
+            "SELECT id, business_name, contact_name, contact_email, website_url, contact_phone, pitch_body, status, pitch_channel
              FROM marketing_leads WHERE id = ?"
         );
         $stmt->execute([$leadId]);
@@ -537,17 +536,14 @@ class OutreachController
             Response::error('The contact phone must use international format, for example +233…', 422);
         }
 
-        $accountSid = trim((string) Settings::get('twilio_account_sid'));
-        $authToken = trim((string) Settings::get('twilio_auth_token'));
-        $from = preg_replace('/[\s().-]+/', '', trim((string) Settings::get('twilio_voice_number'))) ?? '';
-        if (Settings::get('twilio_voice_enabled') !== '1' || $accountSid === '' || $authToken === '' || $from === '') {
-            Response::error('Enable the Twilio voice agent and save the Account SID, Auth Token, and voice number first.', 422);
-        }
-        if (!preg_match('/^AC[0-9a-fA-F]{32}$/', $accountSid) || !preg_match('/^\+[1-9]\d{7,14}$/', $from)) {
-            Response::error('The saved Twilio Account SID or voice number is invalid.', 422);
+        $apiKey = trim((string) Settings::get('elevenlabs_api_key'));
+        $agentId = trim((string) Settings::get('elevenlabs_phone_agent_id'));
+        $phoneNumberId = trim((string) Settings::get('elevenlabs_phone_number_id'));
+        if ($apiKey === '' || $agentId === '' || $phoneNumberId === '') {
+            Response::error('Save the ElevenLabs API key, phone agent ID, and phone number ID in Admin Settings first.', 422);
         }
         if (!function_exists('curl_init')) {
-            Response::error('The server needs the PHP cURL extension before it can start Twilio calls.', 503);
+            Response::error('The server needs the PHP cURL extension before it can start calls.', 503);
         }
         $aiCallsToday = self::aiCallsToday($pdo);
         if ($aiCallsToday >= self::AI_CALL_DAILY_CAP) {
@@ -566,67 +562,58 @@ class OutreachController
             Response::error('Lisa already has a recent active call for this lead.', 409);
         }
 
-        $answerUrl = 'https://princecaleb.dev/api/v1/voice/twilio/outbound?lead=' . $leadId;
-        $statusUrl = 'https://princecaleb.dev/api/v1/voice/twilio/status';
-        $payload = http_build_query([
-            'To' => $to,
-            'From' => $from,
-            'Url' => $answerUrl,
-            'Method' => 'POST',
-            'StatusCallback' => $statusUrl,
-            'StatusCallbackMethod' => 'POST',
-            'StatusCallbackEvent' => 'completed',
-        ]);
+        $context = [
+            'business_name' => (string) $lead['business_name'],
+            'contact_name' => (string) $lead['contact_name'],
+            'contact_email' => (string) $lead['contact_email'],
+            'website_url' => (string) $lead['website_url'],
+            'pitch_body' => (string) $lead['pitch_body'],
+        ];
+        $systemPrompt = VoiceDemoController::outboundPrompt($context);
 
-        $ch = curl_init("https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Calls.json");
+        $payload = json_encode([
+            'agent_id' => $agentId,
+            'agent_phone_number_id' => $phoneNumberId,
+            'to_number' => $to,
+            'conversation_initiation_client_data' => [
+                'dynamic_variables' => array_merge($context, ['lead_id' => (string) $leadId]),
+                'conversation_config_override' => [
+                    'agent' => ['prompt' => ['prompt' => $systemPrompt]],
+                ],
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+
+        $ch = curl_init('https://api.elevenlabs.io/v1/convai/sip-trunk/outbound-call');
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 20,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
-            CURLOPT_USERPWD => $accountSid . ':' . $authToken,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'xi-api-key: ' . $apiKey],
         ]);
         $raw = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
 
-        $twilio = is_string($raw) ? json_decode($raw, true) : null;
-        if ($raw === false || $httpCode < 200 || $httpCode >= 300 || !is_array($twilio) || empty($twilio['sid'])) {
-            error_log('Twilio outbound call failed: ' . ($curlError ?: (string) $raw));
-            Response::error('Twilio could not start the call. Check the number, balance, permissions, and Voice logs.', 502);
+        $eleven = is_string($raw) ? json_decode($raw, true) : null;
+        $conversationId = is_array($eleven) ? (string) ($eleven['conversation_id'] ?? '') : '';
+        if ($raw === false || $httpCode < 200 || $httpCode >= 300 || !is_array($eleven)
+            || empty($eleven['success']) || $conversationId === '') {
+            error_log('ElevenLabs outbound call failed: ' . ($curlError ?: (string) $raw));
+            Response::error('ElevenLabs could not start the call. Check the agent ID, phone number ID, SIP trunk, and Error Logs.', 502);
         }
 
         $pdo->prepare(
             "INSERT OR IGNORE INTO telephony_calls
-             (provider_call_id, marketing_lead_id, provider, direction, from_number, to_number, status, consent_confirmed_at)
-             VALUES (?, ?, 'twilio', 'outbound', ?, ?, ?, datetime('now'))"
-        )->execute([
-            (string) $twilio['sid'],
-            $leadId,
-            $from,
-            $to,
-            mb_substr((string) ($twilio['status'] ?? 'queued'), 0, 40),
-        ]);
-        $pdo->prepare(
-            "UPDATE telephony_calls
-             SET marketing_lead_id = ?, direction = 'outbound', from_number = ?, to_number = ?,
-                 status = ?, consent_confirmed_at = COALESCE(consent_confirmed_at, datetime('now')),
-                 updated_at = datetime('now')
-             WHERE provider_call_id = ?"
-        )->execute([
-            $leadId,
-            $from,
-            $to,
-            mb_substr((string) ($twilio['status'] ?? 'queued'), 0, 40),
-            (string) $twilio['sid'],
-        ]);
+             (provider_call_id, marketing_lead_id, provider, direction, to_number, status, consent_confirmed_at)
+             VALUES (?, ?, 'elevenlabs', 'outbound', ?, 'queued', datetime('now'))"
+        )->execute([$conversationId, $leadId, $to]);
 
         Response::json([
             'started' => true,
-            'call_sid' => $twilio['sid'],
-            'status' => $twilio['status'] ?? 'queued',
+            'call_sid' => $conversationId,
+            'status' => 'queued',
             'business_name' => $lead['business_name'],
             'remaining_today' => max(0, self::AI_CALL_DAILY_CAP - $aiCallsToday - 1),
         ], 201);

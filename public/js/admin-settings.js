@@ -159,22 +159,12 @@ async function saveIntegrations(e) {
       elevenlabs_whatsapp_agent_id: document.getElementById("elevenlabs-whatsapp-agent-id").value.trim(),
       elevenlabs_webhook_secret: document.getElementById("elevenlabs-webhook-secret").value.trim(),
       elevenlabs_postcall_signing_secret: document.getElementById("elevenlabs-postcall-signing-secret").value.trim(),
-      twilio_auth_token: document.getElementById("twilio-auth-token").value.trim(),
-      twilio_account_sid: document.getElementById("twilio-account-sid").value.trim(),
-      twilio_whatsapp_number: document.getElementById("twilio-whatsapp-number").value.trim(),
-      twilio_regulatory_approved: document.getElementById("twilio-regulatory-approved").checked ? "1" : "0",
-      twilio_whatsapp_production_approved: document.getElementById("twilio-whatsapp-production-approved").checked ? "1" : "0",
-      twilio_balance_alert_threshold: document.getElementById("twilio-balance-alert-threshold").value.trim(),
-      twilio_whatsapp_post_call_enabled: document.getElementById("twilio-whatsapp-post-call-enabled").checked ? "1" : "0",
       owner_whatsapp_number: document.getElementById("owner-whatsapp-number").value.trim(),
-      twilio_voice_enabled: document.getElementById("twilio-voice-enabled").checked ? "1" : "0",
-      twilio_voice_number: document.getElementById("twilio-voice-number").value.trim(),
       owner_voice_number: document.getElementById("owner-voice-number").value.trim(),
-      twilio_voice_tts_voice: document.getElementById("twilio-voice-tts-voice").value,
-      twilio_conversation_relay_enabled: document.getElementById("twilio-conversation-relay-enabled").checked ? "1" : "0",
-      twilio_conversation_relay_url: document.getElementById("twilio-conversation-relay-url").value.trim(),
-      twilio_conversation_relay_secret: document.getElementById("twilio-conversation-relay-secret").value.trim(),
-      twilio_conversation_relay_voice: document.getElementById("twilio-conversation-relay-voice").value.trim(),
+      elevenlabs_phone_agent_id: document.getElementById("elevenlabs-phone-agent-id").value.trim(),
+      elevenlabs_phone_number_id: document.getElementById("elevenlabs-phone-number-id").value.trim(),
+      elevenlabs_phone_webhook_secret: document.getElementById("elevenlabs-phone-webhook-secret").value.trim(),
+      elevenlabs_phone_postcall_signing_secret: document.getElementById("elevenlabs-phone-postcall-signing-secret").value.trim(),
       serper_api_key: document.getElementById("serper-key").value.trim(),
       hunter_api_key: document.getElementById("hunter-key").value.trim(),
       apify_api_key: document.getElementById("apify-key").value.trim(),
@@ -272,40 +262,6 @@ function wireHoursControls() {
   const toggle = document.getElementById("hours-enabled");
   if (toggle) toggle.addEventListener("change", syncHoursEnabledState);
   syncHoursEnabledState();
-}
-
-function renderWhatsAppTemplate(state) {
-  const status = (state?.status || "not_created").replaceAll("_", " ");
-  const badge = document.getElementById("whatsapp-template-status");
-  badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-  badge.className = `status-pill ${status === "approved" ? "sent" : ""}`;
-  document.getElementById("whatsapp-template-meta").textContent =
-    `Template: ${state?.template_name || "lisa_post_call_summary"} · SID: ${state?.content_sid || "not created"}`;
-  document.getElementById("whatsapp-template-test").disabled = status !== "approved";
-}
-
-async function runWhatsAppTemplateAction(path, successMessage) {
-  const buttons = ["whatsapp-template-create", "whatsapp-template-refresh", "whatsapp-template-test"]
-    .map(id => document.getElementById(id));
-  buttons.forEach(button => { button.disabled = true; });
-  try {
-    const state = await api.post(path, {});
-    if (state?.content_sid || state?.template_name) renderWhatsAppTemplate(state);
-    showMsg("whatsapp-template-msg", successMessage, true);
-  } catch (err) {
-    showMsg("whatsapp-template-msg", err.message, false);
-  } finally {
-    buttons.forEach(button => { button.disabled = false; });
-    try { renderWhatsAppTemplate(await api.get("/api/v1/admin/whatsapp-template")); } catch (_) {}
-  }
-}
-
-async function loadWhatsAppTemplate() {
-  try {
-    renderWhatsAppTemplate(await api.get("/api/v1/admin/whatsapp-template"));
-  } catch (err) {
-    showMsg("whatsapp-template-msg", err.message, false);
-  }
 }
 
 function updateLisaInstructionCount() {
@@ -717,6 +673,25 @@ async function testAi() {
       alert("Could not copy automatically — select the field manually and copy.");
     }
   });
+  document.getElementById("generate-elevenlabs-phone-secret")?.addEventListener("click", () => {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    document.getElementById("elevenlabs-phone-webhook-secret").value =
+      Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
+  });
+  document.getElementById("copy-elevenlabs-phone-secret")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const value = document.getElementById("elevenlabs-phone-webhook-secret").value;
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      const icon = btn.querySelector("i");
+      icon.className = "bi bi-check2";
+      setTimeout(() => { icon.className = "bi bi-clipboard"; }, 1500);
+    } catch (err) {
+      alert("Could not copy automatically — select the field manually and copy.");
+    }
+  });
   const user = await requireAdminAuth();
   if (!user) return;
   wireLogout();
@@ -758,12 +733,6 @@ async function testAi() {
   document.getElementById("lisa-instructions-clear").addEventListener("click", clearLisaInstructions);
   document.getElementById("appearance-form").addEventListener("submit", saveAppearance);
   document.getElementById("social-draft-form").addEventListener("submit", saveSocialDraft);
-  document.getElementById("whatsapp-template-create").addEventListener("click", () =>
-    runWhatsAppTemplateAction("/api/v1/admin/whatsapp-template", "Template created and submitted to Meta."));
-  document.getElementById("whatsapp-template-refresh").addEventListener("click", () =>
-    runWhatsAppTemplateAction("/api/v1/admin/whatsapp-template/refresh", "Approval status refreshed."));
-  document.getElementById("whatsapp-template-test").addEventListener("click", () =>
-    runWhatsAppTemplateAction("/api/v1/admin/whatsapp-template/test", "Test WhatsApp message queued."));
   try {
     const settings = await api.get("/api/v1/admin/settings");
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
@@ -786,38 +755,18 @@ async function testAi() {
     document.getElementById("liveavatar-voice-id").value = settings.liveavatar_voice_id || "";
     document.getElementById("liveavatar-llm-bridge-secret").value = settings.liveavatar_llm_bridge_secret || "";
     document.getElementById("liveavatar-llm-configuration-id").value = settings.liveavatar_llm_configuration_id || "";
-    document.getElementById("whatsapp-provider").value = settings.whatsapp_provider || "twilio";
+    document.getElementById("whatsapp-provider").value = settings.whatsapp_provider || "elevenlabs";
     document.getElementById("whapi-api-token").value = settings.whapi_api_token || "";
     document.getElementById("whapi-webhook-secret").value = settings.whapi_webhook_secret || "";
     document.getElementById("elevenlabs-whatsapp-agent-id").value = settings.elevenlabs_whatsapp_agent_id || "";
     document.getElementById("elevenlabs-webhook-secret").value = settings.elevenlabs_webhook_secret || "";
     document.getElementById("elevenlabs-postcall-signing-secret").value = settings.elevenlabs_postcall_signing_secret || "";
-    document.getElementById("twilio-auth-token").value = settings.twilio_auth_token || "";
-    document.getElementById("twilio-account-sid").value = settings.twilio_account_sid || "";
-    document.getElementById("twilio-whatsapp-number").value = settings.twilio_whatsapp_number || "";
-    document.getElementById("twilio-regulatory-approved").checked = settings.twilio_regulatory_approved === "1";
-    document.getElementById("twilio-whatsapp-production-approved").checked = settings.twilio_whatsapp_production_approved === "1";
-    document.getElementById("twilio-balance-alert-threshold").value = settings.twilio_balance_alert_threshold || "10";
-    {
-      const statusEl = document.getElementById("twilio-balance-status");
-      if (settings.twilio_last_balance) {
-        const currency = settings.twilio_last_balance_currency || "USD";
-        const checkedAt = settings.twilio_balance_checked_at
-          ? new Date(settings.twilio_balance_checked_at).toLocaleString()
-          : "unknown time";
-        statusEl.textContent = `Last checked balance: ${currency} ${settings.twilio_last_balance} (as of ${checkedAt})`;
-      }
-    }
-    document.getElementById("twilio-whatsapp-post-call-enabled").checked = settings.twilio_whatsapp_post_call_enabled === "1";
     document.getElementById("owner-whatsapp-number").value = settings.owner_whatsapp_number || "";
-    document.getElementById("twilio-voice-enabled").checked = settings.twilio_voice_enabled === "1";
-    document.getElementById("twilio-voice-number").value = settings.twilio_voice_number || "";
     document.getElementById("owner-voice-number").value = settings.owner_voice_number || "";
-    document.getElementById("twilio-voice-tts-voice").value = settings.twilio_voice_tts_voice || "Polly.Emma";
-    document.getElementById("twilio-conversation-relay-enabled").checked = settings.twilio_conversation_relay_enabled === "1";
-    document.getElementById("twilio-conversation-relay-url").value = settings.twilio_conversation_relay_url || "";
-    document.getElementById("twilio-conversation-relay-secret").value = settings.twilio_conversation_relay_secret || "";
-    document.getElementById("twilio-conversation-relay-voice").value = settings.twilio_conversation_relay_voice || "Xb7hH8MSUJpSbSDYk0k2";
+    document.getElementById("elevenlabs-phone-agent-id").value = settings.elevenlabs_phone_agent_id || "";
+    document.getElementById("elevenlabs-phone-number-id").value = settings.elevenlabs_phone_number_id || "";
+    document.getElementById("elevenlabs-phone-webhook-secret").value = settings.elevenlabs_phone_webhook_secret || "";
+    document.getElementById("elevenlabs-phone-postcall-signing-secret").value = settings.elevenlabs_phone_postcall_signing_secret || "";
     document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("hunter-key").value = settings.hunter_api_key || "";
     document.getElementById("apify-key").value = settings.apify_api_key || "";
@@ -889,7 +838,6 @@ async function testAi() {
     document.getElementById("default_theme").value = settings.default_theme || "";
     document.getElementById("splash_screen_enabled").value = settings.splash_screen_enabled || "1";
     document.getElementById("animation_style").value = settings.animation_style || "slide-up";
-    await loadWhatsAppTemplate();
   } catch (_) { /* fields stay empty */ }
 
   document.getElementById("fetch-linkedin-urn-btn").addEventListener("click", fetchLinkedInAuthorUrn);

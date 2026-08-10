@@ -345,7 +345,7 @@ class DashboardController
         }
         $raw = trim((string) Settings::get('external_service_expenses'));
         if ($raw === '') {
-            $raw = "Fly.io | 3.00 | fixed\nTwilio phone number | 2.50 | fixed\nTwilio calls & relay | 5.00 | usage\nElevenLabs | 6.00 | fixed\nNamecheap hosting | 0.00 | fixed";
+            $raw = "Fly.io | 3.00 | fixed\nElevenLabs | 6.00 | fixed\nNamecheap hosting | 0.00 | fixed";
         }
 
         $items = [];
@@ -362,7 +362,6 @@ class DashboardController
         }
 
         $connected = [
-            'Twilio' => !empty(Settings::get('twilio_account_sid')),
             'ElevenLabs' => !empty(Settings::get('elevenlabs_api_key')),
             'Gemini' => !empty(Settings::get('gemini_api_key')),
             'OpenRouter' => !empty(Settings::get('openrouter_api_key')),
@@ -581,17 +580,6 @@ class DashboardController
         $replyTable = $pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='nurturer_replies'")->fetchColumn();
         if ($replyTable) foreach ($pdo->query("SELECT id,from_email,subject,classification,received_at FROM nurturer_replies WHERE status='review'") as $r)
             $add('nurturer_reply:'.$r['id'], 'Follow-up', 'Jason needs reply approval', $r['from_email'].' · '.$r['subject'], '/admin/agent-chat.html', $r['received_at'], 'warning');
-        $lastBalance = Settings::get('twilio_last_balance');
-        if ($lastBalance !== null) {
-            $threshold = (float) (Settings::get('twilio_balance_alert_threshold') ?: 10.0);
-            if ((float) $lastBalance < $threshold) {
-                $currency = Settings::get('twilio_last_balance_currency') ?: 'USD';
-                $checkedAt = Settings::get('twilio_balance_checked_at') ?: gmdate('c');
-                $add('twilio_balance:1', 'Billing', 'Twilio balance is low',
-                    $currency.' '.number_format((float) $lastBalance, 2).' remaining — calls and WhatsApp will stop at zero.',
-                    '/admin/settings.html', $checkedAt, 'danger');
-            }
-        }
         usort($items, static fn($a,$b) => strcmp($b['date'], $a['date']));
         return array_slice($items, 0, 100);
     }

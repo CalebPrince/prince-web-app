@@ -357,7 +357,7 @@ class Chief
         $items = [];
         $raw = trim((string) Settings::get('external_service_expenses'));
         if ($raw === '') {
-            $raw = "Fly.io | 3.00 | fixed\nTwilio phone number | 2.50 | fixed\nTwilio calls & relay | 5.00 | usage\nElevenLabs | 6.00 | fixed\nNamecheap hosting | 0.00 | fixed";
+            $raw = "Fly.io | 3.00 | fixed\nElevenLabs | 6.00 | fixed\nNamecheap hosting | 0.00 | fixed";
         }
         foreach (preg_split('/\R/', $raw) ?: [] as $line) {
             $parts = array_map('trim', explode('|', $line));

@@ -306,11 +306,10 @@
               <div class="mb-3">
                 <label class="form-label fw-semibold" for="whatsapp-provider">WhatsApp provider</label>
                 <select class="form-select" id="whatsapp-provider">
-                  <option value="twilio">Twilio (official Business API)</option>
                   <option value="whapi">Whapi.Cloud sandbox (temporary)</option>
                   <option value="elevenlabs">ElevenLabs (native voice + chat)</option>
                 </select>
-                <div class="form-text">Only one provider handles the live number at a time — switching here stops the others from processing incoming messages/calls, it does not disconnect them elsewhere.</div>
+                <div class="form-text">Only one provider handles the live number at a time — switching here stops the other from processing incoming messages/calls, it does not disconnect it elsewhere.</div>
               </div>
               <div class="mb-3">
                 <label class="form-label" for="whapi-api-token">Whapi channel API token</label>
@@ -359,133 +358,44 @@
               </div>
             </div>
             <div class="mb-3">
-              <label class="form-label">Twilio Auth Token <span class="text-muted-custom fw-normal">(Twilio WhatsApp and Voice)</span></label>
-              <input type="password" class="form-control" id="twilio-auth-token" placeholder="Paste your Twilio Auth Token" autocomplete="off">
-              <div class="form-text">From your Twilio Console. Verifies that incoming WhatsApp webhook requests really came from Twilio before Lisa replies to them.</div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Twilio Account SID <span class="text-muted-custom fw-normal">(reference)</span></label>
-              <input type="text" class="form-control" id="twilio-account-sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Twilio WhatsApp number <span class="text-muted-custom fw-normal">(reference)</span></label>
-              <input type="text" class="form-control" id="twilio-whatsapp-number" placeholder="whatsapp:+14155238886" autocomplete="off">
+              <label class="form-label">Owner voice number <span class="text-muted-custom fw-normal">(so Lisa recognizes you)</span></label>
+              <input type="tel" class="form-control" id="owner-voice-number" placeholder="+233208049962" autocomplete="tel">
               <div class="form-text">
-                Set your webhook URL in the Twilio Console (WhatsApp Sender &rarr; "When a message comes in") to
-                <code>https://princecaleb.dev/api/v1/whatsapp/webhook</code>, method POST. Lisa replies using the same
-                brain as the site's live chat, including handing off to you when needed — no separate setup for that.
-              </div>
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-md-6">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="twilio-regulatory-approved">
-                  <label class="form-check-label" for="twilio-regulatory-approved">Regulatory Bundle approved</label>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="twilio-whatsapp-production-approved">
-                  <label class="form-check-label" for="twilio-whatsapp-production-approved">Production WhatsApp sender approved</label>
-                </div>
-              </div>
-              <div class="col-12">
-                <div class="form-text">Mark these after the corresponding Twilio or Meta review is complete. They update the Voice Demo readiness checklist.</div>
+                Enter the number you call from, including the country code. Lisa will greet you as Prince Caleb,
+                but caller ID recognition alone never authorizes access to private data or sensitive actions. Used for both
+                WhatsApp and phone-call owner recognition.
               </div>
             </div>
             <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
-              <div class="fw-semibold mb-2">Low-balance alert</div>
-              <div class="mb-2">
-                <label class="form-label" for="twilio-balance-alert-threshold">Alert threshold (USD)</label>
-                <input type="number" step="0.01" min="0" class="form-control" id="twilio-balance-alert-threshold" placeholder="10.00">
-                <div class="form-text">
-                  Emails the notification address above, and messages your own WhatsApp number below (if configured), once when the Twilio
-                  balance drops below this amount, and once more when it recovers. Calls (inbound and outbound) and WhatsApp sending all draw
-                  from the same balance, so a drain from any one of them can silently stop all three. Requires
-                  <code>database/check_twilio_balance.php</code> on an hourly cron.
-                </div>
-              </div>
-              <div class="small text-muted-custom" id="twilio-balance-status">Balance not checked yet.</div>
-            </div>
-            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
-              <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
-                <div>
-                  <div class="fw-semibold">Lisa post-call WhatsApp summaries</div>
-                  <div class="form-text mt-1">Lisa asks permission during a call. After a completed call, an approved Meta template sends a concise transcript summary to that caller.</div>
-                </div>
-                <span class="status-pill" id="whatsapp-template-status">Not created</span>
-              </div>
-              <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="twilio-whatsapp-post-call-enabled">
-                <label class="form-check-label" for="twilio-whatsapp-post-call-enabled">Enable consent-based post-call summaries</label>
-              </div>
-              <div class="small text-muted-custom mb-3" id="whatsapp-template-meta">Template: lisa_post_call_summary</div>
-              <div id="whatsapp-template-msg" class="alert py-2 small d-none"></div>
-              <div class="d-flex flex-wrap gap-2">
-                <button type="button" class="btn btn-dark btn-sm" id="whatsapp-template-create">Create and submit</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="whatsapp-template-refresh">Refresh approval</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="whatsapp-template-test">Send test to me</button>
-              </div>
-              <div class="form-text mt-3">Meta approval is still required. Add <code>php database/process_whatsapp_call_followups.php</code> to cron every 5 minutes after deployment.</div>
-            </div>
-            <div class="p-3 mb-3 rounded" style="border:1px solid var(--line); background:var(--bg-soft);">
-              <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="twilio-voice-enabled">
-                <label class="form-check-label fw-semibold" for="twilio-voice-enabled">Enable Twilio customer-service voice agent</label>
+              <h6 class="mb-2">ElevenLabs Phone (SIP trunk)</h6>
+              <p class="text-muted-custom small mb-3">Connect a number from a SIP trunk provider (Telnyx, Plivo, Vonage, etc.) to ElevenLabs first — buy the number there, add it as a SIP trunk in ElevenLabs' Phone Numbers settings, and create or reuse a Conversational AI agent for phone calls. This is a separate agent/number from the ElevenLabs WhatsApp panel above — WhatsApp numbers can't place or receive regular phone calls. Same two auth styles as WhatsApp: the init/tool webhooks use a secret <em>you</em> create; the post-call webhook uses a secret <em>ElevenLabs</em> generates.</p>
+              <div class="mb-3">
+                <label class="form-label" for="elevenlabs-phone-agent-id">ElevenLabs phone agent ID</label>
+                <input type="text" class="form-control" id="elevenlabs-phone-agent-id" autocomplete="off" placeholder="agent_...">
               </div>
               <div class="mb-3">
-                <label class="form-label">Twilio Voice number</label>
-                <input type="text" class="form-control" id="twilio-voice-number" placeholder="+233...">
+                <label class="form-label" for="elevenlabs-phone-number-id">ElevenLabs phone number ID</label>
+                <input type="text" class="form-control" id="elevenlabs-phone-number-id" autocomplete="off" placeholder="phnum_...">
+                <div class="form-text">Shown in ElevenLabs' Phone Numbers list after you import the SIP trunk number. Required to place outbound calls via the API.</div>
               </div>
               <div class="mb-3">
-                <label class="form-label">Owner voice number <span class="text-muted-custom fw-normal">(so Lisa recognizes you)</span></label>
-                <input type="tel" class="form-control" id="owner-voice-number" placeholder="+233208049962" autocomplete="tel">
+                <label class="form-label" for="elevenlabs-phone-webhook-secret">ElevenLabs phone webhook secret <span class="text-muted-custom fw-normal">(you create this)</span></label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="elevenlabs-phone-webhook-secret" autocomplete="new-password" placeholder="Create a long random secret">
+                  <button type="button" class="btn btn-outline-secondary" id="generate-elevenlabs-phone-secret">Generate</button>
+                  <button type="button" class="btn btn-outline-secondary" id="copy-elevenlabs-phone-secret" title="Copy to clipboard"><i class="bi bi-clipboard"></i></button>
+                </div>
                 <div class="form-text">
-                  Enter the number you call from, including the country code. Lisa will greet you as Prince Caleb,
-                  but caller ID recognition alone never authorizes access to private data or sensitive actions.
+                  Conversation initiation webhook: <code>https://princecaleb.dev/api/v1/voice/elevenlabs/init</code> — add custom header <code>X-ElevenLabs-Secret</code> set to this value.<br>
+                  Tool webhooks: point each tool at <code>https://princecaleb.dev/api/v1/voice/elevenlabs/tool?tool_name=check_availability</code> (swap the tool_name per tool — e.g. <code>book_appointment</code>, <code>capture_whatsapp_followup_consent</code>, <code>capture_email_followup_consent</code>, <code>log_opt_out</code>, <code>log_callback_request</code>), same custom header as above.
                 </div>
               </div>
-              <div class="mb-3">
-                <label class="form-label" for="twilio-voice-tts-voice">Lisa's phone voice</label>
-                <select class="form-select" id="twilio-voice-tts-voice">
-                  <option value="Polly.Amy-Generative">Amy Generative — UK female, most natural (Twilio public beta)</option>
-                  <option value="Polly.Emma">Emma — UK female</option>
-                  <option value="Polly.Amy">Amy — UK female</option>
-                  <option value="Polly.Brian">Brian — UK male</option>
-                  <option value="woman">Woman — UK female, basic</option>
-                  <option value="man">Man — UK male, basic</option>
-                </select>
+              <div class="mb-0">
+                <label class="form-label" for="elevenlabs-phone-postcall-signing-secret">Post-call webhook signing secret <span class="text-muted-custom fw-normal">(ElevenLabs generates this)</span></label>
+                <input type="password" class="form-control" id="elevenlabs-phone-postcall-signing-secret" autocomplete="new-password" placeholder="Paste the secret ElevenLabs shows when you create this webhook">
                 <div class="form-text">
-                  Applies to all inbound greetings, conversation replies, and approved outbound calls.
-                  Phone voices are generated by Twilio, so they will sound different from browser voices on the website.
-                  Generative voice usage costs more than standard voice usage and is currently a Twilio public beta.
+                  Post-call webhook: <code>https://princecaleb.dev/api/v1/voice/elevenlabs/post-call</code>. Paste the secret ElevenLabs generates when you add this URL — don't invent one, and don't add a custom header for this one.
                 </div>
-              </div>
-              <div class="p-3 mb-3 rounded" style="border:1px solid var(--line);">
-                <div class="form-check form-switch mb-3">
-                  <input class="form-check-input" type="checkbox" id="twilio-conversation-relay-enabled">
-                  <label class="form-check-label fw-semibold" for="twilio-conversation-relay-enabled">Use natural ConversationRelay calls</label>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label" for="twilio-conversation-relay-url">Secure relay WebSocket URL</label>
-                  <input type="url" class="form-control" id="twilio-conversation-relay-url" placeholder="wss://your-relay.example.com/conversation">
-                  <div class="form-text">Must start with <code>wss://</code>. Leave this mode off until the companion relay is deployed and its health check passes.</div>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label" for="twilio-conversation-relay-secret">Relay shared secret</label>
-                  <input type="password" class="form-control" id="twilio-conversation-relay-secret" placeholder="A long random secret" autocomplete="new-password">
-                  <div class="form-text">Use the same value as <code>RELAY_SHARED_SECRET</code> on the companion service.</div>
-                </div>
-                <div class="mb-0">
-                  <label class="form-label" for="twilio-conversation-relay-voice">ElevenLabs voice ID</label>
-                  <input type="text" class="form-control" id="twilio-conversation-relay-voice" placeholder="Xb7hH8MSUJpSbSDYk0k2">
-                  <div class="form-text">Defaults to Alice, a clear British female ElevenLabs voice. You can replace it with another ConversationRelay-supported ElevenLabs voice ID.</div>
-                </div>
-              </div>
-              <div class="form-text">
-                In Twilio Console, set this number's incoming-call webhook to
-                <code>https://princecaleb.dev/api/v1/voice/twilio/incoming</code> using POST, and its status callback to
-                <code>https://princecaleb.dev/api/v1/voice/twilio/status</code>. The same Auth Token above verifies every request.
               </div>
             </div>
             <div class="mb-3">
@@ -493,9 +403,9 @@
               <input type="text" class="form-control" id="owner-whatsapp-number" placeholder="+14155551234" autocomplete="off">
               <div class="form-text">
                 Include the country code (e.g. +233 for Ghana) — a local format like "024..." won't match. When you
-                message Lisa from this exact number, she knows it's really you (Twilio verifies the sender, so this
-                can't be spoofed by anyone else) and skips the sales/lead-capture flow entirely — no name/email/phone
-                questions, no quote pitches, just a normal conversation.
+                message Lisa from this exact number, she knows it's really you (the WhatsApp provider verifies the
+                sender, so this can't be spoofed by anyone else) and skips the sales/lead-capture flow entirely — no
+                name/email/phone questions, no quote pitches, just a normal conversation.
               </div>
             </div>
             <div class="mb-3">

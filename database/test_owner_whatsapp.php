@@ -40,8 +40,8 @@ if ($mode === 'all' || $mode === 'lisa') {
         . "Admin Inbox: https://princecaleb.dev/admin/inbox.html"
     );
     echo $sent
-        ? "Lisa demo WhatsApp accepted by Twilio.\n"
-        : "Lisa demo WhatsApp failed; check the PHP error log and Twilio Messaging logs.\n";
+        ? "Lisa demo WhatsApp accepted by Whapi.\n"
+        : "Lisa demo WhatsApp failed; check the PHP error log and Whapi delivery logs.\n";
     $failed = $failed || !$sent;
 }
 
@@ -64,8 +64,8 @@ if ($mode === 'all' || $mode === 'chief') {
         $brief['emailed_at'] = $brief['emailed_at'] ?: 'test-email-suppressed';
         $sent = Chief::emailBrief($pdo, $brief);
         echo $sent
-            ? "Chief demo WhatsApp accepted by Twilio.\n"
-            : "Chief demo has a failed notification channel; check the PHP error log and Twilio Messaging logs.\n";
+            ? "Chief demo WhatsApp accepted by Whapi.\n"
+            : "Chief demo has a failed notification channel; check the PHP error log and Whapi delivery logs.\n";
         $failed = $failed || !$sent;
     }
 }
