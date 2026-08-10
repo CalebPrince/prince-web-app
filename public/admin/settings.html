@@ -206,7 +206,17 @@
           <div id="capability-status" class="mb-3"></div>
           <form id="integrations-form">
             <div class="mb-3">
-              <label class="form-label">Gemini API key <span class="text-muted-custom fw-normal">(powers Live Chat + prototypes)</span></label>
+              <label class="form-label">DeepSeek API key <span class="text-muted-custom fw-normal">(primary — tried first, for cost)</span></label>
+              <input type="password" class="form-control" id="deepseek-key" placeholder="sk-..." autocomplete="off">
+              <div class="form-text">Get a key at platform.deepseek.com. Tried before Gemini on every AI call — cheap, paid-from-first-token pricing that undercuts Gemini's paid tier once its free quota is exhausted. Falls through to Gemini/OpenRouter/Groq automatically on any failure. Leave empty to use Gemini first, same as before.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">DeepSeek model <span class="text-muted-custom fw-normal">(optional)</span></label>
+              <input type="text" class="form-control" id="deepseek-model" placeholder="deepseek-v4-flash" autocomplete="off">
+              <div class="form-text">Defaults to deepseek-v4-flash (cheapest) if left blank. deepseek-v4-pro is pricier but more capable.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Gemini API key <span class="text-muted-custom fw-normal">(fallback if DeepSeek is unset or errors)</span></label>
               <input type="password" class="form-control" id="gemini-key" placeholder="AIza..." autocomplete="off">
               <div class="form-text">Get a free key at aistudio.google.com — leave empty to fall back to .env.</div>
             </div>
@@ -216,9 +226,9 @@
               <div class="form-text">Defaults to gemini-2.5-flash if left blank. Avoid the <code>-latest</code> aliases: they track Google's newest model, which is the most contended, and return "503 high demand" under load. Pin a specific model instead.</div>
             </div>
             <div class="mb-3">
-              <label class="form-label">OpenRouter API key <span class="text-muted-custom fw-normal">(fallback if Gemini errors — pitches, prototypes, AI assistant only, not the Live Chat conversation itself)</span></label>
+              <label class="form-label">OpenRouter API key <span class="text-muted-custom fw-normal">(fallback if DeepSeek and Gemini both error — pitches, prototypes, AI assistant only, not the Live Chat conversation itself)</span></label>
               <input type="password" class="form-control" id="openrouter-key" placeholder="sk-or-..." autocomplete="off">
-              <div class="form-text">Get a key at openrouter.ai — optional, only used when Gemini fails (e.g. quota exhausted).</div>
+              <div class="form-text">Get a key at openrouter.ai — optional, only used when DeepSeek and Gemini both fail (e.g. quota exhausted).</div>
             </div>
             <div class="mb-3">
               <label class="form-label">OpenRouter model <span class="text-muted-custom fw-normal">(optional)</span></label>
@@ -226,9 +236,9 @@
               <div class="form-text">Defaults to openrouter/free (OpenRouter's free-tier router) if left blank.</div>
             </div>
             <div class="mb-3">
-              <label class="form-label">Groq API key <span class="text-muted-custom fw-normal">(second fallback, if Gemini and OpenRouter both fail)</span></label>
+              <label class="form-label">Groq API key <span class="text-muted-custom fw-normal">(last fallback, if DeepSeek, Gemini, and OpenRouter all fail)</span></label>
               <input type="password" class="form-control" id="groq-key" placeholder="gsk_..." autocomplete="off">
-              <div class="form-text">Get a free key at console.groq.com — independent quota from Gemini/OpenRouter, so it keeps AI features working if either runs out of credit.</div>
+              <div class="form-text">Get a free key at console.groq.com — independent quota from the others, so it keeps AI features working if all three run out of credit.</div>
             </div>
             <div class="mb-3">
               <label class="form-label">Groq model <span class="text-muted-custom fw-normal">(optional)</span></label>

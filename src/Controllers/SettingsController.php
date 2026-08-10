@@ -17,6 +17,7 @@ class SettingsController
 {
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
+        'deepseek_api_key', 'deepseek_model',
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'slack_webhook_url',
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'elevenlabs_webhook_secret', 'elevenlabs_whatsapp_agent_id', 'elevenlabs_postcall_signing_secret',

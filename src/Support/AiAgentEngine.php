@@ -7,9 +7,13 @@ namespace App\Support;
 /**
  * Shared tool-calling engine for AI agents: given a system prompt, a set of
  * tool declarations (Gemini functionDeclarations shape), and a tool
- * executor, runs the same three-provider fallback (Gemini -> OpenRouter ->
- * Groq, each only if its key is configured) and tool-calling round-trip
- * loop that Live Chat's "Lisa" agent originally had built in directly.
+ * executor, runs the same four-provider fallback (DeepSeek -> Gemini ->
+ * OpenRouter -> Groq, each only if its key is configured) and tool-calling
+ * round-trip loop that Live Chat's "Lisa" agent originally had built in
+ * directly. DeepSeek is tried first as a cost-cutting measure (cheap,
+ * paid-from-first-token, vs. Gemini's paid tier once its free quota runs
+ * out) — this is a cost decision, not a reliability ranking; every provider
+ * still degrades gracefully to the next if it fails.
  * Extracted so a second, differently-configured agent (different persona,
  * different tools) can reuse this machinery instead of duplicating it.
  *
@@ -34,6 +38,10 @@ namespace App\Support;
  */
 class AiAgentEngine
 {
+    // DeepSeek is tried first (see run()) — it's a paid-from-first-token
+    // provider, not a free tier, so its own timeout budget doesn't need the
+    // generous headroom the free-tier legs below need.
+    private const DEEPSEEK_CHAT_TIMEOUT_SECONDS = 15;
     private const GEMINI_CHAT_TIMEOUT_SECONDS = 12;
     // Free-tier OpenRouter models are often slower than Gemini — reusing
     // Gemini's 12s budget here was cutting the fallback off mid-response
@@ -72,17 +80,40 @@ class AiAgentEngine
         $provider = null;
         $ready = false;
 
-        $geminiKey = Settings::get('gemini_api_key');
-        if (!empty($geminiKey)) {
-            $result = self::chatWithGemini(
-                $geminiKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, $onExhaustedFallback, $maxToolRounds
+        // Tried first: a cost-cutting move, not a reliability one — DeepSeek
+        // is a cheap, paid-from-first-token API rather than the free tiers
+        // below, so resolving here means most turns never touch Gemini's
+        // paid-tier billing once its free quota is exhausted. Any hard
+        // failure or unusable response falls through to Gemini exactly like
+        // a Gemini failure falls through to OpenRouter below.
+        $deepseekKey = Settings::get('deepseek_api_key');
+        if (!empty($deepseekKey)) {
+            $result = self::chatWithDeepSeek(
+                $deepseekKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, $onExhaustedFallback, $maxToolRounds
             );
             if ($result !== null) {
                 $ready = $ready || $result['ready'];
                 if ($result['reply'] !== null) {
                     $reply = $result['reply'];
                     $mode = 'ai';
-                    $provider = 'gemini';
+                    $provider = 'deepseek';
+                }
+            }
+        }
+
+        if ($reply === null) {
+            $geminiKey = Settings::get('gemini_api_key');
+            if (!empty($geminiKey)) {
+                $result = self::chatWithGemini(
+                    $geminiKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, $onExhaustedFallback, $maxToolRounds
+                );
+                if ($result !== null) {
+                    $ready = $ready || $result['ready'];
+                    if ($result['reply'] !== null) {
+                        $reply = $result['reply'];
+                        $mode = 'ai';
+                        $provider = 'gemini';
+                    }
                 }
             }
         }
@@ -425,13 +456,82 @@ class AiAgentEngine
     }
 
     /**
-     * Second fallback, tried only after both Gemini and OpenRouter have
-     * failed: same tool-calling conversation, same OpenAI-style
-     * tools/tool_calls shape as chatWithOpenRouter (Groq's API is
-     * OpenAI-compatible), just a different endpoint/key/model. Kept as its
-     * own method rather than parameterizing chatWithOpenRouter because the
-     * two providers may drift in header/quirk requirements over time, and
-     * this stays a straight copy-and-adjust if that happens.
+     * Tried first (see run()): DeepSeek's API is fully OpenAI-compatible —
+     * same tools/tool_calls shape as chatWithOpenRouter/chatWithGroq above —
+     * so this is a straight copy-and-adjust of those, just a different
+     * endpoint/key/model and no Groq-style failed_generation recovery (that
+     * quirk is Groq-specific).
+     *
+     * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to Gemini)
+     */
+    private static function chatWithDeepSeek(
+        string $apiKey,
+        string $system,
+        array $toolDeclarations,
+        callable $toolExecutor,
+        array $transcript,
+        ?callable $onExhaustedFallback,
+        int $maxToolRounds,
+        int $timeoutSeconds = self::DEEPSEEK_CHAT_TIMEOUT_SECONDS
+    ): ?array {
+        $messages = [['role' => 'system', 'content' => $system]];
+        foreach ($transcript as $turn) {
+            $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
+        }
+
+        $tools = self::toolDeclarationsOpenAiFormat($toolDeclarations);
+        $model = Settings::get('deepseek_model') ?: 'deepseek-v4-flash';
+        $ready = false;
+
+        for ($round = 0; $round < $maxToolRounds; $round++) {
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 1024];
+            // See chatWithGemini — force text on the last round so a model
+            // wanting a second sequential tool call can't run out the clock
+            // on tool_calls and never produce a reply.
+            if ($round < $maxToolRounds - 1) {
+                $payload['tools'] = $tools;
+            }
+            $result = self::callDeepSeekRaw($apiKey, $payload, $timeoutSeconds);
+            if ($result === null) {
+                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+            }
+
+            $message = $result['choices'][0]['message'] ?? null;
+            if (!is_array($message)) {
+                error_log('DeepSeek chat: no message in response: ' . json_encode($result));
+                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+            }
+
+            $toolCalls = $message['tool_calls'] ?? null;
+            if (!$toolCalls) {
+                $text = $message['content'] ?? null;
+                return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
+            }
+
+            $messages[] = $message;
+            foreach ($toolCalls as $call) {
+                $name = $call['function']['name'] ?? '';
+                $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
+                $toolResult = $toolExecutor($name, $args);
+                $messages[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => $call['id'] ?? '',
+                    'content' => json_encode($toolResult),
+                ];
+            }
+        }
+
+        return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+    }
+
+    /**
+     * Last-resort fallback, tried only after DeepSeek, Gemini, and
+     * OpenRouter have all failed: same tool-calling conversation, same
+     * OpenAI-style tools/tool_calls shape as chatWithOpenRouter (Groq's API
+     * is OpenAI-compatible), just a different endpoint/key/model. Kept as
+     * its own method rather than parameterizing chatWithOpenRouter because
+     * the two providers may drift in header/quirk requirements over time,
+     * and this stays a straight copy-and-adjust if that happens.
      *
      * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to keywords)
      */
@@ -574,6 +674,38 @@ class AiAgentEngine
         if ($response === false || $status !== 200) {
             error_log(sprintf(
                 'Live Chat OpenRouter fallback failed: status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 800) : 'n/a'
+            ));
+            return null;
+        }
+
+        return json_decode($response, true);
+    }
+
+    private static function callDeepSeekRaw(string $apiKey, array $payload, int $timeout): ?array
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $ch = curl_init('https://api.deepseek.com/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'AiAgentEngine: DeepSeek call failed (falling back to Gemini if configured): status=%s body=%s',
                 $status,
                 is_string($response) ? substr($response, 0, 800) : 'n/a'
             ));

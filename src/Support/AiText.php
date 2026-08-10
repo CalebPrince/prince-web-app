@@ -6,12 +6,14 @@ namespace App\Support;
 
 /**
  * Single-shot "prompt in, text out" generation with automatic fallback:
- * tries Gemini first, then OpenRouter, then Groq — each only if a key is
- * configured — stopping at the first one that returns usable text. A third
- * provider matters because Gemini and OpenRouter going down (or out of
- * quota/credit) at the same time isn't hypothetical — it's happened in
- * production. Groq is the third leg because it has its own independent
- * quota (no shared billing with either of the other two) and a free tier.
+ * tries DeepSeek first, then Gemini, then OpenRouter, then Groq — each only
+ * if a key is configured — stopping at the first one that returns usable
+ * text. DeepSeek leads for cost (cheap, paid-from-first-token, versus
+ * Gemini's paid tier once its free quota is exhausted), not reliability —
+ * everything below it exists because Gemini and OpenRouter going down (or
+ * out of quota/credit) at the same time isn't hypothetical, it's happened
+ * in production. Groq is the last leg because it has its own independent
+ * quota (no shared billing with the others) and a free tier.
  * Centralized here (rather than duplicated per controller) because this
  * exact retry logic is now needed in three places, and the Gemini call
  * itself has already been the source of several subtle bugs this project
@@ -42,6 +44,19 @@ class AiText
      */
     public static function generateWithProvider(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20): ?array
     {
+        // Tried first as a cost-cutting move — DeepSeek is a cheap,
+        // paid-from-first-token API, so resolving here means most calls
+        // never touch Gemini's paid-tier billing once its free quota is
+        // exhausted. Falls through to Gemini on any failure, same as every
+        // other leg in this chain.
+        $deepseekKey = Settings::get('deepseek_api_key');
+        if (!empty($deepseekKey)) {
+            $text = self::callDeepSeek($deepseekKey, $prompt, $systemInstruction, $timeoutSeconds);
+            if ($text !== null) {
+                return ['text' => $text, 'provider' => 'deepseek'];
+            }
+        }
+
         $geminiKey = Settings::get('gemini_api_key');
         if (!empty($geminiKey)) {
             $text = self::callGemini($geminiKey, $prompt, $systemInstruction, $timeoutSeconds);
@@ -73,6 +88,56 @@ class AiText
         }
 
         return null;
+    }
+
+    private static function callDeepSeek(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $messages = [];
+        if ($system !== null) {
+            $messages[] = ['role' => 'system', 'content' => $system];
+        }
+        $messages[] = ['role' => 'user', 'content' => $prompt];
+
+        $model = Settings::get('deepseek_model') ?: 'deepseek-v4-flash';
+
+        $ch = curl_init('https://api.deepseek.com/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages]),
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'AiText: DeepSeek call failed (falling back to Gemini if configured): status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 500) : 'n/a'
+            ));
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        $text = $decoded['choices'][0]['message']['content'] ?? null;
+        if ($text === null) {
+            error_log(sprintf(
+                'AiText: DeepSeek returned 200 but no usable text: finishReason=%s body=%s',
+                $decoded['choices'][0]['finish_reason'] ?? 'none',
+                substr($response, 0, 500)
+            ));
+        }
+        return $text;
     }
 
     private static function callGemini(string $apiKey, string $prompt, ?string $system, int $timeout): ?string

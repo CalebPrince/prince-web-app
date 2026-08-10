@@ -134,6 +134,8 @@ async function saveIntegrations(e) {
   e.preventDefault();
   try {
     await api.put("/api/v1/admin/settings", {
+      deepseek_api_key: document.getElementById("deepseek-key").value.trim(),
+      deepseek_model: document.getElementById("deepseek-model").value.trim(),
       gemini_api_key: document.getElementById("gemini-key").value.trim(),
       gemini_model: document.getElementById("gemini-model").value.trim(),
       openrouter_api_key: document.getElementById("openrouter-key").value.trim(),
@@ -322,7 +324,7 @@ async function saveChatHours(e) {
 async function renderChatLiveStatus(settings) {
   const el = document.getElementById("chat-live-status");
   if (!el) return;
-  const hasKey = !!(settings.gemini_api_key || settings.openrouter_api_key || settings.groq_api_key);
+  const hasKey = !!(settings.deepseek_api_key || settings.gemini_api_key || settings.openrouter_api_key || settings.groq_api_key);
 
   let online = false;
   try { online = !!(await api.get("/api/v1/chat/status")).online; } catch (_) { /* treat as offline */ }
@@ -735,6 +737,8 @@ async function testAi() {
   document.getElementById("social-draft-form").addEventListener("submit", saveSocialDraft);
   try {
     const settings = await api.get("/api/v1/admin/settings");
+    document.getElementById("deepseek-key").value = settings.deepseek_api_key || "";
+    document.getElementById("deepseek-model").value = settings.deepseek_model || "";
     document.getElementById("gemini-key").value = settings.gemini_api_key || "";
     document.getElementById("gemini-model").value = settings.gemini_model || "";
     document.getElementById("openrouter-key").value = settings.openrouter_api_key || "";
