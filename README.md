@@ -1713,8 +1713,8 @@ except the web root out of reach of the browser:
 
 Deploys are automatic: pushing to `main` triggers
 `.github/workflows/deploy.yml`, which FTPS-syncs `public/` into
-`public_html/` and `src/`, `config/`, `database/`, and the stateless
-`voice-relay/` Node companion into the home directory.
+`public_html/` and `src/`, `config/`, and `database/` into the home
+directory.
 It needs three repository secrets — `FTP_SERVER`, `FTP_USERNAME`,
 `FTP_PASSWORD` — for an FTP account rooted at the cPanel home directory.
 `public/index.php` resolves the app via `dirname(__DIR__)`, so this split
