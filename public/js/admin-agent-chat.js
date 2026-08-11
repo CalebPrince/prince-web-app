@@ -58,6 +58,12 @@
   const radarDraftsCard = document.getElementById("radar-drafts-card");
   const radarDraftsList = document.getElementById("radar-drafts-list");
   const radarDraftsEmpty = document.getElementById("radar-drafts-empty");
+  const radarTrackedPagesCard = document.getElementById("radar-tracked-pages-card");
+  const radarTrackedPagesEnabled = document.getElementById("radar-tracked-pages-enabled");
+  const radarTrackedPagesFrequency = document.getElementById("radar-tracked-pages-frequency");
+  const radarTrackedPages = document.getElementById("radar-tracked-pages");
+  const radarTrackedPagesMsg = document.getElementById("radar-tracked-pages-msg");
+  const radarTrackedPagesSave = document.getElementById("radar-tracked-pages-save");
   const beaconLeadsCard = document.getElementById("beacon-leads-card");
   const beaconLeadsList = document.getElementById("beacon-leads-list");
   const beaconLeadsEmpty = document.getElementById("beacon-leads-empty");
@@ -834,6 +840,7 @@
     lisaChatsCard.classList.toggle("d-none", !isLisa);
     contentDraftsCard.classList.toggle("d-none", !isContent);
     radarDraftsCard.classList.toggle("d-none", !isRadar);
+    radarTrackedPagesCard.classList.toggle("d-none", !isRadar);
     if (isBeacon) {
       loadBeaconLeads();
       loadBeaconSpend();
@@ -946,6 +953,42 @@
     }
   });
 
+  // ---- Radar's tracked-page cache settings ----
+  let radarTrackedPagesLoaded = false;
+  async function loadRadarTrackedPagesSettings() {
+    if (radarTrackedPagesLoaded) return;
+    try {
+      const settings = await api.get("/api/v1/admin/settings");
+      radarTrackedPagesEnabled.checked = settings.radar_tracked_pages_enabled === "1";
+      radarTrackedPagesFrequency.value = settings.radar_tracked_pages_frequency || "daily";
+      radarTrackedPages.value = settings.radar_tracked_pages || "";
+      radarTrackedPagesLoaded = true;
+    } catch (_) {
+      // Quiet failure — admin can still retype and save.
+    }
+  }
+
+  radarTrackedPagesSave.addEventListener("click", async () => {
+    radarTrackedPagesMsg.classList.add("d-none");
+    radarTrackedPagesSave.disabled = true;
+    try {
+      await api.put("/api/v1/admin/settings", {
+        radar_tracked_pages_enabled: radarTrackedPagesEnabled.checked ? "1" : "0",
+        radar_tracked_pages_frequency: radarTrackedPagesFrequency.value,
+        radar_tracked_pages: radarTrackedPages.value,
+      });
+      radarTrackedPagesMsg.className = "alert alert-success py-2 small mt-3";
+      radarTrackedPagesMsg.textContent = "Saved.";
+      radarTrackedPagesMsg.classList.remove("d-none");
+    } catch (err) {
+      radarTrackedPagesMsg.className = "alert alert-danger py-2 small mt-3";
+      radarTrackedPagesMsg.textContent = err.message;
+      radarTrackedPagesMsg.classList.remove("d-none");
+    } finally {
+      radarTrackedPagesSave.disabled = false;
+    }
+  });
+
   // ---- sending messages ----
   // Reuses .ai-typing-dots from app.css — same indicator Lisa's widget shows,
   // so the agents behave the same way wherever you talk to them (and it already
@@ -1030,6 +1073,7 @@
       updateLeadsPanelVisibility();
       updateAdaPanelVisibility();
       if (activeAgent === "beacon") { loadBeaconDiscoverySettings(); loadBeaconApifySettings(); }
+      if (activeAgent === "radar") { loadRadarTrackedPagesSettings(); }
     });
   });
 
@@ -1142,5 +1186,6 @@
     resetConversation();
     updateLeadsPanelVisibility();
     if (activeAgent === "beacon") loadBeaconDiscoverySettings();
+    if (activeAgent === "radar") loadRadarTrackedPagesSettings();
   })();
 })();

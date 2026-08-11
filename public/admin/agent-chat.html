@@ -58,7 +58,7 @@
       <a href="/admin/projects.html" class="nav-link"><i class="bi bi-kanban nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Projects</span></a>
       <a href="/admin/blog.html" class="nav-link"><i class="bi bi-journal-text nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Blog</span></a>
       <a href="/admin/testimonials.html" class="nav-link"><i class="bi bi-chat-quote nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Testimonials</span></a>
-      <a href="/admin/social-drafts.html" class="nav-link"><i class="bi bi-megaphone nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Social Drafts</span></a>
+      <a href="/admin/social-drafts.html" class="nav-link"><i class="bi bi-megaphone nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Social Drafts</span></a><a href="/admin/content-ideas.html" class="nav-link"><i class="bi bi-calendar3-week nav-icon"></i><span class="nav-label">Content Ideas</span></a>
       <a href="/admin/content-studio.html" class="nav-link"><i class="bi bi-images nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Content Studio</span></a>
       <a href="/admin/tags.html" class="nav-link"><i class="bi bi-tags nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Tags</span></a>
       <a href="/admin/content.html" class="nav-link"><i class="bi bi-file-earmark-richtext nav-icon" style="color: var(--section-content)"></i><span class="nav-label">Site Content</span></a>
@@ -277,6 +277,33 @@
       <div class="form-text mb-3">Radar never sends these — copy the message and send it yourself from your own LinkedIn. "View post" links back to whatever prompted the outreach, same as Beacon's leads.</div>
       <div id="radar-drafts-empty" class="text-muted-custom small d-none">No drafts yet — ask Radar to draft an outreach message for someone and it'll show up here.</div>
       <div id="radar-drafts-list" class="d-flex flex-column gap-3"></div>
+    </div>
+
+    <div class="admin-card p-4 mt-4 d-none" id="radar-tracked-pages-card">
+      <h5 class="mb-3"><i class="bi bi-bookmark-star me-2"></i>Tracked Pages</h5>
+      <div class="form-text mb-3">Add LinkedIn pages once here instead of pasting a URL into chat every time. A cron (<code>database/run_radar_tracked_pages.php</code>) refreshes each one's recent posts on a schedule via the same Apify setup Beacon's scraper above uses — Radar's chat can then answer from the cache (<code>get_tracked_pages_findings</code>) without you re-pasting anything. Feeds the 30-day Content Ideas page too.</div>
+      <div class="row g-3 align-items-end">
+        <div class="col-sm-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="radar-tracked-pages-enabled">
+            <label class="form-check-label" for="radar-tracked-pages-enabled">Enabled</label>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <label class="form-label">Frequency</label>
+          <select class="form-select" id="radar-tracked-pages-frequency">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="form-label">Tracked LinkedIn pages <span class="text-muted-custom fw-normal">(one URL per line — pages you want to study for content ideas, e.g. <code>https://www.linkedin.com/company/somewhere/</code>)</span></label>
+        <textarea class="form-control" id="radar-tracked-pages" rows="4" placeholder="https://www.linkedin.com/in/someone/&#10;https://www.linkedin.com/company/somewhere/"></textarea>
+      </div>
+      <div class="form-text mt-2">Uses the same Apify API key and "Profile-posts actor ID" configured in the LinkedIn Engagement Scraper card above — no separate Apify setup needed.</div>
+      <div id="radar-tracked-pages-msg" class="alert py-2 small d-none mt-3"></div>
+      <button type="button" class="btn-brand mt-3" id="radar-tracked-pages-save">Save tracked pages</button>
     </div>
 
     <div class="admin-card p-4 mt-4 d-none" id="beacon-leads-card">

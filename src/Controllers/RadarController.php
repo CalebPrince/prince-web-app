@@ -74,6 +74,7 @@ class RadarController
                 SharedAgentTools::siteInfoToolDeclaration(),
                 SharedAgentTools::searchContentToolDeclaration(),
                 self::analyzeLinkedInUrlToolDeclaration(),
+                self::getTrackedPagesFindingsToolDeclaration(),
                 self::getPipelineReportToolDeclaration(),
                 self::getPostPerformanceToolDeclaration(),
                 self::saveDmDraftToolDeclaration(),
@@ -82,6 +83,7 @@ class RadarController
                 'get_site_info' => SharedAgentTools::getSiteInfo(),
                 'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
                 'analyze_linkedin_url' => self::analyzeLinkedInUrl((string) ($args['url'] ?? '')),
+                'get_tracked_pages_findings' => self::getTrackedPagesFindings($pdo),
                 'get_pipeline_report' => self::getPipelineReport($pdo),
                 'get_linkedin_post_performance' => self::getLinkedInPostPerformance($pdo),
                 'save_dm_draft' => self::saveDmDraft($args, $pdo),
@@ -106,10 +108,12 @@ class RadarController
         return "You are {$name}, the LinkedIn research & reporting specialist on Prince Caleb's AI team — Caleb is a "
             . "solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of custom "
             . "web & mobile engineering, and runs princecaleb.dev.{$genderLine}\n\n"
-            . "Your job has four parts: (1) analyze a LinkedIn profile, company, or post Caleb gives you a URL for "
-            . "— use analyze_linkedin_url to pull real data rather than guessing who someone is; if it comes back "
-            . "empty or unconfigured, ask Caleb to paste the profile/post text directly instead of inventing an "
-            . "analysis. (2) report on the real state of the lead pipeline (Beacon's qualified leads, discovery "
+            . "Your job has four parts: (1) analyze a LinkedIn profile, company, or post — if Caleb pastes a URL in "
+            . "this chat, use analyze_linkedin_url on it; if he instead asks about a page he's already added to his "
+            . "tracked list (Admin -> Talk to Agents -> Radar -> Tracked Pages), use get_tracked_pages_findings "
+            . "instead so he never has to re-paste it. If either comes back empty or unconfigured, ask Caleb to "
+            . "paste the profile/post text directly instead of inventing an analysis. (2) report on the real state "
+            . "of the lead pipeline (Beacon's qualified leads, discovery "
             . "spend, Cold Outreach's daily numbers and streak) via get_pipeline_report — every figure you state "
             . "about the pipeline must come from that tool, never be estimated. (3) report on how Caleb's own "
             . "published LinkedIn posts are performing via get_linkedin_post_performance — this one is best-effort "
@@ -198,6 +202,39 @@ class RadarController
         // unlike the cron path (run_beacon_apify_discovery.php) which has no
         // model in the loop and needs deterministic field lookups instead.
         return ['posts' => array_slice($items, 0, 5)];
+    }
+
+    private static function getTrackedPagesFindingsToolDeclaration(): array
+    {
+        return [
+            'name' => 'get_tracked_pages_findings',
+            'description' => 'Get the real, cached recent-posts data for every LinkedIn page Caleb tracks '
+                . '(Admin -> Talk to Agents -> Radar -> Tracked Pages), refreshed automatically on a schedule '
+                . '(database/run_radar_tracked_pages.php). Use this whenever Caleb asks about a tracked page\'s '
+                . 'content without pasting its URL again — if the page he means isn\'t tracked yet, tell him to '
+                . 'add it there, or use analyze_linkedin_url for a one-off lookup instead.',
+            'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private static function getTrackedPagesFindings(\PDO $pdo): array
+    {
+        $rows = $pdo->query(
+            'SELECT page_url, findings_json, fetched_at FROM radar_tracked_page_findings ORDER BY fetched_at DESC'
+        )->fetchAll();
+        if (!$rows) {
+            return ['note' => 'No tracked pages have been cached yet — add URLs under Admin -> Talk to Agents -> '
+                . 'Radar -> Tracked Pages and wait for the next scheduled refresh (or use analyze_linkedin_url for '
+                . 'a one-off lookup on a URL Caleb pastes directly).'];
+        }
+        return ['tracked_pages' => array_map(static function (array $row): array {
+            return [
+                'page_url' => $row['page_url'],
+                'fetched_at' => $row['fetched_at'],
+                'posts' => json_decode((string) $row['findings_json'], true) ?: [],
+            ];
+        }, $rows)];
     }
 
     private static function getPipelineReportToolDeclaration(): array

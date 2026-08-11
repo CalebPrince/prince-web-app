@@ -1135,6 +1135,31 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_radar_dm_drafts_created ON radar_dm_drafts (created_at)');
 
+// Radar's persistent tracked-page cache and the 30-day content-idea list —
+// plain CREATE TABLE IF NOT EXISTS (already in schema.sql for fresh
+// installs) is all an existing database needs too.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS radar_tracked_page_findings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        page_url TEXT NOT NULL UNIQUE,
+        findings_json TEXT NOT NULL,
+        fetched_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS content_ideas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        day_number INTEGER NOT NULL,
+        platform TEXT NOT NULL CHECK (platform IN ('linkedin', 'youtube')),
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        grounded INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'idea' CHECK (status IN ('idea', 'used', 'dismissed')),
+        generated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_content_ideas_day ON content_ideas (day_number)');
+
 // Optional contact detail supplied by Joan/external social discovery. When
 // present on a qualified lead Beacon can pass it straight into Jason's
 // existing Nurturer automation without changing older discovery callers.

@@ -71,6 +71,7 @@ use App\Controllers\InboxController;
 use App\Controllers\ReportController;
 use App\Controllers\TeamController;
 use App\Controllers\ContentAgentController;
+use App\Controllers\ContentIdeasController;
 use App\Controllers\ContentStudioController;
 use App\Controllers\ProposalAgentController;
 use App\Controllers\ProposalController;
@@ -337,6 +338,9 @@ $router->post('/api/v1/admin/agents/scout/chat', [ScoutController::class, 'chat'
 $router->post('/api/v1/admin/agents/radar/chat', [RadarController::class, 'chat']);
 $router->get('/api/v1/admin/radar-dm-drafts', [RadarController::class, 'adminDrafts']);
 $router->delete('/api/v1/admin/radar-dm-drafts/{id}', [RadarController::class, 'destroyDraft']);
+$router->get('/api/v1/admin/content-ideas', [ContentIdeasController::class, 'index']);
+$router->post('/api/v1/admin/content-ideas/generate', [ContentIdeasController::class, 'generate']);
+$router->patch('/api/v1/admin/content-ideas/{id}', [ContentIdeasController::class, 'updateStatus']);
 $router->post('/api/v1/admin/agents/reel/chat', [ReelController::class, 'chat']);
 $router->post('/api/v1/admin/agents/sage/chat', [SageController::class, 'adminChat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);

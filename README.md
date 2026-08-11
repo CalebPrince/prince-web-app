@@ -571,6 +571,7 @@ database/
   send_cold_outreach.php          # Cold Outreach Engine: sends reviewed marketing-lead pitches, capped/day (cron, hourly)
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
   run_beacon_apify_discovery.php  # tracked LinkedIn profiles -> Apify engagers -> ICP-fit scoring -> qualified-lead digest (cron, hourly)
+  run_radar_tracked_pages.php     # tracked LinkedIn pages -> cached recent posts, no AI call (cron, daily; feeds Radar's chat + the 30-day Content Ideas page)
   discover_marketing_leads.php    # standalone runner for the same daily-gated Marketing Leads discovery send_cold_outreach.php already invokes (testing/dedicated cron; --force to bypass the gate)
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   draft_newsletters_from_blog.php    # Published blog posts -> Jason newsletter drafts, ready to review (cron, ~5-10 min)
@@ -1819,6 +1820,16 @@ One-time setup on a new host:
     scores each engager on ICP fit, and feeds anything qualified into the
     same beacon_social_leads queue and digest as regular Beacon discovery:
     `/usr/local/bin/php /home/<cpanel-user>/database/run_beacon_apify_discovery.php > /dev/null`
+4p. Add a seventeenth cron job (daily) for Radar's tracked-page cache — a
+    no-op until enabled under Admin -> Talk to Agents -> Radar -> Tracked
+    Pages, with at least one tracked LinkedIn page (reuses the same
+    `apify_api_key` and profile-posts Apify actor as Beacon's scraper
+    above, no separate setup). No AI call happens here: it just refreshes
+    each tracked page's recent posts into `radar_tracked_page_findings` so
+    Radar's chat can answer from the cache instead of a re-pasted URL, and
+    so Admin -> Content Ideas has real LinkedIn grounding when generating a
+    30-day plan:
+    `/usr/local/bin/php /home/<cpanel-user>/database/run_radar_tracked_pages.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

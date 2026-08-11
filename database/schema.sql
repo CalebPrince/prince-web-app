@@ -728,6 +728,41 @@ CREATE TABLE IF NOT EXISTS radar_dm_drafts (
 );
 CREATE INDEX IF NOT EXISTS idx_radar_dm_drafts_created ON radar_dm_drafts (created_at);
 
+-- Radar's persistent tracked-page cache: one row per URL in radar_tracked_pages
+-- (Admin -> Talk to Agents -> Radar), refreshed in place by
+-- database/run_radar_tracked_pages.php so Radar's chat can reason over a
+-- page's recent posts without a URL ever being re-pasted. findings_json is
+-- the raw Apify dataset for that page (same shape RadarController::
+-- analyzeLinkedInUrl() already hands the model live) -- deliberately
+-- unprocessed here too; the model reads the raw shape when asked, not a
+-- pre-summarized guess.
+CREATE TABLE IF NOT EXISTS radar_tracked_page_findings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  page_url TEXT NOT NULL UNIQUE,
+  findings_json TEXT NOT NULL,
+  fetched_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- 30-day content-idea planning list (Admin -> Content Ideas). Regenerated
+-- wholesale on each "Generate 30-day plan" click (delete-all + insert-30) --
+-- a planning list you refresh when you want fresh ideas, not an archive.
+-- grounded=1 marks an idea (LinkedIn only, today) that cites real posts from
+-- radar_tracked_page_findings rather than a plain AI brainstorm -- YouTube
+-- ideas are always grounded=0 since no real YouTube data source exists in
+-- this app; the prompt is explicitly told never to phrase those as
+-- "trending" or cite invented metrics.
+CREATE TABLE IF NOT EXISTS content_ideas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day_number INTEGER NOT NULL,
+  platform TEXT NOT NULL CHECK (platform IN ('linkedin', 'youtube')),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  grounded INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'idea' CHECK (status IN ('idea', 'used', 'dismissed')),
+  generated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_content_ideas_day ON content_ideas (day_number);
+
 -- Client portal accounts. Rows are provisioned by an admin invite (from a
 -- proposal), never self-signup — password_hash stays NULL until the client
 -- completes /client/setup.html?token=..., mirroring how proposals.token
