@@ -14,12 +14,18 @@
     const value = content[el.dataset.content];
     if (value) {
       if (el.dataset.content === "hero_title") {
-        // Keeps the "voice" accent-word highlight (matches every other page's
-        // heading treatment) alive across an admin-edited Site Content value,
-        // instead of losing it the moment textContent overwrites the markup.
-        // Falls back to plain text harmlessly if a future edit drops the word.
+        // Keeps the accent-word highlight (matches every other page's heading
+        // treatment) alive across an admin-edited or AI-generated Site
+        // Content value, instead of losing it the moment textContent
+        // overwrites the markup. The daily AI headline (see
+        // database/generate_daily_headline.php) wraps its chosen outcome
+        // phrase in **double asterisks**; older/admin-typed values instead
+        // rely on the literal-word fallback below. Falls back to plain text
+        // harmlessly if neither pattern matches.
         const escaped = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        el.innerHTML = escaped.replace(/\bbooked customers\b|\bvoice\b/i, (m) => `<span class="accent-word">${m}</span>`);
+        el.innerHTML = /\*\*[^*]+\*\*/.test(escaped)
+          ? escaped.replace(/\*\*([^*]+)\*\*/, (_, phrase) => `<span class="accent-word">${phrase}</span>`)
+          : escaped.replace(/\bbooked customers\b|\bvoice\b/i, (m) => `<span class="accent-word">${m}</span>`);
       } else {
         el.textContent = value;
       }

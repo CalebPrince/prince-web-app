@@ -3,47 +3,22 @@
 // hero rating pill. Every block guards on its root element so this file is
 // inert on any other page.
 (function () {
-  // --- Hero variant testing -------------------------------------------------
+  // --- Hero ------------------------------------------------------------
+  // Eyebrow/title/subtitle used to be picked randomly per browser session
+  // from 3 hardcoded A/B variants. That's gone: the homepage now shows one
+  // AI-generated headline per calendar day for every visitor (see
+  // database/generate_daily_headline.php + SettingsController::publicContent,
+  // hydrated into the [data-content] elements below by content.js). This
+  // block only owns the CTA labels/hrefs, trust-rail numbers, mobile sticky
+  // bar, and click tracking — it must NOT touch hero_eyebrow/hero_title/
+  // hero_subtitle, or it would clobber the daily headline on every load.
   const heroRoot = document.querySelector(".home-page .agency-hero");
   if (heroRoot) {
-    const variants = {
-      voice: {
-        eyebrow: "// Never miss a call from a serious customer",
-        title: "AI voice agents that convert <span class=\"accent-word\">missed calls into booked jobs</span>.",
-        subtitle: "Deploy a trained voice assistant that answers instantly, qualifies enquiries, and books appointments while your team stays focused on delivery.",
-        primary: { label: "Book a voice-agent call", href: "/book.html?focus=voice-agent" },
-        secondary: { label: "See voice-agent examples", href: "/services.html#track-01" },
-      },
-      automation: {
-        eyebrow: "// Your team should not copy-paste between tools all day",
-        title: "Automate the busywork, keep the <span class=\"accent-word\">human judgment where it matters</span>.",
-        subtitle: "I build workflow automations that move enquiries, bookings, follow-ups, and updates across your stack without manual handoffs.",
-        primary: { label: "Map my workflow", href: "/contact.html?system=automation" },
-        secondary: { label: "Explore automations", href: "/services.html#track-03" },
-      },
-      platform: {
-        eyebrow: "// Build the software your workflow actually needs",
-        title: "Custom platforms designed to <span class=\"accent-word\">fit your operations, not force workarounds</span>.",
-        subtitle: "From client portals to internal dashboards, get purpose-built software connected to the tools your team already uses.",
-        primary: { label: "Scope my platform", href: "/contact.html?system=platform" },
-        secondary: { label: "See shipped platforms", href: "/projects.html" },
-      },
+    const cta = {
+      primary: { label: "Book a voice-agent call", href: "/book.html?focus=voice-agent" },
+      secondary: { label: "See voice-agent examples", href: "/services.html#track-01" },
     };
 
-    const keys = Object.keys(variants);
-    const params = new URLSearchParams(window.location.search);
-    const requested = String(params.get("hero") || "").toLowerCase();
-    const sessionKey = "home_hero_variant";
-    const fromSession = sessionStorage.getItem(sessionKey);
-    const fallback = keys[Math.floor(Math.random() * keys.length)];
-    const chosen = keys.includes(requested) ? requested : (keys.includes(fromSession) ? fromSession : fallback);
-    const selected = variants[chosen];
-    sessionStorage.setItem(sessionKey, chosen);
-    document.documentElement.setAttribute("data-hero-variant", chosen);
-
-    const eyebrowEl = heroRoot.querySelector("[data-content='hero_eyebrow']");
-    const titleEl = heroRoot.querySelector("[data-content='hero_title']");
-    const subtitleEl = heroRoot.querySelector("[data-content='hero_subtitle']");
     const primaryCta = document.getElementById("hero-primary-cta");
     const secondaryCta = document.getElementById("hero-secondary-cta");
     const outcomeCta = document.getElementById("hero-outcome-cta");
@@ -54,24 +29,21 @@
     const mobileStickyPrimary = document.getElementById("mobile-sticky-primary");
     const mobileStickyWhatsapp = document.getElementById("mobile-sticky-whatsapp");
 
-    const applyVariant = () => {
-      if (eyebrowEl) eyebrowEl.textContent = selected.eyebrow;
-      if (titleEl) titleEl.innerHTML = selected.title;
-      if (subtitleEl) subtitleEl.textContent = selected.subtitle;
+    const applyCta = () => {
       if (primaryCta) {
-        primaryCta.textContent = selected.primary.label;
-        primaryCta.setAttribute("href", selected.primary.href);
+        primaryCta.textContent = cta.primary.label;
+        primaryCta.setAttribute("href", cta.primary.href);
       }
       if (secondaryCta) {
-        secondaryCta.textContent = selected.secondary.label;
-        secondaryCta.setAttribute("href", selected.secondary.href);
+        secondaryCta.textContent = cta.secondary.label;
+        secondaryCta.setAttribute("href", cta.secondary.href);
       }
       if (mobileStickyPrimary) {
-        mobileStickyPrimary.textContent = selected.primary.label;
-        mobileStickyPrimary.setAttribute("href", selected.primary.href);
+        mobileStickyPrimary.textContent = cta.primary.label;
+        mobileStickyPrimary.setAttribute("href", cta.primary.href);
       }
       if (outcomeCta) {
-        outcomeCta.setAttribute("href", selected.primary.href);
+        outcomeCta.setAttribute("href", cta.primary.href);
       }
     };
 
@@ -96,33 +68,33 @@
       }
     };
 
-    applyVariant();
+    applyCta();
     syncTrustRail();
     // content.js can patch hero copy from API slightly later; re-assert once.
     window.setTimeout(function () {
-      applyVariant();
+      applyCta();
       syncTrustRail();
     }, 650);
 
-    const seenKey = "home_hero_variant_seen_" + chosen;
+    const seenKey = "home_hero_seen_" + new Date().toISOString().slice(0, 10);
     if (!sessionStorage.getItem(seenKey)) {
       sessionStorage.setItem(seenKey, "1");
-      if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_view");
+      if (window.trackUiEvent) window.trackUiEvent("hero_view");
     }
 
     if (primaryCta) {
       primaryCta.addEventListener("click", () => {
-        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_primary");
+        if (window.trackUiEvent) window.trackUiEvent("hero_cta_primary");
       });
     }
     if (secondaryCta) {
       secondaryCta.addEventListener("click", () => {
-        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_secondary");
+        if (window.trackUiEvent) window.trackUiEvent("hero_cta_secondary");
       });
     }
     if (outcomeCta) {
       outcomeCta.addEventListener("click", () => {
-        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_outcome");
+        if (window.trackUiEvent) window.trackUiEvent("hero_cta_outcome");
       });
     }
 
@@ -137,7 +109,7 @@
       window.addEventListener("resize", toggleSticky);
       if (mobileStickyPrimary) {
         mobileStickyPrimary.addEventListener("click", () => {
-          if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_mobile_primary");
+          if (window.trackUiEvent) window.trackUiEvent("hero_cta_mobile_primary");
         });
       }
       if (mobileStickyWhatsapp) {
@@ -146,7 +118,7 @@
             try { return sessionStorage.getItem("voice_demo_started") === "1" || sessionStorage.getItem("voice_demo_answered") === "1"; }
             catch (_) { return false; }
           })();
-          if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_mobile_whatsapp" + (afterDemo ? "_after_demo" : ""));
+          if (window.trackUiEvent) window.trackUiEvent("hero_cta_mobile_whatsapp" + (afterDemo ? "_after_demo" : ""));
         });
       }
     }
@@ -158,7 +130,7 @@
           try { return sessionStorage.getItem("voice_demo_started") === "1" || sessionStorage.getItem("voice_demo_answered") === "1"; }
           catch (_) { return false; }
         })();
-        if (window.trackUiEvent) window.trackUiEvent("hero_variant_" + chosen + "_cta_whatsapp" + (afterDemo ? "_after_demo" : ""));
+        if (window.trackUiEvent) window.trackUiEvent("hero_cta_whatsapp" + (afterDemo ? "_after_demo" : ""));
       });
     }
   }

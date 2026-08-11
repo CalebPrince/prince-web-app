@@ -563,6 +563,7 @@ database/
   send_milestone_reminders.php    # unpaid proposal milestone nudges (cron)
   send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
+  generate_daily_headline.php     # AI-writes the homepage hero headline once per calendar day (cron)
   check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
   schedule_stale_lead_followups.php  # auto-schedules a follow-up for active pipeline leads gone quiet too long (cron, daily; off by default)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
@@ -1830,6 +1831,14 @@ One-time setup on a new host:
     so Admin -> Content Ideas has real LinkedIn grounding when generating a
     30-day plan:
     `/usr/local/bin/php /home/<cpanel-user>/database/run_radar_tracked_pages.php > /dev/null`
+4q. Add an eighteenth cron job (once a day, e.g. early morning) to generate
+    the homepage hero headline — replaces the old random-per-session A/B
+    variant with one AI-written eyebrow/title/subtitle set per calendar day,
+    the same for every visitor (needs a DeepSeek/Gemini/OpenRouter/Groq key
+    under Admin -> Settings -> Integrations; degrades to the static
+    Site Content hero copy if no provider is configured or the call fails).
+    Idempotent — a second run on the same day is a no-op:
+    `/usr/local/bin/php /home/<cpanel-user>/database/generate_daily_headline.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AgentCapabilities;
+use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\LisaInstructions;
 use App\Support\Mailer;
@@ -172,6 +173,22 @@ class SettingsController
                 $out[$key] = $value;
             }
         }
+
+        // Today's AI-generated hero copy (database/generate_daily_headline.php,
+        // run via cron) overrides the static hero_* Site Content values when
+        // present, so the homepage headline changes once per calendar day
+        // instead of the old random-per-session JS variant.
+        $stmt = Database::get()->prepare(
+            'SELECT eyebrow, title, subtitle FROM daily_headlines WHERE headline_date = ?'
+        );
+        $stmt->execute([gmdate('Y-m-d')]);
+        $todayHeadline = $stmt->fetch();
+        if ($todayHeadline !== false) {
+            $out['hero_eyebrow'] = $todayHeadline['eyebrow'];
+            $out['hero_title'] = $todayHeadline['title'];
+            $out['hero_subtitle'] = $todayHeadline['subtitle'];
+        }
+
         Response::json($out);
     }
 

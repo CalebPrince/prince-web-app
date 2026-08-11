@@ -1704,4 +1704,19 @@ if ($socialDraftsSql !== '' && !str_contains($socialDraftsSql, "'content_idea'")
     echo "Rebuilt social_post_drafts — source_type now allows 'content_idea'.\n";
 }
 
+// Homepage hero headline: one AI-generated set of eyebrow/title/subtitle per
+// calendar day (see database/generate_daily_headline.php), replacing what
+// used to be a random-per-session JS variant pick.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS daily_headlines (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        headline_date TEXT NOT NULL UNIQUE,
+        eyebrow TEXT NOT NULL,
+        title TEXT NOT NULL,
+        subtitle TEXT NOT NULL,
+        ai_provider TEXT,
+        generated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+
 echo "Schema applied.\n";
