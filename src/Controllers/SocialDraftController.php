@@ -19,19 +19,22 @@ use App\Support\SocialImage;
  * AI-drafted social posts. generateDraft() is shared between the scheduled
  * cron script (database/generate_social_drafts.php) and the admin's manual
  * "Generate now" button. Drafts are sourced exclusively from the 30-day
- * Content Ideas queue (Admin -> Content Ideas, LinkedIn ideas only, oldest
- * day_number first) — the earlier blog-post/project/testimonial-announcement
- * and generic-evergreen fallback sourcing was removed 2026-08-11 so every
- * auto-generated post traces back to a real, reviewable plan entry instead
- * of whatever happened to publish most recently. Returns null (no draft,
- * cron/admin surface a "nothing to draft" message) once every LinkedIn idea
- * in the current 30-day plan has been used — generate a fresh plan in
- * Admin -> Content Ideas to keep the queue going. Approval records a
- * social_post_approved integration event (see IntegrationEvent) for any
- * external consumer, and — separately, if a LinkedIn Composio account is
- * connected — actually publishes the post to LinkedIn directly (see
- * publishToLinkedIn()), recording the outcome in published_at/publish_error
- * so approval can genuinely mean "posted," not just "queued somewhere else."
+ * Content Ideas queue (Admin -> Content Ideas, LinkedIn ideas only) — the
+ * earlier blog-post/project/testimonial-announcement and generic-evergreen
+ * fallback sourcing was removed 2026-08-11 so every auto-generated post
+ * traces back to a real, reviewable plan entry instead of whatever happened
+ * to publish most recently. Which idea gets drafted is calendar-driven, not
+ * queue-driven: day_number is matched against today's actual date relative
+ * to when the current plan was generated (see generateDraft()), so running
+ * this more than once a day doesn't race ahead through the plan, and a day
+ * with no unused LinkedIn idea (YouTube day, already drafted, outside the
+ * current plan) correctly yields nothing rather than substituting a
+ * different day. Approval records a social_post_approved integration event
+ * (see IntegrationEvent) for any external consumer, and — separately, if a
+ * LinkedIn Composio account is connected — actually publishes the post to
+ * LinkedIn directly (see publishToLinkedIn()), recording the outcome in
+ * published_at/publish_error so approval can genuinely mean "posted," not
+ * just "queued somewhere else."
  */
 class SocialDraftController
 {
@@ -49,7 +52,7 @@ class SocialDraftController
         AuthMiddleware::requireAuth();
         $result = self::generateDraft();
         if (!$result) {
-            Response::error('Could not generate a draft — either every LinkedIn idea in the current 30-day plan has already been used (generate a fresh one in Admin -> Content Ideas), or no AI provider is configured/reachable.', 502);
+            Response::error("Could not generate a draft — today's plan day has no unused LinkedIn idea (it may be a YouTube day, already drafted, or outside the current 30-day plan), or no AI provider is configured/reachable.", 502);
         }
         Response::json($result, 201);
     }
@@ -288,23 +291,40 @@ class SocialDraftController
     }
 
     /**
-     * Picks the next unused LinkedIn content idea (earliest day_number
-     * first) and drafts it, marking the idea 'used' only once a draft was
-     * actually created — a failed AI call leaves the idea available to try
-     * again on the next run rather than silently burning a plan day.
+     * Drafts whichever LinkedIn content idea's day_number lines up with
+     * today's actual calendar date — day 1 is the date the current 30-day
+     * plan was generated (every row in a batch shares that generated_at
+     * timestamp, since "Generate" replaces all 30 at once), so day N is
+     * generated_at + (N-1) days. This is a real calendar, not a queue:
+     * clicking "Generate now" five times in one day drafts the same day's
+     * idea once (already 'used' after the first) rather than racing ahead
+     * through the plan, and a day whose only idea is YouTube (or that's
+     * already been used, or falls outside the current plan's 30 days)
+     * correctly produces nothing rather than substituting a different day's
+     * content. Marks the idea 'used' only once a draft was actually
+     * created — a failed AI call leaves it available to retry today.
      *
      * @return array{id:int}|null
      */
     public static function generateDraft(): ?array
     {
         $pdo = Database::get();
-        $stmt = $pdo->query(
-            "SELECT * FROM content_ideas WHERE platform = 'linkedin' AND status = 'idea'
-             ORDER BY day_number ASC, id ASC LIMIT 1"
+
+        $planStart = $pdo->query("SELECT MIN(date(generated_at)) FROM content_ideas")->fetchColumn();
+        if (empty($planStart)) {
+            error_log('Social draft generation: no content ideas plan exists — generate one in Admin -> Content Ideas.');
+            return null;
+        }
+
+        $dayNumber = (int) ((strtotime(gmdate('Y-m-d')) - strtotime((string) $planStart)) / 86400) + 1;
+
+        $stmt = $pdo->prepare(
+            "SELECT * FROM content_ideas WHERE day_number = ? AND platform = 'linkedin' AND status = 'idea' LIMIT 1"
         );
+        $stmt->execute([$dayNumber]);
         $idea = $stmt->fetch();
         if (!$idea) {
-            error_log('Social draft generation: no unused LinkedIn ideas in the 30-day plan — generate a fresh one in Admin -> Content Ideas.');
+            error_log("Social draft generation: no unused LinkedIn idea for today (plan day {$dayNumber}) — either it's a YouTube day, already drafted, or outside the current 30-day plan.");
             return null;
         }
 
