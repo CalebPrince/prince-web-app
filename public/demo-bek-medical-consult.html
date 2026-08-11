@@ -42,7 +42,33 @@
   nav.nav-links a:hover{color:var(--accent-dark);}
   .nav-cta{background:var(--accent);color:#fff;padding:10px 20px;border-radius:999px;font-size:.88rem;font-weight:600;text-decoration:none;white-space:nowrap;}
   .nav-cta:hover{background:var(--accent-dark);}
-  @media (max-width:720px){ nav.nav-links{display:none;} }
+
+  /* mobile menu toggle (hidden on desktop) */
+  .menu-toggle{display:none;flex-direction:column;justify-content:center;gap:5px;width:40px;height:40px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;flex-shrink:0;}
+  .menu-toggle span{display:block;width:18px;height:2px;background:var(--navy);margin:0 auto;transition:transform .2s ease,opacity .2s ease;}
+  .menu-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .menu-toggle[aria-expanded="true"] span:nth-child(2){opacity:0;}
+  .menu-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  @media (max-width:720px){
+    nav.nav-links{display:none;}
+    .nav-cta{display:none;}
+    .menu-toggle{display:flex;}
+  }
+
+  /* mobile drawer */
+  .drawer-overlay{position:fixed;inset:0;background:rgba(16,59,67,.45);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+  .drawer-overlay.open{opacity:1;pointer-events:auto;}
+  .mobile-drawer{position:fixed;top:0;right:0;bottom:0;z-index:80;width:78%;max-width:320px;background:#fff;box-shadow:-16px 0 40px -20px rgba(16,59,67,.4);transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;}
+  .mobile-drawer.open{transform:translateX(0);}
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line);}
+  .drawer-head .brand{font-size:1rem;}
+  .drawer-close{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--navy);font-size:1.1rem;line-height:1;cursor:pointer;}
+  .drawer-links{display:flex;flex-direction:column;padding:12px 12px 20px;gap:2px;}
+  .drawer-links a{padding:14px 12px;border-radius:10px;text-decoration:none;color:var(--navy);font-weight:500;font-size:1rem;}
+  .drawer-links a:active,.drawer-links a:hover{background:var(--paper);}
+  .drawer-links .nav-cta{display:block;text-align:center;margin-top:10px;padding:14px 20px;}
+  @media (min-width:721px){ .drawer-overlay,.mobile-drawer{display:none;} }
 
   /* hero */
   .hero{padding:72px 0 56px;}
@@ -143,8 +169,25 @@
         <a href="#contact">Contact</a>
       </nav>
       <a class="nav-cta" href="#contact">Book an Appointment</a>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-drawer">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
+
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <nav class="mobile-drawer" id="mobile-drawer" aria-label="Mobile menu">
+    <div class="drawer-head">
+      <span class="brand"><span class="brand-mark">BM</span> BEK Medical Consult</span>
+      <button class="drawer-close" id="drawer-close" aria-label="Close menu">&times;</button>
+    </div>
+    <div class="drawer-links">
+      <a href="#services">Services</a>
+      <a href="#how-it-works">How Booking Works</a>
+      <a href="#contact">Contact</a>
+      <a class="nav-cta" href="#contact">Book an Appointment</a>
+    </div>
+  </nav>
 
   <main id="top">
     <section class="hero">
@@ -293,6 +336,32 @@
       const open = panel.classList.toggle('open');
       toggle.setAttribute('aria-expanded', String(open));
     });
+
+    const menuToggle = document.getElementById('menu-toggle');
+    const drawer = document.getElementById('mobile-drawer');
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    const drawerClose = document.getElementById('drawer-close');
+
+    function openDrawer() {
+      drawer.classList.add('open');
+      drawerOverlay.classList.add('open');
+      menuToggle.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      drawerOverlay.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    menuToggle.addEventListener('click', () => {
+      menuToggle.getAttribute('aria-expanded') === 'true' ? closeDrawer() : openDrawer();
+    });
+    drawerClose.addEventListener('click', closeDrawer);
+    drawerOverlay.addEventListener('click', closeDrawer);
+    drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
   </script>
 </body>
 </html>
