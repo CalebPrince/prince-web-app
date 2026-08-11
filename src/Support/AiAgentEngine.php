@@ -514,6 +514,19 @@ class AiAgentEngine
             $toolCalls = $message['tool_calls'] ?? null;
             if (!$toolCalls) {
                 $text = $message['content'] ?? null;
+                // Confirmed live (2026-08-11) and matches multiple independently
+                // reported issues: DeepSeek-V4's OpenAI-compatible endpoint can
+                // intermittently leak its own native "DSML" tool-call token
+                // format straight into `content` instead of populating the real
+                // tool_calls array, with finish_reason wrongly reported as
+                // "stop" — a serialization bug on DeepSeek's side, not
+                // something tool_choice above can fully prevent. Never show a
+                // leaked DSML block to a real user; treat it as a hard failure
+                // so the turn falls through to Gemini instead.
+                if ($text !== null && str_contains($text, 'DSML')) {
+                    error_log('DeepSeek chat: detected a leaked DSML tool-call block in content instead of a real tool_calls response; falling back.');
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+                }
                 return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
             }
 
