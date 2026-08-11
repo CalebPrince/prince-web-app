@@ -490,6 +490,15 @@ class AiAgentEngine
             // on tool_calls and never produce a reply.
             if ($round < $maxToolRounds - 1) {
                 $payload['tools'] = $tools;
+                // Confirmed live (2026-08-11): without an explicit tool_choice,
+                // DeepSeek can describe an attempted tool call as plain text in
+                // `content` instead of returning a real tool_calls array — this
+                // codebase's tool_calls-vs-content check below then treats that
+                // hallucinated description as the final reply (leaked into a
+                // live Scout chat as garbled pseudo-XML). Same explicit choice
+                // chatWithGroq() already makes below, just missed when this
+                // method was first added.
+                $payload['tool_choice'] = 'auto';
             }
             $result = self::callDeepSeekRaw($apiKey, $payload, $timeoutSeconds);
             if ($result === null) {
