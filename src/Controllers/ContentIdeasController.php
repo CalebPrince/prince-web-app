@@ -24,11 +24,16 @@ use App\Support\SharedAgentTools;
  * metrics, the same anti-fabrication discipline Beacon/Dossier/Marketing
  * Leads already follow elsewhere in this codebase.
  *
- * Deliberately just a planning list (title + description per day), not
- * full post copy or a video script, and not wired into SocialDraftController
- * or Reel — turning an idea into an actual draft or a planned video stays a
- * manual next step. "Generate" replaces the full 30-row set each time
- * (delete-all + insert-30); this is a list you refresh, not an archive.
+ * Deliberately just a planning list (title + description per day), not full
+ * post copy or a video script. "Generate" replaces the full 30-row set each
+ * time (delete-all + insert-30); this is a list you refresh, not an archive.
+ * LinkedIn ideas are the sole source SocialDraftController::generateDraft()
+ * draws from (oldest day_number, status 'idea', first) — both the manual
+ * "Turn into draft" button here and the daily cron/"Generate now" button on
+ * the Social Drafts page mark an idea 'used' once a draft is actually
+ * created from it. YouTube ideas have no such link yet — turning one into a
+ * planned video stays a manual next step (that would be Reel's job, not
+ * built yet).
  */
 class ContentIdeasController
 {

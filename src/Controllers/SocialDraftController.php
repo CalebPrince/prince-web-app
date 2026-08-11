@@ -13,28 +13,28 @@ use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
-use App\Support\ShortLink;
+use App\Support\SocialImage;
 
 /**
  * AI-drafted social posts. generateDraft() is shared between the scheduled
  * cron script (database/generate_social_drafts.php) and the admin's manual
- * "Generate now" button. Drafts spotlight the most recent published
- * blog post / project / approved testimonial that hasn't already been
- * drafted, falling back to an original evergreen post when there's nothing
- * new. Approval records a social_post_approved integration event (see
- * IntegrationEvent) for any external consumer, and — separately, if a LinkedIn
- * Composio account is connected — actually publishes the post to LinkedIn
- * directly (see publishToLinkedIn()), recording the outcome in
- * published_at/publish_error so approval can genuinely mean "posted," not
- * just "queued somewhere else."
+ * "Generate now" button. Drafts are sourced exclusively from the 30-day
+ * Content Ideas queue (Admin -> Content Ideas, LinkedIn ideas only, oldest
+ * day_number first) — the earlier blog-post/project/testimonial-announcement
+ * and generic-evergreen fallback sourcing was removed 2026-08-11 so every
+ * auto-generated post traces back to a real, reviewable plan entry instead
+ * of whatever happened to publish most recently. Returns null (no draft,
+ * cron/admin surface a "nothing to draft" message) once every LinkedIn idea
+ * in the current 30-day plan has been used — generate a fresh plan in
+ * Admin -> Content Ideas to keep the queue going. Approval records a
+ * social_post_approved integration event (see IntegrationEvent) for any
+ * external consumer, and — separately, if a LinkedIn Composio account is
+ * connected — actually publishes the post to LinkedIn directly (see
+ * publishToLinkedIn()), recording the outcome in published_at/publish_error
+ * so approval can genuinely mean "posted," not just "queued somewhere else."
  */
 class SocialDraftController
 {
-    private static function blogOgImagePath(string $slug): string
-    {
-        return '/uploads/og/blog/' . $slug . '.png';
-    }
-
     /** GET /api/v1/admin/social-drafts */
     public static function index(): void
     {
@@ -49,7 +49,7 @@ class SocialDraftController
         AuthMiddleware::requireAuth();
         $result = self::generateDraft();
         if (!$result) {
-            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+            Response::error('Could not generate a draft — either every LinkedIn idea in the current 30-day plan has already been used (generate a fresh one in Admin -> Content Ideas), or no AI provider is configured/reachable.', 502);
         }
         Response::json($result, 201);
     }
@@ -131,9 +131,10 @@ class SocialDraftController
     /**
      * Best-effort direct LinkedIn post via Composio, run on approval — never
      * blocks or fails the approval itself. Payload shape (author/commentary/
-     * visibility) is confirmed against a live account's 400 response; records
-     * success or the last error in published_at/publish_error rather than
-     * failing silently.
+     * visibility) is confirmed against a live account's 400 response; the
+     * image attachment (content.media) below is not yet confirmed — see the
+     * comment at its assembly. Records success or the last error in
+     * published_at/publish_error rather than failing silently.
      */
     private static function publishToLinkedIn(\PDO $pdo, array $draft): void
     {
@@ -166,6 +167,25 @@ class SocialDraftController
         }
 
         $payload = ['author' => $authorUrn, 'commentary' => $text, 'visibility' => 'PUBLIC'];
+
+        // Not confirmed against a live account yet (no draft has carried an
+        // image_url through to this point before — see SocialImage). LinkedIn's
+        // own Posts API needs an image pre-registered as a urn:li:image:... via
+        // a separate two-step upload, which Composio's generic proxy has no
+        // clean way to do (a raw binary PUT, not a JSON call) — so this instead
+        // gambles that Composio's create-post tool accepts a plain public image
+        // URL directly in content.media.id and does that registration/upload
+        // itself server-side, the same convenience shape several other
+        // Composio-wrapped "create post" actions expose. If LinkedIn/Composio
+        // rejects this shape, the failure path below logs the real response so
+        // the correct field name can be read off it directly, the same way the
+        // missing 'author' field was originally diagnosed.
+        if (!empty($draft['image_url'])) {
+            $imageUrl = str_starts_with((string) $draft['image_url'], 'http')
+                ? (string) $draft['image_url']
+                : 'https://princecaleb.dev' . $draft['image_url'];
+            $payload['content'] = ['media' => ['id' => $imageUrl]];
+        }
 
         // Wrapped in try/catch: shared hosting runs several PHP workers and
         // cron jobs against the same SQLite file, and a lock that outlasts
@@ -267,125 +287,33 @@ class SocialDraftController
         Response::json(['status' => 'deleted']);
     }
 
-    /** @return array{id:int}|null */
+    /**
+     * Picks the next unused LinkedIn content idea (earliest day_number
+     * first) and drafts it, marking the idea 'used' only once a draft was
+     * actually created — a failed AI call leaves the idea available to try
+     * again on the next run rather than silently burning a plan day.
+     *
+     * @return array{id:int}|null
+     */
     public static function generateDraft(): ?array
     {
         $pdo = Database::get();
-        $source = self::findSource($pdo);
-        $prompt = $source ? self::promptForSource($source) : self::generalPrompt();
-
-        $result = AiText::generateWithProvider($prompt, null, 20);
-        if ($result === null) {
-            error_log('Social draft generation: all configured AI providers (Gemini/OpenRouter/Groq) failed.');
+        $stmt = $pdo->query(
+            "SELECT * FROM content_ideas WHERE platform = 'linkedin' AND status = 'idea'
+             ORDER BY day_number ASC, id ASC LIMIT 1"
+        );
+        $idea = $stmt->fetch();
+        if (!$idea) {
+            error_log('Social draft generation: no unused LinkedIn ideas in the 30-day plan — generate a fresh one in Admin -> Content Ideas.');
             return null;
         }
 
-        $text = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['text']));
-        $parsed = json_decode($text, true);
-        if (!is_array($parsed) || empty($parsed['content'])) {
-            error_log('Social draft generation: could not parse JSON from model output: ' . substr($text, 0, 800));
-            return null;
+        $result = self::generateFromIdea($idea);
+        if ($result !== null) {
+            $pdo->prepare("UPDATE content_ideas SET status = 'used' WHERE id = ?")->execute([$idea['id']]);
         }
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, image_url, ai_provider) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([
-            $source['type'] ?? 'general',
-            $source['id'] ?? null,
-            (string) $parsed['content'],
-            !empty($parsed['short_content']) ? (string) $parsed['short_content'] : null,
-            !empty($parsed['hashtags']) ? (string) $parsed['hashtags'] : null,
-            $source['image'] ?? null,
-            $result['provider'],
-        ]);
-
-        return ['id' => (int) $pdo->lastInsertId()];
-    }
-
-    private static function findSource(\PDO $pdo): ?array
-    {
-        // Ordered by updated_at, not created_at — a post drafted (e.g. via
-        // Content Studio's "Send to Blog") sitting unpublished for a while
-        // and only published later would otherwise lose to posts merely
-        // *created* more recently, even though it just went live. Every
-        // save (including the publish toggle) bumps updated_at, so it's the
-        // closer proxy for "when this actually became a live post" — there's
-        // no dedicated published_at column.
-        $stmt = $pdo->query(
-            "SELECT id, slug, title, excerpt FROM blog_posts
-             WHERE is_published = 1
-               AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'blog' AND source_id IS NOT NULL)
-             ORDER BY updated_at DESC LIMIT 1"
-        );
-        $blog = $stmt->fetch();
-        if ($blog) {
-            return [
-                'type' => 'blog',
-                'id' => (int) $blog['id'],
-                'title' => $blog['title'],
-                'summary' => $blog['excerpt'],
-                'url' => ShortLink::getOrCreate(self::absoluteUrl('/archive-post.html?slug=' . $blog['slug'])),
-                'image' => self::absoluteUrl(self::blogOgImagePath((string) $blog['slug'])),
-            ];
-        }
-
-        // Same updated_at-over-created_at reasoning as the blog query above.
-        $stmt = $pdo->query(
-            "SELECT id, slug, title, summary, cover_image_path FROM projects
-             WHERE is_published = 1
-               AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'project' AND source_id IS NOT NULL)
-             ORDER BY updated_at DESC LIMIT 1"
-        );
-        $project = $stmt->fetch();
-        if ($project) {
-            return [
-                'type' => 'project',
-                'id' => (int) $project['id'],
-                'title' => $project['title'],
-                'summary' => $project['summary'],
-                'url' => ShortLink::getOrCreate(self::absoluteUrl('/project.html?slug=' . $project['slug'])),
-                'image' => self::absoluteUrl($project['cover_image_path']),
-            ];
-        }
-
-        $stmt = $pdo->query(
-            "SELECT id, client_name, project_reference, quote FROM testimonials
-             WHERE status = 'approved'
-               AND id NOT IN (SELECT source_id FROM social_post_drafts WHERE source_type = 'testimonial' AND source_id IS NOT NULL)
-             ORDER BY submitted_at DESC LIMIT 1"
-        );
-        $testimonial = $stmt->fetch();
-        if ($testimonial) {
-            return [
-                'type' => 'testimonial',
-                'id' => (int) $testimonial['id'],
-                'client_name' => $testimonial['client_name'],
-                'project_reference' => $testimonial['project_reference'],
-                'quote' => $testimonial['quote'],
-            ];
-        }
-
-        return null;
-    }
-
-    private static function promptForSource(array $source): string
-    {
-        $base = 'You are drafting a social media post for Prince Caleb, a solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering. '
-            . "Keep it authentic and professional, not salesy or hyperbolic — no invented statistics or false urgency.\n\n";
-        $base .= SharedAgentTools::publicContactContext() . "\n\n";
-        $jsonSpec = 'Return JSON only: {"content": "2-4 sentence post for LinkedIn/Facebook", '
-            . '"short_content": "a punchier version under 260 characters for X/Twitter", '
-            . '"hashtags": "3-5 relevant hashtags separated by spaces"} — no markdown fences, no commentary.';
-
-        if ($source['type'] === 'blog' || $source['type'] === 'project') {
-            $kind = $source['type'] === 'blog' ? 'blog post' : 'case study';
-            return $base . "Announce this new {$kind}:\nTitle: {$source['title']}\nSummary: {$source['summary']}\n"
-                . "Link: {$source['url']}\n\nThe \"content\" and \"short_content\" fields must both include the link naturally.\n\n{$jsonSpec}";
-        }
-
-        $ref = $source['project_reference'] ? " for their {$source['project_reference']} project" : '';
-        return $base . "Share this client testimonial{$ref}:\nClient: {$source['client_name']}\nQuote: \"{$source['quote']}\"\n\n{$jsonSpec}";
+        return $result;
     }
 
     /**
@@ -395,6 +323,12 @@ class SocialDraftController
      * LinkedIn ideas only; ContentIdeasController rejects YouTube ideas
      * before this is ever called, since a text post isn't the right output
      * for a video idea (that would be Reel's job, not built yet).
+     *
+     * Every draft also gets the standing branded card (SocialImage) with the
+     * idea's own title/hook as the headline — best-effort: a failed render
+     * (missing GD/FreeType, bundled fonts absent) just leaves image_url
+     * null rather than failing the draft itself, same as every other
+     * best-effort step in this file.
      *
      * @return array{id:int}|null
      */
@@ -414,8 +348,13 @@ class SocialDraftController
             return null;
         }
 
+        $image = SocialImage::generate((string) ($idea['title'] ?? ''));
+        if ($image === null) {
+            error_log("Social draft generation: branded card render failed for idea {$idea['id']} — draft will have no image.");
+        }
+
         $stmt = $pdo->prepare(
-            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, ai_provider) VALUES (?, ?, ?, ?, ?, ?)'
+            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, image_url, ai_provider) VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             'content_idea',
@@ -423,6 +362,7 @@ class SocialDraftController
             (string) $parsed['content'],
             !empty($parsed['short_content']) ? (string) $parsed['short_content'] : null,
             !empty($parsed['hashtags']) ? (string) $parsed['hashtags'] : null,
+            $image['url'] ?? null,
             $result['provider'],
         ]);
 
@@ -441,37 +381,5 @@ class SocialDraftController
         return $base . "Write a LinkedIn post based on this content idea from Caleb's own content calendar:\n"
             . "Title/hook: {$idea['title']}\nAngle: {$idea['description']}\n\n"
             . "Expand it into a real post — don't just restate the title and angle verbatim.\n\n{$jsonSpec}";
-    }
-
-    private static function generalPrompt(): string
-    {
-        $angles = [
-            'a practical, specific web development tip business owners can actually use',
-            'a common mistake businesses make with their website or online presence',
-            'why custom software beats an off-the-shelf tool for a specific kind of business problem',
-            'a behind-the-scenes insight into what it is like working with a freelance developer',
-        ];
-        $angle = $angles[array_rand($angles)];
-
-        $jsonSpec = 'Return JSON only: {"content": "2-4 sentence post for LinkedIn/Facebook", '
-            . '"short_content": "a punchier version under 260 characters for X/Twitter", '
-            . '"hashtags": "3-5 relevant hashtags separated by spaces"} — no markdown fences, no commentary.';
-
-        return 'You are drafting an original social media post for Prince Caleb, a solo developer in Ghana who builds AI voice '
-            . "agents, chatbots, and business automations on 12+ years of web & mobile engineering. There is no new content to promote right now, so write about: {$angle}. "
-            . "Keep it authentic and specific, not salesy or generic — no invented statistics or false urgency.\n\n"
-            . SharedAgentTools::publicContactContext() . "\n\n{$jsonSpec}";
-    }
-
-    private static function absoluteUrl(string $path): string
-    {
-        $host = $_SERVER['HTTP_HOST'] ?? 'princecaleb.dev';
-        $forwardedProto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https' ? 'https' : 'http';
-        if ($host === 'princecaleb.dev' || str_ends_with($host, '.princecaleb.dev')) {
-            $scheme = 'https';
-        }
-
-        return $scheme . '://' . $host . $path;
     }
 }
