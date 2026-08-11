@@ -1297,6 +1297,50 @@ document.getElementById("account-demo-regenerate").addEventListener("click", asy
   }
 });
 
+// --- Send Lisa WhatsApp intro (contact reached out off Lisa's number) ------
+
+document.getElementById("whatsapp-intro-btn").addEventListener("click", () => {
+  document.getElementById("whatsapp-intro-name").value = "";
+  document.getElementById("whatsapp-intro-phone").value = "";
+  document.getElementById("whatsapp-intro-note").value = "";
+  document.getElementById("whatsapp-intro-msg").classList.add("d-none");
+});
+
+document.getElementById("whatsapp-intro-send-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("whatsapp-intro-send-btn");
+  const msg = document.getElementById("whatsapp-intro-msg");
+  const contact_name = document.getElementById("whatsapp-intro-name").value.trim();
+  const phone_number = document.getElementById("whatsapp-intro-phone").value.trim();
+  const note = document.getElementById("whatsapp-intro-note").value.trim();
+
+  msg.classList.add("d-none");
+  if (!contact_name || !phone_number) {
+    msg.className = "alert alert-danger py-2 small mb-0 mt-3";
+    msg.textContent = "Contact name and WhatsApp number are required.";
+    msg.classList.remove("d-none");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  try {
+    await api.post("/api/v1/admin/whatsapp/send-intro", { contact_name, phone_number, note });
+    msg.className = "alert alert-success py-2 small mb-0 mt-3";
+    msg.textContent = `Intro template sent to ${contact_name}. Lisa will pick up the conversation once they reply.`;
+    msg.classList.remove("d-none");
+    document.getElementById("whatsapp-intro-name").value = "";
+    document.getElementById("whatsapp-intro-phone").value = "";
+    document.getElementById("whatsapp-intro-note").value = "";
+  } catch (err) {
+    msg.className = "alert alert-danger py-2 small mb-0 mt-3";
+    msg.textContent = err.message || "Could not send the intro.";
+    msg.classList.remove("d-none");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Send intro";
+  }
+});
+
 // --- Outreach performance analytics ---------------------------------------
 
 const REPLY_CLASSIFICATION_TONE = {

@@ -22,6 +22,7 @@ class SettingsController
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'slack_webhook_url',
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'elevenlabs_webhook_secret', 'elevenlabs_whatsapp_agent_id', 'elevenlabs_postcall_signing_secret',
+        'elevenlabs_whatsapp_phone_number_id', 'elevenlabs_whatsapp_intro_template_name', 'elevenlabs_whatsapp_intro_template_lang',
         'elevenlabs_phone_agent_id', 'elevenlabs_phone_number_id',
         'elevenlabs_phone_webhook_secret', 'elevenlabs_phone_postcall_signing_secret',
         'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model', 'scout_elevenlabs_voice_id',

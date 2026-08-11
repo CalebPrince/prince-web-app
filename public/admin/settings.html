@@ -358,12 +358,31 @@
                   Tool webhooks: in the agent's <strong>Tools</strong> section (separate from the webhooks above), add one webhook tool per capability, each pointing at <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-tool?tool_name=check_availability</code> (swap the tool_name value per tool — e.g. <code>book_appointment</code>, <code>log_inquiry</code>, <code>get_site_info</code>), same custom header as above. Optionally add <code>&session_token={{session_token}}</code> to the URL so bookings land in the right conversation thread.
                 </div>
               </div>
-              <div class="mb-0">
+              <div class="mb-3">
                 <label class="form-label" for="elevenlabs-postcall-signing-secret">Post-call webhook signing secret <span class="text-muted-custom fw-normal">(ElevenLabs generates this)</span></label>
                 <input type="password" class="form-control" id="elevenlabs-postcall-signing-secret" autocomplete="new-password" placeholder="Paste the secret ElevenLabs shows when you create this webhook">
                 <div class="form-text">
                   Post-call webhook: <code>https://princecaleb.dev/api/v1/whatsapp/elevenlabs-post-call</code>.
                   When you add this URL in the agent's post-call webhook settings, ElevenLabs generates its own signing secret and shows it once — paste that value here (don't invent one, and don't add a custom header for this one).
+                </div>
+              </div>
+              <hr>
+              <h6 class="mb-2">Outbound intro (contact reached you outside this number)</h6>
+              <p class="text-muted-custom small mb-3">WhatsApp requires the first business-initiated message to a contact to be a pre-approved template. Create and get the template approved in <a href="https://business.facebook.com/wa/manage/message-templates/" target="_blank" rel="noopener">WhatsApp Manager</a> first — a "utility" category template naming the contact ({{1}}) works well for "thanks for reaching out" opens. Used by the "Send Lisa intro" action on the Marketing Leads page.</p>
+              <div class="mb-3">
+                <label class="form-label" for="elevenlabs-whatsapp-phone-number-id">WhatsApp phone number ID</label>
+                <input type="text" class="form-control" id="elevenlabs-whatsapp-phone-number-id" autocomplete="off" placeholder="120...">
+                <div class="form-text">In ElevenLabs' WhatsApp page, open the menu next to this account and choose "Copy phone number ID." Different from the SIP phone number ID below.</div>
+              </div>
+              <div class="row g-3 mb-0">
+                <div class="col-sm-8">
+                  <label class="form-label" for="elevenlabs-whatsapp-intro-template-name">Intro template name</label>
+                  <input type="text" class="form-control" id="elevenlabs-whatsapp-intro-template-name" autocomplete="off" placeholder="e.g. lisa_intro">
+                  <div class="form-text">Exact name of the approved template in WhatsApp Manager. Its only body parameter is filled with the contact's name.</div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label" for="elevenlabs-whatsapp-intro-template-lang">Template language code</label>
+                  <input type="text" class="form-control" id="elevenlabs-whatsapp-intro-template-lang" autocomplete="off" placeholder="en">
                 </div>
               </div>
             </div>

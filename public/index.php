@@ -316,6 +316,7 @@ $router->get('/api/v1/admin/outreach/whatsapp-queue', [OutreachController::class
 $router->post('/api/v1/admin/outreach/ai-call/{id}', [OutreachController::class, 'initiateAiCall']);
 $router->get('/api/v1/admin/outreach/scoreboard', [OutreachController::class, 'scoreboard']);
 $router->post('/api/v1/admin/outreach/call-log/{id}', [OutreachController::class, 'logCall']);
+$router->post('/api/v1/admin/whatsapp/send-intro', [LiveChatController::class, 'sendIntro']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
 $router->get('/api/v1/admin/content-studio', [ContentStudioController::class, 'index']);

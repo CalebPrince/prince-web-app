@@ -1213,6 +1213,25 @@ CREATE TABLE IF NOT EXISTS whatsapp_call_followups (
 );
 CREATE INDEX IF NOT EXISTS idx_whatsapp_call_followups_status ON whatsapp_call_followups (status, created_at);
 
+-- Business-initiated WhatsApp opener sent to a contact who reached out
+-- somewhere other than Lisa's connected WhatsApp number (a personal number,
+-- a YouTube comment, etc). WhatsApp requires the first business-initiated
+-- message to be a pre-approved template; once the contact replies, the
+-- conversation continues through the normal elevenLabsInitWebhook() flow
+-- and is no longer tracked here.
+CREATE TABLE IF NOT EXISTS whatsapp_intros (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  contact_name TEXT NOT NULL,
+  phone_number TEXT NOT NULL,
+  note TEXT,
+  template_name TEXT NOT NULL,
+  conversation_id TEXT,
+  status TEXT NOT NULL DEFAULT 'sent',
+  error_message TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_intros_created ON whatsapp_intros (created_at);
+
 CREATE TABLE IF NOT EXISTS notification_reads (
   notification_key TEXT PRIMARY KEY,
   read_at TEXT NOT NULL DEFAULT (datetime('now'))

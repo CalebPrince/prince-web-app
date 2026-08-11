@@ -161,6 +161,9 @@ async function saveIntegrations(e) {
       elevenlabs_whatsapp_agent_id: document.getElementById("elevenlabs-whatsapp-agent-id").value.trim(),
       elevenlabs_webhook_secret: document.getElementById("elevenlabs-webhook-secret").value.trim(),
       elevenlabs_postcall_signing_secret: document.getElementById("elevenlabs-postcall-signing-secret").value.trim(),
+      elevenlabs_whatsapp_phone_number_id: document.getElementById("elevenlabs-whatsapp-phone-number-id").value.trim(),
+      elevenlabs_whatsapp_intro_template_name: document.getElementById("elevenlabs-whatsapp-intro-template-name").value.trim(),
+      elevenlabs_whatsapp_intro_template_lang: document.getElementById("elevenlabs-whatsapp-intro-template-lang").value.trim(),
       owner_whatsapp_number: document.getElementById("owner-whatsapp-number").value.trim(),
       owner_voice_number: document.getElementById("owner-voice-number").value.trim(),
       elevenlabs_phone_agent_id: document.getElementById("elevenlabs-phone-agent-id").value.trim(),
@@ -765,6 +768,9 @@ async function testAi() {
     document.getElementById("elevenlabs-whatsapp-agent-id").value = settings.elevenlabs_whatsapp_agent_id || "";
     document.getElementById("elevenlabs-webhook-secret").value = settings.elevenlabs_webhook_secret || "";
     document.getElementById("elevenlabs-postcall-signing-secret").value = settings.elevenlabs_postcall_signing_secret || "";
+    document.getElementById("elevenlabs-whatsapp-phone-number-id").value = settings.elevenlabs_whatsapp_phone_number_id || "";
+    document.getElementById("elevenlabs-whatsapp-intro-template-name").value = settings.elevenlabs_whatsapp_intro_template_name || "";
+    document.getElementById("elevenlabs-whatsapp-intro-template-lang").value = settings.elevenlabs_whatsapp_intro_template_lang || "en";
     document.getElementById("owner-whatsapp-number").value = settings.owner_whatsapp_number || "";
     document.getElementById("owner-voice-number").value = settings.owner_voice_number || "";
     document.getElementById("elevenlabs-phone-agent-id").value = settings.elevenlabs_phone_agent_id || "";

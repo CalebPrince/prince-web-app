@@ -535,6 +535,104 @@ class LiveChatController
     }
 
     /**
+     * POST /api/v1/admin/whatsapp/send-intro — admin-only. Lisa's WhatsApp
+     * number can only reply within a conversation a contact starts there;
+     * this is for the opposite case — someone reached out somewhere else
+     * (a personal number, a YouTube comment) and Caleb wants Lisa to make
+     * first contact on the connected number. WhatsApp requires that first
+     * business-initiated message to be a pre-approved template (free-form
+     * text is rejected outright), so this calls ElevenLabs' outbound
+     * message endpoint with a template rather than sending text directly.
+     * Once the contact replies, the conversation opens a normal service
+     * window and flows through elevenLabsInitWebhook() like any other
+     * inbound chat — nothing further is tracked here after the send.
+     */
+    public static function sendIntro(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $apiKey = Settings::get('elevenlabs_api_key');
+        $agentId = Settings::get('elevenlabs_whatsapp_agent_id');
+        $phoneNumberId = Settings::get('elevenlabs_whatsapp_phone_number_id');
+        $templateName = Settings::get('elevenlabs_whatsapp_intro_template_name');
+        $templateLang = Settings::get('elevenlabs_whatsapp_intro_template_lang') ?: 'en';
+        if (!$apiKey || !$agentId || !$phoneNumberId || !$templateName) {
+            Response::error(
+                'Set the ElevenLabs API key, WhatsApp agent ID, WhatsApp phone number ID, and intro template name in Settings first.',
+                422
+            );
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $contactName = trim((string) ($data['contact_name'] ?? ''));
+        $digits = self::normalizePhoneDigits((string) ($data['phone_number'] ?? ''));
+        $note = trim((string) ($data['note'] ?? ''));
+        if ($contactName === '' || mb_strlen($contactName) > 120) {
+            Response::error('Enter a contact name (up to 120 characters).', 422);
+        }
+        if ($digits === '' || mb_strlen($digits) < 8) {
+            Response::error('Enter the contact\'s WhatsApp number including country code.', 422);
+        }
+        if (mb_strlen($note) > 500) {
+            Response::error('Note is too long (500 characters max).', 422);
+        }
+
+        $payload = json_encode([
+            'agent_id' => $agentId,
+            'whatsapp_phone_number_id' => $phoneNumberId,
+            'whatsapp_user_id' => $digits,
+            'template_name' => $templateName,
+            'template_language_code' => $templateLang,
+            'template_params' => [
+                ['type' => 'body', 'parameters' => [['type' => 'text', 'text' => $contactName]]],
+            ],
+        ], JSON_UNESCAPED_UNICODE);
+
+        $ch = curl_init('https://api.elevenlabs.io/v1/convai/whatsapp/outbound-message');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'xi-api-key: ' . $apiKey],
+        ]);
+        $raw = curl_exec($ch);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $eleven = is_string($raw) ? json_decode($raw, true) : null;
+        $conversationId = is_array($eleven) ? (string) ($eleven['conversation_id'] ?? '') : '';
+        $ok = $raw !== false && $httpCode >= 200 && $httpCode < 300 && $conversationId !== '';
+
+        $pdo = Database::get();
+        $pdo->prepare(
+            "INSERT INTO whatsapp_intros
+             (contact_name, phone_number, note, template_name, conversation_id, status, error_message)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )->execute([
+            $contactName,
+            '+' . $digits,
+            $note !== '' ? $note : null,
+            $templateName,
+            $conversationId !== '' ? $conversationId : null,
+            $ok ? 'sent' : 'failed',
+            $ok ? null : ($curlError ?: (string) $raw),
+        ]);
+
+        if (!$ok) {
+            error_log('ElevenLabs WhatsApp outbound-message failed: ' . ($curlError ?: (string) $raw));
+            $detail = is_array($eleven) ? (string) ($eleven['detail']['message'] ?? $eleven['message'] ?? '') : '';
+            Response::error(
+                'ElevenLabs could not send the template message.' . ($detail !== '' ? ' ' . $detail : ' Check the template name/language and phone number ID.'),
+                502
+            );
+        }
+
+        Response::json(['sent' => true, 'conversation_id' => $conversationId], 201);
+    }
+
+    /**
      * elevenLabsInitWebhook() and elevenLabsToolWebhook() above share this
      * check — a simple custom shared secret (set the same value in Settings
      * and as a custom header in each webhook/tool's config on ElevenLabs'
