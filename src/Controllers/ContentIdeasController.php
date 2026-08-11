@@ -106,6 +106,39 @@ class ContentIdeasController
         Response::json(['status' => 'updated']);
     }
 
+    /**
+     * POST /api/v1/admin/content-ideas/{id}/draft — the one deliberate link
+     * to Social Drafts: turns a LinkedIn idea into a real AI-drafted post via
+     * SocialDraftController::generateFromIdea(), then marks the idea used.
+     * YouTube ideas are rejected here — a text post isn't the right output
+     * for a video idea; that's Reel's job (video planning), not built yet.
+     */
+    public static function createDraft(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT * FROM content_ideas WHERE id = ?');
+        $stmt->execute([$id]);
+        $idea = $stmt->fetch();
+        if (!$idea) {
+            Response::error('Idea not found.', 404);
+        }
+        if ($idea['platform'] !== 'linkedin') {
+            Response::error('Only LinkedIn ideas can be turned into a Social Draft — YouTube ideas need video planning, not a text post.', 422);
+        }
+
+        $draft = SocialDraftController::generateFromIdea($idea);
+        if ($draft === null) {
+            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+        }
+
+        $pdo->prepare("UPDATE content_ideas SET status = 'used' WHERE id = ?")->execute([$id]);
+        ActivityLog::log($user, 'generated', 'social_draft', $draft['id'], 'from content idea: ' . mb_substr((string) $idea['title'], 0, 100));
+
+        Response::json(['draft_id' => $draft['id']], 201);
+    }
+
     private static function systemInstruction(): string
     {
         return "You are a content strategist producing a 30-day content-idea calendar for a solo developer's "

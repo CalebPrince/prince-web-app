@@ -828,7 +828,7 @@ CREATE INDEX IF NOT EXISTS idx_integration_events_created ON integration_events 
 -- is handled by Make.com's platform connectors, not built here.
 CREATE TABLE IF NOT EXISTS social_post_drafts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  source_type TEXT NOT NULL CHECK (source_type IN ('blog', 'project', 'testimonial', 'general')),
+  source_type TEXT NOT NULL CHECK (source_type IN ('blog', 'project', 'testimonial', 'general', 'content_idea')),
   source_id INTEGER,
   content TEXT NOT NULL,
   short_content TEXT,

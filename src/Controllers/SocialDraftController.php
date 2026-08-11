@@ -12,6 +12,7 @@ use App\Support\Database;
 use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\Settings;
+use App\Support\SharedAgentTools;
 use App\Support\ShortLink;
 
 /**
@@ -385,6 +386,61 @@ class SocialDraftController
 
         $ref = $source['project_reference'] ? " for their {$source['project_reference']} project" : '';
         return $base . "Share this client testimonial{$ref}:\nClient: {$source['client_name']}\nQuote: \"{$source['quote']}\"\n\n{$jsonSpec}";
+    }
+
+    /**
+     * Turns a Content Ideas row (Admin -> Content Ideas, "Turn into draft")
+     * into a real AI-drafted social_post_drafts row — the one deliberate
+     * link between what was otherwise built as two standalone systems.
+     * LinkedIn ideas only; ContentIdeasController rejects YouTube ideas
+     * before this is ever called, since a text post isn't the right output
+     * for a video idea (that would be Reel's job, not built yet).
+     *
+     * @return array{id:int}|null
+     */
+    public static function generateFromIdea(array $idea): ?array
+    {
+        $pdo = Database::get();
+        $result = AiText::generateWithProvider(self::promptForContentIdea($idea), null, 20);
+        if ($result === null) {
+            error_log('Social draft generation from content idea: all configured AI providers failed.');
+            return null;
+        }
+
+        $text = trim((string) preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['text']));
+        $parsed = json_decode($text, true);
+        if (!is_array($parsed) || empty($parsed['content'])) {
+            error_log('Social draft generation from content idea: could not parse JSON from model output: ' . substr($text, 0, 800));
+            return null;
+        }
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, ai_provider) VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            'content_idea',
+            $idea['id'],
+            (string) $parsed['content'],
+            !empty($parsed['short_content']) ? (string) $parsed['short_content'] : null,
+            !empty($parsed['hashtags']) ? (string) $parsed['hashtags'] : null,
+            $result['provider'],
+        ]);
+
+        return ['id' => (int) $pdo->lastInsertId()];
+    }
+
+    private static function promptForContentIdea(array $idea): string
+    {
+        $base = 'You are drafting a social media post for Prince Caleb, a solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering. '
+            . "Keep it authentic and professional, not salesy or hyperbolic — no invented statistics or false urgency.\n\n";
+        $base .= SharedAgentTools::publicContactContext() . "\n\n";
+        $jsonSpec = 'Return JSON only: {"content": "2-4 sentence post for LinkedIn", '
+            . '"short_content": "a punchier version under 260 characters", '
+            . '"hashtags": "3-5 relevant hashtags separated by spaces"} — no markdown fences, no commentary.';
+
+        return $base . "Write a LinkedIn post based on this content idea from Caleb's own content calendar:\n"
+            . "Title/hook: {$idea['title']}\nAngle: {$idea['description']}\n\n"
+            . "Expand it into a real post — don't just restate the title and angle verbatim.\n\n{$jsonSpec}";
     }
 
     private static function generalPrompt(): string

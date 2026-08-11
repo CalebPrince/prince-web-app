@@ -36,6 +36,7 @@ function renderIdeas() {
         <p class="idea-description">${ideaEsc(idea.description)}</p>
       </div>
       <div class="d-flex flex-column gap-1">
+        ${platform === 'linkedin' ? `<button class="btn btn-sm btn-outline-primary" data-draft="${idea.id}" ${idea.status !== 'idea' ? 'disabled' : ''}>Turn into draft</button>` : ''}
         <button class="btn btn-sm btn-outline-secondary" data-mark-used="${idea.id}" ${idea.status === 'used' ? 'disabled' : ''}>Mark used</button>
         <button class="btn btn-sm btn-outline-danger" data-dismiss="${idea.id}" ${idea.status === 'dismissed' ? 'disabled' : ''}>Dismiss</button>
       </div>
@@ -47,6 +48,32 @@ function renderIdeas() {
     el.addEventListener('click', () => setIdeaStatus(Number(el.dataset.markUsed), 'used')));
   list.querySelectorAll('[data-dismiss]').forEach(el =>
     el.addEventListener('click', () => setIdeaStatus(Number(el.dataset.dismiss), 'dismissed')));
+  list.querySelectorAll('[data-draft]').forEach(el =>
+    el.addEventListener('click', () => createDraftFromIdea(Number(el.dataset.draft), el)));
+}
+
+async function createDraftFromIdea(id, btn) {
+  const idea = ideas.find(i => Number(i.id) === id);
+  if (!idea) return;
+  const errorBox = document.getElementById('ideas-error');
+  errorBox.classList.add('d-none');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Drafting…';
+  try {
+    await api.post(`/api/v1/admin/content-ideas/${id}/draft`, {});
+    idea.status = 'used';
+    renderIdeas();
+    errorBox.className = 'alert alert-success';
+    errorBox.innerHTML = `Draft created — <a href="/admin/social-drafts.html">review it in Social Drafts</a>.`;
+    errorBox.classList.remove('d-none');
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = originalText;
+    errorBox.className = 'alert alert-danger';
+    errorBox.textContent = err.message;
+    errorBox.classList.remove('d-none');
+  }
 }
 
 async function setIdeaStatus(id, status) {
@@ -82,6 +109,7 @@ async function generatePlan() {
     ideas = res.ideas || [];
     renderIdeas();
   } catch (err) {
+    errorBox.className = 'alert alert-danger';
     errorBox.textContent = err.message;
     errorBox.classList.remove('d-none');
   } finally {

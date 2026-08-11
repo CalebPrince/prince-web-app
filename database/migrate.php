@@ -1669,4 +1669,39 @@ foreach ($autoAutomationDefaults as $name => $value) {
     $autoAutomationSetting->execute([$name, $value]);
 }
 
+// Content Ideas' "Turn into draft" button creates a real social_post_drafts
+// row sourced from a content idea. SQLite can't ALTER a CHECK constraint, so
+// rebuild the table if 'content_idea' isn't an allowed source_type yet —
+// same pattern as lead_attribution's 'newsletter' widening above.
+$socialDraftsSql = (string) $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'social_post_drafts'"
+)->fetchColumn();
+if ($socialDraftsSql !== '' && !str_contains($socialDraftsSql, "'content_idea'")) {
+    rebuildTable(
+        $pdo,
+        'social_post_drafts',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_type TEXT NOT NULL CHECK (source_type IN ('blog', 'project', 'testimonial', 'general', 'content_idea')),
+            source_id INTEGER,
+            content TEXT NOT NULL,
+            short_content TEXT,
+            hashtags TEXT,
+            image_url TEXT,
+            ai_provider TEXT,
+            status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'approved', 'rejected')),
+            sent_to_makecom INTEGER NOT NULL DEFAULT 0,
+            published_at TEXT,
+            publish_error TEXT,
+            linkedin_post_urn TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, source_type, source_id, content, short_content, hashtags, image_url, ai_provider, status,
+         sent_to_makecom, published_at, publish_error, linkedin_post_urn, created_at, updated_at',
+        ['CREATE INDEX IF NOT EXISTS idx_social_post_drafts_status ON social_post_drafts (status, created_at)']
+    );
+    echo "Rebuilt social_post_drafts — source_type now allows 'content_idea'.\n";
+}
+
 echo "Schema applied.\n";

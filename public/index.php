@@ -341,6 +341,7 @@ $router->delete('/api/v1/admin/radar-dm-drafts/{id}', [RadarController::class, '
 $router->get('/api/v1/admin/content-ideas', [ContentIdeasController::class, 'index']);
 $router->post('/api/v1/admin/content-ideas/generate', [ContentIdeasController::class, 'generate']);
 $router->patch('/api/v1/admin/content-ideas/{id}', [ContentIdeasController::class, 'updateStatus']);
+$router->post('/api/v1/admin/content-ideas/{id}/draft', [ContentIdeasController::class, 'createDraft']);
 $router->post('/api/v1/admin/agents/reel/chat', [ReelController::class, 'chat']);
 $router->post('/api/v1/admin/agents/sage/chat', [SageController::class, 'adminChat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
