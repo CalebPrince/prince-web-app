@@ -134,10 +134,10 @@ class SocialDraftController
     /**
      * Best-effort direct LinkedIn post via Composio, run on approval — never
      * blocks or fails the approval itself. Payload shape (author/commentary/
-     * visibility) is confirmed against a live account's 400 response; the
-     * image attachment (content.media) below is not yet confirmed — see the
-     * comment at its assembly. Records success or the last error in
-     * published_at/publish_error rather than failing silently.
+     * visibility) is confirmed against a live account's 400 response. Image
+     * attachment (registerLinkedInImage()) is not yet confirmed against a
+     * live account — see the comment there. Records success or the last
+     * error in published_at/publish_error rather than failing silently.
      */
     private static function publishToLinkedIn(\PDO $pdo, array $draft): void
     {
@@ -171,23 +171,23 @@ class SocialDraftController
 
         $payload = ['author' => $authorUrn, 'commentary' => $text, 'visibility' => 'PUBLIC'];
 
-        // Not confirmed against a live account yet (no draft has carried an
-        // image_url through to this point before — see SocialImage). LinkedIn's
-        // own Posts API needs an image pre-registered as a urn:li:image:... via
-        // a separate two-step upload, which Composio's generic proxy has no
-        // clean way to do (a raw binary PUT, not a JSON call) — so this instead
-        // gambles that Composio's create-post tool accepts a plain public image
-        // URL directly in content.media.id and does that registration/upload
-        // itself server-side, the same convenience shape several other
-        // Composio-wrapped "create post" actions expose. If LinkedIn/Composio
-        // rejects this shape, the failure path below logs the real response so
-        // the correct field name can be read off it directly, the same way the
-        // missing 'author' field was originally diagnosed.
+        // Earlier version of this guessed 'content.media.id' — that's the raw
+        // LinkedIn REST field name, not this Composio tool's own parameter
+        // (its schema is flat: author/commentary/images/visibility/
+        // lifecycleState), so it was silently dropped as an unrecognized
+        // field: the post always published, just without the image, and
+        // with no error to signal why. LINKEDIN_CREATE_LINKED_IN_POST reads
+        // 'images' — an array of {id: urn:li:image:...} — and that urn has
+        // to be a real registered LinkedIn image asset, not a plain public
+        // URL (see registerLinkedInImage()).
         if (!empty($draft['image_url'])) {
             $imageUrl = str_starts_with((string) $draft['image_url'], 'http')
                 ? (string) $draft['image_url']
                 : 'https://princecaleb.dev' . $draft['image_url'];
-            $payload['content'] = ['media' => ['id' => $imageUrl]];
+            $imageUrn = self::registerLinkedInImage($accountId, $authorUrn, $imageUrl);
+            if ($imageUrn !== null) {
+                $payload['images'] = [['id' => $imageUrn]];
+            }
         }
 
         // Wrapped in try/catch: shared hosting runs several PHP workers and
@@ -230,6 +230,58 @@ class SocialDraftController
         } catch (\Throwable $e) {
             error_log("Composio LinkedIn publish for draft {$draft['id']} threw: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Registers our branded card image as a real LinkedIn image asset and
+     * returns its urn:li:image:... — the id publishToLinkedIn() needs in
+     * payload.images. Two Composio calls, matching LinkedIn's own Images API:
+     * LINKEDIN_INITIALIZE_IMAGE_UPLOAD mints a presigned upload URL + the
+     * asset urn, then a PUT to that URL supplies the actual bytes. LinkedIn
+     * requires the connected account's own OAuth token as a Bearer header on
+     * that PUT (confirmed in LinkedIn's docs) — a token this app never holds
+     * directly (Composio redacts it from connected-account responses) — so
+     * the PUT goes through Composio's proxy passing binary_body.url, which
+     * has Composio fetch our public image URL itself and upload it with the
+     * token attached server-side, rather than us handling raw bytes at all.
+     * Not yet confirmed against a live account (no draft has carried an
+     * image this far before) — both the initialize response's field nesting
+     * and the proxy's binary_body support are read from Composio's docs, not
+     * a real response. Logs the raw response at each step so a live failure
+     * shows exactly which assumption to correct, the same way the missing
+     * 'author' field was diagnosed. Returns null (never throws) on any
+     * failure — publishToLinkedIn() then just posts without an image rather
+     * than losing the whole post.
+     */
+    private static function registerLinkedInImage(string $accountId, string $authorUrn, string $imageUrl): ?string
+    {
+        $init = Composio::executeTool('LINKEDIN_INITIALIZE_IMAGE_UPLOAD', $accountId, ['owner' => $authorUrn]);
+        if ($init === null) {
+            error_log('LinkedIn image upload: initialize failed: ' . (Composio::lastError() ?: 'unknown'));
+            return null;
+        }
+        error_log('LinkedIn image upload: initialize raw response: ' . json_encode($init));
+
+        $value = $init['data']['response_dict']['value']
+            ?? $init['data']['value']
+            ?? $init['value']
+            ?? $init['data']
+            ?? [];
+        $uploadUrl = $value['uploadUrl'] ?? null;
+        $urn = $value['image'] ?? null;
+        if (empty($uploadUrl) || empty($urn)) {
+            error_log('LinkedIn image upload: initialize response missing uploadUrl/image: ' . json_encode($init));
+            return null;
+        }
+
+        $put = Composio::executeProxy($accountId, (string) $uploadUrl, 'PUT', [], null, ['url' => $imageUrl]);
+        if ($put === null) {
+            error_log('LinkedIn image upload: PUT to presigned URL failed: ' . (Composio::lastError() ?: 'unknown'));
+            return null;
+        }
+        error_log('LinkedIn image upload: PUT succeeded, raw response: ' . json_encode($put) . ', urn: ' . $urn);
+
+        return (string) $urn;
     }
 
     /**

@@ -230,9 +230,18 @@ class Composio
      * shape, not Composio's tool schema for it.
      *
      * @param array<int,array{name:string,value:string,type:string}> $parameters query/header/path params, Composio's documented shape
+     * @param array{url:string,content_type?:string}|array{base64:string,content_type?:string}|null $binaryBody
+     *   for uploading non-JSON content (e.g. a presigned-URL PUT) — Composio fetches/decodes and sends the bytes
+     *   itself, with the connected account's own auth attached, since this app never holds that token directly
      */
-    public static function executeProxy(string $connectedAccountId, string $endpoint, string $method, array $parameters = [], ?array $body = null): ?array
-    {
+    public static function executeProxy(
+        string $connectedAccountId,
+        string $endpoint,
+        string $method,
+        array $parameters = [],
+        ?array $body = null,
+        ?array $binaryBody = null
+    ): ?array {
         self::$lastError = null;
         $apiKey = Settings::get('composio_api_key');
         if (empty($apiKey)) {
@@ -248,6 +257,9 @@ class Composio
         ];
         if ($body !== null) {
             $payload['body'] = $body;
+        }
+        if ($binaryBody !== null) {
+            $payload['binary_body'] = $binaryBody;
         }
 
         return self::request('POST', self::API_BASE_V31 . '/tools/execute/proxy', $apiKey, $payload);
