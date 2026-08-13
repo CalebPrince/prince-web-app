@@ -599,7 +599,10 @@ class LiveChatController
         $raw = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
+        // No curl_close() — deprecated since PHP 8.0 (handles auto-free), and
+        // calling it on 8.5 emits a deprecation notice that leaks raw HTML
+        // into this JSON response (bit this codebase twice already, see
+        // Composio.php's request()).
 
         $eleven = is_string($raw) ? json_decode($raw, true) : null;
         $conversationId = is_array($eleven) ? (string) ($eleven['conversation_id'] ?? '') : '';
