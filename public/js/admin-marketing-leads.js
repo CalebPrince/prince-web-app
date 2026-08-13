@@ -1533,8 +1533,11 @@ function renderQueryYieldTable(rows) {
       <td>${escapeHtml(r.query)}</td>
       <td class="text-end fw-semibold">${Number(r.total || 0)}</td>
       <td class="text-end">${Number(r.sent || 0)}</td>
-      <td class="text-end">${Number(r.pitch_ready || 0)}</td>
+      <td class="text-end">${Number(r.ready_to_send || 0)}</td>
+      <td class="text-end">${Number(r.held_for_review || 0)}</td>
+      <td class="text-end">${Number(r.phone_script || 0)}</td>
       <td class="text-end">${Number(r.rejected || 0)}</td>
+      <td class="text-end">${Number(r.pending || 0)}</td>
       <td class="small text-muted-custom">${r.last_seen ? formatShortDate(r.last_seen) : '<span class="fst-italic">never run yet</span>'}</td>
     </tr>`).join("");
 }

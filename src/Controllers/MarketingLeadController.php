@@ -277,13 +277,32 @@ class MarketingLeadController
      * listed, at zero, so an unproductive query and an untried one don't
      * look identical.
      *
-     * @return list<array{query:string,total:int,sent:int,pitch_ready:int,rejected:int,pending:int,first_seen:?string,last_seen:?string}>
+     * 'pitch_ready' status is split into the three states that actually
+     * determine what happens next, mirroring ELIGIBLE_SQL's own gates
+     * (OutreachController.php): ready_to_send (would actually go out on the
+     * next run), held_for_review (drafted but review_status/is_high_priority
+     * blocks auto-send), and phone_script (never sends by email at all —
+     * waits on an approval-gated Lisa call instead). Lumping all three as
+     * one "pitch_ready" number made "found leads, 0 sent" unreadable: it
+     * could mean any of five different things, three of which look
+     * identical from outside.
+     *
+     * @return list<array{query:string,total:int,sent:int,ready_to_send:int,held_for_review:int,phone_script:int,rejected:int,pending:int,first_seen:?string,last_seen:?string}>
      */
     private static function buildQueryYield(\PDO $pdo): array
     {
         $prefix = 'Automatically discovered via Serper Places: ';
-        $stmt = $pdo->prepare('SELECT notes, status, created_at FROM marketing_leads WHERE notes LIKE ?');
+        $stmt = $pdo->prepare(
+            'SELECT notes, status, pitch_channel, review_status, is_high_priority, created_at
+             FROM marketing_leads WHERE notes LIKE ?'
+        );
         $stmt->execute([$prefix . '%']);
+
+        $blank = fn(string $query, ?string $seen): array => [
+            'query' => $query, 'total' => 0, 'sent' => 0, 'ready_to_send' => 0,
+            'held_for_review' => 0, 'phone_script' => 0, 'rejected' => 0, 'pending' => 0,
+            'first_seen' => $seen, 'last_seen' => $seen,
+        ];
 
         $byQuery = [];
         foreach ($stmt->fetchAll() as $row) {
@@ -292,19 +311,22 @@ class MarketingLeadController
                 continue;
             }
             if (!isset($byQuery[$query])) {
-                $byQuery[$query] = [
-                    'query' => $query, 'total' => 0, 'sent' => 0, 'pitch_ready' => 0,
-                    'rejected' => 0, 'pending' => 0, 'first_seen' => $row['created_at'], 'last_seen' => $row['created_at'],
-                ];
+                $byQuery[$query] = $blank($query, (string) $row['created_at']);
             }
             $byQuery[$query]['total']++;
             $status = (string) $row['status'];
             if ($status === 'sent') {
                 $byQuery[$query]['sent']++;
-            } elseif ($status === 'pitch_ready') {
-                $byQuery[$query]['pitch_ready']++;
             } elseif ($status === 'rejected') {
                 $byQuery[$query]['rejected']++;
+            } elseif ($status === 'pitch_ready') {
+                if ((string) $row['pitch_channel'] === 'phone') {
+                    $byQuery[$query]['phone_script']++;
+                } elseif ((string) $row['review_status'] === 'accepted' && (int) $row['is_high_priority'] === 0) {
+                    $byQuery[$query]['ready_to_send']++;
+                } else {
+                    $byQuery[$query]['held_for_review']++;
+                }
             } else {
                 $byQuery[$query]['pending']++;
             }
@@ -318,10 +340,7 @@ class MarketingLeadController
         // reads differently from "ran repeatedly and found nothing new."
         foreach (LeadDiscovery::configuredQueries() as $configured) {
             if (!isset($byQuery[$configured])) {
-                $byQuery[$configured] = [
-                    'query' => $configured, 'total' => 0, 'sent' => 0, 'pitch_ready' => 0,
-                    'rejected' => 0, 'pending' => 0, 'first_seen' => null, 'last_seen' => null,
-                ];
+                $byQuery[$configured] = $blank($configured, null);
             }
         }
 
