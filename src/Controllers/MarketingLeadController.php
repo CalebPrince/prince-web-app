@@ -10,6 +10,7 @@ use App\Support\AiText;
 use App\Support\Automations;
 use App\Support\Database;
 use App\Support\EmailEnrichment;
+use App\Support\LeadDiscovery;
 use App\Support\LeadFitScorer;
 use App\Support\Response;
 use App\Support\Settings;
@@ -109,6 +110,7 @@ class MarketingLeadController
             'send_trend' => self::buildSendTrend($pdo),
             'reply_breakdown' => self::buildReplyBreakdown($pdo),
             'opportunity_breakdown' => self::buildOpportunityBreakdown($pdo),
+            'query_yield' => self::buildQueryYield($pdo),
             'recent_sends' => self::buildRecentSends($pdo, 25),
             'recent_replies' => self::buildRecentReplies($pdo, 25),
             'top_demos' => self::buildTopDemos($pdo, 10),
@@ -260,6 +262,71 @@ class MarketingLeadController
         foreach ($counts as $type => $c) {
             $out[] = ['type' => $type, 'label' => $c['label'], 'count' => $c['count']];
         }
+        return $out;
+    }
+
+    /**
+     * Per-search-query yield: how many leads each saved Marketing Leads
+     * discovery search (LeadDiscovery::run()) has actually produced, and
+     * what happened to them. Discovery only ever writes leads with notes in
+     * the exact form 'Automatically discovered via Serper Places: {query}'
+     * (see LeadDiscovery::run()), so that prefix is the only reliable way
+     * to recover which query found a given lead — there's no dedicated
+     * column for it. Currently-configured queries with zero leads so far
+     * (including ones the rotation cursor hasn't reached yet) are still
+     * listed, at zero, so an unproductive query and an untried one don't
+     * look identical.
+     *
+     * @return list<array{query:string,total:int,sent:int,pitch_ready:int,rejected:int,pending:int,first_seen:?string,last_seen:?string}>
+     */
+    private static function buildQueryYield(\PDO $pdo): array
+    {
+        $prefix = 'Automatically discovered via Serper Places: ';
+        $stmt = $pdo->prepare('SELECT notes, status, created_at FROM marketing_leads WHERE notes LIKE ?');
+        $stmt->execute([$prefix . '%']);
+
+        $byQuery = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $query = trim(mb_substr((string) $row['notes'], mb_strlen($prefix)));
+            if ($query === '') {
+                continue;
+            }
+            if (!isset($byQuery[$query])) {
+                $byQuery[$query] = [
+                    'query' => $query, 'total' => 0, 'sent' => 0, 'pitch_ready' => 0,
+                    'rejected' => 0, 'pending' => 0, 'first_seen' => $row['created_at'], 'last_seen' => $row['created_at'],
+                ];
+            }
+            $byQuery[$query]['total']++;
+            $status = (string) $row['status'];
+            if ($status === 'sent') {
+                $byQuery[$query]['sent']++;
+            } elseif ($status === 'pitch_ready') {
+                $byQuery[$query]['pitch_ready']++;
+            } elseif ($status === 'rejected') {
+                $byQuery[$query]['rejected']++;
+            } else {
+                $byQuery[$query]['pending']++;
+            }
+            $createdAt = (string) $row['created_at'];
+            if ($createdAt < $byQuery[$query]['first_seen']) $byQuery[$query]['first_seen'] = $createdAt;
+            if ($createdAt > $byQuery[$query]['last_seen']) $byQuery[$query]['last_seen'] = $createdAt;
+        }
+
+        // Surface currently-configured queries even at zero leads, so "never
+        // run yet" (the rotation-cursor gap this report was built to catch)
+        // reads differently from "ran repeatedly and found nothing new."
+        foreach (LeadDiscovery::configuredQueries() as $configured) {
+            if (!isset($byQuery[$configured])) {
+                $byQuery[$configured] = [
+                    'query' => $configured, 'total' => 0, 'sent' => 0, 'pitch_ready' => 0,
+                    'rejected' => 0, 'pending' => 0, 'first_seen' => null, 'last_seen' => null,
+                ];
+            }
+        }
+
+        $out = array_values($byQuery);
+        usort($out, fn(array $a, array $b): int => $b['total'] <=> $a['total']);
         return $out;
     }
 

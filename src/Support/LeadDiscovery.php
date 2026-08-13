@@ -89,6 +89,12 @@ final class LeadDiscovery
         $target = max(1, min(50, (int) (Settings::get('lead_discovery_daily_target') ?: 50)));
         $pages = json_decode((string) Settings::get('lead_discovery_pages'), true);
         $pages = is_array($pages) ? $pages : [];
+        // Cursor into $queries so each run picks up where the last one left
+        // off instead of always restarting at index 0 — otherwise, with more
+        // than MAX_SEARCHES_PER_RUN queries saved, everything past the first
+        // MAX_SEARCHES_PER_RUN would never run. Re-normalized by count() so
+        // editing the query list can't leave a stale offset out of range.
+        $offset = ((int) Settings::get('lead_discovery_query_offset')) % count($queries);
         $pdo = Database::get();
         $known = self::knownKeys($pdo);
         $fallbackCurrency = strtoupper((string) (Settings::get('pricing_currency') ?: 'GHS'));
@@ -104,7 +110,7 @@ final class LeadDiscovery
         $failures = 0;
 
         while ($added < $target && $searched < self::MAX_SEARCHES_PER_RUN) {
-            $query = $queries[$searched % count($queries)];
+            $query = $queries[($offset + $searched) % count($queries)];
             $queryKey = sha1(mb_strtolower($query));
             $page = max(1, min(self::MAX_PAGE, (int) ($pages[$queryKey] ?? 1)));
             $results = MarketingLeadController::searchBusinesses($apiKey, $query, $page);
@@ -154,10 +160,17 @@ final class LeadDiscovery
         }
 
         Settings::set('lead_discovery_pages', json_encode($pages, JSON_UNESCAPED_SLASHES));
+        Settings::set('lead_discovery_query_offset', (string) (($offset + $searched) % count($queries)));
         $status = $failures === $searched
             ? 'All discovery searches failed; the next cron run will retry.'
             : "Added {$added} new lead(s) from {$searched} search(es); skipped {$skipped} duplicate or unusable result(s).";
         return self::record(self::result(true, true, $added, $searched, $skipped, $status), $failures !== $searched);
+    }
+
+    /** The saved niche/location searches, in rotation order — read-only view for reporting (e.g. per-query yield). */
+    public static function configuredQueries(): array
+    {
+        return self::queries();
     }
 
     /** @return string[] */

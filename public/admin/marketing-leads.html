@@ -434,8 +434,12 @@ a.demo-link-ai:hover { color: var(--heading-color); }
                                         <input type="number" class="form-control form-control-sm" id="oe-discovery-target" min="1" max="50" step="1" style="width:6rem;">
                                     </div>
                                     <div class="flex-grow-1">
-                                        <label for="oe-discovery-queries" class="form-label small mb-1">Niche and location searches <span class="text-muted-custom">(separate each search with a comma)</span></label>
-                                        <textarea class="form-control form-control-sm discovery-query-list" id="oe-discovery-queries" rows="4" wrap="soft" maxlength="4020" placeholder="private clinics in Accra Ghana, dental clinics in Kumasi Ghana"></textarea>
+                                        <label for="oe-discovery-queries" class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                            <span>Niche and location searches <span class="text-muted-custom">(separate each search with a comma)</span></span>
+                                            <span id="oe-discovery-query-count" class="text-muted-custom">0/20</span>
+                                        </label>
+                                        <textarea class="form-control form-control-sm discovery-query-list" id="oe-discovery-queries" rows="4" wrap="soft" maxlength="6000" placeholder="private clinics in Accra Ghana, dental clinics in Kumasi Ghana"></textarea>
+                                        <div id="oe-discovery-query-warning" class="small text-danger mt-1 d-none"></div>
                                     </div>
                                     <button type="button" class="btn btn-outline-secondary btn-sm" id="oe-discovery-save">Save</button>
                                 </div>
@@ -607,6 +611,20 @@ a.demo-link-ai:hover { color: var(--heading-color); }
       </div>
     </div>
 
+    <div class="row g-3 mt-1 mb-3">
+      <div class="col-12">
+        <div class="admin-card p-4">
+          <h5 class="mb-1">Yield by search <small class="text-muted-custom fw-normal" style="font-size:.7rem;">which saved niche/location searches are actually finding leads</small></h5>
+          <div class="table-responsive mt-3">
+            <table class="table table-sm mb-0 align-middle">
+              <thead><tr><th>Search</th><th class="text-end">Leads found</th><th class="text-end">Sent</th><th class="text-end">Pitch-ready</th><th class="text-end">Rejected</th><th>Last found</th></tr></thead>
+              <tbody id="query-yield-tbody"></tbody>
+            </table>
+          </div>
+          <div id="query-yield-empty" class="text-center text-muted-custom py-4 d-none">No discovery searches configured yet.</div>
+        </div>
+      </div>
+    </div>
 
    </div>
   </div>

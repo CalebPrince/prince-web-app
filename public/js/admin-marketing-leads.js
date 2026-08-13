@@ -982,6 +982,42 @@ function startDiscoveryCountdown(enabled, nextEligibleAt) {
   discoveryCountdownTimer = setInterval(update, 1000);
 }
 
+// Mirrors the server-side split/trim/filter in OutreachController::save()
+// (preg_split on comma or newline, trim, drop empties) so the count shown
+// here never disagrees with what the 20-search cap actually counts.
+function parseDiscoveryQueries(raw) {
+  return String(raw || "")
+    .split(/[\r\n,]+/)
+    .map((q) => q.trim())
+    .filter(Boolean);
+}
+
+/** Same 200-char-per-entry rule OutreachController::save() enforces server-side. */
+function overlongDiscoveryQueries(raw) {
+  return parseDiscoveryQueries(raw).filter((q) => q.length > 200);
+}
+
+function updateDiscoveryQueryCount() {
+  const field = document.getElementById("oe-discovery-queries");
+  const label = document.getElementById("oe-discovery-query-count");
+  const warning = document.getElementById("oe-discovery-query-warning");
+  if (!field || !label) return;
+  const count = parseDiscoveryQueries(field.value).length;
+  label.textContent = `${count}/20`;
+  label.classList.toggle("text-danger", count >= 20);
+  label.classList.toggle("text-muted-custom", count < 20);
+
+  if (!warning) return;
+  const overlong = overlongDiscoveryQueries(field.value);
+  if (overlong.length) {
+    const worst = overlong.reduce((a, b) => (b.length > a.length ? b : a));
+    warning.textContent = `${overlong.length === 1 ? "One search is" : `${overlong.length} searches are`} over the 200-character limit — the longest is ${worst.length} characters ("${worst.slice(0, 60)}${worst.length > 60 ? "…" : ""}").`;
+    warning.classList.remove("d-none");
+  } else {
+    warning.classList.add("d-none");
+  }
+}
+
 function renderOutreachStats(s) {
   document.getElementById("oe-queue").textContent = s.eligible_queue;
   document.getElementById("lead-ready").textContent = Number(s.eligible_queue || 0).toLocaleString();
@@ -1015,6 +1051,7 @@ function renderOutreachStats(s) {
   const discoveryQueries = document.getElementById("oe-discovery-queries");
   if (document.activeElement !== discoveryTarget) discoveryTarget.value = s.discovery_daily_target || 50;
   if (document.activeElement !== discoveryQueries) discoveryQueries.value = String(s.discovery_queries || "").split(/\r?\n/).filter(Boolean).join(", ");
+  updateDiscoveryQueryCount();
   const lastRun = s.discovery_last_run ? `Last run ${s.discovery_last_run} UTC. ` : "";
   document.getElementById("oe-discovery-status").textContent =
     lastRun + (s.discovery_last_status || "Waiting for its first run.");
@@ -1172,6 +1209,8 @@ function wireOutreachPanel() {
     if (await saveOutreachSettings({ daily_cap: cap })) outreachMsg("Daily cap updated to " + cap + ".", true);
   });
 
+  document.getElementById("oe-discovery-queries").addEventListener("input", updateDiscoveryQueryCount);
+
   document.getElementById("oe-discovery-save").addEventListener("click", async () => {
     const target = parseInt(document.getElementById("oe-discovery-target").value, 10);
     const queries = document.getElementById("oe-discovery-queries").value.trim();
@@ -1181,6 +1220,10 @@ function wireOutreachPanel() {
     }
     if (!queries) {
       outreachMsg("Add at least one niche and location search.", false);
+      return;
+    }
+    if (parseDiscoveryQueries(queries).length > 20 || overlongDiscoveryQueries(queries).length > 0) {
+      outreachMsg("Use up to 20 discovery searches, each no longer than 200 characters.", false);
       return;
     }
     const saved = await saveOutreachSettings({
@@ -1482,6 +1525,20 @@ function renderSendsTable(sends) {
     </tr>`).join("");
 }
 
+function renderQueryYieldTable(rows) {
+  const tbody = document.getElementById("query-yield-tbody");
+  document.getElementById("query-yield-empty").classList.toggle("d-none", rows.length > 0);
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${escapeHtml(r.query)}</td>
+      <td class="text-end fw-semibold">${Number(r.total || 0)}</td>
+      <td class="text-end">${Number(r.sent || 0)}</td>
+      <td class="text-end">${Number(r.pitch_ready || 0)}</td>
+      <td class="text-end">${Number(r.rejected || 0)}</td>
+      <td class="small text-muted-custom">${r.last_seen ? formatShortDate(r.last_seen) : '<span class="fst-italic">never run yet</span>'}</td>
+    </tr>`).join("");
+}
+
 function renderRepliesList(replies) {
   const list = document.getElementById("replies-list");
   document.getElementById("replies-empty").classList.toggle("d-none", replies.length > 0);
@@ -1570,6 +1627,7 @@ async function loadAnalytics() {
   renderSendTrendChart(data.send_trend || []);
   renderReplyBreakdownChart(data.reply_breakdown || []);
   renderSendsTable(data.recent_sends || []);
+  renderQueryYieldTable(data.query_yield || []);
   renderRepliesList(data.recent_replies || []);
   renderTopDemos(data.top_demos || []);
 }
