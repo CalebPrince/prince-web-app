@@ -629,6 +629,16 @@ class LiveChatController
             );
         }
 
+        // A conversation_id back from this endpoint isn't proof WhatsApp actually
+        // delivered the template — it's only proof ElevenLabs accepted the
+        // request; Meta can still reject it downstream with nothing surfaced
+        // here synchronously (this is exactly how a first live test went out
+        // with an apparent success and never showed up as a conversation).
+        // Logging the full raw response so a repeat test shows whatever extra
+        // status/delivery fields ElevenLabs actually includes, instead of the
+        // single field guessed at in $conversationId.
+        error_log("ElevenLabs WhatsApp outbound-message succeeded, raw response: {$raw}");
+
         Response::json(['sent' => true, 'conversation_id' => $conversationId], 201);
     }
 
