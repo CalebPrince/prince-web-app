@@ -382,11 +382,24 @@ class LiveChatController
         // mismatch is provable from actual data — e.g. Ghana numbers commonly get
         // saved in local (0XXXXXXXXX) vs international (233XXXXXXXXX) format, and
         // the exact-digit-match in isOwnerWhatsAppNumber() won't reconcile those.
+        // Full raw payload included too: this URL is the only Conversation
+        // Initiation Client Data webhook currently configured on the shared
+        // "Lisa - WhatsApp" agent, which also now handles phone/SIP calls
+        // (same agent, one phone number doing double duty) — so a real
+        // inbound phone call will hit this exact handler and build a
+        // WhatsApp-flavored session for it instead of routing to
+        // VoiceDemoController's phone-specific logic. Nothing here
+        // distinguishes "this is a phone call" from "this is WhatsApp" yet
+        // because it's unconfirmed what field actually differs between the
+        // two on a live payload — this log line is what that fix gets
+        // written from once a real phone call comes through, instead of
+        // guessing at ElevenLabs' payload shape.
         error_log(sprintf(
-            'ElevenLabs init webhook: raw caller_id=%s, normalized digits=%s, is_owner=%s',
+            'ElevenLabs init webhook: raw caller_id=%s, normalized digits=%s, is_owner=%s, raw payload=%s',
             $callerId,
             $digits,
-            $isOwner ? 'true' : 'false'
+            $isOwner ? 'true' : 'false',
+            substr($rawBody, 0, 2000)
         ));
         $projects = self::projectCatalog($pdo);
         $systemPrompt = self::buildSystemPrompt($projects, $isOwner);
