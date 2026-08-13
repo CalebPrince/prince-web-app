@@ -64,8 +64,20 @@ final class LeadDiscovery
         'ethiopia' => 'ETB',
     ];
 
-    /** @return array{enabled:bool,ran:bool,added:int,searched:int,skipped:int,status:string} */
-    public static function run(bool $force = false): array
+    /**
+     * @param bool $force Bypass the once-a-day gate — used by the manual
+     *   test-run script so it can fire on demand instead of waiting for the
+     *   next UTC day.
+     * @param bool $persist When false, real searches still run and any
+     *   found leads still get inserted (so a test run is actually visible
+     *   in Marketing Leads / the yield report), but lead_discovery_pages,
+     *   lead_discovery_query_offset, lead_discovery_last_run, and
+     *   lead_discovery_last_status are left untouched — so a manual test
+     *   can never advance the rotation cursor, per-query pagination, or the
+     *   once-a-day gate ahead of where the real scheduled run left them.
+     * @return array{enabled:bool,ran:bool,added:int,searched:int,skipped:int,status:string}
+     */
+    public static function run(bool $force = false, bool $persist = true): array
     {
         if (Settings::get('lead_discovery_enabled') !== '1') {
             return self::result(false, false, 0, 0, 0, 'Automatic discovery is off.');
@@ -78,12 +90,12 @@ final class LeadDiscovery
 
         $apiKey = trim((string) Settings::get('serper_api_key'));
         if ($apiKey === '') {
-            return self::record(self::result(true, false, 0, 0, 0, 'Serper API key is missing.'), false);
+            return self::record(self::result(true, false, 0, 0, 0, 'Serper API key is missing.'), false, $persist);
         }
 
         $queries = self::queries();
         if (!$queries) {
-            return self::record(self::result(true, false, 0, 0, 0, 'No discovery niches are configured.'), false);
+            return self::record(self::result(true, false, 0, 0, 0, 'No discovery niches are configured.'), false, $persist);
         }
 
         $target = max(1, min(50, (int) (Settings::get('lead_discovery_daily_target') ?: 50)));
@@ -159,12 +171,14 @@ final class LeadDiscovery
             $pages[$queryKey] = $page >= self::MAX_PAGE ? 1 : $page + 1;
         }
 
-        Settings::set('lead_discovery_pages', json_encode($pages, JSON_UNESCAPED_SLASHES));
-        Settings::set('lead_discovery_query_offset', (string) (($offset + $searched) % count($queries)));
+        if ($persist) {
+            Settings::set('lead_discovery_pages', json_encode($pages, JSON_UNESCAPED_SLASHES));
+            Settings::set('lead_discovery_query_offset', (string) (($offset + $searched) % count($queries)));
+        }
         $status = $failures === $searched
             ? 'All discovery searches failed; the next cron run will retry.'
             : "Added {$added} new lead(s) from {$searched} search(es); skipped {$skipped} duplicate or unusable result(s).";
-        return self::record(self::result(true, true, $added, $searched, $skipped, $status), $failures !== $searched);
+        return self::record(self::result(true, true, $added, $searched, $skipped, $status), $failures !== $searched, $persist);
     }
 
     /** The saved niche/location searches, in rotation order — read-only view for reporting (e.g. per-query yield). */
@@ -233,8 +247,11 @@ final class LeadDiscovery
     }
 
     /** @param array{enabled:bool,ran:bool,added:int,searched:int,skipped:int,status:string} $result */
-    private static function record(array $result, bool $completed): array
+    private static function record(array $result, bool $completed, bool $persist = true): array
     {
+        if (!$persist) {
+            return $result;
+        }
         Settings::set('lead_discovery_last_status', $result['status']);
         if ($completed) {
             Settings::set('lead_discovery_last_run', gmdate('Y-m-d H:i:s'));
