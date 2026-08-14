@@ -1719,4 +1719,22 @@ $pdo->exec(
     )"
 );
 
+// Growth Roadmap Generator (Admin -> Growth Roadmap) — new table, so a plain
+// CREATE TABLE IF NOT EXISTS (already in schema.sql for fresh installs) is
+// all an existing database needs too.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS growth_roadmap_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT NOT NULL,
+        final_url TEXT,
+        reachable INTEGER NOT NULL DEFAULT 1,
+        score INTEGER,
+        signals TEXT NOT NULL,
+        findings TEXT,
+        created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_growth_roadmap_runs_created ON growth_roadmap_runs (created_at)');
+
 echo "Schema applied.\n";

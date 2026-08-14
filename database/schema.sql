@@ -108,6 +108,19 @@ CREATE TABLE IF NOT EXISTS inquiries (
 );
 CREATE INDEX IF NOT EXISTS idx_inquiries_status_created ON inquiries (status, created_at);
 
+CREATE TABLE IF NOT EXISTS growth_roadmap_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  url TEXT NOT NULL,
+  final_url TEXT,
+  reachable INTEGER NOT NULL DEFAULT 1,
+  score INTEGER,
+  signals TEXT NOT NULL,
+  findings TEXT,
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_growth_roadmap_runs_created ON growth_roadmap_runs (created_at);
+
 CREATE TABLE IF NOT EXISTS pipeline_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   lead_key TEXT NOT NULL UNIQUE,

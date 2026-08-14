@@ -55,6 +55,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\DossierController;
 use App\Controllers\DripController;
 use App\Controllers\ErrorLogController;
+use App\Controllers\GrowthRoadmapController;
 use App\Controllers\InquiryController;
 use App\Controllers\IntegrationController;
 use App\Controllers\InvoiceController;
@@ -309,6 +310,10 @@ $router->patch('/api/v1/admin/marketing-leads/{id}/account-demo', [AccountDemoCo
 $router->post('/api/v1/admin/marketing-leads/{id}/account-demo/publish', [AccountDemoController::class, 'publish']);
 $router->get('/api/v1/account-demos/{token}', [AccountDemoController::class, 'show']);
 $router->post('/api/v1/account-demos/{token}/track', [AccountDemoController::class, 'track']);
+$router->post('/api/v1/admin/growth-roadmap', [GrowthRoadmapController::class, 'generate']);
+$router->get('/api/v1/admin/growth-roadmap', [GrowthRoadmapController::class, 'index']);
+$router->get('/api/v1/admin/growth-roadmap/{id}', [GrowthRoadmapController::class, 'show']);
+$router->delete('/api/v1/admin/growth-roadmap/{id}', [GrowthRoadmapController::class, 'destroy']);
 $router->get('/api/v1/admin/outreach/stats', [OutreachController::class, 'stats']);
 $router->post('/api/v1/admin/outreach/settings', [OutreachController::class, 'updateSettings']);
 $router->get('/api/v1/admin/outreach/call-queue', [OutreachController::class, 'callQueue']);
