@@ -247,7 +247,12 @@ class AiAgentEngine
             $payload = [
                 'system_instruction' => ['parts' => [['text' => $system]]],
                 'contents' => $contents,
-                'generationConfig' => ['maxOutputTokens' => 2048],
+                // 4096, not 2048: gemini-2.5-flash's "thinking" tokens are
+                // drawn from this same budget before the visible answer
+                // starts, so a tight cap here silently truncates a real reply
+                // mid-sentence (caught below via finishReason, but better to
+                // just not hit it as often).
+                'generationConfig' => ['maxOutputTokens' => 4096],
             ];
             // On the last allowed round, don't offer tools at all — otherwise
             // a model that wants a second sequential tool call (e.g. search
@@ -325,6 +330,16 @@ class AiAgentEngine
                         json_encode($parts)
                     ));
                     return null;
+                }
+                // finishReason MAX_TOKENS means the answer was cut off
+                // mid-sentence by the output-token cap (see maxOutputTokens
+                // comment above), not that the model actually finished.
+                // Never show a chopped-off reply to a user; treat it as a
+                // hard failure so the turn falls through to the next
+                // provider instead.
+                if (($result['candidates'][0]['finishReason'] ?? null) === 'MAX_TOKENS') {
+                    error_log(sprintf('Gemini chat: reply truncated by MAX_TOKENS (round %d); falling back.', $round));
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
                 }
                 return ['reply' => $text, 'ready' => $ready];
             }
@@ -432,6 +447,14 @@ class AiAgentEngine
             $toolCalls = $message['tool_calls'] ?? null;
             if (!$toolCalls) {
                 $text = $message['content'] ?? null;
+                // See chatWithDeepSeek — a "length" finish_reason means this
+                // was chopped off by max_tokens mid-sentence, not a finished
+                // reply. Fall through to the next provider instead of
+                // showing that to a user.
+                if (($result['choices'][0]['finish_reason'] ?? null) === 'length') {
+                    error_log('OpenRouter chat: reply truncated by max_tokens (finish_reason=length); falling back.');
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+                }
                 return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
             }
 
@@ -527,6 +550,15 @@ class AiAgentEngine
                     error_log('DeepSeek chat: detected a leaked DSML tool-call block in content instead of a real tool_calls response; falling back.');
                     return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
                 }
+                // finish_reason "length" means the reply was cut off by
+                // max_tokens mid-sentence, not that the model finished
+                // speaking. Never show a chopped-off reply to a real user;
+                // treat it as a hard failure so the turn falls through to
+                // Gemini instead, same as the DSML case above.
+                if (($result['choices'][0]['finish_reason'] ?? null) === 'length') {
+                    error_log('DeepSeek chat: reply truncated by max_tokens (finish_reason=length); falling back.');
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+                }
                 return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
             }
 
@@ -610,6 +642,13 @@ class AiAgentEngine
             $toolCalls = $message['tool_calls'] ?? null;
             if (!$toolCalls) {
                 $text = $message['content'] ?? null;
+                // See chatWithDeepSeek — chopped off mid-sentence by
+                // max_tokens, not actually finished; fall through instead of
+                // showing it to a user.
+                if (($result['choices'][0]['finish_reason'] ?? null) === 'length') {
+                    error_log('Groq chat: reply truncated by max_tokens (finish_reason=length); falling back.');
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+                }
                 return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
             }
 

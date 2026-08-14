@@ -90,7 +90,11 @@ class ScoutController
             . "we build with this\", not a lead-gen or client-facing agent. You have search_web (a real, live web "
             . "search) — use it whenever a question depends on something recent or you're not confident your own "
             . "knowledge is current, so a claim about \"the latest X\" comes from an actual search result, never a "
-            . "guess or something recalled from training. You also have get_site_info (Caleb's real bio, services, "
+            . "guess or something recalled from training. Each result comes with its source link and, when "
+            . "available, a publish date — when you cite one, say where it's from and how recent it is (e.g. "
+            . "\"TechCrunch, 3 days ago\"), and if the freshest result you found is actually old, say so plainly "
+            . "instead of presenting it as current news. Never call something \"the latest\" off a result you "
+            . "haven't checked the date on. You also have get_site_info (Caleb's real bio, services, "
             . "and tech stack) and search_content (his real past projects/blog posts) — use them to ground ideas in "
             . "what he actually builds and has already shipped, rather than pitching something generic or off-stack.\n\n"
             . "When brainstorming, be concrete: name the actual tool/framework/model, explain in a sentence or two "
@@ -118,9 +122,13 @@ class ScoutController
     {
         return [
             'name' => 'search_web',
-            'description' => 'Run a real, live web search — use it to check what is actually new or current in web, '
-                . 'mobile, or AI tooling (a framework release, a new model, a platform feature) before making a claim '
-                . 'about "the latest" anything, so the answer is grounded in a real result instead of a guess.',
+            'description' => 'Run a real, live web search, biased toward the past year so old articles don\'t get '
+                . 'mistaken for current news — use it to check what is actually new or current in web, mobile, or AI '
+                . 'tooling (a framework release, a new model, a platform feature) before making a claim about "the '
+                . 'latest" anything, so the answer is grounded in a real result instead of a guess. Each result '
+                . 'includes its source link and, when Google reports one, a publish date — always check the date '
+                . 'before calling something "the latest": a result from a year+ ago is stale, say so rather than '
+                . 'presenting it as current.',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
@@ -137,12 +145,17 @@ class ScoutController
     /**
      * Real web search via Serper's search endpoint — modeled on
      * DossierController::searchNews(), same "real results only" rule.
-     * Returns up to 6 results. Degrades quietly (an explanatory string, not
-     * a thrown error) when no key is configured or the request fails, so
-     * the agent can tell Caleb why it couldn't check rather than the whole
-     * turn failing.
+     * Returns up to 6 results, each carrying its source link and (when
+     * Google surfaces one) publish date, so Scout can cite where and when it
+     * found something instead of presenting a search hit as timeless fact.
+     * `tbs: qdr:y` biases results to the past year — Scout's whole job is
+     * "what's new", so an old blog post ranking well for a generic query
+     * shouldn't get passed off as current. Degrades quietly (an explanatory
+     * string, not a thrown error) when no key is configured or the request
+     * fails, so the agent can tell Caleb why it couldn't check rather than
+     * the whole turn failing.
      *
-     * @return array{results?: array<int,array{title:string,link:?string,snippet:?string}>, note?: string}
+     * @return array{results?: array<int,array{title:string,link:?string,snippet:?string,date:?string}>, note?: string}
      */
     private static function searchWeb(string $query): array
     {
@@ -167,7 +180,7 @@ class ScoutController
                 'Content-Type: application/json',
                 'X-API-KEY: ' . $apiKey,
             ],
-            CURLOPT_POSTFIELDS => json_encode(['q' => $query]),
+            CURLOPT_POSTFIELDS => json_encode(['q' => $query, 'tbs' => 'qdr:y']),
             CURLOPT_TIMEOUT => 15,
         ]);
         $response = curl_exec($ch);
@@ -201,6 +214,7 @@ class ScoutController
                 'title' => $title,
                 'link' => !empty($item['link']) ? (string) $item['link'] : null,
                 'snippet' => !empty($item['snippet']) ? (string) $item['snippet'] : null,
+                'date' => !empty($item['date']) ? (string) $item['date'] : null,
             ];
         }
 
