@@ -173,6 +173,8 @@ async function saveIntegrations(e) {
       serper_api_key: document.getElementById("serper-key").value.trim(),
       hunter_api_key: document.getElementById("hunter-key").value.trim(),
       apify_api_key: document.getElementById("apify-key").value.trim(),
+      dataforseo_login: document.getElementById("dataforseo-login").value.trim(),
+      dataforseo_password: document.getElementById("dataforseo-password").value.trim(),
       slack_webhook_url: document.getElementById("slack-url").value.trim(),
       integration_api_key: document.getElementById("integration-api-key").value.trim(),
       notification_email: document.getElementById("notification-email").value.trim(),
@@ -780,6 +782,8 @@ async function testAi() {
     document.getElementById("serper-key").value = settings.serper_api_key || "";
     document.getElementById("hunter-key").value = settings.hunter_api_key || "";
     document.getElementById("apify-key").value = settings.apify_api_key || "";
+    document.getElementById("dataforseo-login").value = settings.dataforseo_login || "";
+    document.getElementById("dataforseo-password").value = settings.dataforseo_password || "";
     document.getElementById("slack-url").value = settings.slack_webhook_url || "";
     document.getElementById("integration-api-key").value = settings.integration_api_key || "";
     document.getElementById("notification-email").value = settings.notification_email || "";
