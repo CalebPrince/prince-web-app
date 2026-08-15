@@ -49,6 +49,7 @@ class SettingsController
         'beacon_apify_actor_engagers', 'beacon_apify_actor_engagers_input',
         'beacon_apify_posts_per_profile', 'beacon_apify_engagers_per_post', 'beacon_apify_max_engagers_per_run',
         'radar_tracked_pages_enabled', 'radar_tracked_pages_frequency', 'radar_tracked_pages',
+        'radar_tracked_pages_posts_per_profile',
         'radar_tracked_pages_last_run', 'radar_tracked_pages_last_status',
         'stale_lead_followup_enabled', 'stale_lead_followup_days',
         'composio_api_key',

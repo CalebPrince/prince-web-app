@@ -15,6 +15,10 @@ declare(strict_types=1);
 // Reuses Beacon's Apify actor setting (beacon_apify_actor_posts /
 // beacon_apify_actor_posts_input) deliberately — same actor, same purpose
 // (a profile/company's recent posts), no reason to configure it twice.
+// Posts-per-profile is its own setting (radar_tracked_pages_posts_per_profile),
+// deliberately NOT shared with Beacon's — Beacon and Radar tune this for
+// different purposes (engager-scraping breadth vs. content-idea grounding
+// depth) and tuning one shouldn't silently move the other.
 //
 // Gated by Admin -> Talk to Agents -> Radar -> Tracked Pages: tracked URL
 // list (radar_tracked_pages), enabled flag, cadence. Run this on a cron —
@@ -73,7 +77,7 @@ if (!$pages) {
     exit;
 }
 
-$postsLimit = max(1, min(10, (int) (Settings::get('beacon_apify_posts_per_profile') ?: 5)));
+$postsLimit = max(1, min(10, (int) (Settings::get('radar_tracked_pages_posts_per_profile') ?: 5)));
 
 $pdo = Database::get();
 $upsert = $pdo->prepare(

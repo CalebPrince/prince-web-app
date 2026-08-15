@@ -61,6 +61,7 @@
   const radarTrackedPagesCard = document.getElementById("radar-tracked-pages-card");
   const radarTrackedPagesEnabled = document.getElementById("radar-tracked-pages-enabled");
   const radarTrackedPagesFrequency = document.getElementById("radar-tracked-pages-frequency");
+  const radarTrackedPagesPostsPerProfile = document.getElementById("radar-tracked-pages-posts-per-profile");
   const radarTrackedPages = document.getElementById("radar-tracked-pages");
   const radarTrackedPagesMsg = document.getElementById("radar-tracked-pages-msg");
   const radarTrackedPagesSave = document.getElementById("radar-tracked-pages-save");
@@ -961,6 +962,7 @@
       const settings = await api.get("/api/v1/admin/settings");
       radarTrackedPagesEnabled.checked = settings.radar_tracked_pages_enabled === "1";
       radarTrackedPagesFrequency.value = settings.radar_tracked_pages_frequency || "daily";
+      radarTrackedPagesPostsPerProfile.value = settings.radar_tracked_pages_posts_per_profile || "5";
       radarTrackedPages.value = settings.radar_tracked_pages || "";
       radarTrackedPagesLoaded = true;
     } catch (_) {
@@ -975,6 +977,7 @@
       await api.put("/api/v1/admin/settings", {
         radar_tracked_pages_enabled: radarTrackedPagesEnabled.checked ? "1" : "0",
         radar_tracked_pages_frequency: radarTrackedPagesFrequency.value,
+        radar_tracked_pages_posts_per_profile: radarTrackedPagesPostsPerProfile.value,
         radar_tracked_pages: radarTrackedPages.value,
       });
       radarTrackedPagesMsg.className = "alert alert-success py-2 small mt-3";
