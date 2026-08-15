@@ -1154,11 +1154,20 @@ $pdo->exec(
         title TEXT NOT NULL,
         description TEXT NOT NULL,
         grounded INTEGER NOT NULL DEFAULT 0,
+        source_posted_at TEXT,
         status TEXT NOT NULL DEFAULT 'idea' CHECK (status IN ('idea', 'used', 'dismissed')),
         generated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )"
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_content_ideas_day ON content_ideas (day_number)');
+
+// The real LinkedIn post's own publish date/timestamp, looked up from
+// Radar's cache by post index (never transcribed by the model itself, so it
+// can't be hallucinated) — shown on grounded idea cards for traceability.
+$contentIdeasColumns = array_column($pdo->query('PRAGMA table_info(content_ideas)')->fetchAll(), 'name');
+if (!in_array('source_posted_at', $contentIdeasColumns, true)) {
+    $pdo->exec('ALTER TABLE content_ideas ADD COLUMN source_posted_at TEXT');
+}
 
 // Optional contact detail supplied by Joan/external social discovery. When
 // present on a qualified lead Beacon can pass it straight into Jason's

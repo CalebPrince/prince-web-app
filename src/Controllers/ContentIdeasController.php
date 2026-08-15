@@ -22,7 +22,10 @@ use App\Support\SharedAgentTools;
  * database/run_radar_tracked_pages.php), one idea per distinct real post,
  * exactly that many — no more, no padding, no plain LinkedIn brainstorms.
  * If zero real posts are cached, zero LinkedIn ideas are produced for that
- * batch. YouTube has no equivalent real data source anywhere in this app,
+ * batch. Each grounded idea's source_posted_at is the real post's own
+ * publish date — looked up from an index the model references
+ * (source_post_index), never transcribed by the model itself, so it can't
+ * be hallucinated. YouTube has no equivalent real data source anywhere in this app,
  * so YouTube ideas are always plain AI brainstorms grounded only in service
  * positioning and fill whatever days LinkedIn doesn't use — the prompt is
  * explicit that they must never be phrased as "trending" or cite invented
@@ -56,7 +59,7 @@ class ContentIdeasController
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $rows = $pdo->query(
-            'SELECT id, day_number, platform, title, description, grounded, status, generated_at
+            'SELECT id, day_number, platform, title, description, grounded, source_posted_at, status, generated_at
              FROM content_ideas ORDER BY day_number ASC, id ASC'
         )->fetchAll();
         Response::json(['ideas' => $rows]);
@@ -77,7 +80,7 @@ class ContentIdeasController
             Response::error('Could not generate content ideas — check that an AI provider is configured and reachable.', 502);
         }
 
-        $ideas = self::parseIdeas((string) $text, $built['realPostCount']);
+        $ideas = self::parseIdeas((string) $text, $built['postsByIndex']);
         if ($ideas === null) {
             Response::error('The AI response could not be parsed into a 30-day plan. Try generating again.', 502);
         }
@@ -85,11 +88,13 @@ class ContentIdeasController
         $pdo->beginTransaction();
         $pdo->exec('DELETE FROM content_ideas');
         $insert = $pdo->prepare(
-            'INSERT INTO content_ideas (day_number, platform, title, description, grounded) VALUES (?, ?, ?, ?, ?)'
+            'INSERT INTO content_ideas (day_number, platform, title, description, grounded, source_posted_at)
+             VALUES (?, ?, ?, ?, ?, ?)'
         );
         foreach ($ideas as $idea) {
             $insert->execute([
                 $idea['day'], $idea['platform'], $idea['title'], $idea['description'], $idea['grounded'] ? 1 : 0,
+                $idea['source_posted_at'],
             ]);
         }
         $pdo->commit();
@@ -160,16 +165,19 @@ class ContentIdeasController
             . "their business — not other developers.\n\n"
             . "STRICT RULE ON LINKEDIN IDEAS: every single LinkedIn idea you produce must be grounded: true and "
             . "directly tied to one specific real post supplied below — never invent a LinkedIn idea from "
-            . "imagination, never brainstorm a LinkedIn idea the way you would for YouTube. The real data below "
-            . "states the exact number of distinct real posts available; that number is a hard, exact requirement "
-            . "(not a maximum) for how many LinkedIn ideas to produce — one idea per distinct real post, no more, "
-            . "no fewer, and never two ideas that are just reworded versions of the same post's theme. If that "
-            . "number is zero, produce zero LinkedIn ideas — fill all 30 days with YouTube instead. Follow each "
-            . "grounded post's own real angle: if the post is about a marketing or business problem that has "
-            . "nothing to do with AI/automation/web tech (e.g. lead follow-up, onboarding, pricing, retention, "
-            . "content strategy), let the idea mirror that real problem in its own terms — do not force-fit an "
-            . "AI/automation/web-tech spin onto it just to stay on-brand. Only frame a grounded idea around "
-            . "AI/automation/web outcomes if the source post itself is actually about that.\n\n"
+            . "imagination, never brainstorm a LinkedIn idea the way you would for YouTube. Each real post below is "
+            . "numbered with an \"index\". For every grounded LinkedIn idea, include that exact number as "
+            . "\"source_post_index\" in your JSON output — this is how the real post's original publish date gets "
+            . "attached afterward, so it must be accurate, never guessed. The number of real posts provided is a "
+            . "hard, exact requirement (not a maximum) for how many LinkedIn ideas to produce — one idea per "
+            . "distinct real post (each index used exactly once, no repeats, no skips), and never two ideas that "
+            . "are just reworded versions of the same post's theme. If zero real posts are provided, produce zero "
+            . "LinkedIn ideas — fill all 30 days with YouTube instead. Follow each grounded post's own real angle: "
+            . "if the post is about a marketing or business problem that has nothing to do with AI/automation/web "
+            . "tech (e.g. lead follow-up, onboarding, pricing, retention, content strategy), let the idea mirror "
+            . "that real problem in its own terms — do not force-fit an AI/automation/web-tech spin onto it just "
+            . "to stay on-brand. Only frame a grounded idea around AI/automation/web outcomes if the source post "
+            . "itself is actually about that.\n\n"
             . "YOUTUBE IDEAS: since there is no real-post data source for YouTube, every YouTube idea is a plain "
             . "brainstorm (always grounded: false) framed around business outcomes (more leads, more sales, saved "
             . "time, lower costs, better customer experience, retention, growth) that AI/automation/web technology "
@@ -186,12 +194,16 @@ class ContentIdeasController
             . "— not a full script or post copy.\n\n"
             . "Return ONLY a raw JSON array of exactly 30 objects, no markdown fences, no commentary, in this "
             . "exact shape: [{\"day\": 1, \"platform\": \"linkedin\", \"title\": \"...\", \"description\": \"...\", "
-            . "\"grounded\": false}, ...]. day must run 1 through 30 with no gaps or repeats. platform must be "
-            . "exactly \"linkedin\" or \"youtube\", with the LinkedIn count matching the real-post count exactly "
-            . "as instructed above and YouTube filling the rest.";
+            . "\"grounded\": false, \"source_post_index\": null}, ...]. day must run 1 through 30 with no gaps or "
+            . "repeats. platform must be exactly \"linkedin\" or \"youtube\", with the LinkedIn count matching the "
+            . "real-post count exactly as instructed above and YouTube filling the rest. source_post_index is "
+            . "required (the real post's number) on every grounded LinkedIn idea, and must be null for every "
+            . "YouTube idea.";
     }
 
-    /** @return array{text: string, realPostCount: int} */
+    /**
+     * @return array{text: string, postsByIndex: array<int,array{page_url:string,posted_at:?string}>}
+     */
     private static function buildPrompt(\PDO $pdo): array
     {
         $siteInfo = SharedAgentTools::getSiteInfo();
@@ -206,7 +218,13 @@ class ContentIdeasController
         $tracked = $pdo->query(
             'SELECT page_url, findings_json FROM radar_tracked_page_findings ORDER BY fetched_at DESC'
         )->fetchAll();
-        $totalRealPosts = 0;
+
+        // Every real post gets a stable index across all pages — the model
+        // references posts by this number (source_post_index) rather than
+        // transcribing the date itself, so the date attached to a grounded
+        // idea afterward is always exactly what we extracted, never
+        // hallucinated or reformatted by the model.
+        $postsByIndex = [];
         if ($tracked) {
             $pageLines = [];
             $remainingDays = self::MAX_DAYS;
@@ -221,57 +239,64 @@ class ContentIdeasController
                 // post-count cap was removed (a single tracked page's 10
                 // cached posts pushed one request to 12.5k tokens against
                 // Groq's 12k/min ceiling, and timed out Gemini outright). Only
-                // the actual post text is kept — the count of posts is still
-                // whatever Radar cached, untouched.
-                $posts = [];
+                // the actual post text goes in the prompt — the count of
+                // posts is still whatever Radar cached, untouched.
+                $pagePosts = [];
                 foreach ($rawPosts as $rawPost) {
-                    $text = is_array($rawPost) ? self::deepFindPostText($rawPost) : null;
-                    if ($text !== null) {
-                        $posts[] = $text;
+                    if ($remainingDays <= 0) {
+                        break;
                     }
+                    if (!is_array($rawPost)) {
+                        continue;
+                    }
+                    $text = self::deepFindString($rawPost, ['text', 'commentary', 'description', 'content', 'posttext', 'body'], 500);
+                    if ($text === null) {
+                        continue;
+                    }
+                    $postedAt = self::deepFindString($rawPost, ['postedatiso', 'postedat', 'publishedat', 'postdate', 'timestamp', 'createdat', 'date'], 40);
+                    $index = count($postsByIndex) + 1;
+                    $postsByIndex[$index] = ['page_url' => (string) $page['page_url'], 'posted_at' => $postedAt];
+                    $pagePosts[] = ['index' => $index, 'text' => $text];
+                    $remainingDays--;
                 }
-                // The plan itself is a fixed MAX_DAYS-day calendar, so it
-                // structurally cannot fit more than MAX_DAYS one-idea-per-post
-                // LinkedIn entries — this is the only place volume is trimmed,
-                // and only if the real cache genuinely holds more than that.
-                $posts = array_slice($posts, 0, $remainingDays);
-                $remainingDays -= count($posts);
-                $totalRealPosts += count($posts);
-                $pageLines[] = "Page: {$page['page_url']}\n" . json_encode($posts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                if ($pagePosts) {
+                    $pageLines[] = "Page: {$page['page_url']}\n" . json_encode($pagePosts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                }
             }
+            $totalRealPosts = count($postsByIndex);
             if ($totalRealPosts > 0) {
                 $lines[] = "\nReal recent posts from tracked LinkedIn pages — {$totalRealPosts} distinct real "
-                    . "post(s) total. You MUST produce EXACTLY {$totalRealPosts} LinkedIn idea(s) across the whole "
-                    . self::MAX_DAYS . "-day plan, one per distinct post below, each grounded: true. Do not produce "
-                    . "any other LinkedIn ideas. Fill the remaining " . (self::MAX_DAYS - $totalRealPosts)
+                    . "post(s) total, each numbered with an \"index\". You MUST produce EXACTLY {$totalRealPosts} "
+                    . "LinkedIn idea(s) across the whole " . self::MAX_DAYS . "-day plan, one per distinct post "
+                    . "below, each grounded: true with that post's index as source_post_index. Do not produce any "
+                    . "other LinkedIn ideas. Fill the remaining " . (self::MAX_DAYS - $totalRealPosts)
                     . " day(s) entirely with YouTube ideas (grounded: false):";
                 $lines = array_merge($lines, $pageLines);
             }
         }
-        if ($totalRealPosts === 0) {
+        if (!$postsByIndex) {
             $lines[] = "\nNo real cached LinkedIn posts are available — produce ZERO LinkedIn ideas. All "
                 . self::MAX_DAYS . " days must be platform: youtube (grounded: false).";
         }
 
-        return ['text' => implode("\n", $lines), 'realPostCount' => $totalRealPosts];
+        return ['text' => implode("\n", $lines), 'postsByIndex' => $postsByIndex];
     }
 
     /**
-     * Pulls just a post's text content out of one raw Apify dataset item,
-     * ignoring everything else (author, media, reaction counts, etc.) — same
-     * flexible key-hint search run_beacon_apify_discovery.php already uses
-     * for this same actor's output, since different "LinkedIn profile posts"
-     * actors on Apify don't agree on field names. Truncated well below what
-     * a single post could otherwise cost in prompt tokens.
+     * Flexible key-hint search over one raw Apify dataset item, since
+     * different "LinkedIn profile posts" actors on Apify don't agree on
+     * field names — same pattern run_beacon_apify_discovery.php already uses
+     * for this same actor's output. Used both for a post's text content and,
+     * separately, its publish date/timestamp.
      */
-    private static function deepFindPostText(array $node, int $maxDepth = 3): ?string
+    private static function deepFindString(array $node, array $hints, int $maxLength, int $maxDepth = 3): ?string
     {
         foreach ($node as $key => $value) {
             if (is_string($key) && is_string($value) && trim($value) !== '') {
                 $keyLower = strtolower($key);
-                foreach (['text', 'commentary', 'description', 'content', 'posttext', 'body'] as $hint) {
+                foreach ($hints as $hint) {
                     if (str_contains($keyLower, $hint)) {
-                        return mb_substr(trim($value), 0, 500);
+                        return mb_substr(trim($value), 0, $maxLength);
                     }
                 }
             }
@@ -279,7 +304,7 @@ class ContentIdeasController
         if ($maxDepth > 0) {
             foreach ($node as $value) {
                 if (is_array($value)) {
-                    $found = self::deepFindPostText($value, $maxDepth - 1);
+                    $found = self::deepFindString($value, $hints, $maxLength, $maxDepth - 1);
                     if ($found !== null) {
                         return $found;
                     }
@@ -290,13 +315,17 @@ class ContentIdeasController
     }
 
     /**
-     * $expectedLinkedinCount is the real distinct post count computed in
-     * buildPrompt() — enforced here in code, not just requested in the
-     * prompt, so a model slip can't sneak an invented LinkedIn idea past us.
+     * $postsByIndex is the real-post map built in buildPrompt() — enforced
+     * here in code, not just requested in the prompt, so a model slip can't
+     * sneak an invented LinkedIn idea (or a reused/skipped post index) past
+     * us. The published date attached to each grounded idea is always looked
+     * up from this map, never taken from the model's own output — it cannot
+     * be hallucinated or reformatted that way.
      *
-     * @return array<int,array{day:int,platform:string,title:string,description:string,grounded:bool}>|null
+     * @param array<int,array{page_url:string,posted_at:?string}> $postsByIndex
+     * @return array<int,array{day:int,platform:string,title:string,description:string,grounded:bool,source_posted_at:?string}>|null
      */
-    private static function parseIdeas(string $reply, int $expectedLinkedinCount): ?array
+    private static function parseIdeas(string $reply, array $postsByIndex): ?array
     {
         $stripped = trim((string) preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $reply));
         $parsed = json_decode($stripped, true);
@@ -308,7 +337,7 @@ class ContentIdeasController
 
         $ideas = [];
         $seenDays = [];
-        $linkedinCount = 0;
+        $usedPostIndices = [];
         foreach ($parsed as $item) {
             if (!is_array($item)) {
                 return null;
@@ -326,9 +355,19 @@ class ContentIdeasController
                 error_log('ContentIdeasController: rejected malformed or ungrounded idea item: ' . json_encode($item));
                 return null;
             }
+
+            $sourcePostedAt = null;
             if ($platform === 'linkedin') {
-                $linkedinCount++;
+                $sourceIndex = (int) ($item['source_post_index'] ?? 0);
+                if (!isset($postsByIndex[$sourceIndex]) || isset($usedPostIndices[$sourceIndex])) {
+                    error_log('ContentIdeasController: rejected LinkedIn idea with invalid/reused '
+                        . 'source_post_index: ' . json_encode($item));
+                    return null;
+                }
+                $usedPostIndices[$sourceIndex] = true;
+                $sourcePostedAt = $postsByIndex[$sourceIndex]['posted_at'];
             }
+
             $seenDays[$day] = true;
             $ideas[] = [
                 'day' => $day,
@@ -336,12 +375,13 @@ class ContentIdeasController
                 'title' => mb_substr($title, 0, 200),
                 'description' => mb_substr($description, 0, 1000),
                 'grounded' => $grounded,
+                'source_posted_at' => $sourcePostedAt,
             ];
         }
 
-        if ($linkedinCount !== $expectedLinkedinCount) {
-            error_log("ContentIdeasController: expected exactly {$expectedLinkedinCount} grounded LinkedIn "
-                . "idea(s), model produced {$linkedinCount} — rejecting batch.");
+        if (count($usedPostIndices) !== count($postsByIndex)) {
+            error_log('ContentIdeasController: expected every one of the ' . count($postsByIndex) . ' real post(s) '
+                . 'to be used exactly once, model used ' . count($usedPostIndices) . ' — rejecting batch.');
             return null;
         }
 

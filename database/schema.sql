@@ -771,6 +771,7 @@ CREATE TABLE IF NOT EXISTS content_ideas (
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   grounded INTEGER NOT NULL DEFAULT 0,
+  source_posted_at TEXT,
   status TEXT NOT NULL DEFAULT 'idea' CHECK (status IN ('idea', 'used', 'dismissed')),
   generated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

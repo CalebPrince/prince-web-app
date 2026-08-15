@@ -6,6 +6,17 @@ function weekLabel(startDay) {
   return `Week ${Math.ceil(startDay / 7)} — Days ${startDay}-${endDay}`;
 }
 
+// source_posted_at is whatever raw date/timestamp string Radar's cached post
+// actually had (field names vary by Apify actor) — most are ISO-parseable,
+// but fall back to showing it verbatim rather than hiding a real value just
+// because it didn't parse cleanly.
+function formatPostedAt(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (isNaN(parsed.getTime())) return ideaEsc(value);
+  return parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 function renderIdeas() {
   const list = document.getElementById('ideas-list');
   const empty = document.getElementById('ideas-empty');
@@ -26,8 +37,10 @@ function renderIdeas() {
     }
     const platform = idea.platform === 'youtube' ? 'youtube' : 'linkedin';
     const platformIcon = platform === 'youtube' ? 'bi-youtube' : 'bi-linkedin';
+    const postedAt = formatPostedAt(idea.source_posted_at);
     const grounded = Number(idea.grounded) === 1
-      ? '<span class="idea-grounded"><i class="bi bi-check-circle-fill"></i>grounded in real posts</span>' : '';
+      ? `<span class="idea-grounded"><i class="bi bi-check-circle-fill"></i>grounded in real posts${postedAt ? ` &middot; posted ${postedAt}` : ''}</span>`
+      : '';
     html += `<article class="idea-card mb-2 ${idea.status === 'used' ? 'is-used' : ''} ${idea.status === 'dismissed' ? 'is-dismissed' : ''}" data-idea-id="${idea.id}">
       <div class="idea-day">${idea.day_number}<small>Day</small></div>
       <div class="flex-grow-1">
