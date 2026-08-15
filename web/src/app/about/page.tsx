@@ -28,7 +28,7 @@ export default function AboutPage() {
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-12 lg:items-center lg:gap-14">
           <div className="lg:col-span-7">
-            <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// About</p>
+            <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// About</p>
             <h1 className="mb-3 text-5xl font-bold md:text-6xl">
               Hi, I&apos;m <span className="text-editorial-accent-strong">Prince</span> Caleb.
             </h1>
@@ -40,7 +40,7 @@ export default function AboutPage() {
             </p>
           </div>
           <div className="mt-10 max-w-md rounded-2xl border border-line bg-card p-5 lg:col-span-5 lg:mt-0">
-            <span className="mb-3 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+            <span className="mb-3 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
               Operating profile
             </span>
             {[
@@ -79,7 +79,7 @@ export default function AboutPage() {
       {/* Engineering principles — hairline list, ported from .archive-list/.archive-entry */}
       <section className="border-t border-line py-20" id="principles">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+          <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
             // Engineering principles
           </span>
           <h2 className="mb-8 max-w-2xl text-3xl font-bold md:text-4xl">The operating rules behind the work.</h2>
@@ -117,7 +117,7 @@ export default function AboutPage() {
       {/* Tech I work with */}
       <section className="border-t border-line py-20">
         <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
-          <p className="mb-4 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">Tech I work with</p>
+          <p className="mb-4 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">Tech I work with</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             {TECH.map((t) => (
               <span

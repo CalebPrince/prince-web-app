@@ -1,0 +1,24 @@
+/* Ported from public/css/app.css's sage-chat / sage-bubble / ai-typing-dots
+   rules — a bespoke chat card with a bounce animation, kept as plain CSS
+   rather than hand-derived Tailwind to avoid drift on the exact bubble
+   radii/colors and keyframe timing. */
+.sage-chat-card { display: grid; grid-template-rows: auto 1fr auto; min-height: 520px; border: 1px solid var(--line); border-radius: 18px; background: var(--card-bg); box-shadow: var(--shadow); overflow: hidden; }
+.sage-chat-card > header { display: flex; align-items: center; gap: 0.6rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); background: var(--bg-soft); }
+.sage-chat-card > header strong { color: var(--heading-color); font-size: 0.9rem; }
+.sage-chat-card > header span { margin-left: auto; color: var(--editorial-muted); font-size: 0.68rem; }
+.sage-chat-card > header .status-dot.is-live { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #22c77a; box-shadow: 0 0 0 4px rgba(34, 199, 122, 0.12); display: inline-block; }
+.sage-chat-log { display: flex; flex-direction: column; gap: 0.7rem; padding: 1.25rem; overflow-y: auto; max-height: 460px; }
+.sage-bubble { max-width: 85%; padding: 0.7rem 0.9rem; border-radius: 14px 14px 14px 3px; color: var(--heading-color); background: var(--bg-soft); font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap; }
+.sage-bubble.user { align-self: flex-end; border-radius: 14px 14px 3px 14px; color: #fff; background: #182236; }
+.sage-chat-form { display: flex; gap: 0.6rem; padding: 1rem 1.25rem; border-top: 1px solid var(--line); }
+.ai-typing-dots { display: inline-flex; gap: 4px; align-items: center; }
+.ai-typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-soft); opacity: 0.35; animation: ai-typing-bounce 1.2s infinite ease-in-out; }
+.ai-typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.ai-typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ai-typing-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-typing-dots span { animation: none; }
+}

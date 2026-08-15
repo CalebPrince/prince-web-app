@@ -58,7 +58,7 @@ export function GithubActivity() {
   return (
     <section className="bg-bg-soft py-24">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <p className="mb-2 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+        <p className="mb-2 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           Recent activity
         </p>
         <h3 className="mb-10 text-center text-2xl font-bold">What I&apos;ve been building lately.</h3>

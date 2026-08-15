@@ -36,7 +36,7 @@ export default function HomePage() {
             breakpoint everything stacks, mockup last. */}
         <div className="relative z-[1] mx-auto max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(21rem,0.48fr)] lg:items-center lg:gap-[clamp(2rem,5vw,5rem)]">
           <div>
-            <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+            <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
               // Stop losing enquiries to missed calls and slow follow-up
             </p>
             <h1 className="mb-4 max-w-4xl text-5xl font-bold md:text-6xl">

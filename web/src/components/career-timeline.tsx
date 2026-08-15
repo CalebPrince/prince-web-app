@@ -35,7 +35,7 @@ export function CareerTimeline() {
               )}
               aria-hidden="true"
             />
-            <span className="mb-1 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+            <span className="mb-1 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
               {stage.label}
             </span>
             <h5 className="mb-1 text-lg font-bold text-heading">{stage.title}</h5>

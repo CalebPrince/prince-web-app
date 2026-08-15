@@ -39,7 +39,7 @@ export function TestimonialsRegistry() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Client signals</p>
+          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Client signals</p>
           <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             What <span className="text-editorial-accent-strong">clients</span> say.
           </h1>
@@ -55,7 +55,7 @@ export function TestimonialsRegistry() {
         <section className="border-t border-line py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mb-8 max-w-2xl">
-              <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Verified outcomes</span>
+              <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Verified outcomes</span>
               <h2 className="mb-2 text-3xl font-bold md:text-4xl">Results, not just reviews.</h2>
               <p className="text-ink-soft">Every number below is pulled straight from the project it describes, not written by me.</p>
             </div>
@@ -102,7 +102,7 @@ export function TestimonialsRegistry() {
       <section className="border-t border-line py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-8 max-w-2xl">
-            <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// What I build</span>
+            <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// What I build</span>
             <h2 className="mb-2 text-3xl font-bold md:text-4xl">A broader look at what I build.</h2>
             <p className="text-ink-soft">
               Illustrative concepts across the services I offer, not live client work, and not real customer quotes.
@@ -156,7 +156,7 @@ export function TestimonialsRegistry() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           {caseStudies.length > 0 && plain.length > 0 && (
             <div className="mb-8 max-w-2xl">
-              <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Client signals</span>
+              <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Client signals</span>
               <h2 className="text-3xl font-bold md:text-4xl">More reviews.</h2>
             </div>
           )}

@@ -51,6 +51,15 @@ export type Testimonial = {
   outcome_metrics?: string;
 };
 
+export type BuilderOsAgent = {
+  key: string;
+  name: string;
+  role: string;
+  status: string;
+  capabilities: string[];
+  url?: string;
+};
+
 export type SearchResult = {
   type: "project" | "blog";
   url: string;
@@ -104,6 +113,9 @@ export const api = {
   content: () => get<SiteContent>("/api/v1/content"),
   testimonials: () => get<Testimonial[]>("/api/v1/testimonials"),
   search: (q: string) => get<{ results: SearchResult[] }>(`/api/v1/search?q=${encodeURIComponent(q)}`),
+  builderOsTeam: () => get<{ system: string; status: string; agents: BuilderOsAgent[] }>("/api/v1/builder-os/team"),
+  sageChat: (data: { message: string; transcript: { role: string; text: string }[]; token: string | null }) =>
+    postJson<{ reply: string; token?: string }>("/api/v1/agents/sage/chat", data),
   tags: () => get<Tag[]>("/api/v1/tags"),
   submitInquiry: (data: {
     name: string;

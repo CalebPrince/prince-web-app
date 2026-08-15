@@ -82,7 +82,7 @@ export function SearchPopup({ open, onClose }: { open: boolean; onClose: () => v
         >
           &times;
         </button>
-        <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Search</p>
+        <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Search</p>
         <h2 id="site-search-title" className="mb-3 text-xl font-bold">
           Find a project or article.
         </h2>

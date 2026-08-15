@@ -31,7 +31,7 @@ export function PoweredBySection() {
   return (
     <section className="border-b border-line py-14">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <p className="mb-8 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+        <p className="mb-8 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // Built on real, proven infrastructure
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-5 opacity-70">
@@ -85,7 +85,7 @@ export function ServicesSection() {
   return (
     <section className="py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <p className="mb-8 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+        <p className="mb-8 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // What I build
         </p>
         <div className="grid grid-cols-1 border-t border-l border-line sm:grid-cols-2 lg:grid-cols-3">
@@ -120,7 +120,7 @@ export function ProcessSection() {
   return (
     <section className="border-t border-line py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // How we work
         </span>
         <h2 className="mb-12 max-w-2xl text-3xl font-bold md:text-4xl">From a costly problem to a working system.</h2>
@@ -155,7 +155,7 @@ export function CaseStudiesSection() {
   return (
     <section className="border-t border-line py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // Proof, not promises
         </span>
         <h2 className="mb-10 max-w-2xl text-3xl font-bold md:text-4xl">See what has already shipped.</h2>
@@ -283,7 +283,7 @@ export function TestimonialsSection() {
   return (
     <section className="border-t border-line py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // Client signals
         </span>
         <h2 className="mb-10 text-3xl font-bold md:text-4xl">What clients say after launch.</h2>
@@ -334,7 +334,7 @@ export function FaqSection() {
   return (
     <section className="border-t border-line py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // Frequently asked
         </span>
         <h2 className="mb-10 max-w-2xl text-3xl font-bold md:text-4xl">Questions people ask before we start.</h2>

@@ -59,7 +59,7 @@ export function ArchiveRegistry() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Technical Archive</p>
+          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Technical Archive</p>
           <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             Case <span className="text-editorial-accent-strong">studies</span> for engineered systems.
           </h1>

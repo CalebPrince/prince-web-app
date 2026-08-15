@@ -65,7 +65,7 @@ export default function PricingPage() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Pricing</p>
+          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Pricing</p>
           <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             Start with one <span className="text-editorial-accent-strong">workflow</span>. Expand after it works.
           </h1>
@@ -79,7 +79,7 @@ export default function PricingPage() {
       {/* Choose the first useful outcome — hairline archive list */}
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">
+          <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
             // Choose the first useful outcome
           </span>
           <h2 className="mb-8 max-w-2xl text-3xl font-bold md:text-4xl">Buy a working system, not a technology label.</h2>
@@ -123,7 +123,7 @@ export default function PricingPage() {
                     {t.badge}
                   </span>
                 )}
-                <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">{t.name}</span>
+                <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">{t.name}</span>
                 <div className="mb-1 text-[2rem] font-extrabold text-heading">{t.price}</div>
                 <p className="mb-3 text-ink-soft">{t.tagline}</p>
                 <ul className="mb-4">
@@ -191,7 +191,7 @@ export default function PricingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// What changes month to month</p>
+              <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// What changes month to month</p>
               <h2 className="max-w-2xl text-3xl font-bold md:text-4xl">Implementation and usage stay separate.</h2>
             </div>
             <p className="max-w-sm text-ink-soft">

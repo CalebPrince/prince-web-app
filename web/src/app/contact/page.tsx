@@ -14,7 +14,7 @@ export default function ContactPage() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Contact</p>
+          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Contact</p>
           <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             What should <span className="text-editorial-accent-strong">stop</span> depending on a person?
           </h1>
@@ -34,7 +34,7 @@ export default function ContactPage() {
           </div>
 
           <div className="rounded-[24px] border border-line bg-card p-10 max-md:p-6">
-            <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Direct channels</span>
+            <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Direct channels</span>
 
             <div className="group border-b border-line py-[0.85rem]">
               <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">WhatsApp</span>

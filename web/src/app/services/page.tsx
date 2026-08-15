@@ -76,7 +76,7 @@ export default function ServicesPage() {
       {/* Single-block hero — no side panel here, unlike home/about */}
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Services</p>
+          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Services</p>
           <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             AI <span className="text-editorial-accent-strong">agents</span> that finish the workflow.
           </h1>
@@ -92,7 +92,7 @@ export default function ServicesPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// A working handoff</p>
+              <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// A working handoff</p>
               <h2 className="max-w-2xl text-3xl font-bold md:text-4xl">From first hello to confirmed booking.</h2>
             </div>
             <p className="max-w-sm text-ink-soft">
@@ -247,7 +247,7 @@ export default function ServicesPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Evidence, not invented metrics</p>
+              <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Evidence, not invented metrics</p>
               <h2 className="max-w-2xl text-3xl font-bold md:text-4xl">This site runs the systems it sells.</h2>
             </div>
             <p className="max-w-sm text-ink-soft">

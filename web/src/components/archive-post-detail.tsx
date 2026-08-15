@@ -123,7 +123,7 @@ export function ArchivePostDetail({ slug }: { slug: string }) {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-3 flex flex-wrap items-center gap-3">
             {post.category && (
-              <p className="m-0 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">{post.category}</p>
+              <p className="m-0 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">{post.category}</p>
             )}
             {publishedDate(post) && <span className="text-sm text-editorial-muted">{publishedDate(post)}</span>}
             <span className="text-sm text-editorial-muted">⏱ {post.reading_time} min read</span>
@@ -207,7 +207,7 @@ export function ArchivePostDetail({ slug }: { slug: string }) {
 
         {related.length > 0 && (
           <div className="mt-16 border-t border-line pt-10">
-            <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Keep reading</p>
+            <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Keep reading</p>
             <h3 className="mb-6 text-2xl font-bold text-heading">Related articles</h3>
             <div className="grid gap-5 md:grid-cols-3">
               {related.map((r) => (
@@ -223,7 +223,7 @@ export function ArchivePostDetail({ slug }: { slug: string }) {
                   <div className="flex flex-1 flex-col p-6">
                     <div className="mb-2 flex items-center justify-between">
                       {r.category ? (
-                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">{r.category}</span>
+                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">{r.category}</span>
                       ) : (
                         <span />
                       )}
@@ -292,7 +292,7 @@ function PostNewsletter() {
   return (
     <section className="mt-16 grid items-center gap-8 rounded-[18px] border border-line bg-card p-8 shadow-sm md:grid-cols-[1fr_0.85fr]">
       <div>
-        <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">// Field notes</p>
+        <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Field notes</p>
         <h3 className="mb-1 text-xl font-bold text-heading">Get the next useful build note.</h3>
         <p className="text-ink-soft">Occasional, practical writing on shipping better digital products. No noise.</p>
       </div>
