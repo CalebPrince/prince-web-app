@@ -9,7 +9,6 @@
 <link rel="icon" type="image/png" href="/icons/icon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>(function(){var t=localStorage.getItem("theme")||localStorage.getItem("site_default_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
-<script>(function(){try{var k="prince_builder_connected_seen";if(sessionStorage.getItem(k)){document.documentElement.classList.add("builder-connected-seen");}else{sessionStorage.setItem(k,"1");}}catch(_){}})();</script>
 <script>(function(){try{if(!sessionStorage.getItem("prince_splash_played")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("splash-pending");}}catch(_){}})();</script>
 <title>Prince Caleb, AI Voice Agents, Chatbots &amp; Automation</title>
 <meta name="description" content="Prince Caleb builds AI voice agents that answer business calls, chatbots, and workflow automations, engineered on 12+ years of custom web &amp; mobile development.">
@@ -46,75 +45,6 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/app.css?v=20260806-upgrades-5-7" rel="stylesheet">
 <style>@view-transition { navigation: none; }</style>
-
-<style>
-  .builder-connected {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    z-index: 9999;
-    display: inline-flex;
-    align-items: center;
-    gap: .6rem;
-    padding: .7rem .95rem;
-    border: 1px solid color-mix(in srgb, var(--accent, #33ff88) 34%, transparent);
-    border-radius: 999px;
-    background: rgba(3, 10, 6, .94);
-    color: #f3fff7;
-    font: 600 .78rem/1.1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    letter-spacing: .03em;
-    box-shadow: 0 12px 34px rgba(0, 0, 0, .22);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + 10px)) scale(.98);
-    pointer-events: none;
-    animation: builderConnectedIn .5s .45s ease forwards,
-               builderConnectedOut .5s 2.75s ease forwards;
-  }
-
-  .builder-connected-seen .builder-connected { display: none; }
-
-  .builder-connected-dot {
-    width: .52rem;
-    height: .52rem;
-    border-radius: 50%;
-    background: #32ff82;
-    box-shadow: 0 0 0 4px rgba(50, 255, 130, .10), 0 0 14px rgba(50, 255, 130, .7);
-    animation: builderConnectedPulse 1.2s ease-in-out infinite;
-  }
-
-  @keyframes builderConnectedIn {
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  }
-
-  @keyframes builderConnectedOut {
-    to { opacity: 0; transform: translate(-50%, calc(-50% - 8px)) scale(.98); visibility: hidden; }
-  }
-
-  @keyframes builderConnectedPulse {
-    50% { opacity: .55; transform: scale(.86); }
-  }
-
-  @media (max-width: 575.98px) {
-    .builder-connected {
-      padding: .62rem .78rem;
-      font-size: .7rem;
-      white-space: nowrap;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .builder-connected {
-      animation: none;
-      opacity: 1;
-      transform: translate(-50%, -50%);
-    }
-    .builder-connected-dot {
-      animation: none;
-    }
-  }
-</style>
 
 <style>
   .home-page .service-icon svg { width: 1.45rem; height: 1.45rem; }
@@ -277,11 +207,6 @@
     <div class="splash-word" id="splash-word">Prince Caleb<span class="dot">.</span></div>
     <div class="splash-eyebrow" id="splash-eyebrow">AI voice agents · chatbots · automations</div>
   </div>
-</div>
-
-<div class="builder-connected" id="builder-connected" role="status" aria-live="polite">
-  <span class="builder-connected-dot" aria-hidden="true"></span>
-  <span>Builder OS Connected</span>
 </div>
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -1325,22 +1250,6 @@
       btn.textContent = 'Subscribe';
     }
   });
-})();
-</script>
-
-<script>
-(function () {
-  var toast = document.getElementById('builder-connected');
-  if (!toast) return;
-
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    window.setTimeout(function () { toast.remove(); }, 1800);
-    return;
-  }
-
-  window.setTimeout(function () {
-    if (toast && toast.parentNode) toast.remove();
-  }, 3400);
 })();
 </script>
 
