@@ -170,7 +170,12 @@ class ContentIdeasController
             . "in them (mark those ideas grounded: true) — but for YouTube, and for any LinkedIn idea not tied to "
             . "that real data, never claim something is 'trending' or cite an engagement number you don't "
             . "actually have (mark those grounded: false). An idea is a short title/hook plus a one-sentence "
-            . "description of the angle — not a full script or post copy.\n\n"
+            . "description of the angle — not a full script or post copy. The real data below states the exact "
+            . "number of distinct real posts available and a hard cap on grounded ideas — do not exceed it. Never "
+            . "spin up more than one grounded idea per distinct real post, and never produce two grounded ideas "
+            . "that are just reworded versions of the same post's theme — once a real post's angle has been used "
+            . "once, treat it as spent and move on to a plain (non-grounded) brainstorm for the rest of that "
+            . "day's slot.\n\n"
             . "Return ONLY a raw JSON array of exactly 30 objects, no markdown fences, no commentary, in this "
             . "exact shape: [{\"day\": 1, \"platform\": \"linkedin\", \"title\": \"...\", \"description\": \"...\", "
             . "\"grounded\": false}, ...]. day must run 1 through 30 with no gaps or repeats. platform must be "
@@ -189,12 +194,18 @@ class ContentIdeasController
             . self::MAX_TRACKED_PAGES_IN_PROMPT
         )->fetchAll();
         if ($tracked) {
-            $lines[] = "\nReal recent posts from tracked LinkedIn pages (use these for grounded LinkedIn ideas only):";
+            $totalRealPosts = 0;
+            $pageLines = [];
             foreach ($tracked as $page) {
                 $posts = json_decode((string) $page['findings_json'], true) ?: [];
                 $posts = array_slice($posts, 0, self::MAX_POSTS_PER_PAGE_IN_PROMPT);
-                $lines[] = "Page: {$page['page_url']}\n" . json_encode($posts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                $totalRealPosts += count($posts);
+                $pageLines[] = "Page: {$page['page_url']}\n" . json_encode($posts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             }
+            $lines[] = "\nReal recent posts from tracked LinkedIn pages (use these for grounded LinkedIn ideas only) — "
+                . "{$totalRealPosts} distinct real post(s) total, so produce AT MOST {$totalRealPosts} grounded "
+                . "LinkedIn idea(s) across the whole 30-day plan (one per distinct post, no exceptions):";
+            $lines = array_merge($lines, $pageLines);
         } else {
             $lines[] = "\nNo tracked LinkedIn pages are cached yet — treat every idea as a plain AI brainstorm "
                 . "(grounded: false for all of them).";
