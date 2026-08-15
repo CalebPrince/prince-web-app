@@ -214,7 +214,22 @@ class ContentIdeasController
                 if ($remainingDays <= 0) {
                     break;
                 }
-                $posts = json_decode((string) $page['findings_json'], true) ?: [];
+                $rawPosts = json_decode((string) $page['findings_json'], true) ?: [];
+                // Apify's raw item is mostly metadata bloat (author object,
+                // media, reaction breakdowns) that isn't needed for grounding
+                // and was blowing prompt size past provider limits once the
+                // post-count cap was removed (a single tracked page's 10
+                // cached posts pushed one request to 12.5k tokens against
+                // Groq's 12k/min ceiling, and timed out Gemini outright). Only
+                // the actual post text is kept — the count of posts is still
+                // whatever Radar cached, untouched.
+                $posts = [];
+                foreach ($rawPosts as $rawPost) {
+                    $text = is_array($rawPost) ? self::deepFindPostText($rawPost) : null;
+                    if ($text !== null) {
+                        $posts[] = $text;
+                    }
+                }
                 // The plan itself is a fixed MAX_DAYS-day calendar, so it
                 // structurally cannot fit more than MAX_DAYS one-idea-per-post
                 // LinkedIn entries — this is the only place volume is trimmed,
@@ -239,6 +254,39 @@ class ContentIdeasController
         }
 
         return ['text' => implode("\n", $lines), 'realPostCount' => $totalRealPosts];
+    }
+
+    /**
+     * Pulls just a post's text content out of one raw Apify dataset item,
+     * ignoring everything else (author, media, reaction counts, etc.) — same
+     * flexible key-hint search run_beacon_apify_discovery.php already uses
+     * for this same actor's output, since different "LinkedIn profile posts"
+     * actors on Apify don't agree on field names. Truncated well below what
+     * a single post could otherwise cost in prompt tokens.
+     */
+    private static function deepFindPostText(array $node, int $maxDepth = 3): ?string
+    {
+        foreach ($node as $key => $value) {
+            if (is_string($key) && is_string($value) && trim($value) !== '') {
+                $keyLower = strtolower($key);
+                foreach (['text', 'commentary', 'description', 'content', 'posttext', 'body'] as $hint) {
+                    if (str_contains($keyLower, $hint)) {
+                        return mb_substr(trim($value), 0, 500);
+                    }
+                }
+            }
+        }
+        if ($maxDepth > 0) {
+            foreach ($node as $value) {
+                if (is_array($value)) {
+                    $found = self::deepFindPostText($value, $maxDepth - 1);
+                    if ($found !== null) {
+                        return $found;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**
