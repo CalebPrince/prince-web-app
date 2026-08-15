@@ -112,11 +112,23 @@ jobs:
         working-directory: web
         run: npm run build
 
+      # Passenger restarts an app when the mtime of tmp/restart.txt inside
+      # its app root changes — this is the standard (and only) documented
+      # way to pick up a new deploy without an SSH session. This file must
+      # be part of the SAME sync as the rest of the build: FTP-Deploy-Action
+      # tracks state per server-dir (state-name defaults to the same
+      # .ftp-deploy-sync-state.json for every call), so a second call
+      # against the same server-dir with a smaller local-dir deletes
+      # everything the first call just uploaded that isn't in that smaller
+      # set — which is exactly what silently wiped every deploy here before
+      # this was fixed.
       - name: Assemble standalone deploy bundle
         working-directory: web
         run: |
           cp -r public .next/standalone/public
           cp -r .next/static .next/standalone/.next/static
+          mkdir -p .next/standalone/tmp
+          date > .next/standalone/tmp/restart.txt
 
       - name: Sync web/.next/standalone/ -> nextjs-web/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -126,22 +138,4 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
           local-dir: web/.next/standalone/
-          server-dir: nextjs-web/
-
-      # Passenger restarts an app when the mtime of tmp/restart.txt inside
-      # its app root changes — this is the standard (and only) documented
-      # way to pick up a new deploy without an SSH session. An FTP upload's
-      # mtime is enough to trigger it; content is just a deploy marker.
-      - name: Touch nextjs-web/tmp/restart.txt to trigger Passenger restart
-        run: |
-          mkdir -p /tmp/restart-marker/tmp
-          date > /tmp/restart-marker/tmp/restart.txt
-        shell: bash
-      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          local-dir: /tmp/restart-marker/
           server-dir: nextjs-web/
