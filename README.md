@@ -9,8 +9,12 @@ drafting, social post drafts, Make.com automation events), and a secondary
 opt-in AI assistant widget.
 
 Backend: plain PHP (no framework), PDO + SQLite.
-Frontend: static HTML + vanilla JS (fetch-based hydration) + Bootstrap 5 for
-layout/utilities only — no build step, no bundler.
+Frontend is split across two apps behind one domain: the admin panel, the
+PHP REST API, and every not-yet-migrated/transactional page are still
+static HTML + vanilla JS (fetch-based hydration) + Bootstrap 5, no build
+step, no bundler — while every public marketing page has been rebuilt in
+`web/` on Next.js + Tailwind CSS + shadcn/ui (see "Next.js + Tailwind +
+shadcn/ui rebuild" below).
 
 Live at [princecaleb.dev](https://princecaleb.dev).
 
@@ -466,11 +470,12 @@ Tailwind CSS layer for the still-static `public/*.html` pages (`npm run
 build` → `public/css/tailwind.build.css`, gitignored) — Node is CI-only
 for that piece, the production host never runs it for the PHP app.
 
-Node *does* run in production for `web/` (the Next.js + shadcn rebuild —
-see "Next.js migration" below), via cPanel's Node.js Selector (Phusion
-Passenger), as a separate app alongside the PHP one. The two areas of this
-repo have different Node relationships: `public/`'s Tailwind build is
-CI-only tooling; `web/` is a real, always-running Node app.
+Node *does* run in production for `web/` (the Next.js + Tailwind + shadcn/ui
+rebuild — see "Next.js + Tailwind + shadcn/ui rebuild" below), via cPanel's
+Node.js Selector (Phusion Passenger), as a separate app alongside the PHP
+one. The two areas of this repo have different Node relationships:
+`public/`'s Tailwind build is CI-only tooling; `web/` is a real,
+always-running Node app.
 
 ```bash
 # 1. Apply the schema (safe to re-run any time schema.sql changes)
@@ -501,41 +506,75 @@ php -S localhost:8010 -t public public/index.php
 Visit `http://localhost:8010` for the public site and
 `http://localhost:8010/admin/login.html` for the admin panel.
 
-## Next.js migration (`web/`)
+## Next.js + Tailwind + shadcn/ui rebuild (`web/`)
 
-The public marketing pages are being rebuilt in `web/` — Next.js (App
-Router) + Tailwind + shadcn/ui, a faithful framework port of the existing
-design (same tokens, same 4 themes, same layout), not a redesign. Pages
-migrated so far: home, about, services, pricing, projects (+ detail),
-contact, archive (+ detail), testimonials. Everything else — the admin
-panel, the PHP REST API, and any public page not yet in the list above —
-stays exactly as it is today, served by the existing PHP app.
+Every public marketing page has been rebuilt in `web/` — Next.js (App
+Router) + Tailwind CSS v4 + shadcn/ui on `@base-ui/react` primitives — a
+straight framework port off Bootstrap 5, not a redesign: the same design
+tokens (`--accent`, `--heading-color`, `--line`, etc., re-exposed as
+Tailwind theme colors), the same 4 themes (light/dark/midnight/paper),
+the same layout and copy, page by page against the live `public/*.html`
+markup and `public/css/app.css`. Bespoke, animation-heavy sections that
+don't fit utility classes well (Builder OS's topology map and workflow
+simulator, the agent dossier, Lisa's integration-orbit/scenario-lab, the
+marketing-brain chat bubbles) are ported as scoped CSS files using the
+original class names instead of hand-derived Tailwind, matching the same
+"don't force bespoke UI into utilities" precedent the rest of the app
+already followed for nav mega-menus and terminal-style mockups.
+
+**Confirmed live in production** at princecaleb.dev — `web/` serves `/`,
+`/about`, `/services`, `/pricing`, `/projects` (+ detail), `/contact`,
+`/archive` (+ detail), `/testimonials`, `/404`, `/privacy`, `/terms`,
+`/cookies`, `/search`, `/builder-os`, `/agent`, `/ai-safety`,
+`/ai-adoption-ladder`, `/marketing-brain`, `/growth-roadmap`,
+`/ai-voice-agents-for-clinics`, and `/lisa-ai-assistant`. Real backend
+features (Sage's marketing chat, Builder OS's live agent registry and
+workflow simulator, the clinic ROI calculator, project/blog search) call
+the same PHP `/api/v1/*` endpoints the rest of the site already uses —
+nothing is mocked. The LiveAvatar real-time video call and the
+browser-mic ElevenLabs voice demo are deliberately static shells for now
+(same scope as the homepage's own voice-demo mockup); everything else is
+fully wired. Everything not in the list above — the admin panel, the PHP
+REST API, and every transactional page (`/book.html`, `/pay.html`,
+`/chat.html`, etc.) — stays exactly as it is today, served by the
+existing PHP app.
 
 **Production is two apps behind one domain**, both reachable at
 princecaleb.dev:
 - `web/` runs as its own cPanel Node.js Selector (Phusion Passenger) app,
-  deployed to `nextjs-web/` (a folder alongside, not inside, `public_html/`).
-  `next.config.ts` sets `output: "standalone"` so the deploy is a minimal
-  self-contained bundle (Next.js's own generated `server.js` + only the
-  node_modules actually used at runtime) rather than the full node_modules
-  tree — see `.github/workflows/deploy.yml`'s `web/` build steps.
+  deployed to `nextjs-web/` (a folder alongside, not inside, `public_html/`),
+  bound directly to the apex domain. `next.config.ts` sets
+  `output: "standalone"` so the deploy is a minimal self-contained bundle
+  (Next.js's own generated `server.js` + only the node_modules actually
+  used at runtime) rather than the full node_modules tree — see
+  `.github/workflows/deploy.yml`'s `web/` build steps. Two real deploy
+  bugs were found and fixed getting this pipeline solid: a second
+  FTP-Deploy-Action call sharing sync state with the first was silently
+  deleting every deploy right after it landed, and the action's default
+  excludes were dropping the `node_modules/` the standalone build needs
+  to run at all.
 - The PHP app keeps serving everything it always has, from `public_html/`
-  as today.
-- `public/.htaccess` carries a bypass block that keeps `/admin/*`,
-  `/api/*`, `/uploads/*`, static assets, and any request matching a real
-  file already on disk (i.e. every marketing page not yet migrated)
-  resolving to the PHP app first — Passenger only ever sees requests that
-  fall through past that point. This is what lets the migration proceed
-  page by page without a big-bang cutover.
+  as today — this host runs OpenLiteSpeed, not Apache, and its Node
+  integration only takes over a request when it doesn't match a real
+  file or PHP route, so no `.htaccess` bypass rules were needed for
+  `/admin/*`, `/api/*`, or the not-yet-migrated marketing pages to keep
+  resolving through PHP.
 
 Local dev: `cd web && npm run dev` (Turbopack, port 3000). `next.config.ts`
 proxies `/api/*` to the local PHP dev server in development only — in
-production that routing is Apache's job (the `.htaccess` bypass above),
-never Next.js's.
+production `/api/*` just resolves to a real PHP route the same way any
+other request does, never through Next.js.
 
 ## Project layout
 
 ```
+web/                      # Next.js + Tailwind + shadcn/ui rebuild of the public
+                          #   marketing pages — see "Next.js + Tailwind + shadcn/ui
+                          #   rebuild" below. Deployed as its own cPanel Node.js
+                          #   app, separate from everything under public/ here.
+  src/app/                 # App Router routes, one folder per page
+  src/components/          # shared UI (SiteNav, Button, page-specific registries)
+  src/lib/api.ts           # typed fetch client for the PHP /api/v1/* surface
 public/                  # web root — only this folder is web-exposed
   index.php               # front controller: routes /api/v1/* only
   .htaccess               # Apache rewrite rules for production
