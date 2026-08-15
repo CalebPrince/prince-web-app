@@ -850,7 +850,7 @@ async function testAi() {
     await renderChatLiveStatus(settings);
 
     document.getElementById("default_theme").value = settings.default_theme || "";
-    document.getElementById("splash_screen_enabled").value = settings.splash_screen_enabled || "lockup";
+    document.getElementById("splash_screen_enabled").value = settings.splash_screen_enabled || "on";
     document.getElementById("animation_style").value = settings.animation_style || "slide-up";
   } catch (_) { /* fields stay empty */ }
 

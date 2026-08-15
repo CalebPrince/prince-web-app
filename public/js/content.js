@@ -142,14 +142,6 @@
     el.href = businessWhatsApp;
   });
 
-  // Splash screen, on by default, dismissed early if explicitly turned off.
-  // The inline script in <head> shows it immediately (before this fetch can
-  // possibly resolve) so a brief flash is unavoidable when disabling it, but
-  // this cuts the ~3s animation short instead of letting it play out.
-  if (content.splash_screen_enabled === "0") {
-    document.getElementById("splash")?.remove();
-  }
-
   // Global animation style (Admin -> Site Content -> Appearance). Drives the
   // reveal/hero-entrance/hover CSS in app.css via this attribute, unset (or
   // an unrecognized value) leaves the hardcoded default (the original
