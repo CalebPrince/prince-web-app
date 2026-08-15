@@ -125,12 +125,14 @@ class AiText
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(
-                'AiText: DeepSeek call failed (falling back to Gemini if configured): status=%s body=%s',
+                'AiText: DeepSeek call failed (falling back to Gemini if configured): status=%s curl_error=%s body=%s',
                 $status,
+                $curlError !== '' ? $curlError : 'none',
                 is_string($response) ? substr($response, 0, 500) : 'n/a'
             ));
             return null;
@@ -173,12 +175,14 @@ class AiText
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(
-                'AiText: Gemini call failed (falling back to OpenRouter if configured): status=%s body=%s',
+                'AiText: Gemini call failed (falling back to OpenRouter if configured): status=%s curl_error=%s body=%s',
                 $status,
+                $curlError !== '' ? $curlError : 'none',
                 is_string($response) ? substr($response, 0, 500) : 'n/a'
             ));
             return null;
@@ -229,12 +233,14 @@ class AiText
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(
-                'AiText: OpenRouter fallback also failed: status=%s body=%s',
+                'AiText: OpenRouter fallback also failed: status=%s curl_error=%s body=%s',
                 $status,
+                $curlError !== '' ? $curlError : 'none',
                 is_string($response) ? substr($response, 0, 500) : 'n/a'
             ));
             return null;
@@ -279,12 +285,14 @@ class AiText
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(
-                'AiText: Groq fallback also failed: status=%s body=%s',
+                'AiText: Groq fallback also failed: status=%s curl_error=%s body=%s',
                 $status,
+                $curlError !== '' ? $curlError : 'none',
                 is_string($response) ? substr($response, 0, 500) : 'n/a'
             ));
             return null;
