@@ -14,12 +14,17 @@ use App\Support\SharedAgentTools;
 /**
  * 30-day LinkedIn/YouTube content-idea planning list (Admin -> Content
  * Ideas). One AI call, grounded in real business context
- * (SharedAgentTools::getSiteInfo() — actual services/bio, never invented)
- * and, when available, real cached posts from Radar's tracked LinkedIn
- * pages (radar_tracked_page_findings, kept fresh by
- * database/run_radar_tracked_pages.php). YouTube has no equivalent real
- * data source anywhere in this app, so YouTube ideas are always plain AI
- * brainstorms grounded only in service positioning — the prompt is
+ * (SharedAgentTools::getSiteInfo() — actual services/bio, never invented).
+ *
+ * LinkedIn ideas are NEVER invented: every LinkedIn idea must be tied to a
+ * real cached post from Radar's tracked LinkedIn pages
+ * (radar_tracked_page_findings, kept fresh by
+ * database/run_radar_tracked_pages.php), one idea per distinct real post,
+ * exactly that many — no more, no padding, no plain LinkedIn brainstorms.
+ * If zero real posts are cached, zero LinkedIn ideas are produced for that
+ * batch. YouTube has no equivalent real data source anywhere in this app,
+ * so YouTube ideas are always plain AI brainstorms grounded only in service
+ * positioning and fill whatever days LinkedIn doesn't use — the prompt is
  * explicit that they must never be phrased as "trending" or cite invented
  * metrics, the same anti-fabrication discipline Beacon/Dossier/Marketing
  * Leads already follow elsewhere in this codebase.
@@ -63,13 +68,13 @@ class ContentIdeasController
         $user = AuthMiddleware::requireAuth();
         $pdo = Database::get();
 
-        $prompt = self::buildPrompt($pdo);
-        $text = AiText::generate($prompt, self::systemInstruction(), 45);
+        $built = self::buildPrompt($pdo);
+        $text = AiText::generate($built['text'], self::systemInstruction(), 45);
         if ($text === null) {
             Response::error('Could not generate content ideas — check that an AI provider is configured and reachable.', 502);
         }
 
-        $ideas = self::parseIdeas((string) $text);
+        $ideas = self::parseIdeas((string) $text, $built['realPostCount']);
         if ($ideas === null) {
             Response::error('The AI response could not be parsed into a 30-day plan. Try generating again.', 502);
         }
@@ -149,41 +154,42 @@ class ContentIdeasController
         return "You are a content strategist producing a 30-day content-idea calendar for a solo developer's "
             . "business (AI voice agents, chatbots, workflow automation, custom web/mobile development), split "
             . "across LinkedIn and YouTube. The audience is business owners and decision-makers who want to grow "
-            . "their business — not other developers. For ideas NOT tied to a real tracked post (all YouTube "
-            . "ideas, and any LinkedIn idea you're brainstorming rather than grounding), frame them around "
-            . "business outcomes (more leads, more sales, saved time, lower costs, better customer experience, "
-            . "retention, growth) that AI/automation/web technology can unlock — never coding tutorials, dev "
-            . "tools, programming tips, or any angle aimed at a developer audience. For a LinkedIn idea grounded "
-            . "in a real tracked post below, follow that post's own real angle instead: if the post is about a "
-            . "marketing or business problem that has nothing to do with AI/automation/web tech (e.g. lead "
-            . "follow-up, onboarding, pricing, retention, content strategy), let the idea mirror that real "
-            . "problem in its own terms — do not force-fit an AI/automation/web-tech spin onto it just to stay "
-            . "on-brand. Only frame a grounded idea around AI/automation/web outcomes if the source post itself "
-            . "is actually about that. Titles must sell the 'why it matters' — the business risk, opportunity, "
-            . "or payoff — not the 'how it's built'. Avoid instructional/tutorial phrasing like 'How to "
-            . "Structure...', 'How to Build...', or 'X Steps to...', which reads as a skill for the reader to "
-            . "learn themselves; prefer framing that makes the business stakes obvious at a glance (e.g. 'Why "
-            . "Your AI Chatbot Should Never Improvise With Customers' instead of 'How to Structure AI Prompts to "
-            . "Guardrail Customer Conversations'). Ground every idea in the real business context provided — "
-            . "never invent services, results, client names, or statistics. For LinkedIn ideas, when real recent posts "
-            . "from tracked pages are provided below, you may reference real patterns/themes/formats you observe "
-            . "in them (mark those ideas grounded: true) — but for YouTube, and for any LinkedIn idea not tied to "
-            . "that real data, never claim something is 'trending' or cite an engagement number you don't "
-            . "actually have (mark those grounded: false). An idea is a short title/hook plus a one-sentence "
-            . "description of the angle — not a full script or post copy. The real data below states the exact "
-            . "number of distinct real posts available and a hard cap on grounded ideas — do not exceed it. Never "
-            . "spin up more than one grounded idea per distinct real post, and never produce two grounded ideas "
-            . "that are just reworded versions of the same post's theme — once a real post's angle has been used "
-            . "once, treat it as spent and move on to a plain (non-grounded) brainstorm for the rest of that "
-            . "day's slot.\n\n"
+            . "their business — not other developers.\n\n"
+            . "STRICT RULE ON LINKEDIN IDEAS: every single LinkedIn idea you produce must be grounded: true and "
+            . "directly tied to one specific real post supplied below — never invent a LinkedIn idea from "
+            . "imagination, never brainstorm a LinkedIn idea the way you would for YouTube. The real data below "
+            . "states the exact number of distinct real posts available; that number is a hard, exact requirement "
+            . "(not a maximum) for how many LinkedIn ideas to produce — one idea per distinct real post, no more, "
+            . "no fewer, and never two ideas that are just reworded versions of the same post's theme. If that "
+            . "number is zero, produce zero LinkedIn ideas — fill all 30 days with YouTube instead. Follow each "
+            . "grounded post's own real angle: if the post is about a marketing or business problem that has "
+            . "nothing to do with AI/automation/web tech (e.g. lead follow-up, onboarding, pricing, retention, "
+            . "content strategy), let the idea mirror that real problem in its own terms — do not force-fit an "
+            . "AI/automation/web-tech spin onto it just to stay on-brand. Only frame a grounded idea around "
+            . "AI/automation/web outcomes if the source post itself is actually about that.\n\n"
+            . "YOUTUBE IDEAS: since there is no real-post data source for YouTube, every YouTube idea is a plain "
+            . "brainstorm (always grounded: false) framed around business outcomes (more leads, more sales, saved "
+            . "time, lower costs, better customer experience, retention, growth) that AI/automation/web technology "
+            . "can unlock — never coding tutorials, dev tools, programming tips, or any angle aimed at a developer "
+            . "audience. Never claim something is 'trending' or cite an engagement number you don't actually "
+            . "have. YouTube ideas fill every day that isn't used by a grounded LinkedIn idea.\n\n"
+            . "Titles must sell the 'why it matters' — the business risk, opportunity, or payoff — not the 'how "
+            . "it's built'. Avoid instructional/tutorial phrasing like 'How to Structure...', 'How to Build...', "
+            . "or 'X Steps to...', which reads as a skill for the reader to learn themselves; prefer framing that "
+            . "makes the business stakes obvious at a glance (e.g. 'Why Your AI Chatbot Should Never Improvise "
+            . "With Customers' instead of 'How to Structure AI Prompts to Guardrail Customer Conversations'). "
+            . "Ground every idea in the real business context provided — never invent services, results, client "
+            . "names, or statistics. An idea is a short title/hook plus a one-sentence description of the angle "
+            . "— not a full script or post copy.\n\n"
             . "Return ONLY a raw JSON array of exactly 30 objects, no markdown fences, no commentary, in this "
             . "exact shape: [{\"day\": 1, \"platform\": \"linkedin\", \"title\": \"...\", \"description\": \"...\", "
             . "\"grounded\": false}, ...]. day must run 1 through 30 with no gaps or repeats. platform must be "
-            . "exactly \"linkedin\" or \"youtube\" (mix both across the 30 days, weighted toward whichever makes "
-            . "sense given the real data available).";
+            . "exactly \"linkedin\" or \"youtube\", with the LinkedIn count matching the real-post count exactly "
+            . "as instructed above and YouTube filling the rest.";
     }
 
-    private static function buildPrompt(\PDO $pdo): string
+    /** @return array{text: string, realPostCount: int} */
+    private static function buildPrompt(\PDO $pdo): array
     {
         $siteInfo = SharedAgentTools::getSiteInfo();
         $lines = ["Real business context (do not invent anything beyond this):"];
@@ -193,8 +199,8 @@ class ContentIdeasController
             'SELECT page_url, findings_json FROM radar_tracked_page_findings ORDER BY fetched_at DESC LIMIT '
             . self::MAX_TRACKED_PAGES_IN_PROMPT
         )->fetchAll();
+        $totalRealPosts = 0;
         if ($tracked) {
-            $totalRealPosts = 0;
             $pageLines = [];
             foreach ($tracked as $page) {
                 $posts = json_decode((string) $page['findings_json'], true) ?: [];
@@ -202,20 +208,31 @@ class ContentIdeasController
                 $totalRealPosts += count($posts);
                 $pageLines[] = "Page: {$page['page_url']}\n" . json_encode($posts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             }
-            $lines[] = "\nReal recent posts from tracked LinkedIn pages (use these for grounded LinkedIn ideas only) — "
-                . "{$totalRealPosts} distinct real post(s) total, so produce AT MOST {$totalRealPosts} grounded "
-                . "LinkedIn idea(s) across the whole 30-day plan (one per distinct post, no exceptions):";
-            $lines = array_merge($lines, $pageLines);
-        } else {
-            $lines[] = "\nNo tracked LinkedIn pages are cached yet — treat every idea as a plain AI brainstorm "
-                . "(grounded: false for all of them).";
+            if ($totalRealPosts > 0) {
+                $lines[] = "\nReal recent posts from tracked LinkedIn pages — {$totalRealPosts} distinct real "
+                    . "post(s) total. You MUST produce EXACTLY {$totalRealPosts} LinkedIn idea(s) across the whole "
+                    . "30-day plan, one per distinct post below, each grounded: true. Do not produce any other "
+                    . "LinkedIn ideas. Fill the remaining " . (30 - $totalRealPosts) . " day(s) entirely with "
+                    . "YouTube ideas (grounded: false):";
+                $lines = array_merge($lines, $pageLines);
+            }
+        }
+        if ($totalRealPosts === 0) {
+            $lines[] = "\nNo real cached LinkedIn posts are available — produce ZERO LinkedIn ideas. All 30 days "
+                . "must be platform: youtube (grounded: false).";
         }
 
-        return implode("\n", $lines);
+        return ['text' => implode("\n", $lines), 'realPostCount' => $totalRealPosts];
     }
 
-    /** @return array<int,array{day:int,platform:string,title:string,description:string,grounded:bool}>|null */
-    private static function parseIdeas(string $reply): ?array
+    /**
+     * $expectedLinkedinCount is the real distinct post count computed in
+     * buildPrompt() — enforced here in code, not just requested in the
+     * prompt, so a model slip can't sneak an invented LinkedIn idea past us.
+     *
+     * @return array<int,array{day:int,platform:string,title:string,description:string,grounded:bool}>|null
+     */
+    private static function parseIdeas(string $reply, int $expectedLinkedinCount): ?array
     {
         $stripped = trim((string) preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $reply));
         $parsed = json_decode($stripped, true);
@@ -227,6 +244,7 @@ class ContentIdeasController
 
         $ideas = [];
         $seenDays = [];
+        $linkedinCount = 0;
         foreach ($parsed as $item) {
             if (!is_array($item)) {
                 return null;
@@ -235,12 +253,17 @@ class ContentIdeasController
             $platform = (string) ($item['platform'] ?? '');
             $title = trim((string) ($item['title'] ?? ''));
             $description = trim((string) ($item['description'] ?? ''));
+            $grounded = $platform === 'linkedin' && !empty($item['grounded']);
             if ($day < 1 || $day > 30 || isset($seenDays[$day])
                 || !in_array($platform, self::PLATFORMS, true)
                 || $title === '' || $description === ''
+                || ($platform === 'linkedin' && !$grounded)
             ) {
-                error_log('ContentIdeasController: rejected malformed idea item: ' . json_encode($item));
+                error_log('ContentIdeasController: rejected malformed or ungrounded idea item: ' . json_encode($item));
                 return null;
+            }
+            if ($platform === 'linkedin') {
+                $linkedinCount++;
             }
             $seenDays[$day] = true;
             $ideas[] = [
@@ -248,8 +271,14 @@ class ContentIdeasController
                 'platform' => $platform,
                 'title' => mb_substr($title, 0, 200),
                 'description' => mb_substr($description, 0, 1000),
-                'grounded' => $platform === 'linkedin' && !empty($item['grounded']),
+                'grounded' => $grounded,
             ];
+        }
+
+        if ($linkedinCount !== $expectedLinkedinCount) {
+            error_log("ContentIdeasController: expected exactly {$expectedLinkedinCount} grounded LinkedIn "
+                . "idea(s), model produced {$linkedinCount} — rejecting batch.");
+            return null;
         }
 
         usort($ideas, static fn(array $a, array $b): int => $a['day'] <=> $b['day']);
