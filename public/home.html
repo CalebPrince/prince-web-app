@@ -1349,18 +1349,25 @@
 
     typeText(document.getElementById('boot-line-1'), '> boot princecaleb.dev', 0, 34);
     typeText(document.getElementById('boot-line-2'), '> voice agents · chatbots · automations', 600, 34);
-
     setTimeout(function () { document.getElementById('boot-lines').classList.add('fade'); }, 1850);
-    setTimeout(function () { document.getElementById('boot-grid').classList.add('fade'); }, 3200);
-    setTimeout(function () { document.getElementById('boot-rule').classList.add('draw'); }, 2300);
-    setTimeout(function () { document.getElementById('boot-eyebrow').classList.add('in'); }, 2650);
-    setTimeout(function () { document.getElementById('boot-support').classList.add('fade'); }, 3350);
 
-    // The mark travels to wherever the real nav brand-logo actually sits —
-    // computed live, not guessed, so it lines up at any viewport size.
+    // The mark only appears once the terminal lines have fully faded —
+    // sequential, not layered on top of the typing (they occupy the same
+    // centred spot). Its own CSS delays (tile .75s, wordmark 1.15s, dot
+    // 1.75s) run from whichever moment it's unhidden, so shifting that one
+    // setTimeout pushes the whole assembly later without touching the CSS.
+    var LINES_DONE = 2350;
     var mark = document.getElementById('boot-mark');
     var realLogo = document.querySelector('.site-nav .brand-logo');
-    mark.hidden = false;
+    setTimeout(function () { mark.hidden = false; }, LINES_DONE);
+    var MARK_ASSEMBLED = LINES_DONE + 2200; // tile(.75s) + wordmark(1.15s+.8s) + dot(1.75s+.45s), the last to finish
+
+    setTimeout(function () { document.getElementById('boot-rule').classList.add('draw'); }, MARK_ASSEMBLED + 100);
+    setTimeout(function () { document.getElementById('boot-eyebrow').classList.add('in'); }, MARK_ASSEMBLED + 450);
+
+    var WIPE_START = MARK_ASSEMBLED + 1450;
+    setTimeout(function () { document.getElementById('boot-grid').classList.add('fade'); }, WIPE_START - 150);
+    setTimeout(function () { document.getElementById('boot-support').classList.add('fade'); }, WIPE_START - 100);
     setTimeout(function () {
       if (realLogo) {
         var rect = realLogo.getBoundingClientRect();
@@ -1371,11 +1378,11 @@
       }
       band.classList.add('wipe');
       mark.classList.add('travel');
-    }, 3350);
-    setTimeout(function () { mark.classList.add('settled'); }, 4450);
-    setTimeout(function () { mark.classList.add('hide'); }, 4600);
+    }, WIPE_START);
+    setTimeout(function () { mark.classList.add('settled'); }, WIPE_START + 1100);
+    setTimeout(function () { mark.classList.add('hide'); }, WIPE_START + 1250);
 
-    setTimeout(finishSplash, 4700);
+    setTimeout(finishSplash, WIPE_START + 1350);
   }
 
   fetch('/api/v1/content')
