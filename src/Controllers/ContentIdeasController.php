@@ -44,8 +44,11 @@ class ContentIdeasController
 {
     private const PLATFORMS = ['linkedin', 'youtube'];
     private const STATUSES = ['idea', 'used', 'dismissed'];
-    private const MAX_TRACKED_PAGES_IN_PROMPT = 3;
-    private const MAX_POSTS_PER_PAGE_IN_PROMPT = 3;
+    /** Hard structural ceiling: the plan itself is only 30 days, so more real
+     *  posts than that can't each get their own day regardless of how many
+     *  are cached. Not a content filter — the actual per-page volume is
+     *  governed entirely by Radar's "Posts per page" setting. */
+    private const MAX_DAYS = 30;
 
     /** GET /api/v1/admin/content-ideas — the current 30-day list, ordered by day. */
     public static function index(): void
@@ -195,31 +198,44 @@ class ContentIdeasController
         $lines = ["Real business context (do not invent anything beyond this):"];
         $lines[] = json_encode($siteInfo, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
+        // No page-count or per-page-post cap here — every tracked page and
+        // every post Radar actually cached for it is used. The only volume
+        // control is Radar's own "Posts per page" setting
+        // (radar_tracked_pages_posts_per_profile), which governs what gets
+        // INTO the cache in the first place (database/run_radar_tracked_pages.php).
         $tracked = $pdo->query(
-            'SELECT page_url, findings_json FROM radar_tracked_page_findings ORDER BY fetched_at DESC LIMIT '
-            . self::MAX_TRACKED_PAGES_IN_PROMPT
+            'SELECT page_url, findings_json FROM radar_tracked_page_findings ORDER BY fetched_at DESC'
         )->fetchAll();
         $totalRealPosts = 0;
         if ($tracked) {
             $pageLines = [];
+            $remainingDays = self::MAX_DAYS;
             foreach ($tracked as $page) {
+                if ($remainingDays <= 0) {
+                    break;
+                }
                 $posts = json_decode((string) $page['findings_json'], true) ?: [];
-                $posts = array_slice($posts, 0, self::MAX_POSTS_PER_PAGE_IN_PROMPT);
+                // The plan itself is a fixed MAX_DAYS-day calendar, so it
+                // structurally cannot fit more than MAX_DAYS one-idea-per-post
+                // LinkedIn entries — this is the only place volume is trimmed,
+                // and only if the real cache genuinely holds more than that.
+                $posts = array_slice($posts, 0, $remainingDays);
+                $remainingDays -= count($posts);
                 $totalRealPosts += count($posts);
                 $pageLines[] = "Page: {$page['page_url']}\n" . json_encode($posts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             }
             if ($totalRealPosts > 0) {
                 $lines[] = "\nReal recent posts from tracked LinkedIn pages — {$totalRealPosts} distinct real "
                     . "post(s) total. You MUST produce EXACTLY {$totalRealPosts} LinkedIn idea(s) across the whole "
-                    . "30-day plan, one per distinct post below, each grounded: true. Do not produce any other "
-                    . "LinkedIn ideas. Fill the remaining " . (30 - $totalRealPosts) . " day(s) entirely with "
-                    . "YouTube ideas (grounded: false):";
+                    . self::MAX_DAYS . "-day plan, one per distinct post below, each grounded: true. Do not produce "
+                    . "any other LinkedIn ideas. Fill the remaining " . (self::MAX_DAYS - $totalRealPosts)
+                    . " day(s) entirely with YouTube ideas (grounded: false):";
                 $lines = array_merge($lines, $pageLines);
             }
         }
         if ($totalRealPosts === 0) {
-            $lines[] = "\nNo real cached LinkedIn posts are available — produce ZERO LinkedIn ideas. All 30 days "
-                . "must be platform: youtube (grounded: false).";
+            $lines[] = "\nNo real cached LinkedIn posts are available — produce ZERO LinkedIn ideas. All "
+                . self::MAX_DAYS . " days must be platform: youtube (grounded: false).";
         }
 
         return ['text' => implode("\n", $lines), 'realPostCount' => $totalRealPosts];
@@ -236,9 +252,9 @@ class ContentIdeasController
     {
         $stripped = trim((string) preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $reply));
         $parsed = json_decode($stripped, true);
-        if (!is_array($parsed) || count($parsed) !== 30) {
-            error_log('ContentIdeasController: could not parse a 30-item JSON array from model output: '
-                . substr($stripped, 0, 800));
+        if (!is_array($parsed) || count($parsed) !== self::MAX_DAYS) {
+            error_log('ContentIdeasController: could not parse a ' . self::MAX_DAYS . '-item JSON array from '
+                . 'model output: ' . substr($stripped, 0, 800));
             return null;
         }
 
@@ -254,7 +270,7 @@ class ContentIdeasController
             $title = trim((string) ($item['title'] ?? ''));
             $description = trim((string) ($item['description'] ?? ''));
             $grounded = $platform === 'linkedin' && !empty($item['grounded']);
-            if ($day < 1 || $day > 30 || isset($seenDays[$day])
+            if ($day < 1 || $day > self::MAX_DAYS || isset($seenDays[$day])
                 || !in_array($platform, self::PLATFORMS, true)
                 || $title === '' || $description === ''
                 || ($platform === 'linkedin' && !$grounded)
