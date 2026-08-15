@@ -130,6 +130,13 @@ jobs:
           mkdir -p .next/standalone/tmp
           date > .next/standalone/tmp/restart.txt
 
+      # FTP-Deploy-Action's default `exclude` list drops **/node_modules/**
+      # unconditionally — fine for the PHP syncs (Node dependencies never
+      # belong on that server), but standalone Next.js output ships its own
+      # required node_modules/ inside .next/standalone/, and excluding it
+      # is exactly what made server.js unable to `require("next")` in
+      # production. Override the exclude list here to keep node_modules
+      # while still skipping VCS cruft.
       - name: Sync web/.next/standalone/ -> nextjs-web/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -139,3 +146,6 @@ jobs:
           protocol: ftps
           local-dir: web/.next/standalone/
           server-dir: nextjs-web/
+          exclude: |
+            **/.git*
+            **/.git*/**
