@@ -361,7 +361,7 @@ export function ClosingCtaSection() {
           solve it.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button variant="brand" size="pill" nativeButton={false} render={<Link href="/book" />}>
+          <Button variant="brand" size="pill" nativeButton={false} render={<a href="/book.html" />}>
             Book a 20-minute call
           </Button>
           <Button

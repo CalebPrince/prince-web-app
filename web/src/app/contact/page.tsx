@@ -75,7 +75,7 @@ export default function ContactPage() {
             </div>
 
             <p className="mb-3 mt-4 text-sm text-ink-soft">Prefer to talk it through live?</p>
-            <Button variant="brand-outline" size="pill" className="w-full text-center" nativeButton={false} render={<Link href="/book" />}>
+            <Button variant="brand-outline" size="pill" className="w-full text-center" nativeButton={false} render={<a href="/book.html" />}>
               Book a call
             </Button>
           </div>

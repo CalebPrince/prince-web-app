@@ -136,7 +136,7 @@ export function SiteNav() {
           </NavLink>
         </nav>
 
-        <Button variant="brand" size="pill-sm" className="hidden md:inline-flex" nativeButton={false} render={<Link href="/book" />}>
+        <Button variant="brand" size="pill-sm" className="hidden md:inline-flex" nativeButton={false} render={<a href="/book.html" />}>
           Book a call
         </Button>
       </div>
@@ -255,29 +255,47 @@ function MegaCol({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
+// href pointing at a not-yet-migrated PHP page (.html) must be a plain
+// anchor, not next/link's Link — Link prefetches + soft-navigates any
+// same-origin href as if it were an app route, which 404s for a route
+// that only exists as a static PHP file.
 function MegaLink({ href, meta, children }: { href: string; meta?: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-baseline justify-between gap-4 border-b border-line py-[0.55rem] font-medium text-ink-soft transition-[color,padding-left] duration-300 hover:pl-[0.4rem] hover:text-heading"
-    >
+  const className = "flex items-baseline justify-between gap-4 border-b border-line py-[0.55rem] font-medium text-ink-soft transition-[color,padding-left] duration-300 hover:pl-[0.4rem] hover:text-heading";
+  const content = (
+    <>
       <span>{children}</span>
       {meta ? <span className="text-[0.72rem] tabular-nums text-editorial-muted">{meta}</span> : null}
+    </>
+  );
+  return href.endsWith(".html") ? (
+    <a href={href} className={className}>
+      {content}
+    </a>
+  ) : (
+    <Link href={href} className={className}>
+      {content}
     </Link>
   );
 }
 
 function MegaFeatured({ href, title, description, cta }: { href: string; title: string; description: string; cta: string }) {
-  return (
-    <Link
-      href={href}
-      className="group flex flex-col gap-[0.6rem] rounded-[var(--radius)] border border-line bg-bg-soft p-[1.4rem] text-ink-soft transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-line-strong"
-    >
+  const className = "group flex flex-col gap-[0.6rem] rounded-[var(--radius)] border border-line bg-bg-soft p-[1.4rem] text-ink-soft transition-[border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-line-strong";
+  const content = (
+    <>
       <strong className="text-[1.05rem] tracking-[-0.01em] text-heading">{title}</strong>
       <span className="text-[0.88rem] leading-[1.55] line-clamp-3">{description}</span>
       <span className="mt-[0.2rem] inline-flex items-center gap-1 text-[0.85rem] font-semibold text-heading">
         {cta} <ArrowRight className="size-3 transition-transform duration-150 ease-out group-hover:translate-x-1" aria-hidden="true" />
       </span>
+    </>
+  );
+  return href.endsWith(".html") ? (
+    <a href={href} className={className}>
+      {content}
+    </a>
+  ) : (
+    <Link href={href} className={className}>
+      {content}
     </Link>
   );
 }
@@ -357,12 +375,18 @@ function UtilityDock({ showClientLogin }: { showClientLogin: boolean }) {
 }
 
 function IconLink({ href, children, ...props }: React.ComponentProps<typeof Link>) {
+  const className = "inline-flex items-center justify-center rounded-lg border border-line p-[0.4rem_0.6rem] text-ink transition-colors hover:border-editorial-accent hover:text-editorial-accent";
+  // Admin/client login are PHP-only pages — a plain anchor avoids Link's
+  // same-origin prefetch/soft-navigation 404 (see MegaLink above).
+  if (typeof href === "string" && href.endsWith(".html")) {
+    return (
+      <a href={href} {...(props as React.ComponentProps<"a">)} className={className}>
+        {children}
+      </a>
+    );
+  }
   return (
-    <Link
-      href={href}
-      {...props}
-      className="inline-flex items-center justify-center rounded-lg border border-line p-[0.4rem_0.6rem] text-ink transition-colors hover:border-editorial-accent hover:text-editorial-accent"
-    >
+    <Link href={href} {...props} className={className}>
       {children}
     </Link>
   );
@@ -419,14 +443,14 @@ function ServicesPanel() {
         <div className="flex flex-col">
           <MegaLink href="/pricing">Pricing & packages</MegaLink>
           <MegaLink href="/#estimator">Scope your project</MegaLink>
-          <MegaLink href="/book">Book a discovery call</MegaLink>
-          <MegaLink href="/request">Request a project</MegaLink>
+          <MegaLink href="/book.html">Book a discovery call</MegaLink>
+          <MegaLink href="/request.html">Request a project</MegaLink>
         </div>
       </MegaCol>
       <div>
         <p className="mb-[1.1rem] text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">NOT SURE WHERE TO START</p>
         <MegaFeatured
-          href="/book"
+          href="/book.html"
           title="Book a 20-minute discovery call"
           description="Walk through what you're trying to build and get a straight read on scope, cost, and timeline, no obligation."
           cta="Pick a time"

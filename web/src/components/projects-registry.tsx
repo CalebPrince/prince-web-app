@@ -197,7 +197,7 @@ export function ProjectsRegistry() {
             testing.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button variant="brand" size="pill" className="border-bg bg-bg text-heading hover:text-bg" nativeButton={false} render={<Link href="/book" />}>
+            <Button variant="brand" size="pill" className="border-bg bg-bg text-heading hover:text-bg" nativeButton={false} render={<a href="/book.html" />}>
               Review a workflow
             </Button>
             <Button

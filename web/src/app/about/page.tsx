@@ -145,7 +145,7 @@ export default function AboutPage() {
               size="pill"
               className="border-bg bg-bg text-heading hover:text-bg"
               nativeButton={false}
-              render={<Link href="/book" />}
+              render={<a href="/book.html" />}
             >
               Book a discovery call
             </Button>

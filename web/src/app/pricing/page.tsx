@@ -142,7 +142,7 @@ export default function PricingPage() {
                   size="pill"
                   className="w-full text-center"
                   nativeButton={false}
-                  render={<Link href="/request" />}
+                  render={<a href="/request.html" />}
                 >
                   Get a quote
                 </Button>
@@ -169,7 +169,7 @@ export default function PricingPage() {
           <div className="mt-10 text-center">
             <p className="mb-3 text-ink-soft">Not sure which tier fits? Send over the details and I&apos;ll tell you honestly.</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button variant="brand" size="pill" className="group" nativeButton={false} render={<Link href="/request" />}>
+              <Button variant="brand" size="pill" className="group" nativeButton={false} render={<a href="/request.html" />}>
                 Request a project{" "}
                 <span className="inline-block transition-transform duration-150 ease-out group-hover:translate-x-1" aria-hidden="true">
                   →
@@ -225,7 +225,7 @@ export default function PricingPage() {
               size="pill"
               className="border-bg bg-bg text-heading hover:text-bg"
               nativeButton={false}
-              render={<Link href="/book" />}
+              render={<a href="/book.html" />}
             >
               Book a discovery call
             </Button>

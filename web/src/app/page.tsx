@@ -58,7 +58,7 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="brand" size="pill" nativeButton={false} render={<Link href="/book" />}>
+              <Button variant="brand" size="pill" nativeButton={false} render={<a href="/book.html" />}>
                 Book a 20-minute call
               </Button>
               <Button variant="brand-outline" size="pill" nativeButton={false} render={<Link href="/projects" />}>
