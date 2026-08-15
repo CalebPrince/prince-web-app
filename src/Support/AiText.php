@@ -28,10 +28,18 @@ namespace App\Support;
  */
 class AiText
 {
+    /** Generous enough for every current caller's output (a 30-day content
+     * plan, a full single-file HTML concept, a report) while staying well
+     * under the huge default ceilings that broke OpenRouter's affordability
+     * check — it was quoting "up to 64000 tokens" with none passed, which
+     * fails a low-balance account even though the actual reply needs a
+     * fraction of that. */
+    private const DEFAULT_MAX_TOKENS = 8192;
+
     /** @return string|null null only if every configured provider failed, or none is configured */
-    public static function generate(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20): ?string
+    public static function generate(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20, int $maxTokens = self::DEFAULT_MAX_TOKENS): ?string
     {
-        $result = self::generateWithProvider($prompt, $systemInstruction, $timeoutSeconds);
+        $result = self::generateWithProvider($prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
         return $result['text'] ?? null;
     }
 
@@ -42,7 +50,7 @@ class AiText
      *
      * @return array{text:string,provider:string}|null
      */
-    public static function generateWithProvider(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20): ?array
+    public static function generateWithProvider(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20, int $maxTokens = self::DEFAULT_MAX_TOKENS): ?array
     {
         // Tried first as a cost-cutting move — DeepSeek is a cheap,
         // paid-from-first-token API, so resolving here means most calls
@@ -51,7 +59,7 @@ class AiText
         // other leg in this chain.
         $deepseekKey = Settings::get('deepseek_api_key');
         if (!empty($deepseekKey)) {
-            $text = self::callDeepSeek($deepseekKey, $prompt, $systemInstruction, $timeoutSeconds);
+            $text = self::callDeepSeek($deepseekKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
             if ($text !== null) {
                 return ['text' => $text, 'provider' => 'deepseek'];
             }
@@ -59,7 +67,7 @@ class AiText
 
         $geminiKey = Settings::get('gemini_api_key');
         if (!empty($geminiKey)) {
-            $text = self::callGemini($geminiKey, $prompt, $systemInstruction, $timeoutSeconds);
+            $text = self::callGemini($geminiKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
             if ($text !== null) {
                 return ['text' => $text, 'provider' => 'gemini'];
             }
@@ -67,7 +75,7 @@ class AiText
 
         $openRouterKey = Settings::get('openrouter_api_key');
         if (!empty($openRouterKey)) {
-            $text = self::callOpenRouter($openRouterKey, $prompt, $systemInstruction, $timeoutSeconds);
+            $text = self::callOpenRouter($openRouterKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
             if ($text !== null) {
                 // OpenRouter routes to many underlying model providers behind
                 // one API — reporting the actual configured model (rather
@@ -81,7 +89,7 @@ class AiText
 
         $groqKey = Settings::get('groq_api_key');
         if (!empty($groqKey)) {
-            $text = self::callGroq($groqKey, $prompt, $systemInstruction, $timeoutSeconds);
+            $text = self::callGroq($groqKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
             if ($text !== null) {
                 return ['text' => $text, 'provider' => 'groq'];
             }
@@ -90,7 +98,7 @@ class AiText
         return null;
     }
 
-    private static function callDeepSeek(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
+    private static function callDeepSeek(string $apiKey, string $prompt, ?string $system, int $timeout, int $maxTokens): ?string
     {
         if (!function_exists('curl_init')) {
             return null;
@@ -112,7 +120,7 @@ class AiText
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apiKey,
             ],
-            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages]),
+            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $maxTokens]),
             CURLOPT_TIMEOUT => $timeout,
         ]);
         $response = curl_exec($ch);
@@ -140,13 +148,16 @@ class AiText
         return $text;
     }
 
-    private static function callGemini(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
+    private static function callGemini(string $apiKey, string $prompt, ?string $system, int $timeout, int $maxTokens): ?string
     {
         if (!function_exists('curl_init')) {
             return null;
         }
 
-        $payload = ['contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]]];
+        $payload = [
+            'contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]],
+            'generationConfig' => ['maxOutputTokens' => $maxTokens],
+        ];
         if ($system !== null) {
             $payload['system_instruction'] = ['parts' => [['text' => $system]]];
         }
@@ -188,7 +199,7 @@ class AiText
         return $text;
     }
 
-    private static function callOpenRouter(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
+    private static function callOpenRouter(string $apiKey, string $prompt, ?string $system, int $timeout, int $maxTokens): ?string
     {
         if (!function_exists('curl_init')) {
             return null;
@@ -213,7 +224,7 @@ class AiText
                 'HTTP-Referer: https://princecaleb.dev',
                 'X-Title: Prince Caleb Portfolio',
             ],
-            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages]),
+            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $maxTokens]),
             CURLOPT_TIMEOUT => $timeout,
         ]);
         $response = curl_exec($ch);
@@ -241,7 +252,7 @@ class AiText
         return $text;
     }
 
-    private static function callGroq(string $apiKey, string $prompt, ?string $system, int $timeout): ?string
+    private static function callGroq(string $apiKey, string $prompt, ?string $system, int $timeout, int $maxTokens): ?string
     {
         if (!function_exists('curl_init')) {
             return null;
@@ -263,7 +274,7 @@ class AiText
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apiKey,
             ],
-            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages]),
+            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $maxTokens]),
             CURLOPT_TIMEOUT => $timeout,
         ]);
         $response = curl_exec($ch);
