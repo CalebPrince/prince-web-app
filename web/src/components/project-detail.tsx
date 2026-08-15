@@ -214,45 +214,35 @@ export function ProjectDetail({ slug }: { slug: string }) {
                   The operating surfaces.
                 </h2>
               </header>
+              {/* Same case-browser-mockup chrome as the homepage's case studies, so a
+                  project's screenshots read the same way everywhere they appear. */}
               <div className="grid grid-cols-2 items-start gap-4 max-sm:grid-cols-1">
                 {images.map((image, index) => (
                   <figure
                     key={index}
-                    className="group m-0 overflow-hidden rounded-xl border border-[var(--line-strong)] bg-[var(--bg)] shadow-[0_24px_55px_rgba(0,0,0,0.28)] transition-[transform,border-color,box-shadow] duration-[450ms] hover:-translate-y-[5px] hover:border-[var(--line-strong)]"
+                    className="group m-0 overflow-hidden rounded-[var(--radius)] border border-line bg-card shadow-lg transition-transform duration-300 hover:-translate-y-1"
                   >
-                    <div
-                      className="grid min-h-[34px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--line)] px-[0.65rem] py-[0.42rem]"
-                      style={{ background: "linear-gradient(180deg,#122219 0%,#0b1710 100%)" }}
-                      aria-hidden="true"
-                    >
-                      <span className="flex gap-[0.35rem]">
-                        <i className="size-[7px] rounded-full bg-[#ff6b5f]" />
-                        <i className="size-[7px] rounded-full bg-[#e8bd54]" />
-                        <i className="size-[7px] rounded-full bg-[#43d17a]" />
+                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-line bg-bg-soft/90 px-[0.8rem] py-[0.65rem]" aria-hidden="true">
+                      <span className="flex gap-[0.32rem]">
+                        <i className="size-[0.48rem] rounded-full bg-[#ff6258]" />
+                        <i className="size-[0.48rem] rounded-full bg-[#f4bd3f]" />
+                        <i className="size-[0.48rem] rounded-full bg-[#2dcf66]" />
                       </span>
-                      <span className="overflow-hidden text-ellipsis whitespace-nowrap rounded-[5px] border border-[var(--line)] bg-[var(--bg-soft)] px-[0.6rem] py-[0.22rem] font-mono text-[0.58rem] font-semibold tracking-[0.025em] text-[var(--editorial-muted)]">
-                        secure://{p.slug}/surface-{String(index + 1).padStart(2, "0")}
+                      <span className="overflow-hidden text-ellipsis whitespace-nowrap rounded-full border border-line px-[0.7rem] py-[0.38rem] text-center font-mono text-[0.62rem] font-semibold text-editorial-muted">
+                        princecaleb.dev/systems/{p.slug}/{String(index + 1).padStart(2, "0")}
                       </span>
-                      <span className="flex items-center gap-[0.35rem] font-mono text-[0.55rem] font-bold tracking-[0.08em] text-[var(--editorial-accent)]">
-                        <i className="size-[6px] rounded-full bg-[#43e781] shadow-[0_0_9px_rgba(67,231,129,0.8)]" />
-                        LIVE
+                      <span className="inline-flex items-center gap-[0.35rem] font-mono text-[0.6rem] font-bold uppercase tracking-[0.04em] text-[#188452]">
+                        <i className="size-[0.42rem] rounded-full bg-[#29d978] shadow-[0_0_9px_rgba(41,217,120,0.55)]" /> Live
                       </span>
                     </div>
-                    <div
-                      className="relative overflow-hidden p-[clamp(0.3rem,0.7vw,0.55rem)]"
-                      style={{
-                        background:
-                          "linear-gradient(rgba(98,255,152,.025) 1px,transparent 1px), linear-gradient(90deg,rgba(98,255,152,.025) 1px,transparent 1px), var(--bg)",
-                        backgroundSize: "20px 20px",
-                      }}
-                    >
+                    <div className="grid min-h-[13rem] place-items-center bg-gradient-to-br from-bg-soft/90 to-card p-[0.65rem] md:min-h-[16rem]">
                       <Image
                         src={image}
                         alt={`${p.title} interface ${index + 1}`}
                         width={800}
                         height={500}
                         unoptimized
-                        className="block h-auto w-full rounded border border-white/[0.07] transition-[filter] duration-300 ease-linear group-hover:brightness-[1.035]"
+                        className="h-auto max-h-96 w-full rounded-[0.35rem] border border-line object-contain transition-[filter] duration-300 ease-linear group-hover:brightness-[1.035]"
                       />
                     </div>
                   </figure>
