@@ -186,7 +186,6 @@ class ScoutController
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(

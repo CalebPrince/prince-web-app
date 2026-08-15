@@ -69,7 +69,6 @@ class EmailEnrichment
         $response = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(
@@ -138,7 +137,6 @@ class EmailEnrichment
         $response = curl_exec($ch);
         $httpStatus = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         // 202 means Hunter couldn't finish the SMTP check in its own 20s
         // window — the docs say polling again only ever counts once, so one
@@ -150,7 +148,6 @@ class EmailEnrichment
             $response = curl_exec($ch);
             $httpStatus = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $curlError = curl_error($ch);
-            curl_close($ch);
         }
 
         if ($response === false || $httpStatus !== 200) {

@@ -171,7 +171,6 @@ class ReelController
         $html = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         if ($html === false || $status === 0) {
             error_log(sprintf('Reel: browse_url fetch failed: url=%s curl_error=%s', $url, $curlError ?: 'none'));

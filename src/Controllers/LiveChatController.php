@@ -1026,7 +1026,6 @@ class LiveChatController
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         Response::json([
             'key_loaded' => true,
@@ -1881,14 +1880,12 @@ class LiveChatController
                 ]);
                 curl_exec($probe);
                 $sslOk = curl_errno($probe) === 0 ? false : null;
-                curl_close($probe);
 
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
                 $raw = curl_exec($ch);
             }
             if ($raw === false) {
-                curl_close($ch);
                 return ['error' => 'The site could not be reached (timeout, DNS failure, or connection refused).'];
             }
         }
@@ -1898,7 +1895,6 @@ class LiveChatController
         $ttfb = round((float) curl_getinfo($ch, CURLINFO_STARTTRANSFER_TIME), 2);
         $finalUrl = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
 
         $headers = strtolower(substr($raw, 0, $headerSize));
         $html = substr($raw, $headerSize);

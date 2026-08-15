@@ -168,7 +168,6 @@ class AuthController
             ]);
             $response = @curl_exec($ch);
             $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
             return ($response !== false && $status === 200) ? (string) $response : null;
         }
 

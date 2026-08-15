@@ -159,7 +159,6 @@ class AiImage
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         if ($response === false || $status !== 200) {
             error_log(sprintf(

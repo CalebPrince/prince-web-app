@@ -916,7 +916,6 @@ class MarketingLeadController
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $finalUrl = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $curlError = curl_error($ch);
-        curl_close($ch);
         $elapsedMs = (int) round((microtime(true) - $start) * 1000);
 
         if ($html === false || $status === 0) {

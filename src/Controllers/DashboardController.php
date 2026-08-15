@@ -54,7 +54,6 @@ class DashboardController
                 ]);
                 $body = curl_exec($curl);
                 $status = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                curl_close($curl);
                 return [$status, is_string($body) ? json_decode($body, true) : null];
             };
 

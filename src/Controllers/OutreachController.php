@@ -594,7 +594,6 @@ class OutreachController
         $raw = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         $eleven = is_string($raw) ? json_decode($raw, true) : null;
         $conversationId = is_array($eleven) ? (string) ($eleven['conversation_id'] ?? '') : '';
