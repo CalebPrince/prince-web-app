@@ -103,6 +103,7 @@ class SiteInspector
             'gtag('                => ['Google Analytics', 'Analytics', 'a gtag() analytics call'],
             'connect.facebook.net' => ['Meta Pixel', 'Analytics', 'a Meta/Facebook Pixel script'],
             'hotjar'               => ['Hotjar', 'Analytics', 'a Hotjar tracking script'],
+            '/js/analytics.js'     => ['First-party analytics', 'Analytics', 'the site\'s own /js/analytics.js beacon script'],
             'hubspot'              => ['HubSpot', 'Marketing', 'a HubSpot script'],
             'mailchimp'            => ['Mailchimp', 'Marketing', 'a Mailchimp embed'],
             'elementor'            => ['Elementor', 'CMS', 'the Elementor page builder (WordPress)'],
