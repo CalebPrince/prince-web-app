@@ -30,6 +30,15 @@
   --text-primary: var(--heading-color);
   --text-secondary: var(--muted);
   --border-color: var(--line);
+  --status-warn-bg: #fef3c7;
+  --status-warn-border: #f59e0b;
+  --status-warn-text: #92400e;
+  --status-ok-bg: #dcfce7;
+  --status-ok-border: #22c55e;
+  --status-ok-text: #166534;
+  --status-danger-bg: #fee2e2;
+  --status-danger-border: #ef4444;
+  --status-danger-text: #991b1b;
 }
 
 [data-theme="dark"] {
@@ -60,6 +69,15 @@
   --bs-tertiary-color-rgb: 157, 163, 173;
   --bs-heading-color: var(--heading-color);
   --bs-border-color: var(--line);
+  --status-warn-bg: #3f2d0a;
+  --status-warn-border: #b8860b;
+  --status-warn-text: #fcd34d;
+  --status-ok-bg: #103820;
+  --status-ok-border: #22c55e;
+  --status-ok-text: #86efac;
+  --status-danger-bg: #3f1414;
+  --status-danger-border: #ef4444;
+  --status-danger-text: #fca5a5;
 }
 /* Midnight — a cooler, deep navy-black alternative to Dark. */
 [data-theme="midnight"] {
@@ -88,6 +106,15 @@
   --bs-tertiary-color-rgb: 145, 162, 197;
   --bs-heading-color: var(--heading-color);
   --bs-border-color: var(--line);
+  --status-warn-bg: #2a2410;
+  --status-warn-border: #b8860b;
+  --status-warn-text: #fcd34d;
+  --status-ok-bg: #0d2a1a;
+  --status-ok-border: #22c55e;
+  --status-ok-text: #86efac;
+  --status-danger-bg: #2a1414;
+  --status-danger-border: #ef4444;
+  --status-danger-text: #fca5a5;
 }
 /* Paper — a warm cream alternative to Light. */
 [data-theme="paper"] {
@@ -106,6 +133,15 @@
   --accent-soft: rgba(17, 107, 59, 0.09);
   --shadow: 0 2px 16px rgba(60, 50, 30, 0.08);
   --shadow-lg: 0 16px 40px rgba(60, 50, 30, 0.14);
+  --status-warn-bg: #fbf0d9;
+  --status-warn-border: #b8860b;
+  --status-warn-text: #7a4e04;
+  --status-ok-bg: #dcf0dd;
+  --status-ok-border: #2f9e52;
+  --status-ok-text: #185c30;
+  --status-danger-bg: #f7ddd8;
+  --status-danger-border: #c0392b;
+  --status-danger-text: #7a271d;
 }
 [data-theme="dark"] body,
 [data-theme="midnight"] body { color-scheme: dark; }
@@ -1180,23 +1216,23 @@ pre code.hljs {
 .status-pill.published { border-color: var(--line-strong); }
 .status-pill.unread,
 .status-pill.pending {
-  background: #fef3c7;
-  border-color: #f59e0b;
-  color: #92400e;
+  background: var(--status-warn-bg);
+  border-color: var(--status-warn-border);
+  color: var(--status-warn-text);
 }
 .status-pill.published,
 .status-pill.paid,
 .status-pill.success {
-  background: #dcfce7;
-  border-color: #22c55e;
-  color: #166534;
+  background: var(--status-ok-bg);
+  border-color: var(--status-ok-border);
+  color: var(--status-ok-text);
 }
 .status-pill.void,
 .status-pill.failed,
 .status-pill.danger {
-  background: #fee2e2;
-  border-color: #ef4444;
-  color: #991b1b;
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+  color: var(--status-danger-text);
 }
 
 /* Tech stack badges — monospace editorial chips */

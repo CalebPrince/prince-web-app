@@ -1,0 +1,137 @@
+// Typed fetch client for the PHP backend's public /api/v1/* surface.
+// Confirmed none of these routes require cookies/auth, so this is a plain
+// stateless wrapper — no credentials, no refresh logic (that's admin-only
+// in the PHP site's own public/js/api.js, which this does not need).
+
+export type Tag = { id: number; name: string; slug: string };
+
+export type Project = {
+  id: number;
+  slug: string;
+  title: string;
+  summary: string;
+  is_featured: boolean;
+  tags: Tag[];
+  category?: string;
+  outcome_metrics?: string;
+  is_embeddable?: boolean;
+  live_url?: string;
+  repo_url?: string;
+  cover_image_path?: string;
+  gallery?: string[];
+  case_study_body?: string;
+  testimonial?: { quote: string; client_name: string; rating?: number } | null;
+  [key: string]: unknown;
+};
+
+export type BlogPost = {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string;
+  reading_time?: number;
+  published_at?: string;
+  created_at?: string;
+  updated_at?: string;
+  category?: string;
+  body?: string;
+  [key: string]: unknown;
+};
+
+export type SiteContent = Record<string, string> & { default_theme?: string };
+
+export type Testimonial = {
+  id: number;
+  quote: string;
+  client_name: string;
+  rating?: number;
+  project_slug?: string;
+  project_title?: string;
+  project_reference?: string;
+  outcome_metrics?: string;
+};
+
+export type SearchResult = {
+  type: "project" | "blog";
+  url: string;
+  image: string;
+  title: string;
+  snippet: string;
+};
+
+export type PaymentConfig = {
+  public_key?: string;
+  currency?: string;
+  tier_1_amount?: number;
+};
+
+export type PaymentPrepared = {
+  reference: string;
+  email: string;
+  amount: number;
+  currency: string;
+};
+
+export type PaymentVerified = { status: string };
+
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(path, { headers: { Accept: "application/json" } });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
+  }
+  return res.json() as Promise<T>;
+}
+
+export async function postJson<T>(path: string, data: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  projects: (tag?: string) => get<Project[]>(`/api/v1/projects${tag ? `?tag=${encodeURIComponent(tag)}` : ""}`),
+  project: (slug: string) => get<Project>(`/api/v1/projects/${encodeURIComponent(slug)}`),
+  blog: () => get<BlogPost[]>("/api/v1/blog"),
+  blogPost: (slug: string) => get<BlogPost>(`/api/v1/blog/${encodeURIComponent(slug)}`),
+  content: () => get<SiteContent>("/api/v1/content"),
+  testimonials: () => get<Testimonial[]>("/api/v1/testimonials"),
+  search: (q: string) => get<{ results: SearchResult[] }>(`/api/v1/search?q=${encodeURIComponent(q)}`),
+  tags: () => get<Tag[]>("/api/v1/tags"),
+  submitInquiry: (data: {
+    name: string;
+    email: string;
+    message: string;
+    website: string;
+    source_project_id: number | null;
+    attribution: Record<string, unknown>;
+  }) => postJson<{ id: number }>("/api/v1/inquiries", data),
+  paymentConfig: () => get<PaymentConfig>("/api/v1/payments/config"),
+  preparePayment: (data: { tier: string; name: string; email: string; tos_accepted: true }) =>
+    postJson<PaymentPrepared>("/api/v1/payments/prepare", data),
+  verifyPayment: (reference: string) => postJson<PaymentVerified>("/api/v1/payments/verify", { reference }),
+  subscribeNewsletter: (data: { email: string; website: string; attribution: Record<string, unknown> }) =>
+    postJson<{ id: number }>("/api/v1/newsletter/subscribe", data),
+};
+
+/** Same classifier as the PHP site's window.navPlatformOf (nav-dropdowns.js),
+ * kept as one shared util instead of being duplicated per-component. */
+export function platformOf(p: Project): "ecommerce" | "mobile" | "webapp" {
+  const hay = (
+    (p.tags ?? []).map((t) => t.name).join(" ") +
+    " " +
+    (p.title ?? "") +
+    " " +
+    (p.summary ?? "")
+  ).toLowerCase();
+  if (/e-?commerce|storefront|shopfront|\bshop\b|\bstore\b|paystack|woocommerce|checkout/.test(hay)) return "ecommerce";
+  if (/mobile|android|\bios\b|react native|flutter/.test(hay)) return "mobile";
+  return "webapp";
+}

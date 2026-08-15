@@ -22,6 +22,13 @@ jobs:
           php-version: '8.1' # matches the minimum version the app targets
       - name: php -l all PHP files
         run: find src config database public -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install partial-sync tooling
+        run: npm ci
+      - name: Check partials/*.html haven't drifted from committed pages
+        run: npm run sync:partials:check
 
   deploy:
     runs-on: ubuntu-latest
@@ -29,6 +36,17 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+
+      # Tailwind is a CI-only build dependency — the cPanel host never runs
+      # Node. This compiles public/css/tailwind.build.css fresh on every
+      # deploy; the file is gitignored and never committed. See README.md.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Tailwind CLI
+        run: npm ci
+      - name: Build Tailwind CSS
+        run: npm run build
 
       # The FTP account must be rooted at the cPanel home directory so both
       # the web root and the above-webroot app folders are reachable.
@@ -71,3 +89,59 @@ jobs:
           protocol: ftps
           local-dir: database/
           server-dir: database/
+
+      # web/ (Next.js + shadcn) — cPanel's Node.js Selector (Phusion
+      # Passenger) runs this as its own app, separate from the PHP site,
+      # at nextjs-web/ alongside public_html/ (never inside the public
+      # webroot). `output: "standalone"` (next.config.ts) produces a
+      # minimal self-contained server (own server.js + only the
+      # node_modules actually used at runtime, ~20MB vs 550MB+ for the
+      # full dev+prod node_modules) — dramatically smaller than syncing
+      # node_modules directly over FTP, which is slow and timeout-prone at
+      # that size. public/ and .next/static/ aren't included in the
+      # standalone output automatically (Next.js's own documented
+      # behavior), so they're copied in before the sync. Built here in CI,
+      # not on the server: cPanel Node apps don't run `npm install`/
+      # `next build` on push, they just run server.js against whatever's
+      # already in the app root.
+      - name: Install web/ dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Build web/ (Next.js standalone)
+        working-directory: web
+        run: npm run build
+
+      - name: Assemble standalone deploy bundle
+        working-directory: web
+        run: |
+          cp -r public .next/standalone/public
+          cp -r .next/static .next/standalone/.next/static
+
+      - name: Sync web/.next/standalone/ -> nextjs-web/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: web/.next/standalone/
+          server-dir: nextjs-web/
+
+      # Passenger restarts an app when the mtime of tmp/restart.txt inside
+      # its app root changes — this is the standard (and only) documented
+      # way to pick up a new deploy without an SSH session. An FTP upload's
+      # mtime is enough to trigger it; content is just a deploy marker.
+      - name: Touch nextjs-web/tmp/restart.txt to trigger Passenger restart
+        run: |
+          mkdir -p /tmp/restart-marker/tmp
+          date > /tmp/restart-marker/tmp/restart.txt
+        shell: bash
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: /tmp/restart-marker/
+          server-dir: nextjs-web/

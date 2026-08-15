@@ -28,3 +28,12 @@ videos/**/node_modules/
 videos/**/.capture-profile/
 videos/**/renders/
 videos/**/reference/yt-dlp.exe
+
+# Tailwind build pipeline — CI-only, compiled fresh on every deploy (see
+# README.md Setup). Never commit the compiled output.
+/node_modules/
+/public/css/tailwind.build.css
+
+# Playwright MCP tool's own session logs/page snapshots — scratch output
+# from browser automation, not project content.
+/.playwright-mcp/

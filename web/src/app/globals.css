@@ -1,0 +1,368 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* 4-theme system (Light/Dark/Midnight/Paper), attribute-driven — matches the
+   existing PHP site's convention exactly (see public/css/app.css, the
+   source of truth these blocks are ported from). Not Tailwind's binary
+   dark: strategy; midnight/paper have no light/dark equivalent. */
+@custom-variant theme-dark (&:where([data-theme="dark"], [data-theme="midnight"]) *);
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  /* Direct access to the full editorial token set, not just the shadcn
+     subset above — needed for faithfully porting the original site's exact
+     CSS (nav, buttons, mega-panels, etc.) as Tailwind utility classes
+     rather than raw var() arbitrary values everywhere. */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-heading: var(--heading-color);
+  --color-editorial-muted: var(--editorial-muted);
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-card-bg: var(--card-bg);
+  --color-navy: var(--navy);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-editorial-accent: var(--editorial-accent);
+  --color-editorial-accent-strong: var(--editorial-accent-strong);
+  --color-editorial-accent-soft: var(--editorial-accent-soft);
+  --color-status-warn-bg: var(--status-warn-bg);
+  --color-status-warn-border: var(--status-warn-border);
+  --color-status-warn-text: var(--status-warn-text);
+  --color-status-ok-bg: var(--status-ok-bg);
+  --color-status-ok-border: var(--status-ok-border);
+  --color-status-ok-text: var(--status-ok-text);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-border: var(--status-danger-border);
+  --color-status-danger-text: var(--status-danger-text);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ---- Editorial design system — source of truth, ported verbatim from
+   public/css/app.css. Two names are prefixed `editorial-` (muted, accent
+   and its variants) because they'd otherwise collide with shadcn's own
+   --muted/--accent vocabulary below: a same-scope custom property
+   resolves once per cascade, so a literal same-name copy wouldn't just be
+   confusing, it would silently make every var(--accent) reference resolve
+   to shadcn's redefinition instead of the brand green. Everything else
+   (ink, bg, line, radius, shadow, ease, status-*) has no such collision
+   and keeps app.css's exact names. */
+:root {
+  --ink: #17181c;
+  --heading-color: #0a0b0d;
+  --ink-soft: #41454d;
+  --editorial-muted: #6e737c;
+  --bg: #fbfbfa;
+  --bg-soft: #f3f3f1;
+  --card-bg: #ffffff;
+  --line: rgba(10, 11, 13, 0.09);
+  --line-strong: rgba(10, 11, 13, 0.28);
+  --editorial-accent: #08783c;
+  --editorial-accent-strong: #055d2f;
+  --editorial-accent-soft: rgba(8, 120, 60, 0.09);
+  --on-accent: #ffffff;
+  --navy: #0b0c0e;
+  --navy-soft: #121418;
+  --radius: 12px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --shadow: 0 2px 16px rgba(10, 11, 13, 0.05);
+  --shadow-lg: 0 16px 40px rgba(10, 11, 13, 0.1);
+  --status-warn-bg: #fef3c7;
+  --status-warn-border: #f59e0b;
+  --status-warn-text: #92400e;
+  --status-ok-bg: #dcfce7;
+  --status-ok-border: #22c55e;
+  --status-ok-text: #166534;
+  --status-danger-bg: #fee2e2;
+  --status-danger-border: #ef4444;
+  --status-danger-text: #991b1b;
+}
+
+[data-theme="dark"] {
+  --ink: #f1f3f5;
+  --heading-color: #ffffff;
+  --ink-soft: #d7dbe0;
+  --editorial-muted: #b5bac3;
+  --bg: #0b0c0e;
+  --bg-soft: #101114;
+  --card-bg: #121418;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.26);
+  --editorial-accent: #62ff98;
+  --editorial-accent-strong: #8dffb4;
+  --editorial-accent-soft: rgba(98, 255, 152, 0.1);
+  --on-accent: #04140a;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --status-warn-bg: #3f2d0a;
+  --status-warn-border: #b8860b;
+  --status-warn-text: #fcd34d;
+  --status-ok-bg: #103820;
+  --status-ok-border: #22c55e;
+  --status-ok-text: #86efac;
+  --status-danger-bg: #3f1414;
+  --status-danger-border: #ef4444;
+  --status-danger-text: #fca5a5;
+}
+
+[data-theme="midnight"] {
+  --ink: #dce6ff;
+  --heading-color: #ffffff;
+  --ink-soft: #9fb0d1;
+  --editorial-muted: #7686a8;
+  --bg: #060a14;
+  --bg-soft: #0a0f1c;
+  --card-bg: #0d1526;
+  --line: rgba(150, 180, 255, 0.12);
+  --line-strong: rgba(150, 180, 255, 0.3);
+  --editorial-accent: #62ff98;
+  --editorial-accent-strong: #8dffb4;
+  --editorial-accent-soft: rgba(98, 255, 152, 0.1);
+  --on-accent: #04140a;
+  --shadow: 0 2px 16px rgba(0, 0, 10, 0.5);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 10, 0.6);
+  --status-warn-bg: #3f2d0a;
+  --status-warn-border: #b8860b;
+  --status-warn-text: #fcd34d;
+  --status-ok-bg: #103820;
+  --status-ok-border: #22c55e;
+  --status-ok-text: #86efac;
+  --status-danger-bg: #3f1414;
+  --status-danger-border: #ef4444;
+  --status-danger-text: #fca5a5;
+}
+
+[data-theme="paper"] {
+  --ink: #2b2620;
+  --heading-color: #1a1611;
+  --ink-soft: #6b6153;
+  --editorial-muted: #8c8271;
+  --bg: #f5efe0;
+  --bg-soft: #efe6d3;
+  --card-bg: #fffcf5;
+  --line: rgba(43, 38, 32, 0.12);
+  --line-strong: rgba(43, 38, 32, 0.3);
+  --editorial-accent: #116b3b;
+  --editorial-accent-strong: #0a512c;
+  --editorial-accent-soft: rgba(17, 107, 59, 0.09);
+  --on-accent: #ffffff;
+  --shadow: 0 2px 16px rgba(60, 50, 30, 0.08);
+  --shadow-lg: 0 16px 40px rgba(60, 50, 30, 0.14);
+  --status-warn-bg: #fbf0d9;
+  --status-warn-border: #b8860b;
+  --status-warn-text: #7a4e04;
+  --status-ok-bg: #dcf0dd;
+  --status-ok-border: #2f9e52;
+  --status-ok-text: #185c30;
+  --status-danger-bg: #f7ddd8;
+  --status-danger-border: #c0392b;
+  --status-danger-text: #7a271d;
+}
+
+/* ---- shadcn semantic bridge — defined once; each var resolves against
+   whichever [data-theme] block is active on the ancestor, so it doesn't
+   need repeating per theme. */
+:root {
+  --background: var(--bg);
+  /* app.css sets body { color: var(--ink-soft) } specifically, reserving
+     the stronger --ink/--heading-color for headings (see @layer base
+     below) — not a naive var(--ink) copy. */
+  --foreground: var(--ink-soft);
+  --card: var(--card-bg);
+  --card-foreground: var(--ink);
+  --popover: var(--card-bg);
+  --popover-foreground: var(--ink);
+  --primary: var(--editorial-accent);
+  --primary-foreground: var(--on-accent);
+  --secondary: var(--bg-soft);
+  --secondary-foreground: var(--ink);
+  --muted: var(--bg-soft);
+  --muted-foreground: var(--editorial-muted);
+  --accent: var(--editorial-accent-soft);
+  --accent-foreground: var(--ink);
+  --destructive: var(--status-danger-border);
+  --destructive-foreground: var(--status-danger-text);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--editorial-accent);
+  /* shadcn's chart/sidebar tokens aren't used by this site's design yet;
+     leave them at their generated neutral defaults until a component
+     actually needs them. */
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: var(--card-bg);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--editorial-accent);
+  --sidebar-primary-foreground: var(--on-accent);
+  --sidebar-accent: var(--editorial-accent-soft);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--editorial-accent);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    letter-spacing: 0;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: inherit;
+    color: var(--heading-color);
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+}
+
+/* ---- Nav: the handful of rules that don't translate cleanly to utility
+   classes (CSS counters, multi-part pseudo-element transforms) — ported
+   verbatim from public/css/app.css's .nav-drawer / .nav-toggle rules.
+   Everything else about the nav is plain Tailwind utilities. */
+.nav-drawer-links {
+  counter-reset: nav-index;
+}
+.nav-drawer-link {
+  counter-increment: nav-index;
+}
+.nav-drawer-link::before {
+  content: counter(nav-index, decimal-leading-zero);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--line-strong);
+  transition: color 0.2s ease;
+}
+
+.nav-toggle-line {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.4s var(--ease-out), opacity 0.25s var(--ease-out);
+}
+.nav-toggle:not(.is-open) .nav-toggle-line:nth-child(2) {
+  transform-origin: left center;
+  transform: scaleX(0.7);
+  transition-delay: 0.04s;
+}
+.nav-toggle:not(.is-open) .nav-toggle-line:nth-child(3) {
+  transform-origin: left center;
+  transform: scaleX(0.4);
+  transition-delay: 0.08s;
+}
+.nav-toggle:hover:not(.is-open) .nav-toggle-line:nth-child(2),
+.nav-toggle:focus-visible:not(.is-open) .nav-toggle-line:nth-child(2),
+.nav-toggle:hover:not(.is-open) .nav-toggle-line:nth-child(3),
+.nav-toggle:focus-visible:not(.is-open) .nav-toggle-line:nth-child(3) {
+  transform: scaleX(1);
+}
+.nav-toggle.is-open .nav-toggle-line:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-toggle.is-open .nav-toggle-line:nth-child(2) { opacity: 0; }
+.nav-toggle.is-open .nav-toggle-line:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+.drawer-close::before,
+.drawer-close::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 13px;
+  height: 1.5px;
+  background: var(--ink);
+}
+.drawer-close::before { transform: translate(-50%, -50%) rotate(45deg); }
+.drawer-close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-toggle-line,
+  .nav-drawer-link,
+  .drawer-stagger { transition: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* Hero ambient glow drift — ported from app.css's .hero-glow::before/::after
+   keyframes (11s ease-in-out infinite alternate). */
+@keyframes hero-glow-drift {
+  to { transform: translate3d(9%, 9%, 0) scale(1.18); }
+}
+
+/* Theme picker popover open transition — the original's .theme-menu has no
+   transition at all (a hard display:none/flex toggle), but it sits directly
+   beside the utility-dock tray, which does fade in (opacity/transform,
+   0.18s ease) — matching that timing here so the two adjacent popovers feel
+   consistent, a deliberate small enhancement rather than a strict port. */
+@keyframes theme-menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Powered-by logo strip — ported verbatim from app.css's .powered-by-item
+   filter rules. Plain CSS (not Tailwind utilities): this project's Turbopack
+   dev server has repeatedly failed to pick up newly-added arbitrary-value
+   utility classes and custom variants until multiple restarts, so a
+   compound per-theme filter like this is more reliably expressed as a
+   hand-written rule than chased through the JIT scanner. */
+.powered-by-logo {
+  filter: grayscale(1) brightness(0.35);
+}
+[data-theme="dark"] .powered-by-logo,
+[data-theme="midnight"] .powered-by-logo {
+  filter: invert(1) grayscale(1) brightness(1.4);
+}
+
+/* Search popup — ported from app.css's .site-search-panel/.site-search-result. */
+@keyframes search-panel-pop {
+  0% { opacity: 0; transform: translateY(18px) scale(0.96); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes search-result-in {
+  to { opacity: 1; transform: translateY(0); }
+}

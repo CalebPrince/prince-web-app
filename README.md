@@ -460,8 +460,17 @@ discovery. Arch's design upgrade itself requires no migration.
 
 ## Setup
 
-Requires PHP 8.1+ with the `pdo_sqlite` extension. No Composer, no Node, no
-build step.
+Requires PHP 8.1+ with the `pdo_sqlite` extension. No Composer, and the PHP
+app itself needs no build step. `package.json` at the repo root builds the
+Tailwind CSS layer for the still-static `public/*.html` pages (`npm run
+build` → `public/css/tailwind.build.css`, gitignored) — Node is CI-only
+for that piece, the production host never runs it for the PHP app.
+
+Node *does* run in production for `web/` (the Next.js + shadcn rebuild —
+see "Next.js migration" below), via cPanel's Node.js Selector (Phusion
+Passenger), as a separate app alongside the PHP one. The two areas of this
+repo have different Node relationships: `public/`'s Tailwind build is
+CI-only tooling; `web/` is a real, always-running Node app.
 
 ```bash
 # 1. Apply the schema (safe to re-run any time schema.sql changes)
@@ -491,6 +500,38 @@ php -S localhost:8010 -t public public/index.php
 
 Visit `http://localhost:8010` for the public site and
 `http://localhost:8010/admin/login.html` for the admin panel.
+
+## Next.js migration (`web/`)
+
+The public marketing pages are being rebuilt in `web/` — Next.js (App
+Router) + Tailwind + shadcn/ui, a faithful framework port of the existing
+design (same tokens, same 4 themes, same layout), not a redesign. Pages
+migrated so far: home, about, services, pricing, projects (+ detail),
+contact, archive (+ detail), testimonials. Everything else — the admin
+panel, the PHP REST API, and any public page not yet in the list above —
+stays exactly as it is today, served by the existing PHP app.
+
+**Production is two apps behind one domain**, both reachable at
+princecaleb.dev:
+- `web/` runs as its own cPanel Node.js Selector (Phusion Passenger) app,
+  deployed to `nextjs-web/` (a folder alongside, not inside, `public_html/`).
+  `next.config.ts` sets `output: "standalone"` so the deploy is a minimal
+  self-contained bundle (Next.js's own generated `server.js` + only the
+  node_modules actually used at runtime) rather than the full node_modules
+  tree — see `.github/workflows/deploy.yml`'s `web/` build steps.
+- The PHP app keeps serving everything it always has, from `public_html/`
+  as today.
+- `public/.htaccess` carries a bypass block that keeps `/admin/*`,
+  `/api/*`, `/uploads/*`, static assets, and any request matching a real
+  file already on disk (i.e. every marketing page not yet migrated)
+  resolving to the PHP app first — Passenger only ever sees requests that
+  fall through past that point. This is what lets the migration proceed
+  page by page without a big-bang cutover.
+
+Local dev: `cd web && npm run dev` (Turbopack, port 3000). `next.config.ts`
+proxies `/api/*` to the local PHP dev server in development only — in
+production that routing is Apache's job (the `.htaccess` bypass above),
+never Next.js's.
 
 ## Project layout
 

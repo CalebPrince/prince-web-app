@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/* Scan every page across the public site, admin panel, and client portal.
+   generated-sites/ is runtime-created (gitignored) content from the Arch
+   agent — excluded so its dynamic classes never leak into the build. */
+@source "../public/**/*.html";
+@source not "../public/generated-sites/**";
+
+/* Editorial design-system bridge -----------------------------------------
+   Maps Tailwind's utility namespaces onto the theme-aware CSS custom
+   properties already defined in public/css/app.css (:root plus
+   [data-theme="dark|midnight|paper"]). Utilities built from these tokens
+   (bg-card, text-ink, border-line, ...) repaint correctly across all 4
+   themes automatically, because app.css's theme blocks only ever redefine
+   the underlying --ink/--bg/etc. values, not these Tailwind bindings.
+   Nothing here duplicates or overrides those variables — it only exposes
+   them to Tailwind. Do not hardcode colors here; add a var(--x) mapping to
+   app.css's token set instead. */
+@theme {
+  --color-ink: var(--ink);
+  --color-heading: var(--heading-color);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-card: var(--card-bg);
+  --color-nav: var(--nav-bg);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+
+  --color-status-warn-bg: var(--status-warn-bg);
+  --color-status-warn-border: var(--status-warn-border);
+  --color-status-warn-text: var(--status-warn-text);
+  --color-status-ok-bg: var(--status-ok-bg);
+  --color-status-ok-border: var(--status-ok-border);
+  --color-status-ok-text: var(--status-ok-text);
+  --color-status-danger-bg: var(--status-danger-bg);
+  --color-status-danger-border: var(--status-danger-border);
+  --color-status-danger-text: var(--status-danger-text);
+
+  --radius-editorial: var(--radius);
+
+  --shadow-editorial: var(--shadow);
+  --shadow-editorial-lg: var(--shadow-lg);
+
+  --ease-editorial-out: var(--ease-out);
+  --ease-editorial-spring: var(--ease-spring);
+}
+
+/* Scoped variant for the small number of cases that are genuinely bimodal
+   rather than color-token driven (invert() filters, color-scheme, hero glow
+   opacity tuning) — most theme-awareness should come from the tokens above,
+   not this variant. Covers Dark + Midnight; Paper and Light both fall
+   through to the default (light-mode) styles. */
+@custom-variant theme-dark (&:where([data-theme="dark"], [data-theme="midnight"]) *);
+
+/* Bootstrap-parity `.container` ------------------------------------------
+   Tailwind v4's built-in `container` utility doesn't auto-center or pad, so
+   plain `class="container"` (used on nearly every page, nested selectors
+   like `.site-nav .container` in app.css) would break on stylesheet swap.
+   This reproduces Bootstrap 5's exact breakpoint max-widths so no markup
+   change is needed for this one class across the whole site. */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 0.75rem;
+
+  @media (width >= 576px) { max-width: 540px; }
+  @media (width >= 768px) { max-width: 720px; }
+  @media (width >= 992px) { max-width: 960px; }
+  @media (width >= 1200px) { max-width: 1140px; }
+  @media (width >= 1400px) { max-width: 1320px; }
+}

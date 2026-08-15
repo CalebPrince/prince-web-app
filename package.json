@@ -1,0 +1,16 @@
+{
+  "name": "prince-web-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Tailwind CSS build for prince-web-app. CI-only build dependency — the production host runs no Node at runtime; see README.md Setup.",
+  "scripts": {
+    "build": "tailwindcss -i styles/tailwind.css -o public/css/tailwind.build.css --minify",
+    "dev": "tailwindcss -i styles/tailwind.css -o public/css/tailwind.build.css --watch",
+    "sync:partials": "node scripts/sync-partials.js",
+    "sync:partials:check": "node scripts/sync-partials.js --check"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}
