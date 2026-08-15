@@ -83,8 +83,20 @@ export type PaymentPrepared = {
 
 export type PaymentVerified = { status: string };
 
+// Server-side fetch (generateMetadata, Server Components) has no implicit
+// origin the way a browser's relative fetch does, so it needs an absolute
+// URL. Client-side, the relative path is fine and preferred (works
+// regardless of domain/port). Dev target matches next.config.ts's rewrite
+// destination for the PHP dev server; production is the real domain,
+// since /api/* there is routed to PHP by Apache/LiteSpeed.
+function apiUrl(path: string): string {
+  if (typeof window !== "undefined") return path;
+  const base = process.env.NODE_ENV === "development" ? "http://localhost:8017" : "https://princecaleb.dev";
+  return `${base}${path}`;
+}
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(path, { headers: { Accept: "application/json" } });
+  const res = await fetch(apiUrl(path), { headers: { Accept: "application/json" } });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
@@ -93,7 +105,7 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export async function postJson<T>(path: string, data: unknown): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(data),

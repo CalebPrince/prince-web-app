@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,14 @@ import {
   FaqSection,
   ClosingCtaSection,
 } from "@/components/home-sections";
+
+// title.absolute bypasses the root layout's "%s, Prince Caleb" template —
+// the original home.html's <title> already leads with "Prince Caleb",
+// so applying the template would duplicate it at the end.
+export const metadata: Metadata = {
+  title: { absolute: "Prince Caleb, AI Voice Agents, Chatbots & Automation" },
+  description: "Prince Caleb builds AI voice agents that answer business calls, chatbots, and workflow automations, engineered on 12+ years of custom web & mobile development.",
+};
 
 export default function HomePage() {
   return (
