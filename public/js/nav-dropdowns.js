@@ -197,6 +197,7 @@
         + item("/services.html#track-03", "03", "Business automations", "Workflow")
         + item("/services.html#track-04", "04", "AI chatbots & assistants", "Chat")
         + item("/services.html#track-05", "05", "Custom websites & mobile apps", "Digital products")
+        + item("/services.html#track-06", "06", "Video & image ads", "Ad creative")
         + "</div>")
       + col("ENGAGEMENT",
           link("/pricing.html", "Pricing & packages")

@@ -18,6 +18,10 @@ const PRICING_FIELDS = [
   "pricing_tier_4_price",
   "pricing_tier_4_tagline",
   "pricing_tier_4_features",
+  "pricing_tier_5_name",
+  "pricing_tier_5_price",
+  "pricing_tier_5_tagline",
+  "pricing_tier_5_features",
 ];
 
 const PRICING_DEFAULTS = {
@@ -39,6 +43,10 @@ const PRICING_DEFAULTS = {
   pricing_tier_4_price: "Websites from GHS 5,000",
   pricing_tier_4_tagline: "Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.",
   pricing_tier_4_features: "Business and e-commerce websites\nCustom web applications from GHS 15,000\niOS and Android mobile app MVPs from GHS 35,000\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
+  pricing_tier_5_name: "Video & Image Ads",
+  pricing_tier_5_price: "From GHS 2,000",
+  pricing_tier_5_tagline: "Scroll-stopping video and image ad creative for Meta, TikTok, and Google, scripted, produced, and delivered ready to launch.",
+  pricing_tier_5_features: "3-5 short-form video ads or a static image ad set\nPlatform-optimized formats (Meta, TikTok, Google)\nScripting, captions, and on-brand visuals\nOne round of revisions included",
 };
 
 function showPricingMsg(text, ok) {
@@ -52,7 +60,7 @@ function renderTierEditors() {
   const wrap = document.getElementById("tier-editors");
   wrap.innerHTML = "";
 
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const col = document.createElement("div");
     col.className = "col-12";
     col.innerHTML = `

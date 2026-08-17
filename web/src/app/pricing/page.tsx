@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PricingCheckout } from "@/components/pricing-checkout";
+import { api } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Pricing",
   description: "Starting-point pricing for AI voice agents, WhatsApp assistants, and connected business automation systems from Prince Caleb.",
 };
+
+// Revalidate hourly so tier edits made in Admin -> Pricing show up here
+// without a redeploy (see getTiers() below).
+export const revalidate = 3600;
 
 const OUTCOMES = [
   { tag: "[STARTER]", title: "Answer and route one repeatable call", body: "Prove the voice, information boundaries, call handling, and staff handoff on a controlled workflow.", metric: "Pilot", metricLabel: "One call flow" },
@@ -14,7 +19,20 @@ const OUTCOMES = [
   { tag: "[CUSTOM]", title: "Build the complete digital operation", body: "Connect multiple agents and automations, or add the custom website, web platform, or mobile app your operation needs.", metric: "Custom", metricLabel: "Staged rollout" },
 ];
 
-const TIERS = [
+type Tier = {
+  name: string;
+  price: string;
+  tagline: string;
+  features: string[];
+  featured: boolean;
+  badge?: string;
+  checkout?: boolean;
+};
+
+// Static fallback — same copy database/migrate.php seeds as the Site
+// Content defaults, used only if /api/v1/content is unreachable at request
+// time (mirrors public/js/content.js's fallback behavior on the PHP site).
+const FALLBACK_TIERS: Tier[] = [
   {
     name: "AI Voice Agent Pilot",
     price: "From GHS 5,000",
@@ -51,7 +69,52 @@ const TIERS = [
     ],
     featured: false,
   },
+  {
+    name: "Video & Image Ads",
+    price: "From GHS 2,000",
+    tagline: "Scroll-stopping video and image ad creative for Meta, TikTok, and Google, scripted, produced, and delivered ready to launch.",
+    features: [
+      "3-5 short-form video ads or a static image ad set",
+      "Platform-optimized formats (Meta, TikTok, Google)",
+      "Scripting, captions, and on-brand visuals",
+      "One round of revisions included",
+    ],
+    featured: false,
+  },
 ];
+
+// Tiers are admin-editable (Admin -> Pricing -> settings table, keys
+// pricing_tier_{1..5}_*) and PHP's pricing.html/home.html already read them
+// live via /api/v1/content — this mirrors that instead of hardcoding, so a
+// price/feature edit reaches this page too. "Featured" (tier 2's highlighted
+// border + badge) and "checkout" (tier 1's Paystack deposit button) are
+// structural page decisions, not admin content, so they stay position-based
+// here exactly as they're hardcoded by position in the PHP markup.
+async function getTiers(): Promise<Tier[]> {
+  try {
+    const content = await api.content();
+    const tiers: Tier[] = [];
+    for (let i = 1; i <= 5; i++) {
+      const name = content[`pricing_tier_${i}_name`];
+      if (!name) continue;
+      tiers.push({
+        name,
+        price: content[`pricing_tier_${i}_price`] || "",
+        tagline: content[`pricing_tier_${i}_tagline`] || "",
+        features: (content[`pricing_tier_${i}_features`] || "")
+          .split("\n")
+          .map((f) => f.trim())
+          .filter(Boolean),
+        featured: i === 2,
+        badge: i === 2 ? "Most requested" : undefined,
+        checkout: i === 1,
+      });
+    }
+    return tiers.length > 0 ? tiers : FALLBACK_TIERS;
+  } catch {
+    return FALLBACK_TIERS;
+  }
+}
 
 const COST_BREAKDOWN = [
   { tag: "One-time", title: "Implementation", body: "Conversation design, approved knowledge, integrations, dashboard work, testing, and launch preparation." },
@@ -60,7 +123,8 @@ const COST_BREAKDOWN = [
   { tag: "Optional", title: "Ongoing support", body: "Monitoring, prompt updates, new workflows, reporting, and operational improvements can be retained monthly." },
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const TIERS = await getTiers();
   return (
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">

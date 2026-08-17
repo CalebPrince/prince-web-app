@@ -437,6 +437,7 @@ function ServicesPanel() {
           <MegaLink href="/services#track-03">Business automations</MegaLink>
           <MegaLink href="/services#track-04">AI chatbots & assistants</MegaLink>
           <MegaLink href="/services#track-05">Custom websites & mobile apps</MegaLink>
+          <MegaLink href="/services#track-06">Video & image ads</MegaLink>
         </div>
       </MegaCol>
       <MegaCol label="ENGAGEMENT">

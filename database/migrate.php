@@ -120,6 +120,14 @@ $pricingOfferInserts = [
     'pricing_tier_4_tagline' => 'Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.',
     'pricing_tier_4_features' => "Business and e-commerce websites\nCustom web applications from GHS 15,000\niOS and Android mobile app MVPs from GHS 35,000\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
 ];
+
+// Video & Image Ads added as a fifth service/pricing tier (2026-08-17).
+$adsOfferInserts = [
+    'pricing_tier_5_name' => 'Video & Image Ads',
+    'pricing_tier_5_price' => 'From GHS 2,000',
+    'pricing_tier_5_tagline' => 'Scroll-stopping video and image ad creative for Meta, TikTok, and Google, scripted, produced, and delivered ready to launch.',
+    'pricing_tier_5_features' => "3-5 short-form video ads or a static image ad set\nPlatform-optimized formats (Meta, TikTok, Google)\nScripting, captions, and on-brand visuals\nOne round of revisions included",
+];
 $conversionCopyUpdates = [
     'hero_eyebrow' => [
         '// AI Voice Agents · Chatbots · Automation',
@@ -163,6 +171,9 @@ foreach ($personalNotificationSettings as $name => $value) {
 }
 $pricingUpdateStmt->execute(['https://wa.me/233535801359', 'social_whatsapp', 'https://wa.me/447462190814']);
 foreach ($pricingOfferInserts as $name => $value) {
+    $pricingInsertStmt->execute([$name, $value]);
+}
+foreach ($adsOfferInserts as $name => $value) {
     $pricingInsertStmt->execute([$name, $value]);
 }
 

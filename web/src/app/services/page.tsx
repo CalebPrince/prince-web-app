@@ -59,6 +59,16 @@ const TRACKS = [
     metric: "12+ yrs",
     metricLabel: "Engineering behind it",
   },
+  {
+    id: "track-06",
+    trackId: "TRACK 06",
+    status: "Ad creative",
+    title: "Video & Image Ads",
+    body: "Scroll-stopping video and image ad creative for Meta, TikTok, and Google, scripted, produced, and delivered ready to launch, so your campaigns start with creative that actually performs.",
+    tech: ["Short-form video", "Static image sets", "Platform-ready formats", "Scripting & captions"],
+    metric: "1-2 wks",
+    metricLabel: "Typical turnaround",
+  },
 ];
 
 const LIVE_PROOF = [
