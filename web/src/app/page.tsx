@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import {
   PoweredBySection,
   ServicesSection,
@@ -12,6 +14,39 @@ import {
   ClosingCtaSection,
 } from "@/components/home-sections";
 
+// Static fallback — same copy database/migrate.php seeds as the Site
+// Content default, used only if /api/v1/content is unreachable at request
+// time (mirrors public/js/content.js's fallback behavior on the PHP site).
+const FALLBACK_HERO = {
+  eyebrow: "// Stop losing enquiries to missed calls and slow follow-up",
+  title: "Turn more enquiries into **booked customers**, without adding more admin.",
+  subtitle:
+    "I build AI voice agents, chat assistants and automations that answer quickly, capture the right details and move serious enquiries towards a booking.",
+};
+
+// Revalidate hourly so the AI-generated daily headline (written once a day
+// around 04:00 by database/generate_daily_headline.php's cron) shows up on
+// the live homepage without needing a full redeploy.
+export const revalidate = 3600;
+
+// Renders a hero_title's single `**phrase**` marker (see
+// generate_daily_headline.php's prompt) as the same accent-colored span the
+// static markup already used for "booked customers".
+function renderHeroTitle(title: string): ReactNode {
+  const match = title.match(/\*\*([^*]+)\*\*/);
+  if (!match) return title;
+  const start = match.index ?? 0;
+  const before = title.slice(0, start);
+  const after = title.slice(start + match[0].length);
+  return (
+    <>
+      {before}
+      <span className="text-editorial-accent-strong">{match[1]}</span>
+      {after}
+    </>
+  );
+}
+
 // title.absolute bypasses the root layout's "%s, Prince Caleb" template —
 // the original home.html's <title> already leads with "Prince Caleb",
 // so applying the template would duplicate it at the end.
@@ -20,7 +55,19 @@ export const metadata: Metadata = {
   description: "Prince Caleb builds AI voice agents that answer business calls, chatbots, and workflow automations, engineered on 12+ years of custom web & mobile development.",
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  let hero = FALLBACK_HERO;
+  try {
+    const content = await api.content();
+    hero = {
+      eyebrow: content.hero_eyebrow || FALLBACK_HERO.eyebrow,
+      title: content.hero_title || FALLBACK_HERO.title,
+      subtitle: content.hero_subtitle || FALLBACK_HERO.subtitle,
+    };
+  } catch {
+    // /api/v1/content unreachable — keep the static fallback copy.
+  }
+
   return (
     <main>
       {/* Full-viewport hero — ported from public/home.html's
@@ -46,16 +93,10 @@ export default function HomePage() {
         <div className="relative z-[1] mx-auto max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(21rem,0.48fr)] lg:items-center lg:gap-[clamp(2rem,5vw,5rem)]">
           <div>
             <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
-              // Stop losing enquiries to missed calls and slow follow-up
+              {hero.eyebrow}
             </p>
-            <h1 className="mb-4 max-w-4xl text-5xl font-bold md:text-6xl">
-              Turn more enquiries into <span className="text-editorial-accent-strong">booked customers</span>, without
-              adding more admin.
-            </h1>
-            <p className="mb-4 max-w-2xl text-lg leading-[1.65] text-ink-soft">
-              I build AI voice agents, chat assistants and automations that answer quickly, capture the right details
-              and move serious enquiries towards a booking.
-            </p>
+            <h1 className="mb-4 max-w-4xl text-5xl font-bold md:text-6xl">{renderHeroTitle(hero.title)}</h1>
+            <p className="mb-4 max-w-2xl text-lg leading-[1.65] text-ink-soft">{hero.subtitle}</p>
 
             <div className="flex flex-wrap items-center gap-3">
               <Button variant="brand" size="pill" nativeButton={false} render={<a href="/book.html" />}>
