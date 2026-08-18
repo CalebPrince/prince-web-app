@@ -417,7 +417,7 @@ function AboutPanel() {
         {featured ? (
           <>
             <p className="mb-[1.1rem] text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">FROM THE ARCHIVE</p>
-            <MegaFeatured href={`/blog/${featured.slug}`} title={featured.title} description={featured.excerpt} cta="Open technical breakdown" />
+            <MegaFeatured href={`/archive/${featured.slug}`} title={featured.title} description={featured.excerpt} cta="Open technical breakdown" />
           </>
         ) : (
           <div className="h-32 animate-pulse rounded-[var(--radius)] bg-bg-soft" />
