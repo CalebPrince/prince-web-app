@@ -5,7 +5,10 @@ import { Logo } from "@/components/Logo";
 
 const NAV_LINKS: { label: string; to: string }[] = [
   { label: "Services", to: "/services" },
+  { label: "Builder OS", to: "/builder-os" },
   { label: "Systems", to: "/systems" },
+  { label: "Pricing", to: "/pricing" },
+  { label: "Lisa", to: "/lisa-ai-assistant" },
   { label: "About", to: "/about" },
   { label: "Lab", to: "/lab" },
   { label: "Archive", to: "/archive" },
