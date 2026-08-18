@@ -67,7 +67,7 @@ export function RoadmapForm() {
   }
 
   return (
-    <div className="rounded-3xl border border-line bg-card p-10 max-md:p-6" id="roadmap-form">
+    <div className="reveal rounded-3xl border border-line bg-card p-10 max-md:p-6" id="roadmap-form">
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label htmlFor="name" className="mb-1 block font-semibold text-heading">

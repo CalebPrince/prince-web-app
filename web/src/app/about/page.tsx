@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CareerTimeline } from "@/components/career-timeline";
 import { GithubActivity } from "@/components/github-activity";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "About",
@@ -28,18 +29,18 @@ export default function AboutPage() {
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-12 lg:items-center lg:gap-14">
           <div className="lg:col-span-7">
-            <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// About</p>
-            <h1 className="mb-3 text-5xl font-bold md:text-6xl">
+            <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// About</p>
+            <h1 className="hero-animate hero-animate-2 mb-3 text-5xl font-bold md:text-6xl">
               Hi, I&apos;m <span className="text-editorial-accent-strong">Prince</span> Caleb.
             </h1>
-            <p className="max-w-2xl text-lg leading-[1.65] text-ink-soft">
+            <p className="hero-animate hero-animate-3 max-w-2xl text-lg leading-[1.65] text-ink-soft">
               I build AI voice agents, chatbots, and business automations, on top of 12+ years of custom web and
               mobile engineering, instead of bending businesses to fit a template. I care about the same three
               things on every project: it has to be fast, it has to be secure, and it has to be something you can
               actually maintain after I hand it over.
             </p>
           </div>
-          <div className="mt-10 max-w-md rounded-2xl border border-line bg-card p-5 lg:col-span-5 lg:mt-0">
+          <div className="hero-animate hero-animate-3 mt-10 max-w-md rounded-2xl border border-line bg-card p-5 lg:col-span-5 lg:mt-0">
             <span className="mb-3 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
               Operating profile
             </span>
@@ -60,7 +61,7 @@ export default function AboutPage() {
 
       {/* How I got here */}
       <section className="py-20">
-        <div className="mx-auto max-w-[760px] px-4 sm:px-6">
+        <div className="reveal mx-auto max-w-[760px] px-4 sm:px-6">
           <h3 className="mb-3 text-2xl font-bold">How I got here</h3>
           <p className="text-ink-soft">
             I started out building small sites and scripts, and quickly found the parts of the job I actually
@@ -79,15 +80,20 @@ export default function AboutPage() {
       {/* Engineering principles — hairline list, ported from .archive-list/.archive-entry */}
       <section className="border-t border-line py-20" id="principles">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
-            // Engineering principles
-          </span>
-          <h2 className="mb-8 max-w-2xl text-3xl font-bold md:text-4xl">The operating rules behind the work.</h2>
+          <div className="reveal reveal-on-scroll mb-8">
+            <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+              // Engineering principles
+            </span>
+            <h2 className="max-w-2xl text-3xl font-bold md:text-4xl">The operating rules behind the work.</h2>
+          </div>
           <div className="border-t border-line">
-            {PRINCIPLES.map((p) => (
+            {PRINCIPLES.map((p, i) => (
               <div
                 key={p.title}
-                className="grid items-start gap-6 border-b border-line py-8"
+                className={cn(
+                  "reveal reveal-on-scroll grid items-start gap-6 border-b border-line py-8",
+                  i > 0 && `reveal-delay-${i}`
+                )}
                 style={{ gridTemplateColumns: "minmax(160px, 0.32fr) minmax(0, 1fr) minmax(130px, 0.22fr)" }}
               >
                 <span className="font-mono text-[0.74rem] uppercase tracking-[0.08em] text-heading">{p.tag}</span>
@@ -116,7 +122,7 @@ export default function AboutPage() {
 
       {/* Tech I work with */}
       <section className="border-t border-line py-20">
-        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+        <div className="reveal mx-auto max-w-6xl px-4 text-center sm:px-6">
           <p className="mb-4 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">Tech I work with</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             {TECH.map((t) => (
@@ -136,7 +142,7 @@ export default function AboutPage() {
       {/* Closing CTA — dark inverted panel, ported from .agency-cta (distinct
           from the homepage's closing CTA, which stays on the light bg) */}
       <section className="border-t border-line border-b bg-heading py-20 text-center text-bg">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6">
+        <div className="reveal mx-auto max-w-2xl px-4 sm:px-6">
           <h2 className="mb-3 text-3xl font-bold md:text-4xl">Want to work together?</h2>
           <p className="mb-6 text-lg opacity-90">A short discovery call is the fastest way to find out if we&apos;re a fit.</p>
           <div className="flex flex-wrap items-center justify-center gap-3">

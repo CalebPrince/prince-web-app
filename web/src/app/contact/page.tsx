@@ -14,11 +14,11 @@ export default function ContactPage() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Contact</p>
-          <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Contact</p>
+          <h1 className="hero-animate hero-animate-2 mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             What should <span className="text-editorial-accent-strong">stop</span> depending on a person?
           </h1>
-          <p className="max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
+          <p className="hero-animate hero-animate-3 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
             Describe the call, message, follow-up, or repetitive task. I&apos;ll review where an agent should act,
             where a person should stay in control, and the smallest useful place to start.
           </p>
@@ -27,13 +27,13 @@ export default function ContactPage() {
 
       <section className="py-20">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[7fr_5fr]">
-          <div className="relative rounded-[24px] border border-line bg-card p-10 max-md:p-6">
+          <div className="reveal relative rounded-[24px] border border-line bg-card p-10 max-md:p-6">
             <Suspense fallback={null}>
               <ContactForm />
             </Suspense>
           </div>
 
-          <div className="rounded-[24px] border border-line bg-card p-10 max-md:p-6">
+          <div className="reveal reveal-delay-1 rounded-[24px] border border-line bg-card p-10 max-md:p-6">
             <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Direct channels</span>
 
             <div className="group border-b border-line py-[0.85rem]">

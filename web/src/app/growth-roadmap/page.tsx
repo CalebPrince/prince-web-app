@@ -30,16 +30,16 @@ export default function GrowthRoadmapPage() {
     <main>
       <header className="flex min-h-[calc(100vh-76px)] items-center border-b border-line bg-bg">
         <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Free Growth Roadmap</p>
-          <h1 className="mb-3 text-5xl font-bold leading-[1.1] md:text-6xl">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Free Growth Roadmap</p>
+          <h1 className="hero-animate hero-animate-2 mb-3 text-5xl font-bold leading-[1.1] md:text-6xl">
             Launch isn&apos;t the finish line. It&apos;s <span className="text-editorial-accent-strong">day one</span>.
           </h1>
-          <p className="max-w-[62ch] text-lg leading-[1.65] text-ink-soft">
+          <p className="hero-animate hero-animate-3 max-w-[62ch] text-lg leading-[1.65] text-ink-soft">
             Most business owners spend thousands on a beautiful new website, hit launch, and wait. Nobody comes. A
             website without marketing is just an expensive digital business card hidden in a desert — scaling
             online takes traffic and conversion working together, every single day.
           </p>
-          <p className="mt-3 max-w-[62ch] text-lg leading-[1.65] text-ink-soft">
+          <p className="hero-animate hero-animate-3 mt-3 max-w-[62ch] text-lg leading-[1.65] text-ink-soft">
             I&apos;m Prince Caleb. I build websites, AI agents, and automations for businesses in Accra and beyond —
             and I don&apos;t disappear at handover. Tell me about your site below and I&apos;ll map your traffic,
             conversion, and tracking gaps, free, with clear scope before you commit to anything.
@@ -49,7 +49,7 @@ export default function GrowthRoadmapPage() {
 
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal mb-10 grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// See a sample roadmap</p>
               <h2 className="text-3xl font-bold md:text-4xl">Here&apos;s exactly what you&apos;ll get back.</h2>
@@ -63,7 +63,7 @@ export default function GrowthRoadmapPage() {
           {/* Ported from .workflow-mockup */}
           <div
             aria-label="Mockup of a sample Free Growth Roadmap report"
-            className="grid min-h-[38rem] overflow-hidden rounded-3xl border border-line-strong bg-card shadow-lg max-md:grid-cols-1"
+            className="reveal grid min-h-[38rem] overflow-hidden rounded-3xl border border-line-strong bg-card shadow-lg max-md:grid-cols-1"
             style={{ gridTemplateColumns: "13rem minmax(0, 1fr)" }}
           >
             <aside className="flex flex-col border-r border-line bg-heading p-5 text-bg max-md:hidden">
@@ -178,7 +178,7 @@ export default function GrowthRoadmapPage() {
 
       <section className="py-20">
         <div className="mx-auto grid max-w-4xl gap-6 px-4 sm:px-6 lg:grid-cols-2">
-          <div className="rounded-3xl border border-line bg-card p-10 max-md:p-6">
+          <div className="reveal reveal-delay-1 rounded-3xl border border-line bg-card p-10 max-md:p-6">
             <span className="mb-3 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// What you get</span>
             {VALUES.map((v) => (
               <div key={v.title} className="flex justify-between gap-4 border-t border-line py-[0.9rem]">

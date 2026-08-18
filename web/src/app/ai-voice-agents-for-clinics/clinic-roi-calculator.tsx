@@ -24,7 +24,7 @@ export function ClinicRoiCalculator() {
 
   return (
     <div className="mx-auto grid max-w-6xl gap-[clamp(2rem,8vw,8rem)] px-4 sm:px-6 lg:grid-cols-[1fr_minmax(20rem,0.72fr)] lg:items-center">
-      <div>
+      <div className="reveal">
         <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Missed-call opportunity</p>
         <h2 className="mb-3 text-3xl font-bold md:text-4xl">What could one answered call be worth?</h2>
         <p className="text-ink-soft">Use your own operating assumptions. This estimates opportunity, not guaranteed revenue.</p>
@@ -81,7 +81,7 @@ export function ClinicRoiCalculator() {
         </div>
       </div>
 
-      <aside aria-live="polite" className="grid gap-[1.35rem] bg-heading p-[clamp(2rem,5vw,3.5rem)] text-bg shadow-lg">
+      <aside aria-live="polite" className="reveal grid gap-[1.35rem] bg-heading p-[clamp(2rem,5vw,3.5rem)] text-bg shadow-lg">
         <span className="font-mono text-[0.7rem] font-bold tracking-[0.09em] uppercase opacity-65">Estimated monthly opportunity</span>
         <strong className="text-[clamp(2rem,5vw,3.75rem)] leading-[0.98] tracking-[-0.05em] text-bg">{money(total)}</strong>
         <div className="grid grid-cols-2 gap-4 border-y border-bg/18 py-[1.2rem]">

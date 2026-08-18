@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { SiteSplash } from "@/components/site-splash";
+import { StoryChapters } from "@/components/story-chapters";
 import {
   PoweredBySection,
   ServicesSection,
@@ -70,6 +72,8 @@ export default async function HomePage() {
 
   return (
     <main>
+      <SiteSplash />
+      <StoryChapters />
       {/* Full-viewport hero — ported from public/home.html's
           .hero.agency-hero.hero-glow.hero-orbit section. Ambient glow orbs
           + headline + CTAs + trust rail match the original exactly; the
@@ -92,13 +96,13 @@ export default async function HomePage() {
             breakpoint everything stacks, mockup last. */}
         <div className="relative z-[1] mx-auto max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(21rem,0.48fr)] lg:items-center lg:gap-[clamp(2rem,5vw,5rem)]">
           <div>
-            <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+            <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
               {hero.eyebrow}
             </p>
-            <h1 className="mb-4 max-w-4xl text-5xl font-bold md:text-6xl">{renderHeroTitle(hero.title)}</h1>
-            <p className="mb-4 max-w-2xl text-lg leading-[1.65] text-ink-soft">{hero.subtitle}</p>
+            <h1 className="hero-animate hero-animate-2 mb-4 max-w-4xl text-5xl font-bold md:text-6xl">{renderHeroTitle(hero.title)}</h1>
+            <p className="hero-animate hero-animate-3 mb-4 max-w-2xl text-lg leading-[1.65] text-ink-soft">{hero.subtitle}</p>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="hero-animate hero-animate-4 flex flex-wrap items-center gap-3">
               <Button variant="brand" size="pill" nativeButton={false} render={<a href="/book.html" />}>
                 Book a 20-minute call
               </Button>
@@ -107,14 +111,14 @@ export default async function HomePage() {
               </Button>
             </div>
 
-            <div className="mt-4 grid max-w-2xl grid-cols-3 gap-[0.7rem]">
+            <div className="hero-animate hero-animate-4 mt-4 grid max-w-2xl grid-cols-3 gap-[0.7rem]">
               <TrustStat value="12+" label="years shipping production software" />
               <TrustStat value="30+" label="projects delivered" />
               <TrustStat value="98%" label="client satisfaction" />
             </div>
           </div>
 
-          <div className="mt-12 max-w-md lg:mt-0 lg:max-w-[27rem] lg:justify-self-end">
+          <div className="hero-animate hero-animate-4 mt-12 max-w-md lg:mt-0 lg:max-w-[27rem] lg:justify-self-end">
             <VoiceDemoMockup />
           </div>
         </div>

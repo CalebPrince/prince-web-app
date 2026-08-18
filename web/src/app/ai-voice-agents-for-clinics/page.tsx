@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ClinicRoiCalculator } from "./clinic-roi-calculator";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "AI Voice Agents for Clinics in Ghana",
@@ -61,15 +62,15 @@ export default function AiVoiceAgentsForClinicsPage() {
       <header className="flex min-h-[calc(100vh-76px)] items-center px-4 py-[clamp(5rem,10vw,8rem)] sm:px-6">
         <div className="mx-auto grid max-w-6xl gap-[clamp(2rem,6vw,6rem)] lg:grid-cols-[minmax(0,1fr)_minmax(21rem,0.48fr)] lg:items-center">
           <div>
-            <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// AI call handling for clinics</p>
-            <h1 className="mb-4 max-w-[12ch] text-5xl font-bold leading-[1.1] md:text-6xl">
+            <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// AI call handling for clinics</p>
+            <h1 className="hero-animate hero-animate-2 mb-4 max-w-[12ch] text-5xl font-bold leading-[1.1] md:text-6xl">
               Your <span className="text-editorial-accent-strong">front desk</span> is busy. Your phone still gets answered.
             </h1>
-            <p className="mb-4 max-w-[42rem] text-lg leading-[1.65] text-ink-soft">
+            <p className="hero-animate hero-animate-3 mb-4 max-w-[42rem] text-lg leading-[1.65] text-ink-soft">
               A voice agent handles routine calls, captures the right details, books available appointments, and
               sends the conversation to your team, without giving medical advice or pretending to be a clinician.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="hero-animate hero-animate-4 flex flex-wrap gap-3">
               <Button variant="brand" size="pill" nativeButton={false} render={<a href={`/book.html${DEMO_UTM}`} />}>
                 Book a clinic demo
               </Button>
@@ -78,7 +79,7 @@ export default function AiVoiceAgentsForClinicsPage() {
               </Button>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 divide-y divide-line-strong overflow-hidden rounded-2xl border border-line-strong sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            <div className="hero-animate hero-animate-4 mt-6 grid grid-cols-1 divide-y divide-line-strong overflow-hidden rounded-2xl border border-line-strong sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               <span className="flex items-center gap-2 p-4 text-[0.72rem] font-semibold text-editorial-accent">
                 <span className="inline-block size-[0.4rem] rounded-full bg-editorial-accent" aria-hidden="true" /> Production line live
               </span>
@@ -92,14 +93,14 @@ export default function AiVoiceAgentsForClinicsPage() {
               </a>
             </div>
 
-            <div className="mt-6 flex max-w-[42rem] items-center gap-3 border-t border-line pt-4 text-[0.76rem]">
+            <div className="hero-animate hero-animate-4 mt-6 flex max-w-[42rem] items-center gap-3 border-t border-line pt-4 text-[0.76rem]">
               <span className="shrink-0 font-mono text-[0.65rem] font-bold uppercase tracking-[0.06em] text-[#16835a]">Built-in boundary</span>
               <strong className="text-heading">Scheduling and information only. Clinical questions go to staff.</strong>
             </div>
           </div>
 
           {/* Static shell — real ElevenLabs/mic wiring deferred, same as the homepage's VoiceDemoMockup */}
-          <article aria-label="Mockup of an AI voice agent handling a live booking call" className="relative w-full max-w-[27rem] overflow-hidden rounded-[20px] border border-line-strong bg-card shadow-lg lg:ml-auto">
+          <article aria-label="Mockup of an AI voice agent handling a live booking call" className="hero-animate hero-animate-4 relative w-full max-w-[27rem] overflow-hidden rounded-[20px] border border-line-strong bg-card shadow-lg lg:ml-auto">
             <header className="flex items-center justify-between border-b border-line px-4 py-2.5">
               <span className="inline-flex items-center gap-[0.55rem] text-heading">
                 <span className="inline-block size-[0.48rem] rounded-full bg-[#20a36a] shadow-[0_0_0_4px_rgba(32,163,106,0.13)]" aria-hidden="true" />
@@ -172,7 +173,7 @@ export default function AiVoiceAgentsForClinicsPage() {
 
       <section className="py-20" id="clinic-workflow">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal mb-10 grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// One routine call</p>
               <h2 className="text-3xl font-bold md:text-4xl">Handled end to end.</h2>
@@ -180,7 +181,7 @@ export default function AiVoiceAgentsForClinicsPage() {
             <p className="text-ink-soft">The agent does not replace clinical judgment. It removes the repeatable call work around it.</p>
           </div>
 
-          <div aria-label="Mockups showing call intake, appointment booking, and staff handoff" className="grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <div aria-label="Mockups showing call intake, appointment booking, and staff handoff" className="reveal grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
             <article className="min-h-[31rem] overflow-hidden rounded-2xl border border-line-strong bg-card shadow">
               <header className="flex min-h-[3.2rem] items-center justify-between gap-3 border-b border-line px-4 py-3">
                 <span className="inline-flex items-center gap-[0.45rem] font-mono text-[0.68rem] font-bold uppercase text-heading">
@@ -310,7 +311,7 @@ export default function AiVoiceAgentsForClinicsPage() {
 
       <section className="border-y border-line bg-bg-soft py-20">
         <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 md:grid-cols-[0.75fr_minmax(22rem,1fr)] md:items-center">
-          <div>
+          <div className="reveal">
             <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Designed to know its limits</p>
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">Administrative confidence. Clinical restraint.</h2>
             <p className="text-ink-soft">
@@ -318,7 +319,7 @@ export default function AiVoiceAgentsForClinicsPage() {
               and hand the conversation to a person.
             </p>
           </div>
-          <div className="border-t border-line-strong">
+          <div className="reveal border-t border-line-strong">
             {BOUNDARY_ROWS.map((row, i) => (
               <div key={i} className="grid grid-cols-1 gap-2 border-b border-line-strong py-5 sm:grid-cols-[8.5rem_1fr] sm:gap-4">
                 <span className={`font-mono text-[0.65rem] leading-[1.4] font-bold tracking-[0.06em] uppercase ${row.yes ? "text-[#16835a]" : "text-[#b73b3b]"}`}>{row.label}</span>
@@ -331,7 +332,7 @@ export default function AiVoiceAgentsForClinicsPage() {
 
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal mb-10 grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Built around your practice</p>
               <h2 className="text-3xl font-bold md:text-4xl">Not another isolated phone bot.</h2>
@@ -339,8 +340,8 @@ export default function AiVoiceAgentsForClinicsPage() {
             <p className="text-ink-soft">The useful build connects the call to the systems and people who need the result.</p>
           </div>
           <div className="grid grid-cols-1 border-t border-l border-line sm:grid-cols-2">
-            {CAPABILITIES.map((c) => (
-              <article key={c.n} className="min-h-60 border-r border-b border-line p-8">
+            {CAPABILITIES.map((c, i) => (
+              <article key={c.n} className={cn("reveal min-h-60 border-r border-b border-line p-8", i > 0 && `reveal-delay-${i}`)}>
                 <span className="font-mono text-[0.68rem] font-bold tracking-[0.08em] text-editorial-muted uppercase">{c.n}</span>
                 <h3 className="mt-10 mb-[0.8rem] text-[1.2rem] font-bold text-heading">{c.title}</h3>
                 <p className="leading-[1.65] text-ink-soft">{c.body}</p>
@@ -352,7 +353,7 @@ export default function AiVoiceAgentsForClinicsPage() {
 
       <section className="border-y border-line bg-bg-soft py-20" id="clinic-pilot">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal mb-10 grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// A controlled first deployment</p>
               <h2 className="text-3xl font-bold md:text-4xl">Start with one call your team repeats every day.</h2>
@@ -360,15 +361,15 @@ export default function AiVoiceAgentsForClinicsPage() {
             <p className="text-ink-soft">The pilot proves the workflow with monitored conversations before anything expands.</p>
           </div>
           <div className="grid grid-cols-1 border-t border-l border-line sm:grid-cols-2 lg:grid-cols-4">
-            {PILOT_WEEKS.map((w) => (
-              <article key={w.n} className="border-r border-b border-line p-8">
+            {PILOT_WEEKS.map((w, i) => (
+              <article key={w.n} className={cn("reveal border-r border-b border-line p-8", i > 0 && `reveal-delay-${i}`)}>
                 <span className="block font-mono text-[0.7rem] font-bold tracking-[0.09em] text-editorial-accent uppercase">{w.n}</span>
                 <h3 className="mt-8 mb-[0.65rem] text-[1.25rem] font-bold text-heading">{w.title}</h3>
                 <p className="leading-[1.65] text-ink-soft">{w.body}</p>
               </article>
             ))}
           </div>
-          <div className="mt-6 flex flex-wrap items-center gap-[0.7rem]">
+          <div className="reveal mt-6 flex flex-wrap items-center gap-[0.7rem]">
             <strong className="mr-1 text-heading">Pilot includes</strong>
             {["One inbound call flow", "Approved FAQ set", "Human handoff rules", "Call logs", "Staff summaries"].map((item) => (
               <span key={item} className="rounded-full border border-line px-[0.7rem] py-[0.45rem] text-[0.76rem] text-ink-soft">
@@ -391,7 +392,7 @@ export default function AiVoiceAgentsForClinicsPage() {
 
       <section className="border-t border-line bg-bg-soft py-20" id="clinic-faq">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal mb-10 grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Before a clinic trusts the line</p>
               <h2 className="text-3xl font-bold md:text-4xl">The questions worth asking.</h2>
@@ -400,13 +401,13 @@ export default function AiVoiceAgentsForClinicsPage() {
           </div>
           <div className="grid grid-cols-1 border-t border-l border-line sm:grid-cols-2">
             {FAQS.map((f) => (
-              <details key={f.q} className="border-r border-b border-line p-6">
+              <details key={f.q} className="reveal border-r border-b border-line p-6">
                 <summary className="cursor-pointer font-bold text-heading marker:text-editorial-accent">{f.q}</summary>
                 <p className="mt-4 leading-[1.7] text-ink-soft">{f.a}</p>
               </details>
             ))}
           </div>
-          <div className="mt-8 flex flex-col items-start justify-between gap-6 border border-line bg-bg p-6 sm:flex-row sm:items-center">
+          <div className="reveal mt-8 flex flex-col items-start justify-between gap-6 border border-line bg-bg p-6 sm:flex-row sm:items-center">
             <div>
               <strong className="block text-heading">Safety is part of the build.</strong>
               <span className="text-[0.88rem] text-ink-soft">See how disclosure, consent, recordings, data retention, and human escalation are handled.</span>
@@ -419,7 +420,7 @@ export default function AiVoiceAgentsForClinicsPage() {
       </section>
 
       <section className="border-b border-line bg-heading py-20 text-bg">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-8 px-4 sm:px-6 md:flex-row md:items-end">
+        <div className="reveal mx-auto flex max-w-6xl flex-col justify-between gap-8 px-4 sm:px-6 md:flex-row md:items-end">
           <div className="max-w-[48rem]">
             <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-[#73aaff]">// Start with your busiest call</p>
             <h2 className="mb-3 text-3xl font-bold md:text-4xl">Show me what your front desk repeats every day.</h2>

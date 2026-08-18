@@ -60,13 +60,13 @@ export function ProjectsRegistry() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
             // Builder OS · System Registry
           </p>
-          <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
+          <h1 className="hero-animate hero-animate-2 mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             Systems, not <span className="text-editorial-accent-strong">screenshots</span>.
           </h1>
-          <p className="mb-4 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
+          <p className="hero-animate hero-animate-3 mb-4 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
             Inspect what each deployment solves, how it operates, which channels it connects, and the engineering
             behind it.
           </p>
@@ -121,7 +121,7 @@ export function ProjectsRegistry() {
           {visible && visible.length > 0 && (
             <div className="border-t border-line">
               {visible.map((p, i) => (
-                <article key={p.slug} className="border-b border-line py-9">
+                <article key={p.slug} className={cn("reveal reveal-on-scroll border-b border-line py-9", `reveal-delay-${(i % 4) + 1}`)}>
                   <div
                     className="grid items-center gap-6 max-md:grid-cols-1"
                     style={{ gridTemplateColumns: "minmax(150px, 0.24fr) minmax(0, 1fr) minmax(190px, 0.28fr)" }}
@@ -190,7 +190,7 @@ export function ProjectsRegistry() {
       </section>
 
       <section className="border-t border-line border-b bg-heading py-20 text-center text-bg">
-        <div className="mx-auto max-w-2xl px-4 sm:px-6">
+        <div className="reveal mx-auto max-w-2xl px-4 sm:px-6">
           <h2 className="mb-3 text-3xl font-bold md:text-4xl">Which workflow should work like this?</h2>
           <p className="mb-6 text-lg opacity-90">
             Bring one repetitive customer or operations process. We&apos;ll identify the smallest safe system worth

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PricingCheckout } from "@/components/pricing-checkout";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -129,11 +130,11 @@ export default async function PricingPage() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Pricing</p>
-          <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Pricing</p>
+          <h1 className="hero-animate hero-animate-2 mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             Start with one <span className="text-editorial-accent-strong">workflow</span>. Expand after it works.
           </h1>
-          <p className="max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
+          <p className="hero-animate hero-animate-3 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
             Start with one useful workflow, prove it with real conversations, then expand. These are implementation
             starting points; telephony, messaging, and AI usage are billed separately.
           </p>
@@ -173,14 +174,16 @@ export default async function PricingPage() {
       <section className="border-t border-line py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {TIERS.map((t) => (
+            {TIERS.map((t, i) => (
               <div
                 key={t.name}
-                className={
+                className={cn(
+                  "reveal depth-card relative rounded-[22px] p-10",
+                  `reveal-delay-${(i % 4) + 1}`,
                   t.featured
-                    ? "relative rounded-[22px] border border-editorial-accent p-10 shadow-lg"
-                    : "relative rounded-[22px] border border-line p-10 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-line-strong hover:bg-card"
-                }
+                    ? "border border-editorial-accent shadow-lg"
+                    : "border border-line transition-[border-color,background-color] duration-300 hover:border-line-strong hover:bg-card"
+                )}
               >
                 {t.badge && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-heading px-3 py-1 text-xs font-semibold text-bg">

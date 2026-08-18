@@ -83,16 +83,19 @@ const SERVICES = [
 // so the whole block reads as one bordered sheet divided by hairlines.
 export function ServicesSection() {
   return (
-    <section className="py-24">
+    <section className="py-24" id="what-i-build" data-story-chapter="1">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <p className="mb-8 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+        <p className="chapter-heading mb-8 text-center text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // What I build
         </p>
         <div className="grid grid-cols-1 border-t border-l border-line sm:grid-cols-2 lg:grid-cols-3">
-          {SERVICES.map((s) => (
+          {SERVICES.map((s, i) => (
             <div
               key={s.title}
-              className="flex flex-col gap-4 border-r border-b border-line p-8 transition-[background-color,transform] duration-200 hover:z-10 hover:-translate-y-[3px] hover:bg-bg-soft"
+              className={cn(
+                "reveal depth-card flex flex-col gap-4 border-r border-b border-line p-8 transition-[background-color,transform] duration-200 hover:z-10 hover:bg-bg-soft",
+                `reveal-delay-${(i % 4) + 1}`
+              )}
             >
               <div className="mb-2 flex size-12 items-center justify-center rounded-[10px] border border-line text-heading">
                 <s.icon className="size-5" aria-hidden="true" />
@@ -118,15 +121,15 @@ const PROCESS_STEPS = [
 
 export function ProcessSection() {
   return (
-    <section className="border-t border-line py-24">
+    <section className="border-t border-line py-24" data-story-chapter="2">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+        <span className="chapter-heading mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // How we work
         </span>
-        <h2 className="mb-12 max-w-2xl text-3xl font-bold md:text-4xl">From a costly problem to a working system.</h2>
+        <h2 className="chapter-heading mb-12 max-w-2xl text-3xl font-bold md:text-4xl">From a costly problem to a working system.</h2>
         <div className="grid gap-8 md:grid-cols-3 md:gap-10">
-          {PROCESS_STEPS.map((step) => (
-            <article key={step.n} className="border-t border-line pt-7">
+          {PROCESS_STEPS.map((step, i) => (
+            <article key={step.n} className={cn("reveal border-t border-line pt-7", `reveal-delay-${i + 1}`)}>
               <span className="mb-3 block font-mono text-[0.8rem] tracking-[0.12em] text-editorial-accent">{step.n}</span>
               <h3 className="mb-2 text-xl font-bold">{step.title}</h3>
               <p className="text-ink-soft">{step.body}</p>
@@ -153,12 +156,12 @@ export function CaseStudiesSection() {
     : null;
 
   return (
-    <section className="border-t border-line py-24">
+    <section className="border-t border-line py-24" data-story-chapter="3">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+        <span className="chapter-heading mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // Proof, not promises
         </span>
-        <h2 className="mb-10 max-w-2xl text-3xl font-bold md:text-4xl">See what has already shipped.</h2>
+        <h2 className="chapter-heading mb-10 max-w-2xl text-3xl font-bold md:text-4xl">See what has already shipped.</h2>
 
         <div>
           {picks
@@ -170,7 +173,7 @@ export function CaseStudiesSection() {
                 const coverImage = typeof p.cover_image_path === "string" ? p.cover_image_path : null;
 
                 return (
-                  <div key={p.slug} className="group border-b border-line py-14 last:border-b-0">
+                  <div key={p.slug} className="case-row reveal-on-scroll group border-b border-line py-14 last:border-b-0">
                     <div className={cn("grid items-center gap-10 lg:grid-cols-2", flip && "lg:[&>*:first-child]:order-2")}>
                       <div className="border-l-2 border-heading pl-6">
                         <span className="mb-2 block font-mono text-[0.78rem] uppercase tracking-[0.08em] text-editorial-muted">
@@ -281,15 +284,21 @@ const TESTIMONIALS = [
 
 export function TestimonialsSection() {
   return (
-    <section className="border-t border-line py-24">
+    <section className="border-t border-line py-24" data-story-chapter="4">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+        <span className="chapter-heading mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // Client signals
         </span>
-        <h2 className="mb-10 text-3xl font-bold md:text-4xl">What clients say after launch.</h2>
+        <h2 className="chapter-heading mb-10 text-3xl font-bold md:text-4xl">What clients say after launch.</h2>
         <div className="grid gap-6 md:grid-cols-3">
-          {TESTIMONIALS.map((t) => (
-            <Card key={t.name} className="rounded-[var(--radius)] border-line p-6 shadow-none ring-0">
+          {TESTIMONIALS.map((t, i) => (
+            <Card
+              key={t.name}
+              className={cn(
+                "reveal reveal-card depth-card rounded-[var(--radius)] border-line p-6 shadow-none ring-0",
+                `reveal-delay-${i + 1}`
+              )}
+            >
               <CardContent className="flex flex-col gap-3 p-0">
                 <div className="text-[#f59e0b] tracking-[2px]">★★★★★</div>
                 <p className="text-ink-soft">&ldquo;{t.quote}&rdquo;</p>
@@ -332,13 +341,13 @@ const FAQS = [
 
 export function FaqSection() {
   return (
-    <section className="border-t border-line py-24">
+    <section className="border-t border-line py-24" data-story-chapter="5">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
+        <span className="chapter-heading mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
           // Frequently asked
         </span>
-        <h2 className="mb-10 max-w-2xl text-3xl font-bold md:text-4xl">Questions people ask before we start.</h2>
-        <Accordion defaultValue={["item-0"]} className="max-w-3xl">
+        <h2 className="chapter-heading mb-10 max-w-2xl text-3xl font-bold md:text-4xl">Questions people ask before we start.</h2>
+        <Accordion defaultValue={["item-0"]} className="reveal-on-scroll max-w-3xl">
           {FAQS.map((faq, i) => (
             <AccordionItem key={faq.q} value={`item-${i}`} className="border-line">
               <AccordionTrigger className="text-base font-semibold">{faq.q}</AccordionTrigger>
@@ -353,9 +362,9 @@ export function FaqSection() {
 
 export function ClosingCtaSection() {
   return (
-    <section className="border-t border-line py-24 text-center">
-      <div className="mx-auto max-w-2xl px-4 sm:px-6">
-        <h2 className="mb-3 text-3xl font-bold md:text-4xl">Stop letting good enquiries go cold.</h2>
+    <section className="border-t border-line py-24 text-center" data-story-chapter="6">
+      <div className="reveal reveal-cta cta-glow-pulse mx-auto max-w-2xl px-4 sm:px-6">
+        <h2 className="chapter-heading mb-3 text-3xl font-bold md:text-4xl">Stop letting good enquiries go cold.</h2>
         <p className="mb-6 text-lg text-ink-soft">
           Book a focused call. We&apos;ll identify one workflow worth improving and the smallest useful system to
           solve it.

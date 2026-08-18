@@ -19,7 +19,7 @@ export function ScenarioLab() {
 
   return (
     <>
-      <div className="scenario-switcher" role="tablist" aria-label="Lisa workflow scenarios">
+      <div className="reveal scenario-switcher" role="tablist" aria-label="Lisa workflow scenarios">
         {TABS.map((tab) => (
           <button key={tab.key} type="button" role="tab" aria-selected={active === tab.key} className={active === tab.key ? "active" : ""} onClick={() => setActive(tab.key)}>
             <span>{tab.n}</span> {tab.label}
@@ -28,7 +28,7 @@ export function ScenarioLab() {
       </div>
 
       {active === "booking" && (
-        <div className="scenario-stage">
+        <div className="reveal scenario-stage">
           <div className="scenario-context">
             <span className="scenario-kicker">Clinic · Incoming call</span>
             <h3>A caller needs a Thursday appointment.</h3>

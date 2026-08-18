@@ -59,11 +59,11 @@ export function ArchiveRegistry() {
     <main>
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Technical Archive</p>
-          <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Technical Archive</p>
+          <h1 className="hero-animate hero-animate-2 mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             Case <span className="text-editorial-accent-strong">studies</span> for engineered systems.
           </h1>
-          <p className="mb-4 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
+          <p className="hero-animate hero-animate-3 mb-4 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
             Practical guides on custom software, automation, and web/mobile development, filter by topic, or browse
             everything.
           </p>
@@ -123,7 +123,7 @@ export function ArchiveRegistry() {
                 {pageItems.map((p, i) => (
                   <article
                     key={p.slug}
-                    className="group grid items-start gap-6 border-b border-line py-8 max-md:grid-cols-1"
+                    className={cn("reveal reveal-on-scroll group grid items-start gap-6 border-b border-line py-8 max-md:grid-cols-1", `reveal-delay-${(i % 4) + 1}`)}
                     style={{ gridTemplateColumns: "minmax(160px, 0.32fr) minmax(0, 1fr) minmax(130px, 0.22fr)" }}
                   >
                     <div>

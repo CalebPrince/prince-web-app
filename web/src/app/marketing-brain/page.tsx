@@ -30,16 +30,16 @@ export default function MarketingBrainPage() {
     <main>
       <header className="px-4 pt-[clamp(5rem,8vw,8.5rem)] pb-14 sm:px-6">
         <div className="mx-auto max-w-6xl">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Free marketing brain</p>
-          <h1 className="mb-6 text-[clamp(3rem,6vw,5.6rem)] leading-[0.96] font-extrabold tracking-[-0.05em] text-heading">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Free marketing brain</p>
+          <h1 className="hero-animate hero-animate-2 mb-6 text-[clamp(3rem,6vw,5.6rem)] leading-[0.96] font-extrabold tracking-[-0.05em] text-heading">
             Meet <span className="text-editorial-accent-strong">Sage</span>.
           </h1>
-          <p className="max-w-[66ch] text-[clamp(1rem,1.4vw,1.18rem)] leading-[1.75] text-ink-soft">
+          <p className="hero-animate hero-animate-3 max-w-[66ch] text-[clamp(1rem,1.4vw,1.18rem)] leading-[1.75] text-ink-soft">
             Bring a real marketing problem, an offer that isn&apos;t converting, a channel you can&apos;t decide
             between, a funnel that&apos;s stuck, a headline that isn&apos;t landing, and work it through the
             combined lens of five well-known frameworks. No signup, no email required.
           </p>
-          <div className="mt-8 flex flex-wrap gap-2.5">
+          <div className="hero-animate hero-animate-4 mt-8 flex flex-wrap gap-2.5">
             {FRAMEWORKS.map((f) => (
               <span key={f.name} className="flex flex-col rounded-[10px] border border-line bg-card px-[0.9rem] py-[0.6rem]">
                 <b className="text-[0.78rem] text-heading">{f.name}</b>
@@ -56,7 +56,7 @@ export default function MarketingBrainPage() {
 
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid items-center gap-8 rounded-[22px] bg-[#0d1728] p-[clamp(2rem,5vw,4rem)] text-[#d8e5f8] md:grid-cols-[1fr_auto]">
+          <div className="reveal grid items-center gap-8 rounded-[22px] bg-[#0d1728] p-[clamp(2rem,5vw,4rem)] text-[#d8e5f8] md:grid-cols-[1fr_auto]">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-[#73aaff]">// Beyond brainstorming</p>
               <h2 className="max-w-[20ch] text-[clamp(1.8rem,3.5vw,3rem)] tracking-[-0.04em] text-white">Want the follow-up automated too?</h2>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScenarioLab } from "./scenario-lab";
+import { cn } from "@/lib/utils";
 import "./lisa.css";
 
 export const metadata: Metadata = {
@@ -69,7 +70,7 @@ export default function LisaAiAssistantPage() {
       <header className="lisa-integrations-hero">
         <div className="lisa-hero-grid mx-auto max-w-6xl px-4 sm:px-6">
           <div className="lisa-hero-copy">
-            <div className="lisa-brand-lockup">
+            <div className="hero-animate hero-animate-1 lisa-brand-lockup">
               <span className="lisa-profile-mark" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
                   <circle cx="24" cy="24" r="18" />
@@ -82,14 +83,14 @@ export default function LisaAiAssistantPage() {
                 <small>AI assistant by Prince Caleb</small>
               </span>
             </div>
-            <p className="eyebrow mb-3">// Meet Lisa</p>
-            <h1>
+            <p className="hero-animate hero-animate-1 eyebrow mb-3">// Meet Lisa</p>
+            <h1 className="hero-animate hero-animate-2">
               One assistant.
               <br />
               <span>Your tools, connected.</span>
             </h1>
-            <p>Lisa can answer calls and messages, understand what a customer needs, complete the next task in the tools your team already uses, and bring a person in when judgment is required.</p>
-            <div className="flex flex-wrap gap-3">
+            <p className="hero-animate hero-animate-3">Lisa can answer calls and messages, understand what a customer needs, complete the next task in the tools your team already uses, and bring a person in when judgment is required.</p>
+            <div className="hero-animate hero-animate-4 flex flex-wrap gap-3">
               <Button variant="brand" size="pill" nativeButton={false} render={<a href="#scenario-lab" />}>
                 See Lisa at work
               </Button>
@@ -97,7 +98,7 @@ export default function LisaAiAssistantPage() {
                 Plan an integration
               </Button>
             </div>
-            <div className="lisa-hero-proof">
+            <div className="hero-animate hero-animate-4 lisa-hero-proof">
               <span>
                 <i /> Phone, WhatsApp and web chat
               </span>
@@ -105,7 +106,7 @@ export default function LisaAiAssistantPage() {
             </div>
           </div>
 
-          <div className="lisa-integration-map" aria-label="Lisa connected to business tools">
+          <div className="hero-animate hero-animate-4 lisa-integration-map" aria-label="Lisa connected to business tools">
             <div className="integration-map-head">
               <span>Live workflow map</span>
               <strong>
@@ -191,7 +192,7 @@ export default function LisaAiAssistantPage() {
       <section className="lisa-video-intro py-20" aria-labelledby="lisa-video-title">
         <div className="lisa-video-grid mx-auto max-w-6xl px-4 sm:px-6">
           {/* Static shell — real LiveAvatar SDK video-call wiring deferred, same as the homepage's voice-demo mockup */}
-          <div className="lisa-video-stage">
+          <div className="reveal lisa-video-stage">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/uploads/lisa/june-hr-liveavatar.webp" alt="Lisa's current LiveAvatar video presenter" width={1280} height={720} />
             <div className="lisa-video-status">
@@ -200,7 +201,7 @@ export default function LisaAiAssistantPage() {
               <strong>Ready</strong>
             </div>
           </div>
-          <div className="lisa-video-copy">
+          <div className="reveal reveal-delay-1 lisa-video-copy">
             <p className="eyebrow mb-3">// Meet Lisa face to face</p>
             <h2 id="lisa-video-title" className="display-5">
               A human presence.
@@ -229,7 +230,7 @@ export default function LisaAiAssistantPage() {
 
       <section className="py-20" id="scenario-lab">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal mb-10 grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Real situations</p>
               <h2 className="text-3xl font-bold md:text-4xl">See the work after the conversation.</h2>
@@ -242,7 +243,7 @@ export default function LisaAiAssistantPage() {
 
       <section className="lisa-tools-section py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Connections</p>
               <h2 className="text-3xl font-bold md:text-4xl">Use the tools you already trust.</h2>
@@ -250,8 +251,8 @@ export default function LisaAiAssistantPage() {
             <p className="text-ink-soft">Lisa can connect through approved APIs, webhooks, and automation platforms without forcing your team to replace everything.</p>
           </div>
           <div className="lisa-tools-grid">
-            {TOOLS.map((t) => (
-              <article key={t.title}>
+            {TOOLS.map((t, i) => (
+              <article key={t.title} className={cn("reveal", i % 3 === 1 && "reveal-delay-1", i % 3 === 2 && "reveal-delay-2")}>
                 <span className={t.cls}>{t.icon}</span>
                 <div>
                   <h3>{t.title}</h3>
@@ -261,13 +262,13 @@ export default function LisaAiAssistantPage() {
               </article>
             ))}
           </div>
-          <p className="integration-disclaimer">Tool names describe possible integrations. Availability depends on the tool&apos;s API, your account plan, permissions, and the workflow we approve together.</p>
+          <p className="reveal integration-disclaimer">Tool names describe possible integrations. Availability depends on the tool&apos;s API, your account plan, permissions, and the workflow we approve together.</p>
         </div>
       </section>
 
       <section className="py-20" id="lisa-pricing">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 grid gap-8 md:grid-cols-2 md:items-end">
+          <div className="reveal mb-10 grid gap-8 md:grid-cols-2 md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// One connected service</p>
               <h2 className="text-3xl font-bold md:text-4xl">Lisa, sold as one whole service.</h2>
@@ -279,8 +280,15 @@ export default function LisaAiAssistantPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {TIERS.map((t) => (
-              <div key={t.name} className={t.featured ? "relative rounded-[22px] border border-editorial-accent p-8 shadow-lg" : "relative rounded-[22px] border border-line p-8"}>
+            {TIERS.map((t, i) => (
+              <div
+                key={t.name}
+                className={cn(
+                  "reveal",
+                  `reveal-delay-${i + 1}`,
+                  t.featured ? "relative rounded-[22px] border border-editorial-accent p-8 shadow-lg" : "relative rounded-[22px] border border-line p-8"
+                )}
+              >
                 {t.badge && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-heading px-3 py-1 text-xs font-semibold text-bg">{t.badge}</span>}
                 <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">{t.name}</span>
                 <div className="text-[2rem] font-extrabold text-heading">
@@ -308,7 +316,7 @@ export default function LisaAiAssistantPage() {
               </div>
             ))}
 
-            <div className="relative rounded-[22px] border border-dashed border-line p-8">
+            <div className="reveal reveal-delay-3 relative rounded-[22px] border border-dashed border-line p-8">
               <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">Custom</span>
               <div className="mb-3 text-[2rem] font-extrabold text-heading">Tailored quote</div>
               <p className="mb-3 text-ink-soft">A workflow built around your exact tools, volume, and compliance needs, priced once we&apos;ve scoped it.</p>
@@ -333,7 +341,7 @@ export default function LisaAiAssistantPage() {
 
       <section className="py-20">
         <div className="lisa-control-grid mx-auto max-w-6xl px-4 sm:px-6">
-          <div>
+          <div className="reveal">
             <p className="eyebrow mb-3">// Useful because it is controlled</p>
             <h2 className="display-5 mb-4">Lisa knows what she may do and when to stop.</h2>
             <p className="text-muted-custom">Each deployment receives its own knowledge, tools, permissions, escalation rules, tone, operating hours, and audit trail. The goal is reliable assistance, not uncontrolled autonomy.</p>
@@ -341,7 +349,7 @@ export default function LisaAiAssistantPage() {
               See the safety approach <span>→</span>
             </Link>
           </div>
-          <div className="permission-console">
+          <div className="reveal permission-console">
             <header>
               <span>Lisa · Permissions</span>
               <strong>Client workspace</strong>
@@ -361,7 +369,7 @@ export default function LisaAiAssistantPage() {
 
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="lisa-build-card">
+          <div className="reveal lisa-build-card">
             <div>
               <p className="eyebrow mb-3">// Start with one real workflow</p>
               <h2>What should Lisa handle for your business?</h2>

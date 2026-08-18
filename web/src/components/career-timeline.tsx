@@ -25,7 +25,7 @@ export function CareerTimeline() {
         return (
           <div
             key={stage.title}
-            className={cn("relative cursor-pointer pb-8 last:pb-0")}
+            className={cn("reveal relative cursor-pointer pb-8 last:pb-0", i > 0 && `reveal-delay-${i}`)}
             onClick={() => setExpanded(open ? null : i)}
           >
             <span

@@ -6,6 +6,7 @@ import hljs from "highlight.js";
 import "highlight.js/styles/atom-one-dark.min.css";
 import { api, type BlogPost } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Ported from public/archive-post.html's inline script: same fenced-code
 // body parser, same reading-progress hairline (capture-phase scroll
@@ -121,20 +122,20 @@ export function ArchivePostDetail({ slug }: { slug: string }) {
 
       <header className="border-b border-line bg-bg pt-40 pb-10 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div className="hero-animate hero-animate-1 mb-3 flex flex-wrap items-center gap-3">
             {post.category && (
               <p className="m-0 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">{post.category}</p>
             )}
             {publishedDate(post) && <span className="text-sm text-editorial-muted">{publishedDate(post)}</span>}
             <span className="text-sm text-editorial-muted">⏱ {post.reading_time} min read</span>
           </div>
-          <h1 className="mb-3 max-w-[11ch] text-[clamp(2.5rem,7vw,5.4rem)] font-bold leading-[1.05] text-heading">{post.title}</h1>
-          <p className="max-w-[65ch] text-lg leading-[1.65] text-ink-soft">{post.excerpt}</p>
+          <h1 className="hero-animate hero-animate-2 mb-3 max-w-[11ch] text-[clamp(2.5rem,7vw,5.4rem)] font-bold leading-[1.05] text-heading">{post.title}</h1>
+          <p className="hero-animate hero-animate-3 max-w-[65ch] text-lg leading-[1.65] text-ink-soft">{post.excerpt}</p>
         </div>
       </header>
 
       <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <div className="mt-10 border-t border-line">
+        <div className="reveal reveal-on-scroll mt-10 border-t border-line">
           <div
             className="grid items-start gap-6 border-b border-line py-8"
             style={{ gridTemplateColumns: "minmax(160px, 0.32fr) minmax(0, 1fr) minmax(130px, 0.22fr)" }}
@@ -151,7 +152,7 @@ export function ArchivePostDetail({ slug }: { slug: string }) {
           </div>
         </div>
 
-        <div className="mt-10 max-w-[760px]">
+        <div className="reveal mt-10 max-w-[760px]">
           <div className="mb-6 flex flex-wrap gap-2">
             <a
               href={`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`}
@@ -195,7 +196,7 @@ export function ArchivePostDetail({ slug }: { slug: string }) {
 
         <PostNewsletter />
 
-        <div className="mt-10 border-t border-line pt-8 text-center">
+        <div className="reveal mt-10 border-t border-line pt-8 text-center">
           <h4 className="mb-3 text-xl font-bold text-heading">Want something like this built for your business?</h4>
           <Button variant="brand" size="pill" className="group" nativeButton={false} render={<Link href="/contact" />}>
             Let&apos;s talk about your project{" "}
@@ -210,11 +211,14 @@ export function ArchivePostDetail({ slug }: { slug: string }) {
             <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Keep reading</p>
             <h3 className="mb-6 text-2xl font-bold text-heading">Related articles</h3>
             <div className="grid gap-5 md:grid-cols-3">
-              {related.map((r) => (
+              {related.map((r, i) => (
                 <Link
                   key={r.slug}
                   href={`/archive/${r.slug}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-line transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1.5 hover:border-line-strong hover:bg-card"
+                  className={cn(
+                    "reveal group flex h-full flex-col overflow-hidden rounded-[24px] border border-line transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1.5 hover:border-line-strong hover:bg-card",
+                    `reveal-delay-${i + 1}`
+                  )}
                 >
                   <div className="border-b border-line bg-bg-soft px-8 py-16 text-center">
                     <code className="mb-2 block text-[0.85rem] text-heading">archive_record: {r.slug}</code>
@@ -290,7 +294,7 @@ function PostNewsletter() {
   }
 
   return (
-    <section className="mt-16 grid items-center gap-8 rounded-[18px] border border-line bg-card p-8 shadow-sm md:grid-cols-[1fr_0.85fr]">
+    <section className="reveal mt-16 grid items-center gap-8 rounded-[18px] border border-line bg-card p-8 shadow-sm md:grid-cols-[1fr_0.85fr]">
       <div>
         <p className="mb-2 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Field notes</p>
         <h3 className="mb-1 text-xl font-bold text-heading">Get the next useful build note.</h3>

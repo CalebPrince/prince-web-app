@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -86,11 +87,11 @@ export default function ServicesPage() {
       {/* Single-block hero — no side panel here, unlike home/about */}
       <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Services</p>
-          <h1 className="mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Services</p>
+          <h1 className="hero-animate hero-animate-2 mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
             AI <span className="text-editorial-accent-strong">agents</span> that finish the workflow.
           </h1>
-          <p className="max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
+          <p className="hero-animate hero-animate-3 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
             Start with the call, message, or repetitive task costing your team time. Then connect the answer to the
             booking, follow-up, record, and person who needs it.
           </p>
@@ -224,7 +225,7 @@ export default function ServicesPage() {
               <div
                 key={t.id}
                 id={t.id}
-                className="grid items-center gap-6 border-b border-line py-9 max-md:grid-cols-1"
+                className="reveal-on-scroll grid items-center gap-6 border-b border-line py-9 max-md:grid-cols-1"
                 style={{ gridTemplateColumns: "minmax(150px, 0.24fr) minmax(0, 1fr) minmax(190px, 0.28fr)" }}
               >
                 <div>
@@ -267,8 +268,11 @@ export default function ServicesPage() {
           </div>
 
           <div className="grid grid-cols-1 border-t border-l border-line sm:grid-cols-2 lg:grid-cols-4">
-            {LIVE_PROOF.map((p) => (
-              <article key={p.title} className="flex min-h-[18rem] flex-col border-r border-b border-line bg-bg p-7">
+            {LIVE_PROOF.map((p, i) => (
+              <article
+                key={p.title}
+                className={cn("reveal depth-card flex min-h-[18rem] flex-col border-r border-b border-line bg-bg p-7", `reveal-delay-${(i % 4) + 1}`)}
+              >
                 <div className="flex items-center gap-2 font-mono text-[0.68rem] font-bold uppercase leading-[1.2] tracking-[0.07em] text-[#16835a]">
                   <span className="inline-block size-[0.48rem] rounded-full bg-[#20a36a] shadow-[0_0_0_4px_rgba(32,163,106,0.13)]" />
                   {p.status}

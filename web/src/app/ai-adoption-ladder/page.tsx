@@ -59,11 +59,11 @@ export default function AiAdoptionLadderPage() {
     <main>
       <header className="px-4 pt-[clamp(5rem,8vw,8.5rem)] pb-16 sm:px-6">
         <div className="mx-auto max-w-6xl">
-          <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Where does your business actually sit</p>
-          <h1 className="mb-6 max-w-[16ch] text-[clamp(3rem,6vw,5.6rem)] leading-[0.96] font-extrabold tracking-[-0.05em] text-heading">
+          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Where does your business actually sit</p>
+          <h1 className="hero-animate hero-animate-2 mb-6 max-w-[16ch] text-[clamp(3rem,6vw,5.6rem)] leading-[0.96] font-extrabold tracking-[-0.05em] text-heading">
             The <span className="text-editorial-accent-strong">5 levels</span> of AI adoption.
           </h1>
-          <p className="max-w-[68ch] text-[clamp(1rem,1.4vw,1.18rem)] leading-[1.75] text-ink-soft">
+          <p className="hero-animate hero-animate-3 max-w-[68ch] text-[clamp(1rem,1.4vw,1.18rem)] leading-[1.75] text-ink-soft">
             Almost every business that says &ldquo;we use AI&rdquo; is stuck at Level 1: one chat window, one person
             reading every reply. Real adoption is a ladder, not a toggle. Here&apos;s what each rung actually looks
             like, and where Prince Caleb&apos;s own agent system sits on it today, with real evidence, not a slide.
@@ -74,10 +74,10 @@ export default function AiAdoptionLadderPage() {
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-3.5">
-            {RUNGS.map((rung) => (
+            {RUNGS.map((rung, i) => (
               <article
                 key={rung.num}
-                className={`grid grid-cols-[auto_1fr] items-start gap-6 rounded-2xl border p-[1.6rem_clamp(1.4rem,3vw,2.2rem)] transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg ${
+                className={`reveal ${i === 1 ? "reveal-delay-1" : i === 2 ? "reveal-delay-2" : ""} grid grid-cols-[auto_1fr] items-start gap-6 rounded-2xl border p-[1.6rem_clamp(1.4rem,3vw,2.2rem)] transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg ${
                   rung.current ? "border-editorial-accent-strong bg-gradient-to-b from-bg-soft to-card" : "border-line bg-card"
                 }`}
               >
@@ -105,7 +105,7 @@ export default function AiAdoptionLadderPage() {
 
       <section className="bg-bg-soft py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-8 md:grid-cols-[1fr_minmax(18rem,0.55fr)] md:items-end">
+          <div className="reveal grid gap-8 md:grid-cols-[1fr_minmax(18rem,0.55fr)] md:items-end">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Not a slide, a running system</p>
               <h2 className="text-3xl font-bold md:text-4xl">What Level 3–4 actually looks like here.</h2>
@@ -117,8 +117,11 @@ export default function AiAdoptionLadderPage() {
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {PROOF.map((p) => (
-              <article key={p.title} className="grid grid-cols-[40px_1fr] gap-4 rounded-[14px] border border-line bg-card p-5">
+            {PROOF.map((p, i) => (
+              <article
+                key={p.title}
+                className={`reveal ${i === 1 ? "reveal-delay-1" : i === 2 ? "reveal-delay-2" : ""} grid grid-cols-[40px_1fr] gap-4 rounded-[14px] border border-line bg-card p-5`}
+              >
                 <span className="grid size-10 place-items-center rounded-[10px] bg-[#182236] text-[0.78rem] font-black text-white">{p.icon}</span>
                 <div>
                   <h3 className="mb-2 text-base font-bold text-heading">{p.title}</h3>
@@ -127,7 +130,7 @@ export default function AiAdoptionLadderPage() {
               </article>
             ))}
           </div>
-          <p className="mx-auto mt-6 max-w-[90ch] text-center text-[0.68rem] text-ink-soft">
+          <p className="reveal mx-auto mt-6 max-w-[90ch] text-center text-[0.68rem] text-ink-soft">
             This describes Prince Caleb&apos;s real internal system as of today, not a promised outcome for every
             client. Most engagements start at Level 1–2 on one controlled workflow and grow from there, see the
             safety approach for how permissions and escalation are handled at each stage.
@@ -137,7 +140,7 @@ export default function AiAdoptionLadderPage() {
 
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid items-center gap-8 rounded-[22px] bg-[#0d1728] p-[clamp(2rem,5vw,4rem)] text-[#d8e5f8] md:grid-cols-[1fr_auto]">
+          <div className="reveal grid items-center gap-8 rounded-[22px] bg-[#0d1728] p-[clamp(2rem,5vw,4rem)] text-[#d8e5f8] md:grid-cols-[1fr_auto]">
             <div>
               <p className="mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-[#73aaff]">// Find your rung</p>
               <h2 className="max-w-[20ch] text-[clamp(1.8rem,3.5vw,3rem)] tracking-[-0.04em] text-white">
