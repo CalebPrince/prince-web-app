@@ -1,172 +1,294 @@
 import type { Metadata } from "next";
+import type { IconType } from "react-icons";
+import {
+  SiFigma,
+  SiFramer,
+  SiReact,
+  SiTypescript,
+  SiNodedotjs,
+  SiSupabase,
+  SiAnthropic,
+} from "react-icons/si";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { CareerTimeline } from "@/components/career-timeline";
-import { GithubActivity } from "@/components/github-activity";
+import { ArrowRight } from "lucide-react";
+import { Reveal } from "@/components/Reveal";
+import { SectionLabel } from "@/components/SectionLabel";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "About",
-  description:
-    "Prince Caleb builds AI voice agents, chatbots, and business automations on 12+ years of custom web & mobile engineering, not templates.",
-};
-
 const PRINCIPLES = [
-  { tag: "[PERFORMANCE]", title: "Zero bloat by default", body: "If a dependency does not earn its cost in speed, clarity, or reliability, it stays out of the system.", metric: "Lean", metricLabel: "First build mode" },
-  { tag: "[SECURITY]", title: "Trust from the first line", body: "Input validation, prepared statements, role boundaries, and least-privilege access are part of the initial architecture.", metric: "Day 01", metricLabel: "Security posture" },
-  { tag: "[COMMUNICATION]", title: "Plain-language delivery", body: "You know what is being built, why it matters, what it costs, and what tradeoffs are being made.", metric: "Clear", metricLabel: "Project signal" },
+  {
+    no: "01",
+    title: "Design is how it works",
+    body: "Aesthetics and engineering are the same conversation. I refuse the trade-off between beautiful and fast.",
+  },
+  {
+    no: "02",
+    title: "Ship, then sharpen",
+    body: "Momentum beats perfection. I build in tight loops, get it live, and let real usage guide the polish.",
+  },
+  {
+    no: "03",
+    title: "AI as a collaborator",
+    body: "The most interesting products pair human taste with machine leverage. I design that seam deliberately.",
+  },
+  {
+    no: "04",
+    title: "Own the whole stack",
+    body: "From the first sketch to the deploy pipeline, one person accountable for the entire experience.",
+  },
 ];
 
-const TECH = ["PHP", "JavaScript", "React", "React Native", "WordPress", "MySQL", "PostgreSQL", "REST APIs", "Custom AI Integrations"];
+type Tool = { name: string; icon?: IconType };
 
-export default function AboutPage() {
+// About page toolkit — brand logos paired with capabilities.
+const TOOLKIT: { group: string; items: Tool[] }[] = [
+  {
+    group: "Design",
+    items: [
+      { name: "Figma", icon: SiFigma },
+      { name: "Motion & prototyping", icon: SiFramer },
+      { name: "Design systems" },
+      { name: "Brand identity" },
+    ],
+  },
+  {
+    group: "Engineering",
+    items: [
+      { name: "React & Next.js", icon: SiReact },
+      { name: "TypeScript", icon: SiTypescript },
+      { name: "Node & edge runtimes", icon: SiNodedotjs },
+      { name: "Postgres & Supabase", icon: SiSupabase },
+    ],
+  },
+  {
+    group: "AI",
+    items: [
+      { name: "LLM agents & tools", icon: SiAnthropic },
+      { name: "RAG pipelines" },
+      { name: "Voice interfaces" },
+      { name: "Workflow automation" },
+    ],
+  },
+];
+
+const TIMELINE = [
+  {
+    year: "2014",
+    title: "First lines of code",
+    body: "Started building small sites for local businesses and never looked back.",
+  },
+  {
+    year: "2018",
+    title: "Design meets development",
+    body: "Went full-stack and product-minded — owning experiences end to end.",
+  },
+  {
+    year: "2022",
+    title: "The AI turn",
+    body: "Began shipping AI-native interfaces, agents and automation for clients.",
+  },
+  {
+    year: "2026",
+    title: "The studio today",
+    body: "A one-person studio partnering with ambitious teams on what comes next.",
+  },
+];
+
+export const metadata: Metadata = {
+  title: "About — Prince Caleb",
+  description:
+    "Designer, developer and AI tinkerer running a one-person digital studio, turning raw ideas into products people remember using.",
+};
+
+export default function About() {
   return (
-    <main>
-      {/* Interior-page hero — a single deliberate text block (unlike the
-          homepage's split grid), ported from public/about.html's
-          .hero.agency-hero with a col-lg-7/col-lg-5 row: intro copy beside
-          the "Operating profile" value panel. */}
-      <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-12 lg:items-center lg:gap-14">
+    <>
+      {/* ── HERO / INTRO ────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1400px] px-6 pt-36 pb-24 md:px-10 md:pt-48 md:pb-28">
+        <div className="grid gap-14 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
-            <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// About</p>
-            <h1 className="hero-animate hero-animate-2 mb-3 text-5xl font-bold md:text-6xl">
-              Hi, I&apos;m <span className="text-editorial-accent-strong">Prince</span> Caleb.
-            </h1>
-            <p className="hero-animate hero-animate-3 max-w-2xl text-lg leading-[1.65] text-ink-soft">
-              I build AI voice agents, chatbots, and business automations, on top of 12+ years of custom web and
-              mobile engineering, instead of bending businesses to fit a template. I care about the same three
-              things on every project: it has to be fast, it has to be secure, and it has to be something you can
-              actually maintain after I hand it over.
-            </p>
+            <Reveal>
+              <SectionLabel index="00">About</SectionLabel>
+            </Reveal>
+            <Reveal delay={80}>
+              <h1 className="mt-8 text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+                Hi, I&rsquo;m Caleb.
+                <br />
+                <span className="text-text-2">I build the</span>{" "}
+                <span className="text-accent">web&rsquo;s next</span> chapter.
+              </h1>
+            </Reveal>
+            <Reveal delay={160}>
+              <p className="mt-8 max-w-xl text-lg leading-relaxed text-text-2">
+                Designer, developer and AI tinkerer running a one-person digital studio. For over
+                a decade I&rsquo;ve helped founders and teams turn raw ideas into products people
+                actually remember using.
+              </p>
+            </Reveal>
           </div>
-          <div className="hero-animate hero-animate-3 mt-10 max-w-md rounded-2xl border border-line bg-card p-5 lg:col-span-5 lg:mt-0">
-            <span className="mb-3 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
-              Operating profile
-            </span>
-            {[
-              ["Mode", "Direct builder"],
-              ["Bias", "Small, fast, maintainable"],
-              ["Standard", "Secure from day one"],
-              ["Delivery", "No template dependency"],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-4 border-t border-line py-[0.9rem] first:border-t-0">
-                <strong className="text-[0.9rem] text-heading">{k}</strong>
-                <span className="text-right text-[0.86rem] text-ink-soft">{v}</span>
+
+          <Reveal delay={220} className="lg:col-span-5">
+            <div className="relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2">
+              <img
+                src="https://images.unsplash.com/photo-1450133064473-71024230f91b?w=900&h=1100&fit=crop&auto=format"
+                alt="Portrait of Caleb"
+                className="aspect-[4/5] w-full object-cover grayscale"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-bg/50 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-5">
+                <span className="label text-text">Prince Caleb</span>
+                <span className="label text-accent">Est. 2014</span>
               </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── STORY ───────────────────────────────────────────── */}
+      <section className="border-y border-hairline bg-bg-2/40">
+        <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
+          <div className="grid gap-14 lg:grid-cols-12">
+            <Reveal className="lg:col-span-4">
+              <SectionLabel index="01">The story</SectionLabel>
+            </Reveal>
+            <div className="space-y-6 text-lg leading-relaxed text-text-2 lg:col-span-8">
+              <Reveal delay={60} as="div">
+                <p>
+                  I started out obsessed with two things that rarely lived together: how something
+                  looks, and how it&rsquo;s built. Most people pick a side. I spent years refusing
+                  to &mdash; learning to design interfaces and then engineer them to a standard
+                  neither discipline would compromise.
+                </p>
+              </Reveal>
+              <Reveal delay={120} as="div">
+                <p>
+                  That obsession turned into a studio. Today I work with founders, product teams
+                  and creative agencies who need someone who can hold the whole picture &mdash;
+                  <span className="text-text"> strategy, design, engineering and AI</span> &mdash;
+                  without losing the thread between them.
+                </p>
+              </Reveal>
+              <Reveal delay={180} as="div">
+                <p>
+                  Lately, most of that work lives at the edge of what AI makes possible: agents,
+                  automation and interfaces that feel less like tools and more like collaborators.
+                  It&rsquo;s the most exciting moment the web has had in years, and I&rsquo;m
+                  building squarely for it.
+                </p>
+              </Reveal>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRINCIPLES ──────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
+        <Reveal>
+          <SectionLabel index="02">How I work</SectionLabel>
+          <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
+            Principles that hold.
+          </h2>
+        </Reveal>
+        <div className="mt-16 grid gap-px overflow-hidden rounded-[var(--radius)] border border-hairline bg-hairline sm:grid-cols-2">
+          {PRINCIPLES.map((p, i) => (
+            <Reveal
+              key={p.no}
+              delay={i * 70}
+              className="group bg-bg p-8 transition-colors hover:bg-bg-2 md:p-10"
+            >
+              <span className="label text-accent">{p.no}</span>
+              <h3 className="mt-5 text-2xl font-semibold tracking-tight">{p.title}</h3>
+              <p className="mt-3 text-text-2">{p.body}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── TOOLKIT ─────────────────────────────────────────── */}
+      <section className="border-y border-hairline bg-bg-2/40">
+        <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
+          <Reveal>
+            <SectionLabel index="03">The toolkit</SectionLabel>
+            <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
+              What I reach for.
+            </h2>
+          </Reveal>
+          <div className="mt-16 grid gap-12 md:grid-cols-3">
+            {TOOLKIT.map(({ group, items }, i) => (
+              <Reveal key={group} delay={i * 80}>
+                <p className="label text-muted">{group}</p>
+                <ul className="mt-6 space-y-4 border-t border-hairline pt-6">
+                  {items.map(({ name, icon: Icon }) => (
+                    <li
+                      key={name}
+                      className="group flex items-center gap-3 text-text-2 transition-colors hover:text-text"
+                    >
+                      {Icon ? (
+                        <Icon className="size-5 text-muted transition-colors group-hover:text-accent" aria-hidden="true" />
+                      ) : (
+                        <span className="size-1.5 rounded-full bg-accent" />
+                      )}
+                      {name}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
             ))}
           </div>
         </div>
-      </header>
-
-      {/* How I got here */}
-      <section className="py-20">
-        <div className="reveal mx-auto max-w-[760px] px-4 sm:px-6">
-          <h3 className="mb-3 text-2xl font-bold">How I got here</h3>
-          <p className="text-ink-soft">
-            I started out building small sites and scripts, and quickly found the parts of the job I actually
-            loved: figuring out the real shape of a problem, then building the smallest, cleanest thing that solves
-            it. Over time that turned into full-stack API work, CMS architecture, and cross-platform mobile
-            development, but the core habit never changed: understand the business first, write the code second.
-          </p>
-          <p className="mt-4 text-ink-soft">
-            Today I work directly with founders, small firms, and teams who need something built right the first
-            time, not a stack of plugins bolted together, and not a six-month agency engagement for a problem that
-            doesn&apos;t need one.
-          </p>
-        </div>
       </section>
 
-      {/* Engineering principles — hairline list, ported from .archive-list/.archive-entry */}
-      <section className="border-t border-line py-20" id="principles">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="reveal reveal-on-scroll mb-8">
-            <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">
-              // Engineering principles
-            </span>
-            <h2 className="max-w-2xl text-3xl font-bold md:text-4xl">The operating rules behind the work.</h2>
-          </div>
-          <div className="border-t border-line">
-            {PRINCIPLES.map((p, i) => (
-              <div
-                key={p.title}
-                className={cn(
-                  "reveal reveal-on-scroll grid items-start gap-6 border-b border-line py-8",
-                  i > 0 && `reveal-delay-${i}`
-                )}
-                style={{ gridTemplateColumns: "minmax(160px, 0.32fr) minmax(0, 1fr) minmax(130px, 0.22fr)" }}
-              >
-                <span className="font-mono text-[0.74rem] uppercase tracking-[0.08em] text-heading">{p.tag}</span>
-                <div>
-                  <h3 className="mb-[0.65rem] text-lg font-bold text-heading">{p.title}</h3>
-                  <p className="max-w-[68ch] text-ink-soft">{p.body}</p>
-                </div>
-                <div className="justify-self-end border-l border-line pl-4 text-right">
-                  <strong className="block text-[clamp(1.35rem,3vw,2.1rem)] leading-none text-heading">{p.metric}</strong>
-                  <span className="mt-[0.45rem] block text-[0.78rem] text-editorial-muted">{p.metricLabel}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Career timeline */}
-      <section className="border-t border-line py-20">
-        <div className="mx-auto max-w-[700px] px-4 sm:px-6">
-          <h3 className="mb-2 text-center text-2xl font-bold">How the journey&apos;s gone so far</h3>
-          <p className="mb-10 text-center text-ink-soft">Tap a stage to read more.</p>
-          <CareerTimeline />
-        </div>
-      </section>
-
-      {/* Tech I work with */}
-      <section className="border-t border-line py-20">
-        <div className="reveal mx-auto max-w-6xl px-4 text-center sm:px-6">
-          <p className="mb-4 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">Tech I work with</p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {TECH.map((t) => (
-              <span
-                key={t}
-                className="inline-flex items-center gap-[0.4rem] rounded-lg border border-line px-[0.9rem] py-[0.45rem] font-mono text-[0.8rem] text-ink"
-              >
-                {t}
+      {/* ── TIMELINE ────────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
+        <Reveal>
+          <SectionLabel index="04">The path</SectionLabel>
+          <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
+            A decade in motion.
+          </h2>
+        </Reveal>
+        <div className="mt-16 border-t border-hairline">
+          {TIMELINE.map((t, i) => (
+            <Reveal
+              as="div"
+              key={t.year}
+              delay={i * 70}
+              className="grid items-baseline gap-2 border-b border-hairline py-8 md:grid-cols-12 md:gap-8"
+            >
+              <span className="text-2xl font-bold tracking-tight text-accent md:col-span-2">
+                {t.year}
               </span>
-            ))}
-          </div>
+              <h3 className="text-xl font-semibold tracking-tight md:col-span-4">{t.title}</h3>
+              <p className="max-w-md text-text-2 md:col-span-6">{t.body}</p>
+            </Reveal>
+          ))}
         </div>
       </section>
 
-      <GithubActivity />
-
-      {/* Closing CTA — dark inverted panel, ported from .agency-cta (distinct
-          from the homepage's closing CTA, which stays on the light bg) */}
-      <section className="border-t border-line border-b bg-heading py-20 text-center text-bg">
-        <div className="reveal mx-auto max-w-2xl px-4 sm:px-6">
-          <h2 className="mb-3 text-3xl font-bold md:text-4xl">Want to work together?</h2>
-          <p className="mb-6 text-lg opacity-90">A short discovery call is the fastest way to find out if we&apos;re a fit.</p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button
-              variant="brand"
-              size="pill"
-              className="border-bg bg-bg text-heading hover:text-bg"
-              nativeButton={false}
-              render={<a href="/book.html" />}
-            >
-              Book a discovery call
-            </Button>
-            <Button
-              variant="brand-outline"
-              size="pill"
-              className="border-white/35 text-bg hover:border-bg hover:text-bg"
-              nativeButton={false}
-              render={<Link href="/contact" />}
-            >
-              Send a message
-            </Button>
-          </div>
+      {/* ── CTA ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-t border-hairline">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute left-1/2 top-1/2 h-[30rem] w-[30rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/15 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />
+        </div>
+        <div className="mx-auto max-w-[1400px] px-6 py-28 text-center md:px-10 md:py-40">
+          <Reveal>
+            <h2 className="mx-auto max-w-3xl text-[clamp(2.2rem,6vw,5rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
+              Let&rsquo;s build something
+              <br />
+              <span className="text-accent">worth remembering.</span>
+            </h2>
+            <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link href="/#contact" className={cn(buttonVariants({ size: "lg" }))}>
+                Start a Project{" "}
+                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+              <Link href="/#work" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
+                View My Work
+              </Link>
+            </div>
+          </Reveal>
         </div>
       </section>
-    </main>
+    </>
   );
 }
