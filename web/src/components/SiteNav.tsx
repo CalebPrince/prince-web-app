@@ -14,6 +14,7 @@ const NAV: { label: string; to: string }[] = [
   { label: "Pricing", to: "/pricing" },
   { label: "About", to: "/about" },
   { label: "Lab", to: "/lab" },
+  { label: "Contact", to: "/contact" },
 ];
 
 const CONTACT = "/contact";
