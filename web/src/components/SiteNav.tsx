@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { HeaderUtilityDock } from "@/components/HeaderUtilityDock";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -48,9 +49,12 @@ export function SiteNav() {
         )}
       >
         <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-6 md:px-10">
-          <Link href="/" className="transition-opacity hover:opacity-80">
-            <Logo />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="transition-opacity hover:opacity-80">
+              <Logo />
+            </Link>
+            <HeaderUtilityDock />
+          </div>
 
           <nav className="hidden items-center gap-9 lg:flex">
             {NAV.map((item) => (
