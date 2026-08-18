@@ -84,30 +84,42 @@ export function SiteNav() {
       {/* Mobile menu */}
       <div
         className={cn(
-          "fixed inset-0 z-[60] flex flex-col bg-bg/95 backdrop-blur-2xl transition-all duration-500 lg:hidden",
+          "fixed inset-0 z-[60] flex flex-col bg-bg backdrop-blur-2xl transition-all duration-500 lg:hidden",
           menuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         )}
       >
-        <div className="flex h-20 items-center justify-between px-6">
-          <Logo />
-          <button aria-label="Close menu" onClick={() => setMenuOpen(false)}>
-            <X className="size-6 text-text" />
+        <div
+          className="flex shrink-0 items-center justify-between border-b border-hairline px-6 py-5"
+          style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}
+        >
+          <Link href="/" onClick={() => setMenuOpen(false)} className="transition-opacity hover:opacity-80">
+            <Logo />
+          </Link>
+          <button
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+            className="grid size-10 place-items-center rounded-full border border-hairline text-text transition-colors hover:border-accent/60 hover:text-accent"
+          >
+            <X className="size-5" />
           </button>
         </div>
-        <nav className="flex flex-1 flex-col justify-center gap-2 px-6">
+        <nav className="flex min-h-0 flex-1 flex-col justify-center gap-2 overflow-y-auto px-6 py-4">
           {NAV.map((item, i) => (
             <Link
               key={item.label}
               href={item.to}
               onClick={() => setMenuOpen(false)}
-              className="border-b border-hairline py-5 text-4xl font-semibold tracking-tight text-text"
+              className="shrink-0 border-b border-hairline py-5 text-center text-4xl font-semibold tracking-tight text-text"
               style={{ transitionDelay: `${i * 40}ms` }}
             >
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="p-6">
+        <div
+          className="shrink-0 border-t border-hairline p-6"
+          style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+        >
           <Link
             href={CONTACT}
             onClick={() => setMenuOpen(false)}
