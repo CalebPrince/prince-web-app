@@ -1,86 +1,285 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ContactForm } from "@/components/contact-form";
+import { ArrowRight, Check, Clock, MapPin } from "lucide-react";
+import type { IconType } from "react-icons";
+import { FaWhatsapp, FaGithub, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
+import { HiOutlineMail } from "react-icons/hi";
+import { Reveal } from "@/components/Reveal";
+import { SectionLabel } from "@/components/SectionLabel";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Contact Prince Caleb about an AI voice agent, WhatsApp assistant, or business automation workflow.",
-};
+// Contact page — real details from princecaleb.dev.
+const EMAIL = "hello@princecaleb.dev";
+const WHATSAPP_NUM = "+233 53 580 1359";
+const WHATSAPP_URL = "https://wa.me/233535801359";
 
-export default function ContactPage() {
+const METHODS: {
+  label: string;
+  value: string;
+  href: string;
+  icon: IconType;
+  note: string;
+}[] = [
+  {
+    label: "Email",
+    value: EMAIL,
+    href: `mailto:${EMAIL}`,
+    icon: HiOutlineMail,
+    note: "Best for detailed briefs and files.",
+  },
+  {
+    label: "WhatsApp",
+    value: WHATSAPP_NUM,
+    href: WHATSAPP_URL,
+    icon: FaWhatsapp,
+    note: "Quickest for a fast back-and-forth.",
+  },
+];
+
+const SOCIAL: { label: string; href: string; icon: IconType }[] = [
+  { label: "GitHub", href: "https://github.com/CalebPrince", icon: FaGithub },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/caleb-akakpo-b7123a89/",
+    icon: FaLinkedinIn,
+  },
+  { label: "X", href: "https://x.com/princecay77", icon: FaXTwitter },
+];
+
+const BUDGETS = ["< $2k", "$2k – $5k", "$5k – $15k", "$15k +", "Not sure yet"];
+
+export default function Contact() {
+  const [budget, setBudget] = useState<string>("");
+  const [sent, setSent] = useState(false);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSent(true);
+  };
+
   return (
-    <main>
-      <header className="border-b border-line bg-bg pt-40 pb-16 md:pt-44">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="hero-animate hero-animate-1 mb-3 text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Contact</p>
-          <h1 className="hero-animate hero-animate-2 mb-3 max-w-4xl text-5xl font-bold md:text-6xl">
-            What should <span className="text-editorial-accent-strong">stop</span> depending on a person?
-          </h1>
-          <p className="hero-animate hero-animate-3 max-w-[60ch] text-lg leading-[1.65] text-ink-soft">
-            Describe the call, message, follow-up, or repetitive task. I&apos;ll review where an agent should act,
-            where a person should stay in control, and the smallest useful place to start.
-          </p>
+    <>
+      {/* ── HERO ────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute left-1/4 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />
         </div>
-      </header>
+        <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-14 md:px-10 md:pt-48 md:pb-16">
+          <Reveal>
+            <SectionLabel>Contact</SectionLabel>
+          </Reveal>
+          <Reveal delay={80}>
+            <h1 className="mt-8 max-w-4xl text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+              Let&rsquo;s build
+              <br />
+              <span className="text-accent">something real.</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={160}>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
+              Tell me about an AI voice agent, WhatsApp assistant, automation, or a website or app
+              you have in mind. I&rsquo;ll come back with a straight read on scope, cost and timeline
+              &mdash; no obligation.
+            </p>
+          </Reveal>
+          <Reveal delay={220} className="mt-8 flex flex-wrap items-center gap-6">
+            <span className="inline-flex items-center gap-2 text-text-2">
+              <Clock className="size-4 text-accent" /> Replies within 24 hours
+            </span>
+            <span className="inline-flex items-center gap-2 text-text-2">
+              <MapPin className="size-4 text-accent" /> Accra, Ghana &middot; working worldwide
+            </span>
+          </Reveal>
+        </div>
+      </section>
 
-      <section className="py-20">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:grid-cols-[7fr_5fr]">
-          <div className="reveal relative rounded-[24px] border border-line bg-card p-10 max-md:p-6">
-            <Suspense fallback={null}>
-              <ContactForm />
-            </Suspense>
+      {/* ── MAIN GRID ───────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          {/* Left — direct methods */}
+          <div className="lg:col-span-5">
+            <Reveal>
+              <SectionLabel index="01">Reach me directly</SectionLabel>
+            </Reveal>
+            <div className="mt-8 space-y-4">
+              {METHODS.map(({ label, value, href, icon: Icon, note }, i) => (
+                <Reveal key={label} delay={i * 80}>
+                  <a
+                    href={href}
+                    target={href.startsWith("http") ? "_blank" : undefined}
+                    rel={href.startsWith("http") ? "noreferrer" : undefined}
+                    className="group flex items-center gap-5 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 transition-colors hover:border-accent/40"
+                  >
+                    <span className="grid size-12 shrink-0 place-items-center rounded-[var(--radius)] border border-hairline bg-bg text-accent transition-colors group-hover:border-accent/40">
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="label text-muted">{label}</p>
+                      <p className="mt-1 truncate text-lg font-semibold text-text transition-colors group-hover:text-accent">
+                        {value}
+                      </p>
+                      <p className="mt-0.5 text-sm text-text-2">{note}</p>
+                    </div>
+                  </a>
+                </Reveal>
+              ))}
+            </div>
+
+            <Reveal delay={160} className="mt-8">
+              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group w-full")}>
+                Book a 20-minute call
+                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+              <p className="mt-4 text-sm text-muted">
+                Walk through what you&rsquo;re trying to build and get a straight read on scope, cost
+                and timeline.
+              </p>
+            </Reveal>
+
+            <Reveal delay={220} className="mt-10 border-t border-hairline pt-8">
+              <p className="label text-muted">Elsewhere</p>
+              <div className="mt-4 flex gap-3">
+                {SOCIAL.map(({ label, href, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={label}
+                    className="grid size-11 place-items-center rounded-full border border-hairline text-text-2 transition-all hover:border-accent/60 hover:text-accent hover:glow-green"
+                  >
+                    <Icon className="size-[1.05rem]" aria-hidden="true" />
+                  </a>
+                ))}
+              </div>
+            </Reveal>
           </div>
 
-          <div className="reveal reveal-delay-1 rounded-[24px] border border-line bg-card p-10 max-md:p-6">
-            <span className="mb-2 block text-[0.76rem] font-semibold uppercase tracking-[0.08em] text-editorial-accent">// Direct channels</span>
+          {/* Right — form */}
+          <div className="lg:col-span-7">
+            <Reveal>
+              <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10">
+                {sent ? (
+                  <div className="flex flex-col items-center py-16 text-center">
+                    <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">
+                      <Check className="size-7" />
+                    </span>
+                    <h2 className="mt-6 text-2xl font-bold tracking-tight">Message sent.</h2>
+                    <p className="mt-3 max-w-sm text-text-2">
+                      Thanks for reaching out &mdash; I&rsquo;ll reply within 24 hours. Need
+                      something faster? Ping me on WhatsApp.
+                    </p>
+                    <a
+                      href={WHATSAPP_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(buttonVariants({ variant: "secondary" }), "mt-8")}
+                    >
+                      <FaWhatsapp className="size-4" /> Message on WhatsApp
+                    </a>
+                  </div>
+                ) : (
+                  <form onSubmit={onSubmit} className="space-y-6">
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      <Field label="Name" htmlFor="name">
+                        <input id="name" name="name" required placeholder="Your name" className={inputCls} />
+                      </Field>
+                      <Field label="Email" htmlFor="email">
+                        <input
+                          id="email"
+                          name="email"
+                          type="email"
+                          required
+                          placeholder="you@company.com"
+                          className={inputCls}
+                        />
+                      </Field>
+                    </div>
 
-            <div className="group border-b border-line py-[0.85rem]">
-              <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">WhatsApp</span>
-              <span className="flex items-baseline gap-2">
-                <a
-                  href="https://wa.me/233535801359"
-                  target="_blank"
-                  rel="noopener"
-                  className="text-[clamp(1.2rem,2vw,1.45rem)] font-bold tracking-[-0.015em] text-heading no-underline hover:text-heading hover:opacity-65"
-                >
-                  +233 53 580 1359
-                  <small className="mt-[0.2rem] block text-[0.7rem] font-medium text-editorial-muted">Message Lisa, available 24/7</small>
-                </a>
-                <span className="inline-block text-editorial-muted transition-transform duration-150 ease-out group-hover:translate-x-1" aria-hidden="true">
-                  →
-                </span>
-              </span>
-            </div>
+                    <Field label="What can I build for you?" htmlFor="project">
+                      <input
+                        id="project"
+                        name="project"
+                        placeholder="e.g. an AI voice agent for missed calls"
+                        className={inputCls}
+                      />
+                    </Field>
 
-            <div className="group border-b border-line py-[0.85rem]">
-              <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-editorial-muted">Email</span>
-              <span className="flex items-baseline gap-2">
-                <a
-                  href="mailto:hello@princecaleb.dev"
-                  className="text-[clamp(1.2rem,2vw,1.45rem)] font-bold tracking-[-0.015em] text-heading no-underline hover:text-heading hover:opacity-65"
-                >
-                  hello@princecaleb.dev
-                </a>
-                <span className="inline-block text-editorial-muted transition-transform duration-150 ease-out group-hover:translate-x-1" aria-hidden="true">
-                  →
-                </span>
-              </span>
-            </div>
+                    <div>
+                      <p className="label mb-3 text-muted">Budget</p>
+                      <div className="flex flex-wrap gap-2.5">
+                        {BUDGETS.map((b) => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={() => setBudget(b)}
+                            className={cn(
+                              "rounded-full border px-4 py-2.5 text-sm transition-colors",
+                              budget === b
+                                ? "border-accent/60 bg-accent/10 text-accent"
+                                : "border-hairline text-text-2 hover:border-hairline-strong hover:text-text",
+                            )}
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-            <div className="flex justify-between gap-4 border-t border-line py-[0.9rem]">
-              <strong className="text-[0.9rem] text-heading">Location</strong>
-              <span className="text-right text-[0.86rem] text-ink-soft">Accra, Ghana</span>
-            </div>
+                    <Field label="Tell me more" htmlFor="message">
+                      <textarea
+                        id="message"
+                        name="message"
+                        rows={5}
+                        required
+                        placeholder="A few lines on the problem, your timeline, and what success looks like."
+                        className={cn(inputCls, "h-auto resize-none py-3.5")}
+                      />
+                    </Field>
 
-            <p className="mb-3 mt-4 text-sm text-ink-soft">Prefer to talk it through live?</p>
-            <Button variant="brand-outline" size="pill" className="w-full text-center" nativeButton={false} render={<a href="/book.html" />}>
-              Book a call
-            </Button>
+                    <Button type="submit" size="lg" className="w-full">
+                      Send message
+                      <ArrowRight className="size-4" />
+                    </Button>
+                    <p className="text-center text-sm text-muted">
+                      Prefer email? Write to{" "}
+                      <a
+                        href={`mailto:${EMAIL}`}
+                        className="text-text-2 underline underline-offset-4 transition-colors hover:text-accent"
+                      >
+                        {EMAIL}
+                      </a>
+                    </p>
+                  </form>
+                )}
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
-    </main>
+    </>
+  );
+}
+
+const inputCls =
+  "h-13 w-full rounded-[var(--radius)] border border-hairline-strong bg-bg/60 px-4 text-text placeholder:text-muted transition-colors focus:border-accent/60 focus:outline-none";
+
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label htmlFor={htmlFor} className="block">
+      <span className="label mb-2 block text-muted">{label}</span>
+      {children}
+    </label>
   );
 }

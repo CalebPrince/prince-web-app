@@ -9,6 +9,49 @@ let projectMilestones = [];
 let projectAgents = {};
 let projectOwnerName = "Prince Caleb";
 
+// Public showcase text fields — the input id matches the API field name, so
+// populate/clear/save can all just loop over this list.
+const SHOWCASE_TEXT_FIELDS = [
+  "tagline",
+  "showcase_category",
+  "project_year",
+  "client_name",
+  "role",
+  "timeline",
+  "result_headline",
+  "challenge",
+  "solution",
+];
+
+/** "3× | Booked calls" per line -> [{ value, label }] for the API. */
+function parseMetrics(text) {
+  return String(text || "")
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const [value, ...rest] = line.split("|");
+      return { value: value.trim(), label: rest.join("|").trim() };
+    })
+    .filter(m => m.value || m.label);
+}
+
+/** Inverse of parseMetrics, for populating the textarea when editing. */
+function metricsToText(metrics) {
+  if (!Array.isArray(metrics)) return "";
+  return metrics.map(m => `${m.value || ""} | ${m.label || ""}`.trim()).join("\n");
+}
+
+/** Collects every showcase field into the shape the API expects. */
+function showcasePayload() {
+  const payload = {};
+  SHOWCASE_TEXT_FIELDS.forEach(id => {
+    payload[id] = document.getElementById(id).value.trim() || null;
+  });
+  payload.metrics = parseMetrics(document.getElementById("metrics").value);
+  return payload;
+}
+
 const DELIVERY_STATUS_LABEL = {
   on_track: "On track",
   needs_attention: "Needs attention",
@@ -184,7 +227,7 @@ function renderProjectsTable(projects) {
     <tr draggable="true" data-id="${p.id}">
       <td class="ps-3 text-muted-custom" style="cursor:grab;" title="Drag to reorder">&#x2630;</td>
       <td>${p.title}</td>
-      <td>${p.client_id ? `<a class="project-client-link" href="/admin/clients.html?open=${p.client_id}" title="Open ${escapeHtml(p.client_name || 'client')}"><i class="bi bi-person-circle me-1"></i>${escapeHtml(p.client_name || p.client_email || 'Client')}</a>` : '<span class="text-muted-custom small">Unassigned</span>'}</td>
+      <td>${p.client_id ? `<a class="project-client-link" href="/admin/clients.html?open=${p.client_id}" title="Open ${escapeHtml(p.linked_client_name || 'client')}"><i class="bi bi-person-circle me-1"></i>${escapeHtml(p.linked_client_name || p.client_email || 'Client')}</a>` : '<span class="text-muted-custom small">Unassigned</span>'}</td>
       <td class="text-capitalize">${p.category.replace("_", " ")}</td>
       <td>${p.tags.map(t => t.name).join(", ")}</td>
       <td>
@@ -305,6 +348,8 @@ function openNewModal() {
   document.getElementById("gallery-upload-msg").textContent = "";
   document.getElementById("outcome_metrics").value = "";
   document.getElementById("industry").value = "";
+  SHOWCASE_TEXT_FIELDS.forEach(id => { document.getElementById(id).value = ""; });
+  document.getElementById("metrics").value = "";
   document.getElementById("testimonial_id").value = "";
   document.getElementById("client_id").value = "";
   document.getElementById("is_featured").checked = false;
@@ -348,6 +393,10 @@ function openEditModal(project) {
   document.getElementById("is_featured").checked = !!project.is_featured;
   document.getElementById("outcome_metrics").value = project.outcome_metrics || "";
   document.getElementById("industry").value = project.industry || "";
+  SHOWCASE_TEXT_FIELDS.forEach(id => {
+    document.getElementById(id).value = project[id] || "";
+  });
+  document.getElementById("metrics").value = metricsToText(project.metrics);
   document.getElementById("testimonial_id").value = project.testimonial_id || "";
   document.getElementById("client_id").value = project.client_id || "";
   document.getElementById("delivery_status").value = project.delivery_status || "on_track";
@@ -475,6 +524,7 @@ async function saveProject() {
     is_featured: document.getElementById("is_featured").checked,
     outcome_metrics: document.getElementById("outcome_metrics").value || null,
     industry: document.getElementById("industry").value || null,
+    ...showcasePayload(),
     testimonial_id: document.getElementById("testimonial_id").value || null,
     client_id: document.getElementById("client_id").value || null,
     delivery_status: document.getElementById("delivery_status").value,

@@ -266,6 +266,26 @@ if (!in_array('testimonial_id', $projectColumns, true)) {
 if (!in_array('industry', $projectColumns, true)) {
     $pdo->exec('ALTER TABLE projects ADD COLUMN industry TEXT');
 }
+// Public showcase fields read by the Systems pages on the Next.js front end.
+// All nullable and additive — existing rows keep working untouched, and the
+// front end degrades gracefully for any that are still empty.
+foreach ([
+    'tagline',
+    'showcase_category',
+    'result_headline',
+    'metrics_json',
+    'client_name',
+    'role',
+    'timeline',
+    'project_year',
+    'challenge',
+    'solution',
+    'stack_json',
+] as $showcaseColumn) {
+    if (!in_array($showcaseColumn, $projectColumns, true)) {
+        $pdo->exec("ALTER TABLE projects ADD COLUMN {$showcaseColumn} TEXT");
+    }
+}
 
 $webhookColumns = array_column($pdo->query('PRAGMA table_info(webhook_queue)')->fetchAll(), 'name');
 if (!in_array('slack_sent', $webhookColumns, true)) {
