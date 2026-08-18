@@ -36,6 +36,8 @@ const SOCIAL: { label: string; href: string; icon: IconType }[] = [
 ];
 
 export function SiteFooter() {
+  const navRows = Math.ceil(NAV_LINKS.length / 2);
+
   return (
     <footer className="border-t border-hairline bg-bg-2/30">
       <div className="mx-auto max-w-[1400px] px-6 py-16 md:px-10">
@@ -49,9 +51,12 @@ export function SiteFooter() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-12 sm:grid-cols-4">
-            <div>
+            <div className="col-span-2">
               <p className="label mb-5 text-muted">Navigate</p>
-              <ul className="space-y-3">
+              <ul
+                className="grid grid-flow-col gap-x-8 gap-y-3"
+                style={{ gridTemplateRows: `repeat(${navRows}, auto)` }}
+              >
                 {NAV_LINKS.map((l) => (
                   <li key={l.label}>
                     <Link
