@@ -2,6 +2,14 @@
    Near-black premium dark theme + matching paper-white light theme.
    Monochrome surfaces, razor hairline borders, accent used sparingly.
    Motion character: one shared ease-out-expo curve, vertical-only. */
+
+/* Same faces as the Next.js rebuild's nav/footer (web/src/app/layout.tsx) —
+   scoped to .site-nav/.nav-drawer/.site-footer below rather than swapped
+   in globally, so a visitor crossing from a ported page to a not-yet-ported
+   one sees the same header/footer chrome without every still-PHP page's
+   body copy silently changing font mid-migration. */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500&display=swap");
+
 :root {
   --ink: #17181c;
   --heading-color: #0a0b0d;
@@ -302,6 +310,7 @@ p a:not([class]), li a:not([class]) { text-decoration: underline; text-underline
 
 /* Nav */
 .site-nav {
+  font-family: "Manrope", var(--font-sans, system-ui), sans-serif;
   background: var(--nav-bg);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--line);
@@ -363,36 +372,45 @@ p a:not([class]), li a:not([class]) { text-decoration: underline; text-underline
   }
 }
 .brand-logo {
+  font-family: "Manrope", var(--font-sans, system-ui), sans-serif;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   letter-spacing: -0.02em;
   color: var(--heading-color);
   display: inline-flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.65em;
 }
 .brand-logo .dot { color: var(--accent); }
-/* Brand lockup: the P monogram (same mark as the favicon) + wordmark.
-   Sized in em so it scales with whatever font-size the context sets. */
+/* The ".dev" suffix carried over from the Next.js rebuild's Logo component. */
+.brand-suffix {
+  font-family: "JetBrains Mono", var(--font-mono, ui-monospace, monospace);
+  font-weight: 500;
+  font-size: 0.72em;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+/* Brand lockup: same geometric "P" mark as the Next.js rebuild's Logo
+   component (web/src/components/Logo.tsx) — a bordered, accent-tinted
+   badge around a stroke-drawn glyph, not a solid letter fill. Sized in em
+   so it scales with whatever font-size the context sets. */
 .brand-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   width: 2.15em;
   height: 2.15em;
-  font-size: 0.78em;
-  font-weight: 800;
-  line-height: 1;
-  border-radius: 0.55em;
-  background: var(--heading-color);
-  color: var(--bg);
+  border-radius: 0.45em;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 35%, transparent);
   flex-shrink: 0;
   transition: transform 0.35s var(--ease-out), border-radius 0.35s var(--ease-out);
 }
+.brand-mark svg { width: 1.05em; height: 1.05em; }
 a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
 .brand-text { white-space: nowrap; }
-/* The footer is dark in both themes — keep the mark inverted there. */
-.site-footer .brand-mark { background: #fff; color: #0b0c0e; }
 .site-nav .nav-link {
   color: var(--ink-soft);
   font-weight: 500;
@@ -467,6 +485,7 @@ a.brand-logo:hover .brand-mark { transform: rotate(-8deg); border-radius: 50%; }
    page highlighted, and a staggered reveal synced to Bootstrap's own
    .showing/.show lifecycle classes (no extra JS needed to sequence it). */
 .nav-drawer {
+  font-family: "Manrope", var(--font-sans, system-ui), sans-serif;
   width: min(340px, 86vw);
   background: var(--bg);
   color: var(--ink-soft);
@@ -1695,12 +1714,36 @@ pre code.hljs {
 
 /* Footer */
 .site-footer {
+  font-family: "Manrope", var(--font-sans, system-ui), sans-serif;
   background: var(--navy);
   color: #8a8f98;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 3rem 0 2rem;
 }
 .site-footer a { color: #b4b8bf; }
+.site-footer .footer-eyebrow {
+  font-family: "JetBrains Mono", var(--font-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6a6f78;
+  margin: 0 0 0.9rem;
+}
+.site-footer .footer-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem 1.5rem;
+  margin: 2.5rem 0;
+}
+.site-footer .footer-columns a {
+  display: block;
+  font-size: 0.9rem;
+  padding: 0.2rem 0;
+}
+@media (min-width: 576px) {
+  .site-footer .footer-columns { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+}
 @media (max-width: 575.98px) {
   /* The nav-link and policy-link rows (d-flex + gap, no wrap utility)
      are wider than a narrow phone screen and were overflowing off both
