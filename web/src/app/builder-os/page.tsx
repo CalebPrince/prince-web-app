@@ -91,8 +91,9 @@ const SCENARIOS: { id: string; label: string; request: string; log: LogLine[] }[
 
 function agentHref(a: BuilderOsAgent): string {
   if (a.key === "lisa") return "/lisa-ai-assistant";
+  if (a.key === "sage") return "/marketing-brain";
   if (a.url) return a.url;
-  return `/agent.html?agent=${encodeURIComponent(a.key)}`;
+  return `/agent?agent=${encodeURIComponent(a.key)}`;
 }
 
 function isLiveStatus(status: string): boolean {
