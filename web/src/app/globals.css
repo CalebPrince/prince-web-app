@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  /* Adopted from the live princecaleb.dev dark theme */
+  /* Adopted from the live princecaleb.dev dark theme — the default until a
+     visitor (or their OS) picks light, toggled via [data-theme="light"]
+     below and applied pre-paint by the inline script in layout.tsx. */
   --bg: #0b0c0e;
   --bg-2: #121418;
   --text: #f1f3f5;
@@ -15,6 +17,26 @@
   --hairline: rgba(255, 255, 255, 0.08);
   --hairline-strong: rgba(255, 255, 255, 0.26);
   --radius: 12px;
+  color-scheme: dark;
+}
+
+/* Paper-white light theme — the same values princecaleb.dev's PHP pages
+   use for their light mode (public/css/app.css's base :root), so the two
+   halves of the site read as one brand instead of two different lights. */
+[data-theme="light"] {
+  --bg: #fbfbfa;
+  --bg-2: #ffffff;
+  --text: #0a0b0d;
+  --text-2: #41454d;
+  --muted: #6e737c;
+  --accent: #08783c;
+  --accent-strong: #055d2f;
+  --accent-soft: rgba(8, 120, 60, 0.09);
+  --on-accent: #f5fef8;
+  --glow: rgba(8, 120, 60, 0.35);
+  --hairline: rgba(10, 11, 13, 0.09);
+  --hairline-strong: rgba(10, 11, 13, 0.28);
+  color-scheme: light;
 }
 
 @theme inline {
@@ -69,7 +91,7 @@ body {
   border-radius: 8px;
 }
 *:hover::-webkit-scrollbar-thumb {
-  background: rgba(245, 245, 242, 0.12);
+  background: var(--hairline-strong);
 }
 
 .label {
@@ -106,7 +128,17 @@ body {
   animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Lisa's chat-widget avatar (AgentFace): a gentle whole-face breathe while
+   she's speaking, underneath the accent-ring ping that signals thinking. */
+@keyframes agentbreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.agent-breathe {
+  animation: agentbreathe 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rise, [class*="drift"], [class*="glow"], [class*="marquee"] { animation: none !important; }
+  .rise, [class*="drift"], [class*="glow"], [class*="marquee"], .agent-breathe { animation: none !important; }
   html { scroll-behavior: auto; }
 }

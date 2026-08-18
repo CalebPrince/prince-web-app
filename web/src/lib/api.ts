@@ -97,6 +97,34 @@ export type PaymentPrepared = {
 
 export type PaymentVerified = { status: string };
 
+export type ChatTurn = { role: string; text: string };
+
+export type ChatStatus = {
+  online: boolean;
+  greeting: string;
+  intro: string;
+  offline_message: string;
+  assistant_name: string;
+  voice: { gender: string; accent: string; rate: number; pitch: number };
+};
+
+export type ChatMessageResult = {
+  token: string;
+  reply: string;
+  mode: string;
+  provider: string | null;
+  can_prototype: boolean;
+};
+
+export type ChatSession = {
+  token: string;
+  transcript: ChatTurn[];
+  can_build: boolean;
+  has_prototype: boolean;
+  prototype_status: string | null;
+  prototype_url: string | null;
+};
+
 // Server-side fetch (generateMetadata, Server Components) has no implicit
 // origin the way a browser's relative fetch does, so it needs an absolute
 // URL. Client-side, the relative path is fine and preferred (works
@@ -157,6 +185,18 @@ export const api = {
   verifyPayment: (reference: string) => postJson<PaymentVerified>("/api/v1/payments/verify", { reference }),
   subscribeNewsletter: (data: { email: string; website: string; attribution: Record<string, unknown> }) =>
     postJson<{ id: number }>("/api/v1/newsletter/subscribe", data),
+  chatStatus: () => get<ChatStatus>("/api/v1/chat/status"),
+  chatMessage: (data: { message: string; token: string | null }) =>
+    postJson<ChatMessageResult>("/api/v1/chat/message", data),
+  chatSession: (token: string) => get<ChatSession>(`/api/v1/chat/session/${encodeURIComponent(token)}`),
+  chatInquiry: (data: {
+    token: string | null;
+    name: string;
+    email: string;
+    phone: string;
+    message: string;
+    attribution: Record<string, unknown>;
+  }) => postJson<{ status: string }>("/api/v1/chat/inquiry", data),
 };
 
 /** Same classifier as the PHP site's window.navPlatformOf (nav-dropdowns.js),
