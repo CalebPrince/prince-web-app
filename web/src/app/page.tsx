@@ -1,6 +1,7 @@
 import { ArrowRight, ArrowUpRight, Star } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { FeaturedSystems } from "@/components/FeaturedSystems";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TechStrip } from "@/components/TechStrip";
@@ -26,45 +27,6 @@ const SERVICES = [
     no: "04",
     title: "Digital Products",
     body: "Custom digital products designed around real business problems and real people.",
-  },
-];
-
-const PROJECTS = [
-  {
-    name: "Aurora Commerce",
-    category: "E-Commerce",
-    desc: "A headless storefront and checkout system engineered for scale.",
-    year: "2026",
-    span: "lg:col-span-7",
-    ratio: "aspect-[16/10]",
-    img: "https://images.unsplash.com/photo-1757301714935-c8127a21abc6?w=1400&h=900&fit=crop&auto=format",
-  },
-  {
-    name: "Helio AI",
-    category: "AI",
-    desc: "An agentic workspace that turns intent into finished work.",
-    year: "2026",
-    span: "lg:col-span-5",
-    ratio: "aspect-[4/5]",
-    img: "https://images.unsplash.com/photo-1709377195538-5522ed0f9e10?w=1000&h=1200&fit=crop&auto=format",
-  },
-  {
-    name: "Meridian Studio",
-    category: "Web Design",
-    desc: "A cinematic brand site for an architecture practice.",
-    year: "2025",
-    span: "lg:col-span-5",
-    ratio: "aspect-[4/5]",
-    img: "https://images.unsplash.com/photo-1634084462412-b54873c0a56d?w=1000&h=1200&fit=crop&auto=format",
-  },
-  {
-    name: "Nova Platform",
-    category: "Web Development",
-    desc: "A real-time analytics platform with a bespoke design system.",
-    year: "2025",
-    span: "lg:col-span-7",
-    ratio: "aspect-[16/10]",
-    img: "https://images.unsplash.com/photo-1648134859211-4a1b57575f4e?w=1400&h=900&fit=crop&auto=format",
   },
 ];
 
@@ -277,41 +239,8 @@ export default function Home() {
           </Link>
         </Reveal>
 
-        <div className="mt-16 grid gap-x-6 gap-y-16 lg:grid-cols-12">
-          {PROJECTS.map((p, i) => (
-            <Reveal key={p.name} className={p.span} delay={(i % 2) * 100}>
-              <a href="#work" className="group block">
-                <div
-                  className={cn(
-                    "relative overflow-hidden rounded-sm border border-hairline bg-bg-2",
-                    p.ratio,
-                  )}
-                >
-                  <img
-                    src={p.img}
-                    alt={`${p.name} — ${p.category}`}
-                    className="h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-bg/60 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <div className="absolute right-5 top-5 flex size-11 items-center justify-center rounded-full border border-text/20 bg-bg/40 backdrop-blur-md opacity-0 transition-all duration-500 group-hover:opacity-100">
-                    <ArrowUpRight className="size-5 text-text" />
-                  </div>
-                </div>
-                <div className="mt-6 flex items-start justify-between gap-6">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <span className="label text-accent">{p.category}</span>
-                      <span className="label text-muted">/ {p.year}</span>
-                    </div>
-                    <h3 className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl">
-                      {p.name}
-                    </h3>
-                    <p className="mt-2 max-w-md text-text-2">{p.desc}</p>
-                  </div>
-                </div>
-              </a>
-            </Reveal>
-          ))}
+        <div className="mt-16">
+          <FeaturedSystems />
         </div>
 
         <Reveal className="mt-16 flex justify-center md:hidden">
