@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils";
 
 const NAV: { label: string; to: string }[] = [
   { label: "Services", to: "/services" },
+  { label: "Builder OS", to: "/builder-os" },
   { label: "Systems", to: "/systems" },
+  { label: "Pricing", to: "/pricing" },
   { label: "About", to: "/about" },
   { label: "Lab", to: "/lab" },
 ];

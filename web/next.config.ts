@@ -11,12 +11,9 @@ import type { NextConfig } from "next";
  * Delete an entry as its page is ported into this app.
  */
 const LEGACY_HTML_ROUTES = [
-  "pricing",
   "marketing-brain",
-  "lisa-ai-assistant",
   "ai-voice-agents-for-clinics",
   "growth-roadmap",
-  "builder-os",
   "agent",
 ];
 
