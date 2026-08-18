@@ -41,6 +41,8 @@ export interface SystemView {
   img: string;
   gallery: string[];
   testimonial: { quote: string; client_name: string; rating?: number } | null;
+  /** Ticked as "Display on homepage" in the admin Projects form. */
+  featured: boolean;
   /** Layout rhythm — alternating wide/tall cards, as in the design. */
   span: string;
   ratio: string;
@@ -104,9 +106,22 @@ export function toSystemView(p: Project, index = 0): SystemView {
     img: str(p.cover_image_path),
     gallery: (p.gallery ?? []).filter(Boolean),
     testimonial: p.testimonial ?? null,
+    featured: Boolean(p.is_featured),
     span: wide ? "lg:col-span-7" : "lg:col-span-5",
     ratio: wide ? "aspect-[16/10]" : "aspect-[4/5]",
   };
+}
+
+/**
+ * The homepage showcase: the first three projects ticked "Display on
+ * homepage" in the admin, in sort order (the API already returns them
+ * sorted). Falls back to the first three published projects so the section
+ * is never empty before anything has been ticked.
+ */
+export async function getFeaturedSystems(limit = 3): Promise<SystemView[]> {
+  const all = await getSystems();
+  const featured = all.filter((s) => s.featured);
+  return (featured.length ? featured : all).slice(0, limit);
 }
 
 export async function getSystems(): Promise<SystemView[]> {
