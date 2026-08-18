@@ -55,6 +55,73 @@ These edits use the existing settings/content API and `settings` table; no
 database schema, migrations, seed data, or stored records were changed for
 this redesign.
 
+## Figma rebuild replaces the Next.js front end (2026-08-18 upgrade)
+
+The Bootstrap-token "straight port" version of `web/` (see the September
+Setup section below) was replaced outright by a real Figma-designed rebuild,
+folded into this repo rather than shipped as a separate one — a separate repo
+would have meant re-deriving `.github/workflows/deploy.yml`'s pipeline from
+scratch (including two already-fixed production bugs: FTP-Deploy-Action
+sharing sync state across calls, and its default excludes dropping the
+`node_modules/` a standalone build needs) and still couldn't coordinate with
+the PHP API it reads, which OpenLiteSpeed routes on the same domain.
+
+- **One dark editorial theme, not four** — the old light/dark/midnight/paper
+  theme system and its Bootstrap-derived tokens are gone. `globals.css` now
+  ships a single dark palette lifted from princecaleb.dev's actual live dark
+  theme (`--bg: #0b0c0e`, `--accent: #62ff98`, etc.), set on `:root` with no
+  runtime theme switch. Typography moved to Manrope (body) + JetBrains Mono
+  (headings/code), replacing the prior font stack.
+- **New pages**: `/systems` (the project showcase, renamed from `/projects`)
+  and `/systems/:slug`, `/book` (booking landing), and `/lab` (an "open
+  experiments and prototypes, not client work" showcase page) — none of
+  these existed in the prior rebuild. `/projects` and `/projects/:slug` now
+  permanently redirect to `/systems`.
+- **Seven pages dropped back to legacy PHP for now**: `pricing`,
+  `marketing-brain`, `lisa-ai-assistant`, `ai-voice-agents-for-clinics`,
+  `growth-roadmap`, `builder-os`, and `agent` are not yet ported into the
+  new design. Since OpenLiteSpeed resolves any real file before handing a
+  request to Node, their `.html` versions keep serving directly — but the
+  extension-less route (e.g. `/pricing`) matches no file, falls through to
+  this app, and would 404 without help. `next.config.ts`'s
+  `LEGACY_HTML_ROUTES` list temporarily (non-permanent, so nothing caches)
+  redirects each one to its `.html` page; deleting an entry from that list
+  is the whole job of porting the page later.
+- **Systems showcase fields added to `projects`** — the new design presents
+  each project as a "system": what it does, who it was for, how long it
+  took, before/after, and headline numbers. The `projects` table gained 11
+  nullable columns (`tagline`, `showcase_category`, `result_headline`,
+  `metrics_json`, `client_name`, `role`, `timeline`, `project_year`,
+  `challenge`, `solution`, `stack_json`) rather than bending the design to
+  fit the old schema. `showcase_category` is deliberately separate from the
+  legacy `category` column, which keeps its existing three-bucket CHECK
+  constraint, while showcase groups are AI Agents / Automations / Websites &
+  Apps. The admin Projects form gained a "Systems showcase" section for the
+  fields that can't be derived automatically; `metrics` are entered as
+  `value | label` per line. `backfill_project_showcase.php` fills only what
+  can be derived from existing data (grouping, tagline, year, stack from
+  tags) and leaves client-specific fields (`client_name`, `role`, `timeline`,
+  `result_headline`, `metrics`, `challenge`, `solution`) null rather than
+  invent facts about real client work — safe to re-run (`COALESCE` unless
+  `--force`).
+- **Homepage showcase is now real data** — the "See what has already
+  shipped" section previously listed four invented projects (Aurora
+  Commerce, Helio AI, Meridian Studio, Nova Platform) hardcoded in
+  `page.tsx`. It now fetches published projects from the API client-side
+  and shows the ones ticked "Display on homepage" (the same `is_featured`
+  column/checkbox the legacy homepage already used), in sort order, falling
+  back to the first three published projects if none are ticked so the
+  section is never empty.
+- **Nav link color matched to what PHP actually renders** — the PHP pages'
+  nav links render accent-green regardless of active state, because a
+  higher-specificity global `app.css` rule beats the intended muted default.
+  The Next.js nav was built against that losing (never-applied) PHP rule, so
+  it showed a muted default PHP never actually displays. Both now render
+  nav links, mega-menu triggers, and mobile drawer links accent-green.
+
+No database migration is required beyond the new showcase columns
+(`php database/migrate.php` picks them up automatically).
+
 ## Twilio fully removed — ElevenLabs now runs every calling and WhatsApp surface (2026-08-10 upgrade)
 
 The Twilio account is being closed entirely. Every remaining Twilio-dependent
@@ -508,36 +575,35 @@ Visit `http://localhost:8010` for the public site and
 
 ## Next.js + Tailwind + shadcn/ui rebuild (`web/`)
 
-Every public marketing page has been rebuilt in `web/` — Next.js (App
-Router) + Tailwind CSS v4 + shadcn/ui on `@base-ui/react` primitives — a
-straight framework port off Bootstrap 5, not a redesign: the same design
-tokens (`--accent`, `--heading-color`, `--line`, etc., re-exposed as
-Tailwind theme colors), the same 4 themes (light/dark/midnight/paper),
-the same layout and copy, page by page against the live `public/*.html`
-markup and `public/css/app.css`. Bespoke, animation-heavy sections that
-don't fit utility classes well (Builder OS's topology map and workflow
-simulator, the agent dossier, Lisa's integration-orbit/scenario-lab, the
-marketing-brain chat bubbles) are ported as scoped CSS files using the
-original class names instead of hand-derived Tailwind, matching the same
-"don't force bespoke UI into utilities" precedent the rest of the app
-already followed for nav mega-menus and terminal-style mockups.
+`web/` is a from-scratch, Figma-designed rebuild of the public marketing
+site — Next.js (App Router) + Tailwind CSS v4 + shadcn/ui on
+`@base-ui/react` primitives — not a framework port of the PHP pages'
+Bootstrap markup (an earlier version of `web/` was that kind of straight
+port; the 2026-08-18 upgrade above replaced it outright). It runs one dark
+editorial theme (Manrope + JetBrains Mono, a signal-green `--accent` lifted
+from the live site's dark palette) rather than the PHP pages' 4-theme
+light/dark/midnight/paper system, and introduces new page concepts
+(`/systems`, `/lab`, `/book`) alongside ported equivalents of the PHP
+pages it does cover.
 
-**Confirmed live in production** at princecaleb.dev — `web/` serves `/`,
-`/about`, `/services`, `/pricing`, `/projects` (+ detail), `/contact`,
-`/archive` (+ detail), `/testimonials`, `/404`, `/privacy`, `/terms`,
-`/cookies`, `/search`, `/builder-os`, `/agent`, `/ai-safety`,
-`/ai-adoption-ladder`, `/marketing-brain`, `/growth-roadmap`,
-`/ai-voice-agents-for-clinics`, and `/lisa-ai-assistant`. Real backend
-features (Sage's marketing chat, Builder OS's live agent registry and
-workflow simulator, the clinic ROI calculator, project/blog search) call
-the same PHP `/api/v1/*` endpoints the rest of the site already uses —
-nothing is mocked. The LiveAvatar real-time video call and the
-browser-mic ElevenLabs voice demo are deliberately static shells for now
-(same scope as the homepage's own voice-demo mockup); everything else is
-fully wired. Everything not in the list above — the admin panel, the PHP
-REST API, and every transactional page (`/book.html`, `/pay.html`,
-`/chat.html`, etc.) — stays exactly as it is today, served by the
-existing PHP app.
+**Confirmed live in production** at princecaleb.dev — `web/` currently
+serves `/`, `/about`, `/services`, `/contact`, `/systems` (+ `/systems/:slug`
+detail — the project showcase, renamed from the old `/projects`), `/book`,
+`/lab`, `/archive` (+ detail), `/testimonials`, `/404`, `/privacy`,
+`/terms`, `/cookies`, `/search`, and `/ai-safety` /
+`/ai-adoption-ladder`. Real backend features (project/blog search, the
+Systems showcase, testimonials) call the same PHP `/api/v1/*` endpoints
+the rest of the site already uses — nothing is mocked. `/projects` and
+`/projects/:slug` permanently redirect to `/systems`. Seven pages aren't
+ported into the new design yet — `pricing`, `marketing-brain`,
+`lisa-ai-assistant`, `ai-voice-agents-for-clinics`, `growth-roadmap`,
+`builder-os`, and `agent` — so their extension-less routes temporarily
+redirect to the still-live `.html` version of each (see the 2026-08-18
+upgrade above); deleting an entry from `next.config.ts`'s
+`LEGACY_HTML_ROUTES` is what porting one of them later looks like.
+Everything not covered above — the admin panel, the PHP REST API, and
+every transactional page (`/pay.html`, `/chat.html`, etc.) — stays exactly
+as it is today, served by the existing PHP app.
 
 **Production is two apps behind one domain**, both reachable at
 princecaleb.dev:
