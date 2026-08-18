@@ -9,13 +9,13 @@
   document.body.appendChild(overlay);
 
   const labels = {
-    "/home.html": "Loading command surface…",
-    "/builder-os.html": "Loading Builder OS topology…",
-    "/projects.html": "Opening system registry…",
+    "/": "Loading command surface…",
+    "/builder-os": "Loading Builder OS topology…",
+    "/projects": "Opening system registry…",
     "/project.html": "Inspecting deployed system…",
     "/agent.html": "Opening agent dossier…",
-    "/services.html": "Loading capabilities…",
-    "/contact.html": "Opening workflow request…",
+    "/services": "Loading capabilities…",
+    "/contact": "Opening workflow request…",
   };
 
   document.addEventListener("click", event => {
@@ -24,7 +24,7 @@
     if (link.target || link.hasAttribute("download")) return;
     const url = new URL(link.href, location.href);
     if (url.origin !== location.origin || url.href === location.href || url.hash && url.pathname === location.pathname) return;
-    if (url.pathname === "/home.html") return;
+    if (url.pathname === "/") return;
     if (!/\.html$/.test(url.pathname)) return;
     event.preventDefault();
     document.getElementById("system-transition-label").textContent = labels[url.pathname] || "Loading next system…";

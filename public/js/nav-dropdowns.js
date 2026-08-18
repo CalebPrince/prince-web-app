@@ -10,13 +10,13 @@
   var desktopLinks = nav.querySelector(".d-md-flex");
 
   function ensureBuilderOsLink(container) {
-    if (!container || container.querySelector('a[href="/builder-os.html"]')) return;
+    if (!container || container.querySelector('a[href="/builder-os"]')) return;
     var link = document.createElement("a");
-    link.href = "/builder-os.html";
+    link.href = "/builder-os";
     link.className = "nav-link";
     link.textContent = "Builder OS";
-    if (location.pathname === "/builder-os.html") link.classList.add("active");
-    var projects = container.querySelector('a[href="/projects.html"]');
+    if (location.pathname === "/builder-os") link.classList.add("active");
+    var projects = container.querySelector('a[href="/projects"]');
     if (projects) container.insertBefore(link, projects);
     else container.appendChild(link);
   }
@@ -28,7 +28,7 @@
 
   function ensureSystemsLabel(container) {
     if (!container) return;
-    var link = container.querySelector('a[href="/projects.html"]');
+    var link = container.querySelector('a[href="/projects"]');
     if (!link) return;
     // Run before dropdown carets are attached so only the text label changes.
     link.textContent = "Systems";
@@ -157,19 +157,19 @@
   }
 
   /* ---- About ---------------------------------------------------------- */
-  var about = makeDropdown("/about.html", "About");
+  var about = makeDropdown("/about", "About");
   if (about) {
     about.panel.innerHTML =
       '<div class="container mega-grid">'
       + col("GET TO KNOW ME",
-          link("/about.html", "The story so far")
-        + link("/about.html#principles", "Engineering principles")
-        + link("/about.html#career-timeline", "Career timeline")
-        + link("/about.html#github-feed-section", "GitHub activity"))
+          link("/about", "The story so far")
+        + link("/about#principles", "Engineering principles")
+        + link("/about#career-timeline", "Career timeline")
+        + link("/about#github-feed-section", "GitHub activity"))
       + col("PROOF & ARCHIVE",
-          link("/testimonials.html", "Client testimonials")
-        + link("/archive.html", "Technical archive")
-        + link("/search.html", "Search the site"))
+          link("/testimonials", "Client testimonials")
+        + link("/archive", "Technical archive")
+        + link("/search", "Search the site"))
       + '<div class="mega-col" data-slot="about-featured"></div>'
       + "</div>";
     api.get("/api/v1/blog").then(function (posts) {
@@ -178,7 +178,7 @@
       about.panel.querySelector("[data-slot='about-featured']").innerHTML =
         '<p class="mega-label">// FROM THE ARCHIVE</p>'
         + featured(
-            "/archive-post.html?slug=" + encodeURIComponent(post.slug),
+            "/archive/" + encodeURIComponent(post.slug),
             post.title,
             String(post.excerpt || "").slice(0, 140),
             "Open technical breakdown");
@@ -186,21 +186,21 @@
   }
 
   /* ---- Services ------------------------------------------------------- */
-  var services = makeDropdown("/services.html", "Services");
+  var services = makeDropdown("/services", "Services");
   if (services) {
     services.panel.innerHTML =
       '<div class="container mega-grid">'
       + col("SERVICE TRACKS",
           '<div class="mega-items">'
-        + item("/services.html#track-01", "01", "AI voice agents", "Voice")
-        + item("/services.html#track-02", "02", "Autonomous AI agents", "Agents")
-        + item("/services.html#track-03", "03", "Business automations", "Workflow")
-        + item("/services.html#track-04", "04", "AI chatbots & assistants", "Chat")
-        + item("/services.html#track-05", "05", "Custom websites & mobile apps", "Digital products")
-        + item("/services.html#track-06", "06", "Video & image ads", "Ad creative")
+        + item("/services#track-01", "01", "AI voice agents", "Voice")
+        + item("/services#track-02", "02", "Autonomous AI agents", "Agents")
+        + item("/services#track-03", "03", "Business automations", "Workflow")
+        + item("/services#track-04", "04", "AI chatbots & assistants", "Chat")
+        + item("/services#track-05", "05", "Custom websites & mobile apps", "Digital products")
+        + item("/services#track-06", "06", "Video & image ads", "Ad creative")
         + "</div>")
       + col("ENGAGEMENT",
-          link("/pricing.html", "Pricing & packages")
+          link("/pricing", "Pricing & packages")
         + link("/#estimator", "Scope your project")
         + link("/book.html", "Book a discovery call")
         + link("/request.html", "Request a project"))
@@ -225,7 +225,7 @@
   }
   window.navPlatformOf = platformOf;
 
-  var projects = makeDropdown("/projects.html", "Systems");
+  var projects = makeDropdown("/projects", "Systems");
   if (projects) {
     api.get("/api/v1/projects").then(function (list) {
       list = list || [];
@@ -234,10 +234,10 @@
       var counts = { ecommerce: 0, webapp: 0, mobile: 0 };
       list.forEach(function (p) { counts[platformOf(p)]++; });
       var platformRows = [
-        { label: "All systems", href: "/projects.html", count: list.length },
-        { label: "E-commerce", href: "/projects.html?platform=ecommerce", count: counts.ecommerce },
-        { label: "Web apps", href: "/projects.html?platform=webapp", count: counts.webapp },
-        { label: "Mobile apps", href: "/projects.html?platform=mobile", count: counts.mobile },
+        { label: "All systems", href: "/projects", count: list.length },
+        { label: "E-commerce", href: "/projects?platform=ecommerce", count: counts.ecommerce },
+        { label: "Web apps", href: "/projects?platform=webapp", count: counts.webapp },
+        { label: "Mobile apps", href: "/projects?platform=mobile", count: counts.mobile },
       ].map(function (r) {
         return link(r.href, r.label, String(r.count));
       }).join("");
@@ -245,7 +245,7 @@
       var items = list.slice(0, 6).map(function (p, i) {
         var tag = (p.tags && p.tags[0] && p.tags[0].name) ? p.tags[0].name : "Build";
         return item(
-          "/project.html?slug=" + encodeURIComponent(p.slug),
+          "/projects/" + encodeURIComponent(p.slug),
           String(i + 1).padStart(2, "0"), p.title, tag);
       }).join("");
 
@@ -256,7 +256,7 @@
         + col("DEPLOYED SYSTEMS", '<div class="mega-items">' + items + "</div>")
         + col("HAVE YOU SEEN",
             featured(
-              "/project.html?slug=" + encodeURIComponent(star.slug),
+              "/projects/" + encodeURIComponent(star.slug),
               star.title,
               String(star.summary || "").slice(0, 140),
               "Inspect system"))

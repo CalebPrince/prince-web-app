@@ -11,7 +11,7 @@
 <script>(function(){var t=localStorage.getItem("theme")||localStorage.getItem("site_default_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
 <title>Terms of Service, Prince Caleb</title>
 <meta name="description" content="The terms that apply to using this site, requesting a quote, booking a call, or paying a deposit.">
-<link rel="canonical" href="https://princecaleb.dev/terms.html">
+<link rel="canonical" href="https://princecaleb.dev/terms">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/css/app.css" rel="stylesheet">
 </head>
@@ -20,25 +20,25 @@
 
 <nav class="site-nav">
   <div class="container d-flex align-items-center justify-content-between py-3">
-    <a href="/home.html" class="brand-logo text-decoration-none"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></a>
+    <a href="/" class="brand-logo text-decoration-none"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></a>
     <div class="utility-dock">
       <button type="button" class="utility-tab" aria-expanded="false" aria-controls="utility-tray" aria-label="Quick actions"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="utility-tray" id="utility-tray">
         <button type="button" class="theme-toggle" aria-label="Toggle dark mode"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
-        <a href="/search.html" class="nav-search-btn" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
+        <a href="/search" class="nav-search-btn" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
         <a href="/admin/login.html" class="nav-login-btn" aria-label="Admin login"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></a>
       </div>
     </div>
     <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="d-none d-md-flex gap-1">
-      <a href="/home.html" class="nav-link">Home</a>
-      <a href="/about.html" class="nav-link">About</a>
-      <a href="/services.html" class="nav-link">Services</a>
-      <a href="/projects.html" class="nav-link">Projects</a>
-      <a href="/pricing.html" class="nav-link">Pricing</a>
-      <a href="/contact.html" class="nav-link">Contact</a>
+      <a href="/" class="nav-link">Home</a>
+      <a href="/about" class="nav-link">About</a>
+      <a href="/services" class="nav-link">Services</a>
+      <a href="/projects" class="nav-link">Projects</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+      <a href="/contact" class="nav-link">Contact</a>
     </div>
-    <a href="/contact.html" class="btn-brand d-none d-md-inline-block">Start a project</a>
+    <a href="/contact" class="btn-brand d-none d-md-inline-block">Start a project</a>
   </div>
 </nav>
 
@@ -48,13 +48,13 @@
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body d-flex flex-column">
-    <a href="/home.html" class="nav-link">Home</a>
-    <a href="/about.html" class="nav-link">About</a>
-    <a href="/services.html" class="nav-link">Services</a>
-    <a href="/projects.html" class="nav-link">Projects</a>
-      <a href="/pricing.html" class="nav-link">Pricing</a>
-    <a href="/contact.html" class="nav-link">Contact</a>
-    <a href="/contact.html" class="btn-brand text-center mt-3">Start a project</a>
+    <a href="/" class="nav-link">Home</a>
+    <a href="/about" class="nav-link">About</a>
+    <a href="/services" class="nav-link">Services</a>
+    <a href="/projects" class="nav-link">Projects</a>
+      <a href="/pricing" class="nav-link">Pricing</a>
+    <a href="/contact" class="nav-link">Contact</a>
+    <a href="/contact" class="btn-brand text-center mt-3">Start a project</a>
   </div>
 </div>
 
@@ -75,10 +75,10 @@
     <p class="text-muted-custom mb-4">This site is Prince Caleb's portfolio and client-acquisition platform for web and mobile app development services. By using the contact form, project request form, Live Chat, appointment booking, or payment features, you agree to these terms. If you don't agree, please don't use those features, you're always welcome to just browse.</p>
 
     <h3 class="mb-3">Quotes, estimates &amp; pricing</h3>
-    <p class="text-muted-custom mb-4">The pricing tiers on <a href="/pricing.html">/pricing.html</a> and the project estimate calculator are starting ranges to help you budget, they are not binding quotes. Every project is scoped and priced individually after a discovery conversation, and the final price, timeline, and deliverables are agreed between us before any work begins.</p>
+    <p class="text-muted-custom mb-4">The pricing tiers on <a href="/pricing">/pricing</a> and the project estimate calculator are starting ranges to help you budget, they are not binding quotes. Every project is scoped and priced individually after a discovery conversation, and the final price, timeline, and deliverables are agreed between us before any work begins.</p>
 
     <h3 class="mb-3">Deposits &amp; payments</h3>
-    <p class="text-muted-custom mb-4">Payments are processed by Paystack, card details never touch this server directly (see the <a href="/privacy.html">Privacy Policy</a> for how Paystack fits into data handling). A deposit paid through the Starter-tier checkout or a payment link secures your place in the project queue and goes toward the total agreed cost. Deposits are generally non-refundable once work has started, since they represent time set aside for your project, but if something's gone wrong, get in touch and I'll always work with you in good faith rather than point to fine print.</p>
+    <p class="text-muted-custom mb-4">Payments are processed by Paystack, card details never touch this server directly (see the <a href="/privacy">Privacy Policy</a> for how Paystack fits into data handling). A deposit paid through the Starter-tier checkout or a payment link secures your place in the project queue and goes toward the total agreed cost. Deposits are generally non-refundable once work has started, since they represent time set aside for your project, but if something's gone wrong, get in touch and I'll always work with you in good faith rather than point to fine print.</p>
 
     <h3 class="mb-3">Bookings &amp; appointments</h3>
     <p class="text-muted-custom mb-4">Booking a call through <a href="/book.html">/book.html</a> reserves that time slot. Please give as much notice as you can if you need to reschedule or cancel, a quick message through the contact form or Live Chat is all it takes. Repeated no-shows without notice may affect whether future bookings are accepted.</p>
@@ -87,7 +87,7 @@
     <p class="text-muted-custom mb-4">The Live Chat assistant is powered by AI (Google Gemini, with an OpenRouter fallback) and can make mistakes or state things imprecisely, treat its replies as a helpful starting point, not professional or legal advice. Any "concept prototype" it generates is an illustrative mock-up only: a visual starting point for conversation, not a functional deliverable, and not covered by any project agreement until the actual scope of work is agreed separately.</p>
 
     <h3 class="mb-3">Testimonials</h3>
-    <p class="text-muted-custom mb-4">If you submit a testimonial through a link sent to you, you're giving permission for that quote, your name, and star rating to be reviewed and, if approved, published on the public <a href="/testimonials.html">Testimonials</a> page. Nothing is published without going through that review step first.</p>
+    <p class="text-muted-custom mb-4">If you submit a testimonial through a link sent to you, you're giving permission for that quote, your name, and star rating to be reviewed and, if approved, published on the public <a href="/testimonials">Testimonials</a> page. Nothing is published without going through that review step first.</p>
 
     <h3 class="mb-3">Intellectual property</h3>
     <p class="text-muted-custom mb-4">The content of this site, case studies, blog posts, design, and code powering the site itself, belongs to Prince Caleb unless otherwise noted. Ownership of work delivered as part of a paid project is addressed in that project's own agreement, not by this page, get in touch if you'd like that spelled out before starting.</p>
@@ -117,20 +117,20 @@
   <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
     <span class="brand-logo" style="color:#fff;"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span>
     <div class="d-flex gap-4">
-      <a href="/about.html">About</a>
-      <a href="/services.html">Services</a>
-      <a href="/projects.html">Projects</a>
-      <a href="/archive.html">Archive</a>
-      <a href="/pricing.html">Pricing</a>
-      <a href="/contact.html">Contact</a>
+      <a href="/about">About</a>
+      <a href="/services">Services</a>
+      <a href="/projects">Projects</a>
+      <a href="/archive">Archive</a>
+      <a href="/pricing">Pricing</a>
+      <a href="/contact">Contact</a>
     </div>
   </div>
   <div class="container mt-3 d-flex flex-column align-items-center align-items-sm-start gap-2">
     <small>&copy; 2026 Prince Caleb. All rights reserved.</small>
     <div class="d-flex gap-3">
-      <a href="/privacy.html" class="small">Privacy Policy</a>
-      <a href="/cookies.html" class="small">Cookie Policy</a>
-      <a href="/terms.html" class="small">Terms of Service</a>
+      <a href="/privacy" class="small">Privacy Policy</a>
+      <a href="/cookies" class="small">Cookie Policy</a>
+      <a href="/terms" class="small">Terms of Service</a>
     </div>
   </div>
 </footer>

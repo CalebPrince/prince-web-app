@@ -16,7 +16,7 @@
   if (heroRoot) {
     const cta = {
       primary: { label: "Book a voice-agent call", href: "/book.html?focus=voice-agent" },
-      secondary: { label: "See voice-agent examples", href: "/services.html#track-01" },
+      secondary: { label: "See voice-agent examples", href: "/services#track-01" },
     };
 
     const primaryCta = document.getElementById("hero-primary-cta");
@@ -362,7 +362,7 @@
         const badges = (p.tags || []).slice(0, 3).map(t => `<span class="mono-badge">${esc(t.name)}</span>`).join("");
         const tech = badges || `<span class="mono-badge">Vanilla PHP</span><span class="mono-badge">SQLite</span><span class="mono-badge">Bootstrap 5</span>`;
         const media = p.cover_image_path
-          ? `<a href="/project.html?slug=${esc(p.slug)}" class="case-media case-browser-mockup" aria-label="View ${esc(p.title)} system">
+          ? `<a href="/projects/${esc(p.slug)}" class="case-media case-browser-mockup" aria-label="View ${esc(p.title)} system">
               <span class="case-browser-bar" aria-hidden="true">
                 <span class="case-browser-dots"><i></i><i></i><i></i></span>
                 <span class="case-browser-address">princecaleb.dev/systems/${esc(p.slug)}</span>
@@ -372,7 +372,7 @@
                 <img src="${esc(p.cover_image_path)}" alt="${esc(p.title)} system interface" loading="lazy">
               </span>
             </a>`
-          : `<a href="/project.html?slug=${esc(p.slug)}" class="text-decoration-none"><div class="case-code-card"><code>${esc(tag)}</code><div class="sub">architecture summary</div></div></a>`;
+          : `<a href="/projects/${esc(p.slug)}" class="text-decoration-none"><div class="case-code-card"><code>${esc(tag)}</code><div class="sub">architecture summary</div></div></a>`;
         const flip = i % 2 === 1;
 
         return `
@@ -381,10 +381,10 @@
               <div class="col-lg-6 ${flip ? "order-1 order-lg-2 offset-lg-1" : ""}">
                 <div class="case-copy">
                   <span class="case-index">${num} / ${esc(tag)}</span>
-                  <h3 class="h2 mb-3"><a href="/project.html?slug=${esc(p.slug)}" style="color: var(--heading-color);">${esc(p.title)}</a></h3>
+                  <h3 class="h2 mb-3"><a href="/projects/${esc(p.slug)}" style="color: var(--heading-color);">${esc(p.title)}</a></h3>
                   <p class="text-muted-custom">${esc(p.summary)}</p>
                   <div class="d-flex flex-wrap gap-2 mt-3">${tech}</div>
-                  <a href="/project.html?slug=${esc(p.slug)}" class="d-inline-block mt-4 small fw-semibold">View case study <span class="cta-arrow">→</span></a>
+                  <a href="/projects/${esc(p.slug)}" class="d-inline-block mt-4 small fw-semibold">View case study <span class="cta-arrow">→</span></a>
                 </div>
               </div>
               <div class="col-lg-5 ${flip ? "order-2 order-lg-1" : "offset-lg-1"}">${media}</div>
@@ -416,7 +416,7 @@
       };
 
       archiveList.innerHTML = posts.slice(0, 3).map((p, i) => {
-        const url = `/archive-post.html?slug=${encodeURIComponent(p.slug)}`;
+        const url = `/archive/${encodeURIComponent(p.slug)}`;
         const dateLabel = monthYear(p.published_at || p.created_at);
         return `
           <article class="archive-entry reveal reveal-on-scroll${i ? ` reveal-delay-${i}` : ""}">
@@ -500,7 +500,7 @@
   document.querySelectorAll(".home-decision-grid button").forEach(button => button.addEventListener("click", () => {
     const item = decisionData[button.dataset.path];
     document.querySelectorAll(".home-decision-grid button").forEach(node => node.classList.toggle("active", node === button));
-    decisionDetail.innerHTML = `<div><span>OUTCOME</span><strong>${item.title}</strong><p>${item.outcome}</p></div><div><span>EXAMPLE SYSTEM</span><strong>${item.example}</strong><small>${item.range}</small></div><a href="/contact.html?system=${encodeURIComponent(button.dataset.path)}">${item.action} →</a>`;
+    decisionDetail.innerHTML = `<div><span>OUTCOME</span><strong>${item.title}</strong><p>${item.outcome}</p></div><div><span>EXAMPLE SYSTEM</span><strong>${item.example}</strong><small>${item.range}</small></div><a href="/contact?system=${encodeURIComponent(button.dataset.path)}">${item.action} →</a>`;
     decisionDetail.classList.add("show");
   }));
 
@@ -522,7 +522,7 @@
           ? ["Creates a purpose-built customer or staff interface", "Connects forms, records, payments, and notifications", "Keeps operational progress visible", "Routes exceptions to the right person"]
           : ["Captures the trigger and required context", "Moves work between connected tools", "Records each completed action", "Alerts the owner when judgment is required"];
       const output = document.getElementById("system-recommendation");
-      output.innerHTML = `<header><span>RECOMMENDED SYSTEM</span><strong>${escText(title)}</strong><small>Lead specialist: ${escText(lead)}</small></header><p>${escText(input)}</p><ul>${actions.map(action => `<li>${escText(action)}</li>`).join("")}</ul><div><span><small>ESTIMATED IMPLEMENTATION</small><strong>${isPlatform ? "4–8 weeks" : "2–3 weeks"}</strong></span><a href="/builder-os.html">See the workflow</a><a href="#" onclick="document.getElementById('ai-widget-toggle')?.click();return false;">Talk to ${escText(lisa)}</a><a class="btn-brand" href="/contact.html?brief=${encodeURIComponent(input)}">Request this system</a></div>`;
+      output.innerHTML = `<header><span>RECOMMENDED SYSTEM</span><strong>${escText(title)}</strong><small>Lead specialist: ${escText(lead)}</small></header><p>${escText(input)}</p><ul>${actions.map(action => `<li>${escText(action)}</li>`).join("")}</ul><div><span><small>ESTIMATED IMPLEMENTATION</small><strong>${isPlatform ? "4–8 weeks" : "2–3 weeks"}</strong></span><a href="/builder-os">See the workflow</a><a href="#" onclick="document.getElementById('ai-widget-toggle')?.click();return false;">Talk to ${escText(lisa)}</a><a class="btn-brand" href="/contact?brief=${encodeURIComponent(input)}">Request this system</a></div>`;
       output.classList.remove("d-none");
       output.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
     });

@@ -11,12 +11,12 @@
 <script>(function(){var t=localStorage.getItem("theme")||localStorage.getItem("site_default_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t);var b=t==="dark"?"#0b0c0e":t==="midnight"?"#060a14":t==="paper"?"#f5efe0":"#fbfbfa";document.documentElement.style.backgroundColor=b;document.documentElement.style.setProperty("--bs-body-bg",b);document.documentElement.style.colorScheme=(t==="dark"||t==="midnight")?"dark":"light";})();</script>
 <title>The 5 Levels of AI Adoption | Prince Caleb</title>
 <meta name="description" content="Most businesses stop at Level 1: one AI chat window, everything reviewed by hand. See the five levels of real AI adoption, and where Prince Caleb's own agent system (Beacon, Nurturer, Chief, and the automations engine) actually sits.">
-<link rel="canonical" href="https://princecaleb.dev/ai-adoption-ladder.html">
+<link rel="canonical" href="https://princecaleb.dev/ai-adoption-ladder">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Prince Caleb">
 <meta property="og:title" content="The 5 Levels of AI Adoption">
 <meta property="og:description" content="From asking a chatbot questions to letting real events trigger agents automatically, five levels, and proof of where a real system sits on them.">
-<meta property="og:url" content="https://princecaleb.dev/ai-adoption-ladder.html">
+<meta property="og:url" content="https://princecaleb.dev/ai-adoption-ladder">
 <meta property="og:image" content="https://princecaleb.dev/uploads/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -27,18 +27,18 @@
 
 <nav class="site-nav">
   <div class="container d-flex align-items-center justify-content-between py-3">
-    <a href="/home.html" class="brand-logo text-decoration-none"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></a>
+    <a href="/" class="brand-logo text-decoration-none"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></a>
     <div class="utility-dock">
       <button type="button" class="utility-tab" aria-expanded="false" aria-controls="utility-tray" aria-label="Quick actions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
       <div class="utility-tray" id="utility-tray">
         <button type="button" class="theme-toggle" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
-        <a href="/search.html" class="nav-search-btn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
+        <a href="/search" class="nav-search-btn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></a>
         <a href="/admin/login.html" class="nav-login-btn" aria-label="Admin login"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></a>
       </div>
     </div>
     <button class="nav-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#nav-drawer" aria-label="Toggle navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     <div class="d-none d-md-flex gap-1">
-      <a href="/home.html" class="nav-link">Home</a><a href="/about.html" class="nav-link">About</a><a href="/services.html" class="nav-link active">Services</a><a href="/projects.html" class="nav-link">Projects</a><a href="/pricing.html" class="nav-link">Pricing</a><a href="/contact.html" class="nav-link">Contact</a>
+      <a href="/" class="nav-link">Home</a><a href="/about" class="nav-link">About</a><a href="/services" class="nav-link active">Services</a><a href="/projects" class="nav-link">Projects</a><a href="/pricing" class="nav-link">Pricing</a><a href="/contact" class="nav-link">Contact</a>
     </div>
     <a href="/book.html" class="btn-brand d-none d-md-inline-block">Talk through your system</a>
   </div>
@@ -47,7 +47,7 @@
 <div class="offcanvas offcanvas-end nav-drawer" tabindex="-1" id="nav-drawer">
   <div class="offcanvas-header"><span class="brand-logo"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
   <div class="offcanvas-body d-flex flex-column">
-    <a href="/home.html" class="nav-link">Home</a><a href="/about.html" class="nav-link">About</a><a href="/services.html" class="nav-link active">Services</a><a href="/projects.html" class="nav-link">Projects</a><a href="/pricing.html" class="nav-link">Pricing</a><a href="/contact.html" class="nav-link">Contact</a><a href="/book.html" class="btn-brand text-center mt-3">Talk through your system</a>
+    <a href="/" class="nav-link">Home</a><a href="/about" class="nav-link">About</a><a href="/services" class="nav-link active">Services</a><a href="/projects" class="nav-link">Projects</a><a href="/pricing" class="nav-link">Pricing</a><a href="/contact" class="nav-link">Contact</a><a href="/book.html" class="btn-brand text-center mt-3">Talk through your system</a>
   </div>
 </div>
 
@@ -120,12 +120,12 @@
     </div>
   </section>
 
-  <section class="section ladder-build-section"><div class="container"><div class="ladder-build-card reveal"><div><p class="eyebrow mb-3">// Find your rung</p><h2>Where does your business actually sit right now?</h2><p>Bring one real workflow, the one that eats the most time or gets missed the most, and we'll map the smallest useful step up the ladder, not a jump to Level 4 on day one.</p></div><div class="ladder-build-actions"><a href="/book.html" class="btn-brand">Talk through your system</a><a href="/ai-safety.html" class="btn-brand-outline">See the safety approach</a></div></div></div></section>
+  <section class="section ladder-build-section"><div class="container"><div class="ladder-build-card reveal"><div><p class="eyebrow mb-3">// Find your rung</p><h2>Where does your business actually sit right now?</h2><p>Bring one real workflow, the one that eats the most time or gets missed the most, and we'll map the smallest useful step up the ladder, not a jump to Level 4 on day one.</p></div><div class="ladder-build-actions"><a href="/book.html" class="btn-brand">Talk through your system</a><a href="/ai-safety" class="btn-brand-outline">See the safety approach</a></div></div></div></section>
 </main>
 
 <footer class="site-footer">
-  <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2"><span class="brand-logo" style="color:#fff;"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span><div class="d-flex flex-wrap justify-content-center gap-4"><a href="/about.html">About</a><a href="/services.html">Services</a><a href="/projects.html">Projects</a><a href="/pricing.html">Pricing</a><a href="/contact.html">Contact</a></div></div>
-  <div class="container mt-3 d-flex flex-column align-items-center align-items-sm-start gap-2"><small>&copy; 2026 Prince Caleb. All rights reserved.</small><div class="d-flex gap-3"><a href="/privacy.html" class="small">Privacy Policy</a><a href="/cookies.html" class="small">Cookie Policy</a><a href="/terms.html" class="small">Terms of Service</a></div></div>
+  <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2"><span class="brand-logo" style="color:#fff;"><span class="brand-mark" aria-hidden="true">P</span><span class="brand-text">Prince Caleb<span class="dot">.</span></span></span><div class="d-flex flex-wrap justify-content-center gap-4"><a href="/about">About</a><a href="/services">Services</a><a href="/projects">Projects</a><a href="/pricing">Pricing</a><a href="/contact">Contact</a></div></div>
+  <div class="container mt-3 d-flex flex-column align-items-center align-items-sm-start gap-2"><small>&copy; 2026 Prince Caleb. All rights reserved.</small><div class="d-flex gap-3"><a href="/privacy" class="small">Privacy Policy</a><a href="/cookies" class="small">Cookie Policy</a><a href="/terms" class="small">Terms of Service</a></div></div>
 </footer>
 
 <a href="#" id="whatsapp-float-btn" class="d-none" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg class="whatsapp-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm5.8 14.09c-.24.68-1.4 1.32-1.93 1.4-.5.08-1.13.11-1.82-.11-.42-.13-.96-.31-1.65-.61-2.9-1.25-4.8-4.17-4.94-4.36-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.01-2.41.27-.29.58-.36.78-.36h.56c.18 0 .42-.03.65.5.24.55.8 1.9.87 2.04.07.14.12.3.02.49-.09.19-.14.3-.28.46-.14.16-.29.36-.42.48-.14.14-.29.29-.12.57.16.28.72 1.19 1.55 1.93 1.07.95 1.97 1.24 2.25 1.38.28.14.44.12.6-.07.16-.19.68-.79.86-1.06.19-.28.37-.23.62-.14.26.09 1.63.77 1.9.91.28.14.46.21.53.33.07.12.07.66-.17 1.34z"/></svg></a>

@@ -24,7 +24,7 @@
     if (t.signals.length && t.project_slug) {
       return `
         <div class="col-md-6">
-          <a href="/project.html?slug=${encodeURIComponent(t.project_slug)}" class="case-study-card reveal reveal-card${delay}">
+          <a href="/projects/${encodeURIComponent(t.project_slug)}" class="case-study-card reveal reveal-card${delay}">
             <span class="case-study-eyebrow">Measured result</span>
             <p class="case-study-metric">${escapeHtmlLocal(t.signals[0])}</p>
             <p class="testimonial-quote case-study-quote">"${escapeHtmlLocal(t.quote)}"</p>

@@ -78,7 +78,7 @@
         <section class="agent-profile-section"><header><span>01 / MANDATE</span><h2>What ${esc(agent.name)} is responsible for.</h2></header><div class="agent-profile-copy">${esc(profile.mandate)}</div></section>
         <section class="agent-profile-section"><header><span>02 / OPERATING SURFACES</span><h2>Where the work becomes visible.</h2></header><div class="agent-capability-grid">${profile.surfaces.map((item, index) => `<article><span>${String(index + 1).padStart(2, "0")}</span><strong>${esc(item[0])}</strong><p>${esc(item[1])}</p></article>`).join("")}</div></section>
         <section class="agent-profile-section"><header><span>03 / SIGNAL PATH</span><h2>How one task moves through the system.</h2></header><ol class="agent-signal-path">${profile.path.map((item, index) => `<li><span>${String(index + 1).padStart(2, "0")}</span><div><strong>${esc(item[0])}</strong><small>${esc(item[1])}</small></div></li>`).join("")}</ol></section>
-        <div class="agent-profile-cta"><div><span class="agent-profile-kicker">DEPLOYMENT PATH</span><h2>Build a system with this responsibility.</h2></div><div class="d-flex flex-wrap gap-3"><a href="/builder-os.html" class="btn-brand-outline">Back to network</a><a href="/contact.html?agent=${encodeURIComponent(agent.key)}" class="btn-brand">Map this workflow →</a></div></div>
+        <div class="agent-profile-cta"><div><span class="agent-profile-kicker">DEPLOYMENT PATH</span><h2>Build a system with this responsibility.</h2></div><div class="d-flex flex-wrap gap-3"><a href="/builder-os" class="btn-brand-outline">Back to network</a><a href="/contact?agent=${encodeURIComponent(agent.key)}" class="btn-brand">Map this workflow →</a></div></div>
       </div></div>`;
   }
 
@@ -88,6 +88,6 @@
     if (!agent) throw new Error("Unknown agent");
     render(agent);
   }).catch(() => {
-    root.innerHTML = '<div class="agent-profile-error"><p class="eyebrow">// Registry unavailable</p><h1>That agent dossier could not be opened.</h1><p class="text-muted-custom">Return to the system map and choose a configured specialist.</p><a href="/builder-os.html" class="btn-brand">Return to Builder OS</a></div>';
+    root.innerHTML = '<div class="agent-profile-error"><p class="eyebrow">// Registry unavailable</p><h1>That agent dossier could not be opened.</h1><p class="text-muted-custom">Return to the system map and choose a configured specialist.</p><a href="/builder-os" class="btn-brand">Return to Builder OS</a></div>';
   });
 })();

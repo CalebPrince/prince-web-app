@@ -48,7 +48,7 @@
       '  </form>',
       '  <div class="site-search-status text-muted-custom"></div>',
       '  <div class="site-search-results"></div>',
-      '  <div class="site-search-empty text-muted-custom d-none">No matches yet. Try a different word, or <a href="/contact.html">ask directly</a>.</div>',
+      '  <div class="site-search-empty text-muted-custom d-none">No matches yet. Try a different word, or <a href="/contact">ask directly</a>.</div>',
       '</section>'
     ].join("");
     document.body.appendChild(popup);

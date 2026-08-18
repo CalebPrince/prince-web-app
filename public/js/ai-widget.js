@@ -671,7 +671,7 @@
         resolveBotMessage(pending, "A few things I've built recently:");
         top.forEach((p) => {
           const link = document.createElement("a");
-          link.href = `/project.html?slug=${encodeURIComponent(p.slug)}`;
+          link.href = `/projects/${encodeURIComponent(p.slug)}`;
           link.textContent = `→ ${p.title}`;
           link.className = "d-block small mt-1";
           document.getElementById("ai-widget-messages").appendChild(link);
@@ -683,7 +683,7 @@
       resolveBotMessage(pending, "Couldn't load the portfolio right now, take a look at the full page instead.");
     }
     renderButtonRow([
-      { label: "📄 See all projects →", onClick: () => { window.location.href = "/projects.html"; } },
+      { label: "📄 See all projects →", onClick: () => { window.location.href = "/projects"; } },
       { label: "⬅ Back to menu", variant: "back", onClick: () => renderMenu("main") },
     ]);
   }

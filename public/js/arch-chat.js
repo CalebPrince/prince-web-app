@@ -306,7 +306,7 @@
     document.getElementById("arch-frame").src = data.preview_url;
     document.getElementById("arch-open-link").href = data.preview_url;
     var handoffLink = document.getElementById("arch-download-link");
-    handoffLink.href = data.download_url || "/contact.html";
+    handoffLink.href = data.download_url || "/contact";
     handoffLink.textContent = data.download_url ? "Download site (.zip)" : "Discuss the final build";
     updateRevisionLimit(data.revisions_remaining);
 
@@ -373,7 +373,7 @@
         var cacheBuster = (data.preview_url.indexOf("?") === -1 ? "?" : "&") + "revision=" + Date.now();
         document.getElementById("arch-frame").src = data.preview_url + cacheBuster;
         document.getElementById("arch-open-link").href = data.preview_url;
-        document.getElementById("arch-download-link").href = data.download_url || "/contact.html";
+        document.getElementById("arch-download-link").href = data.download_url || "/contact";
         currentSite.preview_url = data.preview_url;
         currentSite.download_url = data.download_url;
         currentSite.revisions_remaining = data.revisions_remaining;
