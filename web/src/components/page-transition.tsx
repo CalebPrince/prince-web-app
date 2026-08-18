@@ -53,7 +53,16 @@ export function PageTransition() {
       if (url.hash && url.pathname === location.pathname) return;
       if (url.pathname === "/") return;
 
+      // Stop here, in the capture phase, before the event ever reaches the
+      // link itself — next/link's <Link> attaches its own click handler
+      // directly on the <a> that preventDefaults and soft-navigates on its
+      // own the instant the event reaches that element. A bubble-phase
+      // listener on document runs after that already happened, so the
+      // overlay never got a chance to show. stopPropagation() here keeps
+      // the event from ever reaching Link's handler, so this is the only
+      // navigation that runs.
       event.preventDefault();
+      event.stopPropagation();
       setLabel(LABELS[url.pathname] || "Loading next system…");
       setVisible(true);
       pendingHref.current = url.href;
@@ -67,8 +76,8 @@ export function PageTransition() {
       }, 430);
     }
 
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
+    document.addEventListener("click", onClick, { capture: true });
+    return () => document.removeEventListener("click", onClick, { capture: true });
   }, [router]);
 
   return (
