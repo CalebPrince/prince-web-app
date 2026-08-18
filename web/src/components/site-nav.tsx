@@ -163,7 +163,7 @@ export function SiteNav() {
       viewport, collapsing it to a sliver on every page but the transparent
       unscrolled homepage hero.
     */}
-    <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} pathname={pathname} />
+    <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} />
     </>
   );
 }
@@ -172,10 +172,7 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   return (
     <Link
       href={href}
-      className={cn(
-        "group relative px-4 py-2 text-sm font-medium text-ink-soft transition-colors",
-        active ? "text-editorial-accent" : "hover:text-editorial-accent",
-      )}
+      className="group relative px-4 py-2 text-sm font-medium text-editorial-accent transition-colors"
     >
       {children}
       <span
@@ -210,10 +207,7 @@ function MegaTrigger({
       onMouseLeave={onClose}
       aria-expanded={active}
       aria-haspopup="true"
-      className={cn(
-        "group relative inline-flex items-center gap-[0.3rem] px-4 py-2 text-sm font-medium text-ink-soft transition-colors",
-        active ? "text-editorial-accent" : "hover:text-editorial-accent",
-      )}
+      className="group relative inline-flex items-center gap-[0.3rem] px-4 py-2 text-sm font-medium text-editorial-accent transition-colors"
     >
       {children}
       <svg
@@ -537,7 +531,7 @@ function ProjectsPanel() {
   );
 }
 
-function MobileDrawer({ open, onClose, pathname }: { open: boolean; onClose: () => void; pathname: string }) {
+function MobileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const links = [{ href: "/", label: "Home" }, ...PRIMARY_LINKS];
   return (
     <>
@@ -576,15 +570,13 @@ function MobileDrawer({ open, onClose, pathname }: { open: boolean; onClose: () 
           <p className="mb-3 mt-4 text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-ink-soft">// Menu</p>
           <nav className="nav-drawer-links flex flex-col">
             {links.map((link, i) => {
-              const active = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={onClose}
                   className={cn(
-                    "nav-drawer-link drawer-stagger flex items-baseline justify-center gap-[0.6rem] border-b border-line p-[1rem_0.25rem] text-[1.5rem] font-bold transition-[color,opacity,transform] duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:opacity-60",
-                    active ? "text-editorial-accent" : "text-heading",
+                    "nav-drawer-link drawer-stagger flex items-baseline justify-center gap-[0.6rem] border-b border-line p-[1rem_0.25rem] text-[1.5rem] font-bold text-editorial-accent transition-[color,opacity,transform] duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:opacity-60",
                     open ? "translate-y-0 opacity-100" : "translate-y-3.5 opacity-0",
                   )}
                   style={{ transitionDelay: open ? `${0.08 + i * 0.05}s` : "0s" }}
