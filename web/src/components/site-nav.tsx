@@ -66,6 +66,7 @@ export function SiteNav() {
   const solid = !isHome || scrolled;
 
   return (
+    <>
     <header
       className={cn(
         "z-[1000] border-b transition-[background-color,border-color,box-shadow] duration-300",
@@ -151,9 +152,19 @@ export function SiteNav() {
       <MegaPanel open={activeMega === "projects"} onOpen={() => openMega("projects")} onClose={scheduleCloseMega}>
         <ProjectsPanel />
       </MegaPanel>
-
-      <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} pathname={pathname} />
     </header>
+
+    {/*
+      Rendered outside <header> deliberately: the header gets a
+      backdrop-blur (backdrop-filter) class whenever it's solid, and
+      backdrop-filter establishes a new containing block for fixed/absolute
+      descendants (same as filter/transform). A fixed-position drawer nested
+      inside would get pinned to the header's own ~70px box instead of the
+      viewport, collapsing it to a sliver on every page but the transparent
+      unscrolled homepage hero.
+    */}
+    <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} pathname={pathname} />
+    </>
   );
 }
 
