@@ -10,12 +10,7 @@ import type { NextConfig } from "next";
  *
  * Delete an entry as its page is ported into this app.
  */
-const LEGACY_HTML_ROUTES = [
-  "marketing-brain",
-  "ai-voice-agents-for-clinics",
-  "growth-roadmap",
-  "agent",
-];
+const LEGACY_HTML_ROUTES: string[] = [];
 
 const nextConfig: NextConfig = {
   // The repo root has its own package-lock.json (the separate Tailwind CLI
