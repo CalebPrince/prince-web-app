@@ -32,6 +32,33 @@ CREATE TABLE IF NOT EXISTS projects (
   -- education/commerce/professional). Lets a real, approved case study be
   -- cited by industry match in a pitch or demo instead of only generic proof.
   industry TEXT,
+  -- Public showcase fields, written by hand on the admin Projects page and
+  -- read by the Systems pages on the Next.js front end. These exist because
+  -- the showcase presents a project as a *system* — what it does in one
+  -- line, who it was for, how long it took, the before/after, and the
+  -- headline numbers — which the operational columns above don't carry.
+  --
+  -- showcase_category is deliberately separate from `category`: that column
+  -- has a CHECK constraint fixed to the three legacy buckets, while the
+  -- showcase groups work as 'AI Agents' / 'Automations' / 'Websites & Apps'.
+  tagline TEXT,
+  showcase_category TEXT,
+  -- One-line headline outcome, e.g. '3x more booked calls'. Distinct from
+  -- outcome_metrics, which stays a free-text list.
+  result_headline TEXT,
+  -- JSON array of {"value","label"} pairs, e.g. [{"value":"3x","label":"Booked calls"}].
+  metrics_json TEXT,
+  -- Public display name for the engagement. Separate from client_id, which
+  -- is private and stripped from public responses.
+  client_name TEXT,
+  role TEXT,
+  timeline TEXT,
+  project_year TEXT,
+  challenge TEXT,
+  solution TEXT,
+  -- JSON array of {"name","icon"} where icon is a react-icons key, e.g.
+  -- [{"name":"React","icon":"SiReact"}].
+  stack_json TEXT,
   testimonial_id INTEGER NULL REFERENCES testimonials(id) ON DELETE SET NULL,
   -- Delivery health, set by hand on the admin Projects page — separate from
   -- is_published, which is about public visibility, not build progress.

@@ -68,11 +68,59 @@ class ProjectController
             $project['tags'] = $tagsByProject[$project['id']] ?? [];
             $project['gallery'] = $project['gallery_json'] ? json_decode($project['gallery_json'], true) : [];
             unset($project['gallery_json']);
+            // Showcase JSON columns are decoded the same way as the gallery so
+            // the front end never has to parse a string field itself.
+            $project['metrics'] = self::decodeJsonList($project['metrics_json'] ?? null);
+            $project['stack'] = self::decodeJsonList($project['stack_json'] ?? null);
+            unset($project['metrics_json'], $project['stack_json']);
             $project['testimonial'] = $project['testimonial_id'] !== null
                 ? ($testimonialsById[$project['testimonial_id']] ?? null)
                 : null;
         }
         return $projects;
+    }
+
+    /** Decodes a JSON array column, tolerating null, invalid JSON and objects. */
+    private static function decodeJsonList(?string $raw): array
+    {
+        if ($raw === null || trim($raw) === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? array_values($decoded) : [];
+    }
+
+    /**
+     * Encodes a showcase list column, keeping only the expected string keys
+     * so a malformed admin payload can't write arbitrary structures.
+     */
+    private static function encodeShowcaseList(mixed $value, array $keys): ?string
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+        $rows = [];
+        foreach ($value as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $row = [];
+            foreach ($keys as $key) {
+                $row[$key] = trim((string) ($item[$key] ?? ''));
+            }
+            // Drop entries where every field came through empty.
+            if (implode('', $row) !== '') {
+                $rows[] = $row;
+            }
+        }
+        return $rows ? json_encode(array_values($rows)) : null;
+    }
+
+    /** Trims a showcase text field down to null when blank. */
+    private static function showcaseText(mixed $value): ?string
+    {
+        $text = trim((string) ($value ?? ''));
+        return $text !== '' ? $text : null;
     }
 
     /** GET /api/v1/projects?tag=react */
@@ -121,7 +169,10 @@ class ProjectController
     {
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
-        $stmt = $pdo->query('SELECT p.*, c.name AS client_name, c.email AS client_email FROM projects p LEFT JOIN clients c ON c.id=p.client_id ORDER BY p.sort_order ASC');
+        // Aliased as linked_client_name, not client_name: projects now has its
+        // own client_name column (the public showcase display name), and a
+        // bare `client_name` alias here would shadow it in the fetched row.
+        $stmt = $pdo->query('SELECT p.*, c.name AS linked_client_name, c.email AS client_email FROM projects p LEFT JOIN clients c ON c.id=p.client_id ORDER BY p.sort_order ASC');
         $projects = self::attachTags($pdo, $stmt->fetchAll());
         $projects = self::attachOperations($pdo, $projects);
         foreach ($projects as &$project) self::attachFinanceMetrics($project);
@@ -144,8 +195,8 @@ class ProjectController
         $pdo = Database::get();
         $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
         $stmt = $pdo->prepare(
-            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, industry, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key, arch_style_keyword, arch_primary_color, arch_accent_color)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, industry, tagline, showcase_category, result_headline, metrics_json, client_name, role, timeline, project_year, challenge, solution, stack_json, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key, arch_style_keyword, arch_primary_color, arch_accent_color)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $clientId,
@@ -164,6 +215,17 @@ class ProjectController
             (int) ($data['sort_order'] ?? 0),
             trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
             self::industryValue($data['industry'] ?? null),
+            self::showcaseText($data['tagline'] ?? null),
+            self::showcaseText($data['showcase_category'] ?? null),
+            self::showcaseText($data['result_headline'] ?? null),
+            self::encodeShowcaseList($data['metrics'] ?? null, ['value', 'label']),
+            self::showcaseText($data['client_name'] ?? null),
+            self::showcaseText($data['role'] ?? null),
+            self::showcaseText($data['timeline'] ?? null),
+            self::showcaseText($data['project_year'] ?? null),
+            self::showcaseText($data['challenge'] ?? null),
+            self::showcaseText($data['solution'] ?? null),
+            self::encodeShowcaseList($data['stack'] ?? null, ['name', 'icon']),
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
             $data['delivery_status'] ?? 'on_track',
             max(0, min(100, (int) ($data['progress_percent'] ?? 0))),
@@ -219,7 +281,9 @@ class ProjectController
         $stmt = $pdo->prepare(
             "UPDATE projects SET client_id=?, slug=?, title=?, summary=?, case_study_body=?, category=?, live_url=?, repo_url=?,
              cover_image_path=?, gallery_json=?, is_embeddable=?, is_published=?, is_featured=?, sort_order=?,
-             outcome_metrics=?, industry=?, testimonial_id=?, delivery_status=?, progress_percent=?, contract_value=?, estimated_cost=?,
+             outcome_metrics=?, industry=?, tagline=?, showcase_category=?, result_headline=?, metrics_json=?, client_name=?,
+             role=?, timeline=?, project_year=?, challenge=?, solution=?, stack_json=?,
+             testimonial_id=?, delivery_status=?, progress_percent=?, contract_value=?, estimated_cost=?,
              actual_cost=?, hours_worked=?, finance_currency=?, deadline=?, assigned_agent_key=?, arch_style_keyword=?,
              arch_primary_color=?, arch_accent_color=?, updated_at=datetime('now') WHERE id=?"
         );
@@ -240,6 +304,17 @@ class ProjectController
             (int) ($data['sort_order'] ?? 0),
             trim((string) ($data['outcome_metrics'] ?? '')) ?: null,
             self::industryValue($data['industry'] ?? null),
+            self::showcaseText($data['tagline'] ?? null),
+            self::showcaseText($data['showcase_category'] ?? null),
+            self::showcaseText($data['result_headline'] ?? null),
+            self::encodeShowcaseList($data['metrics'] ?? null, ['value', 'label']),
+            self::showcaseText($data['client_name'] ?? null),
+            self::showcaseText($data['role'] ?? null),
+            self::showcaseText($data['timeline'] ?? null),
+            self::showcaseText($data['project_year'] ?? null),
+            self::showcaseText($data['challenge'] ?? null),
+            self::showcaseText($data['solution'] ?? null),
+            self::encodeShowcaseList($data['stack'] ?? null, ['name', 'icon']),
             !empty($data['testimonial_id']) ? (int) $data['testimonial_id'] : null,
             $data['delivery_status'] ?? 'on_track',
             max(0, min(100, (int) ($data['progress_percent'] ?? 0))),

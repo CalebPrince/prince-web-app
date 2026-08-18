@@ -172,6 +172,63 @@
               <label class="form-label">Results / outcomes <span class="text-muted-custom fw-normal">(optional metrics — shown as a "Results" section on the case study page)</span></label>
               <textarea class="form-control" id="outcome_metrics" rows="2" placeholder="e.g. Onboarding time went from weeks to under a day; passed first external audit using the platform's audit log as evidence."></textarea>
             </div>
+            <!-- Public showcase fields — these drive the Systems pages on the
+                 Next.js site. Everything here is optional; a blank field is
+                 simply left out of the page rather than shown empty. -->
+            <div class="col-12">
+              <hr class="my-2">
+              <h6 class="mb-1">Systems showcase</h6>
+              <p class="text-muted-custom small mb-0">
+                Optional. Fills the public Systems card and case-study page. Leave blank and that block is omitted.
+              </p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="tagline">Tagline <span class="text-muted-custom fw-normal">(short descriptor, e.g. "Voice agent + booking")</span></label>
+              <input type="text" class="form-control" id="tagline" placeholder="Voice agent + booking">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="showcase_category">Showcase group</label>
+              <select class="form-select" id="showcase_category">
+                <option value="">Not set</option>
+                <option value="AI Agents">AI Agents</option>
+                <option value="Automations">Automations</option>
+                <option value="Websites &amp; Apps">Websites &amp; Apps</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="project_year">Year</label>
+              <input type="text" class="form-control" id="project_year" placeholder="2026" inputmode="numeric">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="client_name">Client name <span class="text-muted-custom fw-normal">(shown publicly)</span></label>
+              <input type="text" class="form-control" id="client_name" placeholder="Northwind Retail">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="role">Role</label>
+              <input type="text" class="form-control" id="role" placeholder="Design, Development &amp; AI">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="timeline">Timeline</label>
+              <input type="text" class="form-control" id="timeline" placeholder="4 weeks">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="result_headline">Headline result <span class="text-muted-custom fw-normal">(the badge on the Systems card, e.g. "3× more booked calls")</span></label>
+              <input type="text" class="form-control" id="result_headline" placeholder="3× more booked calls">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="metrics">Metrics <span class="text-muted-custom fw-normal">(one per line as <code>value | label</code> — e.g. <code>3× | Booked calls</code>)</span></label>
+              <textarea class="form-control" id="metrics" rows="3" placeholder="3× | Booked calls&#10;&lt;2s | Answer time&#10;0 | Missed leads"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="challenge">The challenge</label>
+              <textarea class="form-control" id="challenge" rows="3" placeholder="What was going wrong before the system existed."></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="solution">The solution</label>
+              <textarea class="form-control" id="solution" rows="3" placeholder="What was built, and how it changed the workflow."></textarea>
+            </div>
+            <div class="col-12"><hr class="my-2"></div>
+
             <div class="col-md-4">
               <label class="form-label" for="industry">Industry <span class="text-muted-custom fw-normal">(optional — lets a matching cold-outreach lead cite this as real proof)</span></label>
               <select class="form-select" id="industry">
