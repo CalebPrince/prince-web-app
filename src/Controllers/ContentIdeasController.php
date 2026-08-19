@@ -77,7 +77,7 @@ class ContentIdeasController
         $built = self::buildPrompt($pdo);
         $text = AiText::generate($built['text'], self::systemInstruction(), 45);
         if ($text === null) {
-            Response::error('Could not generate content ideas — check that an AI provider is configured and reachable.', 502);
+            Response::error('Could not generate content ideas — ' . (AiText::lastError() ?? 'no AI provider answered.'), 502);
         }
 
         $ideas = self::parseIdeas((string) $text, $built['postsByIndex']);
@@ -148,7 +148,7 @@ class ContentIdeasController
 
         $draft = SocialDraftController::generateFromIdea($idea);
         if ($draft === null) {
-            Response::error('Could not generate a draft — check that an AI provider is configured and reachable.', 502);
+            Response::error('Could not generate a draft — ' . (AiText::lastError() ?? 'no AI provider answered.'), 502);
         }
 
         $pdo->prepare("UPDATE content_ideas SET status = 'used' WHERE id = ?")->execute([$id]);

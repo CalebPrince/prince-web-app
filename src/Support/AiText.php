@@ -36,6 +36,11 @@ class AiText
      * fraction of that. */
     private const DEFAULT_MAX_TOKENS = 8192;
 
+    /** Smallest window worth giving a provider once the budget is shared out. */
+    private const MIN_PROVIDER_TIMEOUT = 8;
+
+    private static ?string $lastError = null;
+
     /** @return string|null null only if every configured provider failed, or none is configured */
     public static function generate(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20, int $maxTokens = self::DEFAULT_MAX_TOKENS): ?string
     {
@@ -52,50 +57,73 @@ class AiText
      */
     public static function generateWithProvider(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20, int $maxTokens = self::DEFAULT_MAX_TOKENS): ?array
     {
-        // Tried first as a cost-cutting move — DeepSeek is a cheap,
-        // paid-from-first-token API, so resolving here means most calls
-        // never touch Gemini's paid-tier billing once its free quota is
-        // exhausted. Falls through to Gemini on any failure, same as every
-        // other leg in this chain.
-        $deepseekKey = Settings::get('deepseek_api_key');
-        if (!empty($deepseekKey)) {
-            $text = self::callDeepSeek($deepseekKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
-            if ($text !== null) {
-                return ['text' => $text, 'provider' => 'deepseek'];
-            }
+        self::$lastError = null;
+
+        // DeepSeek is tried first as a cost-cutting move — it is a cheap,
+        // paid-from-first-token API, so resolving here means most calls never
+        // touch Gemini's paid tier once its free quota is exhausted. Every leg
+        // falls through to the next on any failure.
+        $chain = [
+            ['deepseek', Settings::get('deepseek_api_key'), fn($k, $t) => self::callDeepSeek($k, $prompt, $systemInstruction, $t, $maxTokens)],
+            ['gemini', Settings::get('gemini_api_key'), fn($k, $t) => self::callGemini($k, $prompt, $systemInstruction, $t, $maxTokens)],
+            ['openrouter', Settings::get('openrouter_api_key'), fn($k, $t) => self::callOpenRouter($k, $prompt, $systemInstruction, $t, $maxTokens)],
+            ['groq', Settings::get('groq_api_key'), fn($k, $t) => self::callGroq($k, $prompt, $systemInstruction, $t, $maxTokens)],
+        ];
+
+        $configured = array_values(array_filter($chain, static fn(array $leg) => !empty($leg[1])));
+        if ($configured === []) {
+            self::$lastError = 'no AI provider is configured';
+            return null;
         }
 
-        $geminiKey = Settings::get('gemini_api_key');
-        if (!empty($geminiKey)) {
-            $text = self::callGemini($geminiKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
-            if ($text !== null) {
-                return ['text' => $text, 'provider' => 'gemini'];
-            }
-        }
+        // The timeout is a budget for the whole chain, not for each leg. Giving
+        // every provider the full window meant one unreachable host could burn
+        // the entire request — PHP's execution limit would kill it before the
+        // fallback was ever tried, and the caller could only report that
+        // nothing answered.
+        $perCall = max(self::MIN_PROVIDER_TIMEOUT, intdiv($timeoutSeconds, count($configured)));
+        $deadline = microtime(true) + $timeoutSeconds;
+        $attempted = [];
 
-        $openRouterKey = Settings::get('openrouter_api_key');
-        if (!empty($openRouterKey)) {
-            $text = self::callOpenRouter($openRouterKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
-            if ($text !== null) {
-                // OpenRouter routes to many underlying model providers behind
-                // one API — reporting the actual configured model (rather
-                // than a generic "openrouter" label) makes it visible in the
-                // admin UI which model actually generated a given draft,
-                // whatever it's set to (Claude, GPT, Llama, etc.).
-                $model = Settings::get('openrouter_model') ?: 'openrouter/free';
-                return ['text' => $text, 'provider' => $model];
+        foreach ($configured as [$name, $key, $call]) {
+            $remaining = (int) floor($deadline - microtime(true));
+            if ($remaining < self::MIN_PROVIDER_TIMEOUT) {
+                self::$lastError = sprintf(
+                    'ran out of time after trying %s (%ds budget)',
+                    implode(', ', $attempted),
+                    $timeoutSeconds
+                );
+                break;
             }
-        }
 
-        $groqKey = Settings::get('groq_api_key');
-        if (!empty($groqKey)) {
-            $text = self::callGroq($groqKey, $prompt, $systemInstruction, $timeoutSeconds, $maxTokens);
+            $attempted[] = $name;
+            $startedAt = microtime(true);
+            $text = $call($key, min($perCall, $remaining));
+
             if ($text !== null) {
-                return ['text' => $text, 'provider' => 'groq'];
+                // OpenRouter fronts many underlying models, so report the
+                // configured model rather than a generic label — that is what
+                // makes it visible in the admin which model wrote a given draft.
+                $provider = $name === 'openrouter'
+                    ? (Settings::get('openrouter_model') ?: 'openrouter/free')
+                    : $name;
+                return ['text' => $text, 'provider' => $provider];
             }
+
+            self::$lastError = sprintf(
+                '%s failed after %.1fs (see the error log for the provider response)',
+                $name,
+                microtime(true) - $startedAt
+            );
         }
 
         return null;
+    }
+
+    /** Why the last generate() call produced nothing, for surfacing to the admin. */
+    public static function lastError(): ?string
+    {
+        return self::$lastError;
     }
 
     private static function callDeepSeek(string $apiKey, string $prompt, ?string $system, int $timeout, int $maxTokens): ?string
