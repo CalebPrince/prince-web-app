@@ -101,6 +101,7 @@ class AiText
 
             $attempted[] = $name;
             $startedAt = microtime(true);
+            self::$lastError = null;
             $text = $call($key, min($perCall, $remaining));
 
             if ($text !== null) {
@@ -113,11 +114,13 @@ class AiText
                 return ['text' => $text, 'provider' => $provider];
             }
 
-            self::$lastError = sprintf(
-                '%s failed after %.1fs (see the error log for the provider response)',
-                $name,
-                microtime(true) - $startedAt
-            );
+            if (self::$lastError === null) {
+                self::$lastError = sprintf(
+                    '%s failed after %.1fs (see the error log for the provider response)',
+                    $name,
+                    microtime(true) - $startedAt
+                );
+            }
         }
 
         return null;
@@ -180,6 +183,10 @@ class AiText
                 $decoded['choices'][0]['finish_reason'] ?? 'none',
                 substr($response, 0, 500)
             ));
+            self::$lastError = sprintf(
+                'DeepSeek returned no text (finishReason=%s) — the model may have spent the token budget before answering.',
+                $decoded['candidates'][0]['finishReason'] ?? $decoded['choices'][0]['finish_reason'] ?? 'unknown'
+            );
         }
         return $text;
     }
@@ -236,6 +243,10 @@ class AiText
                 $decoded['candidates'][0]['finishReason'] ?? 'none',
                 json_encode($decoded['promptFeedback'] ?? null)
             ));
+            self::$lastError = sprintf(
+                'Gemini returned no text (finishReason=%s) — the model may have spent the token budget before answering.',
+                $decoded['candidates'][0]['finishReason'] ?? $decoded['choices'][0]['finish_reason'] ?? 'unknown'
+            );
         }
         return $text;
     }
@@ -294,6 +305,10 @@ class AiText
                 $decoded['choices'][0]['finish_reason'] ?? 'none',
                 substr($response, 0, 500)
             ));
+            self::$lastError = sprintf(
+                'OpenRouter returned no text (finishReason=%s) — the model may have spent the token budget before answering.',
+                $decoded['candidates'][0]['finishReason'] ?? $decoded['choices'][0]['finish_reason'] ?? 'unknown'
+            );
         }
         return $text;
     }
@@ -349,6 +364,10 @@ class AiText
                 $decoded['choices'][0]['finish_reason'] ?? 'none',
                 substr($response, 0, 500)
             ));
+            self::$lastError = sprintf(
+                'Groq returned no text (finishReason=%s) — the model may have spent the token budget before answering.',
+                $decoded['candidates'][0]['finishReason'] ?? $decoded['choices'][0]['finish_reason'] ?? 'unknown'
+            );
         }
         return $text;
     }
