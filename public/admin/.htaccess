@@ -1,0 +1,14 @@
+# The Next.js app owns /admin, but public/admin/ is still a real directory on
+# disk (the legacy .html pages the migration replaced). mod_dir sees that
+# directory and 301s /admin -> /admin/, Next then 308s /admin/ back to /admin,
+# and the browser gives up on the loop — which took the admin offline.
+#
+# Turning DirectorySlash off here stops mod_dir adding the slash, so /admin
+# reaches the Next route directly. Scoped to this directory so the rest of the
+# site's routing is untouched.
+DirectorySlash Off
+
+# DirectorySlash Off means a request for this directory is served rather than
+# redirected, so listing is disabled explicitly — there is no DirectoryIndex
+# here for it to fall back on.
+Options -Indexes
