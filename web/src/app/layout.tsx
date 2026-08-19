@@ -17,7 +17,13 @@ const jetbrainsMono = JetBrains_Mono({
 import { MarketingUIWrapper } from "@/components/MarketingUIWrapper";
 
 export const metadata: Metadata = {
-  title: "Prince Caleb, Digital Design, Development & AI",
+  // Child segments set just their page name and get the brand prefixed here.
+  // The template deliberately does not reach the home page: it only applies to
+  // child segments, and the home page shares this one, so it keeps `default`.
+  title: {
+    default: "Prince Caleb | Digital Design, Development & AI",
+    template: "Prince Caleb | %s",
+  },
   description:
     "I design and build high-performance websites, digital products and AI-powered experiences that help ambitious businesses move forward.",
 };

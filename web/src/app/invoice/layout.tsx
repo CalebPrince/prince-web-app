@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Prince Caleb - Invoice",
+  title: "Invoice",
   description: "View your invoice.",
   robots: "noindex, nofollow",
 };

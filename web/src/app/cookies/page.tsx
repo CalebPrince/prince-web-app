@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage, LegalSection, legalLink } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Prince Caleb - Cookie Policy",
+  title: "Cookie Policy",
   description:
     "This site doesn't use tracking or advertising cookies. Here's exactly what is stored in your browser.",
 };

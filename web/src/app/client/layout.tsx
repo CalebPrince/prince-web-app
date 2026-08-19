@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Prince Caleb - Client Portal",
+  title: "Client Portal",
   description: "Access your project status, milestones, files, and messages.",
   robots: "noindex, nofollow",
 };
