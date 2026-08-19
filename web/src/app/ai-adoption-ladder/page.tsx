@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Prince Caleb - The 5 Levels of AI Adoption",
+  title: "The 5 Levels of AI Adoption",
   description:
     "Most businesses stop at Level 1: one AI chat window, everything reviewed by hand. See the five levels of real AI adoption, and where Prince Caleb's own agent system actually sits.",
   openGraph: {

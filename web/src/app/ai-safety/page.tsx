@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Prince Caleb - AI Trust & Safety",
+  title: "AI Trust & Safety",
   description:
     "How Prince Caleb approaches AI disclosure, human escalation, call recordings, data retention, and safe boundaries for voice agents and automations.",
 };

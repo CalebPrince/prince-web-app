@@ -7,7 +7,12 @@ import { Logo } from "@/components/Logo";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export const metadata = {
-  title: "Admin Dashboard | Prince Caleb",
+  // Its own template overrides the root "Prince Caleb | %s" one, leaving the
+  // admin pages' existing titles ("Tags - Admin", etc.) untouched.
+  title: {
+    default: "Admin Dashboard | Prince Caleb",
+    template: "%s",
+  },
 };
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {

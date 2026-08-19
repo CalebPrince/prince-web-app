@@ -96,7 +96,7 @@ const TIMELINE = [
 ];
 
 export const metadata: Metadata = {
-  title: "Prince Caleb - About",
+  title: "About",
   description:
     "Designer, developer and AI tinkerer running a one-person digital studio, turning raw ideas into products people remember using.",
 };

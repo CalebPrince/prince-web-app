@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage, LegalSection, legalLink } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Prince Caleb - Terms of Service",
+  title: "Terms of Service",
   description: "Terms for using this site's contact form, booking, Live Chat, and payment features.",
 };
 
