@@ -6,6 +6,7 @@ import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TechStrip } from "@/components/TechStrip";
 import { VoiceDemo } from "@/components/VoiceDemo";
+import { HeroOrbs } from "@/components/HeroOrbs";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { FaqAccordion } from "@/components/FaqAccordion";
@@ -102,8 +103,7 @@ export default async function Home() {
             alt="Abstract cinematic 3D digital environment with glowing objects"
             className="h-full w-full object-cover [animation:drift_28s_ease-in-out_infinite]"
           />
-          <div className="absolute -left-40 top-1/3 h-[36rem] w-[36rem] rounded-full bg-accent/20 blur-[140px] [animation:glowpulse_16s_ease-in-out_infinite]" />
-          <div className="absolute -right-32 top-10 h-[28rem] w-[28rem] rounded-full bg-accent/10 blur-[120px] [animation:glowpulse_20s_ease-in-out_infinite_reverse]" />
+          <HeroOrbs />
           <div className="absolute inset-0 bg-gradient-to-b from-bg/70 via-bg/40 to-bg" />
           <div className="absolute inset-0 bg-gradient-to-r from-bg/85 via-bg/30 to-transparent" />
         </div>
@@ -118,9 +118,15 @@ export default async function Home() {
               className="rise text-[clamp(2.2rem,6vw,5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]"
               style={{ animationDelay: "0.2s" }}
             >
-              Digital experiences,
-              <br />
-              <span className="text-text-2">built to</span> <span className="text-accent">perform.</span>
+              {content?.htext ? (
+                <span dangerouslySetInnerHTML={{ __html: content.htext }} />
+              ) : (
+                <>
+                  Digital experiences,
+                  <br />
+                  <span className="text-text-2">built to</span> <span className="text-accent">perform.</span>
+                </>
+              )}
             </h1>
             <p
               className="rise mt-8 max-w-xl text-lg leading-relaxed text-text-2 md:text-xl"
