@@ -1,7 +1,7 @@
 import type { SampleWireframe } from "@/lib/sample-projects-data";
 import { cn } from "@/lib/utils";
 
-// Abstract wireframe illustrations for the "What I build" samples — no
+// Abstract wireframe illustrations for the "What I build" samples - no
 // fabricated screenshots, just shape and rhythm in the site's own palette.
 export function SampleWireframeScene({ type }: { type: SampleWireframe }) {
   if (type === "voice") {

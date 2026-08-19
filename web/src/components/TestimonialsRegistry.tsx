@@ -11,7 +11,7 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { cn } from "@/lib/utils";
 
 // A review only counts as a case study once it's linked to a published
-// project with a real, admin-entered outcome_metrics line — otherwise it
+// project with a real, admin-entered outcome_metrics line - otherwise it
 // renders as a plain quote card.
 export function TestimonialsRegistry() {
   const [rows, setRows] = React.useState<Testimonial[] | null>(null);

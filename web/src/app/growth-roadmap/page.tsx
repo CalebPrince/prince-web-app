@@ -7,14 +7,14 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 
-// Free Growth Roadmap lead-gen page — ported from public/growth-roadmap.html.
+// Free Growth Roadmap lead-gen page - ported from public/growth-roadmap.html.
 // The form really submits to /api/v1/inquiries (type=inquiry, same as the
 // plain contact form), honeypot included, exactly like the legacy page.
 
 const GAP_OPTIONS = [
   "Not enough traffic hitting the site",
   "Traffic comes, but it doesn't convert",
-  "Not sure what's working — I need tracking clarity",
+  "Not sure what's working, I need tracking clarity",
   "All of the above / not sure yet",
 ];
 
@@ -25,9 +25,9 @@ const VALUE_ROWS = [
 ];
 
 const SAMPLE_FINDINGS = [
-  { tag: "Traffic", body: "The ad is sending clicks to a page that takes 6.8s to load on mobile — most visitors bounce before it finishes." },
+  { tag: "Traffic", body: "The ad is sending clicks to a page that takes 6.8s to load on mobile, most visitors bounce before it finishes." },
   { tag: "Conversion", body: "The homepage has three competing calls to action. Visitors aren't sure which one to click, so many click none." },
-  { tag: "Tracking", body: "No conversion pixel is firing on the booking form — every ad platform is optimizing blind." },
+  { tag: "Tracking", body: "No conversion pixel is firing on the booking form, every ad platform is optimizing blind." },
 ];
 
 const SAMPLE_ACTIONS = [
@@ -39,7 +39,7 @@ const SAMPLE_ACTIONS = [
 const NEXT_STEPS = [
   { title: "I look at your site", body: "I'll review your traffic, conversion, and tracking setup." },
   { title: "You get a personal reply", body: "I'll email you a clear roadmap of what's costing you the most." },
-  { title: "We scope it, if it's a fit", body: "No pressure — you decide what to do with it." },
+  { title: "We scope it, if it's a fit", body: "No pressure, you decide what to do with it." },
 ];
 
 export default function GrowthRoadmap() {
@@ -90,14 +90,14 @@ export default function GrowthRoadmap() {
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
               Most business owners spend thousands on a beautiful new website, hit launch, and wait.
               Nobody comes. A website without marketing is just an expensive digital business card
-              hidden in a desert — scaling online takes traffic and conversion working together,
+              hidden in a desert, scaling online takes traffic and conversion working together,
               every single day.
             </p>
           </Reveal>
           <Reveal delay={220}>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
               I&rsquo;m Prince Caleb. I build websites, AI agents, and automations for businesses in
-              Accra and beyond — and I don&rsquo;t disappear at handover. Tell me about your site
+              Accra and beyond, and I don&rsquo;t disappear at handover. Tell me about your site
               below and I&rsquo;ll map your traffic, conversion, and tracking gaps, free, with clear
               scope before you commit to anything.
             </p>
@@ -114,7 +114,7 @@ export default function GrowthRoadmap() {
           </h2>
           <p className="mt-5 max-w-2xl text-text-2">
             Not a generic PDF template. A short, specific breakdown of what&rsquo;s costing a real
-            business traffic, conversions, and visibility — built the same way yours will be.
+            business traffic, conversions, and visibility, built the same way yours will be.
           </p>
         </Reveal>
 
@@ -177,7 +177,7 @@ export default function GrowthRoadmap() {
                 ))}
               </div>
               <p className="mt-6 text-sm text-muted">
-                No pitch, no pressure — just a clear picture of what&rsquo;s costing you revenue and
+                No pitch, no pressure, just a clear picture of what&rsquo;s costing you revenue and
                 what to fix first.
               </p>
             </div>

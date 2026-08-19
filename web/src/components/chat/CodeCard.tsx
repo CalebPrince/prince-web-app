@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 // Carbon-style code snippet card for a fenced ```code``` block in a chat
 // reply. Ported from ai-widget.js's buildCodeCard(); highlightCode()
 // HTML-escapes every token and every gap between tokens, so the
-// dangerouslySetInnerHTML below is always safe — no bot output is ever
+// dangerouslySetInnerHTML below is always safe - no bot output is ever
 // interpreted as markup.
 export function CodeCard({ lang, value }: { lang: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -38,7 +38,7 @@ export function CodeCard({ lang, value }: { lang: string; value: string }) {
     try {
       if (document.execCommand("copy")) mark();
     } catch {
-      // Clipboard truly unavailable — nothing more we can do.
+      // Clipboard truly unavailable - nothing more we can do.
     }
     document.body.removeChild(ta);
   }

@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: PageProps<"/systems/[slug]">)
   const { slug } = await params;
   try {
     const system = await getSystem(slug);
-    return { title: `${system.name} — Prince Caleb`, description: system.overview };
+    return { title: `${system.name} - Prince Caleb`, description: system.overview };
   } catch {
     return {
-      title: "System — Prince Caleb",
+      title: "System - Prince Caleb",
       description: "A system engineered by Prince Caleb, from architecture to launch.",
     };
   }

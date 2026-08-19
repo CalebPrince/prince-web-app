@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
 
-// Pricing page — tier copy is admin-editable (Admin -> Pricing, the same
+// Pricing page - tier copy is admin-editable (Admin -> Pricing, the same
 // `pricing_tier_1..5_*` settings princecaleb.dev/pricing.html reads), so it's
 // fetched from /api/v1/content rather than hardcoded. Tiers 1-3 are the
 // agent-workflow tiers; 4-5 are the add-on services (websites/apps, ads).
@@ -58,7 +58,7 @@ const ADDON_DEFAULTS = [
   {
     name: "Video & Image Ads",
     tagline:
-      "Scroll-stopping video and image ad creative for Meta, TikTok, and Google — scripted, produced, and delivered ready to launch.",
+      "Scroll-stopping video and image ad creative for Meta, TikTok, and Google, scripted, produced, and delivered ready to launch.",
     features:
       "3–5 short-form video ads or a static image ad set\nPlatform-optimized formats (Meta, TikTok, Google)\nScripting, captions, and on-brand visuals\nOne round of revisions included",
     cta: "Get a quote",
@@ -84,7 +84,7 @@ const MODEL: { label: string; kind: string; body: string }[] = [
   {
     label: "Ongoing support",
     kind: "Optional",
-    body: "Monitoring, prompt updates, new workflows, reporting, and operational improvements — retained monthly.",
+    body: "Monitoring, prompt updates, new workflows, reporting, and operational improvements, retained monthly.",
   },
 ];
 

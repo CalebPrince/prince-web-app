@@ -167,7 +167,7 @@ export function LisaVideoAgent() {
             {/* Poster Image */}
             <img
               src={PRESENTER}
-              alt="Lisa — AI video presenter"
+              alt="Lisa - AI video presenter"
               className={cn(
                 "aspect-[4/5] w-full object-cover transition-opacity duration-300",
                 state === "live" ? "opacity-0" : "opacity-100"

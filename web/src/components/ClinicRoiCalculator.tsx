@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 // Ported from public/js/clinic-roi.js's core math. The site-wide currency
 // switcher (window.SiteCurrency) isn't part of this app, so this stays
-// fixed to GHS — matching the legacy page's default state.
+// fixed to GHS - matching the legacy page's default state.
 function money(value: number) {
   return new Intl.NumberFormat("en-GH", { style: "currency", currency: "GHS", maximumFractionDigits: 0 }).format(
     value,

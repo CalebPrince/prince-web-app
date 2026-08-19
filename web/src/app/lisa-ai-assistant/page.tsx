@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
 import { LisaVideoAgent } from "@/components/LisaVideoAgent";
 
-// Lisa — AI assistant sub-brand. Hero copy, the pricing-section intro, and
+// Lisa - AI assistant sub-brand. Hero copy, the pricing-section intro, and
 // all four tiers are admin-editable (Admin -> Lisa, the same `lisa_*`
 // settings princecaleb.dev/lisa-ai-assistant.html reads), so they're
 // fetched from /api/v1/content. Everything else here (situations,
@@ -77,7 +77,7 @@ const SITUATIONS: {
     title: "No reply does not mean the lead is forgotten.",
     body: "Lisa follows the timing and tone you approve, personalizes the message from the CRM record, and stops immediately when the customer replies.",
     quote: "Hi Yaw, I wanted to clarify the handover and support included in the proposal…",
-    reply: "Message scheduled — and paused the moment Yaw responds.",
+    reply: "Message scheduled, and paused the moment Yaw responds.",
     steps: ["Watches the approved schedule", "Sends a relevant message", "Records replies and next actions"],
   },
 ];
@@ -326,7 +326,7 @@ export default async function Lisa() {
               Use the tools you already trust.
             </h2>
             <p className="mt-5 max-w-2xl text-text-2">
-              Lisa connects through approved APIs, webhooks, and automation platforms — without
+              Lisa connects through approved APIs, webhooks, and automation platforms, without
               forcing your team to replace everything.
             </p>
           </Reveal>
@@ -362,7 +362,7 @@ export default async function Lisa() {
           <Reveal className="lg:col-span-5">
             <SectionLabel index="04">Useful because it is controlled</SectionLabel>
             <h2 className="mt-6 text-[clamp(1.8rem,4vw,3rem)] font-bold leading-[1.05] tracking-[-0.03em]">
-              Lisa knows what she may do — and when to stop.
+              Lisa knows what she may do, and when to stop.
             </h2>
             <p className="mt-5 text-text-2">
               Each deployment gets its own knowledge, tools, permissions, escalation rules, tone,
@@ -410,7 +410,7 @@ export default async function Lisa() {
               {field(
                 content,
                 "lisa_page_service_pitch",
-                "Lisa isn’t a pile of separate tools you have to stitch together. She’s one monthly service — calls, WhatsApp, and web chat on one side, and your social media tools, apps, and CRMs connected on the other, all managed as a single subscription.",
+                "Lisa isn’t a pile of separate tools you have to stitch together. She’s one monthly service, calls, WhatsApp, and web chat on one side, and your social media tools, apps, and CRMs connected on the other, all managed as a single subscription.",
               )}
             </p>
           </Reveal>

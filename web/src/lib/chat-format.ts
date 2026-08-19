@@ -25,7 +25,7 @@ export function hasCode(text: string): boolean {
   return CODE_FENCE_RE.test(text);
 }
 
-// Reply text with fenced code stripped — reading code aloud is noise, so the
+// Reply text with fenced code stripped - reading code aloud is noise, so the
 // speaker button and auto read-aloud only ever get the prose.
 export function proseOnly(text: string): string {
   return parseSegments(text)

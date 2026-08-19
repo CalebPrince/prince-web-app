@@ -1,4 +1,4 @@
-// Ported from public/js/elevenlabs-tts.js — natural ElevenLabs voice with a
+// Ported from public/js/elevenlabs-tts.js - natural ElevenLabs voice with a
 // graceful fallback to the browser's own speechSynthesis. Module-level
 // singleton state (one shared <audio> element) matches the original;
 // this file is only ever imported by client components.
@@ -147,7 +147,7 @@ export function stopBrowserSpeech() {
 }
 
 // Strip emoji (and their modifiers/joiners) before speaking so the voice
-// reads the words only — many TTS engines otherwise announce emoji names
+// reads the words only - many TTS engines otherwise announce emoji names
 // aloud ("waving hand", "rocket"). The on-screen message keeps its emoji;
 // only the spoken copy is cleaned.
 export function stripForSpeech(text: string): string {

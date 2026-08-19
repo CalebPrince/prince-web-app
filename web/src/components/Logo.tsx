@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * PrinceCaleb.dev logo — a rounded-square monogram badge carrying a geometric
+ * PrinceCaleb.dev logo - a rounded-square monogram badge carrying a geometric
  * "P" cut with a signal notch, paired with the wordmark and the signature
  * green terminal dot.
  */

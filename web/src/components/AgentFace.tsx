@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 // Lisa's chat-widget avatar. Ported from public/js/agent-face.js's "lisa"
-// branch (icon + status dot + two radar rings — the generic multi-agent
+// branch (icon + status dot + two radar rings - the generic multi-agent
 // eyes/mouth/sheen variant isn't used here, only Lisa appears in this
 // app's chat widget) and public/css/app.css's .agent-face--lisa rules.
 

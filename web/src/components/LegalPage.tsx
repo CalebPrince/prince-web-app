@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 
-/** Shared shell for the legal pages — hero + a narrow prose column. */
+/** Shared shell for the legal pages - hero + a narrow prose column. */
 export function LegalPage({
   title,
   lede,

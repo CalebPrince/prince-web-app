@@ -1,4 +1,4 @@
-// Technical Archive — practical case-study guides. Swap copy/entries freely.
+// Technical Archive - practical case-study guides. Swap copy/entries freely.
 
 export type Topic = 'Custom software' | 'Automation' | 'Web & mobile' | 'AI agents'
 
@@ -32,7 +32,7 @@ export const ARTICLES: Article[] = [
     slug: 'ship-voice-agents-before-chat',
     title: 'Why I ship voice agents before chat',
     excerpt:
-      'Voice forces you to solve latency and turn-taking first — the exact problems a chat interface quietly hides until launch day.',
+      'Voice forces you to solve latency and turn-taking first, the exact problems a chat interface quietly hides until launch day.',
     topic: 'AI agents',
     date: 'Aug 2026',
     iso: '2026-08-04',
@@ -46,21 +46,21 @@ export const ARTICLES: Article[] = [
       {
         heading: 'The problem with starting in chat',
         paras: [
-          'Chat is forgiving. A half-second delay reads as "thinking", a clumsy reply can be re-read, and nobody notices if the model talks over itself. That forgiveness is exactly the trap — it lets real problems hide until the day you try to put the same agent on a phone call.',
+          'Chat is forgiving. A half-second delay reads as "thinking", a clumsy reply can be re-read, and nobody notices if the model talks over itself. That forgiveness is exactly the trap, it lets real problems hide until the day you try to put the same agent on a phone call.',
           'Voice removes every hiding place. If the response is 800ms late, the caller starts talking. If turn-taking is wrong, the agent and the human collide. You feel the quality of the system in the first ten seconds.',
         ],
       },
       {
         heading: 'Solve the hard channel first',
         paras: [
-          'When I build for a business that needs both a phone agent and a chatbot, I start with voice. Getting latency, interruption handling and intent detection right for a live call means the chat version is almost trivial by comparison — the hard constraints are already met.',
+          'When I build for a business that needs both a phone agent and a chatbot, I start with voice. Getting latency, interruption handling and intent detection right for a live call means the chat version is almost trivial by comparison, the hard constraints are already met.',
           'The pattern that consistently works: stream partial responses, detect barge-in so the caller can interrupt, and always keep a warm path to a human with full context attached.',
         ],
       },
       {
         heading: 'What this looks like in production',
         paras: [
-          'For a recent retail client the voice agent answered in under two seconds, qualified the caller, and booked a fitting directly into the calendar. Anything it could not handle went to staff with a summarised transcript — no repeating themselves.',
+          'For a recent retail client the voice agent answered in under two seconds, qualified the caller, and booked a fitting directly into the calendar. Anything it could not handle went to staff with a summarised transcript, no repeating themselves.',
         ],
       },
     ],
@@ -90,7 +90,7 @@ export const ARTICLES: Article[] = [
       {
         heading: 'How the sync layer is wired',
         paras: [
-          'Writes land in a local database immediately and enqueue a change. A background worker reconciles that queue with Postgres when the network is available, applying a clear conflict strategy — usually last-write-wins per field, with a merge path for anything that matters.',
+          'Writes land in a local database immediately and enqueue a change. A background worker reconciles that queue with Postgres when the network is available, applying a clear conflict strategy, usually last-write-wins per field, with a merge path for anything that matters.',
           'The key discipline is treating conflict resolution as a product question. "What should happen if two people edit this at once?" has a business answer, and the code should reflect it.',
         ],
       },
@@ -115,7 +115,7 @@ export const ARTICLES: Article[] = [
         heading: 'Pixels are the wrong interface',
         paras: [
           'Ask a model for a hero section and it will happily invent hex codes, arbitrary spacing and a new font scale. Each generation drifts a little further from the brand, and you spend your time correcting instead of shipping.',
-          'The fix is to stop handing it pixels. Give it a vocabulary — your tokens — and let it compose only from that.',
+          'The fix is to stop handing it pixels. Give it a vocabulary, your tokens, and let it compose only from that.',
         ],
       },
       {
@@ -144,7 +144,7 @@ export const ARTICLES: Article[] = [
       {
         heading: 'The demo always works',
         paras: [
-          'Automations look bulletproof in a demo because the data is clean. Then a real person renames a column, pastes a date in the wrong format, or leaves a field blank — and the whole chain falls over quietly.',
+          'Automations look bulletproof in a demo because the data is clean. Then a real person renames a column, pastes a date in the wrong format, or leaves a field blank, and the whole chain falls over quietly.',
           'Durable automation assumes mess. It validates at every boundary, quarantines what it cannot understand, and keeps running for everything else.',
         ],
       },
@@ -174,13 +174,13 @@ export const ARTICLES: Article[] = [
       {
         heading: 'The score is a proxy',
         paras: [
-          'A green Lighthouse score is reassuring, but it is measured on an idealised device. Your customers are on a mid-range phone on patchy mobile data — that is the environment that decides whether they bounce.',
+          'A green Lighthouse score is reassuring, but it is measured on an idealised device. Your customers are on a mid-range phone on patchy mobile data, that is the environment that decides whether they bounce.',
         ],
       },
       {
         heading: 'The three metrics that matter',
         paras: [
-          'I optimise for how quickly the page becomes useful, how stable it is while loading, and how fast it responds to the first tap. Those three, measured on real hardware, are what map to conversions — not the synthetic number.',
+          'I optimise for how quickly the page becomes useful, how stable it is while loading, and how fast it responds to the first tap. Those three, measured on real hardware, are what map to conversions, not the synthetic number.',
         ],
       },
     ],
@@ -209,7 +209,7 @@ export const ARTICLES: Article[] = [
       {
         heading: 'Show availability, not a form',
         paras: [
-          'The flow that converts shows real, live availability up front — the customer picks a slot that is guaranteed to exist, rather than submitting a request and hoping. Confirmation and reminders are baked in so the booking actually turns into a visit.',
+          'The flow that converts shows real, live availability up front, the customer picks a slot that is guaranteed to exist, rather than submitting a request and hoping. Confirmation and reminders are baked in so the booking actually turns into a visit.',
         ],
       },
     ],

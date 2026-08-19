@@ -8,7 +8,7 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Booking page — mirrors princecaleb.dev/book.html flow: pick a date,
+// Booking page - mirrors princecaleb.dev/book.html flow: pick a date,
 // choose a time, confirm with a short brief.
 
 const STEPS = [
@@ -20,7 +20,7 @@ const STEPS = [
   {
     no: "02",
     title: "We use the call to clarify",
-    body: "We’ll cover goals, constraints, timing, and fit — and whether a small pilot is worth building.",
+    body: "We’ll cover goals, constraints, timing, and fit, and whether a small pilot is worth building.",
   },
   {
     no: "03",
@@ -112,7 +112,7 @@ export default function Booking() {
       {/* ── MAIN GRID ───────────────────────────────────────── */}
       <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          {/* Left — what to expect */}
+          {/* Left - what to expect */}
           <div className="lg:col-span-5">
             <Reveal>
               <SectionLabel index="01">What to expect</SectionLabel>
@@ -143,7 +143,7 @@ export default function Booking() {
             </Reveal>
           </div>
 
-          {/* Right — scheduler */}
+          {/* Right - scheduler */}
           <div className="lg:col-span-7">
             <Reveal>
               <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10">
@@ -154,7 +154,7 @@ export default function Booking() {
                     </span>
                     <h2 className="mt-6 text-2xl font-bold tracking-tight">You’re booked in.</h2>
                     <p className="mt-3 max-w-sm text-text-2">
-                      {prettyDate} at {time} — a confirmation email is on its way. Bring one workflow
+                      {prettyDate} at {time}, a confirmation email is on its way. Bring one workflow
                       you’d like to review.
                     </p>
                     <Link href="/" className={cn(buttonVariants({ variant: "secondary" }), "mt-8")}>

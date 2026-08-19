@@ -11,11 +11,11 @@ import { playTts, stopTts, speakWithBrowser, stopBrowserSpeech, stripForSpeech, 
 import { api, type ChatStatus } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-// Live chat widget — full-parity port of public/js/ai-widget.js +
+// Live chat widget - full-parity port of public/js/ai-widget.js +
 // public/js/agent-face.js + public/js/elevenlabs-tts.js onto real data
 // (/api/v1/chat/*), restyled for the Figma-rebuild design system. Every
 // enhancement here (chime, read-aloud, voice input, typewriter, code
-// cards) is a progressive one — the chat still works without Web Audio /
+// cards) is a progressive one - the chat still works without Web Audio /
 // speech support, same as the legacy widget.
 
 type MenuOption = {
@@ -120,10 +120,10 @@ const TECH_INFO: Record<string, string> = {
 const DEFAULTS = {
   greeting: "Hi there! 👋 Welcome. We build AI voice agents, WhatsApp assistants, and automations around the work your team repeats.",
   intro: "Pick an option below, or describe the call, message, or repetitive workflow you want to improve.",
-  offline: "We're offline at the moment, but your message won't be missed — leave your name, email and a few words below and Prince will get back to you shortly.",
+  offline: "We're offline at the moment, but your message won't be missed, leave your name, email and a few words below and Prince will get back to you shortly.",
 };
 
-// Minimal shape of the Web Speech recognition API this widget uses — no
+// Minimal shape of the Web Speech recognition API this widget uses - no
 // official TS lib types ship for it.
 interface SRResult {
   0: { transcript: string };
@@ -222,7 +222,7 @@ export function ChatWidget() {
       osc.start(now);
       osc.stop(now + 0.3);
     } catch {
-      // Audio unsupported or blocked until a user gesture — fine to skip.
+      // Audio unsupported or blocked until a user gesture - fine to skip.
     }
   }
 

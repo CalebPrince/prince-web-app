@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Systems — Prince Caleb",
+  title: "Systems - Prince Caleb",
   description:
     "Real systems, running in real businesses, with results worth measuring. Proof, not promises.",
 };

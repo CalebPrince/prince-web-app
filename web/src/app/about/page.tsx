@@ -41,7 +41,7 @@ const PRINCIPLES = [
 
 type Tool = { name: string; icon?: IconType };
 
-// About page toolkit — brand logos paired with capabilities.
+// About page toolkit - brand logos paired with capabilities.
 const TOOLKIT: { group: string; items: Tool[] }[] = [
   {
     group: "Design",
@@ -81,7 +81,7 @@ const TIMELINE = [
   {
     year: "2018",
     title: "Design meets development",
-    body: "Went full-stack and product-minded — owning experiences end to end.",
+    body: "Went full-stack and product-minded, owning experiences end to end.",
   },
   {
     year: "2022",
@@ -96,7 +96,7 @@ const TIMELINE = [
 ];
 
 export const metadata: Metadata = {
-  title: "About — Prince Caleb",
+  title: "About - Prince Caleb",
   description:
     "Designer, developer and AI tinkerer running a one-person digital studio, turning raw ideas into products people remember using.",
 };

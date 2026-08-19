@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LATEST_ARTICLES } from "@/data/archive";
 
-// Lab page — open experiments and prototypes, not client work.
+// Lab page - open experiments and prototypes, not client work.
 
 type Status = "Live" | "Prototype" | "Exploring";
 
@@ -28,7 +28,7 @@ const EXPERIMENTS: Experiment[] = [
     no: "01",
     title: "Voice agent playground",
     blurb:
-      "A sandbox for real-time voice agents — testing latency, interruption handling and natural hand-off to a human.",
+      "A sandbox for real-time voice agents, testing latency, interruption handling and natural hand-off to a human.",
     status: "Live",
     icon: SiAnthropic,
     tags: ["Realtime", "LLM", "Audio"],
@@ -89,9 +89,9 @@ const STATUS_STYLES: Record<Status, string> = {
 };
 
 export const metadata: Metadata = {
-  title: "Lab — Prince Caleb",
+  title: "Lab - Prince Caleb",
   description:
-    "Open experiments, prototypes and half-finished ideas — where new techniques get proven before they reach client work.",
+    "Open experiments, prototypes and half-finished ideas, where new techniques get proven before they reach client work.",
 };
 
 export default function Lab() {
