@@ -144,12 +144,11 @@ interface SRInstance extends EventTarget {
   start(): void;
   stop(): void;
 }
-type SRConstructor = new () => SRInstance;
 
 declare global {
   interface Window {
-    SpeechRecognition?: SRConstructor;
-    webkitSpeechRecognition?: SRConstructor;
+    ElevenLabsTTS: any;
+    trackUiEvent?: (eventName: string) => void;
     webkitAudioContext?: typeof AudioContext;
   }
 }
@@ -195,7 +194,7 @@ export function ChatWidget() {
       setAutoSpeak(sessionStorage.getItem("chat_autospeak") === "1");
       setToken(sessionStorage.getItem("chat_token"));
       setSpeechAvailable("speechSynthesis" in window);
-      setMicAvailable(!!(window.SpeechRecognition || window.webkitSpeechRecognition));
+      setMicAvailable(!!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
     }, 0);
     return () => clearTimeout(t);
   }, []);
@@ -465,7 +464,7 @@ export function ChatWidget() {
       recRef.current?.stop();
       return;
     }
-    const SR = (window.SpeechRecognition || window.webkitSpeechRecognition) as SRConstructor | undefined;
+    const SR = ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) as any;
     if (!SR) return;
     const rec = new SR();
     recRef.current = rec;
@@ -474,7 +473,7 @@ export function ChatWidget() {
     rec.continuous = false;
     let finalText = input ? input.trim() + " " : "";
     rec.onstart = () => setListening(true);
-    rec.onresult = (e) => {
+    rec.onresult = (e: any) => {
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
@@ -483,7 +482,7 @@ export function ChatWidget() {
       }
       setInput((finalText + interim).replace(/\s{2,}/g, " ").trimStart());
     };
-    rec.onerror = () => setListening(false);
+    rec.onerror = (e: any) => setListening(false);
     rec.onend = () => setListening(false);
     try {
       rec.start();

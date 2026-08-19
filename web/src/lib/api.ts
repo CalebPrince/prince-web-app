@@ -166,6 +166,9 @@ export const api = {
   blogPost: (slug: string) => get<BlogPost>(`/api/v1/blog/${encodeURIComponent(slug)}`),
   content: () => get<SiteContent>("/api/v1/content"),
   testimonials: () => get<Testimonial[]>("/api/v1/testimonials"),
+  getTestimonialToken: (token: string) => get<{ client_name?: string }>(`/api/v1/testimonials/${encodeURIComponent(token)}`),
+  submitTestimonial: (token: string, data: { client_name: string; rating: number; quote: string }) =>
+    postJson<{ status: string }>(`/api/v1/testimonials/${encodeURIComponent(token)}`, data),
   search: (q: string) => get<{ results: SearchResult[] }>(`/api/v1/search?q=${encodeURIComponent(q)}`),
   builderOsTeam: () => get<{ system: string; status: string; agents: BuilderOsAgent[] }>("/api/v1/builder-os/team"),
   sageChat: (data: { message: string; transcript: { role: string; text: string }[]; token: string | null }) =>
@@ -182,13 +185,39 @@ export const api = {
   paymentConfig: () => get<PaymentConfig>("/api/v1/payments/config"),
   preparePayment: (data: { tier: string; name: string; email: string; tos_accepted: true }) =>
     postJson<PaymentPrepared>("/api/v1/payments/prepare", data),
+  prepareInvoicePayment: (data: { link_token: string }) =>
+    postJson<PaymentPrepared>("/api/v1/payments/prepare", data),
   verifyPayment: (reference: string) => postJson<PaymentVerified>("/api/v1/payments/verify", { reference }),
+  getInvoice: (token: string) => get<any>(`/api/v1/invoices/${encodeURIComponent(token)}`),
+  getPaymentLink: (token: string) => get<any>(`/api/v1/payments/link/${encodeURIComponent(token)}`),
+  getProposal: (token: string) => get<any>(`/api/v1/proposals/${encodeURIComponent(token)}`),
+  acceptProposal: (token: string, data: { accepted_by_name: string }) =>
+    postJson<{ status: string }>(`/api/v1/proposals/${encodeURIComponent(token)}/accept`, data),
   subscribeNewsletter: (data: { email: string; website: string; attribution: Record<string, unknown> }) =>
     postJson<{ id: number }>("/api/v1/newsletter/subscribe", data),
   chatStatus: () => get<ChatStatus>("/api/v1/chat/status"),
+  
+  // Client Portal Auth
+  clientLogin: (data: any) => postJson<any>("/api/v1/client/auth/login", data),
+  clientSetupPassword: (data: any) => postJson<any>("/api/v1/client/auth/setup-password", data),
+  clientForgotPassword: (data: any) => postJson<any>("/api/v1/client/auth/forgot-password", data),
+  clientResetPassword: (data: any) => postJson<any>("/api/v1/client/auth/reset-password", data),
+  clientLogout: () => postJson<any>("/api/v1/client/auth/logout", {}),
+  clientGetMe: () => get<any>("/api/v1/client/auth/me"),
+  
+  // Client Portal Data
+  clientGetDashboard: () => get<any>("/api/v1/client/dashboard"),
+  clientGetFiles: () => get<any>("/api/v1/client/files"),
+  clientGetMessages: () => get<any>("/api/v1/client/messages"),
+  clientSendMessage: (data: { body: string }) => postJson<any>("/api/v1/client/messages", data),
+  
   chatMessage: (data: { message: string; token: string | null }) =>
     postJson<ChatMessageResult>("/api/v1/chat/message", data),
   chatSession: (token: string) => get<ChatSession>(`/api/v1/chat/session/${encodeURIComponent(token)}`),
+  voiceDemoEvent: (event: string, token: string | null, path: string) =>
+    postJson<any>("/api/v1/voice-demo/event", { event, token, path }),
+  voiceDemoMessage: (message: string, token: string | null, niche: string) =>
+    postJson<any>("/api/v1/voice-demo/message", { message, token, niche }),
   chatInquiry: (data: {
     token: string | null;
     name: string;
@@ -197,6 +226,23 @@ export const api = {
     message: string;
     attribution: Record<string, unknown>;
   }) => postJson<{ status: string }>("/api/v1/chat/inquiry", data),
+  archChat: (data: { message: string; transcript: { role: string; text: string }[]; brief: Record<string, string> }) =>
+    postJson<{ brief: Record<string, string>; ready: boolean; reply: string; step: number }>("/api/v1/arch/chat.php", data),
+  archGenerate: (data: { brief: Record<string, string> }) =>
+    postJson<{ preview_url: string; download_url?: string; revisions_remaining: number; has_cms: boolean; admin_password?: string; admin_url?: string; slug: string; revision_token: string }>("/api/v1/arch/generate.php", data),
+  archRevise: (data: { slug: string; revision_token: string; feedback: string }) =>
+    postJson<{ preview_url: string; download_url?: string; revisions_remaining: number; message: string; brief: Record<string, string> }>("/api/v1/arch/revise.php", data),
+  submitProjectRequest: async (formData: FormData) => {
+    const res = await fetch(apiUrl("/api/v1/project-requests"), {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
+    }
+    return res.json() as Promise<{ id: number; message?: string }>;
+  },
 };
 
 /** Same classifier as the PHP site's window.navPlatformOf (nav-dropdowns.js),

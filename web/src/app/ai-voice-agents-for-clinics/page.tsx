@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { api } from "@/lib/api";
 import { ArrowRight, Check, Phone, MessageCircle, X, ShieldCheck } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ClinicRoiCalculator } from "@/components/ClinicRoiCalculator";
+import { VoiceDemo } from "@/components/VoiceDemo";
 
 // AI Voice Agents for Clinics — niche landing page ported from
 // public/ai-voice-agents-for-clinics.html. The hero's voice-demo card is a
@@ -91,7 +93,9 @@ const FAQS = [
   { q: "What happens when the AI is uncertain?", a: "It should say it is unsure, avoid inventing an answer, capture the request, and send it to an authorised person." },
 ];
 
-export default function ClinicVoiceAgents() {
+export default async function ClinicVoiceAgents() {
+  const content = await api.content().catch(() => null);
+
   return (
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
@@ -151,48 +155,9 @@ export default function ClinicVoiceAgents() {
             </Reveal>
           </div>
 
-          {/* Static illustrative voice-demo mockup */}
+          {/* Interactive Voice Demo */}
           <Reveal delay={200} className="lg:col-span-5">
-            <div className="overflow-hidden rounded-[calc(var(--radius)*1.5)] border border-hairline bg-bg-2/50">
-              <header className="flex items-center justify-between border-b border-hairline px-5 py-3">
-                <span className="flex items-center gap-2 text-sm text-text-2">
-                  <span className="size-2 animate-pulse rounded-full bg-accent" /> Voice demo ready
-                </span>
-                <span className="font-mono text-sm text-muted">00:00</span>
-              </header>
-              <div className="p-6">
-                <div className="flex items-center gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-accent">
-                    <Phone className="size-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <strong className="block text-text">Prince&rsquo;s Assistant</strong>
-                    <small className="text-text-2">Try the real assistant</small>
-                  </div>
-                  <span className="label rounded-full border border-hairline px-2.5 py-1 text-muted">Ready</span>
-                </div>
-                <div className="mt-6 flex items-end justify-center gap-1" aria-hidden="true">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <span key={i} className="w-1 rounded-full bg-hairline-strong" style={{ height: `${8 + (i % 4) * 4}px` }} />
-                  ))}
-                </div>
-                <div className="mt-6 border-t border-hairline pt-5">
-                  <span className="label text-muted">Voice agent</span>
-                  <p className="mt-2 text-text-2">
-                    Tap &ldquo;Start voice demo,&rdquo; then ask how a voice agent could handle calls
-                    for your clinic.
-                  </p>
-                </div>
-              </div>
-              <footer className="border-t border-hairline p-5">
-                <span className={cn(buttonVariants({ size: "lg" }), "w-full cursor-default opacity-90")}>
-                  Start voice demo
-                </span>
-                <p className="mt-3 text-center text-xs text-muted">
-                  Microphone activates only after you tap.
-                </p>
-              </footer>
-            </div>
+            <VoiceDemo />
           </Reveal>
         </div>
       </section>

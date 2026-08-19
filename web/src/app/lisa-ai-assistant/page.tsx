@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -26,6 +23,7 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
+import { LisaVideoAgent } from "@/components/LisaVideoAgent";
 
 // Lisa — AI assistant sub-brand. Hero copy, the pricing-section intro, and
 // all four tiers are admin-editable (Admin -> Lisa, the same `lisa_*`
@@ -175,12 +173,8 @@ function eyebrow(content: SiteContent | null, key: string, fallback: string): st
   return field(content, key, fallback).replace(/^\/\/\s*/, "");
 }
 
-export default function Lisa() {
-  const [content, setContent] = useState<SiteContent | null>(null);
-
-  useEffect(() => {
-    api.content().then(setContent).catch(() => {});
-  }, []);
+export default async function Lisa() {
+  const content = await api.content().catch(() => null);
 
   const tiers = TIER_DEFAULTS.map((d, i) => ({
     ...d,
@@ -251,22 +245,7 @@ export default function Lisa() {
 
           {/* Presenter */}
           <Reveal delay={200} className="lg:col-span-5">
-            <div className="relative mx-auto max-w-sm">
-              <div className="overflow-hidden rounded-[calc(var(--radius)*1.5)] border border-hairline bg-bg-2">
-                <img
-                  src={PRESENTER}
-                  alt="Lisa — AI video presenter"
-                  className="aspect-[4/5] w-full object-cover"
-                />
-              </div>
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-[var(--radius)] border border-hairline bg-bg/70 px-4 py-3 backdrop-blur-md">
-                <span className="flex items-center gap-2 text-sm font-medium text-text">
-                  <span className="size-2 animate-pulse rounded-full bg-accent" />
-                  Lisa · Video identity
-                </span>
-                <span className="label text-muted">Live</span>
-              </div>
-            </div>
+            <LisaVideoAgent />
           </Reveal>
         </div>
       </section>
