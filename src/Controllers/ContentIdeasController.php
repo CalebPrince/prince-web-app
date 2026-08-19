@@ -74,8 +74,15 @@ class ContentIdeasController
         $user = AuthMiddleware::requireAuth();
         $pdo = Database::get();
 
+        // With only DeepSeek and Gemini funded, a 45s budget gives each leg
+        // just ~22s — enough to time out a merely-slow DeepSeek response
+        // rather than let it complete. 100s gives ~45s/leg instead. Needs the
+        // set_time_limit bump too, or the host's default max_execution_time
+        // (often 30s on shared hosting) kills the request before that.
+        set_time_limit(110);
+
         $built = self::buildPrompt($pdo);
-        $text = AiText::generate($built['text'], self::systemInstruction(), 45);
+        $text = AiText::generate($built['text'], self::systemInstruction(), 100);
         if ($text === null) {
             Response::error('Could not generate content ideas — ' . (AiText::lastError() ?? 'no AI provider answered.'), 502);
         }
