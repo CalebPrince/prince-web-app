@@ -7,7 +7,7 @@ import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LATEST_ARTICLES } from "@/data/archive";
+import { getArchiveEntries } from "@/lib/archive";
 
 // Lab page - open experiments and prototypes, not client work.
 
@@ -94,7 +94,13 @@ export const metadata: Metadata = {
     "Open experiments, prototypes and half-finished ideas, where new techniques get proven before they reach client work.",
 };
 
-export default function Lab() {
+// The "latest writing" strip links into /archive, so it reads the same
+// published posts that page does rather than a separate hardcoded list.
+export const dynamic = "force-dynamic";
+
+export default async function Lab() {
+  const latestArticles = (await getArchiveEntries()).slice(0, 3);
+
   return (
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
@@ -184,7 +190,7 @@ export default function Lab() {
           </Reveal>
 
           <div className="mt-16 divide-y divide-hairline border-y border-hairline">
-            {LATEST_ARTICLES.map((n, i) => (
+            {latestArticles.map((n, i) => (
               <Reveal key={n.slug} delay={i * 70}>
                 <Link
                   href={`/archive/${n.slug}`}

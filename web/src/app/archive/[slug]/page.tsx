@@ -5,15 +5,15 @@ import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ARTICLES, getArticle } from "@/data/archive";
+import { getArchiveEntries, getArchiveEntry } from "@/lib/archive";
 
-export function generateStaticParams() {
-  return ARTICLES.map((a) => ({ slug: a.slug }));
-}
+// Rendered on demand so a post published in the admin is live immediately,
+// rather than waiting for a rebuild.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps<"/archive/[slug]">) {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const article = await getArchiveEntry(slug);
   if (!article) return {};
   return {
     title: article.title,
@@ -23,12 +23,15 @@ export async function generateMetadata({ params }: PageProps<"/archive/[slug]">)
 
 export default async function ArticleDetail({ params }: PageProps<"/archive/[slug]">) {
   const { slug } = await params;
-  const article = getArticle(slug);
+
+  const [article, entries] = await Promise.all([getArchiveEntry(slug), getArchiveEntries()]);
 
   if (!article) notFound();
 
-  const index = ARTICLES.findIndex((a) => a.slug === article.slug);
-  const next = ARTICLES[(index + 1) % ARTICLES.length];
+  const index = entries.findIndex((a) => a.slug === article.slug);
+  // Falls back to the first entry when this post is not in the list, and to
+  // nothing at all when it is the only one, so the panel can be skipped.
+  const next = entries.length > 1 ? entries[(Math.max(index, 0) + 1) % entries.length] : null;
 
   return (
     <>
@@ -46,78 +49,61 @@ export default async function ArticleDetail({ params }: PageProps<"/archive/[slu
               <ArrowLeft className="size-3.5" /> Technical Archive
             </Link>
           </Reveal>
-          <Reveal delay={80} className="mt-8 flex items-center gap-3">
+          <Reveal delay={80} className="mt-8 flex flex-wrap items-center gap-3">
             <span className="label text-accent">{article.topic}</span>
-            <span className="label text-muted">/ {article.date}</span>
-            <span className="label text-muted">/ {article.readingTime} read</span>
+            {article.date && <span className="label text-muted">/ {article.date}</span>}
+            {article.readingTime && (
+              <span className="label text-muted">/ {article.readingTime} read</span>
+            )}
           </Reveal>
           <Reveal delay={140}>
             <h1 className="mt-5 text-[clamp(2.2rem,5.5vw,4rem)] font-extrabold leading-[1.02] tracking-[-0.03em]">
               {article.title}
             </h1>
           </Reveal>
-          <Reveal delay={200}>
-            <p className="mt-6 text-xl leading-relaxed text-text-2">{article.excerpt}</p>
-          </Reveal>
+          {article.excerpt && (
+            <Reveal delay={200}>
+              <p className="mt-6 text-xl leading-relaxed text-text-2">{article.excerpt}</p>
+            </Reveal>
+          )}
         </div>
       </section>
 
       {/* ── BODY ────────────────────────────────────────────── */}
       <article className="mx-auto max-w-3xl px-6 pb-8">
-        {/* Takeaways */}
-        <Reveal className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8">
-          <p className="label text-accent">{"// Key takeaways"}</p>
-          <ul className="mt-5 space-y-3">
-            {article.takeaways.map((t) => (
-              <li key={t} className="flex gap-3 text-text-2">
-                <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
-                <span>{t}</span>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
-
-        {/* Sections */}
-        <div className="mt-14 space-y-12">
-          {article.body.map((section) => (
-            <Reveal key={section.heading}>
-              <h2 className="text-2xl font-bold tracking-[-0.02em] md:text-3xl">
-                {section.heading}
-              </h2>
-              <div className="mt-4 space-y-4">
-                {section.paras.map((p, i) => (
-                  <p key={i} className="text-lg leading-relaxed text-text-2">
-                    {p}
-                  </p>
-                ))}
-              </div>
+        <div className="space-y-6">
+          {article.paragraphs.map((p, i) => (
+            <Reveal key={i}>
+              <p className="text-lg leading-relaxed text-text-2">{p}</p>
             </Reveal>
           ))}
         </div>
       </article>
 
       {/* ── NEXT GUIDE ──────────────────────────────────────── */}
-      <section className="mt-16 border-t border-hairline bg-bg-2/40">
-        <div className="mx-auto max-w-3xl px-6 py-16 md:py-20">
-          <Reveal>
-            <SectionLabel>Next guide</SectionLabel>
-          </Reveal>
-          <Reveal delay={80}>
-            <Link
-              href={`/archive/${next.slug}`}
-              className="group mt-6 flex items-end justify-between gap-6"
-            >
-              <div>
-                <span className="label text-accent">{next.topic}</span>
-                <h3 className="mt-2 text-2xl font-bold tracking-[-0.02em] transition-colors group-hover:text-accent md:text-3xl">
-                  {next.title}
-                </h3>
-              </div>
-              <ArrowUpRight className="size-6 shrink-0 text-muted transition-all duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-accent" />
-            </Link>
-          </Reveal>
-        </div>
-      </section>
+      {next && (
+        <section className="mt-16 border-t border-hairline bg-bg-2/40">
+          <div className="mx-auto max-w-3xl px-6 py-16 md:py-20">
+            <Reveal>
+              <SectionLabel>Next guide</SectionLabel>
+            </Reveal>
+            <Reveal delay={80}>
+              <Link
+                href={`/archive/${next.slug}`}
+                className="group mt-6 flex items-end justify-between gap-6"
+              >
+                <div>
+                  <span className="label text-accent">{next.topic}</span>
+                  <h3 className="mt-2 text-2xl font-bold tracking-[-0.02em] transition-colors group-hover:text-accent md:text-3xl">
+                    {next.title}
+                  </h3>
+                </div>
+                <ArrowUpRight className="size-6 shrink-0 text-muted transition-all duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-accent" />
+              </Link>
+            </Reveal>
+          </div>
+        </section>
+      )}
 
       {/* ── CTA ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
