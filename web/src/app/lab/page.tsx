@@ -89,7 +89,7 @@ const STATUS_STYLES: Record<Status, string> = {
 };
 
 export const metadata: Metadata = {
-  title: "Lab - Prince Caleb",
+  title: "Prince Caleb - Lab",
   description:
     "Open experiments, prototypes and half-finished ideas, where new techniques get proven before they reach client work.",
 };

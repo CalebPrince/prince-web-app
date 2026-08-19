@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing - Prince Caleb",
+  title: "Prince Caleb - Pricing",
   description:
     "Start with one useful workflow, prove it with real conversations, then expand. AI agent tiers plus custom websites, mobile apps, and ad creative.",
 };

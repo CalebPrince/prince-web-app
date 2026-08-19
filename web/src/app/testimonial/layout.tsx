@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Leave a Review | Prince Caleb",
+  title: "Prince Caleb - Leave a Review",
   description: "Leave a review for Prince Caleb.",
   robots: "noindex, nofollow",
 };

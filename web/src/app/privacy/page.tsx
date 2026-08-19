@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage, LegalSection, legalLink } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Prince Caleb",
+  title: "Prince Caleb - Privacy Policy",
   description: "What information this site collects, why, and how it's used.",
 };
 
