@@ -131,8 +131,8 @@ export default function About() {
           <Reveal delay={220} className="lg:col-span-5">
             <div className="relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2">
               <img
-                src="https://images.unsplash.com/photo-1450133064473-71024230f91b?w=900&h=1100&fit=crop&auto=format"
-                alt="Portrait of Caleb"
+                src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=900&h=1100&fit=crop&auto=format"
+                alt="Architectural lines in monochrome"
                 className="aspect-[4/5] w-full object-cover grayscale"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-bg/50 to-transparent" />
