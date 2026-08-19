@@ -325,7 +325,9 @@ class AiText
         }
         $messages[] = ['role' => 'user', 'content' => $prompt];
 
-        $model = Settings::get('groq_model') ?: 'llama-3.3-70b-versatile';
+        // llama-3.3-70b-versatile was deprecated by Groq on 2026-06-17;
+        // openai/gpt-oss-120b is Groq's recommended replacement.
+        $model = Settings::get('groq_model') ?: 'openai/gpt-oss-120b';
 
         $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
         curl_setopt_array($ch, [
