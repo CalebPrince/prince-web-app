@@ -49,14 +49,20 @@ export function HeaderUtilityDock() {
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    // Pinned to the very top of the viewport: the header is fixed at top 0 and
+    // 5rem tall, and the 2rem trigger is centred inside it, so lifting it by
+    // half the leftover space ((5rem - 2rem) / 2 = 1.5rem) sits it flush
+    // against the top edge while it stays in the flex row beside the logo.
+    <div ref={rootRef} className="relative -mt-6 self-start">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Quick actions"
         aria-haspopup="true"
         aria-expanded={open}
-        className="grid size-8 place-items-center rounded-full border border-hairline text-text-2 transition-colors hover:border-accent/40 hover:text-text"
+        // Sits flush against the top of the viewport, so it drops its top
+        // border and the corners that would curve away from it.
+        className="grid size-8 place-items-center rounded-b-lg border border-t-0 border-hairline text-text-2 transition-colors hover:border-accent/40 hover:text-text"
       >
         <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
       </button>
@@ -64,7 +70,7 @@ export function HeaderUtilityDock() {
       <div
         role="menu"
         className={cn(
-          "absolute left-0 top-[calc(100%+0.5rem)] z-10 flex items-center gap-1 rounded-full border border-hairline bg-bg-2/95 p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.25)] backdrop-blur-xl transition-all duration-200",
+          "absolute left-0 top-full z-10 flex items-center gap-1 rounded-xl border border-hairline bg-bg/95 p-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.25)] backdrop-blur-xl transition-all duration-200",
           open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0",
         )}
       >
