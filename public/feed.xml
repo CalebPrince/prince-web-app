@@ -2,170 +2,170 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
  <channel>
   <title>Prince Caleb — Technical Archive</title>
-  <link>https://princecaleb.dev/archive.html</link>
+  <link>https://princecaleb.dev/archive</link>
   <description>Articles on web development, freelancing, and building software in Ghana.</description>
   <language>en</language>
-  <lastBuildDate>Fri, 10 Jul 2026 17:57:27 +0000</lastBuildDate>
+  <lastBuildDate>Wed, 19 Aug 2026 09:56:59 +0000</lastBuildDate>
   <atom:link href="https://princecaleb.dev/feed.xml" rel="self" type="application/rss+xml"/>
   <item>
    <title>How I Used Three LLMs to Power One Live Chat: The Gemini, OpenRouter, and Groq Failover Chain Behind This Site</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=three-llms-live-chat-gemini-openrouter-groq</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=three-llms-live-chat-gemini-openrouter-groq</guid>
+   <link>https://princecaleb.dev/archive/three-llms-live-chat-gemini-openrouter-groq</link>
+   <guid>https://princecaleb.dev/archive/three-llms-live-chat-gemini-openrouter-groq</guid>
    <description>The live chat on this website runs on three LLM providers at once — Gemini, OpenRouter, and Groq — not for cleverness, but for uptime. A case study on building a failover chain where a single conversation survives any provider going down.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Fri, 10 Jul 2026 17:49:32 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
-   <title>How I Connected Three (3) LLM-Powered Live Chat to Gmail, Slack, Google Sheets, and WhatsApp With Composio</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=composio-llm-live-chat-gmail-slack-sheets-whatsapp</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=composio-llm-live-chat-gmail-slack-sheets-whatsapp</guid>
+   <title>How I Connected an LLM-Powered Live Chat to Gmail, Slack, Google Sheets, and WhatsApp With Composio</title>
+   <link>https://princecaleb.dev/archive/composio-llm-live-chat-gmail-slack-sheets-whatsapp</link>
+   <guid>https://princecaleb.dev/archive/composio-llm-live-chat-gmail-slack-sheets-whatsapp</guid>
    <description>A practical case study on turning a website live chat from a simple conversation widget into an action-taking assistant that can qualify leads, book calls, and notify Gmail, Slack, Google Sheets, and WhatsApp through Composio.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Fri, 10 Jul 2026 17:49:32 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>AI Booking Assistants for Salons in Accra: Cutting No-Shows With Automation</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-booking-assistants-salons-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-booking-assistants-salons-accra</guid>
+   <link>https://princecaleb.dev/archive/ai-booking-assistants-salons-accra</link>
+   <guid>https://princecaleb.dev/archive/ai-booking-assistants-salons-accra</guid>
    <description>A no-show costs a stylist a paid hour with nothing to show for it. An AI booking assistant that reminds, confirms, and reschedules cuts that loss without an awkward conversation.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Using AI to Match Volunteers to Causes: A Guide for NGOs in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-match-volunteers-causes-ngos-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-match-volunteers-causes-ngos-ghana</guid>
+   <link>https://princecaleb.dev/archive/ai-match-volunteers-causes-ngos-ghana</link>
+   <guid>https://princecaleb.dev/archive/ai-match-volunteers-causes-ngos-ghana</guid>
    <description>Matching a volunteer's actual skills to where they're needed usually happens by memory. AI matching does it systematically, at a scale memory can't handle.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>AI Chatbots for Microfinance: Answering Loan Questions Instantly</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-microfinance-loan-questions</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-microfinance-loan-questions</guid>
+   <link>https://princecaleb.dev/archive/ai-chatbots-microfinance-loan-questions</link>
+   <guid>https://princecaleb.dev/archive/ai-chatbots-microfinance-loan-questions</guid>
    <description>Loan applicants calling to ask &quot;am I eligible&quot; or &quot;what documents do I need&quot; can get an instant answer from a chatbot, freeing loan officers for actual underwriting.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>AI-Assisted Document Review for Law Firms in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-assisted-document-review-law-firms-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-assisted-document-review-law-firms-ghana</guid>
+   <link>https://princecaleb.dev/archive/ai-assisted-document-review-law-firms-ghana</link>
+   <guid>https://princecaleb.dev/archive/ai-assisted-document-review-law-firms-ghana</guid>
    <description>AI document review doesn't replace a lawyer's judgment on a case. It replaces the hours spent manually scanning contracts for the clauses that matter.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>AI Tutors and Chat Support for Schools and Training Centers in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-tutors-chat-support-schools-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-tutors-chat-support-schools-accra</guid>
+   <link>https://princecaleb.dev/archive/ai-tutors-chat-support-schools-accra</link>
+   <guid>https://princecaleb.dev/archive/ai-tutors-chat-support-schools-accra</guid>
    <description>An AI tutor doesn't replace a teacher — it answers the question a student is too embarrassed to ask again in class.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Using AI to Predict Delivery Delays for Logistics Companies in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-predict-delivery-delays-logistics-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-predict-delivery-delays-logistics-ghana</guid>
+   <link>https://princecaleb.dev/archive/ai-predict-delivery-delays-logistics-ghana</link>
+   <guid>https://princecaleb.dev/archive/ai-predict-delivery-delays-logistics-ghana</guid>
    <description>Telling a customer &quot;your delivery might be late&quot; before it happens builds more trust than apologizing after it already is.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>AI Chatbots for Restaurants: Handling Reservations and FAQs in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-restaurants-reservations-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-restaurants-reservations-accra</guid>
+   <link>https://princecaleb.dev/archive/ai-chatbots-restaurants-reservations-accra</link>
+   <guid>https://princecaleb.dev/archive/ai-chatbots-restaurants-reservations-accra</guid>
    <description>A restaurant's phone rings constantly with the same three questions. An AI chatbot on WhatsApp can answer them while staff focus on the dining room.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>AI-Powered Product Recommendations for Retail Stores in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-product-recommendations-retail-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-product-recommendations-retail-ghana</guid>
+   <link>https://princecaleb.dev/archive/ai-product-recommendations-retail-ghana</link>
+   <guid>https://princecaleb.dev/archive/ai-product-recommendations-retail-ghana</guid>
    <description>Generic &quot;customers also bought&quot; recommendations barely move sales. Recommendations tuned to actual local buying patterns do more, but need real data to work.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Using AI to Qualify Real Estate Leads Before They Reach an Agent</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-qualify-real-estate-leads-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-qualify-real-estate-leads-ghana</guid>
+   <link>https://princecaleb.dev/archive/ai-qualify-real-estate-leads-ghana</link>
+   <guid>https://princecaleb.dev/archive/ai-qualify-real-estate-leads-ghana</guid>
    <description>Not every inquiry is a serious buyer. AI lead qualification sorts them before an agent spends time on a conversation that was never going anywhere.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>AI Chat Assistants for Clinics: Answering Patient Questions 24/7 in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=ai-chat-assistants-clinics-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=ai-chat-assistants-clinics-accra</guid>
+   <link>https://princecaleb.dev/archive/ai-chat-assistants-clinics-accra</link>
+   <guid>https://princecaleb.dev/archive/ai-chat-assistants-clinics-accra</guid>
    <description>Patients ask the same handful of questions constantly — hours, services, insurance, directions. An AI assistant answers them at 11pm without waking up a receptionist.</description>
    <category>AI &amp; Chatbots</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Booking Apps for Salons and Spas: What Ghanaian Businesses Should Know</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=booking-apps-salons-spas-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=booking-apps-salons-spas-ghana</guid>
+   <link>https://princecaleb.dev/archive/booking-apps-salons-spas-ghana</link>
+   <guid>https://princecaleb.dev/archive/booking-apps-salons-spas-ghana</guid>
    <description>Building a booking app is the easy part. Getting clients to actually download one for a single salon is the part most owners underestimate.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Building a Volunteer Coordination App for NGOs in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=volunteer-coordination-app-ngos-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=volunteer-coordination-app-ngos-ghana</guid>
+   <link>https://princecaleb.dev/archive/volunteer-coordination-app-ngos-ghana</link>
+   <guid>https://princecaleb.dev/archive/volunteer-coordination-app-ngos-ghana</guid>
    <description>Coordinating volunteers through a WhatsApp broadcast list works for one event. It stops working the moment an NGO runs multiple ongoing programs.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Mobile Banking Apps for Microfinance Institutions in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=mobile-banking-apps-microfinance-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=mobile-banking-apps-microfinance-accra</guid>
+   <link>https://princecaleb.dev/archive/mobile-banking-apps-microfinance-accra</link>
+   <guid>https://princecaleb.dev/archive/mobile-banking-apps-microfinance-accra</guid>
    <description>A mobile banking app for an MFI isn't a luxury feature — it's often the difference between a customer staying and one switching to a mobile money wallet instead.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Building a Client Portal App for Law Firms in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=client-portal-app-law-firms-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=client-portal-app-law-firms-ghana</guid>
+   <link>https://princecaleb.dev/archive/client-portal-app-law-firms-ghana</link>
+   <guid>https://princecaleb.dev/archive/client-portal-app-law-firms-ghana</guid>
    <description>Clients calling to ask &quot;any updates on my case&quot; is a symptom — a client portal treats the actual problem, which is a lack of visibility.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Mobile Apps for Schools: Parent Communication and Fee Payments</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=mobile-apps-schools-parent-communication-fees</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=mobile-apps-schools-parent-communication-fees</guid>
+   <link>https://princecaleb.dev/archive/mobile-apps-schools-parent-communication-fees</link>
+   <guid>https://princecaleb.dev/archive/mobile-apps-schools-parent-communication-fees</guid>
    <description>Parent-teacher communication in most Ghanaian schools happens through a WhatsApp group that becomes unreadable within a week. A dedicated app fixes that without losing the immediacy.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Building a Delivery Tracking App for Logistics Companies in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=delivery-tracking-app-logistics-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=delivery-tracking-app-logistics-accra</guid>
+   <link>https://princecaleb.dev/archive/delivery-tracking-app-logistics-accra</link>
+   <guid>https://princecaleb.dev/archive/delivery-tracking-app-logistics-accra</guid>
    <description>Customers don't want a tracking app — they want to know where their package is. Sometimes a link does that better than an app ever could.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Building a Table Reservation and Loyalty App for Restaurants in Ghana</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=table-reservation-loyalty-app-restaurants-ghana</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=table-reservation-loyalty-app-restaurants-ghana</guid>
+   <link>https://princecaleb.dev/archive/table-reservation-loyalty-app-restaurants-ghana</link>
+   <guid>https://princecaleb.dev/archive/table-reservation-loyalty-app-restaurants-ghana</guid>
    <description>Restaurant apps fail for the same reason most apps fail: nobody has a reason to open them more than once. Reservations and loyalty rewards give people that reason.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
   <item>
    <title>Mobile Loyalty Apps for Retail Businesses in Accra</title>
-   <link>https://princecaleb.dev/archive-post.html?slug=mobile-loyalty-apps-retail-accra</link>
-   <guid>https://princecaleb.dev/archive-post.html?slug=mobile-loyalty-apps-retail-accra</guid>
+   <link>https://princecaleb.dev/archive/mobile-loyalty-apps-retail-accra</link>
+   <guid>https://princecaleb.dev/archive/mobile-loyalty-apps-retail-accra</guid>
    <description>A loyalty app only works if customers open it more than once — which means the reward has to be worth more than the download.</description>
    <category>Mobile Apps</category>
-   <pubDate>Mon, 06 Jul 2026 10:09:39 +0000</pubDate>
+   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
  </channel>
 </rss>
