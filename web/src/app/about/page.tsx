@@ -11,6 +11,7 @@ import {
 } from "react-icons/si";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { AboutStudioMockup } from "@/components/AboutStudioMockup";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
@@ -105,7 +106,7 @@ export default function About() {
   return (
     <>
       {/* ── HERO / INTRO ────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1400px] px-6 pt-36 pb-24 md:px-10 md:pt-48 md:pb-28">
+      <section className="mx-auto max-w-[1400px] px-6 pt-28 pb-16 md:px-10 md:pt-36 md:pb-20">
         <div className="grid gap-14 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <Reveal>
@@ -130,12 +131,8 @@ export default function About() {
 
           <Reveal delay={220} className="lg:col-span-5">
             <div className="relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2">
-              <img
-                src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=900&h=1100&fit=crop&auto=format"
-                alt="Architectural lines in monochrome"
-                className="aspect-[4/5] w-full object-cover grayscale"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-bg/50 to-transparent" />
+              <AboutStudioMockup />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg/60 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-5">
                 <span className="label text-text">Prince Caleb</span>
                 <span className="label text-accent">Est. 2014</span>
