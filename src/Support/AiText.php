@@ -42,6 +42,9 @@ class AiText
     /** Smallest window worth giving a provider once the budget is shared out. */
     private const MIN_PROVIDER_TIMEOUT = 8;
 
+    /** Groq's free/on-demand tokens-per-minute cap for openai/gpt-oss-120b, as of 2026-08. */
+    private const GROQ_TPM_LIMIT = 8000;
+
     private static ?string $lastError = null;
 
     /** @return string|null null only if every configured provider failed, or none is configured */
@@ -329,6 +332,21 @@ class AiText
         // openai/gpt-oss-120b is Groq's recommended replacement.
         $model = Settings::get('groq_model') ?: 'openai/gpt-oss-120b';
 
+        // Groq's free/on-demand tier caps openai/gpt-oss-120b at 8000 tokens
+        // per minute, counting the prompt AND the requested max_tokens
+        // together — a large prompt plus the shared chain-wide $maxTokens
+        // ceiling can ask for more than that in one call and get a 413
+        // before the model runs at all. Estimate the prompt's size
+        // (~4 chars/token, the usual rule of thumb for English) and shrink
+        // the completion budget to fit what the TPM cap has left; if the
+        // prompt alone is already too big, skip the call rather than send
+        // one that cannot succeed.
+        $estimatedPromptTokens = (int) ceil((strlen($prompt) + strlen((string) $system)) / 4);
+        $groqMaxTokens = min($maxTokens, self::GROQ_TPM_LIMIT - $estimatedPromptTokens - 200);
+        if ($groqMaxTokens < 256) {
+            return null;
+        }
+
         $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
@@ -337,7 +355,7 @@ class AiText
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apiKey,
             ],
-            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $maxTokens]),
+            CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $groqMaxTokens]),
             CURLOPT_TIMEOUT => $timeout,
             // A host that will not answer at all should not spend this leg's
             // whole share of the chain's budget failing to connect.
