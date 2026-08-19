@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
-import { Save, ShieldCheck, ShieldOff, Send } from "lucide-react";
+import { Save, ShieldCheck, ShieldOff, Send, Activity, Zap } from "lucide-react";
 import {
   PageHeader, Card, Button, Field, Input, Textarea, Select, Tabs,
 } from "@/components/admin/ui";
+import { ComposioAccounts } from "@/components/admin/ComposioAccounts";
+
+type CapabilityRow = { label: string; available: boolean; used_by: string[] };
+
+type AiTestResult = {
+  key_loaded?: boolean;
+  curl_available?: boolean;
+  http_status?: number;
+  curl_error?: string;
+  response_snippet?: string;
+  hint?: string;
+};
 
 export type EmailTemplateDefaults = Record<
   string,
@@ -164,6 +176,46 @@ export default function SettingsClient({
   const [disablePassword, setDisablePassword] = useState("");
 
   const [testStatus, setTestStatus] = useState<Record<string, string>>({});
+  const [capabilities, setCapabilities] = useState<CapabilityRow[]>([]);
+  const [aiTest, setAiTest] = useState<{ text: string; ok: boolean } | null>(null);
+  const [testingAi, setTestingAi] = useState(false);
+
+  // Capability status is a convenience panel: a failure here should stay quiet
+  // rather than surface as a settings error.
+  useEffect(() => {
+    adminApi
+      .get<{ capabilities?: Record<string, CapabilityRow> }>("/api/v1/admin/agent-capabilities")
+      .then((data) => setCapabilities(Object.values(data.capabilities ?? {})))
+      .catch(() => {});
+  }, []);
+
+  /** Asks the server to make one real call to the AI provider. */
+  const testAi = async () => {
+    setTestingAi(true);
+    setAiTest(null);
+    try {
+      const r = await adminApi.get<AiTestResult>("/api/v1/admin/ai-test");
+      if (!r.key_loaded || r.curl_available === false) {
+        setAiTest({ ok: false, text: r.hint || "The AI provider is not configured." });
+      } else if (r.http_status === 200) {
+        setAiTest({ ok: true, text: "Gemini is working — live chat is fully AI-powered." });
+      } else if (r.curl_error) {
+        setAiTest({
+          ok: false,
+          text: `Connection problem: ${r.curl_error} — the host may be blocking outbound requests.`,
+        });
+      } else {
+        setAiTest({
+          ok: false,
+          text: `Gemini rejected the key (HTTP ${r.http_status}): ${r.response_snippet ?? ""}`,
+        });
+      }
+    } catch (err) {
+      setAiTest({ ok: false, text: err instanceof Error ? err.message : "Could not run the test." });
+    } finally {
+      setTestingAi(false);
+    }
+  };
 
   const set = (key: string, value: string) =>
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -496,10 +548,60 @@ export default function SettingsClient({
         </div>
       )}
 
-      {tab === "ai" && groupCard("ai", "AI providers")}
+      {tab === "ai" && (
+        <div className="space-y-4">
+          {groupCard("ai", "AI providers")}
+
+          <Card title="Connection test" bodyClassName="p-5 space-y-3">
+            <p className="text-sm text-text-2">
+              Makes one real call to the provider and reports exactly what came back.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="outline" onClick={testAi} disabled={testingAi}>
+                <Zap className="w-4 h-4" />
+                {testingAi ? "Testing…" : "Test AI connection"}
+              </Button>
+              {aiTest && (
+                <span className={`text-sm ${aiTest.ok ? "text-green-500" : "text-red-400"}`}>
+                  {aiTest.text}
+                </span>
+              )}
+            </div>
+          </Card>
+
+          {capabilities.length > 0 && (
+            <Card title="Capability status" bodyClassName="p-5 space-y-3">
+              {capabilities.map((cap) => (
+                <div key={cap.label} className="flex items-start gap-3">
+                  <span
+                    className={`mt-0.5 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                      cap.available
+                        ? "bg-green-500/10 text-green-500"
+                        : "bg-bg-3 text-text-2"
+                    }`}
+                  >
+                    <Activity className="w-3 h-3" />
+                    {cap.available ? "Ready" : "Not configured"}
+                  </span>
+                  <div>
+                    <div className="text-sm">{cap.label}</div>
+                    <div className="text-xs text-text-3">Used by: {cap.used_by.join(", ")}</div>
+                  </div>
+                </div>
+              ))}
+            </Card>
+          )}
+        </div>
+      )}
       {tab === "voice" && groupCard("voice", "Voice & avatar")}
       {tab === "messaging" && groupCard("messaging", "WhatsApp & phone")}
-      {tab === "integrations" && groupCard("integrations", "Integrations")}
+      {tab === "integrations" && (
+        <div className="space-y-4">
+          {/* Live connection state, above the credentials that configure it. */}
+          <ComposioAccounts onAuthorUrn={(urn) => set("composio_linkedin_author_urn", urn)} />
+          {groupCard("integrations", "Integrations")}
+        </div>
+      )}
       {tab === "payments" && groupCard("payments", "Payments")}
       {tab === "site" && groupCard("site", "Site behaviour")}
       {tab === "booking" && groupCard("booking", "Bookings")}
