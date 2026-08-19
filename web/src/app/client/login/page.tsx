@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 
 export default function ClientLoginPage() {
   const [email, setEmail] = useState("");
@@ -42,9 +42,7 @@ export default function ClientLoginPage() {
 
       <div className="w-full max-w-[420px] rounded-[24px] border border-hairline bg-card p-8 md:p-10 shadow-2xl shadow-bg-2/50 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="mb-6 flex justify-center">
-          <div className="grid size-12 place-items-center rounded-xl bg-accent text-2xl font-bold text-on-accent shadow-lg shadow-accent/20">
-            P
-          </div>
+          <Logo className="scale-110 origin-center" />
         </div>
 
         <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent">
@@ -98,9 +96,13 @@ export default function ClientLoginPage() {
             </div>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full h-12 mt-2">
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full py-2.5 bg-text text-bg rounded-md font-medium hover:bg-text-2 transition-colors disabled:opacity-50 mt-2"
+          >
             {loading ? "Logging in..." : "Log in"}
-          </Button>
+          </button>
         </form>
 
         <div className="mt-8 space-y-4 text-center">

@@ -38,18 +38,154 @@ export type Project = {
   [key: string]: unknown;
 };
 
+export type AdminProject = Project & {
+  is_published: boolean;
+  sort_order: number;
+  delivery_status: string;
+  progress_percent: number;
+  contract_value: number;
+  estimated_cost: number;
+  actual_cost: number;
+  hours_worked: number;
+  finance_currency: string;
+  deadline?: string;
+  assigned_agent_key?: string;
+  client_email?: string;
+  linked_client_name?: string;
+};
+
 export type BlogPost = {
   id: number;
   slug: string;
   title: string;
   excerpt: string;
-  reading_time?: number;
-  published_at?: string;
-  created_at?: string;
-  updated_at?: string;
   category?: string;
-  body?: string;
+  cover_image_path?: string;
+  body: string;
+  published_at?: string;
+  created_at: string;
+  reading_time?: number;
   [key: string]: unknown;
+};
+
+export type AdminBlogPost = BlogPost & {
+  is_published: boolean;
+  sort_order?: number;
+};
+
+export type AdminTestimonial = {
+  id: number;
+  token: string;
+  client_name: string;
+  client_email: string;
+  project_reference?: string;
+  rating?: number;
+  quote?: string;
+  status: 'requested' | 'submitted' | 'approved' | 'rejected';
+  sort_order?: number;
+  requested_at?: string;
+  submitted_at?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminSocialDraft = {
+  id: number;
+  source_type: string;
+  source_id: number;
+  content: string;
+  short_content?: string;
+  hashtags?: string;
+  image_url?: string;
+  linkedin_post_urn?: string;
+  status: 'draft' | 'approved' | 'rejected';
+  ai_provider?: string;
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+  publish_error?: string;
+};
+
+export type AdminContentIdea = {
+  id: number;
+  day_number: number;
+  platform: 'linkedin' | 'youtube';
+  title: string;
+  description: string;
+  grounded: boolean;
+  source_posted_at?: string;
+  status: 'idea' | 'used' | 'dismissed';
+  generated_at: string;
+};
+
+export type AdminContentStudioItem = {
+  id: number;
+  kind: 'social' | 'flyer' | 'blog';
+  title?: string;
+  body?: string;
+  excerpt?: string;
+  hashtags?: string;
+  image_url?: string;
+  image_size?: string;
+  notes?: string;
+  status: 'draft' | 'approved' | 'used';
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminReportSummary = {
+  currency: string;
+  revenue: {
+    all_time: number;
+    last_30: number;
+    by_month: { month: string; revenue: number }[];
+    by_source: { source: string; amount: number }[];
+    by_currency: { currency: string; amount: number }[];
+  };
+  revenue_target: {
+    currency: string;
+    target: number;
+    actual: number;
+    won: number;
+    forecast: number;
+  };
+  pipeline: {
+    win_rate: number | null;
+    win_rate_prev: number | null;
+    paying_clients: number;
+    avg_deal: number;
+    funnel: { stage: string; count: number }[];
+    bottleneck: string | null;
+    pipeline_stages: { stage: string; count: number; value: number }[];
+  };
+  automations: { id: number; name: string; status: string; enrolled: number; active: number; steps_sent: number; ai_sends: number; unsubscribed: number }[];
+  bookings: { month: string; count: number }[];
+  lead_sources: { source: string; count: number }[];
+  top_clients: { name: string; payments: number; revenue: number }[];
+  period: {
+    from: string;
+    to: string;
+    revenue: number;
+    prev_revenue: number | null;
+    revenue_pct: number | null;
+    revenue_mix: { label: string; amount: number }[];
+  };
+  estimates: { margin: number; utilization: number; margin_estimated: boolean; utilization_estimated: boolean; weekly_billable_hours: number | null };
+  six_month_view: { month: string; revenue: number; margin: number }[];
+};
+
+export type AdminAnalyticsSummary = {
+  total_views: number;
+  by_day: { day: string; views: number }[];
+  top_pages: { path: string; views: number }[];
+  top_events: { path: string; views: number }[];
+  top_referrers: { referrer: string; views: number }[];
+  funnel: {
+    calculator_runs?: number;
+    request_step_3?: number;
+    request_submit_success?: number;
+    checkout_failed_open?: number;
+  };
 };
 
 export type SiteContent = Record<string, string> & { default_theme?: string };
@@ -63,6 +199,22 @@ export type Testimonial = {
   project_title?: string;
   project_reference?: string;
   outcome_metrics?: string;
+};
+
+export type Inquiry = {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  type: string;
+  status: "unread" | "read" | "flagged" | "archived";
+  pipeline_stage?: string;
+  project_type?: string;
+  budget?: string;
+  timeline?: string;
+  features?: string;
+  created_at: string;
+  [key: string]: unknown;
 };
 
 export type BuilderOsAgent = {
@@ -137,8 +289,10 @@ function apiUrl(path: string): string {
   return `${base}${path}`;
 }
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(apiUrl(path), { headers: { Accept: "application/json" } });
+async function get<T>(path: string, customHeaders?: HeadersInit): Promise<T> {
+  const res = await fetch(apiUrl(path), { 
+    headers: { Accept: "application/json", ...customHeaders } 
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
@@ -146,9 +300,9 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function postJson<T>(path: string, data: unknown): Promise<T> {
+export async function postJson<T>(path: string, data: unknown, method: string = "POST"): Promise<T> {
   const res = await fetch(apiUrl(path), {
-    method: "POST",
+    method,
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(data),
   });
@@ -160,6 +314,61 @@ export async function postJson<T>(path: string, data: unknown): Promise<T> {
 }
 
 export const api = {
+  authMe: (cookieHeader?: string) => get<any>("/api/v1/auth/me", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminDashboard: (cookieHeader?: string) => get<any>("/api/v1/admin/dashboard", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminNotifications: (cookieHeader?: string) => get<any>("/api/v1/admin/notifications", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminInquiries: (query?: { status?: string; type?: string; pipeline_stage?: string }, cookieHeader?: string) => {
+    const params = new URLSearchParams();
+    if (query?.status) params.append("status", query.status);
+    if (query?.type) params.append("type", query.type);
+    if (query?.pipeline_stage) params.append("pipeline_stage", query.pipeline_stage);
+    const qs = params.toString();
+    return get<Inquiry[]>(`/api/v1/admin/inquiries${qs ? `?${qs}` : ""}`, cookieHeader ? { Cookie: cookieHeader } : undefined);
+  },
+  adminUpdateInquiry: (id: number, data: { status?: string; pipeline_stage?: string }) =>
+    postJson<{ status: string }>(`/api/v1/admin/inquiries/${id}`, data, "PATCH"),
+  adminDeleteInquiry: (id: number) =>
+    postJson<{ status: string }>(`/api/v1/admin/inquiries/${id}`, {}, "DELETE"),
+  
+  adminProjects: (cookieHeader?: string) => get<AdminProject[]>("/api/v1/admin/projects", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminCreateProject: (data: any) => postJson<any>("/api/v1/admin/projects", data),
+  adminUpdateProject: (id: number, data: any) => postJson<any>(`/api/v1/admin/projects/${id}`, data, "PUT"),
+  adminDeleteProject: (id: number) => postJson<{ status: string }>(`/api/v1/admin/projects/${id}`, {}, "DELETE"),
+  adminReorderProjects: (ids: number[]) => postJson<{ status: string }>("/api/v1/admin/projects/reorder", { order: ids }, "PATCH"),
+  adminReviewBuild: (data: { command: string }) => postJson<{ output: string }>("/api/v1/admin/projects/review-build", data),
+  
+  adminBlogPosts: (cookieHeader?: string) => get<AdminBlogPost[]>("/api/v1/admin/blog", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminCreateBlogPost: (data: any) => postJson<any>("/api/v1/admin/blog", data),
+  adminUpdateBlogPost: (id: number, data: any) => postJson<any>(`/api/v1/admin/blog/${id}`, data, "PUT"),
+  adminDeleteBlogPost: (id: number) => postJson<{ status: string }>(`/api/v1/admin/blog/${id}`, {}, "DELETE"),
+
+  adminTestimonials: (cookieHeader?: string) => get<AdminTestimonial[]>("/api/v1/admin/testimonials", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminRequestTestimonial: (data: any) => postJson<any>("/api/v1/admin/testimonials", data),
+  adminUpdateTestimonial: (id: number, data: any) => postJson<any>(`/api/v1/admin/testimonials/${id}`, data, "PATCH"),
+  adminDeleteTestimonial: (id: number) => postJson<{ status: string }>(`/api/v1/admin/testimonials/${id}`, {}, "DELETE"),
+
+  adminSocialDrafts: (cookieHeader?: string) => get<AdminSocialDraft[]>("/api/v1/admin/social-drafts", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminGenerateSocialDraft: () => postJson<any>("/api/v1/admin/social-drafts/generate", {}),
+  adminUpdateSocialDraft: (id: number, data: any) => postJson<any>(`/api/v1/admin/social-drafts/${id}`, data, "PATCH"),
+  adminDeleteSocialDraft: (id: number) => postJson<{ status: string }>(`/api/v1/admin/social-drafts/${id}`, {}, "DELETE"),
+
+  adminContentIdeas: (cookieHeader?: string) => get<{ ideas: AdminContentIdea[] }>("/api/v1/admin/content-ideas", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminGenerateContentIdeas: () => postJson<any>("/api/v1/admin/content-ideas/generate", {}),
+  adminUpdateContentIdeaStatus: (id: number, status: 'idea' | 'used' | 'dismissed') => postJson<any>(`/api/v1/admin/content-ideas/${id}`, { status }, "PATCH"),
+  adminCreateDraftFromIdea: (id: number) => postJson<any>(`/api/v1/admin/content-ideas/${id}/draft`, {}),
+
+  adminContentStudio: (cookieHeader?: string) => get<AdminContentStudioItem[]>("/api/v1/admin/content-studio", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminUpdateContentStudioItem: (id: number, data: any) => postJson<AdminContentStudioItem>(`/api/v1/admin/content-studio/${id}`, data, "PATCH"),
+  adminPromoteContentStudioItem: (id: number) => postJson<{ promoted: boolean; target: string; id: number }>(`/api/v1/admin/content-studio/${id}/promote`, {}),
+  adminDeleteContentStudioItem: (id: number) => postJson<{ deleted: boolean }>(`/api/v1/admin/content-studio/${id}`, {}, "DELETE"),
+
+  adminReportSummary: (cookieHeader?: string, params?: { from?: string; to?: string }) => {
+    const qs = params ? '?' + new URLSearchParams(Object.entries(params).filter(([,v]) => v) as [string, string][]).toString() : '';
+    return get<AdminReportSummary>(`/api/v1/admin/reports/summary${qs}`, cookieHeader ? { Cookie: cookieHeader } : undefined);
+  },
+  adminAnalyticsSummary: (days: number = 30) => get<AdminAnalyticsSummary>(`/api/v1/admin/analytics/summary?days=${days}`),
+  adminSaveSettings: (data: Record<string, string>) => postJson<any>("/api/v1/admin/settings", data, "PUT"),
+
   projects: (tag?: string) => get<Project[]>(`/api/v1/projects${tag ? `?tag=${encodeURIComponent(tag)}` : ""}`),
   project: (slug: string) => get<Project>(`/api/v1/projects/${encodeURIComponent(slug)}`),
   blog: () => get<BlogPost[]>("/api/v1/blog"),
@@ -244,6 +453,53 @@ export const api = {
     return res.json() as Promise<{ id: number; message?: string }>;
   },
 };
+
+/* ---------------------------------------------------------------------------
+ * Admin data access
+ *
+ * The admin surface spans ~170 endpoints across 40-odd pages. Rather than hand
+ * writing a named wrapper for every one, these generic helpers carry the two
+ * things every admin call needs — the absolute-URL resolution `apiUrl` does,
+ * and forwarding of the session cookie when the call runs on the server during
+ * SSR. Pages stay readable because the endpoint path reads inline at the call
+ * site, the same way the legacy `api.get("/api/v1/admin/...")` calls did.
+ * ------------------------------------------------------------------------- */
+
+export const adminApi = {
+  get: <T>(path: string, cookieHeader?: string) =>
+    get<T>(path, cookieHeader ? { Cookie: cookieHeader } : undefined),
+  post: <T>(path: string, data: unknown = {}) => postJson<T>(path, data, "POST"),
+  put: <T>(path: string, data: unknown = {}) => postJson<T>(path, data, "PUT"),
+  patch: <T>(path: string, data: unknown = {}) => postJson<T>(path, data, "PATCH"),
+  del: <T>(path: string, data: unknown = {}) => postJson<T>(path, data, "DELETE"),
+};
+
+/** Admin list endpoints can answer with an error object or a wrapped payload
+ *  instead of the bare array a page expects. The legacy admin guarded every one
+ *  of these with `Array.isArray(...) ? ... : []`; this keeps that guarantee so a
+ *  surprising shape renders an empty list instead of throwing on `.map`. */
+export function asList<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+/** `ssrAdminGet` for the common list case, with the array-shape guard applied. */
+export async function ssrAdminList<T>(path: string, cookieHeader: string): Promise<T[]> {
+  try {
+    return asList<T>(await adminApi.get<unknown>(path, cookieHeader));
+  } catch {
+    return [];
+  }
+}
+
+/** Wraps an SSR admin fetch so one failing panel renders empty rather than
+ *  collapsing the whole route into an error boundary. */
+export async function ssrAdminGet<T>(path: string, cookieHeader: string, fallback: T): Promise<T> {
+  try {
+    return await adminApi.get<T>(path, cookieHeader);
+  } catch {
+    return fallback;
+  }
+}
 
 /** Same classifier as the PHP site's window.navPlatformOf (nav-dropdowns.js),
  * kept as one shared util instead of being duplicated per-component. */

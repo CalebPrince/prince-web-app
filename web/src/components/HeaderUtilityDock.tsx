@@ -87,7 +87,7 @@ export function HeaderUtilityDock() {
           <Search className="size-4" />
         </Link>
         <a
-          href="/admin/login.html"
+          href="/admin"
           aria-label="Admin login"
           title="Admin login"
           className="grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
@@ -95,7 +95,7 @@ export function HeaderUtilityDock() {
           <Lock className="size-4" />
         </a>
         <a
-          href="/client/login.html"
+          href="/client/login"
           aria-label="Client portal"
           title="Client portal"
           className="grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"

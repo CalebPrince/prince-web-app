@@ -51,6 +51,10 @@ const nextConfig: NextConfig = {
       // Cover images and gallery shots are stored by the PHP side and come
       // back as /uploads/* paths, so they need the same passthrough.
       { source: "/uploads/:path*", destination: "http://localhost:8017/uploads/:path*" },
+      // Allow Next.js to proxy legacy HTML pages and assets to the PHP backend during local dev
+      { source: "/admin/:path*.html", destination: "http://localhost:8017/admin/:path*.html" },
+      { source: "/css/:path*", destination: "http://localhost:8017/css/:path*" },
+      { source: "/js/:path*", destination: "http://localhost:8017/js/:path*" },
     ];
   },
 };

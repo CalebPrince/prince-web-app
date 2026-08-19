@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
 import { Manrope, JetBrains_Mono } from "next/font/google";
-import { SiteNav } from "@/components/SiteNav";
-import { SiteFooter } from "@/components/SiteFooter";
-import { ChatWidget } from "@/components/ChatWidget";
-import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -17,6 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
 });
+
+import { MarketingUIWrapper } from "@/components/MarketingUIWrapper";
 
 export const metadata: Metadata = {
   title: "Prince Caleb, Digital Design, Development & AI",
@@ -42,11 +40,9 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-bg text-text antialiased">
-        <SiteNav />
-        {children}
-        <SiteFooter />
-        <WhatsAppFloatButton />
-        <ChatWidget />
+        <MarketingUIWrapper>
+          {children}
+        </MarketingUIWrapper>
       </body>
     </html>
   );
