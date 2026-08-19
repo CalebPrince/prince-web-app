@@ -5,7 +5,10 @@ import { FeaturedSystems } from "@/components/FeaturedSystems";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TechStrip } from "@/components/TechStrip";
+import { VoiceDemo } from "@/components/VoiceDemo";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { FaqAccordion } from "@/components/FaqAccordion";
 
 const SERVICES = [
   {
@@ -79,7 +82,16 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const content = await api.content().catch(() => null);
+  const faqCount = parseInt(content?.faq_count || "0");
+  const faqs = [];
+  for (let i = 1; i <= faqCount; i++) {
+    const q = content?.[`faq_${i}_question`];
+    const a = content?.[`faq_${i}_answer`];
+    if (q && a) faqs.push({ question: q, answer: a });
+  }
+
   return (
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
@@ -96,19 +108,19 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-bg/85 via-bg/30 to-transparent" />
         </div>
 
-        <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col justify-center px-6 pt-28 pb-16 md:px-10">
-          <div className="max-w-4xl">
+        <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-16 pt-32 md:px-10 lg:grid-cols-2 lg:gap-8">
+          <div className="max-w-3xl">
             <p className="rise label mb-8 text-text-2" style={{ animationDelay: "0.1s" }}>
               Digital Design <span className="text-accent">&bull;</span> Development{" "}
               <span className="text-accent">&bull;</span> AI
             </p>
             <h1
-              className="rise text-[clamp(2.6rem,8vw,7rem)] font-extrabold leading-[0.95] tracking-[-0.03em]"
+              className="rise text-[clamp(2.2rem,6vw,5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]"
               style={{ animationDelay: "0.2s" }}
             >
               Digital experiences,
               <br />
-              <span className="text-text-2">built to</span> perform.
+              <span className="text-text-2">built to</span> <span className="text-accent">perform.</span>
             </h1>
             <p
               className="rise mt-8 max-w-xl text-lg leading-relaxed text-text-2 md:text-xl"
@@ -126,6 +138,9 @@ export default function Home() {
                 Let&rsquo;s Talk
               </Link>
             </div>
+          </div>
+          <div className="rise relative mx-auto w-full max-w-md lg:ml-auto lg:mr-0" style={{ animationDelay: "0.6s" }}>
+            <VoiceDemo />
           </div>
         </div>
 
@@ -165,28 +180,6 @@ export default function Home() {
           </Reveal>
         </div>
 
-        <Reveal delay={120} className="mt-16 grid grid-cols-2 gap-4 md:grid-cols-4">
-          {[
-            "photo-1697292859724-0d2501966448",
-            "photo-1660824340595-abee9c790d85",
-            "photo-1634084462412-b54873c0a56d",
-            "photo-1709625862266-014ef072fd93",
-          ].map((id, i) => (
-            <div
-              key={id}
-              className={cn(
-                "relative overflow-hidden rounded-sm border border-hairline bg-bg-2",
-                i % 2 === 0 ? "aspect-[3/4]" : "aspect-[3/4] md:mt-10",
-              )}
-            >
-              <img
-                src={`https://images.unsplash.com/${id}?w=500&h=650&fit=crop&auto=format`}
-                alt="Interface fragment"
-                className="h-full w-full object-cover opacity-80 grayscale transition-all duration-700 hover:scale-105 hover:opacity-100 hover:grayscale-0"
-              />
-            </div>
-          ))}
-        </Reveal>
       </section>
 
       {/* ── 02 · SERVICES ───────────────────────────────────── */}
@@ -356,6 +349,30 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── FAQ ─────────────────────────────────────────────── */}
+      {faqs.length > 0 && (
+        <section id="faq" className="border-t border-hairline bg-bg py-28 md:py-40">
+          <div className="mx-auto max-w-[1400px] px-6 md:px-10">
+            <div className="mx-auto max-w-3xl text-center">
+              <Reveal>
+                <span className="mb-2 block font-mono text-sm tracking-wide text-text-2">
+                  {content?.faq_eyebrow || "// Frequently asked"}
+                </span>
+                <h2 className="text-[clamp(1.8rem,4vw,3.5rem)] font-bold tracking-tight">
+                  {content?.faq_title || "Questions people ask before we start."}
+                </h2>
+              </Reveal>
+            </div>
+            
+            <div className="mx-auto mt-16 max-w-3xl">
+              <Reveal delay={200}>
+                <FaqAccordion faqs={faqs} />
+              </Reveal>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── 07 · FINAL CTA ──────────────────────────────────── */}
       <section id="contact" className="relative overflow-hidden border-t border-hairline">

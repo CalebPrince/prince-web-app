@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
@@ -102,12 +99,8 @@ function features(content: SiteContent | null, key: string, fallback: string): s
     .filter(Boolean);
 }
 
-export default function Pricing() {
-  const [content, setContent] = useState<SiteContent | null>(null);
-
-  useEffect(() => {
-    api.content().then(setContent).catch(() => {});
-  }, []);
+export default async function Pricing() {
+  const content = await api.content().catch(() => null);
 
   const tiers = TIER_META.map((meta, i) => ({
     ...meta,
