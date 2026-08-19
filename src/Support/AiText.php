@@ -36,6 +36,9 @@ class AiText
      * fraction of that. */
     private const DEFAULT_MAX_TOKENS = 8192;
 
+    /** Longest wait for a provider's TCP/TLS handshake before moving on. */
+    private const CONNECT_TIMEOUT = 6;
+
     /** Smallest window worth giving a provider once the budget is shared out. */
     private const MIN_PROVIDER_TIMEOUT = 8;
 
@@ -150,6 +153,9 @@ class AiText
             ],
             CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $maxTokens]),
             CURLOPT_TIMEOUT => $timeout,
+            // A host that will not answer at all should not spend this leg's
+            // whole share of the chain's budget failing to connect.
+            CURLOPT_CONNECTTIMEOUT => min(self::CONNECT_TIMEOUT, $timeout),
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -200,6 +206,9 @@ class AiText
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_POSTFIELDS => json_encode($payload),
             CURLOPT_TIMEOUT => $timeout,
+            // A host that will not answer at all should not spend this leg's
+            // whole share of the chain's budget failing to connect.
+            CURLOPT_CONNECTTIMEOUT => min(self::CONNECT_TIMEOUT, $timeout),
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -258,6 +267,9 @@ class AiText
             ],
             CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $maxTokens]),
             CURLOPT_TIMEOUT => $timeout,
+            // A host that will not answer at all should not spend this leg's
+            // whole share of the chain's budget failing to connect.
+            CURLOPT_CONNECTTIMEOUT => min(self::CONNECT_TIMEOUT, $timeout),
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -310,6 +322,9 @@ class AiText
             ],
             CURLOPT_POSTFIELDS => json_encode(['model' => $model, 'messages' => $messages, 'max_tokens' => $maxTokens]),
             CURLOPT_TIMEOUT => $timeout,
+            // A host that will not answer at all should not spend this leg's
+            // whole share of the chain's budget failing to connect.
+            CURLOPT_CONNECTTIMEOUT => min(self::CONNECT_TIMEOUT, $timeout),
         ]);
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
