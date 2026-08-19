@@ -43,14 +43,14 @@ export interface SystemView {
   testimonial: { quote: string; client_name: string; rating?: number } | null;
   /** Ticked as "Display on homepage" in the admin Projects form. */
   featured: boolean;
-  /** Layout rhythm — alternating wide/tall cards, as in the design. */
+  /** Layout rhythm - alternating wide/tall cards, as in the design. */
   span: string;
   ratio: string;
 }
 
 const str = (value: unknown): string => String(value ?? "").trim();
 
-/** Only http(s) URLs survive — guards against javascript: and friends. */
+/** Only http(s) URLs survive - guards against javascript: and friends. */
 function safeUrl(value: unknown): string {
   const raw = str(value);
   if (!raw) return "";

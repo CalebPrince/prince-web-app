@@ -24,7 +24,7 @@ const SIGNALS = [
   },
   {
     quote:
-      "The voice agent books calls while we sleep. We stopped losing after-hours leads almost overnight — it paid for itself in the first month.",
+      "The voice agent books calls while we sleep. We stopped losing after-hours leads almost overnight, it paid for itself in the first month.",
     name: "Lena M.",
     role: "Director, home services company",
   },
@@ -131,7 +131,7 @@ export default function Systems() {
                   {p.img && (
                     <img
                       src={p.img}
-                      alt={`${p.name} — ${p.category}`}
+                      alt={`${p.name} - ${p.category}`}
                       className="h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                     />
                   )}

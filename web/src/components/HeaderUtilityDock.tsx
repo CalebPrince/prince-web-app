@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronDown, Sun, Moon, Search, Lock, CircleUserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Small utility cluster glued next to the logo — ported from the PHP
+// Small utility cluster glued next to the logo - ported from the PHP
 // pages' .utility-dock (public/js/utility-dock.js + theme.js): a trigger
 // that reveals appearance / search / admin / client-portal shortcuts.
 // The appearance toggle here is a straight light/dark switch (the legacy

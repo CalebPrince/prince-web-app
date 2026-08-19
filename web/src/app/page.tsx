@@ -53,7 +53,7 @@ const AI_CAPS = [
 const TESTIMONIALS = [
   {
     quote:
-      "Caleb didn’t just build our website — he reframed how we think about our entire digital presence. The result outperformed every projection we set.",
+      "Caleb didn’t just build our website, he reframed how we think about our entire digital presence. The result outperformed every projection we set.",
     name: "Elena Marsh",
     role: "Founder",
     company: "Northwind Labs",

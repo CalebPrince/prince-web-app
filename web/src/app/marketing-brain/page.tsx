@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
-// Sage — free public marketing-frameworks chat. Ported from
+// Sage - free public marketing-frameworks chat. Ported from
 // public/marketing-brain.html + public/js/marketing-brain-chat.js: same
 // sessionStorage-persisted transcript, same real /api/v1/agents/sage/chat
 // call, same starter prompts and framework strip.
@@ -80,7 +80,7 @@ export default function MarketingBrain() {
             return;
           }
         } catch {
-          // Storage unavailable (private browsing) — start fresh below.
+          // Storage unavailable (private browsing) - start fresh below.
         }
         setTranscript([
           {
@@ -97,7 +97,7 @@ export default function MarketingBrain() {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ token, transcript }));
     } catch {
-      // Storage full or unavailable — conversation just won't survive a reload.
+      // Storage full or unavailable - conversation just won't survive a reload.
     }
   }, [token, transcript]);
 

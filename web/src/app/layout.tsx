@@ -19,14 +19,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Prince Caleb — Digital Design, Development & AI",
+  title: "Prince Caleb, Digital Design, Development & AI",
   description:
     "I design and build high-performance websites, digital products and AI-powered experiences that help ambitious businesses move forward.",
 };
 
 // Applies a stored/OS light preference before first paint, so there's no
 // flash of the wrong theme. Shares the "theme" localStorage key with the
-// PHP pages' own theme.js — a choice made on either half of the site
+// PHP pages' own theme.js - a choice made on either half of the site
 // carries over. Dark is the default whenever there's no explicit signal,
 // matching this app's design (unlike the PHP pages' light-first default).
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("theme");var isLight=s?s==="light":matchMedia("(prefers-color-scheme: light)").matches;if(isLight)document.documentElement.setAttribute("data-theme","light");}catch(e){}})();`;

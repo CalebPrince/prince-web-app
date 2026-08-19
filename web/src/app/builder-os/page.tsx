@@ -10,9 +10,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api, type BuilderOsAgent } from "@/lib/api";
 
-// Builder OS — the topology grid renders the real, currently-configured
+// Builder OS - the topology grid renders the real, currently-configured
 // agent roster from /api/v1/builder-os/team (same registry the admin
-// command centre uses), not invented names — grouped into the three zones
+// command centre uses), not invented names - grouped into the three zones
 // below by well-known agent key. The workflow simulator's three scenarios
 // and their step copy are carried over verbatim from the live
 // public/js/builder-os.js implementation; only the presentation is new.
@@ -57,11 +57,11 @@ const SCENARIOS: { id: string; label: string; request: string; log: LogLine[] }[
     label: "After-hours clinic call",
     request: "“I need to book an appointment, but the clinic is closed.”",
     log: [
-      { key: "lisa", action: "Incoming call answered — identified as an after-hours booking" },
-      { key: "lisa", action: "Appointment details captured — name, contact, preferred date, reason" },
-      { key: "system", action: "Availability checked — open calendar times returned, no private data exposed" },
+      { key: "lisa", action: "Incoming call answered, identified as an after-hours booking" },
+      { key: "lisa", action: "Appointment details captured, name, contact, preferred date, reason" },
+      { key: "system", action: "Availability checked, open calendar times returned, no private data exposed" },
       { key: "lisa", action: "Confirmation sent with the agreed booking details" },
-      { key: "chief", action: "Owner checkpoint recorded — no escalation needed" },
+      { key: "chief", action: "Owner checkpoint recorded, no escalation needed" },
     ],
   },
   {
@@ -69,9 +69,9 @@ const SCENARIOS: { id: string; label: string; request: string; log: LogLine[] }[
     label: "New business enquiry",
     request: "“We need an AI assistant for customer calls and follow-up.”",
     log: [
-      { key: "lisa", action: "Enquiry qualified — business need, channels, and outcome captured" },
+      { key: "lisa", action: "Enquiry qualified, business need, channels, and outcome captured" },
       { key: "dossier", action: "Research context prepared from public business information" },
-      { key: "proposal", action: "System scope assembled — workflow, delivery stages, milestones" },
+      { key: "proposal", action: "System scope assembled, workflow, delivery stages, milestones" },
       { key: "nurturer", action: "Follow-up sequence scheduled and reply path tracked" },
       { key: "chief", action: "Decision point flagged for Prince Caleb to review" },
     ],
@@ -81,9 +81,9 @@ const SCENARIOS: { id: string; label: string; request: string; log: LogLine[] }[
     label: "Invoice needs review",
     request: "“This invoice looks wrong. Can someone review it before I send it?”",
     log: [
-      { key: "ada", action: "Document inspected — missing and inconsistent fields identified" },
+      { key: "ada", action: "Document inspected, missing and inconsistent fields identified" },
       { key: "ada", action: "Corrections proposed as a controlled list of changes" },
-      { key: "system", action: "Human approval required — nothing sent or changed without confirmation" },
+      { key: "system", action: "Human approval required, nothing sent or changed without confirmation" },
       { key: "chief", action: "Review checkpoint surfaced in the private command centre" },
     ],
   },

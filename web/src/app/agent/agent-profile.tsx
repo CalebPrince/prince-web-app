@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { api, type BuilderOsAgent } from "@/lib/api";
 
 // Ported from public/js/agent-profile.js. The per-agent "profile" copy
-// (mandate/surfaces/path) has no API source — it's hand-authored per key,
-// exactly like the original — with a generic fallback for any agent key
+// (mandate/surfaces/path) has no API source - it's hand-authored per key,
+// exactly like the original - with a generic fallback for any agent key
 // not in this dictionary.
 type Profile = {
   mandate: string;

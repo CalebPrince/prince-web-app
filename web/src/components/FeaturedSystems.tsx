@@ -17,7 +17,7 @@ const LAYOUT = [
 
 /**
  * The homepage showcase. Which projects appear is controlled from the admin
- * Projects form — tick "Display on homepage" and set sort order; the first
+ * Projects form - tick "Display on homepage" and set sort order; the first
  * three win.
  */
 export function FeaturedSystems() {
@@ -65,7 +65,7 @@ export function FeaturedSystems() {
                 {p.img && (
                   <img
                     src={p.img}
-                    alt={`${p.name} — ${p.category}`}
+                    alt={`${p.name} - ${p.category}`}
                     className="h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                   />
                 )}

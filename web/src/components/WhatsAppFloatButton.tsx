@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { api } from "@/lib/api";
 
-// Floating WhatsApp contact button — ported from the `#whatsapp-float-btn`
+// Floating WhatsApp contact button - ported from the `#whatsapp-float-btn`
 // element public/js/content.js wires up: hidden unless a number is
 // configured (content.contact_phone) and the button hasn't been turned
 // off (content.whatsapp_button_enabled).

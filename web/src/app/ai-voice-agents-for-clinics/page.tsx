@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 import { ClinicRoiCalculator } from "@/components/ClinicRoiCalculator";
 import { VoiceDemo } from "@/components/VoiceDemo";
 
-// AI Voice Agents for Clinics — niche landing page ported from
+// AI Voice Agents for Clinics - niche landing page ported from
 // public/ai-voice-agents-for-clinics.html. The hero's voice-demo card is a
 // static illustrative shell (same scope as the homepage's own voice-demo
-// mockup) — the real browser-mic ElevenLabs demo isn't wired into web/
+// mockup) - the real browser-mic ElevenLabs demo isn't wired into web/
 // anywhere yet. tel:/wa.me links are real and point at the same live
 // numbers the legacy page uses.
 
@@ -149,7 +149,7 @@ export default async function ClinicVoiceAgents() {
             <Reveal delay={300} className="mt-6 flex items-center gap-3 rounded-[var(--radius)] border border-hairline bg-bg-2/40 px-4 py-3">
               <ShieldCheck className="size-5 shrink-0 text-accent" />
               <p className="text-sm text-text-2">
-                <span className="font-semibold text-text">Built-in boundary — </span>
+                <span className="font-semibold text-text">Built-in boundary, </span>
                 Scheduling and information only. Clinical questions go to staff.
               </p>
             </Reveal>

@@ -11,7 +11,7 @@ export type ChatMsg = {
   role: "user" | "bot";
   text: string;
   typing?: boolean;
-  // Only true for the AI's real chat replies (resolveMessage) — these get
+  // Only true for the AI's real chat replies (resolveMessage) - these get
   // the word-by-word typewriter reveal. Instant messages (greeting, menu
   // prompts, canned answers) render immediately, same as the legacy widget.
   animate?: boolean;
@@ -22,7 +22,7 @@ export type ChatMsg = {
 // prefers-reduced-motion and skips very short strings. Ported from
 // ai-widget.js's typewriterReveal. `skip` covers both "still a typing
 // placeholder" (nothing to reveal yet) and "a code-card message" (the
-// caller renders structured segments instead and reports its own onDone) —
+// caller renders structured segments instead and reports its own onDone) ,
 // in both cases this hook must stay fully inert.
 function useTypewriter(text: string, enabled: boolean, skip: boolean, onDone: () => void) {
   const [shown, setShown] = useState("");
@@ -86,7 +86,7 @@ export function ChatBubble({
     onRevealDone(msg.id, msg.text),
   );
 
-  // Structured (code-card) replies render immediately — report done on mount.
+  // Structured (code-card) replies render immediately - report done on mount.
   useEffect(() => {
     if (withCode && !msg.typing) onRevealDone(msg.id, msg.text);
     // eslint-disable-next-line react-hooks/exhaustive-deps

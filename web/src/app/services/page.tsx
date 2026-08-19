@@ -45,7 +45,7 @@ const SERVICES = [
     icon: Workflow,
     title: "Business Automations",
     tagline: "Kill the manual work",
-    body: "Connect the tools you already use and kill the manual work between them — enquiries into your CRM, bookings into invoices, events into email, running quietly on schedule.",
+    body: "Connect the tools you already use and kill the manual work between them, enquiries into your CRM, bookings into invoices, events into email, running quietly on schedule.",
     features: [
       { icon: Plug, label: "Enquiries into your CRM" },
       { icon: FileText, label: "Bookings into invoices" },
@@ -88,7 +88,7 @@ const PROCESS = [
 ];
 
 export const metadata: Metadata = {
-  title: "Services — Prince Caleb",
+  title: "Services - Prince Caleb",
   description:
     "AI voice agents, business automations, and custom websites and mobile apps built around how your customers and team actually work.",
 };

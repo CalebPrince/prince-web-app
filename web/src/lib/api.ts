@@ -1,6 +1,6 @@
 // Typed fetch client for the PHP backend's public /api/v1/* surface.
 // Confirmed none of these routes require cookies/auth, so this is a plain
-// stateless wrapper — no credentials, no refresh logic (that's admin-only
+// stateless wrapper - no credentials, no refresh logic (that's admin-only
 // in the PHP site's own public/js/api.js, which this does not need).
 
 export type Tag = { id: number; name: string; slug: string };
@@ -21,7 +21,7 @@ export type Project = {
   gallery?: string[];
   case_study_body?: string;
   testimonial?: { quote: string; client_name: string; rating?: number } | null;
-  // Public showcase fields backing the Systems pages. All optional — the
+  // Public showcase fields backing the Systems pages. All optional - the
   // admin fills them in per project and the UI omits what is missing.
   tagline?: string;
   showcase_category?: string;

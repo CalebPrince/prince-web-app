@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { SearchRegistry } from "@/components/SearchRegistry";
 
 export const metadata: Metadata = {
-  title: "Search — Prince Caleb",
+  title: "Search - Prince Caleb",
   robots: { index: false, follow: true },
 };
 

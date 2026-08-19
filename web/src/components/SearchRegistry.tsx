@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 
-// The standalone /search page — a project-card grid of results, with ?q=
+// The standalone /search page - a project-card grid of results, with ?q=
 // synced into the URL so a search is shareable.
 export function SearchRegistry() {
   const searchParams = useSearchParams();

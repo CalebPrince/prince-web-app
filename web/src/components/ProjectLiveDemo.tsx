@@ -13,7 +13,7 @@ export function ProjectLiveDemo({ title, url }: { title: string; url: string }) 
         <Play className="size-4 fill-current" aria-hidden="true" />
         Live Demo
       </Button>
-      <Modal open={open} onClose={() => setOpen(false)} title={`Live Demo — ${title}`} className="h-[90vh]">
+      <Modal open={open} onClose={() => setOpen(false)} title={`Live Demo - ${title}`} className="h-[90vh]">
         {open && <iframe src={url} title="Live demo" className="h-full w-full border-0" />}
       </Modal>
     </>

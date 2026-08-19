@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Minimal overlay modal in the site's own palette — closes on backdrop
+ * Minimal overlay modal in the site's own palette - closes on backdrop
  * click and Escape, and traps page scroll while open.
  */
 export function Modal({

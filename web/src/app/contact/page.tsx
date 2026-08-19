@@ -11,7 +11,7 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Contact page — real details from princecaleb.dev.
+// Contact page - real details from princecaleb.dev.
 const EMAIL = "hello@princecaleb.dev";
 const WHATSAPP_NUM = "+233 53 580 1359";
 const WHATSAPP_URL = "https://wa.me/233535801359";
@@ -99,7 +99,7 @@ export default function Contact() {
       {/* ── MAIN GRID ───────────────────────────────────────── */}
       <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          {/* Left — direct methods */}
+          {/* Left - direct methods */}
           <div className="lg:col-span-5">
             <Reveal>
               <SectionLabel index="01">Reach me directly</SectionLabel>
@@ -158,7 +158,7 @@ export default function Contact() {
             </Reveal>
           </div>
 
-          {/* Right — form */}
+          {/* Right - form */}
           <div className="lg:col-span-7">
             <Reveal>
               <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10">
