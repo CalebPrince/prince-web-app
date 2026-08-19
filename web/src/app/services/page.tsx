@@ -88,7 +88,7 @@ const PROCESS = [
 ];
 
 export const metadata: Metadata = {
-  title: "Services - Prince Caleb",
+  title: "Prince Caleb - Services",
   description:
     "AI voice agents, business automations, and custom websites and mobile apps built around how your customers and team actually work.",
 };

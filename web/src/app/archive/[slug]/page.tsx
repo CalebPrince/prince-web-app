@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps<"/archive/[slug]">)
   const article = getArticle(slug);
   if (!article) return {};
   return {
-    title: `${article.title} - Prince Caleb`,
+    title: `Prince Caleb - ${article.title}`,
     description: article.excerpt,
   };
 }

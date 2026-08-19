@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Growth Roadmap, Prince Caleb",
+  title: "Prince Caleb - Free Growth Roadmap",
   description:
     "A launched website is day one, not the finish line. Get a free roadmap that maps your traffic, conversion, and tracking gaps.",
 };
