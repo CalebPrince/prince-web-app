@@ -86,20 +86,20 @@ class AiText
         // nothing answered.
         $perCall = max(self::MIN_PROVIDER_TIMEOUT, intdiv($timeoutSeconds, count($configured)));
         $deadline = microtime(true) + $timeoutSeconds;
-        $attempted = [];
+        // Every attempted leg's failure reason is kept, not just the last —
+        // otherwise a later provider's failure silently overwrites an
+        // earlier one's, hiding exactly the "why did the first, cheaper
+        // provider also fail" detail an admin needs to diagnose a double
+        // outage.
+        $failures = [];
 
         foreach ($configured as [$name, $key, $call]) {
             $remaining = (int) floor($deadline - microtime(true));
             if ($remaining < self::MIN_PROVIDER_TIMEOUT) {
-                self::$lastError = sprintf(
-                    'ran out of time after trying %s (%ds budget)',
-                    implode(', ', $attempted),
-                    $timeoutSeconds
-                );
+                $failures[] = sprintf('ran out of time before trying %s (%ds budget)', $name, $timeoutSeconds);
                 break;
             }
 
-            $attempted[] = $name;
             $startedAt = microtime(true);
             self::$lastError = null;
             $text = $call($key, min($perCall, $remaining));
@@ -114,14 +114,14 @@ class AiText
                 return ['text' => $text, 'provider' => $provider];
             }
 
-            if (self::$lastError === null) {
-                self::$lastError = sprintf(
-                    '%s failed after %.1fs (see the error log for the provider response)',
-                    $name,
-                    microtime(true) - $startedAt
-                );
-            }
+            $failures[] = self::$lastError ?? sprintf(
+                '%s failed after %.1fs (see the error log for the provider response)',
+                $name,
+                microtime(true) - $startedAt
+            );
         }
+
+        self::$lastError = implode('; ', $failures);
 
         return null;
     }
@@ -325,7 +325,9 @@ class AiText
         }
         $messages[] = ['role' => 'user', 'content' => $prompt];
 
-        $model = Settings::get('groq_model') ?: 'llama-3.3-70b-versatile';
+        // llama-3.3-70b-versatile was deprecated by Groq on 2026-06-17;
+        // openai/gpt-oss-120b is Groq's recommended replacement.
+        $model = Settings::get('groq_model') ?: 'openai/gpt-oss-120b';
 
         $ch = curl_init('https://api.groq.com/openai/v1/chat/completions');
         curl_setopt_array($ch, [
