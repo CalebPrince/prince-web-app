@@ -8,7 +8,6 @@ export function HeroOrbs() {
       <motion.div
         animate={{
           scale: [1, 1.1, 1],
-          opacity: [0.2, 0.3, 0.2],
           x: [0, 30, 0],
           y: [0, -30, 0],
         }}
@@ -22,7 +21,6 @@ export function HeroOrbs() {
       <motion.div
         animate={{
           scale: [1, 1.15, 1],
-          opacity: [0.1, 0.15, 0.1],
           x: [0, -40, 0],
           y: [0, 40, 0],
         }}
