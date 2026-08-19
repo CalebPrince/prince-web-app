@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface FaqItemProps {
@@ -26,17 +27,22 @@ function FaqItem({ question, answer, isOpen, onToggle }: FaqItemProps) {
           <Plus className="ml-4 h-5 w-5 shrink-0 text-text-2" />
         )}
       </button>
-      <div
-        className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out",
-          isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div 
+              className="pb-6 text-text-2 leading-relaxed whitespace-pre-wrap"
+              dangerouslySetInnerHTML={{ __html: answer }}
+            />
+          </motion.div>
         )}
-      >
-        <div 
-          className="pb-6 text-text-2 leading-relaxed whitespace-pre-wrap"
-          dangerouslySetInnerHTML={{ __html: answer }}
-        />
-      </div>
+      </AnimatePresence>
     </div>
   );
 }
