@@ -242,7 +242,7 @@ class LiveAvatarController
         $context = stream_context_create(['http' => [
             'method' => 'POST',
             'header' => "Authorization: {$authorization}\r\nContent-Type: application/json\r\nAccept: application/json\r\n",
-            'content' => '{}',
+            'content' => file_get_contents('php://input') ?: '{}',
             'ignore_errors' => true,
             'timeout' => 30,
         ]]);
