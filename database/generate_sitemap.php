@@ -6,6 +6,9 @@ declare(strict_types=1);
 // project, and public/feed.xml (RSS 2.0) from the published blog posts.
 // Re-run this any time projects or posts are added, removed, or unpublished
 // so both stay accurate — they are not generated automatically.
+//
+// URLs point at the Next.js routes (/about, /systems/{slug}, /archive/{slug}),
+// not the legacy .html pages those replaced.
 
 require dirname(__DIR__) . '/src/autoload.php';
 
@@ -18,18 +21,26 @@ $today = date('Y-m-d');
 
 $staticPages = [
     ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'weekly'],
-    ['loc' => '/about.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
-    ['loc' => '/services.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
-    ['loc' => '/projects.html', 'priority' => '0.8', 'changefreq' => 'weekly'],
-    ['loc' => '/archive.html', 'priority' => '0.8', 'changefreq' => 'weekly'],
-    ['loc' => '/pricing.html', 'priority' => '0.7', 'changefreq' => 'monthly'],
-    ['loc' => '/request.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
-    ['loc' => '/book.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
-    ['loc' => '/testimonials.html', 'priority' => '0.6', 'changefreq' => 'monthly'],
-    ['loc' => '/contact.html', 'priority' => '0.5', 'changefreq' => 'yearly'],
-    ['loc' => '/privacy.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
-    ['loc' => '/cookies.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
-    ['loc' => '/terms.html', 'priority' => '0.2', 'changefreq' => 'yearly'],
+    ['loc' => '/services', 'priority' => '0.7', 'changefreq' => 'monthly'],
+    ['loc' => '/builder-os', 'priority' => '0.7', 'changefreq' => 'monthly'],
+    ['loc' => '/systems', 'priority' => '0.8', 'changefreq' => 'weekly'],
+    ['loc' => '/archive', 'priority' => '0.8', 'changefreq' => 'weekly'],
+    ['loc' => '/lisa-ai-assistant', 'priority' => '0.7', 'changefreq' => 'monthly'],
+    ['loc' => '/ai-voice-agents-for-clinics', 'priority' => '0.7', 'changefreq' => 'monthly'],
+    ['loc' => '/ai-adoption-ladder', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/ai-safety', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/marketing-brain', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/growth-roadmap', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/about', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/lab', 'priority' => '0.5', 'changefreq' => 'monthly'],
+    ['loc' => '/pricing', 'priority' => '0.7', 'changefreq' => 'monthly'],
+    ['loc' => '/request', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/book', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/testimonials', 'priority' => '0.6', 'changefreq' => 'monthly'],
+    ['loc' => '/contact', 'priority' => '0.5', 'changefreq' => 'yearly'],
+    ['loc' => '/privacy', 'priority' => '0.2', 'changefreq' => 'yearly'],
+    ['loc' => '/cookies', 'priority' => '0.2', 'changefreq' => 'yearly'],
+    ['loc' => '/terms', 'priority' => '0.2', 'changefreq' => 'yearly'],
 ];
 
 $projects = $pdo->query(
@@ -54,7 +65,7 @@ foreach ($staticPages as $page) {
 
 foreach ($projects as $project) {
     $xml->startElement('url');
-    $xml->writeElement('loc', BASE_URL . '/project.html?slug=' . urlencode($project['slug']));
+    $xml->writeElement('loc', BASE_URL . '/systems/' . rawurlencode($project['slug']));
     $xml->writeElement('lastmod', substr($project['updated_at'], 0, 10));
     $xml->writeElement('changefreq', 'monthly');
     $xml->writeElement('priority', '0.7');
@@ -69,7 +80,7 @@ $posts = $pdo->query(
 
 foreach ($posts as $post) {
     $xml->startElement('url');
-    $xml->writeElement('loc', BASE_URL . '/archive-post.html?slug=' . urlencode($post['slug']));
+    $xml->writeElement('loc', BASE_URL . '/archive/' . rawurlencode($post['slug']));
     $xml->writeElement('lastmod', substr($post['updated_at'], 0, 10));
     $xml->writeElement('changefreq', 'monthly');
     $xml->writeElement('priority', '0.6');
@@ -104,7 +115,7 @@ $rss->writeAttribute('version', '2.0');
 $rss->writeAttribute('xmlns:atom', 'http://www.w3.org/2005/Atom');
 $rss->startElement('channel');
 $rss->writeElement('title', 'Prince Caleb — Technical Archive');
-$rss->writeElement('link', BASE_URL . '/archive.html');
+$rss->writeElement('link', BASE_URL . '/archive');
 $rss->writeElement('description', 'Articles on web development, freelancing, and building software in Ghana.');
 $rss->writeElement('language', 'en');
 $rss->writeElement('lastBuildDate', date(DATE_RSS));
@@ -115,7 +126,7 @@ $rss->writeAttribute('type', 'application/rss+xml');
 $rss->endElement();
 
 foreach ($feedPosts as $post) {
-    $url = BASE_URL . '/archive-post.html?slug=' . urlencode($post['slug']);
+    $url = BASE_URL . '/archive/' . rawurlencode($post['slug']);
     $rss->startElement('item');
     $rss->writeElement('title', $post['title']);
     $rss->writeElement('link', $url);

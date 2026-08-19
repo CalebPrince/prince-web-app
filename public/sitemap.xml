@@ -1,488 +1,506 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
  <url>
-  <loc>https://princecaleb.dev/home.html</loc>
-  <lastmod>2026-07-30</lastmod>
+  <loc>https://princecaleb.dev/</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>weekly</changefreq>
   <priority>1.0</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/builder-os.html</loc>
-  <lastmod>2026-07-30</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.9</priority>
- </url>
- <url>
-  <loc>https://princecaleb.dev/about.html</loc>
-  <lastmod>2026-07-10</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.6</priority>
- </url>
- <url>
-  <loc>https://princecaleb.dev/services.html</loc>
-  <lastmod>2026-07-27</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.6</priority>
- </url>
- <url>
-  <loc>https://princecaleb.dev/ai-voice-agents-for-clinics.html</loc>
-  <lastmod>2026-07-27</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.8</priority>
- </url>
- <url>
-  <loc>https://princecaleb.dev/ai-safety.html</loc>
-  <lastmod>2026-07-27</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.6</priority>
- </url>
- <url>
-  <loc>https://princecaleb.dev/lisa-ai-assistant.html</loc>
-  <lastmod>2026-07-29</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.8</priority>
- </url>
- <url>
-  <loc>https://princecaleb.dev/ai-adoption-ladder.html</loc>
-  <lastmod>2026-08-01</lastmod>
+  <loc>https://princecaleb.dev/services</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/marketing-brain.html</loc>
-  <lastmod>2026-08-01</lastmod>
+  <loc>https://princecaleb.dev/builder-os</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/projects.html</loc>
-  <lastmod>2026-07-30</lastmod>
+  <loc>https://princecaleb.dev/systems</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.8</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive.html</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>weekly</changefreq>
   <priority>0.8</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/pricing.html</loc>
-  <lastmod>2026-07-27</lastmod>
+  <loc>https://princecaleb.dev/lisa-ai-assistant</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/request.html</loc>
-  <lastmod>2026-07-27</lastmod>
+  <loc>https://princecaleb.dev/ai-voice-agents-for-clinics</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/ai-adoption-ladder</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/book.html</loc>
-  <lastmod>2026-07-27</lastmod>
+  <loc>https://princecaleb.dev/ai-safety</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/testimonials.html</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/marketing-brain</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/contact.html</loc>
-  <lastmod>2026-07-27</lastmod>
+  <loc>https://princecaleb.dev/growth-roadmap</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/about</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/lab</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.5</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/pricing</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/request</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/book</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/testimonials</loc>
+  <lastmod>2026-08-19</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/contact</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.5</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/privacy.html</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/privacy</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.2</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/cookies.html</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/cookies</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.2</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/terms.html</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/terms</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>yearly</changefreq>
   <priority>0.2</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=fintech-ledger-dashboard</loc>
-  <lastmod>2026-07-08</lastmod>
+  <loc>https://princecaleb.dev/systems/fintech-ledger-dashboard</loc>
+  <lastmod>2026-07-28</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=headless-wordpress-storefront</loc>
-  <lastmod>2026-07-08</lastmod>
+  <loc>https://princecaleb.dev/systems/headless-wordpress-storefront</loc>
+  <lastmod>2026-07-28</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=cross-platform-booking-app</loc>
-  <lastmod>2026-07-08</lastmod>
+  <loc>https://princecaleb.dev/systems/cross-platform-booking-app</loc>
+  <lastmod>2026-07-28</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=video-watch</loc>
-  <lastmod>2026-07-06</lastmod>
+  <loc>https://princecaleb.dev/systems/video-watch</loc>
+  <lastmod>2026-08-07</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=ledger-command</loc>
-  <lastmod>2026-07-06</lastmod>
+  <loc>https://princecaleb.dev/systems/ledger-command</loc>
+  <lastmod>2026-08-07</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=church-media-diagnostic-suite</loc>
-  <lastmod>2026-07-06</lastmod>
+  <loc>https://princecaleb.dev/systems/church-media-diagnostic-suite</loc>
+  <lastmod>2026-08-07</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=church-shape-it</loc>
-  <lastmod>2026-07-06</lastmod>
+  <loc>https://princecaleb.dev/systems/church-shape-it</loc>
+  <lastmod>2026-08-07</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=lca-accra-church-website</loc>
-  <lastmod>2026-07-06</lastmod>
+  <loc>https://princecaleb.dev/systems/lca-accra-church-website</loc>
+  <lastmod>2026-08-07</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=simply-my-care</loc>
-  <lastmod>2026-07-08</lastmod>
+  <loc>https://princecaleb.dev/systems/simply-my-care</loc>
+  <lastmod>2026-08-07</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/project.html?slug=benas-hub</loc>
-  <lastmod>2026-07-09</lastmod>
+  <loc>https://princecaleb.dev/systems/benas-hub</loc>
+  <lastmod>2026-08-07</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.7</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=automated-patient-onboarding-clinics-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/systems/opskeep</loc>
+  <lastmod>2026-08-07</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+ </url>
+ <url>
+  <loc>https://princecaleb.dev/archive/automated-patient-onboarding-clinics-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=automating-tenant-onboarding-real-estate-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/automating-tenant-onboarding-real-estate-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=inventory-automation-retail-stores-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/inventory-automation-retail-stores-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=automating-reservations-restaurants-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/automating-reservations-restaurants-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=dispatch-delivery-tracking-system-logistics</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/dispatch-delivery-tracking-system-logistics</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=automating-enrollment-fee-tracking-schools-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/automating-enrollment-fee-tracking-schools-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=client-intake-automation-law-firms-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/client-intake-automation-law-firms-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=automating-loan-applications-microfinance-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/automating-loan-applications-microfinance-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=volunteer-donor-management-system-ngos-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/volunteer-donor-management-system-ngos-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=automating-appointment-booking-salons-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/automating-appointment-booking-salons-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-clinics-health-centers-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/custom-dashboards-clinics-health-centers-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=real-estate-dashboards-listings-leads-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/real-estate-dashboards-listings-leads-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=custom-sales-dashboard-retail-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/custom-sales-dashboard-retail-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-restaurants-sales-inventory-staff</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/custom-dashboards-restaurants-sales-inventory-staff</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=logistics-dashboards-fleet-performance-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/logistics-dashboards-fleet-performance-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-schools-attendance-fees</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/custom-dashboards-schools-attendance-fees</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=case-management-dashboards-law-firms-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/case-management-dashboards-law-firms-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=custom-financial-dashboards-microfinance-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/custom-financial-dashboards-microfinance-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=impact-reporting-dashboards-ngos-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/impact-reporting-dashboards-ngos-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=custom-dashboards-salon-chains-bookings-revenue</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/custom-dashboards-salon-chains-bookings-revenue</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=clinics-accra-need-more-than-template-website</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/clinics-accra-need-more-than-template-website</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=headless-cms-real-estate-listings-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/headless-cms-real-estate-listings-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=migrating-retail-shopify-custom-ecommerce</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/migrating-retail-shopify-custom-ecommerce</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=restaurant-website-that-takes-orders-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/restaurant-website-that-takes-orders-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=cms-ecosystems-logistics-multiple-depots</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/cms-ecosystems-logistics-multiple-depots</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=custom-websites-schools-training-centers-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/custom-websites-schools-training-centers-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=website-migration-without-data-loss-law-firms</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/website-migration-without-data-loss-law-firms</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=compliant-trust-first-website-microfinance</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/compliant-trust-first-website-microfinance</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=wordpress-ecosystems-ngos-grants-stories-donors</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/wordpress-ecosystems-ngos-grants-stories-donors</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=from-instagram-to-real-website-salons-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/from-instagram-to-real-website-salons-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=should-your-clinic-build-patient-app-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/should-your-clinic-build-patient-app-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=property-search-app-real-estate-buyers-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/property-search-app-real-estate-buyers-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=mobile-loyalty-apps-retail-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/mobile-loyalty-apps-retail-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=table-reservation-loyalty-app-restaurants-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/table-reservation-loyalty-app-restaurants-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=delivery-tracking-app-logistics-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/delivery-tracking-app-logistics-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=mobile-apps-schools-parent-communication-fees</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/mobile-apps-schools-parent-communication-fees</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=client-portal-app-law-firms-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/client-portal-app-law-firms-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=mobile-banking-apps-microfinance-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/mobile-banking-apps-microfinance-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=volunteer-coordination-app-ngos-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/volunteer-coordination-app-ngos-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=booking-apps-salons-spas-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/booking-apps-salons-spas-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-chat-assistants-clinics-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-chat-assistants-clinics-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-qualify-real-estate-leads-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-qualify-real-estate-leads-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-product-recommendations-retail-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-product-recommendations-retail-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-restaurants-reservations-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-chatbots-restaurants-reservations-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-predict-delivery-delays-logistics-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-predict-delivery-delays-logistics-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-tutors-chat-support-schools-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-tutors-chat-support-schools-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-assisted-document-review-law-firms-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-assisted-document-review-law-firms-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-chatbots-microfinance-loan-questions</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-chatbots-microfinance-loan-questions</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-match-volunteers-causes-ngos-ghana</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-match-volunteers-causes-ngos-ghana</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=ai-booking-assistants-salons-accra</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/ai-booking-assistants-salons-accra</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=composio-llm-live-chat-gmail-slack-sheets-whatsapp</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/composio-llm-live-chat-gmail-slack-sheets-whatsapp</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
  <url>
-  <loc>https://princecaleb.dev/archive-post.html?slug=three-llms-live-chat-gemini-openrouter-groq</loc>
-  <lastmod>2026-07-10</lastmod>
+  <loc>https://princecaleb.dev/archive/three-llms-live-chat-gemini-openrouter-groq</loc>
+  <lastmod>2026-08-19</lastmod>
   <changefreq>monthly</changefreq>
   <priority>0.6</priority>
  </url>
