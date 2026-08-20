@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, Star } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Star, Rocket, Users, Activity } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { TiltCard } from "@/components/TiltCard";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { FaqAccordion } from "@/components/FaqAccordion";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { ImpactGrid } from "@/components/ImpactGrid";
 
 const SERVICES = [
   {
@@ -76,15 +78,6 @@ const TESTIMONIALS = [
   },
 ];
 
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <p className="text-3xl font-bold tracking-tight">{value}</p>
-      <p className="label mt-1 text-muted">{label}</p>
-    </div>
-  );
-}
-
 // Static fallback — used only if /api/v1/content is unreachable, or before
 // today's row exists yet. Matches the copy database/migrate.php seeds as the
 // hero_eyebrow/hero_title/hero_subtitle Site Content defaults.
@@ -127,6 +120,46 @@ export default async function Home() {
     title: content?.hero_title || FALLBACK_HERO.title,
     subtitle: content?.hero_subtitle || FALLBACK_HERO.subtitle,
   };
+
+  // Apps launched defaults to the real published-project count rather than a
+  // made-up number - stat_1_value in Site Content overrides it if set.
+  // stat_2/stat_3/stat_4 (users served, uptime, client rating) have no
+  // equivalent live source in this app - real approved testimonials would be
+  // the honest source for a rating, but none exist yet (/api/v1/testimonials
+  // returns an empty array locally) - so all three fall back to placeholders
+  // an admin needs to replace with real figures under Admin -> Site Content
+  // before this is trustworthy.
+  const publishedProjects = await api.projects().catch(() => []);
+  const impactStats = [
+    {
+      icon: Rocket,
+      label: content?.stat_1_label || "Apps launched",
+      target: Number(content?.stat_1_value) || publishedProjects.length || 30,
+      suffix: content?.stat_1_suffix ?? "+",
+    },
+    {
+      icon: Users,
+      label: content?.stat_2_label || "Users served",
+      target: Number(content?.stat_2_value) || 5000,
+      suffix: content?.stat_2_suffix ?? "+",
+    },
+    {
+      icon: Activity,
+      label: content?.stat_3_label || "Uptime",
+      target: Number(content?.stat_3_value) || 99.9,
+      suffix: content?.stat_3_suffix ?? "%",
+      decimals: content?.stat_3_value ? 0 : 1,
+    },
+    {
+      icon: Star,
+      label: content?.stat_4_label || "Client rating",
+      target: Number(content?.stat_4_value) || 4.5,
+      prefix: content?.stat_4_prefix ?? "",
+      suffix: content?.stat_4_suffix ?? "/5",
+      // Always one decimal - a rating reads as "4.5", never "5".
+      decimals: 1,
+    },
+  ];
   const faqCount = parseInt(content?.faq_count || "0");
   const faqs = [];
   for (let i = 1; i <= faqCount; i++) {
@@ -193,42 +226,43 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── IMPACT ──────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-y border-hairline bg-bg-2/50 py-20 md:py-28">
+        <ImpactGrid />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-bg-2/60 via-transparent to-bg-2/60" />
+        <div className="relative mx-auto grid max-w-[1400px] grid-cols-2 gap-12 px-6 sm:grid-cols-4 md:px-10">
+          {impactStats.map((stat, i) => (
+            <Reveal key={stat.label} delay={i * 120} className="flex flex-col items-center text-center">
+              <div className="flex items-center justify-center gap-4">
+                <stat.icon
+                  className="h-[clamp(2.25rem,5vw,4rem)] w-[clamp(2.25rem,5vw,4rem)] shrink-0 text-accent"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <p className="text-[clamp(2.25rem,5vw,4rem)] font-extrabold leading-none tracking-tight">
+                  <AnimatedCounter
+                    target={stat.target}
+                    prefix={stat.prefix}
+                    suffix={stat.suffix}
+                    decimals={stat.decimals}
+                  />
+                </p>
+              </div>
+              <p className="label mt-3 text-muted">{stat.label}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
       {/* ── TECH STRIP ──────────────────────────────────────── */}
       <TechStrip />
 
-      {/* ── 01 · THE STUDIO ─────────────────────────────────── */}
-      <section id="about" className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
-        <Reveal>
-          <SectionLabel index="01">The Studio</SectionLabel>
-        </Reveal>
-        <div className="mt-12 grid gap-14 lg:grid-cols-12">
-          <Reveal className="lg:col-span-8" delay={80}>
-            <h2 className="text-[clamp(1.9rem,4.5vw,4rem)] font-bold leading-[1.02] tracking-[-0.025em]">
-              I turn ideas into digital <br className="hidden md:block" />
-              experiences people <span className="italic text-accent">remember.</span>
-            </h2>
-          </Reveal>
-          <Reveal className="lg:col-span-4 lg:pt-3" delay={200}>
-            <p className="text-base leading-relaxed text-text-2">
-              PrinceCaleb combines design, development, AI and strategy to create digital
-              experiences from first concept through launch &mdash; and everything in between.
-            </p>
-            <div className="mt-8 flex gap-10">
-              <Stat value="12+" label="Years" />
-              <Stat value="30+" label="Projects" />
-              <Stat value="98%" label="Satisfaction" />
-            </div>
-          </Reveal>
-        </div>
-
-      </section>
-
-      {/* ── 02 · SERVICES ───────────────────────────────────── */}
+      {/* ── 01 · SERVICES ───────────────────────────────────── */}
       <section id="services" className="border-y border-hairline bg-bg-2/40">
         <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
           <Reveal className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <SectionLabel index="02">Capabilities</SectionLabel>
+              <SectionLabel index="01">Capabilities</SectionLabel>
               <h2 className="mt-6 text-[clamp(2.2rem,5vw,4.5rem)] font-bold tracking-[-0.03em]">
                 What I build
               </h2>
@@ -255,11 +289,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 03 · SELECTED WORK ──────────────────────────────── */}
+      {/* ── 02 · SELECTED WORK ──────────────────────────────── */}
       <section id="work" className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
         <Reveal className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <SectionLabel index="03">Proof, not promises</SectionLabel>
+            <SectionLabel index="02">Proof, not promises</SectionLabel>
             <h2 className="mt-6 text-[clamp(2.2rem,5vw,4.5rem)] font-bold tracking-[-0.03em]">
               See what has already shipped.
             </h2>
@@ -284,11 +318,11 @@ export default async function Home() {
         </Reveal>
       </section>
 
-      {/* ── 04 · PROCESS ────────────────────────────────────── */}
+      {/* ── 03 · PROCESS ────────────────────────────────────── */}
       <section id="lab" className="border-y border-hairline bg-bg-2/40">
         <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
           <Reveal>
-            <SectionLabel index="04">Process</SectionLabel>
+            <SectionLabel index="03">Process</SectionLabel>
             <h2 className="mt-6 max-w-3xl text-[clamp(2.2rem,5vw,4.5rem)] font-bold leading-[1.02] tracking-[-0.03em]">
               From idea to launch.
             </h2>
@@ -312,7 +346,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 05 · AI / FUTURE ────────────────────────────────── */}
+      {/* ── 04 · AI / FUTURE ────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-1/2 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-[160px]" />
@@ -327,7 +361,7 @@ export default async function Home() {
         </div>
         <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-44">
           <Reveal className="mx-auto max-w-4xl text-center">
-            <SectionLabel index="05">The Future</SectionLabel>
+            <SectionLabel index="04">The Future</SectionLabel>
             <h2 className="mt-8 text-[clamp(2.2rem,6vw,5.5rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
               The web is changing.
               <br />
@@ -348,11 +382,11 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 06 · TESTIMONIALS ───────────────────────────────── */}
+      {/* ── 05 · TESTIMONIALS ───────────────────────────────── */}
       <section className="border-t border-hairline">
         <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
           <Reveal>
-            <SectionLabel index="06">Client signals</SectionLabel>
+            <SectionLabel index="05">Client signals</SectionLabel>
             <h2 className="mt-6 text-[clamp(2.2rem,5vw,4.5rem)] font-bold tracking-[-0.03em]">
               What clients say after launch.
             </h2>

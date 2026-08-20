@@ -151,3 +151,52 @@ body {
   .rise, [class*="drift"], [class*="glow"], [class*="marquee"], .agent-breathe { animation: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* Custom round cursor - CustomCursor.tsx toggles this class and only ever
+   does so on pointer:fine (mouse) devices, so cursor:none can't strand
+   anyone on touch. Ring trails the dot slightly via the transform
+   transition below; the dot itself snaps to the pointer with none. */
+html.custom-cursor-active,
+html.custom-cursor-active * {
+  cursor: none !important;
+}
+
+.custom-cursor-dot,
+.custom-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.custom-cursor-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+}
+
+.custom-cursor-ring {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--accent);
+  transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease, transform 0.15s ease-out;
+}
+
+.custom-cursor-ring.is-hovering {
+  width: 52px;
+  height: 52px;
+  background: var(--accent-soft);
+}
+
+.custom-cursor-dot.is-hidden,
+.custom-cursor-ring.is-hidden {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-cursor-ring { transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease; }
+}
