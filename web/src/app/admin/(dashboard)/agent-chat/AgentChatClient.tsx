@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adminApi, asList } from "@/lib/api";
+import { playTts, speakWithBrowser, stopTts, stopBrowserSpeech, stripForSpeech } from "@/lib/tts";
 import {
   Send, Paperclip, X, RotateCcw, Volume2, VolumeX, Flag, Check, Trash2, Mic, MicOff,
 } from "lucide-react";
@@ -222,11 +223,22 @@ export default function AgentChatClient({ settings }: { settings: Record<string,
     }
   };
 
+  // Lisa and Scout both have a dedicated ElevenLabs voice (see
+  // TextToSpeechController::AGENT_VOICE_SETTING); everyone else falls
+  // through straight to the browser's own speechSynthesis, same as legacy
+  // admin-agent-chat.js.
   const speak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-  }, []);
+    const spoken = stripForSpeech(text);
+    if (!spoken) return;
+    stopTts();
+    stopBrowserSpeech();
+    const fallback = () => speakWithBrowser(spoken, { gender: "auto", accent: "auto", rate: 1, pitch: 1 });
+    if (active === "lisa" || active === "scout") {
+      playTts(spoken, {}, active).catch(fallback);
+      return;
+    }
+    fallback();
+  }, [active]);
 
   const loadBeaconLeads = useCallback(async () => {
     try {
