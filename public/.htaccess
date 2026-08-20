@@ -53,10 +53,26 @@
   Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.paystack.co https://accounts.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' https://api.github.com https://accounts.google.com https://api.paystack.co https://standard.paystack.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://api.liveavatar.com wss://api.liveavatar.com https://*.livekit.cloud wss://*.livekit.cloud; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://accounts.google.com https://checkout.paystack.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
 </IfModule>
 
-# No DirectoryIndex on purpose. The .html pages are gone and "/" belongs to
-# the Next app: naming an index file here would make "/" resolve to a real
-# file again, and OpenLiteSpeed serves real files before it hands anything
-# to Node, which is exactly how the old homepage kept winning.
+# No directory listings, ever. This became load-bearing the moment the
+# .html pages went: with no index file at the web root, LiteSpeed fell
+# back to its autoindex and served a browsable listing of public_html at
+# "/" - every folder name, every stray file, to anyone who asked.
+Options -Indexes
+
+# Files that live in the web root but are not public documents. error_log
+# is already denied by the host; _phptest.php is a leftover probe that
+# answers 200 and has no reason to be reachable.
+<FilesMatch "^(error_log|_phptest\.php)$">
+  Require all denied
+</FilesMatch>
+
+# "/" belongs to the Next app, so nothing here may resolve it to a local
+# file. Simply dropping the old `DirectoryIndex home.html` was not enough:
+# the server then falls back to its *default* index list, finds index.php
+# (the API router) and hands "/" to PHP, which answers a bare 404 because
+# it has no route for it. `disabled` turns the lookup off outright, so "/"
+# matches nothing locally and reaches Node.
+DirectoryIndex disabled
 
 RewriteEngine On
 
