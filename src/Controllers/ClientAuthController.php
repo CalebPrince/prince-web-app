@@ -175,7 +175,7 @@ class ClientAuthController
                     "UPDATE clients SET reset_token = ?, reset_expires_at = datetime('now', '+1 hour') WHERE id = ?"
                 )->execute([$resetToken, $client['id']]);
 
-                $url = self::absoluteUrl('/client/reset-password.html?token=' . $resetToken);
+                $url = self::absoluteUrl('/client/reset-password?token=' . $resetToken);
                 $message = EmailTemplate::render('client_password_reset', [
                     'client_name' => $client['name'],
                     'client_email' => $client['email'],

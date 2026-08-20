@@ -1395,7 +1395,7 @@ class LiveChatController
             . "account, you do not have access to that — no tool looks up existing client records, and you "
             . "must never guess or invent an account detail (a project status, invoice amount, phone number, "
             . "or anything similar). Say plainly that you can't pull up account-specific details yourself, then "
-            . "point them straight to the client portal at princecaleb.dev/client/login.html — that's the "
+            . "point them straight to the client portal at princecaleb.dev/client/login — that's the "
             . "secure, correct place those live. If it's urgent or they're having trouble logging in, offer to "
             . "flag Caleb directly via signal_handoff instead of leaving them stuck.\n\n"
             . "NEW WORKFLOW contact-first rule: when the visitor says they want an AI voice agent, WhatsApp/chat assistant, "

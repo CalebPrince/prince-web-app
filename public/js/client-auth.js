@@ -2,7 +2,7 @@ async function requireClientAuth() {
   try {
     return await clientApi.get("/api/v1/client/me");
   } catch (_) {
-    window.location.href = "/client/login.html";
+    window.location.href = "/client/login";
     return null;
   }
 }
@@ -13,6 +13,6 @@ function wireClientLogout() {
   link.addEventListener("click", async (e) => {
     e.preventDefault();
     await clientApi.post("/api/v1/client/auth/logout");
-    window.location.href = "/client/login.html";
+    window.location.href = "/client/login";
   });
 }

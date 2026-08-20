@@ -43,6 +43,14 @@ const RETIRED_HTML_PAGES: Record<string, string> = {
   terms: "/terms",
   testimonial: "/testimonial",
   testimonials: "/testimonials",
+  // Client portal. Invite and reset links carry a ?token=, which Next passes
+  // through to the destination automatically, so an invite sent before the
+  // cutover still completes setup instead of dead-ending.
+  "client/dashboard": "/client/dashboard",
+  "client/forgot-password": "/client/forgot-password",
+  "client/login": "/client/login",
+  "client/reset-password": "/client/reset-password",
+  "client/setup": "/client/setup",
 };
 
 /**
