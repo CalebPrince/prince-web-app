@@ -29,6 +29,16 @@ use App\Support\AiText;
 class ArchSiteBuilder
 {
     /**
+     * Gallery photography, under public/. Each generated site gets its own copy
+     * in <site>/images/ rather than a link back here, because the folder has to
+     * stay self-contained (see the note above) for a downloaded .zip to work on
+     * the client's host. These were hotlinked from Unsplash until the CSP in
+     * public/.htaccess, which the same-origin preview at /generated-sites/{slug}/
+     * inherits, started blocking them and left every gallery empty.
+     */
+    private const STOCK_DIR = 'img/arch-stock';
+
+    /**
      * Ask the AI fallback chain for on-brand copy as JSON. Returns a content
      * array (always with a '_provider' key) — falls back to brief-derived copy
      * if the model is unreachable or returns unparseable output.
@@ -189,6 +199,7 @@ class ArchSiteBuilder
 
     public static function writeStaticSite(string $dir, string $slug, array $brief, array $content): void
     {
+        self::copyStockImages($dir, $brief);
         $html = self::buildPageHtml($brief, $content, false);
         file_put_contents($dir . '/index.html', $html);
         file_put_contents($dir . '/contact.php', self::buildContactHandler($brief));
@@ -199,6 +210,8 @@ class ArchSiteBuilder
 
     public static function writeCmsSite(string $dir, string $slug, array $brief, array $content, string $adminHash): void
     {
+        self::copyStockImages($dir, $brief);
+
         // Per-site SQLite holding the editable content, seeded from $content.
         $dbFile = $dir . '/content.sqlite';
         self::seedCmsDatabase($dbFile, $brief, $content, $adminHash);
@@ -277,7 +290,7 @@ class ArchSiteBuilder
         $isChurch = $profile['kind'] === 'church';
         $wantsLive = $isChurch && (str_contains($pageText, 'hook up') || str_contains($pageText, 'live') || str_contains($featureText, 'live') || str_contains($goalText, 'live'));
         $wantsSermons = $isChurch && (str_contains($pageText, 'sermon') || str_contains($pageText, 'archive') || str_contains($featureText, 'sermon') || str_contains($goalText, 'sermon'));
-        $wantsGallery = in_array('gallery', $pages, true) || str_contains($featureText, 'gallery');
+        $wantsGallery = self::wantsGallery($brief);
         $wantsAbout = $pages === [] || in_array('about', $pages, true);
         $wantsServices = $pages === [] || in_array('services', $pages, true);
         $wantsContact = $pages === [] || in_array('contact', $pages, true) || str_contains($featureText, 'contact');
@@ -385,7 +398,7 @@ class ArchSiteBuilder
                 . "    <h2 class=\"section-title text-center reveal\">Gallery</h2>\n"
                 . "    <div class=\"row g-3 mt-2\">\n";
             foreach ($profile['images'] as $i => $image) {
-                $body .= "      <div class=\"" . ($i === 0 ? 'col-12 col-md-7' : 'col-6 col-md') . " reveal\"><img class=\"gallery-tile\" src=\"" . self::e($image) . "\" alt=\"" . self::e($profile['image_alt']) . "\" loading=\"lazy\"></div>\n";
+                $body .= "      <div class=\"" . ($i === 0 ? 'col-12 col-md-7' : 'col-6 col-md') . " reveal\"><img class=\"gallery-tile\" src=\"" . self::e(self::galleryUrl($image)) . "\" alt=\"" . self::e($profile['image_alt']) . "\" loading=\"lazy\"></div>\n";
             }
             $body .= "    </div>\n    <p class=\"text-center text-body-secondary small mt-3\">Curated concept imagery — replace with your own photography before launch.</p>\n  </div>\n</section>\n";
         }
@@ -870,49 +883,49 @@ PHP;
                 'note_label' => 'Your next step', 'note_value' => 'Care starts here', 'radius' => '10px',
                 'about_detail' => 'Clear information and an easy next step help every visitor feel informed before they get in touch.',
                 'process' => [['Explore', 'Find the care or support that fits your needs.'], ['Connect', 'Ask a question or choose a convenient time.'], ['Continue', 'Move forward with a clear, human next step.']],
-                'images' => ['https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=900&q=80'],
+                'images' => ['clinical-1.webp', 'clinical-2.webp', 'clinical-3.webp'],
             ],
             'food' => [
                 'layout' => 'immersive', 'eyebrow' => 'Made to be remembered', 'image_alt' => 'A welcoming dining experience',
                 'note_label' => 'Made for', 'note_value' => 'Good moments', 'radius' => '2px',
                 'about_detail' => 'Atmosphere, appetite and a direct path to booking or ordering work together from the first screen.',
                 'process' => [['Discover', 'See the flavours and experiences waiting for you.'], ['Choose', 'Find the option that suits the moment.'], ['Enjoy', 'Reserve, order or visit with confidence.']],
-                'images' => ['https://images.unsplash.com/photo-1517248135467-4c7edcad34c5?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80'],
+                'images' => ['food-1.webp', 'food-2.webp', 'food-3.webp'],
             ],
             'property' => [
                 'layout' => 'structured', 'eyebrow' => 'Space for what comes next', 'image_alt' => 'Contemporary property exterior',
                 'note_label' => 'Built around', 'note_value' => 'Your priorities', 'radius' => '0px',
                 'about_detail' => 'Strong imagery, useful details and decisive calls to action make complex choices easier to navigate.',
                 'process' => [['Browse', 'Explore the options aligned with your priorities.'], ['Compare', 'Get the details needed to make a sound decision.'], ['Enquire', 'Speak with the right person and take the next step.']],
-                'images' => ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=80'],
+                'images' => ['property-1.webp', 'property-2.webp', 'property-3.webp'],
             ],
             'beauty' => [
                 'layout' => 'editorial', 'eyebrow' => 'Your time, beautifully spent', 'image_alt' => 'A refined beauty and wellness setting',
                 'note_label' => 'The experience', 'note_value' => 'Personal by design', 'radius' => '999px',
                 'about_detail' => 'An editorial rhythm and tactile imagery create a premium first impression without making the journey feel complicated.',
                 'process' => [['Select', 'Choose the experience that feels right for you.'], ['Book', 'Pick a convenient time in just a few steps.'], ['Arrive', 'Come in knowing everything is taken care of.']],
-                'images' => ['https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=900&q=80'],
+                'images' => ['beauty-1.webp', 'beauty-2.webp', 'beauty-3.webp'],
             ],
             'hospitality' => [
                 'layout' => 'immersive', 'eyebrow' => 'Stay somewhere memorable', 'image_alt' => 'A welcoming hospitality destination',
                 'note_label' => 'Come for', 'note_value' => 'A better stay', 'radius' => '4px',
                 'about_detail' => 'Immersive imagery carries the mood while practical details keep the path to an enquiry or reservation simple.',
                 'process' => [['Imagine', 'Explore the setting and picture your time here.'], ['Plan', 'Find the experience that matches your trip.'], ['Reserve', 'Reach out or book your stay with confidence.']],
-                'images' => ['https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80'],
+                'images' => ['hospitality-1.webp', 'hospitality-2.webp', 'hospitality-3.webp'],
             ],
             'professional' => [
                 'layout' => 'editorial', 'eyebrow' => 'Judgement you can rely on', 'image_alt' => 'A focused professional team at work',
                 'note_label' => 'The standard', 'note_value' => 'Clear and considered', 'radius' => '3px',
                 'about_detail' => 'An authoritative editorial layout builds confidence through restraint, clarity and visible next steps.',
                 'process' => [['Understand', 'Start with the challenge and the outcome you need.'], ['Advise', 'Get a clear recommendation shaped around your situation.'], ['Act', 'Move forward with an agreed plan and next step.']],
-                'images' => ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=80'],
+                'images' => ['professional-1.webp', 'professional-2.webp', 'professional-3.webp'],
             ],
             'studio' => [
                 'layout' => 'editorial', 'eyebrow' => 'Built around your next move', 'image_alt' => 'A creative team shaping new ideas',
                 'note_label' => 'Made to', 'note_value' => 'Turn interest into action', 'radius' => '14px',
                 'about_detail' => 'A distinctive visual system and a focused customer journey give the business a stronger digital first impression.',
                 'process' => [['Discover', 'Understand what is available and why it matters.'], ['Decide', 'Find the right fit without unnecessary friction.'], ['Connect', 'Take the primary next step with confidence.']],
-                'images' => ['https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1400&q=82', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80', 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=900&q=80'],
+                'images' => ['studio-1.webp', 'studio-2.webp', 'studio-3.webp'],
             ],
         ];
         return ['kind' => $kind] + $profiles[$kind];
@@ -1133,6 +1146,52 @@ PHP;
             }
         }
         return 'bi-globe';
+    }
+
+    /** Whether the brief asks for a gallery section, and so for its images. */
+    private static function wantsGallery(array $brief): bool
+    {
+        $pages = array_map('strtolower', Arch::toList($brief['pages'] ?? []));
+        $features = array_map('strtolower', Arch::toList($brief['features'] ?? []));
+
+        return in_array('gallery', $pages, true)
+            || str_contains(strtolower(implode(' ', $features)), 'gallery');
+    }
+
+    /** How a generated page addresses one of its own gallery images. */
+    private static function galleryUrl(string $image): string
+    {
+        return str_starts_with($image, 'data:') ? $image : 'images/' . $image;
+    }
+
+    /**
+     * Copies this brief's gallery photos into <site>/images/. Skipped when the
+     * brief wants no gallery, and inline entries (the church profile ships an
+     * SVG data: URI) need no file. A failed copy costs one broken tile, so it
+     * must never abort the build.
+     */
+    private static function copyStockImages(string $dir, array $brief): void
+    {
+        if (!self::wantsGallery($brief)) {
+            return;
+        }
+        $images = array_filter(
+            self::designProfile($brief)['images'],
+            static fn (string $image): bool => !str_starts_with($image, 'data:')
+        );
+        if ($images === []) {
+            return;
+        }
+        $target = $dir . '/images';
+        if (!is_dir($target) && !@mkdir($target, 0755, true) && !is_dir($target)) {
+            return;
+        }
+        $source = dirname(__DIR__, 2) . '/public/' . self::STOCK_DIR . '/';
+        foreach ($images as $image) {
+            if (is_file($source . $image)) {
+                @copy($source . $image, $target . '/' . $image);
+            }
+        }
     }
 
     private static function siteHtaccess(): string

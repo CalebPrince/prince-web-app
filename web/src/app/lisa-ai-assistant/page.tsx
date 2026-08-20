@@ -31,9 +31,6 @@ import { LisaVideoAgent } from "@/components/LisaVideoAgent";
 // fetched from /api/v1/content. Everything else here (situations,
 // connections, control) is fixed marketing copy, same as the legacy page.
 
-const PRESENTER =
-  "https://images.unsplash.com/photo-1785676375041-31b0882f3189?w=1000&h=1300&fit=crop&auto=format";
-
 const CHANNELS: { icon: LucideIcon; label: string }[] = [
   { icon: Phone, label: "Phone" },
   { icon: MessageCircle, label: "WhatsApp" },
