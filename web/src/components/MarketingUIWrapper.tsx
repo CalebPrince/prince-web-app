@@ -5,6 +5,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ChatWidget } from "@/components/ChatWidget";
 import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
+import { CustomCursor } from "@/components/CustomCursor";
 
 export function MarketingUIWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,6 +17,7 @@ export function MarketingUIWrapper({ children }: { children: React.ReactNode }) 
 
   return (
     <>
+      <CustomCursor />
       <SiteNav />
       {children}
       <SiteFooter />
