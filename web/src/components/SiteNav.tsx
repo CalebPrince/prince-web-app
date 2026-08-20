@@ -107,18 +107,26 @@ export function SiteNav() {
             <X className="size-5" />
           </button>
         </div>
-        <nav className="flex min-h-0 flex-1 flex-col justify-center gap-2 overflow-y-auto px-6 py-4">
-          {NAV.map((item, i) => (
-            <Link
-              key={item.label}
-              href={item.to}
-              onClick={() => setMenuOpen(false)}
-              className="shrink-0 border-b border-hairline py-5 text-center text-4xl font-semibold tracking-tight text-text"
-              style={{ transitionDelay: `${i * 40}ms` }}
-            >
-              {item.label}
-            </Link>
-          ))}
+        {/* The links are centred with `m-auto` on the inner wrapper rather than
+            `justify-center` on the scroller: flexbox resolves auto margins to 0
+            once free space goes negative, so a list too tall for the drawer
+            starts flush at the top and scrolls. `justify-center` keeps centring
+            past that point, pushing the first item above scrollTop 0 where it
+            can never be scrolled back into view. */}
+        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-4">
+          <div className="m-auto flex w-full flex-col gap-2">
+            {NAV.map((item, i) => (
+              <Link
+                key={item.label}
+                href={item.to}
+                onClick={() => setMenuOpen(false)}
+                className="shrink-0 border-b border-hairline py-5 text-center text-4xl font-semibold tracking-tight text-text"
+                style={{ transitionDelay: `${i * 40}ms` }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </nav>
         <div
           className="shrink-0 border-t border-hairline p-6"
