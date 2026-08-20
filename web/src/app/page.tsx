@@ -141,7 +141,7 @@ export default async function Home() {
       <section id="top" className="relative flex min-h-screen flex-col overflow-hidden">
         <div className="absolute inset-0 -z-10">
           <img
-            src="https://images.unsplash.com/photo-1622737133809-d95047b9e673?w=2200&h=1400&fit=crop&auto=format"
+            src="/img/backgrounds/hero-abstract-3d.webp"
             alt="Abstract cinematic 3D digital environment with glowing objects"
             className="h-full w-full object-cover [animation:drift_16s_ease-in-out_infinite]"
           />
@@ -414,7 +414,7 @@ export default async function Home() {
       <section id="contact" className="relative overflow-hidden border-t border-hairline">
         <div className="absolute inset-0 -z-10">
           <img
-            src="https://images.unsplash.com/photo-1709377195538-5522ed0f9e10?w=2000&h=1200&fit=crop&auto=format"
+            src="/img/backgrounds/cta-abstract-dark.webp"
             alt="Cinematic dark abstract environment"
             className="h-full w-full object-cover opacity-40 [animation:drift_22s_ease-in-out_infinite]"
           />

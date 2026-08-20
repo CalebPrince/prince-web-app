@@ -45,12 +45,12 @@
   # script/style/font-src — browsers fetch a vendored file's .map sidecar
   # (its own connect, separate from the script/style load) whenever DevTools
   # is open, and that was getting silently blocked without it.
-  # images.unsplash.com serves the Next.js hero/CTA background photos (see
-  # web/src/app/page.tsx and web/src/app/lisa-ai-assistant/page.tsx). The
-  # PHP pages ship their own images, so img-src stayed at 'self' data: until
-  # the Next rebuild; without this the heroes render as bare gradient with
-  # no console error visible to anyone not watching for CSP violations.
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.paystack.co https://accounts.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https://images.unsplash.com; media-src 'self' blob:; connect-src 'self' https://api.github.com https://accounts.google.com https://api.paystack.co https://standard.paystack.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://api.liveavatar.com wss://api.liveavatar.com https://*.livekit.cloud wss://*.livekit.cloud; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://accounts.google.com https://checkout.paystack.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+  # img-src deliberately has no external origin. The Next.js heroes briefly
+  # needed one when they hotlinked Unsplash; those three photos now live in
+  # web/public/img/backgrounds/ and load from 'self'. Note this does block
+  # the Unsplash images in Architect-generated prototypes, which are served
+  # same-origin from /generated-sites/{slug}/ and so inherit this policy.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.paystack.co https://accounts.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; media-src 'self' blob:; connect-src 'self' https://api.github.com https://accounts.google.com https://api.paystack.co https://standard.paystack.co https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com https://api.liveavatar.com wss://api.liveavatar.com https://*.livekit.cloud wss://*.livekit.cloud; frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://accounts.google.com https://checkout.paystack.com; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
 </IfModule>
 
 # home.html carries the real page (nav, hero, everything) plus its own
