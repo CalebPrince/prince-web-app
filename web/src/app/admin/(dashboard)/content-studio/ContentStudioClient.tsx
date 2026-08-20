@@ -43,6 +43,7 @@ function StudioItemCard({
   const [isEditing, setIsEditing] = useState(false);
   const [body, setBody] = useState(item.body ?? "");
   const [title, setTitle] = useState(item.title ?? "");
+  const [excerpt, setExcerpt] = useState(item.excerpt ?? "");
   const [hashtags, setHashtags] = useState(item.hashtags ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
@@ -57,6 +58,7 @@ function StudioItemCard({
       await onUpdate(item.id, {
         title: item.kind === "blog" ? title : undefined,
         body,
+        excerpt: item.kind !== "flyer" ? excerpt : undefined,
         hashtags: item.kind !== "blog" ? hashtags : undefined,
       });
       setIsEditing(false);
@@ -157,6 +159,22 @@ function StudioItemCard({
             <p className="text-sm text-text-2 whitespace-pre-wrap line-clamp-4">
               {item.body ?? <span className="italic text-text-3">No caption yet — click Edit to add one.</span>}
             </p>
+          )}
+
+          {item.kind !== "flyer" && (
+            isEditing ? (
+              <textarea
+                value={excerpt}
+                onChange={e => setExcerpt(e.target.value)}
+                rows={2}
+                className="w-full bg-bg-2 border border-hairline rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent font-sans"
+                placeholder={item.kind === "blog" ? "Excerpt — required before this can be sent to the Blog" : "Short variant (optional, used as the post's short_content)"}
+              />
+            ) : (
+              item.excerpt && (
+                <p className="text-xs text-text-3 italic">{item.excerpt}</p>
+              )
+            )
           )}
 
           {item.kind !== "blog" && (
