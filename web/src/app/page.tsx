@@ -1,4 +1,5 @@
 import { ArrowRight, ArrowUpRight, Star } from "lucide-react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { FeaturedSystems } from "@/components/FeaturedSystems";
@@ -7,6 +8,7 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { TechStrip } from "@/components/TechStrip";
 import { VoiceDemo } from "@/components/VoiceDemo";
 import { HeroOrbs } from "@/components/HeroOrbs";
+import { TiltCard } from "@/components/TiltCard";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { FaqAccordion } from "@/components/FaqAccordion";
@@ -83,8 +85,48 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
+// Static fallback — used only if /api/v1/content is unreachable, or before
+// today's row exists yet. Matches the copy database/migrate.php seeds as the
+// hero_eyebrow/hero_title/hero_subtitle Site Content defaults.
+const FALLBACK_HERO = {
+  eyebrow: "Digital Design • Development • AI",
+  title: "Digital experiences, built to **perform**.",
+  subtitle:
+    "I design and build high-performance websites, digital products and AI-powered experiences that help ambitious businesses move forward.",
+};
+
+// database/generate_daily_headline.php writes one AI-generated
+// eyebrow/title/subtitle set per day; SettingsController::publicContent()
+// overrides the static hero_* Site Content values with today's row when
+// present. Revalidating hourly means a fresh headline (written once daily,
+// around 04:00, by cron) shows up without a redeploy.
+export const revalidate = 3600;
+
+// Renders a hero_title's single `**phrase**` marker (see
+// generate_daily_headline.php's prompt) as the same accent-colored span the
+// static fallback copy uses.
+function renderHeroTitle(title: string): ReactNode {
+  const match = title.match(/\*\*([^*]+)\*\*/);
+  if (!match) return title;
+  const start = match.index ?? 0;
+  const before = title.slice(0, start);
+  const after = title.slice(start + match[0].length);
+  return (
+    <>
+      {before}
+      <span className="text-accent">{match[1]}</span>
+      {after}
+    </>
+  );
+}
+
 export default async function Home() {
   const content = await api.content().catch(() => null);
+  const hero = {
+    eyebrow: content?.hero_eyebrow || FALLBACK_HERO.eyebrow,
+    title: content?.hero_title || FALLBACK_HERO.title,
+    subtitle: content?.hero_subtitle || FALLBACK_HERO.subtitle,
+  };
   const faqCount = parseInt(content?.faq_count || "0");
   const faqs = [];
   for (let i = 1; i <= faqCount; i++) {
@@ -111,29 +153,19 @@ export default async function Home() {
         <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-16 pt-32 md:px-10 lg:grid-cols-2 lg:gap-8">
           <div className="max-w-3xl">
             <p className="rise label mb-8 text-text-2" style={{ animationDelay: "0.1s" }}>
-              Digital Design <span className="text-accent">&bull;</span> Development{" "}
-              <span className="text-accent">&bull;</span> AI
+              {hero.eyebrow}
             </p>
             <h1
               className="rise text-[clamp(2.2rem,6vw,5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]"
               style={{ animationDelay: "0.2s" }}
             >
-              {content?.htext ? (
-                <span dangerouslySetInnerHTML={{ __html: content.htext }} />
-              ) : (
-                <>
-                  Digital experiences,
-                  <br />
-                  <span className="text-text-2">built to</span> <span className="text-accent">perform.</span>
-                </>
-              )}
+              {renderHeroTitle(hero.title)}
             </h1>
             <p
               className="rise mt-8 max-w-xl text-lg leading-relaxed text-text-2 md:text-xl"
               style={{ animationDelay: "0.35s" }}
             >
-              I design and build high-performance websites, digital products and AI-powered
-              experiences that help ambitious businesses move forward.
+              {hero.subtitle}
             </p>
             <div className="rise mt-10 flex flex-col gap-4 sm:flex-row" style={{ animationDelay: "0.5s" }}>
               <Link href="#work" className={cn(buttonVariants({ size: "lg" }), "group")}>
@@ -325,31 +357,26 @@ export default async function Home() {
 
           <div className="mt-16 grid gap-6 md:grid-cols-3">
             {TESTIMONIALS.map((t, i) => (
-              <Reveal
-                key={t.name}
-                delay={i * 90}
-                className={cn(
-                  "flex flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-8 transition-colors hover:border-accent/30",
-                  i === 1 && "md:mt-10",
-                )}
-              >
-                <div>
-                  <div className="flex gap-0.5 text-accent">
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <Star key={s} className="size-4 fill-current" aria-hidden="true" />
-                    ))}
+              <Reveal key={t.name} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
+                <TiltCard className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-8 transition-colors hover:border-accent/30">
+                  <div>
+                    <div className="flex gap-0.5 text-accent">
+                      {Array.from({ length: 5 }).map((_, s) => (
+                        <Star key={s} className="size-4 fill-current" aria-hidden="true" />
+                      ))}
+                    </div>
+                    <p className="mt-5 text-lg leading-relaxed text-text">
+                      <span className="mr-1 text-3xl leading-none text-accent">&ldquo;</span>
+                      {t.quote}
+                    </p>
                   </div>
-                  <p className="mt-5 text-lg leading-relaxed text-text">
-                    <span className="mr-1 text-3xl leading-none text-accent">&ldquo;</span>
-                    {t.quote}
-                  </p>
-                </div>
-                <div className="mt-10 border-t border-hairline pt-6">
-                  <p className="font-semibold text-text">{t.name}</p>
-                  <p className="label mt-1 text-muted">
-                    {t.role} &bull; {t.company}
-                  </p>
-                </div>
+                  <div className="mt-10 border-t border-hairline pt-6">
+                    <p className="font-semibold text-text">{t.name}</p>
+                    <p className="label mt-1 text-muted">
+                      {t.role} &bull; {t.company}
+                    </p>
+                  </div>
+                </TiltCard>
               </Reveal>
             ))}
           </div>

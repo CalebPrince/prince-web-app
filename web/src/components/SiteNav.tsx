@@ -61,7 +61,7 @@ export function SiteNav() {
               <Link
                 key={item.label}
                 href={item.to}
-                className="label text-text-2 transition-colors hover:text-text"
+                className="label inline-block origin-bottom text-text-2 transition-[color,transform] duration-300 ease-out hover:[transform:perspective(400px)_translateY(-2px)_rotateX(10deg)] hover:text-text motion-reduce:transition-none motion-reduce:hover:[transform:none]"
               >
                 {item.label}
               </Link>

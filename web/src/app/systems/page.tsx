@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Star } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
+import { TiltCard } from "@/components/TiltCard";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getSystems, categoriesOf, type SystemView } from "@/lib/systems";
@@ -122,7 +123,8 @@ export default function Systems() {
           {shown.map((p, i) => (
             <Reveal key={p.slug} className={p.span} delay={(i % 2) * 100}>
               <Link href={`/systems/${p.slug}`} className="group block">
-                <div
+                <TiltCard
+                  maxTilt={5}
                   className={cn(
                     "relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2",
                     p.ratio,
@@ -144,7 +146,7 @@ export default function Systems() {
                   <div className="absolute right-5 top-5 flex size-11 items-center justify-center rounded-full border border-text/20 bg-bg/40 opacity-0 backdrop-blur-md transition-all duration-500 group-hover:opacity-100">
                     <ArrowUpRight className="size-5 text-text" />
                   </div>
-                </div>
+                </TiltCard>
                 <div className="mt-6">
                   <div className="flex items-center gap-3">
                     <span className="label text-accent">{p.category}</span>
@@ -171,29 +173,24 @@ export default function Systems() {
 
           <div className="mt-16 grid gap-6 md:grid-cols-3">
             {SIGNALS.map((t, i) => (
-              <Reveal
-                key={t.name}
-                delay={i * 90}
-                className={cn(
-                  "flex flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 transition-colors hover:border-accent/30",
-                  i === 1 && "md:mt-10",
-                )}
-              >
-                <div>
-                  <div className="flex gap-0.5 text-accent">
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <Star key={s} className="size-4 fill-current" aria-hidden="true" />
-                    ))}
+              <Reveal key={t.name} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
+                <TiltCard className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 transition-colors hover:border-accent/30">
+                  <div>
+                    <div className="flex gap-0.5 text-accent">
+                      {Array.from({ length: 5 }).map((_, s) => (
+                        <Star key={s} className="size-4 fill-current" aria-hidden="true" />
+                      ))}
+                    </div>
+                    <p className="mt-5 text-lg leading-relaxed text-text">
+                      <span className="mr-1 text-3xl leading-none text-accent">&ldquo;</span>
+                      {t.quote}
+                    </p>
                   </div>
-                  <p className="mt-5 text-lg leading-relaxed text-text">
-                    <span className="mr-1 text-3xl leading-none text-accent">&ldquo;</span>
-                    {t.quote}
-                  </p>
-                </div>
-                <div className="mt-10 border-t border-hairline pt-6">
-                  <p className="font-semibold text-text">{t.name}</p>
-                  <p className="label mt-1 text-muted">{t.role}</p>
-                </div>
+                  <div className="mt-10 border-t border-hairline pt-6">
+                    <p className="font-semibold text-text">{t.name}</p>
+                    <p className="label mt-1 text-muted">{t.role}</p>
+                  </div>
+                </TiltCard>
               </Reveal>
             ))}
           </div>

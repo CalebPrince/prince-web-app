@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
+import { TiltCard } from "@/components/TiltCard";
 import { cn } from "@/lib/utils";
 import { getFeaturedSystems, type SystemView } from "@/lib/systems";
 
@@ -56,7 +57,8 @@ export function FeaturedSystems() {
         return (
           <Reveal key={p.slug} className={layout.span} delay={(i % 2) * 100}>
             <Link href={`/systems/${p.slug}`} className="group block">
-              <div
+              <TiltCard
+                maxTilt={5}
                 className={cn(
                   "relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2",
                   layout.ratio,
@@ -78,7 +80,7 @@ export function FeaturedSystems() {
                 <div className="absolute right-5 top-5 flex size-11 items-center justify-center rounded-full border border-text/20 bg-bg/40 opacity-0 backdrop-blur-md transition-all duration-500 group-hover:opacity-100">
                   <ArrowUpRight className="size-5 text-text" />
                 </div>
-              </div>
+              </TiltCard>
               <div className="mt-6 flex items-start justify-between gap-6">
                 <div>
                   <div className="flex items-center gap-3">
