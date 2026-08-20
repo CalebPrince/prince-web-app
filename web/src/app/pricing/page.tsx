@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
+import { TiltCard } from "@/components/TiltCard";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
@@ -154,55 +155,56 @@ export default async function Pricing() {
         </Reveal>
         <div className="grid gap-6 lg:grid-cols-3">
           {tiers.map((t, i) => (
-            <Reveal
-              key={t.name}
-              delay={i * 90}
-              className={cn(
-                "relative flex flex-col rounded-[var(--radius)] border p-8 transition-colors md:p-10",
-                t.featured
-                  ? "border-accent/50 bg-accent/[0.04]"
-                  : "border-hairline bg-bg-2/50 hover:border-hairline-strong",
-              )}
-            >
-              {t.featured && (
-                <span className="absolute -top-3 left-8 rounded-full border border-accent/50 bg-bg px-3 py-1 text-[0.65rem] font-medium text-accent glow-green">
-                  Most requested
-                </span>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="label text-accent">[{t.tag}]</span>
-                <span className="label text-muted">{t.outcome.split(" ").slice(0, 3).join(" ")}…</span>
-              </div>
-              <h2 className="mt-6 text-2xl font-bold tracking-tight md:text-3xl">{t.name}</h2>
-              <p className="mt-3 text-text-2">{t.blurb}</p>
-
-              <div className="mt-8 border-t border-hairline pt-6">
-                <span className="label text-muted">Implementation from</span>
-                <p className="mt-1 text-[clamp(1.8rem,3vw,2.6rem)] font-extrabold tracking-[-0.03em]">
-                  {t.from}
-                </p>
-                <span className="label text-muted">one-time · usage billed separately</span>
-              </div>
-
-              <ul className="mt-8 flex-1 space-y-3">
-                {t.features.map((f) => (
-                  <li key={f} className="flex gap-3 text-text-2">
-                    <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/book"
+            <Reveal key={t.name} delay={i * 90}>
+              <TiltCard
+                maxTilt={5}
                 className={cn(
-                  buttonVariants({ variant: t.featured ? "primary" : "secondary", size: "lg" }),
-                  "group mt-8 w-full",
+                  "relative flex h-full flex-col rounded-[var(--radius)] border p-8 transition-colors md:p-10",
+                  t.featured
+                    ? "border-accent/50 bg-accent/[0.04]"
+                    : "border-hairline bg-bg-2/50 hover:border-hairline-strong",
                 )}
               >
-                Get a quote
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+                {t.featured && (
+                  <span className="absolute -top-3 left-8 rounded-full border border-accent/50 bg-bg px-3 py-1 text-[0.65rem] font-medium text-accent glow-green">
+                    Most requested
+                  </span>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="label text-accent">[{t.tag}]</span>
+                  <span className="label text-muted">{t.outcome.split(" ").slice(0, 3).join(" ")}…</span>
+                </div>
+                <h2 className="mt-6 text-2xl font-bold tracking-tight md:text-3xl">{t.name}</h2>
+                <p className="mt-3 text-text-2">{t.blurb}</p>
+
+                <div className="mt-8 border-t border-hairline pt-6">
+                  <span className="label text-muted">Implementation from</span>
+                  <p className="mt-1 text-[clamp(1.8rem,3vw,2.6rem)] font-extrabold tracking-[-0.03em]">
+                    {t.from}
+                  </p>
+                  <span className="label text-muted">one-time · usage billed separately</span>
+                </div>
+
+                <ul className="mt-8 flex-1 space-y-3">
+                  {t.features.map((f) => (
+                    <li key={f} className="flex gap-3 text-text-2">
+                      <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/book"
+                  className={cn(
+                    buttonVariants({ variant: t.featured ? "primary" : "secondary", size: "lg" }),
+                    "group mt-8 w-full",
+                  )}
+                >
+                  Get a quote
+                  <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+              </TiltCard>
             </Reveal>
           ))}
         </div>

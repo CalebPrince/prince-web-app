@@ -34,7 +34,8 @@ const SOCIAL: { label: string; href: string; icon: IconType }[] = [
   { label: "Twitter", href: "https://x.com", icon: FaXTwitter },
 ];
 
-const LINK_CLASS = "text-[15px] leading-none text-text-2 transition-colors hover:text-accent";
+const LINK_CLASS =
+  "inline-block origin-bottom text-[15px] leading-none text-text-2 transition-[color,transform] duration-300 ease-out hover:text-accent hover:[transform:perspective(400px)_translateY(-2px)_rotateX(10deg)] motion-reduce:transition-none motion-reduce:hover:[transform:none]";
 
 function FooterColumn({
   label,
@@ -140,7 +141,7 @@ export function SiteFooter() {
             href="https://github.com/CalebPrince/prince-web-app"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-text-3 transition-colors hover:text-accent"
+            className="inline-flex origin-bottom items-center gap-2 text-sm text-text-3 transition-[color,transform] duration-300 ease-out hover:[transform:perspective(400px)_translateY(-2px)_rotateX(10deg)] hover:text-accent motion-reduce:transition-none motion-reduce:hover:[transform:none]"
           >
             <FaGithub className="size-4" aria-hidden="true" />
             View source
