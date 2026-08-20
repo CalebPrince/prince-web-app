@@ -42,7 +42,7 @@ time saved.
 Reply with ONLY a JSON object, no markdown fences, no commentary, in this
 exact shape:
 {"eyebrow": "// short one-line hook, under 60 characters, starting with //",
- "title": "one sentence headline, under 90 characters, wrapping the single most important outcome phrase in **double asterisks**",
+ "title": "a short, punchy headline phrase, under 55 characters total — not a full sentence, wrapping the single most important outcome word or phrase in **double asterisks**",
  "subtitle": "one to two sentences, under 200 characters, expanding on how the outcome is delivered"}
 SYS;
 
