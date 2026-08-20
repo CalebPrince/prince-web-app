@@ -112,7 +112,7 @@ export default function DashboardClient({
               <h3 className="font-semibold flex items-center gap-2">
                 <Inbox className="w-4 h-4 text-accent" /> Recent Inquiries
               </h3>
-              <a href="/admin/inquiries.html" className="text-sm text-text-2 hover:text-accent">View all</a>
+              <a href="/admin/inquiries" className="text-sm text-text-2 hover:text-accent">View all</a>
             </div>
             <div className="divide-y divide-hairline">
               {initialData?.recent_inquiries?.length > 0 ? (
@@ -148,7 +148,7 @@ export default function DashboardClient({
               <h3 className="font-semibold flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-accent" /> Recent Payments
               </h3>
-              <a href="/admin/payments.html" className="text-sm text-text-2 hover:text-accent">View all</a>
+              <a href="/admin/payments" className="text-sm text-text-2 hover:text-accent">View all</a>
             </div>
             <div className="divide-y divide-hairline">
               {initialData?.recent_payments?.length > 0 ? (
@@ -251,7 +251,7 @@ export default function DashboardClient({
               ) : (
                 <div className="p-8 text-center text-text-2">
                   <p className="text-sm mb-3">Your immediate queue is clear.</p>
-                  <a href="/admin/pipeline.html" className="text-sm text-accent hover:underline">Plan next action &rarr;</a>
+                  <a href="/admin/pipeline" className="text-sm text-accent hover:underline">Plan next action &rarr;</a>
                 </div>
               )}
             </div>
