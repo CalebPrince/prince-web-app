@@ -218,7 +218,7 @@ class ClientController
         $pdo->prepare('UPDATE payment_links SET client_id = ? WHERE client_email = ? AND client_id IS NULL')
             ->execute([$clientId, $email]);
 
-        $url = self::absoluteUrl('/client/setup.html?token=' . $inviteToken);
+        $url = self::absoluteUrl('/client/setup?token=' . $inviteToken);
         $message = EmailTemplate::render('client_invite', [
             'client_name' => $name,
             'client_email' => $email,
@@ -419,7 +419,7 @@ class ClientController
             'INSERT INTO client_messages (client_id, sender_type, body, read_by_admin) VALUES (?, ?, ?, 1)'
         )->execute([$clientId, 'admin', $body]);
 
-        $portalUrl = self::absoluteUrl('/client/dashboard.html');
+        $portalUrl = self::absoluteUrl('/client/dashboard');
         $message = EmailTemplate::render('client_portal_message', [
             'client_name' => $client['name'],
             'client_email' => $client['email'],
@@ -432,7 +432,7 @@ class ClientController
             $client['email'],
             'New message from Prince Caleb',
             "Hi {$client['name']},\n\nYou have a new message in your client portal:\n\n{$body}\n\n"
-                . self::absoluteUrl('/client/dashboard.html')
+                . self::absoluteUrl('/client/dashboard')
         );
 
         Response::json(['status' => 'sent'], 201);
