@@ -336,7 +336,17 @@ export const api = {
   adminDeleteProject: (id: number) => postJson<{ status: string }>(`/api/v1/admin/projects/${id}`, {}, "DELETE"),
   adminReorderProjects: (ids: number[]) => postJson<{ status: string }>("/api/v1/admin/projects/reorder", { order: ids }, "PATCH"),
   adminReviewBuild: (data: { command: string }) => postJson<{ output: string }>("/api/v1/admin/projects/review-build", data),
-  
+  adminUploadFile: async (file: File): Promise<{ path: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(apiUrl("/api/v1/admin/uploads"), { method: "POST", body: formData });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
+    }
+    return res.json();
+  },
+
   adminBlogPosts: (cookieHeader?: string) => get<AdminBlogPost[]>("/api/v1/admin/blog", cookieHeader ? { Cookie: cookieHeader } : undefined),
   adminCreateBlogPost: (data: any) => postJson<any>("/api/v1/admin/blog", data),
   adminUpdateBlogPost: (id: number, data: any) => postJson<any>(`/api/v1/admin/blog/${id}`, data, "PUT"),
