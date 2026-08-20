@@ -193,6 +193,7 @@ class ProjectController
         }
 
         $pdo = Database::get();
+        self::assertSlugAvailable($pdo, $data['slug'], null);
         $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
         $stmt = $pdo->prepare(
             'INSERT INTO projects (client_id, slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, gallery_json, is_embeddable, is_published, is_featured, sort_order, outcome_metrics, industry, tagline, showcase_category, result_headline, metrics_json, client_name, role, timeline, project_year, challenge, solution, stack_json, testimonial_id, delivery_status, progress_percent, contract_value, estimated_cost, actual_cost, hours_worked, finance_currency, deadline, assigned_agent_key, arch_style_keyword, arch_primary_color, arch_accent_color)
@@ -272,6 +273,7 @@ class ProjectController
         }
 
         $pdo = Database::get();
+        self::assertSlugAvailable($pdo, $data['slug'], $id);
         $clientId = self::validatedClientId($pdo, $data['client_id'] ?? null);
 
         $stmt = $pdo->prepare('SELECT is_published FROM projects WHERE id = ?');
@@ -344,6 +346,23 @@ class ProjectController
         }
 
         Response::json(['status' => 'updated']);
+    }
+
+    /**
+     * The slug column is UNIQUE NOT NULL — without this check a collision
+     * (e.g. two projects auto-slugified from the same title) surfaces as an
+     * uncaught PDOException and a raw HTTP 500 instead of a clean message,
+     * since nothing upstream catches Throwable.
+     */
+    private static function assertSlugAvailable(\PDO $pdo, string $slug, ?int $excludeId): void
+    {
+        $stmt = $excludeId === null
+            ? $pdo->prepare('SELECT id FROM projects WHERE slug = ?')
+            : $pdo->prepare('SELECT id FROM projects WHERE slug = ? AND id != ?');
+        $stmt->execute($excludeId === null ? [$slug] : [$slug, $excludeId]);
+        if ($stmt->fetchColumn()) {
+            Response::error('That slug is already in use by another project — choose a different title or slug.', 422);
+        }
     }
 
     private static function validatedClientId(\PDO $pdo, mixed $value): ?int
