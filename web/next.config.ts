@@ -2,15 +2,59 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 /**
- * Routes still served by the legacy PHP/HTML site. Production runs two apps
- * behind one domain: OpenLiteSpeed serves any real file (and every PHP
- * route) first, and only hands what's left to this Node app. So
- * `/pricing.html` already resolves on its own — but `/pricing` matches no
- * file, falls through to here, and would 404 without these redirects.
+ * The legacy `.html` pages this app replaced. All 78 of them were deleted
+ * from `public/` once every page had been ported, so these paths no longer
+ * resolve to a file and now fall through to this app.
  *
- * Delete an entry as its page is ported into this app.
+ * They still need to resolve, because links to them are already out in the
+ * world: `/pay.html` in invoice and proposal emails, `/book.html` in booking
+ * confirmations, `/project.html?slug=…` in anything a crawler or a client
+ * saved. Each one permanently redirects to the route that replaced it.
  */
-const LEGACY_HTML_ROUTES: string[] = [];
+const RETIRED_HTML_PAGES: Record<string, string> = {
+  home: "/",
+  about: "/about",
+  agent: "/agent",
+  "ai-adoption-ladder": "/ai-adoption-ladder",
+  "ai-safety": "/ai-safety",
+  "ai-voice-agents-for-clinics": "/ai-voice-agents-for-clinics",
+  archive: "/archive",
+  book: "/book",
+  "builder-os": "/builder-os",
+  chat: "/chat",
+  contact: "/contact",
+  cookies: "/cookies",
+  "growth-roadmap": "/growth-roadmap",
+  invoice: "/invoice",
+  "lisa-ai-assistant": "/lisa-ai-assistant",
+  maintenance: "/maintenance",
+  "marketing-brain": "/marketing-brain",
+  "newsletter-unsubscribed": "/newsletter-unsubscribed",
+  pay: "/pay",
+  "payment-success": "/payment-success",
+  pricing: "/pricing",
+  privacy: "/privacy",
+  // The showcase became /systems when the Figma design landed.
+  projects: "/systems",
+  proposal: "/proposal",
+  request: "/request",
+  search: "/search",
+  services: "/services",
+  terms: "/terms",
+  testimonial: "/testimonial",
+  testimonials: "/testimonials",
+};
+
+/**
+ * The two legacy pages that carried their item in a `?slug=` query rather
+ * than the path. Next matches the query and rebuilds it as a real segment,
+ * so a saved or shared `/archive-post.html?slug=foo` lands on `/archive/foo`
+ * instead of the index.
+ */
+const RETIRED_SLUG_PAGES: Record<string, string> = {
+  "archive-post": "/archive",
+  project: "/systems",
+};
 
 const nextConfig: NextConfig = {
   // The repo root has its own package-lock.json (the separate Tailwind CLI
@@ -30,12 +74,24 @@ const nextConfig: NextConfig = {
       // The project showcase moved to /systems when the Figma design landed.
       { source: "/projects", destination: "/systems", permanent: true },
       { source: "/projects/:slug", destination: "/systems/:slug", permanent: true },
-      // Not yet ported — hand these back to the legacy page. Temporary
-      // (308-free) so the redirect isn't cached once the real route exists.
-      ...LEGACY_HTML_ROUTES.map((route) => ({
-        source: `/${route}`,
-        destination: `/${route}.html`,
-        permanent: false,
+      // Retired .html pages. Permanent, because they are never coming back.
+      ...Object.entries(RETIRED_HTML_PAGES).map(([page, destination]) => ({
+        source: `/${page}.html`,
+        destination,
+        permanent: true,
+      })),
+      // Slug-carrying pages: keep the item, not just the index.
+      ...Object.entries(RETIRED_SLUG_PAGES).map(([page, base]) => ({
+        source: `/${page}.html`,
+        has: [{ type: "query" as const, key: "slug", value: "(?<slug>.*)" }],
+        destination: `${base}/:slug`,
+        permanent: true,
+      })),
+      // Same two without a slug — send them to the index rather than 404.
+      ...Object.entries(RETIRED_SLUG_PAGES).map(([page, base]) => ({
+        source: `/${page}.html`,
+        destination: base,
+        permanent: true,
       })),
     ];
   },

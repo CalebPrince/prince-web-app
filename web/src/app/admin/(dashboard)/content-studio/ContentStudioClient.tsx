@@ -257,7 +257,7 @@ export default function ContentStudioClient({ initialItems }: { initialItems: Ad
           <h2 className="text-3xl font-bold tracking-tight mb-1">Review before it goes anywhere.</h2>
           <p className="text-text-2">
             Captions, flyers, and blog drafts made by Danielle in{" "}
-            <a href="/admin/agent-chat.html" className="text-accent hover:underline">Talk to Agents</a>
+            <a href="/admin/agent-chat" className="text-accent hover:underline">Talk to Agents</a>
             {" "}— review, correct the copy, and download the images. Nothing here is published until you promote it.
           </p>
         </div>
@@ -284,7 +284,7 @@ export default function ContentStudioClient({ initialItems }: { initialItems: Ad
           <h3 className="text-lg font-semibold">Nothing here yet</h3>
           <p className="text-text-3 mt-1">
             Open{" "}
-            <a href="/admin/agent-chat.html" className="text-accent hover:underline">Talk to Agents</a>
+            <a href="/admin/agent-chat" className="text-accent hover:underline">Talk to Agents</a>
             , pick <strong>Danielle</strong>, and ask it to write a post or make a flyer.
           </p>
         </div>
