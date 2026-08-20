@@ -61,9 +61,18 @@ class AiText
      *
      * @return array{text:string,provider:string}|null
      */
+    /** Standing style rule applied to every call through this class, so it
+     *  covers every current and future caller without each one having to
+     *  remember to ask for it — the em dash is a well-known AI-writing tell
+     *  the site's copy should never carry. */
+    private const STYLE_RULES = 'Never use an em dash (—) or en dash (–) anywhere in your output; use a comma, period, or restructure the sentence instead.';
+
     public static function generateWithProvider(string $prompt, ?string $systemInstruction = null, int $timeoutSeconds = 20, int $maxTokens = self::DEFAULT_MAX_TOKENS): ?array
     {
         self::$lastError = null;
+        $systemInstruction = $systemInstruction !== null
+            ? $systemInstruction . "\n\n" . self::STYLE_RULES
+            : self::STYLE_RULES;
 
         // DeepSeek is tried first as a cost-cutting move — it is a cheap,
         // paid-from-first-token API, so resolving here means most calls never
