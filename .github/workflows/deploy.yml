@@ -50,6 +50,24 @@ jobs:
 
       # The FTP account must be rooted at the cPanel home directory so both
       # the web root and the above-webroot app folders are reachable.
+      # public_html/.htaccess is NOT ours to overwrite. cPanel's Node.js
+      # Selector writes the CloudLinux/Passenger block into it to bind the
+      # nextjs-web app to the apex domain, so the server's copy always has
+      # content this repo has never seen. Syncing our copy over it unbinds
+      # the Node app: the apex falls back to DirectoryIndex home.html and
+      # every migrated route 404s through PHP. That is what took the new
+      # site down on 2026-08-20, and it is the most likely explanation for
+      # the file going empty on 2026-08-15 too.
+      #
+      # `exclude` replaces the action's default list rather than adding to
+      # it, so the three defaults are repeated here. The pattern is the
+      # bare filename on purpose: it matches only public/.htaccess, while
+      # admin/, js/vendor/, triplepmed-demo/ and uploads/ keep theirs.
+      #
+      # Consequence: edits to the CSP (or anything else in that file) no
+      # longer deploy. Apply them by hand in cPanel File Manager, keeping
+      # the Passenger block at the top intact, and keep this repo's copy
+      # updated to match so it stays the readable source of truth.
       - name: Sync public/ -> public_html/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -59,6 +77,11 @@ jobs:
           protocol: ftps
           local-dir: public/
           server-dir: public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            .htaccess
 
       - name: Sync src/
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
