@@ -66,10 +66,13 @@ Options -Indexes
   Require all denied
 </FilesMatch>
 
-# No DirectoryIndex on purpose. The .html pages are gone and "/" belongs to
-# the Next app: naming an index file here would make "/" resolve to a real
-# file again, and OpenLiteSpeed serves real files before it hands anything
-# to Node, which is exactly how the old homepage kept winning.
+# "/" belongs to the Next app, so nothing here may resolve it to a local
+# file. Simply dropping the old `DirectoryIndex home.html` was not enough:
+# the server then falls back to its *default* index list, finds index.php
+# (the API router) and hands "/" to PHP, which answers a bare 404 because
+# it has no route for it. `disabled` turns the lookup off outright, so "/"
+# matches nothing locally and reaches Node.
+DirectoryIndex disabled
 
 RewriteEngine On
 
