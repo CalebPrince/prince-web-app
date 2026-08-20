@@ -16,7 +16,7 @@ export function HeroOrbs() {
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className="absolute -left-40 top-1/3 h-[36rem] w-[36rem] rounded-full bg-accent/20 blur-[140px]"
+        className="absolute -left-40 top-1/3 h-[36rem] w-[36rem] rounded-full bg-accent/25 blur-[150px]"
       />
       <motion.div
         animate={{
@@ -29,7 +29,7 @@ export function HeroOrbs() {
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className="absolute -right-32 top-10 h-[28rem] w-[28rem] rounded-full bg-accent/10 blur-[120px]"
+        className="absolute -right-32 top-10 h-[28rem] w-[28rem] rounded-full bg-accent/18 blur-[130px]"
       />
     </>
   );

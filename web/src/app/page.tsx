@@ -145,9 +145,12 @@ export default async function Home() {
             alt="Abstract cinematic 3D digital environment with glowing objects"
             className="h-full w-full object-cover [animation:drift_28s_ease-in-out_infinite]"
           />
-          <HeroOrbs />
           <div className="absolute inset-0 bg-gradient-to-b from-bg/70 via-bg/40 to-bg" />
           <div className="absolute inset-0 bg-gradient-to-r from-bg/85 via-bg/30 to-transparent" />
+          {/* Painted after the two scrims, not before: the left-hand one reaches
+              bg/85 exactly where the orbs sit, so underneath them the drifting
+              accent glow was scrubbed down to nothing. */}
+          <HeroOrbs />
         </div>
 
         <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-16 pt-32 md:px-10 lg:grid-cols-2 lg:gap-8">
