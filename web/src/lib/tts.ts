@@ -3,9 +3,11 @@
 // singleton state (one shared <audio> element) matches the original;
 // this file is only ever imported by client components.
 
-// Mirrors TextToSpeechController::MAX_TEXT_LENGTH. Lisa is the only agent
-// this app's chat widget speaks for.
-const MAX_TEXT_LENGTH = 700;
+// Mirrors TextToSpeechController::MAX_TEXT_LENGTH. Lisa is the public chat
+// widget's only agent; Scout is also spoken from the admin agent-chat page,
+// and her longer console answers need the higher cap or they get cut off
+// mid-sentence (the actual bug TextToSpeechController.php's comment cites).
+const MAX_TEXT_LENGTH: Record<string, number> = { lisa: 700, scout: 3000 };
 
 let activeAudio: HTMLAudioElement | null = null;
 let activeUrl: string | null = null;
@@ -55,16 +57,17 @@ export function unlockTts() {
 
 type TtsHandlers = { onstart?: () => void; onend?: () => void; onerror?: () => void };
 
-export async function playTts(text: string, handlers?: TtsHandlers): Promise<void> {
+export async function playTts(text: string, handlers?: TtsHandlers, agent: string = "lisa"): Promise<void> {
   const spoken = text.trim();
   if (!spoken) throw new Error("No speech text");
   release();
 
+  const maxLength = MAX_TEXT_LENGTH[agent] ?? MAX_TEXT_LENGTH.lisa;
   const response = await fetch("/api/v1/voice/tts", {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: spoken.slice(0, MAX_TEXT_LENGTH), agent: "lisa" }),
+    body: JSON.stringify({ text: spoken.slice(0, maxLength), agent }),
   });
   if (!response.ok) {
     throw new Error("Natural speech unavailable");
