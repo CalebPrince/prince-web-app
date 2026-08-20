@@ -143,7 +143,7 @@ export default async function Home() {
           <img
             src="https://images.unsplash.com/photo-1622737133809-d95047b9e673?w=2200&h=1400&fit=crop&auto=format"
             alt="Abstract cinematic 3D digital environment with glowing objects"
-            className="h-full w-full object-cover [animation:drift_28s_ease-in-out_infinite]"
+            className="h-full w-full object-cover [animation:drift_16s_ease-in-out_infinite]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-bg/70 via-bg/40 to-bg" />
           <div className="absolute inset-0 bg-gradient-to-r from-bg/85 via-bg/30 to-transparent" />
@@ -416,7 +416,7 @@ export default async function Home() {
           <img
             src="https://images.unsplash.com/photo-1709377195538-5522ed0f9e10?w=2000&h=1200&fit=crop&auto=format"
             alt="Cinematic dark abstract environment"
-            className="h-full w-full object-cover opacity-40 [animation:drift_32s_ease-in-out_infinite]"
+            className="h-full w-full object-cover opacity-40 [animation:drift_22s_ease-in-out_infinite]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
           <div className="absolute left-1/3 top-1/2 h-[30rem] w-[30rem] -translate-y-1/2 rounded-full bg-accent/20 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />

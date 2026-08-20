@@ -108,10 +108,13 @@ body {
 }
 
 /* Cinematic hero motion */
+/* The pan and zoom deltas need to clear the eye's motion threshold: the old
+   2% / 0.06-scale swing spread over 28s moved the frame under half a pixel a
+   second and read as a still photo. */
 @keyframes drift {
-  0% { transform: translate3d(0, 0, 0) scale(1.08); }
-  50% { transform: translate3d(-2%, -1.5%, 0) scale(1.14); }
-  100% { transform: translate3d(0, 0, 0) scale(1.08); }
+  0% { transform: translate3d(0, 0, 0) scale(1.06); }
+  50% { transform: translate3d(-4.5%, -3%, 0) scale(1.24); }
+  100% { transform: translate3d(0, 0, 0) scale(1.06); }
 }
 @keyframes glowpulse {
   0%, 100% { opacity: 0.4; transform: translate(0, 0) scale(1); }
