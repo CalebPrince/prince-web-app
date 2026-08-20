@@ -298,7 +298,12 @@ export default function SettingsClient({
   const sendTest = async (key: string) => {
     setTestStatus((prev) => ({ ...prev, [key]: "Sending…" }));
     try {
-      await adminApi.post("/api/v1/admin/settings/test-email", { template: key });
+      await adminApi.post("/api/v1/admin/settings/test-email", {
+        key,
+        subject: values[`email_tpl_${key}_subject`] ?? "",
+        html: values[`email_tpl_${key}_html`] ?? "",
+        text: values[`email_tpl_${key}_text`] ?? "",
+      });
       setTestStatus((prev) => ({ ...prev, [key]: "Sent to your inbox." }));
     } catch (err) {
       setTestStatus((prev) => ({
