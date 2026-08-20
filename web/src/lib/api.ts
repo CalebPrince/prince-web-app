@@ -295,7 +295,11 @@ async function get<T>(path: string, customHeaders?: HeadersInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
+    // res.statusText is blank on HTTP/2 (which the live site serves over), so
+    // fall back to the numeric status rather than throwing an empty message
+    // that renders as a blank alert(). Nullish coalescing alone doesn't catch
+    // that case since "" is not null/undefined, hence the || below.
+    throw new Error(body?.error ?? body?.errors?.join(" ") ?? (res.statusText || `Request failed (HTTP ${res.status})`));
   }
   return res.json() as Promise<T>;
 }
@@ -308,7 +312,11 @@ export async function postJson<T>(path: string, data: unknown, method: string = 
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
+    // res.statusText is blank on HTTP/2 (which the live site serves over), so
+    // fall back to the numeric status rather than throwing an empty message
+    // that renders as a blank alert(). Nullish coalescing alone doesn't catch
+    // that case since "" is not null/undefined, hence the || below.
+    throw new Error(body?.error ?? body?.errors?.join(" ") ?? (res.statusText || `Request failed (HTTP ${res.status})`));
   }
   return res.json() as Promise<T>;
 }
