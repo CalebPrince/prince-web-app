@@ -113,15 +113,19 @@ export function toSystemView(p: Project, index = 0): SystemView {
 }
 
 /**
- * The homepage showcase: the first three projects ticked "Display on
- * homepage" in the admin, in sort order (the API already returns them
- * sorted). Falls back to the first three published projects so the section
- * is never empty before anything has been ticked.
+ * The homepage showcase: the projects ticked "Display on homepage" in the
+ * admin, in sort order (the API already returns them sorted).
+ *
+ * When fewer than `limit` are ticked, the rest of the published projects top
+ * the list up rather than leaving the grid short — the gallery is laid out
+ * for six cards, and three ticked projects used to render as three. Ticked
+ * ones still come first, so the admin's picks keep the prime slots.
  */
 export async function getFeaturedSystems(limit = 3): Promise<SystemView[]> {
   const all = await getSystems();
   const featured = all.filter((s) => s.featured);
-  return (featured.length ? featured : all).slice(0, limit);
+  const rest = all.filter((s) => !s.featured);
+  return [...featured, ...rest].slice(0, limit);
 }
 
 export async function getSystems(): Promise<SystemView[]> {
