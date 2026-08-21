@@ -222,7 +222,7 @@ export default async function Lisa() {
               {CHANNELS.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className="inline-flex items-center gap-2 rounded-full border border-hairline bg-bg-2/60 px-4 py-2 text-sm text-text-2"
+                  className="inline-flex items-center gap-2 rounded-full border border-hairline bg-bg-2/60 px-4 py-2 text-sm text-text-2 glass"
                 >
                   <Icon className="size-4 text-accent" aria-hidden="true" />
                   {label}
@@ -282,7 +282,7 @@ export default async function Lisa() {
             <Reveal
               key={title}
               delay={(i % 2) * 90}
-              className="flex flex-col rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 md:p-10"
+              className="flex flex-col rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 md:p-10 glass"
             >
               <div className="flex size-12 items-center justify-center rounded-[var(--radius)] border border-hairline bg-bg text-accent">
                 <Icon className="size-5" aria-hidden="true" />
@@ -333,7 +333,7 @@ export default async function Lisa() {
               <Reveal
                 key={title}
                 delay={(i % 3) * 70}
-                className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-7 transition-colors hover:border-accent/30"
+                className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-7 transition-colors hover:border-accent/30 glass"
               >
                 <Icon className="size-6 text-accent" aria-hidden="true" />
                 <h3 className="mt-5 text-lg font-semibold tracking-tight">{title}</h3>
@@ -380,7 +380,7 @@ export default async function Lisa() {
                 ))}
               </ul>
             </Reveal>
-            <Reveal delay={80} className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-7">
+            <Reveal delay={80} className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-7 glass">
               <p className="label text-muted">Needs a human first</p>
               <ul className="mt-5 space-y-3">
                 {NEEDS_HUMAN.map((c) => (
@@ -455,7 +455,7 @@ export default async function Lisa() {
             ))}
 
             {/* Custom tier */}
-            <Reveal delay={240} className="relative flex flex-col rounded-[var(--radius)] border border-hairline bg-bg/60 p-8">
+            <Reveal delay={240} className="relative flex flex-col rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 glass">
               <span className="label text-accent">{customTier.tag}</span>
               <div className="mt-5 flex items-baseline gap-2">
                 <span className="text-[clamp(1.6rem,2.5vw,2.2rem)] font-extrabold tracking-[-0.03em]">

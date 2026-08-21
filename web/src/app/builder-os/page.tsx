@@ -217,7 +217,7 @@ export default function BuilderOS() {
           </Reveal>
 
           {failed && (
-            <Reveal className="mt-8 rounded-[var(--radius)] border border-hairline bg-bg/60 p-6 text-text-2">
+            <Reveal className="mt-8 rounded-[var(--radius)] border border-hairline bg-bg/60 p-6 text-text-2 glass">
               The public registry is reconnecting. The customer-service channels remain available.
             </Reveal>
           )}
@@ -228,7 +228,7 @@ export default function BuilderOS() {
                 <Reveal
                   key={code}
                   delay={i * 90}
-                  className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-7"
+                  className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-7 glass"
                 >
                   <div className="flex items-center justify-between">
                     <span className="label text-accent">{code}</span>
@@ -240,14 +240,14 @@ export default function BuilderOS() {
                       Array.from({ length: i === 1 ? 3 : 1 }).map((_, j) => (
                         <div
                           key={j}
-                          className="h-[68px] animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/60"
+                          className="h-[68px] animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/60 glass"
                         />
                       ))}
                     {zoneAgents.map((a) => (
                       <Link
                         key={a.key}
                         href={agentHref(a)}
-                        className="flex items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2/60 p-4 transition-colors hover:border-accent/40"
+                        className="flex items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2/60 p-4 transition-colors hover:border-accent/40 glass"
                       >
                         <span className="grid size-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-semibold text-accent">
                           {a.key.slice(0, 2).toUpperCase()}

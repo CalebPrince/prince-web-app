@@ -160,7 +160,7 @@ export function LisaVideoAgent() {
         <div className="relative mx-auto w-full max-w-sm">
           <div
             className={cn(
-              "relative overflow-hidden rounded-[calc(var(--radius)*1.5)] border bg-bg-2 transition-all duration-300",
+              "relative overflow-hidden rounded-[calc(var(--radius)*1.5)] border bg-bg-2 transition-all duration-300 glass",
               state === "live" ? "border-accent/60 shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)]" : "border-hairline"
             )}
           >
@@ -242,7 +242,7 @@ export function LisaVideoAgent() {
             <button
               type="button"
               disabled
-              className="w-full rounded-[var(--radius)] bg-bg-2 px-6 py-4 font-bold text-muted"
+              className="w-full rounded-[var(--radius)] bg-bg-2 px-6 py-4 font-bold text-muted glass"
             >
               {state === "connecting" ? "Connecting to Lisa…" : "Video chat active"}
             </button>

@@ -114,7 +114,7 @@ export default async function SystemDetail({ params }: PageProps<"/systems/[slug
       {/* ── COVER ───────────────────────────────────────────── */}
       {system.img && (
         <section className="mx-auto max-w-[1400px] px-6 md:px-10">
-          <Reveal className="overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2">
+          <Reveal className="overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2 glass">
             <img src={system.img} alt={system.name} className="aspect-[16/9] w-full object-cover" />
           </Reveal>
         </section>
@@ -143,7 +143,7 @@ export default async function SystemDetail({ params }: PageProps<"/systems/[slug
                   {system.stack.map((item) => (
                     <span
                       key={item.name}
-                      className="inline-flex items-center gap-2 rounded-full border border-hairline bg-bg-2/60 px-3.5 py-2 text-sm text-text-2"
+                      className="inline-flex items-center gap-2 rounded-full border border-hairline bg-bg-2/60 px-3.5 py-2 text-sm text-text-2 glass"
                     >
                       <StackIcon name={item.icon} />
                       {item.name}
@@ -207,7 +207,7 @@ export default async function SystemDetail({ params }: PageProps<"/systems/[slug
               <Reveal
                 key={src}
                 delay={i * 90}
-                className="overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2"
+                className="overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2 glass"
               >
                 <img
                   src={src}

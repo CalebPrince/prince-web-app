@@ -122,7 +122,7 @@ export default function Services() {
             {["AI voice agents", "Chatbots", "Automations"].map((t) => (
               <span
                 key={t}
-                className="label rounded-full border border-hairline bg-bg-2/50 px-4 py-2.5 text-text-2"
+                className="label rounded-full border border-hairline bg-bg-2/50 px-4 py-2.5 text-text-2 glass"
               >
                 {t}
               </span>

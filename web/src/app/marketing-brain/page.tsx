@@ -157,7 +157,7 @@ export default function MarketingBrain() {
             {FRAMEWORKS.map((f) => (
               <span
                 key={f.name}
-                className="inline-flex flex-col rounded-[var(--radius)] border border-hairline bg-bg-2/60 px-4 py-2.5"
+                className="inline-flex flex-col rounded-[var(--radius)] border border-hairline bg-bg-2/60 px-4 py-2.5 glass"
               >
                 <strong className="text-sm text-text">{f.name}</strong>
                 <span className="text-xs text-muted">{f.focus}</span>
@@ -171,7 +171,7 @@ export default function MarketingBrain() {
       <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32" id="sage-chat">
         <div className="grid gap-8 lg:grid-cols-12">
           <Reveal className="lg:col-span-8">
-            <div className="flex h-[34rem] flex-col overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/50">
+            <div className="flex h-[34rem] flex-col overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/50 glass">
               <header className="flex items-center gap-3 border-b border-hairline px-6 py-4">
                 <span className="size-2 shrink-0 animate-pulse rounded-full bg-accent" />
                 <strong className="text-text">{assistantName}</strong>
@@ -231,7 +231,7 @@ export default function MarketingBrain() {
                   type="button"
                   onClick={() => sendMessage(s.prompt)}
                   disabled={sending}
-                  className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 px-4 py-3 text-left text-sm text-text-2 transition-colors hover:border-accent/40 hover:text-text disabled:opacity-40"
+                  className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 px-4 py-3 text-left text-sm text-text-2 transition-colors hover:border-accent/40 hover:text-text disabled:opacity-40 glass"
                 >
                   {s.label}
                 </button>
@@ -252,7 +252,7 @@ export default function MarketingBrain() {
       {/* ── BEYOND BRAINSTORMING ─────────────────────────────── */}
       <section className="border-y border-hairline bg-bg-2/40">
         <div className="mx-auto max-w-[1400px] px-6 py-20 md:px-10 md:py-24">
-          <Reveal className="flex flex-col items-start justify-between gap-8 rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 md:flex-row md:items-center md:p-12">
+          <Reveal className="flex flex-col items-start justify-between gap-8 rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 md:flex-row md:items-center md:p-12 glass">
             <div>
               <span className="label text-accent">Beyond brainstorming</span>
               <h2 className="mt-4 text-[clamp(1.6rem,3.5vw,2.6rem)] font-bold tracking-[-0.02em]">

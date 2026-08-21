@@ -133,7 +133,7 @@ export default async function Lab() {
         <div className="grid gap-6 lg:grid-cols-12">
           {EXPERIMENTS.map(({ no, title, blurb, status, icon: Icon, tags, span }, i) => (
             <Reveal key={no} className={span} delay={(i % 2) * 90}>
-              <article className="group flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 md:p-10">
+              <article className="group flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 md:p-10 glass">
                 <div>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex size-12 items-center justify-center rounded-[var(--radius)] border border-hairline bg-bg text-accent transition-colors group-hover:border-accent/40">

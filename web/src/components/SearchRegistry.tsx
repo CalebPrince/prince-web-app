@@ -120,7 +120,7 @@ export function SearchRegistry() {
               <Link
                 key={r.url}
                 href={r.url}
-                className="group flex h-full flex-col overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/40 transition-colors hover:border-accent/40"
+                className="group flex h-full flex-col overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/40 transition-colors hover:border-accent/40 glass"
               >
                 <div className="aspect-[4/3] w-full overflow-hidden bg-bg-2">
                   {r.image && (

@@ -44,7 +44,7 @@ export default function PaymentSuccessPage() {
 
       <section className="mx-auto max-w-[620px] px-6 pb-24 md:pb-32">
         <Reveal>
-          <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center md:p-12">
+          <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center md:p-12 glass">
             <div className="mb-6 flex justify-center">
               <span className="grid size-16 place-items-center rounded-full bg-accent text-on-accent">
                 <Check className="size-8" />

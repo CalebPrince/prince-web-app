@@ -146,7 +146,7 @@ export default function Booking() {
           {/* Right - scheduler */}
           <div className="lg:col-span-7">
             <Reveal>
-              <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10">
+              <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
                 {booked ? (
                   <div className="flex flex-col items-center py-16 text-center">
                     <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">

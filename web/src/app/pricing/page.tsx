@@ -229,7 +229,7 @@ export default async function Pricing() {
               <Reveal
                 key={m.label}
                 delay={i * 70}
-                className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-7"
+                className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-7 glass"
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold tracking-tight">{m.label}</h3>
@@ -272,7 +272,7 @@ export default async function Pricing() {
               <Reveal
                 key={a.name}
                 delay={i * 90}
-                className="flex flex-col rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 transition-colors hover:border-accent/30 md:p-10"
+                className="flex flex-col rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 transition-colors hover:border-accent/30 md:p-10 glass"
               >
                 <h3 className="text-2xl font-bold tracking-tight">{a.name}</h3>
                 <p className="mt-3 text-text-2">{a.blurb}</p>
@@ -302,7 +302,7 @@ export default async function Pricing() {
         <Reveal>
           <Link
             href="/lisa-ai-assistant"
-            className="group flex flex-col justify-between gap-8 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 md:flex-row md:items-center md:p-12"
+            className="group flex flex-col justify-between gap-8 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 md:flex-row md:items-center md:p-12 glass"
           >
             <div>
               <span className="label text-accent">Meet Lisa</span>

@@ -30,6 +30,16 @@
      of the page, light enough to keep the copy over it legible. */
   --brandmark: rgba(98, 255, 152, 0.16);
   --brandmark-dot: rgba(98, 255, 152, 0.42);
+  /* Frosted card surfaces (.glass below). The tint has to stay heavy enough
+     to read body copy over the brandmark passing behind it. --glass-solid is
+     the opaque fallback where backdrop-filter is unsupported. */
+  --glass-bg: rgba(18, 20, 24, 0.58);
+  --glass-solid: #121418;
+  --glass-border: rgba(255, 255, 255, 0.12);
+  /* The whole filter, not just its radius: Lightning CSS drops a
+     `backdrop-filter: blur(var(--x))` declaration on the floor, while a var
+     standing for the entire value passes through untouched. */
+  --glass-filter: blur(14px) saturate(140%);
   --radius: 12px;
   color-scheme: dark;
 }
@@ -58,6 +68,9 @@
   /* Black on paper, per the brief. */
   --brandmark: rgba(10, 11, 13, 0.12);
   --brandmark-dot: rgba(8, 120, 60, 0.5);
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-solid: #ffffff;
+  --glass-border: rgba(10, 11, 13, 0.1);
   color-scheme: light;
 }
 
@@ -116,6 +129,32 @@ body {
 }
 *:hover::-webkit-scrollbar-thumb {
   background: var(--hairline-strong);
+}
+
+/* Frosted panel. Unlayered on purpose: Tailwind's utilities live in a cascade
+   layer, so this wins over whatever bg-* the element already carries and the
+   two can coexist — the utility stays as the colour of record for anything
+   that reads the class list.
+   The brandmark and the accent glows sit behind the page, so what these
+   surfaces diffuse is the site's own background rather than a flat colour. */
+.glass {
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+
+/* Phones pay the most for a full-size backdrop filter and show it the least,
+   so they get a lighter blur. */
+@media (max-width: 640px) {
+  :root {
+    --glass-filter: blur(8px) saturate(140%);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: var(--glass-solid);
+  }
 }
 
 .label {

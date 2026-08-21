@@ -87,7 +87,7 @@ export function TestimonialsRegistry() {
                 <Reveal key={t.id} delay={(i % 2) * 90}>
                   <Link
                     href={`/systems/${t.project_slug}`}
-                    className="group block h-full rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40"
+                    className="group block h-full rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 glass"
                   >
                     <span className="label text-accent">Measured result</span>
                     <p className="mt-4 text-[clamp(1.25rem,2.2vw,1.6rem)] font-bold leading-[1.3] tracking-[-0.01em] text-text">
@@ -197,7 +197,7 @@ export function TestimonialsRegistry() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-40 animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/50"
+                className="h-40 animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/50 glass"
               />
             ))}
           </div>
@@ -220,7 +220,7 @@ export function TestimonialsRegistry() {
                 key={t.id}
                 delay={(i % 3) * 80}
                 className={cn(
-                  "h-full rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-6 transition-colors hover:border-accent/30",
+                  "h-full rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-6 transition-colors hover:border-accent/30 glass",
                 )}
               >
                 <div className="flex gap-0.5 text-accent">

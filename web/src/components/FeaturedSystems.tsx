@@ -40,7 +40,7 @@ export function FeaturedSystems() {
           <div
             key={i}
             className={cn(
-              "animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/50",
+              "animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/50 glass",
               l.span,
               l.ratio,
             )}
@@ -60,7 +60,7 @@ export function FeaturedSystems() {
               <TiltCard
                 maxTilt={5}
                 className={cn(
-                  "relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2",
+                  "relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2 glass",
                   layout.ratio,
                 )}
               >

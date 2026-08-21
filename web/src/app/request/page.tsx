@@ -209,7 +209,7 @@ export default function RequestPage() {
 
       <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32" id="request-form">
         <Reveal>
-          <div className="mx-auto max-w-3xl rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 md:p-10">
+          <div className="mx-auto max-w-3xl rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 md:p-10 glass">
             {sent ? (
               <div className="flex flex-col items-center py-8 text-center animate-in fade-in zoom-in duration-500">
                 <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">
@@ -273,7 +273,7 @@ export default function RequestPage() {
                     <legend className="label mb-3 block text-text">What should the workflow include? (optional)</legend>
                     <div className="flex flex-wrap gap-3">
                       {FEATURES.map(feat => (
-                        <label key={feat} className="flex cursor-pointer items-center gap-2 rounded-full border border-hairline-strong bg-bg/50 px-4 py-2 text-sm transition-colors hover:border-accent has-[:checked]:border-accent has-[:checked]:bg-accent/10 has-[:checked]:text-accent">
+                        <label key={feat} className="flex cursor-pointer items-center gap-2 rounded-full border border-hairline-strong bg-bg/50 px-4 py-2 text-sm transition-colors hover:border-accent has-[:checked]:border-accent has-[:checked]:bg-accent/10 has-[:checked]:text-accent glass">
                           <input type="checkbox" className="hidden" checked={features.includes(feat)} onChange={() => toggleFeature(feat)} />
                           {feat}
                         </label>

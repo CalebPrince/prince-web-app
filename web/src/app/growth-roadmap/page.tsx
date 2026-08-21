@@ -118,7 +118,7 @@ export default function GrowthRoadmap() {
           </p>
         </Reveal>
 
-        <Reveal className="overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/50">
+        <Reveal className="overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/50 glass">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-6 py-4">
             <div>
               <span className="label text-muted">Sample roadmap / a local service business</span>
@@ -132,7 +132,7 @@ export default function GrowthRoadmap() {
             <div className="lg:col-span-7">
               <div className="space-y-3">
                 {SAMPLE_FINDINGS.map((f) => (
-                  <div key={f.tag} className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-4">
+                  <div key={f.tag} className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-4 glass">
                     <span className="label text-accent">{f.tag}</span>
                     <p className="mt-2 text-sm text-text-2">{f.body}</p>
                   </div>
@@ -166,7 +166,7 @@ export default function GrowthRoadmap() {
       <section className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32" id="roadmap-form">
         <div className="grid gap-8 lg:grid-cols-12">
           <Reveal className="lg:col-span-5">
-            <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8">
+            <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 glass">
               <span className="label text-accent">What you get</span>
               <div className="mt-6 space-y-6">
                 {VALUE_ROWS.map((r) => (
@@ -184,7 +184,7 @@ export default function GrowthRoadmap() {
           </Reveal>
 
           <Reveal delay={100} className="lg:col-span-7">
-            <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10">
+            <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
               {sent ? (
                 <div className="flex flex-col items-center py-8 text-center">
                   <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">

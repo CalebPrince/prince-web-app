@@ -326,7 +326,7 @@ export function VoiceDemo() {
     <>
       <Script src="/js/elevenlabs-tts.js?v=20260731-length-fallback-fix" strategy="lazyOnload" />
       <div className={cn(
-        "overflow-hidden rounded-[calc(var(--radius)*1.5)] border border-hairline bg-bg-2/50 transition-all duration-300",
+        "overflow-hidden rounded-[calc(var(--radius)*1.5)] border border-hairline bg-bg-2/50 transition-all duration-300 glass",
         state === "listening" && "border-accent/40 shadow-[0_0_20px_rgba(var(--accent-rgb),0.1)]",
         state === "thinking" && "border-white/20",
         state === "speaking" && "border-accent/60 shadow-[0_0_30px_rgba(var(--accent-rgb),0.2)]"

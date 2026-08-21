@@ -130,7 +130,7 @@ export default function About() {
           </div>
 
           <Reveal delay={220} className="lg:col-span-5">
-            <div className="relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2">
+            <div className="relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2 glass">
               <AboutStudioMockup />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg/60 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-5">

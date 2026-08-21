@@ -245,7 +245,7 @@ export default function Chat() {
               <iframe src={currentSite.preview_url} className="w-full h-[65vh] border-0" title="Your generated website preview" loading="lazy" />
             </div>
 
-            <form onSubmit={submitRevision} className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6">
+            <form onSubmit={submitRevision} className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 glass">
               <label htmlFor="reviewInput" className="mb-2 block font-semibold">Want anything changed?</label>
               <p className="mb-4 text-sm text-text-2">Describe a focused change to this prototype. Two revision rounds are included; larger changes need a project review.</p>
               <textarea
@@ -306,7 +306,7 @@ export default function Chat() {
               </div>
             </div>
 
-            <div className="flex h-[36rem] flex-col overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/50">
+            <div className="flex h-[36rem] flex-col overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2/50 glass">
               <div ref={logRef} className="flex-1 space-y-4 overflow-y-auto p-6 scroll-smooth">
                 {transcript.map((turn, i) => (
                   <p

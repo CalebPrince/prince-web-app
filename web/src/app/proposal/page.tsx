@@ -82,7 +82,7 @@ export default function ProposalPage() {
   if (error) {
     return (
       <section className="mx-auto max-w-[920px] px-6 pt-32 pb-24 md:pt-48">
-        <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center animate-in fade-in zoom-in duration-500">
+        <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center animate-in fade-in zoom-in duration-500 glass">
           <h4 className="mb-2 text-xl font-bold">{error.title}</h4>
           <p className="text-text-2">{error.desc}</p>
         </div>
@@ -222,7 +222,7 @@ export default function ProposalPage() {
                 required 
                 checked={acceptTerms}
                 onChange={e => setAcceptTerms(e.target.checked)}
-                className="mt-1 size-4 rounded border-hairline-strong bg-bg/60 text-accent focus:ring-accent/60" 
+                className="mt-1 size-4 rounded border-hairline-strong bg-bg/60 text-accent focus:ring-accent/60 glass" 
               />
               <label htmlFor="accept-terms-check" className="text-sm text-text-2">
                 I have reviewed and agree to the scope, timeline, and terms above.

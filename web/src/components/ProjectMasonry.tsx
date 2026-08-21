@@ -81,7 +81,7 @@ function ProjectCard({ system, slot }: { system: SystemView; slot: Slot }) {
         <div
           className={cn(
             // 300ms hover lift: scale 1.03 and the shadow blur opening up.
-            "relative flex flex-col gap-4 rounded-2xl border bg-bg-2 p-5",
+            "relative flex flex-col gap-4 rounded-2xl border bg-bg-2 p-5 glass",
             "shadow-[var(--card-shadow)] transition-[transform,box-shadow,border-color] duration-300",
             "group-hover:scale-[1.03] group-hover:shadow-[var(--card-shadow-lift)]",
             accent ? "border-accent" : "border-hairline group-hover:border-accent/40",
@@ -198,7 +198,7 @@ export function ProjectMasonry({
       {systems === null
         ? Array.from({ length: skeletonCount }, (_, i) => (
             <div key={i} className={cn("mb-9 break-inside-avoid", slotFor(i).offset)}>
-              <div className="h-[340px] animate-pulse rounded-2xl border border-hairline bg-bg-2/50" />
+              <div className="h-[340px] animate-pulse rounded-2xl border border-hairline bg-bg-2/50 glass" />
             </div>
           ))
         : systems.map((system, i) => {
@@ -233,7 +233,7 @@ export function ProjectMasonry({
                 {slot.accent && (
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute -bottom-3 right-10 flex items-center gap-2 rounded-full border border-accent bg-bg-2 px-3 py-2 shadow-[var(--card-shadow)]"
+                    className="pointer-events-none absolute -bottom-3 right-10 flex items-center gap-2 rounded-full border border-accent bg-bg-2 px-3 py-2 shadow-[var(--card-shadow)] glass"
                   >
                     <MousePointer2 className="size-4 text-accent" />
                     <span className="font-mono text-[11px] font-bold tracking-[0.12em] text-accent">

@@ -451,7 +451,7 @@ export default async function Home() {
           <div className="mt-16 grid gap-6 md:grid-cols-3">
             {TESTIMONIALS.map((t, i) => (
               <Reveal key={t.name} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
-                <TiltCard className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-8 transition-colors hover:border-accent/30">
+                <TiltCard className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-8 transition-colors hover:border-accent/30 glass">
                   <div>
                     <div className="flex gap-0.5 text-accent">
                       {Array.from({ length: 5 }).map((_, s) => (

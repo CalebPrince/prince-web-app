@@ -111,7 +111,7 @@ export default function Contact() {
                     href={href}
                     target={href.startsWith("http") ? "_blank" : undefined}
                     rel={href.startsWith("http") ? "noreferrer" : undefined}
-                    className="group flex items-center gap-5 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 transition-colors hover:border-accent/40"
+                    className="group flex items-center gap-5 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 transition-colors hover:border-accent/40 glass"
                   >
                     <span className="grid size-12 shrink-0 place-items-center rounded-[var(--radius)] border border-hairline bg-bg text-accent transition-colors group-hover:border-accent/40">
                       <Icon className="size-5" aria-hidden="true" />
@@ -161,7 +161,7 @@ export default function Contact() {
           {/* Right - form */}
           <div className="lg:col-span-7">
             <Reveal>
-              <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10">
+              <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
                 {sent ? (
                   <div className="flex flex-col items-center py-16 text-center">
                     <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">

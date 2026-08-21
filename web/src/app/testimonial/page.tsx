@@ -89,7 +89,7 @@ export default function TestimonialPage() {
 
       <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32">
         <Reveal>
-          <div className="mx-auto max-w-xl rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 md:p-10">
+          <div className="mx-auto max-w-xl rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 md:p-10 glass">
             {validToken === null ? (
               <div className="py-10 text-center animate-pulse text-muted">Loading...</div>
             ) : !validToken ? (

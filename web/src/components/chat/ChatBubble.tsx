@@ -95,7 +95,7 @@ export function ChatBubble({
   if (msg.typing) {
     return (
       <div
-        className="flex max-w-[85%] gap-1 rounded-2xl rounded-bl-sm border border-hairline bg-bg-2/60 px-4 py-3"
+        className="flex max-w-[85%] gap-1 rounded-2xl rounded-bl-sm border border-hairline bg-bg-2/60 px-4 py-3 glass"
         aria-label="typing"
       >
         <span className="size-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.3s]" />

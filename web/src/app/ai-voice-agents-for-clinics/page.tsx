@@ -133,7 +133,7 @@ export default async function ClinicVoiceAgents() {
             <Reveal delay={260} className="mt-8 flex flex-wrap gap-3">
               <a
                 href={`tel:${CALL_NUMBER}`}
-                className="flex items-center gap-2.5 rounded-full border border-hairline bg-bg-2/60 px-4 py-2.5 text-sm text-text-2 transition-colors hover:border-accent/40 hover:text-text"
+                className="flex items-center gap-2.5 rounded-full border border-hairline bg-bg-2/60 px-4 py-2.5 text-sm text-text-2 transition-colors hover:border-accent/40 hover:text-text glass"
               >
                 <Phone className="size-4 text-accent" /> Call Lisa now
               </a>
@@ -141,12 +141,12 @@ export default async function ClinicVoiceAgents() {
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2.5 rounded-full border border-hairline bg-bg-2/60 px-4 py-2.5 text-sm text-text-2 transition-colors hover:border-accent/40 hover:text-text"
+                className="flex items-center gap-2.5 rounded-full border border-hairline bg-bg-2/60 px-4 py-2.5 text-sm text-text-2 transition-colors hover:border-accent/40 hover:text-text glass"
               >
                 <MessageCircle className="size-4 text-accent" /> WhatsApp Lisa
               </a>
             </Reveal>
-            <Reveal delay={300} className="mt-6 flex items-center gap-3 rounded-[var(--radius)] border border-hairline bg-bg-2/40 px-4 py-3">
+            <Reveal delay={300} className="mt-6 flex items-center gap-3 rounded-[var(--radius)] border border-hairline bg-bg-2/40 px-4 py-3 glass">
               <ShieldCheck className="size-5 shrink-0 text-accent" />
               <p className="text-sm text-text-2">
                 <span className="font-semibold text-text">Built-in boundary, </span>
@@ -181,7 +181,7 @@ export default async function ClinicVoiceAgents() {
               <Reveal
                 key={step.title}
                 delay={i * 90}
-                className="flex flex-col rounded-[var(--radius)] border border-hairline bg-bg/60 p-6"
+                className="flex flex-col rounded-[var(--radius)] border border-hairline bg-bg/60 p-6 glass"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-text">{step.title}</span>
@@ -189,7 +189,7 @@ export default async function ClinicVoiceAgents() {
                 </div>
                 {step.caller && (
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-full border border-hairline bg-bg-2 text-xs font-semibold text-text-2">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full border border-hairline bg-bg-2 text-xs font-semibold text-text-2 glass">
                       AM
                     </span>
                     <div className="min-w-0 flex-1">
@@ -200,7 +200,7 @@ export default async function ClinicVoiceAgents() {
                   </div>
                 )}
                 {step.transcript && (
-                  <p className="mt-4 rounded-[var(--radius)] border border-hairline bg-bg-2/60 p-3 text-sm text-text-2">
+                  <p className="mt-4 rounded-[var(--radius)] border border-hairline bg-bg-2/60 p-3 text-sm text-text-2 glass">
                     {step.transcript}
                   </p>
                 )}
@@ -249,7 +249,7 @@ export default async function ClinicVoiceAgents() {
             {BOUNDARY_NO.map((item) => (
               <div
                 key={item}
-                className="flex items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2/50 px-5 py-4"
+                className="flex items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2/50 px-5 py-4 glass"
               >
                 <X className="size-4 shrink-0 text-muted" />
                 <span className="label shrink-0 text-muted">Human handoff</span>
@@ -274,7 +274,7 @@ export default async function ClinicVoiceAgents() {
           </Reveal>
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {CAPABILITIES.map((c, i) => (
-              <Reveal key={c.no} delay={i * 80} className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-6">
+              <Reveal key={c.no} delay={i * 80} className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-6 glass">
                 <span className="label text-accent">{c.no}</span>
                 <h3 className="mt-4 font-semibold text-text">{c.title}</h3>
                 <p className="mt-2 text-sm text-text-2">{c.body}</p>
@@ -304,7 +304,7 @@ export default async function ClinicVoiceAgents() {
             </Reveal>
           ))}
         </div>
-        <Reveal delay={320} className="mt-12 flex flex-wrap items-center gap-3 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6">
+        <Reveal delay={320} className="mt-12 flex flex-wrap items-center gap-3 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 glass">
           <strong className="text-text">Pilot includes</strong>
           {PILOT_INCLUDES.map((p) => (
             <span key={p} className="label rounded-full border border-hairline px-3 py-1.5 text-text-2">
@@ -350,7 +350,7 @@ export default async function ClinicVoiceAgents() {
         <div className="mt-16 grid gap-4 md:grid-cols-2">
           {FAQS.map((f, i) => (
             <Reveal key={f.q} delay={(i % 2) * 80}>
-              <details className="group rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 open:border-accent/40">
+              <details className="group rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 open:border-accent/40 glass">
                 <summary className="cursor-pointer list-none font-semibold text-text marker:content-none">
                   <span className="flex items-center justify-between gap-4">
                     {f.q}
@@ -362,7 +362,7 @@ export default async function ClinicVoiceAgents() {
             </Reveal>
           ))}
         </div>
-        <Reveal delay={200} className="mt-8 flex flex-col items-start justify-between gap-6 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 sm:flex-row sm:items-center">
+        <Reveal delay={200} className="mt-8 flex flex-col items-start justify-between gap-6 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 sm:flex-row sm:items-center glass">
           <div>
             <strong className="text-text">Safety is part of the build.</strong>
             <p className="mt-1 text-sm text-text-2">

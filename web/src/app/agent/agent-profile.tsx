@@ -305,7 +305,7 @@ export function AgentProfile() {
               <Reveal
                 key={title}
                 delay={i * 80}
-                className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-6"
+                className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-6 glass"
               >
                 <span className="label text-accent">{String(i + 1).padStart(2, "0")}</span>
                 <strong className="mt-4 block text-text">{title}</strong>
@@ -369,7 +369,7 @@ export function AgentProfile() {
 
 function Stat({ label, value, live }: { label: string; value: string; live?: boolean }) {
   return (
-    <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 px-4 py-3">
+    <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 px-4 py-3 glass">
       <span className="label text-muted">{label}</span>
       <p className="mt-1.5 flex items-center gap-2 text-sm font-semibold capitalize text-text">
         {live && <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-accent" />}
