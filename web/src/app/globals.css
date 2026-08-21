@@ -274,3 +274,287 @@ html.custom-cursor-active * {
     }
   }
 }
+
+/* ============================================================
+   Page transitions — the curtain, and the splash that hands off
+   to it. Component: src/components/PageTransition.tsx, which
+   owns the timings below; the two have to be changed together.
+   ============================================================ */
+
+:root {
+  /* Reveals settle on this: fast out of the gate, long tail. */
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  /* The curtain runs on a symmetric curve, so a column leaving looks like
+     the same object as a column arriving. */
+  --ease-shutter: cubic-bezier(0.76, 0, 0.24, 1);
+  /* Overshoot, kept for small things that should feel sprung — the dot. */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --pt-cover: 480ms;
+  --pt-reveal: 520ms;
+  --pt-stagger: 38ms;
+}
+
+/* ---- Route curtain ---- */
+
+.pt-curtain {
+  position: fixed;
+  inset: 0;
+  /* Over the nav (z-50) and the mobile menu (z-60): a transition that the
+     navigation punches through is not a transition. */
+  z-index: 100;
+  visibility: hidden;
+  pointer-events: none;
+  --cw: calc(100vw / var(--n));
+}
+
+.pt-curtain[data-phase="cover"],
+.pt-curtain[data-phase="covered"],
+.pt-curtain[data-phase="reveal"] {
+  visibility: visible;
+}
+
+/* Covered, the curtain also swallows clicks: a second navigation started
+   into a screen the visitor cannot see would land them somewhere they did
+   not choose. */
+.pt-curtain[data-phase="cover"],
+.pt-curtain[data-phase="covered"] {
+  pointer-events: auto;
+}
+
+.pt-col {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  left: calc(var(--i) * var(--cw));
+  /* Fractional viewport widths do not tile exactly. The extra 1.5px laps
+     each column over the next and hides the seams rounding leaves. */
+  width: calc(var(--cw) + 1.5px);
+  background: var(--bg);
+  border-right: 1px solid var(--hairline);
+  transform: translateY(-101%);
+  will-change: transform;
+}
+
+/* The leading edge. It is the only lit thing on an otherwise flat panel, so
+   it is what the eye tracks across the sweep. */
+.pt-col::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 24px var(--glow);
+}
+
+.pt-curtain[data-phase="cover"] .pt-col {
+  transform: translateY(0);
+  transition: transform var(--pt-cover) var(--ease-shutter);
+  transition-delay: calc(var(--i) * var(--pt-stagger));
+}
+
+/* Held still, and deliberately without a transition: this is the state the
+   splash snaps the curtain into, where any travel would be seen. */
+.pt-curtain[data-phase="covered"] .pt-col {
+  transform: translateY(0);
+}
+
+/* Lifts in reverse, so the sweep reads as one continuous pass across the
+   screen rather than a rewind. */
+.pt-curtain[data-phase="reveal"] .pt-col {
+  transform: translateY(-101%);
+  transition: transform var(--pt-reveal) var(--ease-shutter);
+  transition-delay: calc((var(--n) - 1 - var(--i)) * var(--pt-stagger));
+}
+
+.pt-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 220ms var(--ease-out-expo), transform 220ms var(--ease-out-expo);
+}
+
+/* Named late in the cover, so the destination arrives just as the screen
+   finishes closing rather than racing the columns down. */
+.pt-curtain[data-phase="cover"] .pt-label,
+.pt-curtain[data-phase="covered"] .pt-label {
+  opacity: 1;
+  transform: none;
+  transition-delay: 300ms;
+}
+
+.pt-curtain[data-phase="covered"] .pt-label {
+  transition-delay: 0ms;
+}
+
+.pt-label-text {
+  color: var(--text-3);
+}
+
+/* ---- Splash ---- */
+
+/* Hidden until the inline script in layout.tsx arms it, which it only does
+   once a session and never under reduced motion. Default-off also means a
+   visitor without JS is never left behind a cover nothing can lift. */
+.splash {
+  display: none;
+}
+
+html[data-splash] .splash {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+}
+
+html[data-splash] body {
+  overflow: hidden;
+}
+
+.splash-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
+  background-size: 64px 64px;
+  /* Fades the grid out toward the edges so it reads as texture under the
+     wordmark, not as a table drawn over the screen. */
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 20%, transparent 100%);
+}
+
+.splash-mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28em;
+  padding: 0 6vw;
+  text-align: center;
+  font-weight: 800;
+  font-size: clamp(2.4rem, 11vw, 11rem);
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+  color: var(--text);
+}
+
+/* Each word is wiped upward out of its own line rather than faded in: a
+   clip edge travelling over the letters gives the reveal a direction, which
+   a fade does not have. --w staggers the two words. */
+@keyframes splash-word-in {
+  from {
+    clip-path: inset(0 0 108% 0);
+    transform: translateY(0.3em);
+  }
+  to {
+    clip-path: inset(0 0 -35% 0);
+    transform: none;
+  }
+}
+
+.splash-word {
+  display: inline-block;
+  animation: splash-word-in 860ms var(--ease-out-expo) both;
+  animation-delay: calc(140ms + var(--w) * 120ms);
+}
+
+@keyframes splash-dot-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* The one accent mark on the screen, landing last and on the sprung curve —
+   the same dot the footer wordmark ends on. */
+.splash-dot {
+  display: inline-block;
+  color: var(--accent);
+  animation: splash-dot-in 540ms var(--ease-spring) both;
+  animation-delay: 1180ms;
+}
+
+.splash-foot {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 4vw, 3rem);
+  padding: 0 clamp(1.5rem, 5vw, 4rem) clamp(1.5rem, 4vh, 2.5rem);
+  color: var(--text-3);
+}
+
+.splash-rule {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+@keyframes splash-rule-in {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Runs the length of the count, so the number and the bar are two readings
+   of the same clock. */
+.splash-rule::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left;
+  animation: splash-rule-in 1400ms var(--ease-out-expo) both;
+  animation-delay: 140ms;
+}
+
+.splash-meta,
+.splash-count {
+  white-space: nowrap;
+}
+
+.splash-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+@keyframes splash-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+/* The splash does not lift itself. Its contents leave, then the curtain —
+   the same colour, already snapped shut behind it — takes over the reveal,
+   so the site has one way of uncovering itself rather than two. */
+html[data-splash="out"] .splash-mark,
+html[data-splash="out"] .splash-foot,
+html[data-splash="out"] .splash-grid {
+  animation: splash-fade-out 300ms var(--ease-out-expo) both;
+}
+
+/* Neither the curtain nor the splash has anything to say to a visitor who
+   asked for less motion, and both cost them time. */
+@media (prefers-reduced-motion: reduce) {
+  .splash,
+  html[data-splash] .splash {
+    display: none;
+  }
+
+  .pt-curtain {
+    display: none;
+  }
+}

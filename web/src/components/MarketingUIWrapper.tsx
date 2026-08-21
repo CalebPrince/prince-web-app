@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ChatWidget } from "@/components/ChatWidget";
 import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 import { CustomCursor } from "@/components/CustomCursor";
+import { PageTransition } from "@/components/PageTransition";
 
 export function MarketingUIWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,6 +19,7 @@ export function MarketingUIWrapper({ children }: { children: React.ReactNode }) 
   return (
     <>
       <CustomCursor />
+      <PageTransition />
       <SiteNav />
       {children}
       <SiteFooter />
