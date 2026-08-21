@@ -26,7 +26,9 @@ export function MarketingUIWrapper({ children }: { children: React.ReactNode }) 
           footer's negative layer while deliberately NOT opening a stacking
           context, so in-page overlays still stack against the nav and the
           chat widgets as they do today. See SiteFooter. */}
-      <div className="relative bg-bg">{children}</div>
+      <div className="relative bg-bg shadow-[0_28px_60px_-12px_rgba(0,0,0,0.55)]">
+        {children}
+      </div>
       <SiteFooter />
       <WhatsAppFloatButton />
       <ChatWidget />

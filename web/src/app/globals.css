@@ -201,14 +201,13 @@ html.custom-cursor-active * {
   .custom-cursor-ring { transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease; }
 }
 
-/* Footer rise — what the footer does on screens too short to pin it under the
-   page (see SiteFooter): its contents slide up from under its own top rule as
-   it scrolls into view, driven by scroll position rather than a timer, so the
-   motion tracks the finger. Progressive enhancement — browsers without
-   scroll-driven animations simply render it static. */
-@keyframes footer-rise {
+/* Footer depth — the footer sits under the page and is uncovered by it (see
+   SiteFooter). Both halves below animate the same idea: the footer coming up
+   out of the dark and settling as the page clears it. Transform and opacity
+   only, so it stays on the compositor. */
+@keyframes footer-emerge {
   from {
-    transform: translateY(14%);
+    transform: translateY(10%) scale(0.985);
     opacity: 0.35;
   }
   to {
@@ -217,13 +216,23 @@ html.custom-cursor-active * {
   }
 }
 
+/* Pinned footer: --footer-reveal is driven from the scroll position by
+   SiteFooter, because a pinned element cannot time itself off its own
+   position — it never moves. */
+.footer-reveal-inner {
+  transform: translateY(calc((1 - var(--footer-reveal, 1)) * 10%))
+    scale(calc(0.985 + var(--footer-reveal, 1) * 0.015));
+  opacity: calc(0.35 + var(--footer-reveal, 1) * 0.65);
+}
+
+/* Footer taller than the viewport, so it scrolls normally and can time itself
+   off its own entry into view. Progressive enhancement — browsers without
+   scroll-driven animations render it static. */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .footer-rise {
-      animation: footer-rise linear both;
+      animation: footer-emerge linear both;
       animation-timeline: view();
-      /* Settles a little before the footer is fully in view, so the last of
-         the scroll lands on a footer already at rest. */
       animation-range: entry 0% entry 85%;
     }
   }
