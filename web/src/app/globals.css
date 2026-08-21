@@ -200,3 +200,31 @@ html.custom-cursor-active * {
 @media (prefers-reduced-motion: reduce) {
   .custom-cursor-ring { transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease; }
 }
+
+/* Footer rise — what the footer does on screens too short to pin it under the
+   page (see SiteFooter): its contents slide up from under its own top rule as
+   it scrolls into view, driven by scroll position rather than a timer, so the
+   motion tracks the finger. Progressive enhancement — browsers without
+   scroll-driven animations simply render it static. */
+@keyframes footer-rise {
+  from {
+    transform: translateY(14%);
+    opacity: 0.35;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .footer-rise {
+      animation: footer-rise linear both;
+      animation-timeline: view();
+      /* Settles a little before the footer is fully in view, so the last of
+         the scroll lands on a footer already at rest. */
+      animation-range: entry 0% entry 85%;
+    }
+  }
+}

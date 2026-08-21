@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { IconType } from "react-icons";
 import { FaGithub, FaLinkedinIn, FaYoutube, FaXTwitter } from "react-icons/fa6";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS: { label: string; to: string }[] = [
   { label: "Services", to: "/services" },
@@ -54,14 +58,87 @@ function FooterColumn({
   );
 }
 
+type FooterMotion = "static" | "reveal" | "rise";
+
+/** How the footer arrives on screen. Two mechanisms, picked by measurement,
+ *  because the good one has a hard size limit:
+ *
+ *  "reveal" — the footer parks on the viewport floor and the (opaque) page
+ *  above scrolls away off it, so it reads as rising out from beneath the page
+ *  rather than arriving with the scroll. `sticky bottom-0` alone does that:
+ *  the last in-flow block gets pulled up onto the viewport floor and only
+ *  settles into its natural position at the very end of the document. The
+ *  negative z-index puts it behind the page body (see MarketingUIWrapper,
+ *  which supplies the opaque cover) — negative rather than raising the
+ *  content, because raising it would open a stacking context around every
+ *  page and trap in-page overlays under the nav.
+ *
+ *  "rise" — the fallback, for when the footer is taller than the viewport.
+ *  Pinned to the viewport floor, a footer that tall would have its top
+ *  cropped with no way to scroll to it, so instead its contents slide up from
+ *  under its own top rule as it scrolls in (see .footer-rise in globals.css).
+ *  Same read, no size limit. That is the phone case: this footer runs well
+ *  past a phone screen.
+ *
+ *  "static" — what everyone gets before the measure lands, and what visitors
+ *  who ask for reduced motion keep.
+ */
+function useFooterMotion() {
+  const ref = useRef<HTMLElement>(null);
+  const [motion, setMotion] = useState<FooterMotion>("static");
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // offsetHeight is the in-flow height either way: neither sticky nor the
+    // rise animation resizes the element, so applying the result of a measure
+    // can never feed back into the next one.
+    const measure = () => {
+      if (reduceMotion.matches) return setMotion("static");
+      setMotion(el.offsetHeight <= window.innerHeight ? "reveal" : "rise");
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    reduceMotion.addEventListener("change", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      reduceMotion.removeEventListener("change", measure);
+    };
+  }, []);
+
+  return { ref, motion };
+}
+
 export function SiteFooter() {
   /** The nav list runs down two columns before wrapping, the way the link
    *  blocks in the reference layout do, instead of one long single column. */
   const navRows = Math.ceil(NAV_LINKS.length / 2);
+  const { ref, motion } = useFooterMotion();
 
   return (
-    <footer className="border-t border-hairline bg-bg">
-      <div className="mx-auto max-w-[1400px] px-6 md:px-10">
+    <footer
+      ref={ref}
+      className={cn(
+        // Clip, not hidden, so the "rise" keeps its travel behind the top
+        // rule: overflow-hidden would make the footer a scroll container and
+        // the rise's view() timeline would resolve against it and never run.
+        "overflow-clip border-t border-hairline bg-bg",
+        motion === "reveal" && "sticky bottom-0 -z-10"
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto max-w-[1400px] px-6 md:px-10",
+          motion === "rise" && "footer-rise"
+        )}
+      >
         {/* Link band */}
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 py-16 md:grid-cols-12 md:py-20">
           <FooterColumn label="Navigate" className="col-span-2 md:col-span-5">
