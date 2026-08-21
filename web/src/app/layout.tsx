@@ -35,6 +35,14 @@ export const metadata: Metadata = {
 // matching this app's design (unlike the PHP pages' light-first default).
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("theme");var isLight=s?s==="light":matchMedia("(prefers-color-scheme: light)").matches;if(isLight)document.documentElement.setAttribute("data-theme","light");}catch(e){}})();`;
 
+// Arms the splash before the first paint, the same way the theme is applied
+// above: the splash has to be covering in the very first frame, or the
+// visitor sees the page and then has it hidden again by its own introduction.
+// Once a session only, and never under reduced motion. The path guard matters
+// — data-splash locks scrolling, and the admin and client apps do not mount
+// PageTransition, so nothing there would ever take it back off.
+const SPLASH_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0||p.indexOf("/client")===0)return;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(sessionStorage.getItem("pc-splash"))return;sessionStorage.setItem("pc-splash","1");document.documentElement.setAttribute("data-splash","on");}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -44,6 +52,7 @@ export default function RootLayout({
     <html lang="en" className={`${manrope.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-bg text-text antialiased">
         <MarketingUIWrapper>
