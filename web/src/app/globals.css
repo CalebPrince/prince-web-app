@@ -18,6 +18,8 @@
   --glow: rgba(41, 217, 120, 0.55);
   --hairline: rgba(255, 255, 255, 0.08);
   --hairline-strong: rgba(255, 255, 255, 0.26);
+  /* The shadow the page's bottom edge casts onto the footer it is uncovering. */
+  --footer-scrim: rgba(0, 0, 0, 0.55);
   --radius: 12px;
   color-scheme: dark;
 }
@@ -40,6 +42,7 @@
   --glow: rgba(8, 120, 60, 0.35);
   --hairline: rgba(10, 11, 13, 0.09);
   --hairline-strong: rgba(10, 11, 13, 0.28);
+  --footer-scrim: rgba(10, 11, 13, 0.16);
   color-scheme: light;
 }
 
@@ -201,9 +204,54 @@ html.custom-cursor-active * {
   .custom-cursor-ring { transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease; }
 }
 
-/* Footer emerge — for the case the footer cannot be pinned behind the page
-   (see SiteFooter): it comes up out of the dark as it scrolls into view
-   instead. Transform and opacity only, so it stays on the compositor. */
+/* Sticky footer reveal — the footer holds still on the viewport floor while
+   the page slides up off it, so it reads as being uncovered rather than as
+   arriving with the scroll. Structure from olivierlarose/sticky-footer.
+
+   The stage is the footer's own space in the flow, one footer tall. Inside
+   it, the footer is pinned to the viewport floor from a full viewport
+   earlier, and the stage clips it — so the footer only shows in the space
+   the page has already vacated, and grows into view without ever moving.
+   --footer-h and --footer-vh are measured and published by SiteFooter. */
+.footer-stage {
+  height: var(--footer-h);
+  /* clip-path rather than overflow: it clips the pinned footer to this box
+     without making the stage a scroll container, which would take the
+     footer's sticky positioning with it. */
+  clip-path: inset(0);
+}
+
+/* Starts a viewport above the stage, so the footer inside is already pinned
+   by the time the stage reaches the bottom of the screen. */
+.footer-stage-track {
+  position: relative;
+  top: calc(var(--footer-vh) * -1);
+  height: calc(var(--footer-vh) + var(--footer-h));
+}
+
+/* Sits on the viewport floor — top + own height is one viewport — until the
+   end of the track, which is the end of the document, sets it down. */
+.footer-stage-pin {
+  position: sticky;
+  top: calc(var(--footer-vh) - var(--footer-h));
+}
+
+/* The stage's top edge is the page's bottom edge, so this rides down the
+   still footer with the page as it clears it. ::after, not an inset shadow,
+   to paint over the pinned footer rather than under it. */
+.footer-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 160px;
+  background: linear-gradient(to bottom, var(--footer-scrim), transparent);
+  pointer-events: none;
+}
+
+/* Footer depth — the fallback for a footer too tall to pin (see SiteFooter):
+   the same idea of the footer coming up out of the dark, played off its own
+   entry into view. Transform and opacity only, so it stays on the
+   compositor. */
 @keyframes footer-emerge {
   from {
     transform: translateY(10%) scale(0.985);
@@ -215,8 +263,8 @@ html.custom-cursor-active * {
   }
 }
 
-/* Timed off the footer's own entry into view. Progressive enhancement —
-   browsers without scroll-driven animations render it static. */
+/* Progressive enhancement — browsers without scroll-driven animations render
+   the tall footer static. */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .footer-rise {
