@@ -223,7 +223,10 @@ class SettingsController
     {
         $user = AuthMiddleware::requireAuth();
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $changedPricingKeys = [];
+        // Key NAMES only, never values — this list is written to the activity
+        // log and ADMIN_ONLY_KEYS holds API keys and webhook secrets.
+        $writtenKeys = [];
+        $clearedKeys = [];
 
         foreach (array_merge(self::ADMIN_ONLY_KEYS, self::CONTENT_KEYS) as $key) {
             if (!array_key_exists($key, $data)) {
@@ -290,8 +293,13 @@ class SettingsController
             }
             Settings::set($key, $value);
 
-            if (str_starts_with($key, 'pricing_')) {
-                $changedPricingKeys[] = $key;
+            $writtenKeys[] = $key;
+            // Settings::set() DELETEs on an empty value, so a blank is a
+            // destructive write, not a no-op. Recorded separately because
+            // "which settings did something just erase" was unanswerable from
+            // the log the one time it mattered.
+            if ($value === '') {
+                $clearedKeys[] = $key;
             }
 
             // The DB value is just UI state — the .maintenance marker file next
@@ -314,8 +322,13 @@ class SettingsController
             }
         }
 
-        if ($changedPricingKeys) {
-            ActivityLog::log($user, 'updated', 'pricing_settings', null, null, ['keys' => $changedPricingKeys]);
+        // Logged for EVERY save, not just pricing ones as before: an audit
+        // trail that only covers a subset can't answer "what changed these".
+        if ($writtenKeys) {
+            ActivityLog::log($user, 'updated', 'settings', null, null, [
+                'keys' => $writtenKeys,
+                'cleared' => $clearedKeys,
+            ]);
         }
 
         Response::json(['status' => 'saved']);

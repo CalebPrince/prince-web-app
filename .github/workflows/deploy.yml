@@ -153,6 +153,46 @@ jobs:
           mkdir -p .next/standalone/tmp
           date > .next/standalone/tmp/restart.txt
 
+      # Carry the PREVIOUS build's hashed chunks into this bundle so the sync
+      # stops deleting assets that pages currently being served still point at.
+      #
+      # The sync mirrors: anything on the server that isn't in the local dir
+      # gets removed. Chunk filenames are content-hashed, so every build
+      # renames them and the old set is deleted the moment the new one lands —
+      # while the outgoing Passenger process is still serving html that names
+      # the old ones. That is one half of what blanked the homepage on
+      # 2026-08-21 (the other half, an ISR page cached on disk, is gone now
+      # that `/` renders per request). Keeping one generation costs a few MB
+      # and closes the window for any page rendered just before the restart.
+      #
+      # `cp -rn` never overwrites, so a same-named file from the new build
+      # always wins. A cache miss just restores today's behaviour.
+      - name: Restore previous build's static assets
+        uses: actions/cache/restore@v4
+        with:
+          path: web/.next/static-previous
+          key: next-static-${{ github.run_id }}
+          restore-keys: |
+            next-static-
+
+      - name: Merge previous static assets into the bundle
+        working-directory: web
+        run: |
+          if [ -d .next/static-previous ]; then
+            cp -rn .next/static-previous/. .next/standalone/.next/static/ || true
+            echo "Carried forward $(find .next/static-previous -type f | wc -l) file(s) from the previous build."
+          else
+            echo "No previous static cache — first run with this step, nothing to carry forward."
+          fi
+          rm -rf .next/static-previous
+          cp -r .next/static .next/static-previous
+
+      - name: Save this build's static assets for the next deploy
+        uses: actions/cache/save@v4
+        with:
+          path: web/.next/static-previous
+          key: next-static-${{ github.run_id }}
+
       # FTP-Deploy-Action's default `exclude` list drops **/node_modules/**
       # unconditionally — fine for the PHP syncs (Node dependencies never
       # belong on that server), but standalone Next.js output ships its own
@@ -172,3 +212,58 @@ jobs:
           exclude: |
             **/.git*
             **/.git*/**
+
+      # Fetching the homepage is not enough to know a deploy worked: on
+      # 2026-08-21 `/` returned a perfectly healthy 200 while every stylesheet
+      # and script it referenced 404'd, so the page rendered as unstyled
+      # markup. Anything that serves html naming assets that aren't there has
+      # to fail this job rather than report success.
+      #
+      # Passenger restarts on the tmp/restart.txt that just synced, so allow a
+      # little time for the new process to come up before judging it.
+      - name: Smoke-test the deployed site
+        run: |
+          set -uo pipefail
+          BASE="https://princecaleb.dev"
+
+          for attempt in $(seq 1 10); do
+            code=$(curl -sS -o /tmp/home.html -w '%{http_code}' --max-time 30 "$BASE/" || echo 000)
+            [ "$code" = "200" ] && break
+            echo "Attempt $attempt: homepage returned $code, waiting for the app to restart…"
+            sleep 15
+          done
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Homepage returned HTTP $code after the deploy."
+            exit 1
+          fi
+
+          # Every hashed asset the delivered html actually references. The
+          # `|| true` matters: runners default to `bash -eo pipefail`, so a
+          # no-match grep would kill the step before the explicit check below
+          # could explain what went wrong.
+          grep -o '/_next/static/[A-Za-z0-9_./-]*\.\(js\|css\)' /tmp/home.html \
+            | sort -u > /tmp/assets.txt || true
+          count=$(wc -l < /tmp/assets.txt)
+          echo "Homepage OK. Checking $count referenced asset(s)…"
+
+          if [ "$count" -eq 0 ]; then
+            echo "::error::Homepage referenced no /_next/static assets — the build did not render as expected."
+            exit 1
+          fi
+
+          failed=0
+          while read -r path; do
+            acode=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$BASE$path" || echo 000)
+            if [ "$acode" != "200" ]; then
+              echo "::error::$path returned HTTP $acode"
+              failed=$((failed + 1))
+            fi
+          done < /tmp/assets.txt
+
+          if [ "$failed" -gt 0 ]; then
+            echo "::error::$failed asset(s) referenced by the homepage are missing — the site will render unstyled."
+            exit 1
+          fi
+
+          echo "All $count assets served. Deploy verified."

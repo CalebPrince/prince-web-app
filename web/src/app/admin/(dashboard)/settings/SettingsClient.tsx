@@ -156,10 +156,14 @@ export default function SettingsClient({
   initialSettings,
   account,
   templateDefaults,
+  loadFailed = false,
 }: {
   initialSettings: Record<string, string>;
   account: { email?: string; twofa_enabled?: boolean };
   templateDefaults: EmailTemplateDefaults;
+  /** True when the server couldn't read the settings. Blocks every group's
+   *  Save, because posting the resulting blanks would erase real secrets. */
+  loadFailed?: boolean;
 }) {
   const [values, setValues] = useState<Record<string, string>>(initialSettings);
   const [tab, setTab] = useState<Tab>("account");
@@ -221,6 +225,14 @@ export default function SettingsClient({
     setValues((prev) => ({ ...prev, [key]: value }));
 
   const saveKeys = async (keys: string[], groupLabel: string) => {
+    // Refuse rather than post the blanks a failed read left in the form.
+    if (loadFailed) {
+      setMessage({
+        ok: false,
+        text: "Settings could not be loaded, so saving is disabled. Reload the page first.",
+      });
+      return;
+    }
     setSavingGroup(groupLabel);
     setMessage(null);
     try {
@@ -414,6 +426,15 @@ export default function SettingsClient({
         title="Everything the site runs on."
         description="Credentials, integrations, email delivery and the switches that change how the public site behaves."
       />
+
+      {loadFailed && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <strong className="font-semibold">Settings could not be loaded.</strong> The fields
+          below are showing empty because the request to the API failed — these are not your real
+          values. Saving is disabled so blanks can&apos;t overwrite your credentials and API keys.
+          Reload the page; if it keeps failing, check that you are still signed in.
+        </div>
+      )}
 
       {message && (
         <div

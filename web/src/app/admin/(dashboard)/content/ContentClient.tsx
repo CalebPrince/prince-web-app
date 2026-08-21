@@ -255,8 +255,13 @@ const TABS: { value: Tab; label: string }[] = [
 
 export default function ContentClient({
   initialSettings,
+  loadFailed = false,
 }: {
   initialSettings: Record<string, string>;
+  /** True when the server couldn't read /api/v1/admin/settings. Without this
+   *  the page is indistinguishable from a genuinely blank one: every field
+   *  renders empty and Save would post those blanks over the real values. */
+  loadFailed?: boolean;
 }) {
   /** The FAQ count defaults to the highest question that actually has content,
    *  matching how the legacy page inferred it before the setting existed. */
@@ -281,21 +286,43 @@ export default function ContentClient({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [uploadStatus, setUploadStatus] = useState<Record<string, string>>({});
+  /** Keys the user has actually edited this session. The save posts only
+   *  these — see the comment on save() for why posting everything is unsafe. */
+  const [dirty, setDirty] = useState<Set<string>>(new Set());
 
   const set = (key: string, value: string) => {
     setValues((prev) => ({ ...prev, [key]: value }));
+    setDirty((prev) => new Set(prev).add(key));
     setMessage(null);
   };
 
+  // Posts only edited fields. It used to post every key in ALL_KEYS, blanks
+  // included, which is destructive: the API skips keys absent from the
+  // payload, but writes the ones present — and Settings::set() DELETEs a row
+  // whose value is ''. So one save from a form that failed to load its values
+  // (see loadFailed) would wipe every Site Content setting, including ones on
+  // tabs never opened. Sending just the diff means an unloaded field can't
+  // overwrite anything, while deliberately clearing a field still works: it
+  // lands in `dirty` with an empty value and is posted as such.
   const save = async () => {
+    if (loadFailed) return;
+    const changed = ALL_KEYS.filter((k) => dirty.has(k));
+    if (changed.length === 0) {
+      setMessage({ ok: true, text: "Nothing to save — no fields changed." });
+      return;
+    }
     setSaving(true);
     setMessage(null);
     try {
       await adminApi.put(
         "/api/v1/admin/settings",
-        Object.fromEntries(ALL_KEYS.map((k) => [k, (values[k] ?? "").trim()]))
+        Object.fromEntries(changed.map((k) => [k, (values[k] ?? "").trim()]))
       );
-      setMessage({ ok: true, text: "Saved — the public site updates immediately." });
+      setDirty(new Set());
+      setMessage({
+        ok: true,
+        text: `Saved ${changed.length} field${changed.length === 1 ? "" : "s"} — the public site updates immediately.`,
+      });
     } catch (err) {
       setMessage({ ok: false, text: err instanceof Error ? err.message : "Could not save." });
     } finally {
@@ -378,12 +405,21 @@ export default function ContentClient({
         title="Every word on the public site."
         description="Hero, services, pricing, FAQ and agent copy — edits go live immediately."
         actions={
-          <Button variant="primary" onClick={save} disabled={saving}>
+          <Button variant="primary" onClick={save} disabled={saving || loadFailed}>
             <Save className="w-4 h-4" />
             {saving ? "Saving…" : "Save changes"}
           </Button>
         }
       />
+
+      {loadFailed && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <strong className="font-semibold">Settings could not be loaded.</strong> Every field
+          below is showing empty because the request to the API failed — this is not your real
+          content. Saving is disabled so these blanks can&apos;t be written over your live values.
+          Reload the page; if it keeps failing, check that you are still signed in.
+        </div>
+      )}
 
       {message && (
         <div
