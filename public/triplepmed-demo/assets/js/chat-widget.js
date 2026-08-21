@@ -134,7 +134,7 @@
     }
 
     if (action === 'virtual') {
-      botSay('Our virtual clinic lets you see a physician by secure video call: ' + linkBtn('Visit the Virtual Clinic', info.virtualClinicUrl));
+      botSay('Our telemedicine service lets you see a physician by secure video call: ' + linkBtn('Visit Telemedicine', info.telemedicineUrl));
       setTimeout(function () { renderQuickReplies(MAIN_MENU); }, 500);
       return;
     }
@@ -152,7 +152,7 @@
     if (/hour|open|close|time/.test(q)) return handleAction('hours');
     if (/where|address|location|direction/.test(q)) return handleAction('hours');
     if (/whatsapp/.test(q)) return handleAction('whatsapp');
-    if (/virtual|telehealth|video|online consult/.test(q)) return handleAction('virtual');
+    if (/virtual|telemedicine|telehealth|video|online consult/.test(q)) return handleAction('virtual');
     if (/book|appointment|schedule|reserve/.test(q)) return handleAction('appointment');
     if (/phone|call|number/.test(q)) {
       botSay('You can reach us at ' + escapeHtml(info.phone) + ' (telehealth: ' + escapeHtml(info.telehealthPhone) + ').');
