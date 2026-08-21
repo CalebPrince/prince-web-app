@@ -626,6 +626,14 @@ textarea { resize: vertical; min-height: 120px; }
 #who-its-for .card { display: flex; flex-direction: column; justify-content: center; }
 #who-its-for .card > *:last-child { margin-bottom: 0; }
 
+/* .service-icon defaults to a white chip with a white glyph — correct on the
+   tinted .service-card, invisible on these white cards. It still occupied
+   52px + 18px of margin, which is what read as a lopsided gap above the text.
+   Same green treatment .clinic-service gives the "What our caregivers do"
+   cards higher up the page, without borrowing its type sizes. */
+#who-its-for .service-icon { background: var(--brand-green-tint); }
+#who-its-for .service-icon svg { stroke: var(--brand-green-dark); }
+
 .clinic-step { position: relative; }
 .clinic-step-num {
   display: inline-flex; align-items: center; justify-content: center;
