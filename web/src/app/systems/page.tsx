@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Star } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TiltCard } from "@/components/TiltCard";
+import { ProjectMasonry } from "@/components/ProjectMasonry";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getSystems, categoriesOf, type SystemView } from "@/lib/systems";
@@ -94,23 +95,9 @@ export default function Systems() {
       </section>
 
       {/* ── SYSTEMS GRID ────────────────────────────────────── */}
+      {/* The homepage's Selected Work cards, same component — the index is
+          just the unfiltered version of the same gallery. */}
       <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32">
-        {systems === null && !failed && (
-          <div className="grid gap-x-6 gap-y-16 lg:grid-cols-12">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className={cn(
-                  "animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/50",
-                  i % 4 === 0 || i % 4 === 3
-                    ? "lg:col-span-7 aspect-[16/10]"
-                    : "lg:col-span-5 aspect-[4/5]",
-                )}
-              />
-            ))}
-          </div>
-        )}
-
         {failed && (
           <p className="py-20 text-center text-text-2">Could not load systems right now.</p>
         )}
@@ -119,46 +106,15 @@ export default function Systems() {
           <p className="py-20 text-center text-text-2">No systems match this filter yet.</p>
         )}
 
-        <div className="grid gap-x-6 gap-y-16 lg:grid-cols-12">
-          {shown.map((p, i) => (
-            <Reveal key={p.slug} className={p.span} delay={(i % 2) * 100}>
-              <Link href={`/systems/${p.slug}`} className="group block">
-                <TiltCard
-                  maxTilt={5}
-                  className={cn(
-                    "relative overflow-hidden rounded-[var(--radius)] border border-hairline bg-bg-2",
-                    p.ratio,
-                  )}
-                >
-                  {p.img && (
-                    <img
-                      src={p.img}
-                      alt={`${p.name} - ${p.category}`}
-                      className="h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-bg/70 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  {p.result && (
-                    <span className="absolute left-5 top-5 rounded-full border border-accent/40 bg-bg/50 px-3 py-1.5 text-[0.7rem] font-medium text-accent backdrop-blur-md">
-                      {p.result}
-                    </span>
-                  )}
-                  <div className="absolute right-5 top-5 flex size-11 items-center justify-center rounded-full border border-text/20 bg-bg/40 opacity-0 backdrop-blur-md transition-all duration-500 group-hover:opacity-100">
-                    <ArrowUpRight className="size-5 text-text" />
-                  </div>
-                </TiltCard>
-                <div className="mt-6">
-                  <div className="flex items-center gap-3">
-                    <span className="label text-accent">{p.category}</span>
-                    {p.year && <span className="label text-muted">/ {p.year}</span>}
-                  </div>
-                  <h3 className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl">{p.name}</h3>
-                  <p className="mt-2 max-w-md text-text-2">{p.desc}</p>
-                </div>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
+        {!failed && (
+          <ProjectMasonry
+            // Remounting on a filter change lets the incoming cards play
+            // their entrance rather than snapping into place.
+            key={filter}
+            systems={systems === null ? null : shown}
+            trigger="item"
+          />
+        )}
       </section>
 
       {/* ── PROOF · CLIENT SIGNALS ──────────────────────────── */}
