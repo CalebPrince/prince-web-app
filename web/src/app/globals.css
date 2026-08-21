@@ -20,6 +20,11 @@
   --hairline-strong: rgba(255, 255, 255, 0.26);
   /* The shadow the page's bottom edge casts onto the footer it is uncovering. */
   --footer-scrim: rgba(0, 0, 0, 0.55);
+  /* Resting and hover-lift shadows for the tilted Selected Work cards — the
+     Figma file's 8px -> 20px blur, kept as tokens so the light theme can cast
+     a shadow that suits paper instead of a hole punched in the page. */
+  --card-shadow: 0 12px 8px rgba(0, 0, 0, 0.35);
+  --card-shadow-lift: 0 18px 20px rgba(0, 0, 0, 0.5);
   --radius: 12px;
   color-scheme: dark;
 }
@@ -43,6 +48,8 @@
   --hairline: rgba(10, 11, 13, 0.09);
   --hairline-strong: rgba(10, 11, 13, 0.28);
   --footer-scrim: rgba(10, 11, 13, 0.16);
+  --card-shadow: 0 12px 8px rgba(10, 11, 13, 0.07);
+  --card-shadow-lift: 0 18px 20px rgba(10, 11, 13, 0.13);
   color-scheme: light;
 }
 
@@ -150,8 +157,27 @@ body {
   animation: agentbreathe 1.4s ease-in-out infinite;
 }
 
+/* Selected Work gallery (WorkGallery.tsx). The accent card breathes a glow
+   around its border, and the scroll cue bounces — both per the Figma file's
+   animation annotations. */
+@keyframes gallerypulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); opacity: 0.6; }
+  50% { box-shadow: 0 0 22px 3px var(--accent-soft); opacity: 1; }
+}
+.gallery-pulse {
+  animation: gallerypulse 2s ease-in-out infinite;
+}
+@keyframes gallerybounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.gallery-bounce {
+  animation: gallerybounce 2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rise, [class*="drift"], [class*="glow"], [class*="marquee"], .agent-breathe { animation: none !important; }
+  .rise, [class*="drift"], [class*="glow"], [class*="marquee"], .agent-breathe,
+  .gallery-pulse, .gallery-bounce { animation: none !important; }
   html { scroll-behavior: auto; }
 }
 
