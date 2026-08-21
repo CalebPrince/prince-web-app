@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { IconType } from "react-icons";
 import { FaGithub, FaLinkedinIn, FaYoutube, FaXTwitter } from "react-icons/fa6";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS: { label: string; to: string }[] = [
   { label: "Services", to: "/services" },
@@ -54,14 +58,138 @@ function FooterColumn({
   );
 }
 
+type FooterMotion = "static" | "reveal" | "rise";
+
+/** How the footer arrives on screen. Two mechanisms, picked by measurement,
+ *  because the good one has a hard size limit:
+ *
+ *  "reveal" — the footer parks on the viewport floor and the (opaque) page
+ *  above scrolls away off it, so it reads as rising out from beneath the page
+ *  rather than arriving with the scroll. `sticky bottom-0` alone does that:
+ *  the last in-flow block gets pulled up onto the viewport floor and only
+ *  settles into its natural position at the very end of the document. The
+ *  negative z-index puts it behind the page body (see MarketingUIWrapper,
+ *  which supplies the opaque cover) — negative rather than raising the
+ *  content, because raising it would open a stacking context around every
+ *  page and trap in-page overlays under the nav.
+ *
+ *  "rise" — the fallback, for when the footer is taller than the viewport.
+ *  Pinned to the viewport floor, a footer that tall would have its top
+ *  cropped with no way to scroll to it, so instead its contents slide up from
+ *  under its own top rule as it scrolls in (see .footer-rise in globals.css).
+ *  Same read, no size limit. That is the phone case: this footer runs well
+ *  past a phone screen.
+ *
+ *  "static" — what everyone gets before the measure lands, and what visitors
+ *  who ask for reduced motion keep.
+ */
+function useFooterMotion() {
+  const ref = useRef<HTMLElement>(null);
+  const [motion, setMotion] = useState<FooterMotion>("static");
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // offsetHeight is the in-flow height either way: neither sticky nor the
+    // rise animation resizes the element, so applying the result of a measure
+    // can never feed back into the next one.
+    const measure = () => {
+      if (reduceMotion.matches) return setMotion("static");
+      setMotion(el.offsetHeight <= window.innerHeight ? "reveal" : "rise");
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    reduceMotion.addEventListener("change", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      reduceMotion.removeEventListener("change", measure);
+    };
+  }, []);
+
+  return { ref, motion };
+}
+
+/** Publishes how far the reveal has got, 0 to 1, as --footer-reveal on the
+ *  footer, for the depth cues in .footer-reveal-inner to read.
+ *
+ *  Uncovering a pinned footer is, on its own, almost invisible here: page and
+ *  footer are the same colour and the top of the footer is padding, so the
+ *  page slides off it with nothing to see. What sells it is the footer
+ *  reacting to being uncovered — lifting, settling to full size, coming up
+ *  out of the dark — and that needs the progress of the reveal as a number.
+ *
+ *  Which is a document measure, not an element one: a pinned footer does not
+ *  move, so its own rect says nothing. The scroll still to go is exactly how
+ *  much of the footer is still covered.
+ */
+function useRevealProgress(ref: React.RefObject<HTMLElement | null>, active: boolean) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !active) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const height = el.offsetHeight;
+      if (!height) return;
+      const remaining =
+        document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+      // Settles a little before the very last pixel of scroll, so the reveal
+      // reads as finished rather than as still moving when the page stops.
+      const progress = Math.min(1, Math.max(0, (1 - remaining / height) / 0.85));
+      el.style.setProperty("--footer-reveal", progress.toFixed(4));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      el.style.removeProperty("--footer-reveal");
+    };
+  }, [ref, active]);
+}
+
 export function SiteFooter() {
   /** The nav list runs down two columns before wrapping, the way the link
    *  blocks in the reference layout do, instead of one long single column. */
   const navRows = Math.ceil(NAV_LINKS.length / 2);
+  const { ref, motion } = useFooterMotion();
+  useRevealProgress(ref, motion === "reveal");
 
   return (
-    <footer className="border-t border-hairline bg-bg">
-      <div className="mx-auto max-w-[1400px] px-6 md:px-10">
+    <footer
+      ref={ref}
+      className={cn(
+        // Clip, not hidden, so the "rise" keeps its travel behind the top
+        // rule: overflow-hidden would make the footer a scroll container and
+        // the rise's view() timeline would resolve against it and never run.
+        // bg-2, not bg: the footer has to be a different surface from the
+        // page for the page to be seen coming off it at all.
+        "overflow-clip border-t border-hairline bg-bg-2",
+        motion === "reveal" && "sticky bottom-0 -z-10"
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto max-w-[1400px] px-6 md:px-10",
+          motion === "reveal" && "footer-reveal-inner",
+          motion === "rise" && "footer-rise"
+        )}
+      >
         {/* Link band */}
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 py-16 md:grid-cols-12 md:py-20">
           <FooterColumn label="Navigate" className="col-span-2 md:col-span-5">
