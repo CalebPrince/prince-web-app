@@ -218,17 +218,15 @@ export function WorkGallery() {
         }}
       />
 
-      {/* section-header-container */}
+      {/* The section's own headings live in page.tsx; what the design's
+          header contributes here is the sweeping marker bar under them and
+          the line of gallery copy. */}
       <motion.div
         variants={headerVariants}
         initial="hidden"
         animate={state}
-        className="flex flex-col items-center gap-4 text-center"
+        className="flex flex-col gap-4"
       >
-        <p className="label text-accent">[ 02 // Gallery ]</p>
-        <h2 className="text-[clamp(2.2rem,5vw,3rem)] font-bold tracking-[-0.03em]">
-          Selected Work
-        </h2>
         <div className="h-1 w-[120px] overflow-hidden rounded-sm bg-bg-3">
           <motion.span
             variants={underlineVariants}
@@ -246,7 +244,7 @@ export function WorkGallery() {
 
       {/* masonry-grid — CSS columns, so cards reflow on resize while keeping
           their own rotation, offset and proportions. */}
-      <div className="mt-20 gap-8 [column-fill:balance] md:columns-2 lg:columns-3">
+      <div className="mt-16 gap-8 [column-fill:balance] md:columns-2 lg:columns-3">
         {systems === null
           ? SLOTS.map((slot, i) => (
               <div key={i} className={cn("mb-9 break-inside-avoid", slot.offset)}>

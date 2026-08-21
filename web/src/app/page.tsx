@@ -344,13 +344,29 @@ export default async function Home() {
         className="relative overflow-hidden px-6 py-28 md:px-10 md:py-40"
       >
         <div className="mx-auto max-w-[1400px]">
+          <Reveal className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+            <div>
+              <SectionLabel index="02">Proof, not promises</SectionLabel>
+              <h2 className="mt-6 text-[clamp(2.2rem,5vw,4.5rem)] font-bold tracking-[-0.03em]">
+                See what has already shipped.
+              </h2>
+            </div>
+            <Link
+              href="/systems"
+              className="label group hidden items-center gap-2 text-text-2 hover:text-text md:flex"
+            >
+              See all systems
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Reveal>
+
           <WorkGallery />
 
-          <div className="mt-16 flex justify-center">
+          <Reveal className="mt-16 flex justify-center md:hidden">
             <Link href="/systems" className={cn(buttonVariants({ variant: "secondary" }))}>
               See all systems <ArrowRight className="size-4" />
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
 
