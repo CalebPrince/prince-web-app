@@ -7,6 +7,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 import { CustomCursor } from "@/components/CustomCursor";
 import { PageTransition } from "@/components/PageTransition";
+import { BrandWatermark } from "@/components/BrandWatermark";
 
 export function MarketingUIWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,6 +21,7 @@ export function MarketingUIWrapper({ children }: { children: React.ReactNode }) 
     <>
       <CustomCursor />
       <PageTransition />
+      <BrandWatermark />
       <SiteNav />
       {children}
       <SiteFooter />
