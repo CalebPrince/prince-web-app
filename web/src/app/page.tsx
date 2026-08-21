@@ -91,9 +91,25 @@ const FALLBACK_HERO = {
 // database/generate_daily_headline.php writes one AI-generated
 // eyebrow/title/subtitle set per day; SettingsController::publicContent()
 // overrides the static hero_* Site Content values with today's row when
-// present. Revalidating hourly means a fresh headline (written once daily,
-// around 04:00, by cron) shows up without a redeploy.
-export const revalidate = 3600;
+// present, so this page has to re-render to pick a new headline up.
+//
+// Rendered per request rather than with `export const revalidate`, which
+// took the homepage down on 2026-08-21. ISR writes the rendered page to
+// nextjs-web/.next/server/app/index.html ON THE SERVER, and that file
+// outlives the build that produced it. The deploy is a plain FTP sync plus
+// a tmp/restart.txt touch, so there is a window after the new files land
+// where the still-running OLD process can revalidate this route and write
+// its OLD html back over the freshly uploaded copy. The new process then
+// boots, serves that html, and every /_next/static/* chunk it references
+// was deleted by the same sync -> stylesheet and scripts all 404 and the
+// homepage renders as unstyled markup. It does not self-heal, because the
+// accompanying .meta marks the entry as freshly generated.
+//
+// Every other route is either static (overwritten by the sync on each
+// deploy) or force-dynamic, which is why only `/` broke. Rendering on
+// demand costs two loopback calls to the PHP API per hit and keeps the
+// markup permanently in lockstep with the running build's asset hashes.
+export const dynamic = "force-dynamic";
 
 // Renders a hero_title's single `**phrase**` marker (see
 // generate_daily_headline.php's prompt) as the same accent-colored span the
