@@ -618,6 +618,14 @@ textarea { resize: vertical; min-height: 120px; }
 .clinic-site .hero-slideshow .hero-badge svg { stroke: var(--brand-green); }
 .clinic-site .hero-dot.is-active { background: var(--brand-green); }
 
+/* "Who It's For" cards stretch to match the tallest in the row, so their copy
+   sat pinned to the top with all the slack pooling underneath — and the
+   closing paragraph's own bottom margin piled on top of that. Centre the
+   block vertically and drop that trailing margin so the space above and below
+   the text comes out even on every card. */
+#who-its-for .card { display: flex; flex-direction: column; justify-content: center; }
+#who-its-for .card > *:last-child { margin-bottom: 0; }
+
 .clinic-step { position: relative; }
 .clinic-step-num {
   display: inline-flex; align-items: center; justify-content: center;
@@ -653,6 +661,17 @@ textarea { resize: vertical; min-height: 120px; }
 .mobile-only { display: none; }
 
 /* ---------- Responsive ---------- */
+
+/* .hero-content caps at 640px to keep the headline and lead at a readable
+   line length, but the three badges need ~790px to sit on one line, so the
+   last one ("Telehealth from anywhere") dropped to a row of its own. Let just
+   the badge row run past that cap once the viewport is wide enough to hold it
+   — the container's own max-width still bounds it. Below 1025px the badges go
+   back to wrapping, which is what the narrower layouts want anyway. */
+@media (min-width: 1025px) {
+  .hero-slideshow .hero-badges { flex-wrap: nowrap; width: max-content; }
+  .hero-slideshow .hero-badge { white-space: nowrap; }
+}
 
 /* Wide desktops / large laptop screens — the header reads too small once the
    viewport goes well past a typical 13"-14" laptop, so scale it up. */
