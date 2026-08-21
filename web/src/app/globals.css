@@ -25,6 +25,11 @@
      a shadow that suits paper instead of a hole punched in the page. */
   --card-shadow: 0 12px 8px rgba(0, 0, 0, 0.35);
   --card-shadow-lift: 0 18px 20px rgba(0, 0, 0, 0.5);
+  /* The fixed "Prince Caleb" behind the page (BrandWatermark.tsx). Accent
+     green here so it reads against the near-black; strong enough to be part
+     of the page, light enough to keep the copy over it legible. */
+  --brandmark: rgba(98, 255, 152, 0.16);
+  --brandmark-dot: rgba(98, 255, 152, 0.42);
   --radius: 12px;
   color-scheme: dark;
 }
@@ -50,6 +55,9 @@
   --footer-scrim: rgba(10, 11, 13, 0.16);
   --card-shadow: 0 12px 8px rgba(10, 11, 13, 0.07);
   --card-shadow-lift: 0 18px 20px rgba(10, 11, 13, 0.13);
+  /* Black on paper, per the brief. */
+  --brandmark: rgba(10, 11, 13, 0.12);
+  --brandmark-dot: rgba(8, 120, 60, 0.5);
   color-scheme: light;
 }
 

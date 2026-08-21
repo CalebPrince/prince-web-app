@@ -221,7 +221,11 @@ export default async function Home() {
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
       <section id="top" className="relative flex min-h-screen flex-col overflow-hidden">
-        <div className="absolute inset-0 -z-10">
+        {/* bg-bg on the layer itself, not just the photograph: the fixed
+            BrandWatermark sits behind the page, and the hero is the one
+            section that must never show it through — including if the image
+            fails to load. */}
+        <div className="absolute inset-0 -z-10 bg-bg">
           <img
             src="/img/backgrounds/hero-abstract-3d.webp"
             alt="Abstract cinematic 3D digital environment with glowing objects"
