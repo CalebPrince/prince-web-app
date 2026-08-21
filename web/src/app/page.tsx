@@ -114,6 +114,37 @@ export const dynamic = "force-dynamic";
 // Renders a hero_title's single `**phrase**` marker (see
 // generate_daily_headline.php's prompt) as the same accent-colored span the
 // static fallback copy uses.
+/** Site Content stat values are free-text fields, and the natural thing to
+ *  type into one is the whole figure — "98.9%", "4.5/5", "12,000+" — with the
+ *  separate suffix field left alone. `Number()` returns NaN for every one of
+ *  those, and NaN is falsy, so the page quietly rendered its hardcoded
+ *  placeholder instead of the figure that was entered: real numbers typed by
+ *  an admin were displayed as invented ones, with nothing to indicate it.
+ *  Strip the decoration and read the number rather than discarding the input. */
+/** Matches the FIRST number in the string rather than stripping out every
+ *  non-digit: "4.5/5" has to read as 4.5, and deleting the "/" would leave
+ *  "4.55". Tolerates thousands separators so "12,000+" works too. */
+function firstNumber(raw: string | undefined): string | null {
+  return (raw ?? "").match(/-?\d[\d,]*(?:\.\d+)?/)?.[0] ?? null;
+}
+
+function statValue(raw: string | undefined, fallback: number): number {
+  const token = firstNumber(raw);
+  if (token === null) return fallback;
+  const parsed = Number(token.replace(/,/g, ""));
+  // Number.isFinite, not `|| fallback`: 0 is a legitimate figure to publish.
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+/** Keeps however many decimal places were actually typed, so "98.9" renders
+ *  as 98.9 rather than being rounded to 99. */
+function statDecimals(raw: string | undefined, fallback: number): number {
+  const token = firstNumber(raw);
+  if (token === null) return fallback;
+  const dot = token.indexOf(".");
+  return dot === -1 ? 0 : token.length - dot - 1;
+}
+
 function renderHeroTitle(title: string): ReactNode {
   const match = title.match(/\*\*([^*]+)\*\*/);
   if (!match) return title;
@@ -150,30 +181,32 @@ export default async function Home() {
     {
       icon: Rocket,
       label: content?.stat_1_label || "Apps launched",
-      target: Number(content?.stat_1_value) || publishedProjects.length || 30,
+      target: statValue(content?.stat_1_value, publishedProjects.length || 30),
       suffix: content?.stat_1_suffix ?? "+",
+      decimals: statDecimals(content?.stat_1_value, 0),
     },
     {
       icon: Users,
       label: content?.stat_2_label || "Users served",
-      target: Number(content?.stat_2_value) || 5000,
+      target: statValue(content?.stat_2_value, 5000),
       suffix: content?.stat_2_suffix ?? "+",
+      decimals: statDecimals(content?.stat_2_value, 0),
     },
     {
       icon: Activity,
       label: content?.stat_3_label || "Uptime",
-      target: Number(content?.stat_3_value) || 99.9,
+      target: statValue(content?.stat_3_value, 99.9),
       suffix: content?.stat_3_suffix ?? "%",
-      decimals: content?.stat_3_value ? 0 : 1,
+      decimals: statDecimals(content?.stat_3_value, 1),
     },
     {
       icon: Star,
       label: content?.stat_4_label || "Client rating",
-      target: Number(content?.stat_4_value) || 4.5,
+      target: statValue(content?.stat_4_value, 4.5),
       prefix: content?.stat_4_prefix ?? "",
       suffix: content?.stat_4_suffix ?? "/5",
-      // Always one decimal - a rating reads as "4.5", never "5".
-      decimals: 1,
+      // At least one decimal - a rating reads as "4.5", never "5".
+      decimals: Math.max(1, statDecimals(content?.stat_4_value, 1)),
     },
   ];
   const faqCount = parseInt(content?.faq_count || "0");
