@@ -33,7 +33,15 @@ foreach ($pending as $row) {
     $slackDone = !empty($row['slack_sent']) || empty($slackUrl);
     $emailDone = !empty($row['email_sent']) || empty($notifyEmail);
     $isHandoff = str_starts_with((string) $row['message'], '[LIVE HANDOFF REQUESTED]');
-    $whatsappDone = !$isHandoff || !empty($row['whatsapp_sent']);
+    // Skipped when owner WhatsApp is not set up, exactly as Slack and email
+    // are skipped above. Without this the channel had no unconfigured escape:
+    // a handoff whose email had already gone out could never reach 'sent',
+    // burned an attempt on every pass, and landed in 'failed' after five -
+    // marking rows as failures when the only thing wrong was an optional
+    // channel nobody had configured.
+    $whatsappDone = !$isHandoff
+        || !empty($row['whatsapp_sent'])
+        || !WhatsAppNotifier::isOwnerConfigured();
 
     $isProjectRequest = ($row['type'] ?? 'contact') === 'project_request';
     $attachments = $isProjectRequest && $row['attachments'] ? (json_decode($row['attachments'], true) ?: []) : [];
