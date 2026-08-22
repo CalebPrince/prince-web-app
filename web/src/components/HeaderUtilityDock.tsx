@@ -2,25 +2,40 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Sun, Moon, Search, Lock, CircleUserRound } from "lucide-react";
+import { ChevronDown, Sun, Moon, Sunset, Search, Lock, CircleUserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Small utility cluster glued next to the logo - ported from the PHP
 // pages' .utility-dock (public/js/utility-dock.js + theme.js): a trigger
 // that reveals appearance / search / admin / client-portal shortcuts.
-// The appearance toggle here is a straight light/dark switch (the legacy
-// picker's extra Midnight/Paper states aren't part of this app's design
-// system), reusing the same `theme` localStorage key so a choice made on
-// either half of the site carries over to the other.
+// Appearance is a three-way pick - light, dark and dusk, the warm dark -
+// reusing the same `theme` localStorage key so a choice made on either half
+// of the site carries over to the other. The PHP half only knows light and
+// dark and renders dusk as its dark.
+/** The three appearances, in the order they are offered. Dark is the absence
+ *  of the attribute rather than a value of it, which is what lets the theme
+ *  live in the stylesheet's own :root. */
+const THEMES = [
+  { id: "light", label: "Light", icon: Sun },
+  { id: "dark", label: "Dark", icon: Moon },
+  { id: "dusk", label: "Dusk", icon: Sunset },
+] as const;
+
+type Theme = (typeof THEMES)[number]["id"];
+
+function readTheme(): Theme {
+  const stamped = document.documentElement.getAttribute("data-theme");
+  if (stamped === "light" || stamped === "dusk") return stamped;
+  return "dark";
+}
+
 export function HeaderUtilityDock() {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<Theme>("dark");
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setTheme(document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark");
-    }, 0);
+    const t = setTimeout(() => setTheme(readTheme()), 0);
     return () => clearTimeout(t);
   }, []);
 
@@ -40,10 +55,9 @@ export function HeaderUtilityDock() {
     };
   }, [open]);
 
-  function toggleTheme() {
-    const next = theme === "light" ? "dark" : "light";
-    if (next === "light") document.documentElement.setAttribute("data-theme", "light");
-    else document.documentElement.removeAttribute("data-theme");
+  function applyTheme(next: Theme) {
+    if (next === "dark") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("theme", next);
     setTheme(next);
   }
@@ -74,15 +88,26 @@ export function HeaderUtilityDock() {
           open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0",
         )}
       >
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-          title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-          className="grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
-        >
-          {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
-        </button>
+        {/* Three states rather than a toggle: a switch can only ever offer
+            the one you are not in, and with three there is no "other". */}
+        {THEMES.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => applyTheme(id)}
+            aria-label={`${label} appearance`}
+            aria-pressed={theme === id}
+            title={label}
+            className={cn(
+              "grid size-8 place-items-center rounded-full transition-colors hover:bg-bg hover:text-accent",
+              theme === id ? "bg-accent-soft text-accent" : "text-text-2",
+            )}
+          >
+            <Icon className="size-4" />
+          </button>
+        ))}
+
+        <span className="mx-0.5 h-5 w-px bg-hairline" aria-hidden="true" />
         <Link
           href="/search"
           onClick={() => setOpen(false)}
