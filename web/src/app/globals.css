@@ -1651,3 +1651,115 @@ html[data-splash="out"] .splash-grid {
     display: none;
   }
 }
+
+/* ── Header logo sting ─────────────────────────────────────────────────────
+   The mark draws itself once per page load, mirroring the Remotion
+   composition (my-ads/remotion/src/LogoSting). Pure CSS, so <Logo> stays a
+   server component and no hydration is needed to start it.
+
+   Everything is gated on data-splash. On the first visit of a session the
+   splash covers the viewport for roughly two seconds — long enough for this
+   whole sequence to finish unseen — so the animation is held at its first
+   frame until PageTransition tears the splash down, then plays into the
+   revealed page. On every later load there is no splash and it simply runs. */
+@keyframes logo-badge-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes logo-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes logo-dot-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes logo-glow-pulse {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Wiped out from behind the badge rather than faded, so the reveal has a
+   direction — the same reasoning as .splash-word. */
+@keyframes logo-word-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-10px);
+  }
+  to {
+    clip-path: inset(0 -4% 0 0);
+    transform: none;
+  }
+}
+
+.logo-anim .logo-badge {
+  animation: logo-badge-in 270ms var(--ease-out-expo) both;
+}
+
+.logo-anim .logo-path {
+  stroke-dasharray: 1;
+  /* Deliberately near-linear. An expo ease-out completes a stroke draw in its
+     first few frames, which turns an 800ms beat into an instant pop; this
+     keeps ink travelling across the whole window. */
+  animation: logo-draw 800ms cubic-bezier(0.42, 0.02, 0.32, 1) 133ms both;
+}
+
+.logo-anim .logo-dot {
+  transform-origin: 18.5px 6px;
+  animation: logo-dot-in 400ms var(--ease-spring) 867ms both;
+}
+
+.logo-anim .logo-glow {
+  animation: logo-glow-pulse 670ms var(--ease-out-expo) 933ms both;
+}
+
+.logo-anim .logo-word {
+  animation: logo-word-in 500ms var(--ease-out-expo) 1000ms both;
+}
+
+/* Held at the first frame for as long as the splash is covering. */
+html[data-splash] .logo-anim .logo-badge,
+html[data-splash] .logo-anim .logo-path,
+html[data-splash] .logo-anim .logo-dot,
+html[data-splash] .logo-anim .logo-glow,
+html[data-splash] .logo-anim .logo-word {
+  animation-play-state: paused;
+}
+
+/* A visitor who asked for less motion gets the finished mark immediately —
+   the same call the splash and the curtain make. */
+@media (prefers-reduced-motion: reduce) {
+  .logo-anim .logo-badge,
+  .logo-anim .logo-path,
+  .logo-anim .logo-dot,
+  .logo-anim .logo-word {
+    animation: none;
+  }
+
+  .logo-anim .logo-glow {
+    animation: none;
+    opacity: 0;
+  }
+}

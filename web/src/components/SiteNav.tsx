@@ -98,7 +98,7 @@ export function SiteNav() {
         <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-6 md:px-10">
           <div className="flex items-center gap-3">
             <Link href="/" className="transition-opacity hover:opacity-80">
-              <Logo />
+              <Logo animate />
             </Link>
             <HeaderUtilityDock />
           </div>
