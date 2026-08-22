@@ -6,7 +6,7 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
-import { TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 const PALETTE = ["#4f46e5", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
@@ -56,6 +56,7 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
   const [to, setTo] = useState(initialReport?.period?.to ?? "");
   const [analyticsDays, setAnalyticsDays] = useState(30);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Revenue target form state
   const [targetAmount, setTargetAmount] = useState(
@@ -69,12 +70,17 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
     try {
       const data = await api.adminReportSummary(undefined, params);
       setReport(data);
+      setError(null);
       setFrom(data.period.from);
       setTo(data.period.to);
       setTargetAmount(String(data.revenue_target.target / 100));
       setTargetCurrency(data.revenue_target.currency);
     } catch (err) {
-      console.error(err);
+      // Carry the API's own message through to the screen. "Failed to load,
+      // please refresh" is the one thing refreshing will not fix when the
+      // cause is a missing table or a 500 - and it costs a round trip through
+      // the server logs to find out which.
+      setError(err instanceof Error ? err.message : "Could not load the report.");
     } finally {
       setIsLoading(false);
     }
@@ -90,6 +96,19 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
   useEffect(() => {
     loadAnalytics(analyticsDays);
   }, [analyticsDays, loadAnalytics]);
+
+  // The page is rendered on the server with the report already fetched, and
+  // that fetch is allowed to fail quietly. Ask again from the browser when it
+  // did: the session cookie is unambiguously present here, so anything that
+  // was only wrong about the server-side request fixes itself, and anything
+  // genuinely broken says so below instead of leaving an empty page.
+  useEffect(() => {
+    if (initialReport) return;
+    // Off the effect body itself: loadReport sets its loading flag before it
+    // awaits anything, and a setState run synchronously during an effect is
+    // a cascading render.
+    queueMicrotask(() => loadReport());
+  }, [initialReport, loadReport]);
 
   const presetRange = (preset: string) => {
     const now = new Date();
@@ -125,8 +144,24 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
 
   if (!report) {
     return (
-      <div className="text-center py-12 text-text-3">
-        <p>Failed to load report data. Please refresh.</p>
+      <div className="mx-auto max-w-lg py-16 text-center">
+        <p className="text-text-2">
+          {isLoading ? "Loading the report…" : "The report could not be loaded."}
+        </p>
+        {error && !isLoading && (
+          <p className="mt-3 break-words rounded-lg border border-hairline bg-bg-2 px-4 py-3 text-sm text-text-3">
+            {error}
+          </p>
+        )}
+        {!isLoading && (
+          <button
+            type="button"
+            onClick={() => loadReport()}
+            className="mt-6 rounded-full border border-hairline px-5 py-2 text-sm text-text-2 transition-colors hover:border-accent hover:text-text"
+          >
+            Try again
+          </button>
+        )}
       </div>
     );
   }
@@ -134,14 +169,14 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
   const currency = report.currency;
   const revenueByMonth = report.revenue.by_month.map(r => ({
     name: monthLabel(r.month),
-    revenue: Number(r.revenue) / 100,
+    revenue: Number(r.amount) / 100,
   }));
   const sixMonthData = report.six_month_view.map(r => ({
     name: monthLabel(r.month),
     revenue: Number(r.revenue) / 100,
-    margin: Number(r.margin) / 100,
+    margin: Number(r.margin_est) / 100,
   }));
-  const bookingsData = report.bookings.map(r => ({
+  const bookingsData = report.bookings.by_month.map(r => ({
     name: monthLabel(r.month),
     bookings: Number(r.count),
   }));
@@ -149,9 +184,12 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
   // Revenue target bar
   const target = report.revenue_target.target;
   const actual = report.revenue_target.actual;
-  const forecast = report.revenue_target.forecast;
-  const actualPct = target > 0 ? Math.min(100, Math.round((actual / target) * 100)) : 0;
-  const forecastPct = target > 0 ? Math.min(100, Math.round((forecast / target) * 100)) : 0;
+  const forecast = report.revenue_target.weighted_forecast;
+  // The server already computes both of these against the same target, and
+  // projected_pct is cumulative (collected + weighted), which is what the
+  // overlaid bar is drawing.
+  const actualPct = Math.min(100, Math.round(report.revenue_target.actual_pct));
+  const projectedPct = Math.min(100, Math.round(report.revenue_target.projected_pct));
 
   return (
     <div className="space-y-10">
@@ -253,7 +291,7 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
               />
               <div
                 className="absolute inset-y-0 left-0 bg-accent/40 rounded-full transition-all"
-                style={{ width: `${forecastPct}%` }}
+                style={{ width: `${projectedPct}%` }}
               />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -273,7 +311,7 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
               <div>
                 <div className="text-text-3 text-xs">Weighted forecast</div>
                 <div className="font-bold text-accent">{formatMoney(forecast, report.revenue_target.currency)}</div>
-                {target > 0 && <div className="text-xs text-text-3">{forecastPct}% of target</div>}
+                {target > 0 && <div className="text-xs text-text-3">{projectedPct}% of target projected</div>}
               </div>
             </div>
           </div>
@@ -287,23 +325,23 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
           <MetricTile
             label="Revenue"
             value={formatMoney(report.period.revenue, currency)}
-            trend={report.period.revenue_pct}
+            trend={report.period.revenue_change_pct}
             sub="vs previous period"
           />
           <MetricTile
             label="Gross margin"
-            value={`${Math.round(report.estimates.margin * 100)}%`}
-            sub={report.estimates.margin_estimated ? "est. (no cost data)" : undefined}
+            value={`${Math.round(report.estimates.gross_margin_pct)}%`}
+            sub={report.estimates.gross_margin_is_estimate ? "est. (no cost data)" : undefined}
           />
           <MetricTile
             label="Win rate"
             value={report.pipeline.win_rate != null ? `${report.pipeline.win_rate}%` : "—"}
-            sub={report.pipeline.paying_clients > 0 ? `${report.pipeline.paying_clients} paying clients` : undefined}
+            sub={report.pipeline.paying_customers > 0 ? `${report.pipeline.paying_customers} paying clients` : undefined}
           />
           <MetricTile
             label="Utilization"
-            value={`${Math.round(report.estimates.utilization * 100)}%`}
-            sub={report.estimates.utilization_estimated ? "est. (no hours data)" : undefined}
+            value={`${Math.round(report.estimates.utilization_pct)}%`}
+            sub={report.estimates.utilization_is_estimate ? "est. (no hours data)" : undefined}
           />
         </div>
       </div>
@@ -313,7 +351,7 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
         <SectionLabel>Revenue</SectionLabel>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <MetricTile label="Revenue (all time)" value={formatMoney(report.revenue.all_time, currency)} />
-          <MetricTile label="Revenue · last 30 days" value={formatMoney(report.revenue.last_30, currency)} sub="successful payments" />
+          <MetricTile label="Revenue · last 30 days" value={formatMoney(report.revenue.last_30_days, currency)} sub="successful payments" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           <div className="lg:col-span-2 rounded-xl border border-hairline bg-bg p-4">
@@ -344,9 +382,9 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
                   const total = report.revenue.all_time || 1;
                   const pct = Math.round((s.amount / total) * 100);
                   return (
-                    <div key={s.source}>
+                    <div key={s.label}>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-text-2 capitalize">{s.source}</span>
+                        <span className="text-text-2">{s.label}</span>
                         <span className="font-semibold">{pct}%</span>
                       </div>
                       <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden">
@@ -426,8 +464,8 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
             ) : (
               <div className="space-y-2">
                 {report.pipeline.funnel.map((f, i) => (
-                  <div key={f.stage} className="flex items-center gap-3">
-                    <div className="text-xs text-text-3 w-24 shrink-0 capitalize">{f.stage}</div>
+                  <div key={f.label} className="flex items-center gap-3">
+                    <div className="text-xs text-text-3 w-24 shrink-0">{f.label}</div>
                     <div className="flex-1 h-6 rounded-md flex items-center overflow-hidden bg-bg-3">
                       <div
                         className="h-full rounded-md flex items-center px-2 text-xs font-medium text-white"
@@ -452,7 +490,7 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
               <p className="text-xs text-text-3">No lead source data.</p>
             ) : (
               <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={report.lead_sources.map(s => ({ name: s.source, count: s.count }))}>
+                <BarChart data={report.lead_sources.map(s => ({ name: s.label, count: s.count }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--hairline)" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#8b93a7" }} />
                   <YAxis tick={{ fontSize: 11, fill: "#8b93a7" }} />
@@ -480,9 +518,9 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
               <tbody className="divide-y divide-hairline">
                 {report.top_clients.map((c, i) => (
                   <tr key={i} className="hover:bg-bg-2/50">
-                    <td className="px-4 py-3 font-medium">{c.name}</td>
-                    <td className="px-4 py-3 text-right text-text-2">{c.payments}</td>
-                    <td className="px-4 py-3 text-right font-semibold">{formatMoney(c.revenue, currency)}</td>
+                    <td className="px-4 py-3 font-medium">{c.name || c.email}</td>
+                    <td className="px-4 py-3 text-right text-text-2">{c.payments_count}</td>
+                    <td className="px-4 py-3 text-right font-semibold">{formatMoney(c.total, c.currency)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -513,12 +551,12 @@ export default function ReportsClient({ initialReport }: { initialReport: AdminR
                     <tr key={a.id} className="hover:bg-bg-2/50">
                       <td className="px-4 py-3 font-medium">{a.name}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${a.status === "active" ? "bg-green-500/10 text-green-500" : "bg-bg-3 text-text-3"}`}>
-                          {a.status}
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${a.is_active ? "bg-green-500/10 text-green-500" : "bg-bg-3 text-text-3"}`}>
+                          {a.is_active ? "active" : "paused"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-text-2">{a.enrolled}</td>
-                      <td className="px-4 py-3 text-right text-text-2">{a.active}</td>
+                      <td className="px-4 py-3 text-right text-text-2">{a.enrollments}</td>
+                      <td className="px-4 py-3 text-right text-text-2">{a.active_enrollments}</td>
                       <td className="px-4 py-3 text-right text-text-2">{a.steps_sent}</td>
                       <td className="px-4 py-3 text-right text-text-2">{a.unsubscribed}</td>
                     </tr>
