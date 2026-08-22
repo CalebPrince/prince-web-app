@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- The logo's monogram (components/Logo.tsx), redrawn for a 16px tab: the
+       badge is filled rather than tinted and the P is knocked out of it,
+       because a 40%-opacity border and a 2.4px stroke both disappear at that
+       size. The geometry is the same - square-cut stem, half-round bowl, and
+       the signal dot off the shoulder. -->
+  <rect width="32" height="32" rx="7" fill="#29d978" />
+  <path
+    d="M10 26V7h7a5 5 0 0 1 0 10h-4.5"
+    fill="none"
+    stroke="#07130c"
+    stroke-width="3.2"
+    stroke-linecap="square"
+  />
+  <circle cx="25" cy="8" r="2" fill="#07130c" />
+</svg>
