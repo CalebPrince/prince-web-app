@@ -189,7 +189,7 @@ export default async function ClinicVoiceAgents() {
                 </div>
                 {step.caller && (
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-full border border-hairline bg-bg-2 text-xs font-semibold text-text-2 glass">
+                    <span className="tilt-3d tilt-3d-tile grid size-9 shrink-0 place-items-center rounded-full border border-hairline bg-bg-2 text-xs font-semibold text-text-2 glass">
                       AM
                     </span>
                     <div className="min-w-0 flex-1">

@@ -57,7 +57,7 @@ export function Modal({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="grid size-9 place-items-center rounded-full border border-hairline text-text-2 transition-colors hover:border-accent/60 hover:text-accent"
+            className="tilt-3d tilt-3d-tile grid size-9 place-items-center rounded-full border border-hairline text-text-2 transition-colors hover:border-accent/60 hover:text-accent"
           >
             <X className="size-4" />
           </button>

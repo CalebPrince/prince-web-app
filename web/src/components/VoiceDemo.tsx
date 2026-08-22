@@ -409,7 +409,7 @@ export function VoiceDemo() {
               <button
                 type="submit"
                 disabled={!inputValue.trim() || busyRef.current}
-                className="rounded-[var(--radius)] bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50"
+                className="tilt-3d tilt-glow rounded-[var(--radius)] bg-accent px-4 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong disabled:opacity-50"
               >
                 Ask
               </button>
@@ -421,10 +421,10 @@ export function VoiceDemo() {
             onClick={handleStart}
             disabled={busyRef.current && state === "thinking"}
             className={cn(
-              "w-full rounded-[calc(var(--radius)*1.2)] px-4 py-3 font-semibold transition-all",
+              "tilt-3d w-full rounded-[calc(var(--radius)*1.2)] px-4 py-3 font-semibold transition-all",
               state === "listening" || state === "speaking"
                 ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                : "bg-accent text-on-accent hover:bg-accent-strong hover:glow-green disabled:opacity-50"
+                : "tilt-glow bg-accent text-on-accent hover:bg-accent-strong disabled:opacity-50"
             )}
           >
             {buttonLabel}

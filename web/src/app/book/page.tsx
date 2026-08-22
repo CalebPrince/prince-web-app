@@ -149,8 +149,8 @@ export default function Booking() {
               <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
                 {booked ? (
                   <div className="flex flex-col items-center py-16 text-center">
-                    <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">
-                      <Check className="size-7" />
+                    <span className="tilt-3d tilt-3d-tile grid size-14 place-items-center rounded-full bg-accent text-on-accent">
+                      <Check className="icon-3d icon-3d-on-accent size-7" />
                     </span>
                     <h2 className="mt-6 text-2xl font-bold tracking-tight">You’re booked in.</h2>
                     <p className="mt-3 max-w-sm text-text-2">

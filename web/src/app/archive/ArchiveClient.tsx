@@ -148,8 +148,8 @@ export default function ArchiveClient({
             <Reveal delay={120} className="lg:col-span-6 lg:justify-self-end">
               {subscribed ? (
                 <div className="flex items-center gap-4 rounded-[var(--radius)] border border-accent/40 bg-accent/10 p-8">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-on-accent">
-                    <Check className="size-5" />
+                  <span className="tilt-3d tilt-3d-tile grid size-11 shrink-0 place-items-center rounded-full bg-accent text-on-accent">
+                    <Check className="icon-3d icon-3d-on-accent size-5" />
                   </span>
                   <div>
                     <p className="font-semibold text-text">You&rsquo;re on the list.</p>

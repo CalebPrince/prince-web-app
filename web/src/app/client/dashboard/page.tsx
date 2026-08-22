@@ -237,7 +237,7 @@ export default function ClientDashboardPage() {
                                 {m.payment_status || 'pending'}
                               </span>
                               {accepted && m.payment_status !== 'paid' && m.payment_url && (
-                                <a href={m.payment_url} className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-light">
+                                <a href={m.payment_url} className="tilt-3d tilt-glow rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-light">
                                   Pay now
                                 </a>
                               )}

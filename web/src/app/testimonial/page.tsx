@@ -99,8 +99,8 @@ export default function TestimonialPage() {
               </div>
             ) : sent ? (
               <div className="flex flex-col items-center py-8 text-center animate-in fade-in zoom-in duration-500">
-                <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">
-                  <Check className="size-7" />
+                <span className="tilt-3d tilt-3d-tile grid size-14 place-items-center rounded-full bg-accent text-on-accent">
+                  <Check className="icon-3d icon-3d-on-accent size-7" />
                 </span>
                 <h3 className="mt-6 text-2xl font-bold tracking-tight">Thank you!</h3>
                 <p className="mt-3 text-text-2">Your review has been sent to Prince and will appear on the site once approved.</p>

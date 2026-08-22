@@ -5,17 +5,22 @@ import { cn } from "@/lib/utils";
 import { Slot } from "@radix-ui/react-slot";
 
 const buttonVariants = cva(
-  "group relative inline-flex origin-bottom items-center justify-center gap-2 rounded-full font-medium tracking-[-0.01em] [transform:perspective(600px)] transition-[background-color,border-color,color,transform,box-shadow] duration-300 ease-out hover:[transform:perspective(600px)_translateY(-3px)_rotateX(14deg)] hover:shadow-[0_16px_28px_-16px_rgba(0,0,0,0.55)] active:duration-150 active:[transform:perspective(600px)_translateY(1px)_rotateX(-6deg)_scale(0.97)] motion-reduce:transition-none motion-reduce:hover:[transform:none] motion-reduce:active:[transform:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-40",
+  // tilt-3d (globals.css) owns the resting tilt, the hover rotate-up, the press
+  // and the reduced-motion opt-out, so every control on the site shares one
+  // angle instead of each spelling out its own perspective transform. It sits
+  // on the variants rather than here because ghost is a text button - a slab
+  // of ground shadow under transparent copy reads as a rendering bug.
+  "group relative inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-[-0.01em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
         // Signature princecaleb.dev green pill: mint fill, near-black ink, green glow
-        primary: "bg-accent text-on-accent hover:bg-accent-strong hover:glow-green",
-        default: "bg-accent text-on-accent hover:bg-accent-strong hover:glow-green",
+        primary: "tilt-3d tilt-glow bg-accent text-on-accent hover:bg-accent-strong",
+        default: "tilt-3d tilt-glow bg-accent text-on-accent hover:bg-accent-strong",
         secondary:
-          "border border-hairline-strong bg-white/[0.02] text-text hover:border-accent/60 hover:text-accent",
+          "tilt-3d border border-hairline-strong bg-bg text-text hover:border-accent/60 hover:text-accent",
         outline:
-          "border border-hairline-strong bg-transparent text-text hover:border-accent/60 hover:text-accent",
+          "tilt-3d border border-hairline-strong bg-bg text-text hover:border-accent/60 hover:text-accent",
         ghost: "bg-transparent text-text-2 hover:text-accent",
       },
       size: {

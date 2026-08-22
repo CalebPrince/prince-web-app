@@ -234,7 +234,7 @@ export function LisaVideoAgent() {
             <button
               type="button"
               onClick={handleStart}
-              className="w-full rounded-[var(--radius)] bg-accent px-6 py-4 font-bold text-bg transition-colors hover:bg-accent-light"
+              className="tilt-3d tilt-glow w-full rounded-[var(--radius)] bg-accent px-6 py-4 font-bold text-bg transition-colors hover:bg-accent-light"
             >
               {state === "unavailable" ? "Try video again" : "Start a video chat"}
             </button>

@@ -46,8 +46,8 @@ export default function PaymentSuccessPage() {
         <Reveal>
           <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center md:p-12 glass">
             <div className="mb-6 flex justify-center">
-              <span className="grid size-16 place-items-center rounded-full bg-accent text-on-accent">
-                <Check className="size-8" />
+              <span className="tilt-3d tilt-3d-tile grid size-16 place-items-center rounded-full bg-accent text-on-accent">
+                <Check className="icon-3d icon-3d-on-accent [--icon-depth:1.05px] size-8" />
               </span>
             </div>
             
