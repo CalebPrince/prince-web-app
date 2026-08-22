@@ -17,6 +17,24 @@ import { cn } from "@/lib/utils";
 // cards) is a progressive one - the chat still works without Web Audio /
 // speech support, same as the legacy widget.
 
+/** What Lisa opens a call with. A call that begins in silence reads as
+ *  broken, so the voice path says hello - typed on screen and spoken aloud,
+ *  the same line either way. Text stays silent: there the visitor is already
+ *  typing, and being greeted by a wall of copy is what the old widget did. */
+const callGreeting = (name: string) =>
+  `Hey there. I'm ${name} from Prince Caleb. How can I help you today?`;
+
+/** Silence gets answered three times before Lisa leaves: a nudge, a check
+ *  that the messages are arriving at all, then a goodbye. Long enough that
+ *  someone reading her last answer is not interrupted, short enough that an
+ *  abandoned conversation closes itself the same visit. */
+const IDLE_MS = 45000;
+const IDLE_LINES = [
+  "Still there? Tell me what you are building, or what you would like to fix, and I will take it from there.",
+  "I might be missing your messages. If you are still there, type or say what is on your mind - otherwise we can pick this up another time.",
+  "Looks like you are away, so I will close this off for now. Come back any time and we can carry on.",
+];
+
 const DEFAULTS = {
   offline: "We're offline at the moment, but your message won't be missed, leave your name, email and a few words below and Prince will get back to you shortly.",
 };
@@ -68,6 +86,14 @@ export function ChatWidget() {
   const [sending, setSending] = useState(false);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
   const [autoSpeak, setAutoSpeak] = useState(false);
+  /** Set by a call being started, cleared by the greeting going out. A ref
+   *  rather than state: boot() reads it after an await, and a re-render is
+   *  not what should carry it. */
+  const wantsGreeting = useRef(false);
+  /** How far up the idle ladder this conversation has climbed. Reset by the
+   *  visitor saying anything at all. */
+  const idleStep = useRef(0);
+  const [ended, setEnded] = useState(false);
   const [speechAvailable, setSpeechAvailable] = useState(false);
   const [micAvailable, setMicAvailable] = useState(false);
   const [listening, setListening] = useState(false);
@@ -139,6 +165,18 @@ export function ChatWidget() {
     return id;
   }
 
+  /** Greets, but only into an empty conversation: someone returning to a
+   *  thread they were already having does not need introducing again. The
+   *  message animates, which is both how the text types itself out and how
+   *  the read-aloud is triggered when it finishes (handleRevealDone). */
+  function greetForCall(name: string) {
+    if (!wantsGreeting.current) return;
+    wantsGreeting.current = false;
+    setMessages((m) =>
+      m.length ? m : [{ id: nextId(), role: "bot", text: callGreeting(name), animate: true }],
+    );
+  }
+
   function appendTyping() {
     const id = nextId();
     setMessages((m) => [...m, { id, role: "bot", text: "", typing: true }]);
@@ -191,12 +229,48 @@ export function ChatWidget() {
       }
     }
 
-    if (!status.online) {
+    if (status.online) {
+      greetForCall(status.assistant_name || "Lisa");
+    } else {
       appendMessage("bot", status.offline_message || DEFAULTS.offline);
       setShowLeaveForm(true);
     }
     setBooted(true);
   }
+
+  /** Silence, answered the way a person would: a nudge, then a check that the
+   *  messages are arriving at all, then a graceful exit rather than a widget
+   *  left hanging open forever. The ladder resets the moment the visitor says
+   *  anything, and the last rung ends the conversation. */
+  useEffect(() => {
+    if (!open || !online || ended || showLeaveForm || sending || messages.length === 0) return;
+
+    const timer = window.setTimeout(() => {
+      const step = idleStep.current;
+      const line = IDLE_LINES[step];
+      if (!line) return;
+      idleStep.current = step + 1;
+      setMessages((m) => [...m, { id: nextId(), role: "bot", text: line, animate: true }]);
+      if (step === IDLE_LINES.length - 1) {
+        setEnded(true);
+        // Read-aloud goes with the conversation. Turned off here rather than
+        // in the effect below, which has only external systems to stop.
+        setAutoSpeak(false);
+      }
+    }, IDLE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [open, online, ended, showLeaveForm, sending, messages]);
+
+  /** Ending stops the microphone and whatever was being read aloud: the one
+   *  thing worse than a widget that never closes is one that closes and keeps
+   *  listening. */
+  useEffect(() => {
+    if (!ended) return;
+    stopTts();
+    stopBrowserSpeech();
+    recRef.current?.stop();
+  }, [ended]);
 
   /**
    * `voice` opens straight into a spoken exchange: read-aloud on, and the mic
@@ -205,23 +279,32 @@ export function ChatWidget() {
    * the same task as the click, hence starting it here rather than in an
    * effect once the panel has rendered.
    */
-  function openWidget(mode: "text" | "voice" = "text") {
+  function openWidget(mode: "text" | "voice" = "text", opts: { greet?: boolean } = {}) {
     setOpen(true);
     if (!badgeSeen) {
       setBadgeSeen(true);
       sessionStorage.setItem("chat_badge_seen", "1");
     }
-    if (!booted) boot();
+    // Asked for by the caller, not inferred from the mode: the call button
+    // falls back to text where there is no microphone, and it should still
+    // open with Lisa saying hello - that is what the button promised.
+    if (opts.greet) wantsGreeting.current = true;
     if (mode === "voice") {
       unlockTts();
       setAutoSpeak(true);
       sessionStorage.setItem("chat_autospeak", "1");
       if (micAvailable && !listening) toggleMic();
     }
+    // boot() greets on its way out; a widget that has already booted has no
+    // one left to do it.
+    if (!booted) boot();
+    else if (opts.greet && online) greetForCall(assistantName);
   }
 
   // ---- send a free-text message -------------------------------------------
   async function sendChatMessage(text: string) {
+    idleStep.current = 0;
+    setEnded(false);
     appendMessage("user", text);
     const pendingId = appendTyping();
     setSending(true);
@@ -359,7 +442,10 @@ export function ChatWidget() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => openWidget(micAvailable && online ? "voice" : "text")}
+                // Always the call, even where the browser has no speech
+                // recognition: reading aloud does not need a microphone, and
+                // a silent "Ask anything" is not what the button says.
+                onClick={() => openWidget("voice", { greet: true })}
                 className="lisa-cta"
               >
                 <Phone className="size-4" />
@@ -437,7 +523,18 @@ export function ChatWidget() {
           {showLeaveForm ? (
             <LeaveMessageForm onSubmit={submitLeaveForm} />
           ) : (
-            <form onSubmit={onSubmitText} className="flex items-center gap-2 border-t border-hairline p-3">
+            <>
+              {/* Ended, but not closed: the composer stays exactly where it
+                  was, so picking the conversation back up is typing into the
+                  same box rather than finding a way back in. */}
+              {ended && (
+                <p className="border-t border-hairline px-4 py-3 text-center text-xs text-text-3">
+                  {assistantName} ended the conversation.{" "}
+                  <span className="text-text-2">Send a message to pick it back up.</span>
+                </p>
+              )}
+
+              <form onSubmit={onSubmitText} className="flex items-center gap-2 border-t border-hairline p-3">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -460,15 +557,16 @@ export function ChatWidget() {
                   <Mic className="size-4" />
                 </button>
               )}
-              <button
-                type="submit"
-                aria-label="Send message"
-                title="Send"
-                className="tilt-3d tilt-3d-tile grid size-9 shrink-0 place-items-center rounded-full bg-accent text-on-accent transition-colors hover:bg-accent-strong"
-              >
-                <Send className="size-4" />
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  aria-label="Send message"
+                  title="Send"
+                  className="tilt-3d tilt-3d-tile grid size-9 shrink-0 place-items-center rounded-full bg-accent text-on-accent transition-colors hover:bg-accent-strong"
+                >
+                  <Send className="size-4" />
+                </button>
+              </form>
+            </>
           )}
         </div>
       )}
