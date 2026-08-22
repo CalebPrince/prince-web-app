@@ -57,19 +57,67 @@ export function unlockTts() {
 
 type TtsHandlers = { onstart?: () => void; onend?: () => void; onerror?: () => void };
 
+/** Once natural speech has failed, the rest of the session stays on the
+ *  browser voice. The two sound nothing like each other, and a Lisa who is
+ *  ElevenLabs on one line and the operating system on the next reads as a
+ *  fault - worse than being consistently the plainer of the two. A reload
+ *  gives the natural voice another go. */
+let naturalSpeechDown = false;
+
+export function isNaturalSpeechDown(): boolean {
+  return naturalSpeechDown;
+}
+
+/** The browser's voice list is populated asynchronously: the first call to
+ *  getVoices() usually returns nothing, and speaking against an empty list
+ *  silently uses whatever default the OS has, which is why the first line
+ *  came out in a different voice from the ones after it. */
+function voicesReady(synth: SpeechSynthesis): Promise<SpeechSynthesisVoice[]> {
+  const ready = synth.getVoices();
+  if (ready.length) return Promise.resolve(ready);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      synth.removeEventListener("voiceschanged", finish);
+      resolve(synth.getVoices());
+    };
+    synth.addEventListener("voiceschanged", finish);
+    // Not every browser fires the event. A greeting held hostage to it would
+    // be worse than one spoken in the default voice.
+    setTimeout(finish, 1200);
+  });
+}
+
+/** Chosen once and kept. The list can be reordered between calls, and a
+ *  different pick each time is the same bug in a subtler form. */
+let chosenVoice: SpeechSynthesisVoice | null | undefined;
+
+
 export async function playTts(text: string, handlers?: TtsHandlers, agent: string = "lisa"): Promise<void> {
   const spoken = text.trim();
   if (!spoken) throw new Error("No speech text");
   release();
 
+  if (naturalSpeechDown) throw new Error("Natural speech unavailable");
+
   const maxLength = MAX_TEXT_LENGTH[agent] ?? MAX_TEXT_LENGTH.lisa;
-  const response = await fetch("/api/v1/voice/tts", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: spoken.slice(0, maxLength), agent }),
-  });
+  let response: Response;
+  try {
+    response = await fetch("/api/v1/voice/tts", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: spoken.slice(0, maxLength), agent }),
+    });
+  } catch (err) {
+    naturalSpeechDown = true;
+    throw err;
+  }
   if (!response.ok) {
+    naturalSpeechDown = true;
     throw new Error("Natural speech unavailable");
   }
 
@@ -86,7 +134,12 @@ export async function playTts(text: string, handlers?: TtsHandlers, agent: strin
     handlers?.onerror?.();
     release();
   };
-  await audio.play();
+  try {
+    await audio.play();
+  } catch (err) {
+    naturalSpeechDown = true;
+    throw err;
+  }
 }
 
 export function stopTts() {
@@ -128,13 +181,14 @@ export function pickVoice(voices: SpeechSynthesisVoice[], cfg: VoiceConfig): Spe
   return null;
 }
 
-export function speakWithBrowser(text: string, cfg: VoiceConfig, handlers?: TtsHandlers) {
+export async function speakWithBrowser(text: string, cfg: VoiceConfig, handlers?: TtsHandlers) {
   const synth = window.speechSynthesis;
   if (!synth) return;
   const u = new SpeechSynthesisUtterance(text);
   u.rate = Math.min(2, Math.max(0.5, Number(cfg.rate) || 1));
   u.pitch = Math.min(2, Math.max(0, Number(cfg.pitch) || 1));
-  const voice = pickVoice(synth.getVoices(), cfg);
+  if (chosenVoice === undefined) chosenVoice = pickVoice(await voicesReady(synth), cfg);
+  const voice = chosenVoice;
   if (voice) {
     u.voice = voice;
     if (voice.lang) u.lang = voice.lang;
