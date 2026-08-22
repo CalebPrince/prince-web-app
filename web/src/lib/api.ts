@@ -133,45 +133,101 @@ export type AdminContentStudioItem = {
   updated_at: string;
 };
 
+// Mirrors ReportController::summary() exactly. Every field below was read off
+// a live response - the previous shape here was hand-written and had drifted
+// from the PHP on almost every key, which TypeScript cannot catch because
+// get<T>() only casts. If you change the controller, change this too.
 export type AdminReportSummary = {
   currency: string;
   revenue: {
     all_time: number;
-    last_30: number;
-    by_month: { month: string; revenue: number }[];
-    by_source: { source: string; amount: number }[];
-    by_currency: { currency: string; amount: number }[];
+    this_month: number;
+    last_30_days: number;
+    by_month: { month: string; amount: number }[];
+    by_source: { label: string; amount: number }[];
+    by_currency: { currency: string; total: number }[];
   };
   revenue_target: {
     currency: string;
     target: number;
     actual: number;
     won: number;
-    forecast: number;
+    weighted_forecast: number;
+    /** Already 0-100, not a 0-1 fraction. */
+    actual_pct: number;
+    /** (actual + weighted_forecast) / target, 0-100. */
+    projected_pct: number;
   };
   pipeline: {
+    stages: { stage: string; count: number }[];
+    inquiries_total: number;
+    proposals_total: number;
+    proposals_sent: number;
+    proposals_accepted: number;
+    proposals_declined: number;
+    paying_customers: number;
     win_rate: number | null;
-    win_rate_prev: number | null;
-    paying_clients: number;
-    avg_deal: number;
-    funnel: { stage: string; count: number }[];
-    bottleneck: string | null;
-    pipeline_stages: { stage: string; count: number; value: number }[];
+    avg_deal_size: number;
+    activity_funnel: { key: string; label: string; count: number; href: string; conversion: number | null }[];
+    activity_bottleneck: string | null;
+    activity_period: { from: string; to: string };
+    funnel: { label: string; count: number }[];
   };
-  automations: { id: number; name: string; status: string; enrolled: number; active: number; steps_sent: number; ai_sends: number; unsubscribed: number }[];
-  bookings: { month: string; count: number }[];
-  lead_sources: { source: string; count: number }[];
-  top_clients: { name: string; payments: number; revenue: number }[];
+  automations: {
+    id: number;
+    name: string;
+    trigger_event: string;
+    /** SQLite boolean: 0 or 1. */
+    is_active: number;
+    nurturer_enabled: number;
+    enrollments: number;
+    active_enrollments: number;
+    unsubscribed: number;
+    steps_sent: number;
+    ai_sends: number;
+  }[];
+  /** An object, not a list - the 12-month series is under `by_month`. */
+  bookings: {
+    total: number;
+    upcoming: number;
+    completed: number;
+    cancelled: number;
+    by_month: { month: string; count: number }[];
+  };
+  lead_sources: { label: string; count: number }[];
+  top_clients: {
+    email: string;
+    name: string | null;
+    payments_count: number;
+    total: number;
+    currency: string;
+    last_paid_at: string;
+  }[];
   period: {
     from: string;
     to: string;
+    prev_from: string;
+    prev_to: string;
     revenue: number;
-    prev_revenue: number | null;
-    revenue_pct: number | null;
-    revenue_mix: { label: string; amount: number }[];
+    revenue_prev: number;
+    revenue_change_pct: number | null;
+    avg_project: number | null;
+    avg_project_prev: number | null;
+    avg_project_change_pct: number | null;
+    revenue_mix: { category: string; label: string; amount: number }[];
   };
-  estimates: { margin: number; utilization: number; margin_estimated: boolean; utilization_estimated: boolean; weekly_billable_hours: number | null };
-  six_month_view: { month: string; revenue: number; margin: number }[];
+  estimates: {
+    /** Already 0-100, not a 0-1 fraction. */
+    gross_margin_pct: number;
+    gross_margin_is_estimate: boolean;
+    /** Already 0-100, not a 0-1 fraction. */
+    utilization_pct: number;
+    utilization_is_estimate: boolean;
+    weekly_billable_hours: number | null;
+    is_estimate: boolean;
+    note: string;
+  };
+  six_month_view: { month: string; revenue: number; margin_est: number }[];
 };
 
 export type AdminAnalyticsSummary = {
