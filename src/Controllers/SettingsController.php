@@ -23,6 +23,7 @@ class SettingsController
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'elevenlabs_webhook_secret', 'elevenlabs_whatsapp_agent_id', 'elevenlabs_postcall_signing_secret',
         'elevenlabs_whatsapp_phone_number_id', 'elevenlabs_whatsapp_intro_template_name', 'elevenlabs_whatsapp_intro_template_lang',
+        'elevenlabs_whatsapp_alert_template_name', 'elevenlabs_whatsapp_alert_template_lang', 'elevenlabs_whatsapp_alert_template_params',
         'elevenlabs_phone_agent_id', 'elevenlabs_phone_number_id',
         'elevenlabs_phone_webhook_secret', 'elevenlabs_phone_postcall_signing_secret',
         'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model', 'scout_elevenlabs_voice_id',

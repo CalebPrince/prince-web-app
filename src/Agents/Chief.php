@@ -788,7 +788,14 @@ class Chief
             $whatsAppBody = "📊 *Chief daily report — last 24 hours*\n\n"
                 . mb_substr($brief['headline'] . "\n\n" . $brief['body'], 0, 1150)
                 . "\n\nFull report: https://princecaleb.dev/admin/chief.html";
-            $whatsAppDone = WhatsAppNotifier::sendOwnerAlert($whatsAppBody);
+            $whatsAppDone = WhatsAppNotifier::sendOwnerAlert($whatsAppBody, [
+                // Template providers interpolate parts rather than prose. The
+                // brief has no visitor, so name stands in as the report label.
+                'name' => 'Chief daily report',
+                'reason' => (string) $brief['headline'],
+                'summary' => mb_substr((string) $brief['body'], 0, 900),
+                'message' => mb_substr((string) $brief['body'], 0, 900),
+            ]);
         }
         if ($whatsAppDone && $whatsAppConfigured && empty($brief['whatsapp_sent_at'])) {
             $pdo->prepare("UPDATE agent_daily_briefs SET whatsapp_sent_at = datetime('now') WHERE id = ?")
