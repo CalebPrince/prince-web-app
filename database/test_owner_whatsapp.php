@@ -137,6 +137,11 @@ if ($mode === 'all' || $mode === 'lisa') {
         if (!$sent && $result['error']) {
             fwrite(STDERR, 'Provider said: ' . $result['error'] . "\n");
         }
+        // Printed on success too: "accepted" is not "delivered", and when a
+        // template is accepted here and never arrives on the handset, this
+        // body is the only thing that distinguishes the two.
+        echo 'HTTP ' . ($result['status'] ?? '?') . ' response: '
+            . mb_substr((string) ($result['raw'] ?? ''), 0, 1200) . "\n";
     } else {
         $sent = WhatsAppNotifier::sendOwnerAlert($demoBody, $demoFields);
     }

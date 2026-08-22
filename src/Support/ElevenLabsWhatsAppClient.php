@@ -135,10 +135,14 @@ final class ElevenLabsWhatsAppClient
             $error = $curlError
                 ?: (string) ($response['detail']['message'] ?? $response['message'] ?? $raw);
             error_log('ElevenLabs owner WhatsApp alert failed: HTTP ' . $status . ' ' . mb_substr($error, 0, 800));
-            return ['ok' => false, 'id' => null, 'error' => mb_substr($error, 0, 500)];
+            return ['ok' => false, 'id' => null, 'error' => mb_substr($error, 0, 500), 'raw' => (string) $raw, 'status' => $status];
         }
 
-        return ['ok' => true, 'id' => $conversationId, 'error' => null];
+        // The raw body travels back deliberately. A 2xx with a conversation_id
+        // means only that ElevenLabs accepted the request; Meta can still drop
+        // the template afterwards with nothing surfaced here, and when that
+        // happens this body is the only evidence there is.
+        return ['ok' => true, 'id' => $conversationId, 'error' => null, 'raw' => (string) $raw, 'status' => $status];
     }
 
     /**
