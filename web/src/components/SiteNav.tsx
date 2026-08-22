@@ -138,8 +138,12 @@ export function SiteNav() {
         aria-modal="true"
         aria-label="Site menu"
         inert={!menuOpen}
+        // The column count is on the cover as well as on the curtain: the
+        // cover has to stay visible for exactly as long as the last column
+        // takes to leave, and that is a function of how many there are.
+        style={{ "--n": COLUMNS } as React.CSSProperties}
       >
-        <div className="site-menu-curtain" style={{ "--n": COLUMNS } as React.CSSProperties}>
+        <div className="site-menu-curtain">
           {Array.from({ length: COLUMNS }, (_, i) => (
             <span key={i} className="site-menu-col" style={{ "--i": i } as React.CSSProperties}>
               {[75, 50, 25].map((d, k) => (
