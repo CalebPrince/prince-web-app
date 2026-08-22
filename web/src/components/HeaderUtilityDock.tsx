@@ -99,7 +99,7 @@ export function HeaderUtilityDock() {
             aria-pressed={theme === id}
             title={label}
             className={cn(
-              "grid size-8 place-items-center rounded-full transition-colors hover:bg-bg hover:text-accent",
+              "tilt-3d-chrome grid size-8 place-items-center rounded-full transition-colors hover:bg-bg hover:text-accent",
               theme === id ? "bg-accent-soft text-accent" : "text-text-2",
             )}
           >
@@ -113,7 +113,7 @@ export function HeaderUtilityDock() {
           onClick={() => setOpen(false)}
           aria-label="Search"
           title="Search"
-          className="grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
+          className="tilt-3d-chrome grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
         >
           <Search className="size-4" />
         </Link>
@@ -121,7 +121,7 @@ export function HeaderUtilityDock() {
           href="/admin"
           aria-label="Admin login"
           title="Admin login"
-          className="grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
+          className="tilt-3d-chrome grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
         >
           <Lock className="size-4" />
         </a>
@@ -129,7 +129,7 @@ export function HeaderUtilityDock() {
           href="/client/login"
           aria-label="Client portal"
           title="Client portal"
-          className="grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
+          className="tilt-3d-chrome grid size-8 place-items-center rounded-full text-text-2 transition-colors hover:bg-bg hover:text-accent"
         >
           <CircleUserRound className="size-4" />
         </a>

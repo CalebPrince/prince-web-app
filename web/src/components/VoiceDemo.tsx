@@ -347,7 +347,7 @@ export function VoiceDemo() {
           <div className="flex items-center gap-3">
             <span
               className={cn(
-                "grid size-11 shrink-0 place-items-center rounded-full border transition-colors",
+                "tilt-3d tilt-3d-tile grid size-11 shrink-0 place-items-center rounded-full border transition-colors",
                 state === "speaking"
                   ? "border-accent bg-accent/20 text-accent"
                   : "border-accent/40 bg-accent/10 text-accent"

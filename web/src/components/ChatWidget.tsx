@@ -510,7 +510,7 @@ export function ChatWidget() {
         aria-label={open ? `Close live chat with ${assistantName}` : "Open live chat"}
         aria-expanded={open}
         onClick={() => (open ? setOpen(false) : openWidget())}
-        className="fixed bottom-6 right-6 z-50 grid size-14 place-items-center rounded-full border border-accent/50 bg-bg text-accent shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+        className="tilt-3d tilt-3d-tile fixed bottom-6 right-6 z-50 grid size-14 place-items-center rounded-full border border-accent/50 bg-bg text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
       >
         {open ? (
           <X className="size-6" />
@@ -601,7 +601,7 @@ export function ChatWidget() {
                   title={listening ? "Listening… tap to stop" : "Speak your message"}
                   aria-label="Speak your message"
                   className={cn(
-                    "grid size-9 shrink-0 place-items-center rounded-full border border-hairline text-text-2 transition-colors hover:border-accent/40 hover:text-text",
+                    "tilt-3d tilt-3d-tile grid size-9 shrink-0 place-items-center rounded-full border border-hairline text-text-2 transition-colors hover:border-accent/40 hover:text-text",
                     listening && "animate-pulse border-accent/50 text-accent",
                   )}
                 >
@@ -612,7 +612,7 @@ export function ChatWidget() {
                 type="submit"
                 aria-label="Send message"
                 title="Send"
-                className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-on-accent transition-colors hover:bg-accent-strong"
+                className="tilt-3d tilt-3d-tile grid size-9 shrink-0 place-items-center rounded-full bg-accent text-on-accent transition-colors hover:bg-accent-strong"
               >
                 <Send className="size-4" />
               </button>

@@ -199,6 +199,23 @@ body {
   transform: perspective(360px) translateY(-3px) rotateX(0deg);
 }
 
+/* Header chrome: same pivot as a tile, no ground shadow. These buttons sit ON
+   the header surface rather than floating above the page, and a cast shadow
+   under a 32px transparent control reads as a smudge. Tilt alone is enough to
+   put them on the same plane as everything else. */
+.tilt-3d-chrome {
+  transform: perspective(360px) rotateX(9deg);
+  transform-origin: center bottom;
+  transition:
+    transform 300ms ease-out,
+    background-color 300ms ease-out,
+    border-color 300ms ease-out,
+    color 300ms ease-out;
+}
+.tilt-3d-chrome:hover:not(:disabled) {
+  transform: perspective(360px) translateY(-1px) rotateX(0deg);
+}
+
 /* Reduced motion keeps the depth cue (the shadow) and drops the rotation:
    a control that pitches on hover is exactly the vestibular trigger the
    preference exists to silence. */
@@ -207,7 +224,9 @@ body {
   .tilt-3d:hover:not(:disabled),
   .tilt-3d:active:not(:disabled),
   .tilt-3d-tile,
-  .tilt-3d-tile:hover:not(:disabled) {
+  .tilt-3d-tile:hover:not(:disabled),
+  .tilt-3d-chrome,
+  .tilt-3d-chrome:hover:not(:disabled) {
     transform: none;
     transition: background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out;
   }
