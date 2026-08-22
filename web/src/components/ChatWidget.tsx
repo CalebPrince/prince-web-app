@@ -191,10 +191,21 @@ export function ChatWidget() {
     // than synchronously inside the effect body.
     const t = setTimeout(() => {
       setBadgeSeen(sessionStorage.getItem("chat_badge_seen") === "1");
-      setAutoSpeak(sessionStorage.getItem("chat_autospeak") === "1");
+      // Read-aloud is on unless the visitor has turned it off. Lisa has a real
+      // ElevenLabs voice and it is the point of her, but the toggle still
+      // persists a refusal so it is asked once, not every visit.
+      setAutoSpeak(sessionStorage.getItem("chat_autospeak") !== "0");
       setToken(sessionStorage.getItem("chat_token"));
       setSpeechAvailable("speechSynthesis" in window);
       setMicAvailable(!!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
+      // Status used to be fetched in boot(), which only runs once the widget is
+      // opened — so the launcher could not know whether Lisa was available
+      // until after the click it was meant to inform. It offers to speak to
+      // her, and must not do that when she is offline, so it asks up front.
+      // One small GET; boot() still refetches for the greeting and intro.
+      api.chatStatus()
+        .then((s) => setOnline(!!s.online))
+        .catch(() => setOnline(false));
     }, 0);
     return () => clearTimeout(t);
   }, []);
@@ -297,13 +308,26 @@ export function ChatWidget() {
     setBooted(true);
   }
 
-  function openWidget() {
+  /**
+   * `voice` opens straight into a spoken exchange: read-aloud on, and the mic
+   * already listening so the visitor can just talk. Speech recognition needs a
+   * user gesture, and the launcher tap is one — but only if the mic starts in
+   * the same task as the click, hence starting it here rather than in an
+   * effect once the panel has rendered.
+   */
+  function openWidget(mode: "text" | "voice" = "text") {
     setOpen(true);
     if (!badgeSeen) {
       setBadgeSeen(true);
       sessionStorage.setItem("chat_badge_seen", "1");
     }
     if (!booted) boot();
+    if (mode === "voice") {
+      unlockTts();
+      setAutoSpeak(true);
+      sessionStorage.setItem("chat_autospeak", "1");
+      if (micAvailable && !listening) toggleMic();
+    }
   }
 
   // ---- send a free-text message -------------------------------------------
@@ -505,28 +529,57 @@ export function ChatWidget() {
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={open ? `Close live chat with ${assistantName}` : "Open live chat"}
-        aria-expanded={open}
-        onClick={() => (open ? setOpen(false) : openWidget())}
-        className="tilt-3d tilt-3d-tile fixed bottom-6 right-6 z-50 grid size-14 place-items-center rounded-full border border-accent/50 bg-bg text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-      >
-        {open ? (
-          <X className="size-6" />
-        ) : (
-          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" className="size-7" aria-hidden="true">
-            <circle cx="24" cy="24" r="18" />
-            <path d="M15 25h3l2.4-8 4.4 15 3.4-11 2.1 6H34" />
-            <path d="M18 37c3.8 2.1 8.2 2.1 12 0" />
-          </svg>
+      {/* Launcher. Voice leads: talking to Lisa is the thing worth doing, and
+          buried behind a mic icon inside a panel nobody had opened yet, almost
+          nobody found it. Text keeps its own button rather than becoming a
+          secondary mode of the voice one. */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        {!open && (
+          <div className="tilt-3d tilt-3d-tile flex items-center gap-2 rounded-full border border-hairline bg-bg py-1.5 pl-1.5 pr-3.5">
+            <AgentFace size="sm" />
+            <span className="text-xs font-medium text-text-2">
+              {online ? `Ask ${assistantName} anything` : `Leave ${assistantName} a message`}
+            </span>
+          </div>
         )}
-        {!open && !badgeSeen && (
-          <span className="absolute -right-0.5 -top-0.5 grid size-5 place-items-center rounded-full border-2 border-bg bg-red-500 text-[0.65rem] font-bold text-white">
-            1<span className="sr-only"> unread message</span>
-          </span>
-        )}
-      </button>
+
+        <div className="flex items-center gap-2">
+          {!open && micAvailable && online && (
+            <button
+              type="button"
+              onClick={() => openWidget("voice")}
+              aria-label={`Speak to ${assistantName}`}
+              className="tilt-3d tilt-glow flex h-12 items-center gap-2 rounded-full bg-accent pl-4 pr-5 text-sm font-semibold text-on-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            >
+              <Mic className="size-4" />
+              Speak
+            </button>
+          )}
+
+          <button
+            type="button"
+            aria-label={open ? `Close live chat with ${assistantName}` : `Chat with ${assistantName}`}
+            aria-expanded={open}
+            onClick={() => (open ? setOpen(false) : openWidget("text"))}
+            className="tilt-3d tilt-3d-tile relative grid size-14 place-items-center rounded-full border border-accent/50 bg-bg text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+          >
+            {open ? (
+              <X className="size-6" />
+            ) : (
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" className="size-7" aria-hidden="true">
+                <circle cx="24" cy="24" r="18" />
+                <path d="M15 25h3l2.4-8 4.4 15 3.4-11 2.1 6H34" />
+                <path d="M18 37c3.8 2.1 8.2 2.1 12 0" />
+              </svg>
+            )}
+            {!open && !badgeSeen && (
+              <span className="absolute -right-0.5 -top-0.5 grid size-5 place-items-center rounded-full border-2 border-bg bg-red-500 text-[0.65rem] font-bold text-white">
+                1<span className="sr-only"> unread message</span>
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
 
       {open && (
         <div
