@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, Mic, X, Volume2, VolumeX, Phone, ChevronDown } from "lucide-react";
+import { Send, Mic, X, Volume2, VolumeX, Phone } from "lucide-react";
 import { AgentFace } from "@/components/AgentFace";
 import { ChatBubble, type ChatMsg } from "@/components/chat/ChatBubble";
 import { LeaveMessageForm } from "@/components/chat/LeaveMessageForm";
@@ -53,7 +53,6 @@ declare global {
 
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   const [badgeSeen, setBadgeSeen] = useState(true); // true until we know otherwise (avoids SSR/CSR flash)
   const [booted, setBooted] = useState(false);
 
@@ -342,70 +341,52 @@ export function ChatWidget() {
           who is there and then offers the ways in, rather than a stack of
           floating buttons. The call is the filled pill because talking to
           Lisa is the thing worth doing; text keeps its own button rather than
-          becoming a mode of the voice one; the chevron folds the whole thing
-          back to the mark. */}
+          becoming a mode of the voice one.
+
+          The card is the resting state. There is no bubble to click first:
+          a launcher that only says "there is a launcher here" costs a click
+          to learn what the card says outright. */}
       {!open && (
         <div className="fixed bottom-6 right-6 z-50">
-          {collapsed ? (
-            <button
-              type="button"
-              onClick={() => setCollapsed(false)}
-              aria-label={`Open ${assistantName}`}
-              className="lisa-round lisa-round--lg relative"
-            >
+          <div className="lisa-card">
+            <div className="flex items-center gap-2.5 px-1.5 pb-3 pt-1">
               <AgentFace size="sm" />
-              {!badgeSeen && <span className="lisa-badge" aria-hidden="true" />}
-            </button>
-          ) : (
-            <div className="lisa-card">
-              <div className="flex items-center gap-2.5 px-1.5 pb-3 pt-1">
-                <AgentFace size="sm" />
-                <span className="text-[0.95rem] font-medium text-text">
-                  {online === false ? `${assistantName} is away` : "Need help?"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => openWidget(micAvailable && online ? "voice" : "text")}
-                  className="lisa-cta"
-                >
-                  <Phone className="size-4" />
-                  {online === false ? "Leave a message" : "Ask anything"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => openWidget("text")}
-                  aria-label={`Chat with ${assistantName}`}
-                  className="lisa-round relative"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" className="size-5" aria-hidden="true">
-                    <path
-                      d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinejoin="round"
-                    />
-                    <circle cx="8.75" cy="9.5" r="1.05" fill="currentColor" />
-                    <circle cx="12" cy="9.5" r="1.05" fill="currentColor" />
-                    <circle cx="15.25" cy="9.5" r="1.05" fill="currentColor" />
-                  </svg>
-                  {!badgeSeen && <span className="lisa-badge" aria-hidden="true" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCollapsed(true)}
-                  aria-label="Collapse"
-                  className="lisa-round"
-                >
-                  <ChevronDown className="size-4" />
-                </button>
-              </div>
+              <span className="text-[0.95rem] font-medium text-text">
+                {online === false ? `${assistantName} is away` : "Need help?"}
+              </span>
             </div>
-          )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => openWidget(micAvailable && online ? "voice" : "text")}
+                className="lisa-cta"
+              >
+                <Phone className="size-4" />
+                {online === false ? "Leave a message" : "Ask anything"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openWidget("text")}
+                aria-label={`Chat with ${assistantName}`}
+                className="lisa-round relative"
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="size-5" aria-hidden="true">
+                  <path
+                    d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="8.75" cy="9.5" r="1.05" fill="currentColor" />
+                  <circle cx="12" cy="9.5" r="1.05" fill="currentColor" />
+                  <circle cx="15.25" cy="9.5" r="1.05" fill="currentColor" />
+                </svg>
+                {!badgeSeen && <span className="lisa-badge" aria-hidden="true" />}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
