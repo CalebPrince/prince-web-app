@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, Mic, Menu as MenuIcon, X, Volume2, VolumeX } from "lucide-react";
+import { Send, Mic, X, Volume2, VolumeX, Phone, ChevronDown } from "lucide-react";
 import { AgentFace } from "@/components/AgentFace";
 import { ChatBubble, type ChatMsg } from "@/components/chat/ChatBubble";
-import { QuickReplyMenu, type MenuButton } from "@/components/chat/QuickReplyMenu";
 import { LeaveMessageForm } from "@/components/chat/LeaveMessageForm";
 import { hasCode, proseOnly } from "@/lib/chat-format";
 import { playTts, stopTts, speakWithBrowser, stopBrowserSpeech, stripForSpeech, unlockTts, type VoiceConfig } from "@/lib/tts";
@@ -18,108 +17,7 @@ import { cn } from "@/lib/utils";
 // cards) is a progressive one - the chat still works without Web Audio /
 // speech support, same as the legacy widget.
 
-type MenuOption = {
-  label: string;
-  to?: string;
-  action?: "projectLead" | "techInfo" | "portfolio" | "supportForm" | "humanHandoff";
-  text?: string;
-  key?: string;
-  tag?: string;
-};
-type MenuNode = { prompt: string; back?: string; options: MenuOption[] };
-
-const MENU: Record<string, MenuNode> = {
-  main: {
-    prompt: "How can I help you today?",
-    options: [
-      { label: "🚀 Start a Project / Get a Quote", to: "startProject" },
-      { label: "⚡ Tech Stack & Capabilities", to: "techStack" },
-      { label: "💼 View Portfolio & Case Studies", action: "portfolio" },
-      { label: "📞 Existing Client Support", to: "support" },
-      { label: "💬 Talk to a Human", action: "humanHandoff" },
-    ],
-  },
-  startProject: {
-    prompt: "What kind of project are you thinking about?",
-    back: "main",
-    options: [
-      { label: "📱 Mobile App Development", to: "mobileApp" },
-      { label: "💻 Custom Web Application", to: "webApp" },
-      { label: "🌐 Website & E-commerce", to: "website" },
-      { label: "🤖 AI or Automation Integration", to: "aiAutomation" },
-    ],
-  },
-  mobileApp: {
-    prompt: "Mobile app, which platform?",
-    back: "startProject",
-    options: [
-      { label: "🍎 iOS", action: "projectLead", text: "I'm interested in a mobile app for iOS." },
-      { label: "🤖 Android", action: "projectLead", text: "I'm interested in a mobile app for Android." },
-      { label: "🔀 Cross-Platform (Hybrid)", action: "projectLead", text: "I'm interested in a cross-platform (hybrid) mobile app." },
-    ],
-  },
-  webApp: {
-    prompt: "Custom web application, what shape is it?",
-    back: "startProject",
-    options: [
-      { label: "🖥️ Frontend/Backend Build", action: "projectLead", text: "I need a custom web application, a frontend and backend build." },
-      { label: "📊 SaaS Platform", action: "projectLead", text: "I want to build a SaaS platform." },
-      { label: "🔐 Client/Admin Portal", action: "projectLead", text: "I need a custom client or admin portal." },
-    ],
-  },
-  website: {
-    prompt: "Website & e-commerce, what do you need?",
-    back: "startProject",
-    options: [
-      { label: "🐘 Custom PHP/Bootstrap Site", action: "projectLead", text: "I need a custom PHP/Bootstrap website." },
-      { label: "🛒 E-commerce Storefront", action: "projectLead", text: "I want an e-commerce storefront." },
-      { label: "🏢 Corporate Site", action: "projectLead", text: "I need a corporate website." },
-    ],
-  },
-  aiAutomation: {
-    prompt: "AI or automation, what are you picturing?",
-    back: "startProject",
-    options: [
-      { label: "🤖 Chatbot", action: "projectLead", text: "I'm interested in building a chatbot." },
-      { label: "⚙️ Workflow Automation", action: "projectLead", text: "I'm interested in workflow automation." },
-      { label: "🔌 Custom API Integration", action: "projectLead", text: "I need a custom API integration." },
-    ],
-  },
-  techStack: {
-    prompt: "What would you like to know about?",
-    back: "main",
-    options: [
-      { label: "⚡ Frontend Technologies", action: "techInfo", key: "frontend" },
-      { label: "⚙️ Backend & APIs", action: "techInfo", key: "backend" },
-      { label: "🗄️ Database & Cloud", action: "techInfo", key: "database" },
-      { label: "🛠️ CMS & Platforms", action: "techInfo", key: "cms" },
-    ],
-  },
-  support: {
-    prompt: "What do you need help with?",
-    back: "main",
-    options: [
-      { label: "🐛 Report a Bug / Technical Issue", action: "supportForm", tag: "Bug Report" },
-      { label: "📈 Request a Feature/Update", action: "supportForm", tag: "Feature Request" },
-      { label: "💳 Billing & Invoicing Query", action: "supportForm", tag: "Billing Query" },
-      { label: "🧑‍💻 Talk to my Project Manager", action: "supportForm", tag: "Talk to PM" },
-    ],
-  },
-};
-
-const TECH_INFO: Record<string, string> = {
-  frontend:
-    "⚡ On the frontend: plain HTML/CSS/JS or React when a build needs real interactivity, Bootstrap 5 or Tailwind for layout, and React Native for cross-platform mobile, no framework or build-step overhead unless the project actually calls for it.",
-  backend:
-    "⚙️ On the backend: PHP, Node.js, and Python/FastAPI, all built around clean REST APIs, picked per project, not a one-size-fits-all stack.",
-  database:
-    "🗄️ For data: MySQL, PostgreSQL, and SQLite for anything relational, NoSQL when the shape of the data calls for it, plus cloud object storage/CDNs for media-heavy features.",
-  cms: "🛠️ For content: tailored WordPress builds, headless CMS setups, or a fully custom lightweight admin panel, whichever keeps day-to-day editing easy without dragging in more than you need.",
-};
-
 const DEFAULTS = {
-  greeting: "Hi there! 👋 Welcome. We build AI voice agents, WhatsApp assistants, and automations around the work your team repeats.",
-  intro: "Pick an option below, or describe the call, message, or repetitive workflow you want to improve.",
   offline: "We're offline at the moment, but your message won't be missed, leave your name, email and a few words below and Prince will get back to you shortly.",
 };
 
@@ -155,6 +53,7 @@ declare global {
 
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [badgeSeen, setBadgeSeen] = useState(true); // true until we know otherwise (avoids SSR/CSR flash)
   const [booted, setBooted] = useState(false);
 
@@ -164,10 +63,7 @@ export function ChatWidget() {
 
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [token, setToken] = useState<string | null>(null);
-  const [menuNode, setMenuNode] = useState<string | null>(null);
   const [showLeaveForm, setShowLeaveForm] = useState(false);
-  const [leaveFormPrefill, setLeaveFormPrefill] = useState("");
-  const [leaveFormHasBack, setLeaveFormHasBack] = useState(false);
 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -191,17 +87,28 @@ export function ChatWidget() {
     // than synchronously inside the effect body.
     const t = setTimeout(() => {
       setBadgeSeen(sessionStorage.getItem("chat_badge_seen") === "1");
-      setAutoSpeak(sessionStorage.getItem("chat_autospeak") === "1");
+      // Read-aloud is on unless the visitor has turned it off. Lisa has a real
+      // ElevenLabs voice and it is the point of her, but the toggle still
+      // persists a refusal so it is asked once, not every visit.
+      setAutoSpeak(sessionStorage.getItem("chat_autospeak") !== "0");
       setToken(sessionStorage.getItem("chat_token"));
       setSpeechAvailable("speechSynthesis" in window);
       setMicAvailable(!!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
+      // Status used to be fetched in boot(), which only runs once the widget is
+      // opened — so the launcher could not know whether Lisa was available
+      // until after the click it was meant to inform. It offers to speak to
+      // her, and must not do that when she is offline, so it asks up front.
+      // One small GET; boot() still refetches for the greeting and intro.
+      api.chatStatus()
+        .then((s) => setOnline(!!s.online))
+        .catch(() => setOnline(false));
     }, 0);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
     messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight });
-  }, [messages, menuNode, showLeaveForm]);
+  }, [messages, showLeaveForm]);
 
   function playTone() {
     try {
@@ -244,16 +151,15 @@ export function ChatWidget() {
     setMessages((m) => m.map((msg) => (msg.id === id ? { ...msg, text, typing: false, animate: true, links: opts?.links } : msg)));
   }
 
-  function clearMessages() {
-    setMessages([]);
-  }
-
   // ---- boot ---------------------------------------------------------------
   async function boot() {
     let status: ChatStatus = {
       online: false,
-      greeting: DEFAULTS.greeting,
-      intro: DEFAULTS.intro,
+      // The greeting and intro the API still sends are deliberately unused:
+      // the widget opens straight into a conversation now, with nothing
+      // said until there is something to say.
+      greeting: "",
+      intro: "",
       offline_message: DEFAULTS.offline,
       assistant_name: "Lisa",
       voice: { gender: "female", accent: "en-GB", rate: 1, pitch: 1 },
@@ -286,24 +192,33 @@ export function ChatWidget() {
       }
     }
 
-    appendMessage("bot", status.greeting || DEFAULTS.greeting);
-    if (status.online) {
-      appendMessage("bot", status.intro || DEFAULTS.intro);
-      setMenuNode("main");
-    } else {
+    if (!status.online) {
       appendMessage("bot", status.offline_message || DEFAULTS.offline);
       setShowLeaveForm(true);
     }
     setBooted(true);
   }
 
-  function openWidget() {
+  /**
+   * `voice` opens straight into a spoken exchange: read-aloud on, and the mic
+   * already listening so the visitor can just talk. Speech recognition needs a
+   * user gesture, and the launcher tap is one — but only if the mic starts in
+   * the same task as the click, hence starting it here rather than in an
+   * effect once the panel has rendered.
+   */
+  function openWidget(mode: "text" | "voice" = "text") {
     setOpen(true);
     if (!badgeSeen) {
       setBadgeSeen(true);
       sessionStorage.setItem("chat_badge_seen", "1");
     }
     if (!booted) boot();
+    if (mode === "voice") {
+      unlockTts();
+      setAutoSpeak(true);
+      sessionStorage.setItem("chat_autospeak", "1");
+      if (micAvailable && !listening) toggleMic();
+    }
   }
 
   // ---- send a free-text message -------------------------------------------
@@ -318,7 +233,6 @@ export function ChatWidget() {
       resolveMessage(pendingId, res.reply);
     } catch (err) {
       resolveMessage(pendingId, err instanceof Error ? err.message : "Sorry, something went wrong. Please leave a message below instead.");
-      setLeaveFormHasBack(false);
       setShowLeaveForm(true);
     } finally {
       setSending(false);
@@ -330,85 +244,14 @@ export function ChatWidget() {
     const text = input.trim();
     if (!text || sending) return;
     setInput("");
-    setMenuNode(null);
     sendChatMessage(text);
-  }
-
-  // ---- quick-reply menu -----------------------------------------------------
-  function selectMenu(nodeId: string, opts: { skipPrompt?: boolean } = {}) {
-    if (!opts.skipPrompt) appendMessage("bot", MENU[nodeId].prompt);
-    setMenuNode(nodeId);
-  }
-
-  async function showPortfolio() {
-    const pendingId = appendTyping();
-    try {
-      const projects = await api.projects();
-      const top = projects.slice(0, 3);
-      if (top.length) {
-        resolveMessage(pendingId, "A few things I've built recently:", {
-          links: top.map((p) => ({ href: `/systems/${p.slug}`, label: p.title })),
-        });
-      } else {
-        resolveMessage(pendingId, "Take a look at the full portfolio, new work gets added regularly.");
-      }
-    } catch {
-      resolveMessage(pendingId, "Couldn't load the portfolio right now, take a look at the full page instead.");
-    }
-  }
-
-  function handleOption(opt: MenuOption) {
-    clearMessages();
-    if (opt.to) {
-      selectMenu(opt.to);
-      return;
-    }
-    switch (opt.action) {
-      case "projectLead":
-        setMenuNode(null);
-        sendChatMessage(opt.text!);
-        break;
-      case "techInfo":
-        appendMessage("bot", TECH_INFO[opt.key!]);
-        selectMenu("techStack");
-        break;
-      case "portfolio":
-        setMenuNode(null);
-        showPortfolio();
-        break;
-      case "supportForm":
-        setMenuNode(null);
-        setLeaveFormPrefill(`[${opt.tag}] `);
-        setLeaveFormHasBack(true);
-        setShowLeaveForm(true);
-        break;
-      case "humanHandoff":
-        setMenuNode(null);
-        setLeaveFormPrefill("");
-        setLeaveFormHasBack(true);
-        setShowLeaveForm(true);
-        break;
-    }
-  }
-
-  function backToMenuFromForm() {
-    setShowLeaveForm(false);
-    selectMenu("main");
-  }
-
-  function openMainMenu() {
-    setShowLeaveForm(false);
-    clearMessages();
-    selectMenu("main");
   }
 
   async function submitLeaveForm(data: { name: string; email: string; phone: string; message: string }) {
     try {
       await api.chatInquiry({ token, ...data, attribution: {} });
       setShowLeaveForm(false);
-      setMenuNode(null);
       appendMessage("bot", `Thanks! Your message is on its way, Prince will reply to you at ${data.email} soon. 📬`);
-      if (online) selectMenu("main");
     } catch (err) {
       appendMessage("bot", err instanceof Error ? err.message : "Could not send your message, please try again.");
     }
@@ -491,48 +334,86 @@ export function ChatWidget() {
     }
   }
 
-  // ---- menu buttons -----------------------------------------------------------
-  const currentMenuButtons: MenuButton[] = menuNode
-    ? [
-        ...MENU[menuNode].options.map((opt) => ({ label: opt.label, onClick: () => handleOption(opt) })),
-        ...(MENU[menuNode].back
-          ? [{ label: "⬅ Back", back: true, onClick: () => selectMenu(MENU[menuNode].back!) }]
-          : []),
-      ]
-    : [];
-
   const statusLabel = online === null ? "Connecting…" : online ? "Online" : "Offline";
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={open ? `Close live chat with ${assistantName}` : "Open live chat"}
-        aria-expanded={open}
-        onClick={() => (open ? setOpen(false) : openWidget())}
-        className="tilt-3d tilt-3d-tile fixed bottom-6 right-6 z-50 grid size-14 place-items-center rounded-full border border-accent/50 bg-bg text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-      >
-        {open ? (
-          <X className="size-6" />
-        ) : (
-          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" className="size-7" aria-hidden="true">
-            <circle cx="24" cy="24" r="18" />
-            <path d="M15 25h3l2.4-8 4.4 15 3.4-11 2.1 6H34" />
-            <path d="M18 37c3.8 2.1 8.2 2.1 12 0" />
-          </svg>
-        )}
-        {!open && !badgeSeen && (
-          <span className="absolute -right-0.5 -top-0.5 grid size-5 place-items-center rounded-full border-2 border-bg bg-red-500 text-[0.65rem] font-bold text-white">
-            1<span className="sr-only"> unread message</span>
-          </span>
-        )}
-      </button>
+      {/* Launcher. Modelled on the ElevenLabs help widget: one card that says
+          who is there and then offers the ways in, rather than a stack of
+          floating buttons. The call is the filled pill because talking to
+          Lisa is the thing worth doing; text keeps its own button rather than
+          becoming a mode of the voice one; the chevron folds the whole thing
+          back to the mark. */}
+      {!open && (
+        <div className="fixed bottom-6 right-6 z-50">
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              aria-label={`Open ${assistantName}`}
+              className="lisa-round lisa-round--lg relative"
+            >
+              <AgentFace size="sm" />
+              {!badgeSeen && <span className="lisa-badge" aria-hidden="true" />}
+            </button>
+          ) : (
+            <div className="lisa-card">
+              <div className="flex items-center gap-2.5 px-1.5 pb-3 pt-1">
+                <AgentFace size="sm" />
+                <span className="text-[0.95rem] font-medium text-text">
+                  {online === false ? `${assistantName} is away` : "Need help?"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openWidget(micAvailable && online ? "voice" : "text")}
+                  className="lisa-cta"
+                >
+                  <Phone className="size-4" />
+                  {online === false ? "Leave a message" : "Ask anything"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openWidget("text")}
+                  aria-label={`Chat with ${assistantName}`}
+                  className="lisa-round relative"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" className="size-5" aria-hidden="true">
+                    <path
+                      d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinejoin="round"
+                    />
+                    <circle cx="8.75" cy="9.5" r="1.05" fill="currentColor" />
+                    <circle cx="12" cy="9.5" r="1.05" fill="currentColor" />
+                    <circle cx="15.25" cy="9.5" r="1.05" fill="currentColor" />
+                  </svg>
+                  {!badgeSeen && <span className="lisa-badge" aria-hidden="true" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(true)}
+                  aria-label="Collapse"
+                  className="lisa-round"
+                >
+                  <ChevronDown className="size-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {open && (
         <div
           role="dialog"
           aria-label={`Live chat with ${assistantName}`}
-          className="fixed bottom-24 right-6 z-50 flex max-h-[min(34rem,calc(100vh-7rem))] w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[calc(var(--radius)*1.3)] border border-hairline bg-bg shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+          className="fixed bottom-6 right-6 z-50 flex max-h-[min(34rem,calc(100vh-4rem))] w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[calc(var(--radius)*1.3)] border border-hairline bg-bg shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
         >
           <header className="flex items-center gap-3 border-b border-hairline px-4 py-3">
             <AgentFace size="sm" thinking={sending} speaking={speakingId !== null} />
@@ -554,9 +435,6 @@ export function ChatWidget() {
                 {autoSpeak ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
               </button>
             )}
-            <button type="button" onClick={openMainMenu} title="Menu" aria-label="Show menu" className="shrink-0 text-muted transition-colors hover:text-text">
-              <MenuIcon className="size-4" />
-            </button>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="shrink-0 text-muted transition-colors hover:text-text">
               <X className="size-4" />
             </button>
@@ -575,15 +453,8 @@ export function ChatWidget() {
             ))}
           </div>
 
-          {menuNode && !showLeaveForm && <QuickReplyMenu buttons={currentMenuButtons} />}
-
           {showLeaveForm ? (
-            <LeaveMessageForm
-              prefillMessage={leaveFormPrefill}
-              showBack={leaveFormHasBack && !!online}
-              onBack={backToMenuFromForm}
-              onSubmit={submitLeaveForm}
-            />
+            <LeaveMessageForm onSubmit={submitLeaveForm} />
           ) : (
             <form onSubmit={onSubmitText} className="flex items-center gap-2 border-t border-hairline p-3">
               <input

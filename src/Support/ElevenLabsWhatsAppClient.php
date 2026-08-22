@@ -36,6 +36,46 @@ final class ElevenLabsWhatsAppClient
     }
 
     /**
+     * Fetch a conversation created by an outbound template.
+     *
+     * The send call answers only with a conversation_id — it carries no
+     * delivery status at all — so when a template is accepted and never
+     * arrives, the conversation is the only place left to look: whether it
+     * holds an outbound message, and what state that message is in, is what
+     * separates "Meta took it" from "Meta dropped it".
+     *
+     * Returns the decoded body untouched rather than picking fields out of it,
+     * because the useful detail here is whatever ElevenLabs happens to say.
+     *
+     * @return array{ok:bool,status:int,raw:string}
+     */
+    public static function fetchConversation(string $conversationId): array
+    {
+        $apiKey = trim((string) Settings::get('elevenlabs_api_key'));
+        if ($apiKey === '' || $conversationId === '') {
+            return ['ok' => false, 'status' => 0, 'raw' => 'Missing API key or conversation id.'];
+        }
+        if (!function_exists('curl_init')) {
+            return ['ok' => false, 'status' => 0, 'raw' => 'PHP cURL is unavailable.'];
+        }
+
+        $ch = curl_init('https://api.elevenlabs.io/v1/convai/conversations/' . rawurlencode($conversationId));
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_HTTPHEADER => ['xi-api-key: ' . $apiKey],
+        ]);
+        $raw = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        return [
+            'ok' => $raw !== false && $status >= 200 && $status < 300,
+            'status' => $status,
+            'raw' => is_string($raw) ? $raw : 'Request failed.',
+        ];
+    }
+
+    /**
      * The configured owner alert: template and placeholder order come from
      * Settings.
      *

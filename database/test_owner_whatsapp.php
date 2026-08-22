@@ -142,6 +142,18 @@ if ($mode === 'all' || $mode === 'lisa') {
         // body is the only thing that distinguishes the two.
         echo 'HTTP ' . ($result['status'] ?? '?') . ' response: '
             . mb_substr((string) ($result['raw'] ?? ''), 0, 1200) . "\n";
+
+        // The send answers with an id and nothing else, so read the
+        // conversation back: an outbound message present in it means Meta
+        // accepted the template, and an empty one means it was dropped after
+        // ElevenLabs had already reported success.
+        if ($sent && $result['id']) {
+            echo "Reading conversation {$result['id']} back in 6s...\n";
+            sleep(6);
+            $conv = App\Support\ElevenLabsWhatsAppClient::fetchConversation((string) $result['id']);
+            echo 'Conversation HTTP ' . $conv['status'] . ': '
+                . mb_substr($conv['raw'], 0, 2000) . "\n";
+        }
     } else {
         $sent = WhatsAppNotifier::sendOwnerAlert($demoBody, $demoFields);
     }
