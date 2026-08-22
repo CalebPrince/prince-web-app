@@ -1950,6 +1950,12 @@ class LiveChatController
             $email = 'live-chat@princecaleb.dev';
         }
         $phone = trim((string) ($args['phone'] ?? ''));
+        // The tool declares request_summary and Lisa fills it in, but nothing
+        // here ever read it: $summary was undefined below, so PHP evaluated it
+        // as null, the `!== ''` test passed anyway, and every handoff carried a
+        // bare "Request:" line while the summary itself was dropped. It is the
+        // one part of the alert that says what the visitor actually wants.
+        $summary = trim((string) ($args['request_summary'] ?? ''));
 
         self::recordInquiry(
             $pdo,
