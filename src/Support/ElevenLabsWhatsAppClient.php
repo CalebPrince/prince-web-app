@@ -36,23 +36,60 @@ final class ElevenLabsWhatsAppClient
     }
 
     /**
+     * The configured owner alert: template and placeholder order come from
+     * Settings.
+     *
      * @param array<string,string> $fields Values keyed by the names in FIELDS.
      * @return array{ok:bool,id:?string,error:?string}
      */
     public static function sendOwnerTemplate(string $recipient, array $fields): array
     {
-        $to = preg_replace('/\D+/', '', $recipient) ?? '';
-        if (!preg_match('/^[1-9]\d{7,14}$/', $to)) {
-            return ['ok' => false, 'id' => null, 'error' => 'Owner WhatsApp number is missing or malformed.'];
-        }
         if (!self::isConfigured()) {
             return ['ok' => false, 'id' => null, 'error' => 'ElevenLabs WhatsApp alert settings are incomplete.'];
+        }
+        return self::sendTemplate(
+            $recipient,
+            trim((string) Settings::get('elevenlabs_whatsapp_alert_template_name')),
+            trim((string) Settings::get('elevenlabs_whatsapp_alert_template_lang')) ?: 'en',
+            self::paramOrder(),
+            $fields
+        );
+    }
+
+    /**
+     * Send any approved template to any number. Split out from
+     * sendOwnerTemplate so the pipeline — credentials, agent, phone number ID,
+     * number format, placeholder count — can be proved against a template that
+     * is already approved, without first writing a template name into the
+     * settings that real handoffs read.
+     *
+     * @param list<string>         $order  Field names filling {{1}}, {{2}}, ...
+     * @param array<string,string> $fields Values keyed by the names in FIELDS.
+     * @return array{ok:bool,id:?string,error:?string}
+     */
+    public static function sendTemplate(
+        string $recipient,
+        string $templateName,
+        string $languageCode,
+        array $order,
+        array $fields
+    ): array {
+        $to = preg_replace('/\D+/', '', $recipient) ?? '';
+        if (!preg_match('/^[1-9]\d{7,14}$/', $to)) {
+            return ['ok' => false, 'id' => null, 'error' => 'Recipient WhatsApp number is missing or malformed.'];
+        }
+        if ($templateName === '') {
+            return ['ok' => false, 'id' => null, 'error' => 'No template name given.'];
+        }
+        foreach (['elevenlabs_api_key', 'elevenlabs_whatsapp_agent_id', 'elevenlabs_whatsapp_phone_number_id'] as $key) {
+            if (trim((string) Settings::get($key)) === '') {
+                return ['ok' => false, 'id' => null, 'error' => "Setting {$key} is empty."];
+            }
         }
         if (!function_exists('curl_init')) {
             return ['ok' => false, 'id' => null, 'error' => 'PHP cURL is unavailable.'];
         }
 
-        $order = self::paramOrder();
         $parameters = [];
         foreach ($order as $field) {
             // Meta rejects an empty placeholder outright, and newlines are not
@@ -70,8 +107,8 @@ final class ElevenLabsWhatsAppClient
             'agent_id' => trim((string) Settings::get('elevenlabs_whatsapp_agent_id')),
             'whatsapp_phone_number_id' => trim((string) Settings::get('elevenlabs_whatsapp_phone_number_id')),
             'whatsapp_user_id' => $to,
-            'template_name' => trim((string) Settings::get('elevenlabs_whatsapp_alert_template_name')),
-            'template_language_code' => trim((string) Settings::get('elevenlabs_whatsapp_alert_template_lang')) ?: 'en',
+            'template_name' => $templateName,
+            'template_language_code' => $languageCode ?: 'en',
             'template_params' => $parameters === []
                 ? []
                 : [['type' => 'body', 'parameters' => $parameters]],
