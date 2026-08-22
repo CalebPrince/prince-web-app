@@ -93,6 +93,11 @@ export function ChatWidget() {
   /** How far up the idle ladder this conversation has climbed. Reset by the
    *  visitor saying anything at all. */
   const idleStep = useRef(0);
+  /** Whether Lisa is talking right now, readable from inside the recogniser's
+   *  callbacks - which fire outside React and so cannot see the state. */
+  const speakingRef = useRef(false);
+  /** The microphone was ours to stop, so it is ours to start again. */
+  const resumeMic = useRef(false);
   const [ended, setEnded] = useState(false);
   const [speechAvailable, setSpeechAvailable] = useState(false);
   const [micAvailable, setMicAvailable] = useState(false);
@@ -262,6 +267,31 @@ export function ChatWidget() {
     return () => window.clearTimeout(timer);
   }, [open, online, ended, showLeaveForm, sending, messages]);
 
+  /** A call plays Lisa through the speakers and listens through the
+   *  microphone at the same time, so she hears herself and types her own
+   *  greeting into the composer. The microphone stands down while she talks
+   *  and starts again when she stops - it keeps the permission it was granted
+   *  by the tap that opened the call, so no second gesture is needed. */
+  useEffect(() => {
+    speakingRef.current = speakingId !== null;
+
+    if (speakingId !== null) {
+      if (listening) {
+        resumeMic.current = true;
+        recRef.current?.stop();
+      }
+      return;
+    }
+
+    if (resumeMic.current && open && !ended && micAvailable && !listening) {
+      resumeMic.current = false;
+      toggleMic();
+    }
+    // toggleMic is redefined every render and only ever reads current state,
+    // so it is deliberately not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speakingId, listening, open, ended, micAvailable]);
+
   /** Ending stops the microphone and whatever was being read aloud: the one
    *  thing worse than a widget that never closes is one that closes and keeps
    *  listening. */
@@ -399,6 +429,11 @@ export function ChatWidget() {
     let finalText = input ? input.trim() + " " : "";
     rec.onstart = () => setListening(true);
     rec.onresult = (e: any) => {
+      // Anything heard while Lisa is talking is Lisa, coming back in through
+      // the speakers. The recogniser is stopped for the duration below, but
+      // results already in flight still land here afterwards, and they are
+      // what put her own greeting in the composer.
+      if (speakingRef.current) return;
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
