@@ -6,13 +6,32 @@ import { usePathname } from "next/navigation";
 /** How far each word breaks right, as a multiple of --sw-shift. The first
  *  word holds the line so the heading keeps an anchor to read from; the
  *  second and third are the ones that visibly leave. Anything past them
- *  takes a smaller offset on a repeating figure, so a long heading drifts
- *  rather than flying apart. */
+ *  drifts on a repeating figure, so a long heading spreads rather than
+ *  flying apart.
+ *
+ *  The offsets must never decrease from one word to the next. Only the words
+ *  move - the whitespace between them is a text node that stays put - so a
+ *  word offset further right than the one after it eats the space between
+ *  them and the two render as one word. TAIL is therefore a set of
+ *  increments added to the running offset, not a set of absolute offsets:
+ *  as literals they dropped from the lead's 1.7 back to 0.5, which closed
+ *  the gap by ~49px at half progress and read as "Callsinto". */
 const LEAD = [0, 1, 1.7];
-const TAIL = [0.5, 0.9, 0.3, 0.7];
+const TAIL = [0.18, 0.32, 0.1, 0.24];
 
-function weightFor(index: number): number {
-  return index < LEAD.length ? LEAD[index] : TAIL[(index - LEAD.length) % TAIL.length];
+/** Offsets for one heading's words, in order. Stateful across the heading
+ *  rather than a pure function of the index, since each offset depends on the
+ *  one before it. */
+function makeWeights() {
+  let prev = 0;
+  return (index: number): number => {
+    const next =
+      index < LEAD.length
+        ? Math.max(LEAD[index], prev)
+        : prev + TAIL[(index - LEAD.length) % TAIL.length];
+    prev = next;
+    return next;
+  };
 }
 
 /** Headings are authored as ordinary markup - some carry a <br>, most carry a
@@ -28,22 +47,44 @@ function wrapWords(heading: HTMLElement) {
   while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
 
   let index = 0;
+  let lastWeight = 0;
+  // The first word behaves as though it follows a space: nothing precedes it
+  // for punctuation to attach to.
+  let afterSpace = true;
+  const weightFor = makeWeights();
+
   for (const node of textNodes) {
     const text = node.nodeValue ?? "";
-    if (!text.trim()) continue;
+    // A whitespace-only node is the space between two elements - the accent
+    // span and the text after it, say. It is left exactly as it is, and only
+    // noted, so the punctuation rule below can tell "word." from "word ."
+    if (!text.trim()) {
+      afterSpace = true;
+      continue;
+    }
 
     const fragment = document.createDocumentFragment();
     for (const part of text.split(/(\s+)/)) {
       if (!part) continue;
       if (!part.trim()) {
         fragment.appendChild(document.createTextNode(part));
+        afterSpace = true;
         continue;
       }
+      // Punctuation that follows a word with no space between them is part of
+      // that word, however the markup happens to be divided up - the accent
+      // full stop in "built to perform." is its own span, so the walker meets
+      // it as a separate text node. Giving it its own offset floated it ~10px
+      // clear of the word at full progress. It rides along instead.
+      const glued = !afterSpace && !/[\p{L}\p{N}]/u.test(part);
+      if (!glued) lastWeight = weightFor(index++);
+
       const word = document.createElement("span");
       word.className = "sw-word";
-      word.style.setProperty("--w", String(weightFor(index++)));
+      word.style.setProperty("--w", String(lastWeight));
       word.textContent = part;
       fragment.appendChild(word);
+      afterSpace = false;
     }
     node.parentNode?.replaceChild(fragment, node);
   }
