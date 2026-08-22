@@ -1,73 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Bot,
-  Workflow,
-  AppWindow,
-  PhoneCall,
-  MessageSquare,
-  CalendarCheck,
-  UserRoundCheck,
-  Plug,
-  FileText,
-  Clock,
-  Zap,
-  Gauge,
-  Smartphone,
-  LayoutGrid,
-  Check,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { SERVICES } from "@/lib/services";
 
-const SERVICES = [
-  {
-    id: "ai-agents",
-    no: "01",
-    icon: Bot,
-    title: "AI Agents",
-    tagline: "Voice & chat agents",
-    body: "Voice and chat agents that answer customers, qualify enquiries, manage bookings and hand over to your team when human judgement matters.",
-    features: [
-      { icon: PhoneCall, label: "24/7 call answering & booking" },
-      { icon: UserRoundCheck, label: "Lead qualification" },
-      { icon: CalendarCheck, label: "Books directly into your calendar" },
-      { icon: MessageSquare, label: "Voice + WhatsApp handoff" },
-    ],
-  },
-  {
-    id: "automations",
-    no: "02",
-    icon: Workflow,
-    title: "Business Automations",
-    tagline: "Kill the manual work",
-    body: "Connect the tools you already use and kill the manual work between them, enquiries into your CRM, bookings into invoices, events into email, running quietly on schedule.",
-    features: [
-      { icon: Plug, label: "Enquiries into your CRM" },
-      { icon: FileText, label: "Bookings into invoices" },
-      { icon: Zap, label: "Instant missed-lead follow-up" },
-      { icon: Clock, label: "Scheduled, hands-off workflows" },
-    ],
-  },
-  {
-    id: "websites-apps",
-    no: "03",
-    icon: AppWindow,
-    title: "Custom Websites & Mobile Apps",
-    tagline: "Built around your workflow",
-    body: "Fast websites, focused web platforms and mobile applications built around how your customers and team actually work.",
-    features: [
-      { icon: Gauge, label: "Fast, performance-first sites" },
-      { icon: LayoutGrid, label: "Focused web platforms" },
-      { icon: Smartphone, label: "Native-feel mobile apps" },
-      { icon: UserRoundCheck, label: "Designed around real workflows" },
-    ],
-  },
-];
 
 const PROCESS = [
   {
@@ -135,7 +74,6 @@ export default function Services() {
       <section className="border-t border-hairline">
         <div className="mx-auto max-w-[1400px] px-6 md:px-10">
           {SERVICES.map((s) => {
-            const Icon = s.icon;
             return (
               <Reveal
                 as="div"
@@ -144,12 +82,7 @@ export default function Services() {
                 className="grid scroll-mt-28 gap-10 border-b border-hairline py-16 md:grid-cols-12 md:gap-8 md:py-24"
               >
                 <div className="md:col-span-5">
-                  <div className="flex items-center gap-4">
-                    <span className="grid size-12 place-items-center rounded-[var(--radius)] border border-accent/40 bg-accent/10 text-accent">
-                      <Icon className="size-6" aria-hidden="true" />
-                    </span>
-                    <span className="label text-muted">{s.no} &middot; {s.tagline}</span>
-                  </div>
+                  <span className="label text-muted">{s.no} &middot; {s.tagline}</span>
                   <h2 className="mt-7 text-[clamp(1.8rem,3.5vw,3rem)] font-bold leading-[1.05] tracking-[-0.02em]">
                     {s.title}
                   </h2>
@@ -164,20 +97,14 @@ export default function Services() {
                 </div>
 
                 <ul className="grid gap-px self-start overflow-hidden rounded-[var(--radius)] border border-hairline bg-hairline sm:grid-cols-2 md:col-span-7">
-                  {s.features.map((f) => {
-                    const FIcon = f.icon;
-                    return (
-                      <li
-                        key={f.label}
-                        className="group flex items-start gap-3 bg-bg p-6 transition-colors hover:bg-bg-2"
-                      >
-                        <FIcon className="mt-0.5 size-5 shrink-0 text-muted transition-colors group-hover:text-accent" aria-hidden="true" />
-                        <span className="text-text-2 transition-colors group-hover:text-text">
-                          {f.label}
-                        </span>
-                      </li>
-                    );
-                  })}
+                  {s.features.map((f) => (
+                    <li
+                      key={f.label}
+                      className="group bg-bg p-6 text-text-2 transition-colors hover:bg-bg-2 hover:text-text"
+                    >
+                      {f.label}
+                    </li>
+                  ))}
                 </ul>
               </Reveal>
             );

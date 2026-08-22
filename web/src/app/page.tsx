@@ -1,8 +1,9 @@
-import { ArrowRight, ArrowUpRight, Star, Rocket, Users, Activity } from "lucide-react";
+import { ArrowRight, Star, Rocket, Users, Activity } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { WorkGallery } from "@/components/WorkGallery";
+import { SplitServices } from "@/components/SplitServices";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TechStrip } from "@/components/TechStrip";
@@ -15,28 +16,6 @@ import { FaqAccordion } from "@/components/FaqAccordion";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ImpactGrid } from "@/components/ImpactGrid";
 
-const SERVICES = [
-  {
-    no: "01",
-    title: "Web Design",
-    body: "Conversion-focused websites with strong visual identities and exceptional user experiences.",
-  },
-  {
-    no: "02",
-    title: "Development",
-    body: "Fast, scalable and maintainable web applications and digital platforms built to last.",
-  },
-  {
-    no: "03",
-    title: "AI Experiences",
-    body: "AI-powered interfaces, automation, intelligent agents and next-generation digital experiences.",
-  },
-  {
-    no: "04",
-    title: "Digital Products",
-    body: "Custom digital products designed around real business problems and real people.",
-  },
-];
 
 const PROCESS = [
   { no: "01", title: "Discover", body: "Understand the problem, audience and business objective." },
@@ -312,7 +291,7 @@ export default async function Home() {
 
       {/* ── 01 · SERVICES ───────────────────────────────────── */}
       <section id="services" className="border-y border-hairline bg-bg-2/40">
-        <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
+        <div className="mx-auto max-w-[1400px] px-6 pt-28 md:px-10 md:pt-40">
           <Reveal className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
               <SectionLabel index="01">Capabilities</SectionLabel>
@@ -322,23 +301,12 @@ export default async function Home() {
             </div>
           </Reveal>
 
-          <div className="mt-16 border-t border-hairline">
-            {SERVICES.map((s, i) => (
-              <Reveal as="div" key={s.no} delay={i * 60}>
-                <a
-                  href="#contact"
-                  className="group grid items-center gap-4 border-b border-hairline py-9 transition-colors hover:bg-white/[0.015] md:grid-cols-12 md:gap-8 md:px-4"
-                >
-                  <span className="label col-span-1 text-muted">{s.no}</span>
-                  <h3 className="col-span-4 text-3xl font-semibold tracking-tight transition-transform duration-500 group-hover:translate-x-2 md:text-4xl">
-                    {s.title}
-                  </h3>
-                  <p className="col-span-6 max-w-md text-text-2">{s.body}</p>
-                  <ArrowUpRight className="col-span-1 size-6 text-muted transition-all duration-500 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-accent md:justify-self-end" />
-                </a>
-              </Reveal>
-            ))}
-          </div>
+        </div>
+
+        {/* The three services, one screen each, on the route curtain's own
+            vocabulary - see SplitServices. */}
+        <div className="mt-16">
+          <SplitServices />
         </div>
       </section>
 

@@ -168,6 +168,16 @@ body {
 /* The pan and zoom deltas need to clear the eye's motion threshold: the old
    2% / 0.06-scale swing spread over 28s moved the frame under half a pixel a
    second and read as a still photo. */
+/* The hero's ambient glow. A radial gradient standing in for a 150px blur:
+   the filter had to be re-rendered on every frame the orb scaled, while a
+   gradient is painted once and then only moved. Component: HeroOrbs.tsx. */
+.hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, var(--glow), transparent 72%);
+  will-change: transform, opacity;
+}
+
 @keyframes drift {
   0% { transform: translate3d(0, 0, 0) scale(1.06); }
   50% { transform: translate3d(-4.5%, -3%, 0) scale(1.24); }
@@ -365,6 +375,12 @@ html.custom-cursor-active * {
   --pt-cover: 480ms;
   --pt-reveal: 520ms;
   --pt-stagger: 38ms;
+  /* Dither cell, and the depth of each of the three bands. */
+  --pt-check: 8px;
+  --pt-dither-band: 40px;
+  /* Parked far enough up that the three dither bands trailing the panel are
+     off-screen too, and not just the panel itself. */
+  --pt-park: calc(-101% - 3 * var(--pt-dither-band));
 }
 
 /* ---- Route curtain ---- */
@@ -404,19 +420,68 @@ html.custom-cursor-active * {
   width: calc(var(--cw) + 1.5px);
   background: var(--bg);
   border-right: 1px solid var(--hairline);
-  transform: translateY(-101%);
-  will-change: transform;
+  transform: translateY(var(--pt-park));
 }
 
 /* The leading edge. It is the only lit thing on an otherwise flat panel, so
-   it is what the eye tracks across the sweep. */
+   it is what the eye tracks across the sweep. Drawn over the dither bands,
+   which hang below it. */
 .pt-col::after {
+  z-index: 1;
   content: "";
   position: absolute;
   inset: auto 0 0 0;
   height: 2px;
   background: var(--accent);
   box-shadow: 0 0 24px var(--glow);
+}
+
+/* ---- Pixel dither ----
+
+   Three bands of ordered-dither checks trail the leading edge, densest first,
+   so the panel does not end at a line but breaks up into pixels that thin out
+   into the page. The check is a fixed 8px regardless of viewport: dithering
+   that scales with the screen stops reading as pixels and starts reading as a
+   pattern. Squares are cut from --bg, the same paint as the panel, so the band
+   is literally the panel dissolving rather than a texture laid over it. */
+
+.pt-dither {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Stacked past the panel's bottom edge, one band after another. */
+  top: calc(100% + var(--k) * var(--pt-dither-band));
+  height: var(--pt-dither-band);
+  background-size: var(--pt-check) var(--pt-check);
+  pointer-events: none;
+}
+
+/* Coverage comes from how much of the 8px tile the conic sweep fills: one
+   quadrant is 25%, two on the diagonal are 50% (the checkerboard), three are
+   75%. Same tile, three densities, no images. */
+.pt-dither[data-d="75"] {
+  background-image: conic-gradient(var(--bg) 0 75%, transparent 0);
+}
+
+.pt-dither[data-d="50"] {
+  background-image: conic-gradient(
+    var(--bg) 0 25%,
+    transparent 0 50%,
+    var(--bg) 0 75%,
+    transparent 0
+  );
+}
+
+.pt-dither[data-d="25"] {
+  background-image: conic-gradient(var(--bg) 0 25%, transparent 0);
+}
+
+/* will-change only while the curtain is on the move. Left on, eight
+   viewport-sized layers stay promoted for the whole session, and everything
+   else on the page - the custom cursor most visibly - pays for them. */
+.pt-curtain[data-phase="cover"] .pt-col,
+.pt-curtain[data-phase="reveal"] .pt-col {
+  will-change: transform;
 }
 
 .pt-curtain[data-phase="cover"] .pt-col {
@@ -434,7 +499,7 @@ html.custom-cursor-active * {
 /* Lifts in reverse, so the sweep reads as one continuous pass across the
    screen rather than a rewind. */
 .pt-curtain[data-phase="reveal"] .pt-col {
-  transform: translateY(-101%);
+  transform: translateY(var(--pt-park));
   transition: transform var(--pt-reveal) var(--ease-shutter);
   transition-delay: calc((var(--n) - 1 - var(--i)) * var(--pt-stagger));
 }
@@ -464,6 +529,629 @@ html.custom-cursor-active * {
 
 .pt-label-text {
   color: var(--text-3);
+}
+
+/* ---- Dither edge, borrowed by the rest of the site ---- */
+
+/* Same three bands as the curtain, in a form any panel can hang off its own
+   edge: densest against the edge, thinning inward, so a photo or a slide
+   breaks up into pixels where it stops instead of ending on a cut. */
+.dither-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(3 * var(--pt-dither-band));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dither-edge[data-side="top"] {
+  top: 0;
+}
+
+.dither-edge[data-side="bottom"] {
+  bottom: 0;
+}
+
+/* Turned on its side for a vertical edge - the same three bands, walking in
+   from the left rather than down from the top. */
+.dither-edge[data-side="left"] {
+  /* Narrower than the horizontal bands: this one crosses the picture rather
+     than its top or bottom margin, and at 120px it starts eating whatever
+     the picture was of. */
+  --pt-dither-band: 22px;
+  top: 0;
+  bottom: 0;
+  right: auto;
+  width: calc(3 * var(--pt-dither-band));
+  height: auto;
+}
+
+.dither-edge[data-side="left"] > span {
+  top: 0;
+  bottom: 0;
+  right: auto;
+  height: auto;
+  width: var(--pt-dither-band);
+  left: calc(var(--k) * var(--pt-dither-band));
+}
+
+/* Vertical edges belong to the two-column layout; stacked, the panes meet
+   across the screen and it is the horizontal bands that do the work. */
+@media (max-width: 767px) {
+  .dither-edge[data-side="left"] {
+    display: none;
+  }
+}
+
+.dither-edge > span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--pt-dither-band);
+  background-size: var(--pt-check) var(--pt-check);
+}
+
+.dither-edge[data-side="top"] > span {
+  top: calc(var(--k) * var(--pt-dither-band));
+}
+
+.dither-edge[data-side="bottom"] > span {
+  bottom: calc(var(--k) * var(--pt-dither-band));
+}
+
+.dither-edge > span[data-d="75"] {
+  background-image: conic-gradient(var(--bg) 0 75%, transparent 0);
+}
+
+.dither-edge > span[data-d="50"] {
+  background-image: conic-gradient(
+    var(--bg) 0 25%,
+    transparent 0 50%,
+    var(--bg) 0 75%,
+    transparent 0
+  );
+}
+
+.dither-edge > span[data-d="25"] {
+  background-image: conic-gradient(var(--bg) 0 25%, transparent 0);
+}
+
+/* Shallower bands on a phone: the same 120px of dither that grazes the edge
+   of a full-height pane would eat a third of a 40vh one. */
+@media (max-width: 767px) {
+  .dither-edge {
+    --pt-dither-band: 18px;
+    height: calc(3 * 18px);
+  }
+}
+
+/* ============================================================
+   Split-screen showcase — the curtain, pinned inside a section.
+   Component: src/components/SplitShowcase.tsx.
+   ============================================================ */
+
+.split-pane {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Both halves move on the curtain's easing and for slightly longer than it
+   takes a route to cover, because here the visitor is watching the move
+   itself rather than waiting behind it. */
+.split-slide {
+  position: absolute;
+  inset: 0;
+  transition: transform 720ms var(--ease-shutter);
+}
+
+.split-slide[data-state="active"] {
+  transform: none;
+}
+
+/* Opposed directions are the whole point: the notes climb while the image
+   falls, so the halves shear past each other at the seam. */
+.split-slide--up {
+  background: var(--bg);
+}
+
+.split-slide--up[data-state="before"] {
+  transform: translateY(-100%);
+}
+
+.split-slide--up[data-state="after"] {
+  transform: translateY(100%);
+}
+
+.split-slide--down {
+  overflow: hidden;
+  background: var(--bg-2);
+}
+
+.split-slide--down[data-state="before"] {
+  transform: translateY(100%);
+}
+
+.split-slide--down[data-state="after"] {
+  transform: translateY(-100%);
+}
+
+/* The spec panel that fills the falling half. No photograph: a ruled field,
+   an oversized number bled off the corner and the service's own list, so the
+   half reads as a page from a spec sheet rather than as stock art. */
+.split-spec {
+  background:
+    repeating-linear-gradient(to right, var(--hairline) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(to bottom, var(--hairline) 0 1px, transparent 1px 88px),
+    var(--bg-2);
+}
+
+.split-spec-no {
+  position: absolute;
+  top: -0.32em;
+  right: 0.06em;
+  font-size: clamp(9rem, 20vw, 17rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  /* Outlined rather than filled: at this size a solid number would be the
+     loudest thing on the screen, and it is meant to be wallpaper. */
+  color: transparent;
+  -webkit-text-stroke: 1px var(--text-3);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+/* The seam, and the only thing in the section that holds still. Lit at the
+   middle the way a column's leading edge is lit, so the eye is given the
+   line the two halves are measured against. */
+.split-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--hairline);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* The lit stretch. Two pixels rather than one and carried on a wider glow,
+   because unlike the curtain's edge this one is asked to hold its own
+   against a photograph sitting right against it. */
+.split-seam::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 22%;
+  height: 56%;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+  box-shadow: 0 0 32px 2px var(--glow);
+}
+
+/* Stacked rather than side by side below the breakpoint, so the seam lies
+   across the screen instead of down it. */
+@media (max-width: 767px) {
+  .split-seam {
+    top: 40vh;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 1px;
+  }
+
+  .split-seam::after {
+    top: 0;
+    left: 30%;
+    width: 40%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--accent), transparent);
+  }
+}
+
+/* One stop per service, sitting at the scroll position where that service
+   takes the screen. Zero-height and invisible; all they carry is the snap
+   alignment. */
+.split-stop {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  pointer-events: none;
+}
+
+/* Armed by SplitServices while its section is on screen. Proximity, so the
+   visitor is nudged onto a service rather than held hostage by one. */
+html.split-snapping {
+  scroll-snap-type: y proximity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.split-snapping {
+    scroll-snap-type: none;
+  }
+}
+
+/* Progress as a row of shutters rather than dots — the curtain's columns,
+   laid on their side. */
+.split-rail {
+  position: absolute;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.split-tick {
+  width: 34px;
+  height: 2px;
+  background: var(--hairline);
+  transition: background 420ms var(--ease-out-expo), box-shadow 420ms var(--ease-out-expo);
+}
+
+.split-tick[data-on] {
+  background: var(--accent);
+  box-shadow: 0 0 16px var(--glow);
+}
+
+/* Reduced motion: the halves still change, they just stop travelling. */
+@media (prefers-reduced-motion: reduce) {
+  .split-slide {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Main menu — the header carries the mark and one button; the
+   navigation itself lives behind a full-screen cover built on
+   the route curtain. Component: src/components/SiteNav.tsx.
+   ============================================================ */
+
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: var(--text);
+}
+
+/* Two rules rather than the usual three: the shorter lower one is what makes
+   it read as a mark rather than as a hamburger, and it is also the piece
+   that grows on hover. */
+.menu-bars {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 12px;
+}
+
+.menu-bars > span {
+  position: absolute;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  transition:
+    transform 420ms var(--ease-shutter),
+    width 420ms var(--ease-shutter);
+}
+
+.menu-bars > span:first-child {
+  top: 0;
+}
+
+.menu-bars > span:last-child {
+  bottom: 0;
+  width: 62%;
+}
+
+.menu-trigger:hover .menu-bars > span:last-child {
+  width: 100%;
+}
+
+.menu-bars[data-open] > span:first-child {
+  transform: translateY(5px) rotate(45deg);
+}
+
+.menu-bars[data-open] > span:last-child {
+  width: 100%;
+  transform: translateY(-5px) rotate(-45deg);
+}
+
+/* ---- The cover ---- */
+
+.site-menu {
+  position: fixed;
+  inset: 0;
+  /* Over the header (z-50), under the route curtain (z-100): following a
+     link out of the menu should still be covered by the site transition. */
+  z-index: 70;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.site-menu[data-open] {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.site-menu-curtain {
+  position: absolute;
+  inset: 0;
+  --cw: calc(100vw / var(--n));
+}
+
+.site-menu-col {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  left: calc(var(--i) * var(--cw));
+  width: calc(var(--cw) + 1.5px);
+  background: var(--bg);
+  border-right: 1px solid var(--hairline);
+  transform: translateY(var(--pt-park));
+  /* Closing runs the sweep backwards, so opening and closing read as one
+     object moving rather than as two effects. */
+  transition: transform var(--pt-reveal) var(--ease-shutter);
+  transition-delay: calc((var(--n) - 1 - var(--i)) * var(--pt-stagger));
+}
+
+.site-menu[data-open] .site-menu-col {
+  will-change: transform;
+  transform: translateY(0);
+  transition-duration: var(--pt-cover);
+  transition-delay: calc(var(--i) * var(--pt-stagger));
+}
+
+.site-menu-col::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 24px var(--glow);
+  z-index: 1;
+}
+
+/* ---- What the cover carries ---- */
+
+.site-menu-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  padding: 5rem 1.5rem 2rem;
+  /* Seven lines of 4.5rem type plus a footer does not fit a laptop in
+     landscape, let alone a phone. The cover scrolls rather than clipping,
+     and the scroll stops here instead of chaining to the page underneath. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 768px) {
+  .site-menu-body {
+    padding: 6rem 2.5rem 2.5rem;
+  }
+}
+
+/* Both sit on the header centre line (a 5rem bar, so 2.5rem) and in its
+   gutter, so nothing appears to jump when the cover lands. */
+/* Fixed, not absolute: the body scrolls, and these two belong to the header
+   line rather than to the list that moves under them. */
+.site-menu-mark,
+.site-menu-close {
+  position: fixed;
+  z-index: 3;
+  top: 2.5rem;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition:
+    opacity 420ms var(--ease-out-expo),
+    color 300ms var(--ease-out-expo);
+}
+
+.site-menu-mark {
+  left: 1.5rem;
+}
+
+.site-menu-close {
+  right: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: var(--text-2);
+}
+
+.site-menu-close:hover {
+  color: var(--text);
+}
+
+@media (min-width: 768px) {
+  .site-menu-mark {
+    left: 2.5rem;
+  }
+
+  .site-menu-close {
+    right: 2.5rem;
+  }
+}
+
+/* Centred with auto margins rather than justify-content: once free space
+   goes negative the margins resolve to 0, so a list too tall for the screen
+   starts flush at the top and scrolls. justify-content would keep centring
+   past that point and push the first link above scrollTop 0, where it could
+   never be scrolled back to. */
+/* A block sized to the type, centred on the screen, with the lines ranged
+   right inside it: the list reads as one object sitting in the middle of the
+   page rather than as labels pushed against the far edge. */
+.site-menu-list {
+  margin: auto;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-shrink: 0;
+  flex-direction: column;
+  padding: 1.5rem 0;
+}
+
+/* Ranged right, against a fixed number column: the labels end on one edge
+   and the numbers line up under each other, so the list has a spine on the
+   side the eye is already on after using the trigger. */
+.site-menu-link {
+  display: grid;
+  /* Two tracks, both sized to what is actually visible: the label and the
+     number. The note is taken out of the flow below, or the empty column it
+     would hold on the left would push the type off centre. */
+  position: relative;
+  grid-template-columns: auto 3rem;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 0.3rem 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 520ms var(--ease-out-expo),
+    transform 520ms var(--ease-out-expo);
+}
+
+.site-menu-no {
+  order: 3;
+  justify-self: end;
+  color: var(--text-3);
+  transition: color 300ms var(--ease-out-expo);
+}
+
+.site-menu-label {
+  order: 2;
+  text-align: right;
+  /* Sized so all seven lines plus the footer clear a laptop in landscape:
+     past that the cover scrolls, which works but is not what it should do
+     on the common screen. */
+  font-size: clamp(1.9rem, 5vw, 3.9rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  transition: color 300ms var(--ease-out-expo);
+}
+
+/* Hung outside the row on the left, so it costs the centred block nothing.
+   Only ever one is visible at a time, so the ragged left edge between rows
+   is never on screen. */
+.site-menu-note {
+  position: absolute;
+  right: calc(100% + 1.5rem);
+  max-width: 16ch;
+  text-align: right;
+  color: var(--text-3);
+  opacity: 0;
+  transform: translateX(6px);
+  transition:
+    opacity 320ms var(--ease-out-expo),
+    transform 320ms var(--ease-out-expo);
+}
+
+.site-menu-link:hover .site-menu-note,
+.site-menu-link:focus-visible .site-menu-note {
+  opacity: 1;
+  transform: none;
+}
+
+.site-menu-link:hover .site-menu-label,
+.site-menu-link:focus-visible .site-menu-label,
+.site-menu-link:hover .site-menu-no {
+  color: var(--accent);
+}
+
+/* The page you are already on is named, not offered. */
+.site-menu-link.is-current .site-menu-label {
+  color: var(--text-3);
+}
+
+.site-menu-link.is-current .site-menu-no {
+  color: var(--accent);
+}
+
+/* On a phone the outer tracks would squeeze the label onto two lines, so the
+   number and the note step aside. */
+@media (max-width: 767px) {
+  .site-menu-no,
+  .site-menu-note {
+    display: none;
+  }
+
+  .site-menu-link {
+    grid-template-columns: 1fr;
+    text-align: right;
+  }
+}
+
+.site-menu-foot {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  border-top: 1px solid var(--hairline);
+  padding-top: 1.75rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 520ms var(--ease-out-expo),
+    transform 520ms var(--ease-out-expo);
+}
+
+.site-menu-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 2rem;
+}
+
+@media (min-width: 768px) {
+  .site-menu-foot {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+/* Everything the cover carries waits for the sweep to finish. 620ms is the
+   eight columns (480ms + 7 x 38ms) plus a beat, so the list rises into a
+   screen that has already stopped moving. */
+.site-menu[data-open] .site-menu-link {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(620ms + var(--i) * 55ms);
+}
+
+.site-menu[data-open] .site-menu-mark,
+.site-menu[data-open] .site-menu-close {
+  opacity: 1;
+  transition-delay: 620ms;
+}
+
+.site-menu[data-open] .site-menu-foot {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(620ms + 7 * 55ms);
+}
+
+/* Reduced motion: the cover still covers, it just stops sweeping. */
+@media (prefers-reduced-motion: reduce) {
+  .site-menu-col,
+  .site-menu-link,
+  .site-menu-foot,
+  .site-menu-mark,
+  .site-menu-close,
+  .menu-bars > span {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
 }
 
 /* ---- Splash ---- */
