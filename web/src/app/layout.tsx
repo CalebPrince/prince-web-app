@@ -28,12 +28,17 @@ export const metadata: Metadata = {
     "I design and build high-performance websites, digital products and AI-powered experiences that help ambitious businesses move forward.",
 };
 
-// Applies a stored/OS light preference before first paint, so there's no
-// flash of the wrong theme. Shares the "theme" localStorage key with the
-// PHP pages' own theme.js - a choice made on either half of the site
-// carries over. Dark is the default whenever there's no explicit signal,
-// matching this app's design (unlike the PHP pages' light-first default).
-const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("theme");var isLight=s?s==="light":matchMedia("(prefers-color-scheme: light)").matches;if(isLight)document.documentElement.setAttribute("data-theme","light");}catch(e){}})();`;
+// Applies a stored/OS theme preference before first paint, so there's no
+// flash of the wrong one. Dark is the default whenever there's no explicit
+// signal, matching this app's design (unlike the PHP pages' light-first
+// default), and is the absence of the attribute rather than a value.
+//
+// Shares the "theme" localStorage key with the PHP pages' own theme.js, so a
+// choice made on either half of the site carries over. That half only knows
+// light and dark, so it renders "dusk" as its dark - which is the right
+// fallback, and the reason the value is whitelisted here rather than written
+// straight onto the element.
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("theme");var t=s||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");if(t==="light"||t==="dusk")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`;
 
 // Arms the splash before the first paint, the same way the theme is applied
 // above: the splash has to be covering in the very first frame, or the

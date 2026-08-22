@@ -74,6 +74,40 @@
   color-scheme: light;
 }
 
+/* Dusk — the warm dark. The other two themes are the same green on either a
+   near-black or a paper white, so a third built the same way would only ever
+   read as a second dark. This one changes the temperature instead: a
+   charcoal-brown ground and an amber accent, warm the whole way through
+   rather than the green tinted brown. Same token names, so nothing in the
+   site has to know it exists. */
+[data-theme="dusk"] {
+  --bg: #100d0a;
+  --bg-2: #191512;
+  --bg-3: #241e19;
+  --text: #f4efe8;
+  --text-2: #ded5c8;
+  --text-3: #9a8f80;
+  --muted: #bcb1a1;
+  --accent: #ffab5e;
+  --accent-strong: #ffc48c;
+  --accent-soft: rgba(255, 171, 94, 0.11);
+  --on-accent: #1a0f04;
+  --glow: rgba(255, 150, 60, 0.5);
+  /* Hairlines carry the warmth too: a white rule on a brown ground is the
+     one thing that would give away that this is a tinted dark theme. */
+  --hairline: rgba(255, 225, 190, 0.1);
+  --hairline-strong: rgba(255, 225, 190, 0.28);
+  --footer-scrim: rgba(0, 0, 0, 0.55);
+  --card-shadow: 0 12px 8px rgba(0, 0, 0, 0.4);
+  --card-shadow-lift: 0 18px 20px rgba(0, 0, 0, 0.55);
+  --brandmark: rgba(255, 171, 94, 0.14);
+  --brandmark-dot: rgba(255, 171, 94, 0.42);
+  --glass-bg: rgba(25, 21, 18, 0.6);
+  --glass-solid: #191512;
+  --glass-border: rgba(255, 225, 190, 0.13);
+  color-scheme: dark;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-2: var(--bg-2);
@@ -84,6 +118,7 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
   --color-on-accent: var(--on-accent);
   --color-hairline: var(--hairline);
   --color-hairline-strong: var(--hairline-strong);
