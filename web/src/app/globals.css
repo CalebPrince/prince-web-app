@@ -906,13 +906,33 @@ html.split-snapping {
   /* Over the header (z-50), under the route curtain (z-100): following a
      link out of the menu should still be covered by the site transition. */
   z-index: 70;
+
+  /* ---- Leaving ----
+     Closing is not the opening played backwards at half attention: the list
+     goes first, and only once it is gone does the cover lift off the page.
+     Otherwise the columns rise while the links are still lit and the visitor
+     watches the menu float over the page it was covering. */
+  --menu-lead: 240ms;
+  --menu-out: 180ms;
+  /* Quicker than the way in. An entrance is worth watching; an exit is
+     something the visitor has already decided about. */
+  --menu-out-sweep: 420ms;
+  --menu-out-stagger: 26ms;
+
   visibility: hidden;
   pointer-events: none;
+  /* visibility cannot be interpolated, so it is switched at the end of the
+     exit rather than the start of it. Without the delay the whole cover is
+     gone on the first frame and none of the above is ever seen - which is
+     exactly what a closing menu with no animation looks like. */
+  transition: visibility 0s linear
+    calc(var(--menu-lead) + var(--menu-out-sweep) + (var(--n) - 1) * var(--menu-out-stagger));
 }
 
 .site-menu[data-open] {
   visibility: visible;
   pointer-events: auto;
+  transition-delay: 0s;
 }
 
 .site-menu-curtain {
@@ -931,9 +951,12 @@ html.split-snapping {
   border-right: 1px solid var(--hairline);
   transform: translateY(var(--pt-park));
   /* Closing runs the sweep backwards, so opening and closing read as one
-     object moving rather than as two effects. */
-  transition: transform var(--pt-reveal) var(--ease-shutter);
-  transition-delay: calc((var(--n) - 1 - var(--i)) * var(--pt-stagger));
+     object moving rather than as two effects - but it waits for the list to
+     clear first, and then moves faster than it arrived. */
+  transition: transform var(--menu-out-sweep) var(--ease-shutter);
+  transition-delay: calc(
+    var(--menu-lead) + (var(--n) - 1 - var(--i)) * var(--menu-out-stagger)
+  );
 }
 
 .site-menu[data-open] .site-menu-col {
@@ -987,7 +1010,7 @@ html.split-snapping {
   opacity: 0;
   transform: translateY(-50%);
   transition:
-    opacity 420ms var(--ease-out-expo),
+    opacity var(--menu-out) var(--ease-out-expo),
     color 300ms var(--ease-out-expo);
 }
 
@@ -1051,8 +1074,11 @@ html.split-snapping {
   opacity: 0;
   transform: translateY(20px);
   transition:
-    opacity 520ms var(--ease-out-expo),
-    transform 520ms var(--ease-out-expo);
+    opacity var(--menu-out) var(--ease-out-expo),
+    transform var(--menu-out) var(--ease-out-expo);
+  /* Leaving, they go top first and close together: a reverse of the entrance
+     stagger would take as long to clear as it took to arrive. */
+  transition-delay: calc(var(--i) * 10ms);
 }
 
 .site-menu-no {
@@ -1137,8 +1163,8 @@ html.split-snapping {
   opacity: 0;
   transform: translateY(14px);
   transition:
-    opacity 520ms var(--ease-out-expo),
-    transform 520ms var(--ease-out-expo);
+    opacity var(--menu-out) var(--ease-out-expo),
+    transform var(--menu-out) var(--ease-out-expo);
 }
 
 .site-menu-secondary {
@@ -1161,18 +1187,21 @@ html.split-snapping {
 .site-menu[data-open] .site-menu-link {
   opacity: 1;
   transform: none;
+  transition-duration: 520ms;
   transition-delay: calc(620ms + var(--i) * 55ms);
 }
 
 .site-menu[data-open] .site-menu-mark,
 .site-menu[data-open] .site-menu-close {
   opacity: 1;
+  transition-duration: 420ms;
   transition-delay: 620ms;
 }
 
 .site-menu[data-open] .site-menu-foot {
   opacity: 1;
   transform: none;
+  transition-duration: 520ms;
   transition-delay: calc(620ms + 7 * 55ms);
 }
 
