@@ -11,6 +11,9 @@ const COLUMNS = 8;
 const STAGGER_MS = 38;
 const COVER_MS = 480;
 const REVEAL_MS = 520;
+/** Coverage of each dither band, densest first — the band nearest the solid
+ *  edge is the one that has almost filled in. */
+const DITHER_STEPS = [75, 50, 25] as const;
 /** A column's own travel plus the wait for the last one to start. */
 const SWEEP_MS = COVER_MS + (COLUMNS - 1) * STAGGER_MS;
 /** Beat of stillness once covered, so the swap does not read as a stutter. */
@@ -197,8 +200,21 @@ export function PageTransition() {
     });
   }, [pathname, after, clearTimers]);
 
+  /** Each column carries a three-step ordered-dither band past its leading
+   *  edge: 75%, 50% then 25% coverage, in fixed-pixel checks. The panel is
+   *  solid, so the band is what does the covering as far as the eye is
+   *  concerned — the screen fills in as pixels rather than as a hard line. */
   const columns = Array.from({ length: COLUMNS }, (_, i) => (
-    <span key={i} className="pt-col" style={{ "--i": i } as React.CSSProperties} />
+    <span key={i} className="pt-col" style={{ "--i": i } as React.CSSProperties}>
+      {DITHER_STEPS.map((d, k) => (
+        <span
+          key={k}
+          className="pt-dither"
+          data-d={d}
+          style={{ "--k": k } as React.CSSProperties}
+        />
+      ))}
+    </span>
   ));
 
   return (
