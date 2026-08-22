@@ -77,11 +77,11 @@ export default function InvoicePage() {
       `}</style>
       
       <div className="invoice-actions mb-4 flex flex-wrap items-center justify-between gap-3">
-        <button type="button" className="btn-brand-outline rounded-full border border-hairline-strong bg-transparent px-5 py-2.5 text-sm font-semibold transition-colors hover:border-accent hover:text-accent" onClick={() => window.print()}>
+        <button type="button" className="tilt-3d btn-brand-outline rounded-full border border-hairline-strong bg-bg px-5 py-2.5 text-sm font-semibold transition-colors hover:border-accent hover:text-accent" onClick={() => window.print()}>
           Download PDF / Print
         </button>
         {invoice.payment_url && !isPaid && !isVoid && (
-          <a href={invoice.payment_url} className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-light">
+          <a href={invoice.payment_url} className="tilt-3d tilt-glow rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-light">
             Pay Now {money(invoice.total, invoice.currency)}
           </a>
         )}

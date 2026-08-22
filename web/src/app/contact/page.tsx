@@ -113,8 +113,8 @@ export default function Contact() {
                     rel={href.startsWith("http") ? "noreferrer" : undefined}
                     className="group flex items-center gap-5 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 transition-colors hover:border-accent/40 glass"
                   >
-                    <span className="grid size-12 shrink-0 place-items-center rounded-[var(--radius)] border border-hairline bg-bg text-accent transition-colors group-hover:border-accent/40">
-                      <Icon className="size-5" aria-hidden="true" />
+                    <span className="tilt-3d tilt-3d-tile grid size-12 shrink-0 place-items-center rounded-[var(--radius)] border border-hairline bg-bg text-accent transition-colors group-hover:border-accent/40">
+                      <Icon className="icon-3d size-5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0">
                       <p className="label text-muted">{label}</p>
@@ -149,9 +149,9 @@ export default function Contact() {
                     target="_blank"
                     rel="noreferrer"
                     aria-label={label}
-                    className="grid size-11 place-items-center rounded-full border border-hairline text-text-2 transition-all hover:border-accent/60 hover:text-accent hover:glow-green"
+                    className="tilt-3d tilt-3d-tile grid size-11 place-items-center rounded-full border border-hairline text-text-2 transition-all hover:border-accent/60 hover:text-accent hover:glow-green"
                   >
-                    <Icon className="size-[1.05rem]" aria-hidden="true" />
+                    <Icon className="icon-3d size-[1.05rem]" aria-hidden="true" />
                   </a>
                 ))}
               </div>
@@ -164,8 +164,8 @@ export default function Contact() {
               <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
                 {sent ? (
                   <div className="flex flex-col items-center py-16 text-center">
-                    <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">
-                      <Check className="size-7" />
+                    <span className="tilt-3d tilt-3d-tile grid size-14 place-items-center rounded-full bg-accent text-on-accent">
+                      <Check className="icon-3d icon-3d-on-accent size-7" />
                     </span>
                     <h2 className="mt-6 text-2xl font-bold tracking-tight">Message sent.</h2>
                     <p className="mt-3 max-w-sm text-text-2">

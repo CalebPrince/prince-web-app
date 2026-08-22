@@ -249,7 +249,7 @@ export default function BuilderOS() {
                         href={agentHref(a)}
                         className="flex items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2/60 p-4 transition-colors hover:border-accent/40 glass"
                       >
-                        <span className="grid size-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-semibold text-accent">
+                        <span className="tilt-3d tilt-3d-tile grid size-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-semibold text-accent">
                           {a.key.slice(0, 2).toUpperCase()}
                         </span>
                         <div className="min-w-0 flex-1">

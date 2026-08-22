@@ -1,23 +1,58 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 export type MenuButton = { label: string; onClick: () => void; back?: boolean };
 
+/**
+ * Quick replies sit in their own rail between the transcript and the input,
+ * laid out the way the Triple P demo widget does it: one horizontal row of
+ * pills that scrolls sideways rather than a full-width vertical stack.
+ *
+ * The stack was costing a row of panel height per option, and with five
+ * options on the main menu it pushed the text input off the bottom of the
+ * panel entirely. A single rail is a fixed cost no matter how many options a
+ * menu node carries.
+ */
 export function QuickReplyMenu({ buttons }: { buttons: MenuButton[] }) {
+  // Back leads the rail. Everything past the first two or three pills is off
+  // the right edge until you scroll, and "go back" is the one action that has
+  // to stay reachable without hunting for it.
+  const ordered = [...buttons].sort((a, b) => Number(!!b.back) - Number(!!a.back));
+
+  // A rail that stays scrolled where the last menu left it opens the next one
+  // already cut off at the left edge — which is exactly where Back sits. Snap
+  // back to the start whenever the options change.
+  const railRef = useRef<HTMLDivElement>(null);
+  const signature = ordered.map((b) => b.label).join(" ");
+  useEffect(() => {
+    railRef.current?.scrollTo({ left: 0 });
+  }, [signature]);
+
   return (
-    <div className="flex flex-col gap-1.5 border-t border-hairline px-3 py-3">
-      <p className="mb-0.5 text-xs text-muted">Tap an option below to reply:</p>
-      {buttons.map((b) => (
+    <div
+      ref={railRef}
+      className={cn(
+        "flex shrink-0 items-center gap-2 overflow-x-auto overscroll-x-contain",
+        "border-t border-hairline bg-bg-2/40 px-3 py-2.5",
+        // The global scrollbar rule reserves an 8px track and paints a thumb
+        // on hover; on a 40px-tall rail that reads as a stray line under the
+        // pills, so this one opts out entirely like the demo does.
+        "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+      )}
+    >
+      {ordered.map((b) => (
         <button
           key={b.label}
           type="button"
           onClick={b.onClick}
           className={cn(
-            "rounded-[var(--radius)] border px-3 py-2 text-left text-sm transition-colors",
+            "shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5",
+            "text-xs font-semibold transition-colors",
             b.back
-              ? "border-transparent text-muted hover:text-text"
-              : "border-hairline bg-bg-2/50 text-text-2 hover:border-accent/40 hover:text-text",
+              ? "border-dashed border-hairline-strong text-muted hover:border-accent/50 hover:text-text"
+              : "border-hairline-strong bg-bg text-text-2 hover:border-accent hover:text-accent",
           )}
         >
           {b.label}

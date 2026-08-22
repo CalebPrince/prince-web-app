@@ -212,8 +212,8 @@ export default function RequestPage() {
           <div className="mx-auto max-w-3xl rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 md:p-10 glass">
             {sent ? (
               <div className="flex flex-col items-center py-8 text-center animate-in fade-in zoom-in duration-500">
-                <span className="grid size-14 place-items-center rounded-full bg-accent text-on-accent">
-                  <Check className="size-7" />
+                <span className="tilt-3d tilt-3d-tile grid size-14 place-items-center rounded-full bg-accent text-on-accent">
+                  <Check className="icon-3d icon-3d-on-accent size-7" />
                 </span>
                 <p className="label mt-6 text-accent">Workflow request received</p>
                 <h3 className="mt-2 text-2xl font-bold tracking-tight">Thanks, I'll review your workflow.</h3>

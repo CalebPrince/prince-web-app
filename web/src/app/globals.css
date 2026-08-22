@@ -25,6 +25,11 @@
      a shadow that suits paper instead of a hole punched in the page. */
   --card-shadow: 0 12px 8px rgba(0, 0, 0, 0.35);
   --card-shadow-lift: 0 18px 20px rgba(0, 0, 0, 0.5);
+  /* Ground shadows for .tilt-3d. Split per theme because the same black
+     that seats a control on near-black punches a hole in paper. */
+  --tilt-rest: 0 10px 20px -10px rgba(0, 0, 0, 0.6);
+  --tilt-hover: 0 18px 30px -14px rgba(0, 0, 0, 0.65);
+  --tilt-press: 0 5px 11px -8px rgba(0, 0, 0, 0.5);
   /* The fixed "Prince Caleb" behind the page (BrandWatermark.tsx). Accent
      green here so it reads against the near-black; strong enough to be part
      of the page, light enough to keep the copy over it legible. */
@@ -65,6 +70,9 @@
   --footer-scrim: rgba(10, 11, 13, 0.16);
   --card-shadow: 0 12px 8px rgba(10, 11, 13, 0.07);
   --card-shadow-lift: 0 18px 20px rgba(10, 11, 13, 0.13);
+  --tilt-rest: 0 10px 18px -8px rgba(10, 11, 13, 0.32);
+  --tilt-hover: 0 18px 28px -12px rgba(10, 11, 13, 0.36);
+  --tilt-press: 0 4px 10px -8px rgba(10, 11, 13, 0.22);
   /* Black on paper, per the brief. */
   --brandmark: rgba(10, 11, 13, 0.12);
   --brandmark-dot: rgba(8, 120, 60, 0.5);
@@ -100,6 +108,9 @@
   --footer-scrim: rgba(0, 0, 0, 0.55);
   --card-shadow: 0 12px 8px rgba(0, 0, 0, 0.4);
   --card-shadow-lift: 0 18px 20px rgba(0, 0, 0, 0.55);
+  --tilt-rest: 0 10px 20px -10px rgba(20, 10, 2, 0.62);
+  --tilt-hover: 0 18px 30px -14px rgba(20, 10, 2, 0.68);
+  --tilt-press: 0 5px 11px -8px rgba(20, 10, 2, 0.52);
   --brandmark: rgba(255, 171, 94, 0.14);
   --brandmark-dot: rgba(255, 171, 94, 0.42);
   --glass-bg: rgba(25, 21, 18, 0.6);
@@ -144,9 +155,134 @@ body {
   color: var(--on-accent);
 }
 
+/* ---- Dimensional surfaces -------------------------------------------------
+   Interactive controls rest tipped slightly away from the viewer and rotate up
+   to face them on hover, so buttons and icon tiles read as objects lying on
+   the page rather than paint on it. One utility rather than a transform spelled
+   out per control, because the whole point is that they all sit on the same
+   optical plane - a button tilted 8deg next to one tilted 14deg reads as a
+   mistake, not depth.
+
+   transform-origin is the bottom edge: the control pivots on the edge touching
+   the page, the way a hinged object would, instead of floating around its own
+   middle.
+
+   Not applied to <button> globally on purpose. Plenty of buttons here are bare
+   icons in a header or a table row, and tilting those would be noise. Opt in. */
+.tilt-3d {
+  transform: perspective(420px) rotateX(12deg);
+  transform-origin: center bottom;
+  box-shadow: var(--tilt-rest);
+  transition:
+    transform 300ms ease-out,
+    box-shadow 300ms ease-out,
+    background-color 300ms ease-out,
+    border-color 300ms ease-out,
+    color 300ms ease-out;
+}
+.tilt-3d:hover:not(:disabled) {
+  transform: perspective(420px) translateY(-4px) rotateX(0deg);
+  box-shadow: var(--tilt-hover);
+}
+.tilt-3d:active:not(:disabled) {
+  transform: perspective(420px) translateY(2px) rotateX(17deg) scale(0.98);
+  box-shadow: var(--tilt-press);
+  transition-duration: 140ms;
+}
+/* A tighter angle for small square tiles. At 8deg a 48px tile loses most of a
+   pixel row off its top edge and the icon inside starts to look misaligned
+   against neighbouring text. */
+.tilt-3d-tile {
+  transform: perspective(360px) rotateX(9deg);
+}
+.tilt-3d-tile:hover:not(:disabled) {
+  transform: perspective(360px) translateY(-3px) rotateX(0deg);
+}
+
+/* Header chrome: same pivot as a tile, no ground shadow. These buttons sit ON
+   the header surface rather than floating above the page, and a cast shadow
+   under a 32px transparent control reads as a smudge. Tilt alone is enough to
+   put them on the same plane as everything else. */
+.tilt-3d-chrome {
+  transform: perspective(360px) rotateX(9deg);
+  transform-origin: center bottom;
+  transition:
+    transform 300ms ease-out,
+    background-color 300ms ease-out,
+    border-color 300ms ease-out,
+    color 300ms ease-out;
+}
+.tilt-3d-chrome:hover:not(:disabled) {
+  transform: perspective(360px) translateY(-1px) rotateX(0deg);
+}
+
+/* Reduced motion keeps the depth cue (the shadow) and drops the rotation:
+   a control that pitches on hover is exactly the vestibular trigger the
+   preference exists to silence. */
+@media (prefers-reduced-motion: reduce) {
+  .tilt-3d,
+  .tilt-3d:hover:not(:disabled),
+  .tilt-3d:active:not(:disabled),
+  .tilt-3d-tile,
+  .tilt-3d-tile:hover:not(:disabled),
+  .tilt-3d-chrome,
+  .tilt-3d-chrome:hover:not(:disabled) {
+    transform: none;
+    transition: background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out;
+  }
+}
+
+/* ---- Extruded icons -------------------------------------------------------
+   Stacked zero-blur drop-shadows extrude a glyph's own silhouette downward, so
+   the icon gains real thickness rather than just a cast shadow. Reserved for
+   featured icons sitting in a tile - it wants simple, open shapes. Glyphs built
+   from many thin closely-spaced strokes (sun rays, sliders, grids) have their
+   gaps flooded by the extrusion and collapse into a blob, so those must stay
+   flat. Checked against the real icon set before shipping; the ones used in
+   tiles here are all single-stroke shapes, brand marks, or letters.
+
+   Depth has to track the glyph's size - a fixed offset is mud at 16px and
+   invisible at 56px. --icon-depth is roughly size/30 and can be overridden per
+   icon; the default suits the 20-28px glyphs these tiles carry.
+
+   --icon-extrude is the side-wall colour, overridable because the default
+   (currentColor mixed toward black) has nothing to work with when the glyph is
+   already near-black - as it is on the mint accent tiles, where the sides are
+   mixed toward the tile fill instead so they stay visible. */
+.icon-3d {
+  /* Read with a fallback rather than declared: this file is unlayered, so a
+     declared default would outrank a Tailwind [--icon-depth:*] utility (those
+     live in a cascade layer) and per-icon overrides would silently do nothing. */
+  --d: var(--icon-depth, 0.85px);
+  --icon-extrude: color-mix(in srgb, currentColor 52%, #000);
+  --icon-extrude-2: color-mix(in srgb, currentColor 38%, #000);
+  --icon-extrude-3: color-mix(in srgb, currentColor 26%, #000);
+  filter:
+    drop-shadow(0 var(--d) 0 var(--icon-extrude))
+    drop-shadow(0 calc(var(--d) * 2) 0 var(--icon-extrude-2))
+    drop-shadow(0 calc(var(--d) * 3) 0 var(--icon-extrude-3))
+    drop-shadow(0 calc(var(--d) * 4.5) calc(var(--d) * 2.5) rgba(0, 0, 0, 0.45));
+}
+/* Near-black glyph on the mint accent fill: mixing toward black buys nothing,
+   so the side walls run toward the tile colour and read as shaded edges. */
+.icon-3d-on-accent {
+  --icon-extrude: color-mix(in srgb, var(--accent) 34%, #000);
+  --icon-extrude-2: color-mix(in srgb, var(--accent) 24%, #000);
+  --icon-extrude-3: color-mix(in srgb, var(--accent) 16%, #000);
+}
+
 /* Signature green glow lifted from princecaleb.dev buttons */
 .glow-green {
   box-shadow: 0 0 10px var(--glow), 0 0 0 4px var(--accent-soft);
+}
+
+/* The accent pill wants both the signature glow and its ground shadow. A bare
+   hover:glow-green would replace .tilt-3d:hover's box-shadow rather than join
+   it - one box-shadow property, last rule wins - so the two are composed here
+   into a single value. Declared after .tilt-3d so it takes the hover at equal
+   specificity. */
+.tilt-glow:hover:not(:disabled) {
+  box-shadow: 0 0 10px var(--glow), 0 0 0 4px var(--accent-soft), var(--tilt-hover);
 }
 
 /* Hide scrollbar until scrolling */

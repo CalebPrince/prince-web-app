@@ -162,7 +162,7 @@ export default function AiAdoptionLadderPage() {
                 delay={(i % 4) * 70}
                 className="group h-full rounded-[var(--radius)] border border-hairline bg-bg p-6 transition-colors hover:border-accent/40"
               >
-                <span className="grid size-10 place-items-center rounded-[10px] border border-accent/40 bg-accent/10 font-mono text-sm font-bold text-accent">
+                <span className="tilt-3d tilt-3d-tile grid size-10 place-items-center rounded-[10px] border border-accent/40 bg-accent/10 font-mono text-sm font-bold text-accent">
                   {p.icon}
                 </span>
                 <h3 className="mt-6 text-lg font-semibold tracking-tight text-text">{p.title}</h3>

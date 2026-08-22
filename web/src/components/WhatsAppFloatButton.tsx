@@ -30,7 +30,7 @@ export function WhatsAppFloatButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
-      className="fixed bottom-6 left-6 z-50 grid size-14 place-items-center rounded-full bg-[#25d366] text-white shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+      className="tilt-3d tilt-3d-tile fixed bottom-6 left-6 z-50 grid size-14 place-items-center rounded-full bg-[#25d366] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
     >
       <FaWhatsapp className="size-7" />
     </a>
