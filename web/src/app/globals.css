@@ -1469,14 +1469,6 @@ body {
   transform: scale(0.96);
 }
 
-/* Folded away, the mark is the whole control, so it gets the card's shadow
-   and a little more room. */
-.lisa-round--lg {
-  height: 3.5rem;
-  width: 3.5rem;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
-}
-
 .lisa-badge {
   position: absolute;
   top: 0.35rem;
