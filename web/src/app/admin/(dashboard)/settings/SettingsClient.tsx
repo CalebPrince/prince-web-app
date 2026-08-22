@@ -66,6 +66,8 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "whatsapp_provider", "whapi_api_token", "whapi_webhook_secret",
     "elevenlabs_whatsapp_agent_id", "elevenlabs_whatsapp_phone_number_id",
     "elevenlabs_whatsapp_intro_template_name", "elevenlabs_whatsapp_intro_template_lang",
+    "elevenlabs_whatsapp_alert_template_name", "elevenlabs_whatsapp_alert_template_lang",
+    "elevenlabs_whatsapp_alert_template_params",
     "owner_whatsapp_number", "owner_voice_number", "elevenlabs_phone_agent_id",
     "elevenlabs_phone_number_id", "elevenlabs_phone_webhook_secret",
     "elevenlabs_phone_postcall_signing_secret",

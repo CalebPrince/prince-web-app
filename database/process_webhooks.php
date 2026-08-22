@@ -107,12 +107,27 @@ foreach ($pending as $row) {
     }
 
     if (!$whatsappDone) {
+        // The marker prefix and the inbox link are addressed to a human
+        // reading free text; a Meta template has its own fixed wording, so the
+        // fields below carry only the parts that vary.
+        $handoffBody = trim(preg_replace(
+            '/^\[LIVE HANDOFF REQUESTED\]\s*/u',
+            '',
+            trim((string) $row['message'])
+        ) ?? '');
+
         $whatsappDone = WhatsAppNotifier::sendOwnerAlert(
             "🔴 *Lisa handoff — someone wants to speak with you*\n\n"
             . "Name: {$row['name']}\n"
             . "Email: {$row['email']}\n\n"
             . trim((string) $row['message']) . "\n\n"
-            . "Open Admin Inbox: https://princecaleb.dev/admin/inbox.html"
+            . "Open Admin Inbox: https://princecaleb.dev/admin/inbox.html",
+            [
+                'name' => (string) $row['name'],
+                'email' => (string) $row['email'],
+                'summary' => $handoffBody,
+                'message' => $handoffBody,
+            ]
         );
     }
 
