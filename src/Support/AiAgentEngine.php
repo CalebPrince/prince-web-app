@@ -7,13 +7,12 @@ namespace App\Support;
 /**
  * Shared tool-calling engine for AI agents: given a system prompt, a set of
  * tool declarations (Gemini functionDeclarations shape), and a tool
- * executor, runs the same four-provider fallback (DeepSeek -> Gemini ->
- * OpenRouter -> Groq, each only if its key is configured) and tool-calling
+ * executor, runs the same three-provider fallback (Gemini -> OpenRouter ->
+ * Groq, each only if its key is configured) and tool-calling
  * round-trip loop that Live Chat's "Lisa" agent originally had built in
- * directly. DeepSeek is tried first as a cost-cutting measure (cheap,
- * paid-from-first-token, vs. Gemini's paid tier once its free quota runs
- * out) — this is a cost decision, not a reliability ranking; every provider
- * still degrades gracefully to the next if it fails.
+ * directly. DeepSeek remains available through AiText for plain generation,
+ * but is excluded here because its compatible endpoint has repeatedly leaked
+ * native DSML tool syntax instead of returning valid tool_calls.
  * Extracted so a second, differently-configured agent (different persona,
  * different tools) can reuse this machinery instead of duplicating it.
  *
@@ -79,27 +78,6 @@ class AiAgentEngine
         $mode = 'fallback';
         $provider = null;
         $ready = false;
-
-        // Tried first: a cost-cutting move, not a reliability one — DeepSeek
-        // is a cheap, paid-from-first-token API rather than the free tiers
-        // below, so resolving here means most turns never touch Gemini's
-        // paid-tier billing once its free quota is exhausted. Any hard
-        // failure or unusable response falls through to Gemini exactly like
-        // a Gemini failure falls through to OpenRouter below.
-        $deepseekKey = Settings::get('deepseek_api_key');
-        if (!empty($deepseekKey)) {
-            $result = self::chatWithDeepSeek(
-                $deepseekKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, $onExhaustedFallback, $maxToolRounds
-            );
-            if ($result !== null) {
-                $ready = $ready || $result['ready'];
-                if ($result['reply'] !== null) {
-                    $reply = $result['reply'];
-                    $mode = 'ai';
-                    $provider = 'deepseek';
-                }
-            }
-        }
 
         if ($reply === null) {
             $geminiKey = Settings::get('gemini_api_key');
@@ -626,13 +604,27 @@ class AiAgentEngine
                 return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
             }
             if (isset($result['_groq_failed_generation'])) {
-                $recovered = $onGroqFailedGeneration !== null
-                    ? $onGroqFailedGeneration((string) $result['_groq_failed_generation'])
-                    : null;
-                if ($recovered !== null) {
-                    return $recovered;
+                // Groq rejects a response when the model generates malformed
+                // tool-call JSON. Retry the same round once with deterministic
+                // sampling before recovering the rejected pseudo-call.
+                error_log('Groq chat: malformed tool call; retrying once with temperature=0.');
+                $retryPayload = $payload;
+                $retryPayload['temperature'] = 0;
+                $retryResult = self::callGroqRaw($apiKey, $retryPayload, $timeoutSeconds);
+                if ($retryResult !== null && !isset($retryResult['_groq_failed_generation'])) {
+                    $result = $retryResult;
+                } else {
+                    $failedGeneration = isset($retryResult['_groq_failed_generation'])
+                        ? (string) $retryResult['_groq_failed_generation']
+                        : (string) $result['_groq_failed_generation'];
+                    $recovered = $onGroqFailedGeneration !== null
+                        ? $onGroqFailedGeneration($failedGeneration)
+                        : null;
+                    if ($recovered !== null) {
+                        return $recovered;
+                    }
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
                 }
-                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
             }
 
             $message = $result['choices'][0]['message'] ?? null;
@@ -803,7 +795,7 @@ class AiAgentEngine
             if (is_array($decoded)
                 && ($decoded['error']['code'] ?? '') === 'tool_use_failed'
                 && !empty($decoded['error']['failed_generation'])) {
-                error_log('Live Chat Groq tool-use failed; attempting backend recovery from failed_generation.');
+                error_log('Groq tool-use failed; returning failed_generation for retry or recovery.');
                 return ['_groq_failed_generation' => (string) $decoded['error']['failed_generation']];
             }
             error_log(sprintf(
