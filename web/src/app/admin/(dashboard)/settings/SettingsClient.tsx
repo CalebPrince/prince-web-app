@@ -73,7 +73,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "elevenlabs_phone_postcall_signing_secret",
   ],
   integrations: [
-    "serper_api_key", "hunter_api_key", "apify_api_key", "dataforseo_login",
+    "serper_api_key", "hunter_api_key", "apify_api_key", "pagespeed_api_key", "dataforseo_login",
     "dataforseo_password", "slack_webhook_url", "integration_api_key",
     "notification_email", "google_client_id", "composio_api_key",
     "composio_google_calendar_auth_config_id", "composio_gmail_auth_config_id",
@@ -131,7 +131,7 @@ const SECRET_KEYS = new Set([
   "liveavatar_api_key", "liveavatar_llm_bridge_secret", "whapi_api_token",
   "whapi_webhook_secret", "elevenlabs_phone_webhook_secret",
   "elevenlabs_phone_postcall_signing_secret", "serper_api_key", "hunter_api_key",
-  "apify_api_key", "dataforseo_password", "integration_api_key", "composio_api_key",
+  "apify_api_key", "pagespeed_api_key", "dataforseo_password", "integration_api_key", "composio_api_key",
   "paystack_secret_key", "smtp_app_password",
 ]);
 
@@ -151,6 +151,7 @@ function labelFor(key: string) {
     .replace(/\burl\b/gi, "URL")
     .replace(/\bsmtp\b/gi, "SMTP")
     .replace(/\bimap\b/gi, "IMAP")
+    .replace(/\bpagespeed\b/gi, "PageSpeed")
     .replace(/^\w/, (c) => c.toUpperCase());
 }
 
