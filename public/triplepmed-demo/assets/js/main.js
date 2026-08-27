@@ -71,10 +71,17 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     };
 
+    var goToRandom = function () {
+      if (slides.length < 2) return;
+      var next;
+      do { next = Math.floor(Math.random() * slides.length); } while (next === current);
+      goTo(next);
+    };
+
     var startAutoplay = function () {
       if (reducedMotion || slides.length < 2) return;
       stopAutoplay();
-      timer = setInterval(function () { goTo(current + 1); }, interval);
+      timer = setInterval(goToRandom, interval);
     };
 
     var stopAutoplay = function () {
