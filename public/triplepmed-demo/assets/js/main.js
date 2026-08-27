@@ -71,10 +71,28 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     };
 
+    // Slides are tagged data-group="a"/"b" (e.g. two different casts) so
+    // autoplay alternates groups each tick instead of picking fully at random,
+    // while still picking randomly within whichever group is up next.
+    var groups = {};
+    slides.forEach(function (slide, i) {
+      var g = slide.dataset.group || 'a';
+      (groups[g] = groups[g] || []).push(i);
+    });
+    var groupKeys = Object.keys(groups);
+    var lastGroupIndex = 0;
+
     var goToRandom = function () {
       if (slides.length < 2) return;
+      var pool;
+      if (groupKeys.length > 1) {
+        lastGroupIndex = (lastGroupIndex + 1) % groupKeys.length;
+        pool = groups[groupKeys[lastGroupIndex]];
+      } else {
+        pool = groups[groupKeys[0]];
+      }
       var next;
-      do { next = Math.floor(Math.random() * slides.length); } while (next === current);
+      do { next = pool[Math.floor(Math.random() * pool.length)]; } while (next === current && pool.length > 1);
       goTo(next);
     };
 
