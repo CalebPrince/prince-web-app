@@ -287,6 +287,57 @@ foreach ([
     }
 }
 
+// Sites (Technical/Health tier + analytics pixel) — see database/check_uptime.php,
+// database/check_site_technical.php, and public/js/pixel.js.
+$projectColumns = array_column($pdo->query('PRAGMA table_info(projects)')->fetchAll(), 'name');
+foreach ([
+    'ssl_expires_at', 'domain_expires_at', 'domain_registrar', 'last_deployed_at', 'technical_checked_at',
+] as $col) {
+    if (!in_array($col, $projectColumns, true)) {
+        $pdo->exec("ALTER TABLE projects ADD COLUMN {$col} TEXT");
+    }
+}
+if (!in_array('perf_desktop_score', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN perf_desktop_score INTEGER');
+}
+if (!in_array('perf_mobile_score', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN perf_mobile_score INTEGER');
+}
+if (!in_array('perf_lcp_ms', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN perf_lcp_ms INTEGER');
+}
+if (!in_array('perf_cls', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN perf_cls REAL');
+}
+if (!in_array('tracking_key', $projectColumns, true)) {
+    $pdo->exec('ALTER TABLE projects ADD COLUMN tracking_key TEXT');
+    // Column can't carry UNIQUE via ALTER TABLE — enforce it with an index instead.
+    $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_tracking_key ON projects (tracking_key)');
+    $ids = $pdo->query('SELECT id FROM projects WHERE tracking_key IS NULL')->fetchAll(\PDO::FETCH_COLUMN);
+    $setKey = $pdo->prepare('UPDATE projects SET tracking_key = ? WHERE id = ?');
+    foreach ($ids as $id) {
+        $setKey->execute([bin2hex(random_bytes(6)), $id]);
+    }
+}
+
+$uptimeMonitorColumns = array_column($pdo->query('PRAGMA table_info(uptime_monitors)')->fetchAll(), 'name');
+if (!in_array('project_id', $uptimeMonitorColumns, true)) {
+    $pdo->exec('ALTER TABLE uptime_monitors ADD COLUMN project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_uptime_monitors_project ON uptime_monitors (project_id)');
+}
+
+$pageViewColumns = array_column($pdo->query('PRAGMA table_info(page_views)')->fetchAll(), 'name');
+if (!in_array('project_id', $pageViewColumns, true)) {
+    $pdo->exec('ALTER TABLE page_views ADD COLUMN project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL');
+}
+if (!in_array('visitor_id', $pageViewColumns, true)) {
+    $pdo->exec('ALTER TABLE page_views ADD COLUMN visitor_id TEXT');
+}
+if (!in_array('session_id', $pageViewColumns, true)) {
+    $pdo->exec('ALTER TABLE page_views ADD COLUMN session_id TEXT');
+}
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_page_views_project_created ON page_views (project_id, created_at)');
+
 $webhookColumns = array_column($pdo->query('PRAGMA table_info(webhook_queue)')->fetchAll(), 'name');
 if (!in_array('slack_sent', $webhookColumns, true)) {
     $pdo->exec('ALTER TABLE webhook_queue ADD COLUMN slack_sent INTEGER NOT NULL DEFAULT 0');

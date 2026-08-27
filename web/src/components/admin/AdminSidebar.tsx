@@ -72,7 +72,7 @@ const navigation = [
   {
     group: "System",
     items: [
-      { name: "Uptime", href: "/admin/uptime", icon: Activity },
+      { name: "Sites", href: "/admin/sites", icon: Activity },
       { name: "Voice Demo", href: "/admin/voice-demo", icon: AudioLines },
       { name: "Agent Queue", href: "/admin/agent-tasks", icon: ListChecks },
       { name: "Activity Log", href: "/admin/activity-log", icon: History },

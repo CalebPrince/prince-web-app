@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
+use App\Support\GithubClient;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -191,25 +192,21 @@ class ScoutController
      */
     private static function inspectGitHubRepository(string $url): array
     {
-        $url = trim($url);
-        if (!preg_match(
-            '~^https?://(?:www\.)?github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?(?:[/?#].*)?$~i',
-            $url,
-            $matches
-        )) {
+        $parsed = GithubClient::parseRepoUrl($url);
+        if ($parsed === null) {
             return ['error' => 'Provide a public GitHub repository URL in the form https://github.com/owner/repository.'];
         }
 
-        $owner = $matches[1];
-        $repository = $matches[2];
+        $owner = $parsed['owner'];
+        $repository = $parsed['repository'];
         $base = 'https://api.github.com/repos/' . rawurlencode($owner) . '/' . rawurlencode($repository);
-        $metadata = self::githubApiRequest($base);
+        $metadata = GithubClient::request($base);
         if (isset($metadata['_error'])) {
             return ['error' => (string) $metadata['_error']];
         }
 
-        $contents = self::githubApiRequest($base . '/contents');
-        $readmeResponse = self::githubApiRequest($base . '/readme');
+        $contents = GithubClient::request($base . '/contents');
+        $readmeResponse = GithubClient::request($base . '/readme');
         $rootFiles = [];
         if (!isset($contents['_error'])) {
             foreach (array_slice($contents, 0, 100) as $item) {
@@ -252,48 +249,6 @@ class ScoutController
             'readme' => $readme,
             'note' => $readme === null ? 'No readable README was returned for this public repository.' : null,
         ];
-    }
-
-    /** @return array<string,mixed>|array<int,mixed> */
-    private static function githubApiRequest(string $url): array
-    {
-        if (!function_exists('curl_init')) {
-            return ['_error' => 'GitHub inspection is unavailable on this server.'];
-        }
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                'Accept: application/vnd.github+json',
-                'X-GitHub-Api-Version: 2022-11-28',
-                'User-Agent: princecaleb-scout',
-            ],
-            CURLOPT_TIMEOUT => 15,
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false || $status !== 200) {
-            error_log(sprintf(
-                'Scout: GitHub API request failed: status=%s curl_error=%s body=%s',
-                $status,
-                $curlError !== '' ? $curlError : 'none',
-                is_string($response) ? substr($response, 0, 500) : 'n/a'
-            ));
-            if ($status === 404) {
-                return ['_error' => 'That GitHub repository was not found or is not public.'];
-            }
-            if ($status === 403 || $status === 429) {
-                return ['_error' => 'GitHub temporarily refused the lookup, possibly because its public API rate limit was reached.'];
-            }
-            return ['_error' => 'GitHub could not be reached right now.'];
-        }
-
-        $decoded = json_decode((string) $response, true);
-        return is_array($decoded) ? $decoded : ['_error' => 'GitHub returned an unreadable response.'];
     }
 
     private static function searchWeb(string $query): array

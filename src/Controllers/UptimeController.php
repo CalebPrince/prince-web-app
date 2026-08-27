@@ -53,7 +53,7 @@ class UptimeController
         Response::json($stmt->fetchAll());
     }
 
-    /** POST /api/v1/admin/uptime — body: {name, url, client_id?} */
+    /** POST /api/v1/admin/uptime — body: {name, url, client_id?, project_id?} */
     public static function store(): void
     {
         $user = AuthMiddleware::requireAuth();
@@ -62,6 +62,7 @@ class UptimeController
         $name = trim((string) ($data['name'] ?? ''));
         $url = trim((string) ($data['url'] ?? ''));
         $clientId = !empty($data['client_id']) ? (int) $data['client_id'] : null;
+        $projectId = !empty($data['project_id']) ? (int) $data['project_id'] : null;
 
         $errors = [];
         if ($name === '') $errors[] = 'A name is required.';
@@ -73,14 +74,14 @@ class UptimeController
         }
 
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO uptime_monitors (name, url, client_id) VALUES (?, ?, ?)')
-            ->execute([$name, $url, $clientId]);
+        $pdo->prepare('INSERT INTO uptime_monitors (name, url, client_id, project_id) VALUES (?, ?, ?, ?)')
+            ->execute([$name, $url, $clientId, $projectId]);
 
         ActivityLog::log($user, 'created', 'uptime_monitor', (string) $pdo->lastInsertId(), $name, ['url' => $url]);
         Response::json(['status' => 'created'], 201);
     }
 
-    /** PATCH /api/v1/admin/uptime/{id} — body: {name?, url?, client_id?, is_active?} */
+    /** PATCH /api/v1/admin/uptime/{id} — body: {name?, url?, client_id?, project_id?, is_active?} */
     public static function update(array $params): void
     {
         $user = AuthMiddleware::requireAuth();
@@ -110,6 +111,10 @@ class UptimeController
         if (array_key_exists('client_id', $data)) {
             $fields[] = 'client_id = ?';
             $values[] = !empty($data['client_id']) ? (int) $data['client_id'] : null;
+        }
+        if (array_key_exists('project_id', $data)) {
+            $fields[] = 'project_id = ?';
+            $values[] = !empty($data['project_id']) ? (int) $data['project_id'] : null;
         }
         if (array_key_exists('is_active', $data)) {
             $fields[] = 'is_active = ?';

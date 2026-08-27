@@ -82,6 +82,22 @@ CREATE TABLE IF NOT EXISTS projects (
   arch_style_keyword TEXT,
   arch_primary_color TEXT,
   arch_accent_color TEXT,
+  -- Public token the pixel script (public/js/pixel.js) sends as `site` to
+  -- identify which project a tracked event belongs to — never the raw id.
+  tracking_key TEXT UNIQUE,
+  -- Technical/Health tier: all written by database/check_site_technical.php
+  -- (daily cron) except ssl_expires_at, which check_uptime.php writes
+  -- straight from the linked monitor's own TLS probe. Nullable — a project
+  -- with no live_url, or one not checked yet, just shows blank.
+  ssl_expires_at TEXT,
+  domain_expires_at TEXT,
+  domain_registrar TEXT,
+  perf_desktop_score INTEGER,
+  perf_mobile_score INTEGER,
+  perf_lcp_ms INTEGER,
+  perf_cls REAL,
+  last_deployed_at TEXT,
+  technical_checked_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -398,10 +414,24 @@ CREATE TABLE IF NOT EXISTS page_views (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   path TEXT NOT NULL,
   referrer TEXT,
+  -- NULL = princecaleb.dev's own traffic (the original, single-tenant use of
+  -- this table). Set when the beacon fires from a client site's embedded
+  -- pixel with a `site` tracking key, resolved to this project.
+  project_id INTEGER NULL REFERENCES projects(id) ON DELETE SET NULL,
+  -- Anonymous, pixel-generated ids (localStorage/sessionStorage) — only
+  -- present for pixel-sourced rows, not the self-tracking beacon. Let the
+  -- per-site Analytics tab compute distinct visitors/sessions and bounce
+  -- rate without a separate sessions table.
+  visitor_id TEXT,
+  session_id TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_page_views_path_created ON page_views (path, created_at);
 CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views (created_at);
+-- idx_page_views_project_created is created in migrate.php, not here — on an
+-- existing install this CREATE TABLE is a no-op (column doesn't exist yet on
+-- the old table), so an unconditional index on project_id here would fail
+-- before migrate.php's guarded ALTER TABLE ever runs.
 
 CREATE TABLE IF NOT EXISTS appointments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -994,6 +1024,9 @@ CREATE TABLE IF NOT EXISTS uptime_monitors (
   name TEXT NOT NULL,
   url TEXT NOT NULL,
   client_id INTEGER NULL REFERENCES clients(id) ON DELETE SET NULL,
+  -- Links this monitor to its portfolio entry so the admin Sites page can
+  -- show one card per project instead of a separate monitor list.
+  project_id INTEGER NULL REFERENCES projects(id) ON DELETE SET NULL,
   is_active INTEGER NOT NULL DEFAULT 1,
   last_status TEXT CHECK (last_status IS NULL OR last_status IN ('up', 'down')),
   last_checked_at TEXT,

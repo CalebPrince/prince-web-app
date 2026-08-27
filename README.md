@@ -710,7 +710,8 @@ database/
   send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
   generate_daily_headline.php     # AI-writes the homepage hero headline once per calendar day (cron)
-  check_uptime.php                # pings uptime monitors, alerts on status change (cron, ~5 min)
+  check_uptime.php                # pings uptime monitors, alerts on status change, captures SSL expiry (cron, ~5 min)
+  check_site_technical.php        # Sites Technical tab: domain expiry (RDAP), PageSpeed scores, last deployment (cron, daily)
   schedule_stale_lead_followups.php  # auto-schedules a follow-up for active pipeline leads gone quiet too long (cron, daily; off by default)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
@@ -1898,7 +1899,7 @@ One-time setup on a new host:
     fires if enabled in Admin -> Settings -> Content):
     `/usr/local/bin/php /home/<cpanel-user>/database/generate_social_drafts.php > /dev/null`
 4f. Add a sixth cron job (every 5 minutes) for the uptime monitors
-    (`/admin/uptime.html` shows no data without it):
+    (`/admin/sites` shows no data without it):
     `/usr/local/bin/php /home/<cpanel-user>/database/check_uptime.php > /dev/null`
 4g. Add a seventh cron job (hourly) for drip email sequences (no-op until
     a sequence is created in `/admin/drip.html`):
@@ -1985,6 +1986,13 @@ One-time setup on a new host:
     Site Content hero copy if no provider is configured or the call fails).
     Idempotent — a second run on the same day is a no-op:
     `/usr/local/bin/php /home/<cpanel-user>/database/generate_daily_headline.php > /dev/null`
+4r. Add a nineteenth cron job (once a day) to refresh the Sites Technical tab
+    (domain expiry via RDAP, PageSpeed scores, last-deployment date — SSL
+    expiry itself comes free off the existing uptime ping, no separate job;
+    PageSpeed scores stay blank until a `pagespeed_api_key` setting is added —
+    there's no Settings UI field for it yet, so set it directly:
+    `INSERT INTO settings (name, value) VALUES ('pagespeed_api_key', '...')`):
+    `/usr/local/bin/php /home/<cpanel-user>/database/check_site_technical.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate — `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

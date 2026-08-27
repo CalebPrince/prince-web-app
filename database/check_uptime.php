@@ -20,7 +20,7 @@ use App\Support\Settings;
 const TIMEOUT_SECONDS = 15;
 const KEEP_CHECKS_DAYS = 90;
 
-/** @return array{status: 'up'|'down', http_status: int, response_time_ms: int} */
+/** @return array{status: 'up'|'down', http_status: int, response_time_ms: int, ssl_expires_at: ?string} */
 function probe(string $url): array
 {
     $context = stream_context_create([
@@ -32,7 +32,9 @@ function probe(string $url): array
             'follow_location' => 1,
             'max_redirects' => 5,
         ],
-        'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+        // capture_peer_cert piggybacks the site's own TLS expiry off this
+        // same request — free (Technical tab), no separate check needed.
+        'ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'capture_peer_cert' => true],
     ]);
 
     $start = microtime(true);
@@ -48,7 +50,22 @@ function probe(string $url): array
 
     $isUp = $body !== false && $httpStatus >= 200 && $httpStatus < 400;
 
-    return ['status' => $isUp ? 'up' : 'down', 'http_status' => $httpStatus, 'response_time_ms' => $elapsedMs];
+    $sslExpiresAt = null;
+    $options = stream_context_get_options($context);
+    $cert = $options['ssl']['peer_certificate'] ?? null;
+    if ($cert !== null) {
+        $certInfo = openssl_x509_parse($cert);
+        if ($certInfo !== false && !empty($certInfo['validTo_time_t'])) {
+            $sslExpiresAt = gmdate('Y-m-d H:i:s', (int) $certInfo['validTo_time_t']);
+        }
+    }
+
+    return [
+        'status' => $isUp ? 'up' : 'down',
+        'http_status' => $httpStatus,
+        'response_time_ms' => $elapsedMs,
+        'ssl_expires_at' => $sslExpiresAt,
+    ];
 }
 
 $pdo = Database::get();
@@ -74,6 +91,11 @@ foreach ($monitors as $monitor) {
             . ($statusChanged ? ", last_status_changed_at = datetime('now')" : '')
             . ' WHERE id = ?'
     )->execute([$result['status'], $monitor['id']]);
+
+    if ($monitor['project_id'] && $result['ssl_expires_at'] !== null) {
+        $pdo->prepare('UPDATE projects SET ssl_expires_at = ? WHERE id = ?')
+            ->execute([$result['ssl_expires_at'], $monitor['project_id']]);
+    }
 
     if ($result['status'] === 'down' && !$monitor['alert_sent'] && $notifyEmail) {
         $ok = Mailer::send(

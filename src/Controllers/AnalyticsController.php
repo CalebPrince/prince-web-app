@@ -16,7 +16,14 @@ use App\Support\Response;
  */
 class AnalyticsController
 {
-    /** POST /api/v1/analytics/track — public, rate-limited (abuse guard, not a usage cap) */
+    /**
+     * POST /api/v1/analytics/track — public, rate-limited (abuse guard, not a
+     * usage cap). Called both by this site's own beacon (public/js/analytics.js,
+     * no `site`) and by public/js/pixel.js embedded on client sites (`site` =
+     * a project's tracking_key, plus anonymous visitor/session ids). Body is
+     * read as raw JSON regardless of Content-Type, since the pixel sends via
+     * sendBeacon (defaults to text/plain) to stay a CORS-free "simple request".
+     */
     public static function track(): void
     {
         require_once dirname(__DIR__, 2) . '/config/config.php';
@@ -30,8 +37,27 @@ class AnalyticsController
 
         $referrer = trim((string) ($data['referrer'] ?? ''));
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO page_views (path, referrer) VALUES (?, ?)')
-            ->execute([$path, $referrer !== '' ? mb_substr($referrer, 0, 255) : null]);
+
+        $projectId = null;
+        $siteKey = trim((string) ($data['site'] ?? ''));
+        if ($siteKey !== '') {
+            $stmt = $pdo->prepare('SELECT id FROM projects WHERE tracking_key = ?');
+            $stmt->execute([$siteKey]);
+            $projectId = $stmt->fetchColumn() ?: null;
+        }
+
+        $visitorId = trim((string) ($data['visitor_id'] ?? ''));
+        $sessionId = trim((string) ($data['session_id'] ?? ''));
+
+        $pdo->prepare(
+            'INSERT INTO page_views (path, referrer, project_id, visitor_id, session_id) VALUES (?, ?, ?, ?, ?)'
+        )->execute([
+            $path,
+            $referrer !== '' ? mb_substr($referrer, 0, 255) : null,
+            $projectId,
+            $visitorId !== '' ? mb_substr($visitorId, 0, 64) : null,
+            $sessionId !== '' ? mb_substr($sessionId, 0, 64) : null,
+        ]);
 
         Response::json(['status' => 'ok'], 201);
     }
