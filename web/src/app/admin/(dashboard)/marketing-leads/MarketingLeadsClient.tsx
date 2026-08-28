@@ -103,9 +103,11 @@ function money(minor: number | null, currency: string | null) {
 export default function MarketingLeadsClient({
   initialLeads,
   initialStats,
+  loadError,
 }: {
   initialLeads: MarketingLead[];
   initialStats: OutreachStats | null;
+  loadError?: string | null;
 }) {
   const [leads, setLeads] = useState(initialLeads);
   const [stats, setStats] = useState(initialStats);
@@ -113,7 +115,7 @@ export default function MarketingLeadsClient({
   const [fit, setFit] = useState<FitFilter>("all");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(loadError ?? null);
   const [busy, setBusy] = useState<number | null>(null);
 
   const [addOpen, setAddOpen] = useState(false);

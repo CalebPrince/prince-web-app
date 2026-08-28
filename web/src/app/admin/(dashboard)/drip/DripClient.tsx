@@ -95,9 +95,11 @@ const emptyStepForm = { day_offset: "0", subject: "", body: "", is_active: true 
 export default function DripClient({
   initialAutomations,
   settings,
+  loadError,
 }: {
   initialAutomations: Automation[];
   settings: Record<string, string>;
+  loadError?: string | null;
 }) {
   const [automations, setAutomations] = useState(initialAutomations);
   const [current, setCurrent] = useState<Automation | null>(null);
@@ -105,7 +107,7 @@ export default function DripClient({
   const [steps, setSteps] = useState<Step[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [nurturerSends, setNurturerSends] = useState<NurturerSend[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(loadError ?? null);
 
   const [automationOpen, setAutomationOpen] = useState(false);
   const [editingAutomationId, setEditingAutomationId] = useState<number | null>(null);
