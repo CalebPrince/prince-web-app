@@ -64,6 +64,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
   ],
   messaging: [
     "whatsapp_provider", "whapi_api_token", "whapi_webhook_secret",
+    "wati_api_endpoint", "wati_api_token", "wati_webhook_secret",
     "elevenlabs_whatsapp_agent_id", "elevenlabs_whatsapp_phone_number_id",
     "elevenlabs_whatsapp_intro_template_name", "elevenlabs_whatsapp_intro_template_lang",
     "elevenlabs_whatsapp_alert_template_name", "elevenlabs_whatsapp_alert_template_lang",
@@ -129,14 +130,14 @@ const SECRET_KEYS = new Set([
   "deepseek_api_key", "gemini_api_key", "groq_api_key", "openrouter_api_key",
   "elevenlabs_api_key", "elevenlabs_webhook_secret", "elevenlabs_postcall_signing_secret",
   "liveavatar_api_key", "liveavatar_llm_bridge_secret", "whapi_api_token",
-  "whapi_webhook_secret", "elevenlabs_phone_webhook_secret",
+  "whapi_webhook_secret", "wati_api_token", "wati_webhook_secret", "elevenlabs_phone_webhook_secret",
   "elevenlabs_phone_postcall_signing_secret", "serper_api_key", "hunter_api_key",
   "apify_api_key", "pagespeed_api_key", "dataforseo_password", "integration_api_key", "composio_api_key",
   "paystack_secret_key", "smtp_app_password",
 ]);
 
 const CHOICES: Record<string, string[]> = {
-  whatsapp_provider: ["elevenlabs", "whapi"],
+  whatsapp_provider: ["elevenlabs", "whapi", "wati"],
   default_theme: ["dark", "light", "midnight", "paper"],
   animation_style: ["full", "subtle", "off"],
   social_draft_frequency: ["daily", "weekly", "monthly"],
@@ -152,6 +153,7 @@ function labelFor(key: string) {
     .replace(/\bsmtp\b/gi, "SMTP")
     .replace(/\bimap\b/gi, "IMAP")
     .replace(/\bpagespeed\b/gi, "PageSpeed")
+    .replace(/\bwati\b/gi, "WATI")
     .replace(/^\w/, (c) => c.toUpperCase());
 }
 

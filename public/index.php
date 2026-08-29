@@ -165,6 +165,7 @@ $router->get('/api/v1/chat/prototype/{token}', [LiveChatController::class, 'view
 $router->post('/api/v1/chat/feedback', [LiveChatController::class, 'feedback']);
 $router->post('/api/v1/chat/inquiry', [LiveChatController::class, 'inquiry']);
 $router->post('/api/v1/whatsapp/whapi-webhook', [LiveChatController::class, 'whapiWebhook']);
+$router->post('/api/v1/whatsapp/wati-webhook', [LiveChatController::class, 'watiWebhook']);
 $router->post('/api/v1/whatsapp/elevenlabs-init', [LiveChatController::class, 'elevenLabsInitWebhook']);
 $router->post('/api/v1/whatsapp/elevenlabs-tool', [LiveChatController::class, 'elevenLabsToolWebhook']);
 $router->post('/api/v1/whatsapp/elevenlabs-post-call', [LiveChatController::class, 'elevenLabsPostCallWebhook']);

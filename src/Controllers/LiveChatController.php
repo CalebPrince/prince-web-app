@@ -17,6 +17,7 @@ use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\WatiClient;
 use App\Support\WhapiClient;
 
 /**
@@ -319,6 +320,87 @@ class LiveChatController
             if (!$sent['ok']) {
                 $pdo->prepare('DELETE FROM whapi_webhook_events WHERE message_id = ?')->execute([$messageId]);
                 error_log('Whapi Lisa reply failed: ' . (string) $sent['error']);
+                continue;
+            }
+            $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+            $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
+            self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
+            self::markChatUnread($pdo, (int) $session['id']);
+            $processed++;
+        }
+        Response::json(['ok' => true, 'processed' => $processed]);
+    }
+
+    /**
+     * Wati webhook — "Message Received" event. Wati runs no LLM of its own
+     * on this event (unlike ElevenLabs below), so this endpoint's job is the
+     * same as whapiWebhook() above: normalize the inbound message, run it
+     * through Lisa's real brain, and send the reply back out. Field names
+     * (waId, text, type, owner, eventType) are confirmed against Wati's
+     * live API docs (2026-08) for the "Message Received" event — see
+     * docs.wati.io/reference/webhooks. Register this URL as a webhook in
+     * Wati (Connector -> API -> Webhooks) once the account is live.
+     */
+    public static function watiWebhook(): void
+    {
+        set_time_limit(135);
+        if (Settings::get('whatsapp_provider') !== 'wati') {
+            Response::json(['ok' => true, 'ignored' => 'provider_disabled']);
+        }
+        $expected = trim((string) Settings::get('wati_webhook_secret'));
+        $provided = trim((string) ($_SERVER['HTTP_X_WATI_SECRET'] ?? ($_GET['secret'] ?? '')));
+        if ($expected === '' || $provided === '' || !hash_equals($expected, $provided)) {
+            Response::error('Invalid webhook secret.', 403);
+        }
+
+        $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+        // Wati posts one event per request (not a batch like Whapi), so wrap
+        // it in a single-element list to reuse the same per-message loop
+        // shape as whapiWebhook() above.
+        $events = [$payload];
+        $pdo = Database::get();
+        $processed = 0;
+        foreach ($events as $event) {
+            if (!is_array($event)
+                || ($event['eventType'] ?? '') !== 'message'
+                || ($event['type'] ?? '') !== 'text'
+                || !empty($event['owner'])) {
+                continue;
+            }
+            $messageId = mb_substr(trim((string) ($event['whatsappMessageId'] ?? $event['id'] ?? '')), 0, 255);
+            $waId = trim((string) ($event['waId'] ?? ''));
+            $body = trim((string) ($event['text'] ?? ''));
+            if ($messageId === '' || $waId === '' || $body === '' || mb_strlen($body) > 1000) continue;
+
+            $insert = $pdo->prepare('INSERT OR IGNORE INTO wati_webhook_events (message_id) VALUES (?)');
+            $insert->execute([$messageId]);
+            if ($insert->rowCount() === 0) continue;
+
+            $digits = self::normalizePhoneDigits($waId);
+            if ($digits === '') continue;
+            $from = 'whatsapp:+' . $digits;
+            RateLimitMiddleware::enforce('whatsapp_' . $digits, 30);
+
+            $session = self::findOrCreateSessionByExactToken($pdo, $from);
+            $transcript = json_decode($session['transcript_json'], true) ?: [];
+            $senderName = trim((string) ($event['senderName'] ?? ''));
+            if (empty($session['client_phone'])) {
+                $pdo->prepare('UPDATE chat_sessions SET client_phone = ?, client_name = ? WHERE id = ?')
+                    ->execute(['+' . $digits, $senderName !== '' ? $senderName : null, $session['id']]);
+            }
+
+            $transcript = self::rollingTranscript($transcript);
+            $isOwner = self::isOwnerWhatsAppNumber($from);
+            $transcript[] = ['role' => 'user', 'text' => $body];
+            $projects = self::projectCatalog($pdo);
+            $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
+                'name' => $senderName,
+                'phone' => '+' . $digits,
+            ]);
+            $sent = WatiClient::sendText($digits, $result['reply']);
+            if (!$sent['ok']) {
+                $pdo->prepare('DELETE FROM wati_webhook_events WHERE message_id = ?')->execute([$messageId]);
+                error_log('Wati Lisa reply failed: ' . (string) $sent['error']);
                 continue;
             }
             $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
