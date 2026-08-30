@@ -50,10 +50,12 @@ echo "Provider (whatsapp_provider): {$provider}\n";
 
 // Name the setting that is actually missing. "Not fully configured" on its own
 // sends you back to a settings page with twenty fields and no idea which one.
-$required = $provider === 'elevenlabs'
-    ? ['owner_whatsapp_number', 'elevenlabs_api_key', 'elevenlabs_whatsapp_agent_id',
-       'elevenlabs_whatsapp_phone_number_id', 'elevenlabs_whatsapp_alert_template_name']
-    : ['owner_whatsapp_number', 'whapi_api_token'];
+$required = match ($provider) {
+    'elevenlabs' => ['owner_whatsapp_number', 'elevenlabs_api_key', 'elevenlabs_whatsapp_agent_id',
+                     'elevenlabs_whatsapp_phone_number_id', 'elevenlabs_whatsapp_alert_template_name'],
+    'wati' => ['owner_whatsapp_number', 'wati_api_endpoint', 'wati_api_token'],
+    default => ['owner_whatsapp_number', 'whapi_api_token'],
+};
 
 // --template supplies the one thing the alert setting would have: with it, the
 // setting is not required and the run proves everything else.
@@ -182,8 +184,8 @@ if ($mode === 'all' || $mode === 'chief') {
         $brief['emailed_at'] = $brief['emailed_at'] ?: 'test-email-suppressed';
         $sent = Chief::emailBrief($pdo, $brief);
         echo $sent
-            ? "Chief demo WhatsApp accepted by Whapi.\n"
-            : "Chief demo has a failed notification channel; check the PHP error log and Whapi delivery logs.\n";
+            ? "Chief demo WhatsApp accepted by {$provider}.\n"
+            : "Chief demo has a failed notification channel; check the PHP error log and {$provider} delivery logs.\n";
         $failed = $failed || !$sent;
     }
 }
