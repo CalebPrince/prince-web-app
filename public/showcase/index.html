@@ -255,6 +255,86 @@
     color: #ffe2c4;
   }
 
+  /* ── What I can do (capabilities) ─────────────────────── */
+  .cap-grid {
+    display: grid;
+    gap: 22px;
+    /* 420px, not 340: four cards at 340 fit three to a row and leave the
+       fourth stranded beside a hole. This holds a 2x2 block on a desktop
+       and collapses to one column on a phone. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  }
+
+  .cap {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 28px 28px 30px;
+  }
+  .cap-no {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .cap h3 {
+    margin: 14px 0 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .cap > p { margin: 10px 0 0; font-size: 15px; color: var(--text-2); }
+
+  .cap ul { margin: 18px 0 0; padding: 0; list-style: none; }
+  .cap li {
+    position: relative;
+    padding-left: 26px;
+    margin-top: 9px;
+    font-size: 14.5px;
+    color: var(--text-3);
+  }
+  .cap li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    opacity: 0.55;
+  }
+
+  /* The hands-off promise, spelled out as the three states a job can be in. */
+  .handsoff {
+    margin-top: 26px;
+    border: 1px solid rgba(98, 255, 152, 0.28);
+    border-radius: 18px;
+    background: linear-gradient(180deg, var(--accent-soft), rgba(98, 255, 152, 0.02));
+    padding: 30px 28px;
+  }
+  .handsoff h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .handsoff > p { margin: 10px 0 0; max-width: 52rem; color: var(--text-2); font-size: 15px; }
+  .steps {
+    margin-top: 26px;
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  .step-no {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .step h4 { margin: 10px 0 0; font-size: 1rem; font-weight: 700; }
+  .step p { margin: 6px 0 0; font-size: 14.5px; color: var(--text-3); }
+
   /* ── Footer ───────────────────────────────────────────── */
   footer {
     border-top: 1px solid var(--line);
@@ -336,7 +416,8 @@
     <p class="lede">
       Websites and applications I have designed and built, and the Facebook and Instagram
       pages I set up and ran before handing them over to their owners. Every link opens
-      the real thing &mdash; nothing here is a mockup.
+      the real thing &mdash; nothing here is a mockup &mdash; and the last section covers what
+      I can set up to run your own business day to day.
     </p>
     <p class="newtab-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -537,6 +618,125 @@
         </div>
       </a>
 
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ WHAT I CAN DO FOR YOUR BUSINESS ══════════ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="label">03 &mdash; What I can do for your business</p>
+      <h2>Work that runs itself.</h2>
+      <p>
+        Most of what a small team does all day is the same job over and over: answering
+        the same questions, copying the same details between apps, chasing the same
+        follow-ups. That work does not need a person &mdash; it needs a system. I build the
+        system, and your team gets back to the work that actually needs them.
+      </p>
+    </div>
+
+    <div class="cap-grid">
+
+      <div class="cap">
+        <span class="cap-no">01</span>
+        <h3>AI voice &amp; chat agents</h3>
+        <p>
+          A trained agent that picks up the phone and answers WhatsApp around the clock,
+          in your business&rsquo;s own words &mdash; so nothing goes unanswered at 11pm, on a
+          Sunday, or while your line is busy.
+        </p>
+        <ul>
+          <li>Answers calls and messages 24/7, never engaged, never on hold</li>
+          <li>Qualifies enquiries and captures every detail you need</li>
+          <li>Books straight into your calendar and confirms with the customer</li>
+          <li>Passes the conversation to a human the moment it needs one</li>
+        </ul>
+      </div>
+
+      <div class="cap">
+        <span class="cap-no">02</span>
+        <h3>Business process automation</h3>
+        <p>
+          The tools you already pay for, wired together so the work moves between them on
+          its own. No one re-typing an order into a spreadsheet, no one remembering to
+          send the reminder.
+        </p>
+        <ul>
+          <li>Enquiries land in your CRM already sorted and assigned</li>
+          <li>Bookings turn themselves into invoices, receipts and reminders</li>
+          <li>Missed leads get followed up automatically, within minutes</li>
+          <li>Daily and weekly reports arrive without anyone building them</li>
+        </ul>
+      </div>
+
+      <div class="cap">
+        <span class="cap-no">03</span>
+        <h3>Websites, web platforms &amp; mobile apps</h3>
+        <p>
+          Fast, properly built sites and applications shaped around how your customers and
+          your staff actually work &mdash; not a template you have to work around.
+        </p>
+        <ul>
+          <li>Business, e-commerce and booking websites</li>
+          <li>Internal platforms: orders, records, stock, staff, dashboards</li>
+          <li>iOS and Android apps for customers or field teams</li>
+          <li>Payments, and integration with the systems you already run</li>
+        </ul>
+      </div>
+
+      <div class="cap">
+        <span class="cap-no">04</span>
+        <h3>Social media set-up &amp; management</h3>
+        <p>
+          The same service behind the pages above: I build the page, establish the look and
+          the posting rhythm, run it until it has momentum, then hand it to your team
+          trained and documented.
+        </p>
+        <ul>
+          <li>Facebook and Instagram pages set up and branded properly</li>
+          <li>Content calendar, posts, reels and captions</li>
+          <li>Replies and community handling, with the routine parts automated</li>
+          <li>A clean handover so your team can carry it on</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="handsoff">
+      <h3>Hands off by default. Human only when it truly matters.</h3>
+      <p>
+        Automation should not mean your customers get stuck talking to a machine. Every
+        system I build runs on its own until it reaches something that genuinely needs a
+        person &mdash; a complaint, a price that needs approving, a decision only you should
+        make &mdash; and then it hands over cleanly, with the full history attached.
+      </p>
+      <div class="steps">
+        <div class="step">
+          <span class="step-no">01 &mdash; Routine</span>
+          <h4>Handled end to end</h4>
+          <p>
+            Questions answered, bookings taken, records updated, follow-ups sent. No one on
+            your side touches it.
+          </p>
+        </div>
+        <div class="step">
+          <span class="step-no">02 &mdash; Judgement</span>
+          <h4>Escalated to your team</h4>
+          <p>
+            Anything sensitive, unusual or high-value stops and reaches a real person, with
+            the whole conversation already summarised.
+          </p>
+        </div>
+        <div class="step">
+          <span class="step-no">03 &mdash; Control</span>
+          <h4>You approve, it acts</h4>
+          <p>
+            Nothing goes out in your name without your say-so where it counts, and every
+            action is logged so you can see exactly what happened.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
