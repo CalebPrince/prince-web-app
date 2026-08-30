@@ -150,7 +150,10 @@ code path was replaced or deleted, not just gated behind a toggle:
   attempt for any call that connects but never produces a real exchange.
 - **WhatsApp** — `whatsapp_provider` no longer accepts `twilio`; it's Whapi
   or ElevenLabs only. The Twilio inbound-message webhook and its
-  request-signature verification are gone.
+  request-signature verification are gone. *(Later reversed in part: Wati
+  and a rebuilt Twilio option were added back as selectable providers —
+  see `TwilioClient` and `LiveChatController::twilioWebhook()`. None of the
+  removed Twilio voice/Content-API features came back.)*
 - **Owner operational alerts** (`WhatsAppNotifier`) now send only through
   Whapi. The Twilio Content API-powered "Lisa post-call WhatsApp summary"
   feature (`WhatsAppTemplateManager`, `WhatsAppTemplateController`,

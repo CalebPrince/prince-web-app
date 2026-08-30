@@ -12,17 +12,23 @@ namespace App\Support;
  * running on ElevenLabs had no working owner-alert path at all and every
  * handoff silently lost its WhatsApp leg.
  *
- * The two providers differ in kind, not just in endpoint. Whapi sends free
- * text, so the caller's fully composed $body goes out as written. ElevenLabs
- * sends an approved Meta template, whose placeholders are fixed at approval
- * time, so the same alert has to arrive as discrete $fields the template can
- * interpolate. Callers supply both: the prose for Whapi, the parts for Meta.
+ * The providers differ in kind, not just in endpoint. Whapi and Twilio send
+ * free text, so the caller's fully composed $body goes out as written.
+ * ElevenLabs sends an approved Meta template, whose placeholders are fixed at
+ * approval time, so the same alert has to arrive as discrete $fields the
+ * template can interpolate. Callers supply both: the prose for the free-text
+ * providers, the parts for Meta.
+ *
+ * Wati is deliberately absent here: it is selectable as an inbound
+ * whatsapp_provider but has never been wired into owner alerts, so a site
+ * running on Wati still falls through to Whapi for them.
  */
 class WhatsAppNotifier
 {
     public static function provider(): string
     {
-        return Settings::get('whatsapp_provider') === 'elevenlabs' ? 'elevenlabs' : 'whapi';
+        $provider = (string) Settings::get('whatsapp_provider');
+        return in_array($provider, ['elevenlabs', 'twilio'], true) ? $provider : 'whapi';
     }
 
     public static function isOwnerConfigured(): bool
@@ -30,9 +36,11 @@ class WhatsAppNotifier
         if (self::address((string) Settings::get('owner_whatsapp_number')) === null) {
             return false;
         }
-        return self::provider() === 'elevenlabs'
-            ? ElevenLabsWhatsAppClient::isConfigured()
-            : trim((string) Settings::get('whapi_api_token')) !== '';
+        return match (self::provider()) {
+            'elevenlabs' => ElevenLabsWhatsAppClient::isConfigured(),
+            'twilio' => TwilioClient::isConfigured(),
+            default => trim((string) Settings::get('whapi_api_token')) !== '',
+        };
     }
 
     /**
@@ -51,6 +59,13 @@ class WhatsAppNotifier
                 $fields = ['summary' => $body, 'message' => $body];
             }
             return ElevenLabsWhatsAppClient::sendOwnerTemplate($recipient, $fields)['ok'];
+        }
+
+        if (self::provider() === 'twilio') {
+            // Free text like Whapi, but Meta's 24h service window applies: an
+            // alert sent when Caleb hasn't messaged the sender recently is
+            // rejected by Twilio (error 63016) rather than delivered.
+            return TwilioClient::sendText($recipient, $body)['ok'];
         }
 
         return WhapiClient::sendText($recipient, $body)['ok'];
