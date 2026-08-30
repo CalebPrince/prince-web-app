@@ -66,6 +66,7 @@ use App\Controllers\AccountDemoController;
 use App\Controllers\NewsletterController;
 use App\Controllers\NurturerController;
 use App\Controllers\OutreachController;
+use App\Controllers\WhatsAppTemplateController;
 use App\Controllers\PaymentController;
 use App\Controllers\PipelineController;
 use App\Controllers\InboxController;
@@ -325,6 +326,9 @@ $router->post('/api/v1/admin/outreach/ai-call/{id}', [OutreachController::class,
 $router->get('/api/v1/admin/outreach/scoreboard', [OutreachController::class, 'scoreboard']);
 $router->post('/api/v1/admin/outreach/call-log/{id}', [OutreachController::class, 'logCall']);
 $router->post('/api/v1/admin/whatsapp/send-intro', [LiveChatController::class, 'sendIntro']);
+$router->get('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/refresh', [WhatsAppTemplateController::class, 'refresh']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
 $router->get('/api/v1/admin/content-studio', [ContentStudioController::class, 'index']);

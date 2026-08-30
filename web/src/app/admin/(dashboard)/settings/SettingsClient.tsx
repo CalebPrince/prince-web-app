@@ -10,6 +10,18 @@ import { ComposioAccounts } from "@/components/admin/ComposioAccounts";
 
 type CapabilityRow = { label: string; available: boolean; used_by: string[] };
 
+/** Lisa's WhatsApp intro template, as WhatsAppTemplateManager::status() reports it. */
+type IntroTemplate = {
+  content_sid: string | null;
+  /** "not_created" until it exists, then Meta's verdict: pending/approved/rejected. */
+  status: string;
+  template_name: string;
+  language: string;
+  category: string;
+  body: string;
+  provider: string;
+};
+
 type AiTestResult = {
   key_loaded?: boolean;
   curl_available?: boolean;
@@ -66,6 +78,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "whatsapp_provider", "whapi_api_token", "whapi_webhook_secret",
     "wati_api_endpoint", "wati_api_token", "wati_webhook_secret",
     "twilio_account_sid", "twilio_auth_token", "twilio_whatsapp_number", "twilio_webhook_url",
+    "twilio_intro_content_sid",
     "elevenlabs_whatsapp_agent_id", "elevenlabs_whatsapp_phone_number_id",
     "elevenlabs_whatsapp_intro_template_name", "elevenlabs_whatsapp_intro_template_lang",
     "elevenlabs_whatsapp_alert_template_name", "elevenlabs_whatsapp_alert_template_lang",
@@ -191,6 +204,10 @@ export default function SettingsClient({
   const [aiTest, setAiTest] = useState<{ text: string; ok: boolean } | null>(null);
   const [testingAi, setTestingAi] = useState(false);
 
+  const [introTpl, setIntroTpl] = useState<IntroTemplate | null>(null);
+  const [introMsg, setIntroMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [introBusy, setIntroBusy] = useState(false);
+
   // Capability status is a convenience panel: a failure here should stay quiet
   // rather than surface as a settings error.
   useEffect(() => {
@@ -199,6 +216,54 @@ export default function SettingsClient({
       .then((data) => setCapabilities(Object.values(data.capabilities ?? {})))
       .catch(() => {});
   }, []);
+
+  // Same deal — the intro-template panel reports its own errors on demand, so a
+  // failed initial read just leaves the status showing as unknown.
+  useEffect(() => {
+    void loadIntroTemplate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadIntroTemplate = () =>
+    adminApi
+      .get<IntroTemplate>("/api/v1/admin/whatsapp-template")
+      .then(setIntroTpl)
+      .catch(() => {});
+
+  const runIntroTemplate = async (
+    call: () => Promise<IntroTemplate>,
+    done: (t: IntroTemplate) => string
+  ) => {
+    setIntroBusy(true);
+    setIntroMsg(null);
+    try {
+      const t = await call();
+      setIntroTpl(t);
+      setIntroMsg({ ok: t.status !== "rejected", text: done(t) });
+    } catch (err) {
+      setIntroMsg({
+        ok: false,
+        text: err instanceof Error ? err.message : "Twilio rejected the request.",
+      });
+    } finally {
+      setIntroBusy(false);
+    }
+  };
+
+  const createIntroTemplate = () =>
+    runIntroTemplate(
+      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template"),
+      (t) => `Submitted to Meta — currently ${t.status}.`
+    );
+
+  const refreshIntroTemplate = () =>
+    runIntroTemplate(
+      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/refresh"),
+      (t) =>
+        t.status === "approved"
+          ? "Approved — the Send Lisa intro button is live."
+          : `Still ${t.status}.`
+    );
 
   /** Asks the server to make one real call to the AI provider. */
   const testAi = async () => {
@@ -627,7 +692,67 @@ export default function SettingsClient({
         </div>
       )}
       {tab === "voice" && groupCard("voice", "Voice & avatar")}
-      {tab === "messaging" && groupCard("messaging", "WhatsApp & phone")}
+      {tab === "messaging" && (
+        <div className="space-y-4">
+          {groupCard("messaging", "WhatsApp & phone")}
+
+          <Card title="Lisa intro template (Twilio)" bodyClassName="p-5 space-y-3">
+            <p className="text-sm text-text-2">
+              WhatsApp only allows an approved template as the first message to
+              someone who hasn&apos;t written in. This builds it on Twilio and submits
+              it to Meta — no Console work. Approval is Meta&apos;s and takes minutes
+              to a day, so check back with Refresh.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  introTpl?.status === "approved"
+                    ? "bg-green-500/10 text-green-500"
+                    : introTpl?.status === "rejected"
+                      ? "bg-red-500/10 text-red-400"
+                      : "bg-bg-3 text-text-2"
+                }`}
+              >
+                <Activity className="w-3 h-3" />
+                {introTpl?.status ?? "…"}
+              </span>
+              {introTpl?.content_sid && (
+                <code className="text-xs text-text-3">{introTpl.content_sid}</code>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={createIntroTemplate}
+                disabled={introBusy || !!introTpl?.content_sid}
+              >
+                <Send className="w-4 h-4" />
+                {introBusy ? "Working…" : "Create & submit"}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={refreshIntroTemplate}
+                disabled={introBusy || !introTpl?.content_sid}
+              >
+                Refresh status
+              </Button>
+              {introMsg && (
+                <span className={`text-sm ${introMsg.ok ? "text-green-500" : "text-red-400"}`}>
+                  {introMsg.text}
+                </span>
+              )}
+            </div>
+
+            {introTpl?.body && (
+              <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
+                {introTpl.body}
+              </pre>
+            )}
+          </Card>
+        </div>
+      )}
       {tab === "integrations" && (
         <div className="space-y-4">
           {/* Live connection state, above the credentials that configure it. */}
