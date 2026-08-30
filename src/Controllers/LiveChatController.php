@@ -735,27 +735,19 @@ class LiveChatController
      * (a personal number, a YouTube comment) and Caleb wants Lisa to make
      * first contact on the connected number. WhatsApp requires that first
      * business-initiated message to be a pre-approved template (free-form
-     * text is rejected outright), so this calls ElevenLabs' outbound
-     * message endpoint with a template rather than sending text directly.
-     * Once the contact replies, the conversation opens a normal service
-     * window and flows through elevenLabsInitWebhook() like any other
-     * inbound chat — nothing further is tracked here after the send.
+     * text is rejected outright), so this sends a template rather than free
+     * text. Once the contact replies, the conversation opens a normal service
+     * window and flows through the active provider's inbound webhook like any
+     * other chat — nothing further is tracked here after the send.
+     *
+     * The template goes out through whichever provider currently owns the
+     * number, since only that one can send from it: ElevenLabs' outbound
+     * message endpoint, or Twilio's Content API. Whapi and Wati have no
+     * business-initiated path wired up here.
      */
     public static function sendIntro(): void
     {
         AuthMiddleware::requireAuth();
-
-        $apiKey = Settings::get('elevenlabs_api_key');
-        $agentId = Settings::get('elevenlabs_whatsapp_agent_id');
-        $phoneNumberId = Settings::get('elevenlabs_whatsapp_phone_number_id');
-        $templateName = Settings::get('elevenlabs_whatsapp_intro_template_name');
-        $templateLang = Settings::get('elevenlabs_whatsapp_intro_template_lang') ?: 'en';
-        if (!$apiKey || !$agentId || !$phoneNumberId || !$templateName) {
-            Response::error(
-                'Set the ElevenLabs API key, WhatsApp agent ID, WhatsApp phone number ID, and intro template name in Settings first.',
-                422
-            );
-        }
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $contactName = trim((string) ($data['contact_name'] ?? ''));
@@ -769,6 +761,102 @@ class LiveChatController
         }
         if (mb_strlen($note) > 500) {
             Response::error('Note is too long (500 characters max).', 422);
+        }
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        $sent = match ($provider) {
+            'twilio' => self::sendTwilioIntro($digits, $contactName),
+            'elevenlabs' => self::sendElevenLabsIntro($digits, $contactName),
+            default => Response::error(
+                'Intros can only go out on the ElevenLabs or Twilio provider — '
+                . ($provider !== '' ? $provider : 'no provider') . ' has no business-initiated template path.',
+                422
+            ),
+        };
+
+        $pdo = Database::get();
+        // conversation_id holds whatever the provider calls its handle for the
+        // send — an ElevenLabs conversation_id, or a Twilio message SID.
+        $pdo->prepare(
+            "INSERT INTO whatsapp_intros
+             (contact_name, phone_number, note, template_name, conversation_id, status, error_message)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )->execute([
+            $contactName,
+            '+' . $digits,
+            $note !== '' ? $note : null,
+            $sent['template'],
+            $sent['id'],
+            $sent['ok'] ? 'sent' : 'failed',
+            $sent['ok'] ? null : $sent['error'],
+        ]);
+
+        if (!$sent['ok']) {
+            Response::error((string) $sent['error'], 502);
+        }
+        Response::json(['sent' => true, 'conversation_id' => $sent['id']], 201);
+    }
+
+    /**
+     * Twilio delivers approved templates through its Content API rather than
+     * by name: twilio_intro_content_sid is the HX... id of the approved intro
+     * template, and its body placeholders are keyed by position, so the
+     * contact's name goes in as "1" — the same single body parameter the
+     * ElevenLabs template takes.
+     *
+     * @return array{ok:bool,id:?string,template:string,error:?string}
+     */
+    private static function sendTwilioIntro(string $digits, string $contactName): array
+    {
+        $contentSid = trim((string) Settings::get('twilio_intro_content_sid'));
+        if (!TwilioClient::isConfigured() || TwilioClient::senderDigits() === '') {
+            Response::error('Set the Twilio account SID, auth token, and WhatsApp number in Settings first.', 422);
+        }
+        if ($contentSid === '') {
+            Response::error(
+                'No intro template yet — create one under Settings → WhatsApp & phone → Lisa intro template.',
+                422
+            );
+        }
+        // Meta rejects a send against an unapproved template with an opaque
+        // error, so fail here with the actual reason instead.
+        $status = strtolower((string) Settings::get('twilio_intro_template_status'));
+        if ($status !== 'approved') {
+            Response::error(
+                'The intro template is not approved yet (currently ' . ($status ?: 'pending')
+                . '). Check Settings → WhatsApp & phone → Lisa intro template.',
+                422
+            );
+        }
+
+        $sent = TwilioClient::sendTemplate($digits, $contentSid, ['1' => $contactName]);
+        if (!$sent['ok']) {
+            error_log('Twilio WhatsApp intro template failed: ' . (string) $sent['error']);
+        }
+
+        return [
+            'ok' => $sent['ok'],
+            'id' => $sent['id'],
+            'template' => $contentSid,
+            'error' => $sent['ok']
+                ? null
+                : 'Twilio could not send the template message. ' . (string) $sent['error'],
+        ];
+    }
+
+    /** @return array{ok:bool,id:?string,template:string,error:?string} */
+    private static function sendElevenLabsIntro(string $digits, string $contactName): array
+    {
+        $apiKey = Settings::get('elevenlabs_api_key');
+        $agentId = Settings::get('elevenlabs_whatsapp_agent_id');
+        $phoneNumberId = Settings::get('elevenlabs_whatsapp_phone_number_id');
+        $templateName = Settings::get('elevenlabs_whatsapp_intro_template_name');
+        $templateLang = Settings::get('elevenlabs_whatsapp_intro_template_lang') ?: 'en';
+        if (!$apiKey || !$agentId || !$phoneNumberId || !$templateName) {
+            Response::error(
+                'Set the ElevenLabs API key, WhatsApp agent ID, WhatsApp phone number ID, and intro template name in Settings first.',
+                422
+            );
         }
 
         $payload = json_encode([
@@ -802,28 +890,16 @@ class LiveChatController
         $conversationId = is_array($eleven) ? (string) ($eleven['conversation_id'] ?? '') : '';
         $ok = $raw !== false && $httpCode >= 200 && $httpCode < 300 && $conversationId !== '';
 
-        $pdo = Database::get();
-        $pdo->prepare(
-            "INSERT INTO whatsapp_intros
-             (contact_name, phone_number, note, template_name, conversation_id, status, error_message)
-             VALUES (?, ?, ?, ?, ?, ?, ?)"
-        )->execute([
-            $contactName,
-            '+' . $digits,
-            $note !== '' ? $note : null,
-            $templateName,
-            $conversationId !== '' ? $conversationId : null,
-            $ok ? 'sent' : 'failed',
-            $ok ? null : ($curlError ?: (string) $raw),
-        ]);
-
         if (!$ok) {
             error_log('ElevenLabs WhatsApp outbound-message failed: ' . ($curlError ?: (string) $raw));
             $detail = is_array($eleven) ? (string) ($eleven['detail']['message'] ?? $eleven['message'] ?? '') : '';
-            Response::error(
-                'ElevenLabs could not send the template message.' . ($detail !== '' ? ' ' . $detail : ' Check the template name/language and phone number ID.'),
-                502
-            );
+            return [
+                'ok' => false,
+                'id' => null,
+                'template' => (string) $templateName,
+                'error' => 'ElevenLabs could not send the template message.'
+                    . ($detail !== '' ? ' ' . $detail : ' Check the template name/language and phone number ID.'),
+            ];
         }
 
         // A conversation_id back from this endpoint isn't proof WhatsApp actually
@@ -836,7 +912,12 @@ class LiveChatController
         // single field guessed at in $conversationId.
         error_log("ElevenLabs WhatsApp outbound-message succeeded, raw response: {$raw}");
 
-        Response::json(['sent' => true, 'conversation_id' => $conversationId], 201);
+        return [
+            'ok' => true,
+            'id' => $conversationId,
+            'template' => (string) $templateName,
+            'error' => null,
+        ];
     }
 
     /**

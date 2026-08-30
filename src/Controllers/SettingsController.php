@@ -23,6 +23,7 @@ class SettingsController
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'wati_api_endpoint', 'wati_api_token', 'wati_webhook_secret',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'twilio_webhook_url',
+        'twilio_intro_content_sid', 'twilio_intro_template_status',
         'elevenlabs_webhook_secret', 'elevenlabs_whatsapp_agent_id', 'elevenlabs_postcall_signing_secret',
         'elevenlabs_whatsapp_phone_number_id', 'elevenlabs_whatsapp_intro_template_name', 'elevenlabs_whatsapp_intro_template_lang',
         'elevenlabs_whatsapp_alert_template_name', 'elevenlabs_whatsapp_alert_template_lang', 'elevenlabs_whatsapp_alert_template_params',

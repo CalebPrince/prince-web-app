@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { adminApi, asList } from "@/lib/api";
 import {
   Plus, Search, Star, Trash2, Trash, Telescope, ScanSearch, PenLine,
-  MonitorPlay, Send, Save, ArrowUpRight,
+  MonitorPlay, Send, Save, ArrowUpRight, MessageSquarePlus,
 } from "lucide-react";
 import {
   PageHeader, Card, StatCard, Table, Row, Cell, EmptyRow, Button, IconButton,
@@ -66,6 +66,8 @@ const emptyLeadForm = {
   estimated_value: "0",
   currency: "GHS",
 };
+
+const emptyIntroForm = { contact_name: "", phone_number: "", note: "" };
 
 function fitBand(lead: MarketingLead): FitFilter {
   if (lead.status === "rejected") return "rejected";
@@ -134,6 +136,11 @@ export default function MarketingLeadsClient({
     pitch_subject: "", pitch_body: "", estimated_value: "0", currency: "GHS",
   });
   const [pitchNote, setPitchNote] = useState<{ text: string; ok: boolean } | null>(null);
+
+  const [introOpen, setIntroOpen] = useState(false);
+  const [introForm, setIntroForm] = useState(emptyIntroForm);
+  const [introNote, setIntroNote] = useState<{ text: string; ok: boolean } | null>(null);
+  const [introSending, setIntroSending] = useState(false);
 
   const researchName = leads[0]?.research_agent_name || "Dossier";
   const pitchName = leads[0]?.pitch_agent_name || "Beacon";
@@ -301,6 +308,38 @@ export default function MarketingLeadsClient({
     });
   };
 
+  // For someone who reached out somewhere other than Lisa's WhatsApp number —
+  // a personal number, a YouTube comment. WhatsApp only allows a pre-approved
+  // template as the first business-initiated message, so this is a separate
+  // path from the wa.me handoff below, which needs an already-open thread.
+  const sendIntro = async () => {
+    if (!introForm.contact_name.trim() || !introForm.phone_number.trim()) {
+      setIntroNote({ ok: false, text: "Contact name and WhatsApp number are required." });
+      return;
+    }
+    setIntroSending(true);
+    setIntroNote(null);
+    try {
+      await adminApi.post("/api/v1/admin/whatsapp/send-intro", {
+        contact_name: introForm.contact_name.trim(),
+        phone_number: introForm.phone_number.trim(),
+        note: introForm.note.trim(),
+      });
+      setIntroNote({
+        ok: true,
+        text: `Intro template sent to ${introForm.contact_name.trim()}. Lisa picks up the conversation once they reply.`,
+      });
+      setIntroForm(emptyIntroForm);
+    } catch (err) {
+      setIntroNote({
+        ok: false,
+        text: err instanceof Error ? err.message : "Could not send the intro.",
+      });
+    } finally {
+      setIntroSending(false);
+    }
+  };
+
   const savePitch = async () => {
     if (!pitchLead) return;
     await adminApi.patch(`/api/v1/admin/marketing-leads/${pitchLead.id}`, pitchForm);
@@ -396,6 +435,17 @@ export default function MarketingLeadsClient({
             >
               <Plus className="w-4 h-4" />
               Add lead
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIntroForm(emptyIntroForm);
+                setIntroNote(null);
+                setIntroOpen(true);
+              }}
+            >
+              <MessageSquarePlus className="w-4 h-4" />
+              Send Lisa intro
             </Button>
             <Button
               variant="primary"
@@ -681,6 +731,55 @@ export default function MarketingLeadsClient({
             </Select>
           </Field>
         </div>
+      </Modal>
+
+      {/* Send Lisa intro */}
+      <Modal
+        isOpen={introOpen}
+        onClose={() => setIntroOpen(false)}
+        title="Send Lisa intro"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setIntroOpen(false)}>Close</Button>
+            <Button variant="primary" onClick={sendIntro} disabled={introSending}>
+              <Send className="w-4 h-4" />
+              {introSending ? "Sending…" : "Send intro"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-white/60">
+          For someone who messaged you somewhere other than Lisa&apos;s WhatsApp number.
+          WhatsApp only allows an approved template as the first business-initiated
+          message, so this sends that template — Lisa takes over once they reply.
+        </p>
+        <Field label="Contact name">
+          <Input
+            required
+            value={introForm.contact_name}
+            onChange={(e) => setIntroForm({ ...introForm, contact_name: e.target.value })}
+          />
+        </Field>
+        <Field label="WhatsApp number">
+          <Input
+            required
+            placeholder="+233…"
+            value={introForm.phone_number}
+            onChange={(e) => setIntroForm({ ...introForm, phone_number: e.target.value })}
+          />
+        </Field>
+        <Field label="Note (for your records only)">
+          <Textarea
+            rows={2}
+            value={introForm.note}
+            onChange={(e) => setIntroForm({ ...introForm, note: e.target.value })}
+          />
+        </Field>
+        {introNote && (
+          <p className={`text-sm ${introNote.ok ? "text-emerald-400" : "text-red-400"}`}>
+            {introNote.text}
+          </p>
+        )}
       </Modal>
 
       {/* Discover */}
