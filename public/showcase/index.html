@@ -214,19 +214,43 @@
   }
   .card-cta svg { width: 15px; height: 15px; flex: none; }
 
-  /* ── Social page cards ────────────────────────────────── */
-  .social-card .card-body { padding-top: 22px; }
-  .platform {
+  /* ── Social page cards ─────────────────────── */
+  /* These carry one or two outbound links each, so the card itself is a
+     <div> and the links inside it do the navigating. Cancel the lift the
+     project cards get: nothing here is clickable edge to edge. */
+  .social-card { padding-top: 4px; }
+  .social-card:hover,
+  .social-card:focus-within { transform: none; background: var(--bg-2); }
+  .social-card:focus-within { border-color: rgba(98, 255, 152, 0.45); }
+
+  .brand-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
+  }
+  .brandmark {
+    flex: none;
+    width: 58px;
+    height: 58px;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+  .brandmark img { width: 100%; height: 100%; object-fit: cover; }
+
+  .social-card h3 { margin: 0; }
+  .platform {
+    display: block;
+    margin-top: 5px;
     font-family: var(--mono);
     font-size: 11px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-3);
   }
-  .platform svg { width: 18px; height: 18px; flex: none; color: var(--text-2); }
+
+  .social-card p { margin-top: 14px; }
 
   .handover {
     align-self: flex-start;
@@ -238,22 +262,31 @@
     padding: 3px 11px;
   }
 
-  /* ── Editor note (delete once the real pages are in) ──── */
-  .editor-note {
-    margin-bottom: 28px;
-    padding: 18px 20px;
-    border: 1px dashed rgba(255, 171, 94, 0.55);
-    border-radius: 14px;
-    background: rgba(255, 171, 94, 0.07);
-    color: #ffcf9e;
-    font-size: 14.5px;
+  .social-links {
+    margin-top: auto;
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
   }
-  .editor-note strong { color: #ffab5e; }
-  .editor-note code {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: #ffe2c4;
+  .social-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color 0.2s ease;
   }
+  .social-link:last-child { padding-bottom: 0; }
+  .social-link:hover,
+  .social-link:focus-visible { color: var(--accent); }
+  .social-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  /* First glyph is the platform mark, last is the open-in-new-tab arrow. */
+  .social-link svg:first-of-type { width: 17px; height: 17px; flex: none; }
+  .social-link svg:last-of-type { width: 15px; height: 15px; flex: none; margin-left: auto; }
 
   /* ── What I can do (capabilities) ─────────────────────── */
   .cap-grid {
@@ -398,11 +431,17 @@
 
 <!-- ══════════════════════════════════════════════════════════
      HOW TO EDIT THIS PAGE
-     Every entry below is one plain <a class="card"> block. To add a
-     project or a social page, copy the nearest block and change the
-     href, the title and the description. To remove one, delete the
-     whole block. Nothing here needs a build step — save the file and
-     it is live.
+     Every project in section 01 is one <a class="card"> block, and every
+     social page in section 02 is one <div class="card social-card"> block
+     holding one or two <a class="social-link"> rows — a brand gets two when
+     it runs both a Facebook and an Instagram page. To add an entry, copy
+     the nearest block of the right kind and change the href, the title and
+     the description. To remove one, delete the whole block. Nothing here
+     needs a build step — save the file and it is live.
+
+     Card thumbnails and brand logos live in /uploads/showcase/. The
+     thumbnails are 1440x900 screenshots of the live sites, so re-shoot one
+     at that size if a client redesigns.
 
      Every outbound link carries target="_blank" rel="noopener
      noreferrer", so it opens in a new tab and leaves this page open
@@ -438,135 +477,86 @@
       </p>
     </div>
 
-    <!-- ───────────────────────────────────────────────────────
-         EDITOR NOTE — DELETE THIS BLOCK BEFORE SENDING THE LINK.
-         Seven cards below are waiting on a live address; each one is
-         marked "LIVE URL NEEDED" in a comment directly above it, with
-         the case-study page named for reference. For each of them
-         either paste the client's live URL into href="#", or delete
-         the whole <a class="card"> ... </a> block if that project has
-         no live site any more. The Triple P card already points at a
-         real, reachable address.
-         ─────────────────────────────────────────────────────── -->
-    <div class="editor-note">
-      <strong>Editor note (not for the client):</strong> seven cards below still have
-      <code>href="#"</code> &mdash; drop in the live URL for the ones that are still online
-      and delete the cards for the ones that are not. Then delete this box.
-    </div>
-
     <div class="grid">
 
-      <!-- LIVE URL NEEDED. Case study for reference: https://princecaleb.dev/systems/ledger-command
-           Paste the client's live address into href below; delete this
-           whole <a>...</a> block if the site is no longer live. -->
-      <a class="card" href="#" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/uploads/ledger-command-real.jpg" alt="Ledger Command dashboard" loading="lazy"></div>
-        <div class="card-body">
-          <span class="chip">AI agents</span>
-          <h3>Ledger Command</h3>
-          <p>An AI accounting command centre that reads the books and answers questions about them in plain language.</p>
-          <span class="card-cta">Open the live site
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-          </span>
-        </div>
-      </a>
-
-      <!-- LIVE URL NEEDED. Case study for reference: https://princecaleb.dev/systems/simply-my-care
-           Paste the client's live address into href below; delete this
-           whole <a>...</a> block if the site is no longer live. -->
-      <a class="card" href="#" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/uploads/simplymycare-real.jpg" alt="Simply My Care portal" loading="lazy"></div>
+      <a class="card" href="https://simplymycare.co.uk/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/showcase/simplymycare-site.jpg" alt="Simply My Care home page" loading="lazy" width="1440" height="900"></div>
         <div class="card-body">
           <span class="chip">Websites &amp; apps</span>
           <h3>Simply My Care</h3>
-          <p>A care provider portal that keeps client records, visits and staff scheduling in one place.</p>
+          <p>A UK-wide home care provider: services, supported living, live vacancies and a client portal, under NHS-approved and CQC-aligned branding.</p>
           <span class="card-cta">Open the live site
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
           </span>
         </div>
       </a>
 
-      <!-- LIVE URL NEEDED. Case study for reference: https://princecaleb.dev/systems/benas-hub
-           Paste the client's live address into href below; delete this
-           whole <a>...</a> block if the site is no longer live. -->
-      <a class="card" href="#" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/uploads/benas-hub.jpeg" alt="Benas Hub storefront" loading="lazy"></div>
+      <a class="card" href="https://habitationzcic.co.uk/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/showcase/habitationz-site.jpg" alt="Habitationz CIC home page" loading="lazy" width="1440" height="900"></div>
         <div class="card-body">
           <span class="chip">Websites &amp; apps</span>
-          <h3>Benas Hub</h3>
-          <p>An organic products storefront &mdash; catalogue, cart and checkout built for a small retail brand.</p>
+          <h3>Habitationz CIC</h3>
+          <p>Supported housing across the UK &mdash; services, partner information and a referral form that routes straight to the team.</p>
           <span class="card-cta">Open the live site
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
           </span>
         </div>
       </a>
 
-      <!-- LIVE URL NEEDED. Case study for reference: https://princecaleb.dev/systems/lca-accra-church-website
-           Paste the client's live address into href below; delete this
-           whole <a>...</a> block if the site is no longer live. -->
-      <a class="card" href="#" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/uploads/lca-accra-real.jpg" alt="LCA Accra church platform" loading="lazy"></div>
+      <a class="card" href="https://abyshub.com/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/showcase/abyshub-site.jpg" alt="Abys Hub online store" loading="lazy" width="1440" height="900"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>Abys Hub</h3>
+          <p>A Tupperware and home goods store: 90 products across 11 shelves, with checkout by card, WhatsApp or bulk quote.</p>
+          <span class="card-cta">Open the live site
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://jdlcore.com/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/showcase/jdlcore-site.jpg" alt="JDL Core group site" loading="lazy" width="1440" height="900"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>JDL Core</h3>
+          <p>A group site for three divisions &mdash; inspection services, industry data analytics and an oil &amp; gas academy &mdash; each opening its own destination.</p>
+          <span class="card-cta">Open the live site
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://andsontravelconsult.com/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/showcase/andson-travel-site.jpg" alt="Andson Travel Consult home page" loading="lazy" width="1440" height="900"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>Andson Travel Consult</h3>
+          <p>Travel consultancy and visa preparation: services, FAQs and an online application form that starts the assistance process.</p>
+          <span class="card-cta">Open the live site
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://lca-accra.com/newsite/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/showcase/lca-accra-site.jpg" alt="LCA Accra church website" loading="lazy" width="1440" height="900"></div>
         <div class="card-body">
           <span class="chip">Websites &amp; apps</span>
           <h3>LCA Accra</h3>
-          <p>A church website and management platform: services, media, giving and member records.</p>
+          <p>A church website and management platform: announcements, service times and member accounts with sign-in and registration.</p>
           <span class="card-cta">Open the live site
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
           </span>
         </div>
       </a>
 
-      <!-- LIVE URL NEEDED. Case study for reference: https://princecaleb.dev/systems/church-media-diagnostic-suite
-           Paste the client's live address into href below; delete this
-           whole <a>...</a> block if the site is no longer live. -->
-      <a class="card" href="#" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/uploads/church-media-real.jpg" alt="Church Media Diagnostic Suite" loading="lazy"></div>
-        <div class="card-body">
-          <span class="chip">Websites &amp; apps</span>
-          <h3>Church Media Diagnostic Suite</h3>
-          <p>Live audio diagnostics for media teams &mdash; it listens to the room and shows what is going wrong.</p>
-          <span class="card-cta">Open the live site
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-          </span>
-        </div>
-      </a>
-
-      <!-- LIVE URL NEEDED. Case study for reference: https://princecaleb.dev/systems/church-shape-it
-           Paste the client's live address into href below; delete this
-           whole <a>...</a> block if the site is no longer live. -->
-      <a class="card" href="#" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/uploads/church-shapeit-real.jpg" alt="Church Shape It equaliser" loading="lazy"></div>
-        <div class="card-body">
-          <span class="chip">Websites &amp; apps</span>
-          <h3>Church Shape It</h3>
-          <p>A 10-band parametric EQ in the browser, built so a volunteer can tune a room without a sound engineer.</p>
-          <span class="card-cta">Open the live site
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-          </span>
-        </div>
-      </a>
-
-      <!-- LIVE URL NEEDED. Case study for reference: https://princecaleb.dev/systems/video-watch
-           Paste the client's live address into href below; delete this
-           whole <a>...</a> block if the site is no longer live. -->
-      <a class="card" href="#" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/uploads/videowatch-real.jpg" alt="Video Watch monitoring tool" loading="lazy"></div>
+      <a class="card" href="http://videowatch.duckdns.org/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/showcase/videowatch-site.jpg" alt="Video Watch monitoring tool" loading="lazy" width="1440" height="900"></div>
         <div class="card-body">
           <span class="chip">Automations</span>
           <h3>Video Watch</h3>
-          <p>Video monitoring and scraping that tracks channels automatically and reports what changed.</p>
-          <span class="card-cta">Open the live site
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-          </span>
-        </div>
-      </a>
-
-      <a class="card" href="/triplepmed-demo/" target="_blank" rel="noopener noreferrer">
-        <div class="thumb"><img src="/triplepmed-demo/assets/images/hero-consultation-web.jpg" alt="Triple P Medical Solutions website" loading="lazy"></div>
-        <div class="card-body">
-          <span class="chip">Websites &amp; apps</span>
-          <h3>Triple P Medical Solutions</h3>
-          <p>A full clinic website &mdash; services, telemedicine, home clinic and online appointment booking.</p>
+          <p>Automated video monitoring &mdash; it scans favourite channels and sites across platforms and notifies you the moment new content drops.</p>
           <span class="card-cta">Open the live site
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
           </span>
@@ -591,57 +581,143 @@
       </p>
     </div>
 
-    <!-- ───────────────────────────────────────────────────────
-         EDITOR NOTE — DELETE THIS BLOCK BEFORE SENDING THE LINK.
-         Replace the two example cards below with the real pages:
-         change the href to the Facebook/Instagram page URL, the
-         <h3> to the page name, and the <p> to what you did for it.
-         Copy a whole <a class="card social-card"> block for each
-         extra page; delete any you don't need. Swap the FACEBOOK
-         icon block for the INSTAGRAM one where it applies — both
-         are marked in the comments below.
-         ─────────────────────────────────────────────────────── -->
-    <div class="editor-note">
-      <strong>Editor note (not for the client):</strong> the two cards below are
-      placeholders. Put the real page names and links in, then delete this box and the
-      comment above it. The link to change is the <code>href="#"</code> on each card.
-    </div>
-
     <div class="grid">
 
-      <!-- FACEBOOK card -->
-      <a class="card social-card" href="#" target="_blank" rel="noopener noreferrer">
+      <div class="card social-card">
         <div class="card-body">
-          <span class="platform">
-            <!-- Facebook glyph -->
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
-            Facebook page
-          </span>
-          <h3>Client page name</h3>
-          <p>What you set up and ran for this page &mdash; branding, content calendar, community replies, paid promotion.</p>
+          <div class="brand-row">
+            <span class="brandmark"><img src="/uploads/showcase/logo-asanka.jpg" alt="Asanka Avenue Restaurant logo" loading="lazy" width="120" height="120"></span>
+            <div>
+              <h3>Asanka Avenue Restaurant</h3>
+              <span class="platform">Restaurant &middot; Accra</span>
+            </div>
+          </div>
+          <p>A local and continental restaurant on the Hatso&ndash;Agbogba road. Page, grid and posting rhythm built from nothing, then run day to day across both channels.</p>
           <span class="handover">Set up &amp; managed &middot; now run by the client</span>
-          <span class="card-cta">Open the page
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-          </span>
+          <div class="social-links">
+            <a class="social-link" href="https://web.facebook.com/asankaavenuerestaurant/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+              Facebook
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+            <a class="social-link" href="https://www.instagram.com/asanka_avenue/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16ZM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.12 1.38C1.35 2.68.93 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.72 1.46 1.38 2.12.66.66 1.33 1.08 2.12 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.3 1.46-.72 2.12-1.38.66-.66 1.08-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.3-.79-.72-1.46-1.38-2.12C21.32 1.35 20.65.93 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0Zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32Zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm7.85-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0Z"/></svg>
+              Instagram
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+          </div>
         </div>
-      </a>
+      </div>
 
-      <!-- INSTAGRAM card -->
-      <a class="card social-card" href="#" target="_blank" rel="noopener noreferrer">
+      <div class="card social-card">
         <div class="card-body">
-          <span class="platform">
-            <!-- Instagram glyph -->
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16ZM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.12 1.38C1.35 2.68.93 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.72 1.46 1.38 2.12.66.66 1.33 1.08 2.12 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.3 1.46-.72 2.12-1.38.66-.66 1.08-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.3-.79-.72-1.46-1.38-2.12C21.32 1.35 20.65.93 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0Zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32Zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm7.85-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0Z"/></svg>
-            Instagram page
-          </span>
-          <h3>Client page name</h3>
-          <p>What you set up and ran for this page &mdash; grid design, reels, captions, hashtags, growth.</p>
+          <div class="brand-row">
+            <span class="brandmark"><img src="/uploads/showcase/logo-arigato.jpg" alt="Arigato Catering logo" loading="lazy" width="120" height="120"></span>
+            <div>
+              <h3>Arigato Catering</h3>
+              <span class="platform">Catering &middot; East Legon, Accra</span>
+            </div>
+          </div>
+          <p>Premium catering &mdash; hibachi chef service, teppanyaki buffets, chef&rsquo;s table and BBQ cookouts. Branding, food photography and enquiry handling on both platforms.</p>
           <span class="handover">Set up &amp; managed &middot; now run by the client</span>
-          <span class="card-cta">Open the page
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-          </span>
+          <div class="social-links">
+            <a class="social-link" href="https://web.facebook.com/arigatocatering/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+              Facebook
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+            <a class="social-link" href="https://www.instagram.com/arigatocatering_gh/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16ZM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.12 1.38C1.35 2.68.93 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.72 1.46 1.38 2.12.66.66 1.33 1.08 2.12 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.3 1.46-.72 2.12-1.38.66-.66 1.08-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.3-.79-.72-1.46-1.38-2.12C21.32 1.35 20.65.93 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0Zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32Zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm7.85-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0Z"/></svg>
+              Instagram
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+          </div>
         </div>
-      </a>
+      </div>
+
+      <div class="card social-card">
+        <div class="card-body">
+          <div class="brand-row">
+            <span class="brandmark"><img src="/uploads/showcase/logo-tof.jpg" alt="Think Of Fashion logo" loading="lazy" width="120" height="120"></span>
+            <div>
+              <h3>Think Of Fashion (TOF)</h3>
+              <span class="platform">Clothing brand &middot; Online shop</span>
+            </div>
+          </div>
+          <p>An online fashion shop selling accessories, footwear and perfumes on delivery only. Page set up, styled and grown past a two-thousand following.</p>
+          <span class="handover">Set up &amp; managed &middot; now run by the client</span>
+          <div class="social-links">
+            <a class="social-link" href="https://web.facebook.com/tofonlinegh/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+              Facebook
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card social-card">
+        <div class="card-body">
+          <div class="brand-row">
+            <span class="brandmark"><img src="/uploads/showcase/logo-trainora.jpg" alt="Trainora Consulting Firm logo" loading="lazy" width="120" height="120"></span>
+            <div>
+              <h3>Trainora Consulting Firm</h3>
+              <span class="platform">IT company &middot; Accra</span>
+            </div>
+          </div>
+          <p>Managed IT, training and support for growing businesses. A business page built to carry service posts, class announcements and direct enquiries.</p>
+          <span class="handover">Set up &amp; managed &middot; now run by the client</span>
+          <div class="social-links">
+            <a class="social-link" href="https://web.facebook.com/trainoraconsult" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+              Facebook
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card social-card">
+        <div class="card-body">
+          <div class="brand-row">
+            <span class="brandmark"><img src="/uploads/showcase/logo-eremat.jpg" alt="Eremat Home Essentials logo" loading="lazy" width="120" height="120"></span>
+            <div>
+              <h3>Eremat Home Essentials</h3>
+              <span class="platform">Product &amp; service &middot; Accra</span>
+            </div>
+          </div>
+          <p>Kitchen appliances and home essentials from unique brands. A product-led page with a posting calendar and order enquiries handled in the inbox.</p>
+          <span class="handover">Set up &amp; managed &middot; now run by the client</span>
+          <div class="social-links">
+            <a class="social-link" href="https://web.facebook.com/erematessentials/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+              Facebook
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card social-card">
+        <div class="card-body">
+          <div class="brand-row">
+            <span class="brandmark"><img src="/uploads/showcase/logo-andrelisa.jpg" alt="Andrelisa Enterprise logo" loading="lazy" width="120" height="120"></span>
+            <div>
+              <h3>Andrelisa Enterprise</h3>
+              <span class="platform">Shopping &amp; retail &middot; Accra</span>
+            </div>
+          </div>
+          <p>A retail enterprise selling modest, fashionable pieces. Page identity, product posts and reels set up and run before handover.</p>
+          <span class="handover">Set up &amp; managed &middot; now run by the client</span>
+          <div class="social-links">
+            <a class="social-link" href="https://web.facebook.com/andrelisaenterprise/" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+              Facebook
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
