@@ -17,6 +17,7 @@ use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\TwilioClient;
 use App\Support\WatiClient;
 use App\Support\WhapiClient;
 
@@ -410,6 +411,104 @@ class LiveChatController
             $processed++;
         }
         Response::json(['ok' => true, 'processed' => $processed]);
+    }
+
+    /**
+     * Twilio inbound-message webhook ("When a message comes in" on the
+     * WhatsApp sender). Like Wati and Whapi — and unlike ElevenLabs below —
+     * Twilio runs no LLM of its own here, so this endpoint normalizes the
+     * message, runs it through Lisa's real brain, and sends the reply back out
+     * over Twilio's REST API.
+     *
+     * Two shape differences from the handlers above: the body arrives
+     * form-encoded rather than as JSON, and authentication is Twilio's request
+     * signature over the full URL rather than a shared secret header (see
+     * TwilioClient::verifySignature()). Twilio expects TwiML back, so the
+     * response is an empty <Response/> — the actual reply goes out over REST,
+     * which keeps the send path identical to every other provider.
+     */
+    public static function twilioWebhook(): void
+    {
+        set_time_limit(135);
+        if (Settings::get('whatsapp_provider') !== 'twilio') {
+            self::respondEmptyTwiml();
+        }
+        $signedUrl = TwilioClient::webhookUrl();
+        if (!TwilioClient::verifySignature($signedUrl, $_POST, (string) ($_SERVER['HTTP_X_TWILIO_SIGNATURE'] ?? ''))) {
+            // The URL is the usual culprit when Twilio's own request is
+            // rejected, so log the one that was hashed — it goes straight into
+            // twilio_webhook_url if it doesn't match the Console.
+            error_log(sprintf(
+                'Twilio webhook rejected: signature header present=%s, hashed url=%s',
+                isset($_SERVER['HTTP_X_TWILIO_SIGNATURE']) ? 'yes' : 'no',
+                $signedUrl
+            ));
+            Response::error('Invalid request signature.', 403);
+        }
+
+        $pdo = Database::get();
+        // Twilio posts one message per request, so wrap it to reuse the same
+        // per-message loop shape as the handlers above.
+        foreach ([$_POST] as $event) {
+            $messageId = mb_substr(trim((string) ($event['MessageSid'] ?? '')), 0, 255);
+            $from = trim((string) ($event['From'] ?? ''));
+            $body = trim((string) ($event['Body'] ?? ''));
+            // A media-only message carries no Body, so the empty-body check
+            // here is also what drops images, audio and documents.
+            if ($messageId === '' || $from === '' || $body === '' || mb_strlen($body) > 1000) continue;
+
+            $insert = $pdo->prepare('INSERT OR IGNORE INTO twilio_webhook_events (message_id) VALUES (?)');
+            $insert->execute([$messageId]);
+            if ($insert->rowCount() === 0) continue;
+
+            $digits = self::normalizePhoneDigits($from);
+            if ($digits === '') continue;
+            $token = 'whatsapp:+' . $digits;
+            RateLimitMiddleware::enforce('whatsapp_' . $digits, 30);
+
+            $session = self::findOrCreateSessionByExactToken($pdo, $token);
+            $transcript = json_decode($session['transcript_json'], true) ?: [];
+            $profileName = trim((string) ($event['ProfileName'] ?? ''));
+            if (empty($session['client_phone'])) {
+                $pdo->prepare('UPDATE chat_sessions SET client_phone = ?, client_name = ? WHERE id = ?')
+                    ->execute(['+' . $digits, $profileName !== '' ? $profileName : null, $session['id']]);
+            }
+
+            $transcript = self::rollingTranscript($transcript);
+            $isOwner = self::isOwnerWhatsAppNumber($token);
+            $transcript[] = ['role' => 'user', 'text' => $body];
+            $projects = self::projectCatalog($pdo);
+            $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
+                'name' => $profileName,
+                'phone' => '+' . $digits,
+            ]);
+            // Reply from whichever sender the message came in on, so an
+            // inbound conversation is answered correctly even before
+            // twilio_whatsapp_number has been filled in.
+            $sent = TwilioClient::sendText($digits, $result['reply'], (string) ($event['To'] ?? ''));
+            if (!$sent['ok']) {
+                $pdo->prepare('DELETE FROM twilio_webhook_events WHERE message_id = ?')->execute([$messageId]);
+                error_log('Twilio Lisa reply failed: ' . (string) $sent['error']);
+                continue;
+            }
+            $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+            $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
+            self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
+            self::markChatUnread($pdo, (int) $session['id']);
+        }
+        self::respondEmptyTwiml();
+    }
+
+    /**
+     * Twilio flags a non-XML webhook response as error 12300 in its debugger
+     * even on a 200, so acknowledge with empty TwiML instead of JSON.
+     */
+    private static function respondEmptyTwiml(): never
+    {
+        header('Content-Type: text/xml; charset=UTF-8');
+        http_response_code(200);
+        echo '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
+        exit;
     }
 
     /**

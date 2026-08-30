@@ -22,6 +22,7 @@ class SettingsController
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'pagespeed_api_key', 'dataforseo_login', 'dataforseo_password', 'slack_webhook_url',
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'wati_api_endpoint', 'wati_api_token', 'wati_webhook_secret',
+        'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'twilio_webhook_url',
         'elevenlabs_webhook_secret', 'elevenlabs_whatsapp_agent_id', 'elevenlabs_postcall_signing_secret',
         'elevenlabs_whatsapp_phone_number_id', 'elevenlabs_whatsapp_intro_template_name', 'elevenlabs_whatsapp_intro_template_lang',
         'elevenlabs_whatsapp_alert_template_name', 'elevenlabs_whatsapp_alert_template_lang', 'elevenlabs_whatsapp_alert_template_params',
@@ -245,8 +246,8 @@ class SettingsController
             if ($key === 'chat_persona' && mb_strlen($value) > LisaInstructions::MAX_LENGTH) {
                 Response::error('Lisa custom instructions must be 4,000 characters or fewer.', 422);
             }
-            if ($key === 'whatsapp_provider' && !in_array($value, ['whapi', 'elevenlabs', 'wati'], true)) {
-                Response::error('Choose Whapi, ElevenLabs, or Wati as the WhatsApp provider.', 422);
+            if ($key === 'whatsapp_provider' && !in_array($value, ['whapi', 'elevenlabs', 'wati', 'twilio'], true)) {
+                Response::error('Choose Whapi, ElevenLabs, Wati, or Twilio as the WhatsApp provider.', 422);
             }
             if ($key === 'whapi_webhook_secret' && $value !== '' && mb_strlen($value) < 24) {
                 Response::error('The Whapi webhook secret must be at least 24 characters.', 422);
