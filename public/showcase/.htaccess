@@ -1,0 +1,12 @@
+# Root .htaccess sets `DirectoryIndex disabled` so "/" reaches the Next app,
+# which also switches the index lookup off for every folder under it. This
+# turns it back on for this one, so /showcase/ serves index.html — same
+# pattern as public/triplepmed-demo/.htaccess.
+DirectoryIndex index.html
+Options -Indexes
+
+# A share link that is edited between sends: never let a client's browser
+# hold a stale copy.
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache, must-revalidate"
+</IfModule>
