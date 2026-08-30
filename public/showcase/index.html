@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selected Work | Prince Caleb</title>
+<meta name="description" content="Websites, apps and social media pages built and managed by Prince Caleb — a single link to share with clients.">
+<!-- A private share link, not a public page: keep it out of search results,
+     same as public/triplepmed-demo/. -->
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* Brand tokens copied from web/src/app/globals.css (dark theme) so this
+     page matches princecaleb.dev without depending on the Next build. */
+  :root {
+    --bg: #0b0c0e;
+    --bg-2: #121418;
+    --bg-3: #1b1f26;
+    --text: #f1f3f5;
+    --text-2: #d7dbe0;
+    --text-3: #8b919b;
+    --accent: #62ff98;
+    --accent-soft: rgba(98, 255, 152, 0.1);
+    --on-accent: #04140a;
+    --line: rgba(255, 255, 255, 0.09);
+    --sans: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+
+  img { max-width: 100%; display: block; }
+
+  .wrap {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .label {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  /* ── Hero ─────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -18rem;
+    left: 50%;
+    width: 46rem;
+    height: 46rem;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.11;
+    filter: blur(150px);
+    pointer-events: none;
+  }
+  .hero .wrap { position: relative; padding-top: 72px; padding-bottom: 64px; }
+
+  .wordmark {
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .wordmark span { color: var(--accent); }
+
+  h1 {
+    margin: 40px 0 0;
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+  }
+
+  .lede {
+    margin: 24px 0 0;
+    max-width: 46rem;
+    font-size: clamp(1rem, 1.6vw, 1.18rem);
+    color: var(--text-2);
+  }
+
+  .newtab-note {
+    margin: 28px 0 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-2);
+    font-size: 13.5px;
+    color: var(--text-3);
+  }
+  .newtab-note svg { width: 14px; height: 14px; color: var(--accent); }
+
+  /* ── Sections ─────────────────────────────────────────── */
+  section.block { padding: 76px 0 8px; }
+  section.block:last-of-type { padding-bottom: 76px; }
+
+  .block-head { max-width: 44rem; margin-bottom: 40px; }
+  .block-head h2 {
+    margin: 18px 0 0;
+    font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .block-head p { margin: 14px 0 0; color: var(--text-2); }
+
+  .grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  /* ── Cards ────────────────────────────────────────────── */
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+  }
+  .card:hover,
+  .card:focus-visible {
+    transform: translateY(-4px);
+    border-color: rgba(98, 255, 152, 0.45);
+    background: var(--bg-3);
+  }
+  .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .thumb {
+    aspect-ratio: 16 / 10;
+    background: var(--bg-3);
+    overflow: hidden;
+  }
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .card:hover .thumb img { transform: scale(1.04); }
+
+  .card-body { padding: 20px 22px 22px; display: flex; flex-direction: column; flex: 1; }
+
+  .chip {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 4px 10px;
+  }
+
+  .card h3 {
+    margin: 14px 0 0;
+    font-size: 1.16rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .card p { margin: 8px 0 0; font-size: 14.5px; color: var(--text-3); }
+
+  .card-cta {
+    /* auto, not a fixed gap: keeps the call to action on one line across a
+       row of cards whose descriptions run to different lengths. */
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .card-cta svg { width: 15px; height: 15px; flex: none; }
+
+  /* ── Social page cards ────────────────────────────────── */
+  .social-card .card-body { padding-top: 22px; }
+  .platform {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .platform svg { width: 18px; height: 18px; flex: none; color: var(--text-2); }
+
+  .handover {
+    align-self: flex-start;
+    margin-top: 14px;
+    font-size: 12.5px;
+    color: var(--text-3);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 11px;
+  }
+
+  /* ── Editor note (delete once the real pages are in) ──── */
+  .editor-note {
+    margin-bottom: 28px;
+    padding: 18px 20px;
+    border: 1px dashed rgba(255, 171, 94, 0.55);
+    border-radius: 14px;
+    background: rgba(255, 171, 94, 0.07);
+    color: #ffcf9e;
+    font-size: 14.5px;
+  }
+  .editor-note strong { color: #ffab5e; }
+  .editor-note code {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: #ffe2c4;
+  }
+
+  /* ── Footer ───────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 56px 0 72px;
+  }
+  .contact-row {
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 18px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--text-2);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+  .pill:hover,
+  .pill:focus-visible {
+    color: var(--accent);
+    border-color: rgba(98, 255, 152, 0.45);
+    transform: translateY(-2px);
+  }
+  .pill.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+  }
+  .pill.primary:hover { color: var(--on-accent); }
+  .pill svg { width: 16px; height: 16px; flex: none; }
+
+  .colophon {
+    margin-top: 44px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+    .card:hover { transform: none; }
+    .card:hover .thumb img { transform: none; }
+  }
+
+  @media (max-width: 640px) {
+    .hero .wrap { padding-top: 52px; padding-bottom: 48px; }
+    section.block { padding-top: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     HOW TO EDIT THIS PAGE
+     Every entry below is one plain <a class="card"> block. To add a
+     project or a social page, copy the nearest block and change the
+     href, the title and the description. To remove one, delete the
+     whole block. Nothing here needs a build step — save the file and
+     it is live.
+
+     Every outbound link carries target="_blank" rel="noopener
+     noreferrer", so it opens in a new tab and leaves this page open
+     behind it. Keep those two attributes on anything you add.
+     ══════════════════════════════════════════════════════════ -->
+
+<header class="hero">
+  <div class="wrap">
+    <a class="wordmark" href="https://princecaleb.dev" target="_blank" rel="noopener noreferrer">Prince<span>.</span>Caleb</a>
+    <h1>Selected work.</h1>
+    <p class="lede">
+      Websites and applications I have designed and built, and the Facebook and Instagram
+      pages I set up and ran before handing them over to their owners. Every link opens
+      the real thing &mdash; nothing here is a mockup.
+    </p>
+    <p class="newtab-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Every link opens in a new tab
+    </p>
+  </div>
+</header>
+
+<!-- ══════════ WEBSITES & APPLICATIONS ══════════ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="label">01 &mdash; Websites &amp; applications</p>
+      <h2>Projects I have built.</h2>
+      <p>
+        Each card opens the project&rsquo;s write-up &mdash; what it does, who it was for,
+        and the stack behind it &mdash; with a link through to the running site.
+      </p>
+    </div>
+
+    <div class="grid">
+
+      <a class="card" href="https://princecaleb.dev/systems/ledger-command" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/ledger-command-real.jpg" alt="Ledger Command dashboard" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">AI agents</span>
+          <h3>Ledger Command</h3>
+          <p>An AI accounting command centre that reads the books and answers questions about them in plain language.</p>
+          <span class="card-cta">View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://princecaleb.dev/systems/simply-my-care" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/simplymycare-real.jpg" alt="Simply My Care portal" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>Simply My Care</h3>
+          <p>A care provider portal that keeps client records, visits and staff scheduling in one place.</p>
+          <span class="card-cta">View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://princecaleb.dev/systems/benas-hub" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/benas-hub.jpeg" alt="Benas Hub storefront" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>Benas Hub</h3>
+          <p>An organic products storefront &mdash; catalogue, cart and checkout built for a small retail brand.</p>
+          <span class="card-cta">View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://princecaleb.dev/systems/lca-accra-church-website" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/lca-accra-real.jpg" alt="LCA Accra church platform" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>LCA Accra</h3>
+          <p>A church website and management platform: services, media, giving and member records.</p>
+          <span class="card-cta">View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://princecaleb.dev/systems/church-media-diagnostic-suite" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/church-media-real.jpg" alt="Church Media Diagnostic Suite" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>Church Media Diagnostic Suite</h3>
+          <p>Live audio diagnostics for media teams &mdash; it listens to the room and shows what is going wrong.</p>
+          <span class="card-cta">View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://princecaleb.dev/systems/church-shape-it" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/church-shapeit-real.jpg" alt="Church Shape It equaliser" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>Church Shape It</h3>
+          <p>A 10-band parametric EQ in the browser, built so a volunteer can tune a room without a sound engineer.</p>
+          <span class="card-cta">View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://princecaleb.dev/systems/video-watch" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/videowatch-real.jpg" alt="Video Watch monitoring tool" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Automations</span>
+          <h3>Video Watch</h3>
+          <p>Video monitoring and scraping that tracks channels automatically and reports what changed.</p>
+          <span class="card-cta">View project
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="/triplepmed-demo/" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/triplepmed-demo/assets/images/hero-consultation-web.jpg" alt="Triple P Medical Solutions website" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Websites &amp; apps</span>
+          <h3>Triple P Medical Solutions</h3>
+          <p>A full clinic website &mdash; services, telemedicine, home clinic and online appointment booking.</p>
+          <span class="card-cta">Open the live site
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a class="card" href="https://github.com/CalebPrince/opskeep-skills" target="_blank" rel="noopener noreferrer">
+        <div class="thumb"><img src="/uploads/opskeep-real.png" alt="Opskeep agent skills" loading="lazy"></div>
+        <div class="card-body">
+          <span class="chip">Open source</span>
+          <h3>Opskeep</h3>
+          <p>An open-source skills pack that installs day-to-day business workflows into an AI coding agent.</p>
+          <span class="card-cta">Open on GitHub
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SOCIAL MEDIA PAGES ══════════ -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <p class="label">02 &mdash; Social media pages</p>
+      <h2>Pages I set up and managed.</h2>
+      <p>
+        I created these Facebook and Instagram pages from scratch, built out the branding
+        and posting, and ran them day to day. Each one has since been handed over to its
+        owner&rsquo;s own team, so what you see today is their work continuing on the
+        foundation I set up.
+      </p>
+    </div>
+
+    <!-- ───────────────────────────────────────────────────────
+         EDITOR NOTE — DELETE THIS BLOCK BEFORE SENDING THE LINK.
+         Replace the two example cards below with the real pages:
+         change the href to the Facebook/Instagram page URL, the
+         <h3> to the page name, and the <p> to what you did for it.
+         Copy a whole <a class="card social-card"> block for each
+         extra page; delete any you don't need. Swap the FACEBOOK
+         icon block for the INSTAGRAM one where it applies — both
+         are marked in the comments below.
+         ─────────────────────────────────────────────────────── -->
+    <div class="editor-note">
+      <strong>Editor note (not for the client):</strong> the two cards below are
+      placeholders. Put the real page names and links in, then delete this box and the
+      comment above it. The link to change is the <code>href="#"</code> on each card.
+    </div>
+
+    <div class="grid">
+
+      <!-- FACEBOOK card -->
+      <a class="card social-card" href="#" target="_blank" rel="noopener noreferrer">
+        <div class="card-body">
+          <span class="platform">
+            <!-- Facebook glyph -->
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"/></svg>
+            Facebook page
+          </span>
+          <h3>Client page name</h3>
+          <p>What you set up and ran for this page &mdash; branding, content calendar, community replies, paid promotion.</p>
+          <span class="handover">Set up &amp; managed &middot; now run by the client</span>
+          <span class="card-cta">Open the page
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- INSTAGRAM card -->
+      <a class="card social-card" href="#" target="_blank" rel="noopener noreferrer">
+        <div class="card-body">
+          <span class="platform">
+            <!-- Instagram glyph -->
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16ZM12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.3-1.46.72-2.12 1.38C1.35 2.68.93 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.27.26 2.15.56 2.91.3.79.72 1.46 1.38 2.12.66.66 1.33 1.08 2.12 1.38.76.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.06 2.15-.26 2.91-.56.79-.3 1.46-.72 2.12-1.38.66-.66 1.08-1.33 1.38-2.12.3-.76.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.27-.26-2.15-.56-2.91-.3-.79-.72-1.46-1.38-2.12C21.32 1.35 20.65.93 19.86.63c-.76-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0Zm0 5.84a6.16 6.16 0 1 0 0 12.32 6.16 6.16 0 0 0 0-12.32Zm0 10.16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm7.85-10.4a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0Z"/></svg>
+            Instagram page
+          </span>
+          <h3>Client page name</h3>
+          <p>What you set up and ran for this page &mdash; grid design, reels, captions, hashtags, growth.</p>
+          <span class="handover">Set up &amp; managed &middot; now run by the client</span>
+          <span class="card-cta">Open the page
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+          </span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ CONTACT ══════════ -->
+<footer>
+  <div class="wrap">
+    <p class="label">Get in touch</p>
+    <h2 style="margin:16px 0 0;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-0.02em;">
+      Want something like this built?
+    </h2>
+    <div class="contact-row">
+      <a class="pill primary" href="https://wa.me/233535801359" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.65-2.05-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.01-1.04 2.47s1.06 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.41-.07-.13-.27-.2-.57-.35ZM12.05 21.8h-.02a9.8 9.8 0 0 1-4.99-1.37l-.36-.21-3.71.97.99-3.62-.23-.37a9.78 9.78 0 0 1-1.5-5.22c0-5.4 4.4-9.8 9.82-9.8a9.75 9.75 0 0 1 6.94 2.88 9.72 9.72 0 0 1 2.87 6.93c0 5.4-4.4 9.8-9.81 9.8ZM20.5 3.5A11.72 11.72 0 0 0 12.05 0C5.58 0 .31 5.26.3 11.73c0 2.07.54 4.09 1.57 5.87L.2 24l6.55-1.72a11.7 11.7 0 0 0 5.3 1.35h.01c6.47 0 11.74-5.26 11.75-11.73a11.66 11.66 0 0 0-3.44-8.3Z"/></svg>
+        WhatsApp
+      </a>
+      <a class="pill" href="mailto:hello@princecaleb.dev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+        hello@princecaleb.dev
+      </a>
+      <a class="pill" href="tel:+233208049962">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h4l2 5-2.5 2.5a12 12 0 0 0 6 6L18 14l5 2v4c0 1-1 2-2 2C12 22 2 12 2 5c0-1 1-2 2-2z"/></svg>
+        +233 20 804 9962
+      </a>
+      <a class="pill" href="https://princecaleb.dev" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20a15.3 15.3 0 0 1 0-20z"/></svg>
+        princecaleb.dev
+      </a>
+      <a class="pill" href="https://www.linkedin.com/in/caleb-akakpo-b7123a89/" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1-.02 5.01A2.5 2.5 0 0 1 4.98 3.5ZM2.4 21.5h5.16V9.75H2.4V21.5Zm7.72-11.75V21.5h5.16v-6.5c0-1.72.33-3.38 2.46-3.38 2.1 0 2.13 1.96 2.13 3.49v6.39h5.16v-7.42c0-4.47-.97-7.05-5.19-7.05-2.03 0-3.39 1.11-3.95 2.17h-.07V9.75h-4.7Z"/></svg>
+        LinkedIn
+      </a>
+      <a class="pill" href="https://github.com/CalebPrince" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.79 23.4c.6.1.82-.26.82-.58v-2.2c-3.34.72-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.83.57A12 12 0 0 0 12 .3Z"/></svg>
+        GitHub
+      </a>
+      <a class="pill" href="https://x.com/princecay77" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.59l5.25 6.93 6.06-6.93Zm-1.29 19.5h2.04L6.49 3.24H4.3l13.31 17.41Z"/></svg>
+        X / Twitter
+      </a>
+    </div>
+    <p class="colophon">Prince Caleb &middot; Accra, Ghana &middot; princecaleb.dev</p>
+  </div>
+</footer>
+
+</body>
+</html>
