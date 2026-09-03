@@ -814,25 +814,43 @@ class AiAgentEngine
     {
         $tools = [];
         foreach ($toolDeclarations as $decl) {
-            $params = $decl['parameters'];
-            $params['type'] = strtolower($params['type']);
-            if (isset($params['properties']) && is_array($params['properties'])) {
-                foreach ($params['properties'] as &$prop) {
-                    if (isset($prop['type'])) {
-                        $prop['type'] = strtolower($prop['type']);
-                    }
-                }
-                unset($prop);
-            }
             $tools[] = [
                 'type' => 'function',
                 'function' => [
                     'name' => $decl['name'],
                     'description' => $decl['description'],
-                    'parameters' => $params,
+                    'parameters' => self::normalizeSchemaForOpenAi($decl['parameters']),
                 ],
             ];
         }
         return $tools;
+    }
+
+    /**
+     * Gemini's function declarations use uppercase JSON-Schema types
+     * ("OBJECT", "STRING", "NUMBER", "ARRAY"); OpenAI-style tools want them
+     * lowercase, recursively — including nested `properties` and array
+     * `items` schemas, which the earlier one-level pass missed once a tool
+     * (create_invoice) started declaring a list of objects.
+     *
+     * @param array<string,mixed> $schema
+     * @return array<string,mixed>
+     */
+    private static function normalizeSchemaForOpenAi(array $schema): array
+    {
+        if (isset($schema['type']) && is_string($schema['type'])) {
+            $schema['type'] = strtolower($schema['type']);
+        }
+        if (isset($schema['properties']) && is_array($schema['properties'])) {
+            foreach ($schema['properties'] as $key => $prop) {
+                if (is_array($prop)) {
+                    $schema['properties'][$key] = self::normalizeSchemaForOpenAi($prop);
+                }
+            }
+        }
+        if (isset($schema['items']) && is_array($schema['items'])) {
+            $schema['items'] = self::normalizeSchemaForOpenAi($schema['items']);
+        }
+        return $schema;
     }
 }

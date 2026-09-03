@@ -175,7 +175,7 @@ class LiveChatController
      * fallback and returns the reply plus which path served it. $transcript
      * must already include the new user turn as its last entry.
      *
-     * @return array{reply: string, mode: string, provider: ?string, ready: bool}
+     * @return array{reply: string, mode: string, provider: ?string, ready: bool, attachment: ?array{url:string,caption:string}}
      */
     public static function generateReply(
         string $message,
@@ -194,12 +194,16 @@ class LiveChatController
         // that would re-attempt — and likely reject — the same slot.
         $confirmedBooking = null;
         $confirmedReschedule = null;
+        // A created invoice's PDF, ready for the channel to attach to its
+        // reply (currently wired for the Twilio WhatsApp path — the owner's
+        // channel). {url, caption} or null.
+        $invoiceDelivery = null;
         // If a provider executes a side-effecting tool and then fails while
         // writing its reply, the engine retries the turn with the next
         // provider. Reuse the first result so that retry cannot insert the
         // same inquiry once per configured AI provider.
         $sideEffectResults = [];
-        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$confirmedReschedule, &$sideEffectResults, $transcript, $isOwner, $handoffContext) {
+        $toolExecutor = function (string $name, array $args) use ($pdo, &$confirmedBooking, &$confirmedReschedule, &$invoiceDelivery, &$sideEffectResults, $transcript, $isOwner, $handoffContext) {
             if (isset($sideEffectResults[$name])) {
                 return $sideEffectResults[$name];
             }
@@ -212,7 +216,23 @@ class LiveChatController
                 }
             }
             $result = self::runTool($name, $args, $pdo, $isOwner);
-            if (in_array($name, ['log_inquiry', 'signal_handoff', 'reschedule_appointment'], true)) {
+            if ($name === 'create_invoice' && ($result['ok'] ?? false)) {
+                if (!empty($result['pdf_url'])) {
+                    $invoiceDelivery = [
+                        'url' => 'https://princecaleb.dev' . $result['pdf_url'],
+                        'caption' => trim(sprintf(
+                            'Invoice %s — %s %s',
+                            (string) ($result['invoice_number'] ?? ''),
+                            (string) ($result['currency'] ?? ''),
+                            (string) ($result['total'] ?? '')
+                        )),
+                    ];
+                }
+                // The absolute server path (and the now-redundant relative
+                // URL) must not go back to the model as tool output.
+                unset($result['pdf_path'], $result['pdf_url']);
+            }
+            if (in_array($name, ['log_inquiry', 'signal_handoff', 'reschedule_appointment', 'create_invoice'], true)) {
                 $sideEffectResults[$name] = $result;
             }
             if ($name === 'book_appointment' && ($result['success'] ?? false)) {
@@ -224,13 +244,17 @@ class LiveChatController
             }
             return $result;
         };
-        $onExhaustedFallback = function () use (&$confirmedBooking, &$confirmedReschedule, $transcript) {
+        $onExhaustedFallback = function () use (&$confirmedBooking, &$confirmedReschedule, &$invoiceDelivery, $transcript) {
             if ($confirmedReschedule !== null) {
                 return ['reply' => self::rescheduleConfirmationText($confirmedReschedule, $transcript), 'ready' => false];
             }
-            return $confirmedBooking !== null
-                ? ['reply' => self::bookingConfirmationText($confirmedBooking, $transcript), 'ready' => false]
-                : null;
+            if ($confirmedBooking !== null) {
+                return ['reply' => self::bookingConfirmationText($confirmedBooking, $transcript), 'ready' => false];
+            }
+            if ($invoiceDelivery !== null) {
+                return ['reply' => "Done — I've created that invoice and attached the PDF here for you to forward to the client.", 'ready' => false];
+            }
+            return null;
         };
         $onGroqFailedGeneration = fn (string $failedGeneration) => self::recoverGroqFailedToolGeneration($failedGeneration, $toolExecutor);
 
@@ -261,6 +285,10 @@ class LiveChatController
                 ? self::ownerKeywordFallback($message)
                 : self::keywordFallback($message, $projects));
         }
+
+        // Channels that can attach media (Twilio WhatsApp) read this; the
+        // rest ignore it. Null unless a tool this turn produced a file.
+        $result['attachment'] = $invoiceDelivery;
 
         return $result;
     }
@@ -492,6 +520,23 @@ class LiveChatController
                 continue;
             }
             $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+
+            // A tool this turn (create_invoice) produced a file — send it as a
+            // follow-up WhatsApp document. The text reply already landed, so a
+            // media failure is logged, not fatal.
+            if (!empty($result['attachment']['url'])) {
+                $media = TwilioClient::sendMedia(
+                    $digits,
+                    (string) $result['attachment']['url'],
+                    (string) ($result['attachment']['caption'] ?? ''),
+                    (string) ($event['To'] ?? '')
+                );
+                if ($media['ok']) {
+                    $transcript[] = ['role' => 'assistant', 'text' => '[attached ' . ($result['attachment']['caption'] ?: 'a document') . ']'];
+                } else {
+                    error_log('Twilio Lisa invoice PDF send failed: ' . (string) $media['error']);
+                }
+            }
             $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
             self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
             self::markChatUnread($pdo, (int) $session['id']);
@@ -669,6 +714,10 @@ class LiveChatController
         $pdo = Database::get();
         $isOwner = $token !== '' && self::isOwnerWhatsAppNumber($token);
         $result = self::runTool($name, $args, $pdo, $isOwner);
+        // This is a voice channel — it can't deliver the PDF. Drop the file
+        // paths (never expose the server filesystem path to the model) and
+        // leave invoice_url for the agent to read out instead.
+        unset($result['pdf_path'], $result['pdf_url']);
         Response::json($result);
     }
 
@@ -1756,8 +1805,8 @@ class LiveChatController
                 . "email, or phone number, never pitch a quote or gather project requirements as if qualifying "
                 . "a lead, and never call log_inquiry treating this conversation as a new inquiry. Just talk "
                 . "with him naturally and helpfully, using your tools where genuinely useful (e.g. "
-                . "check_availability, get_site_info, search_content) exactly as he asks, same as any other "
-                . "capability — this overrides every lead-capture/contact-first rule above.\n"
+                . "check_availability, list_bookings, get_site_info, search_content) exactly as he asks, same as "
+                . "any other capability — this overrides every lead-capture/contact-first rule above.\n"
                 . "Prince frequently tests you by describing a hypothetical customer scenario, adopting a "
                 . "different name or business, pasting an ad, or asking how you'd respond to a prospect saying "
                 . "X — treat ALL of that as him testing your responses, never as a real inquiry, no matter how "
@@ -1779,7 +1828,17 @@ class LiveChatController
                 . "records. The tool returns the captured conversation for owner review when speech exists. If "
                 . "conversation_captured is false, say plainly that the call completed but no speech was captured; "
                 . "do not imply that inaccessible conversation details exist. Never tell Prince that you cannot "
-                . "make calls or cannot view call records.";
+                . "make calls or cannot view call records.\n"
+                . "INVOICING: when Prince asks you to invoice or bill a client, use create_invoice. First collect "
+                . "and read back, in one message, every detail you need: the client's name, the client's email, "
+                . "each line item with its quantity and unit price, the currency (assume GHS only if he does not "
+                . "say), and a due date if he wants one. Convert any relative date (\"next Friday\") to an actual "
+                . "YYYY-MM-DD before calling the tool. Unit prices are in normal currency units — 4000 means "
+                . "4,000.00, never cents. Only call create_invoice after he confirms. It saves the invoice as a "
+                . "draft and generates a branded PDF; on this WhatsApp channel the PDF is attached to your reply "
+                . "automatically, so tell Prince it's attached and he can forward it straight to the client. No "
+                . "payment link or email goes out — he sends it himself. If the tool returns errors, tell him "
+                . "exactly what's missing and do not claim the invoice was created.";
         } else {
             $system .= "\n\nCALL PRIVACY: you can explain that Lisa supports human-approved customer-service "
                 . "calls, but never reveal whether a specific person or business was called, any number, call "
@@ -1945,6 +2004,54 @@ class LiveChatController
                     ],
                 ],
             ];
+            $tools[] = [
+                'name' => 'list_bookings',
+                'description' => 'Owner-only: list Prince\'s upcoming confirmed appointments — client name, date, '
+                    . 'time, topic. Use whenever he asks what\'s booked, whether there are any bookings today or '
+                    . 'this week, or who is coming in. Pass `date` for one specific day, or `days` to change how '
+                    . 'far ahead to look (default 14). Present dates as DD-MM-YYYY; if the list is empty, say '
+                    . 'plainly that nothing is booked in that window.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'date' => ['type' => 'STRING', 'description' => 'Optional single day, YYYY-MM-DD. Resolve "today"/"tomorrow" to an actual date first.'],
+                        'days' => ['type' => 'NUMBER', 'description' => 'Optional number of days ahead from today to include (1-90, default 14). Ignored when `date` is set.'],
+                    ],
+                ],
+            ];
+            $tools[] = [
+                'name' => 'create_invoice',
+                'description' => 'Owner-only: create a real invoice for one of Prince\'s clients and get back a '
+                    . 'branded PDF. Only call this after reading the full breakdown back to Prince — client name, '
+                    . 'client email, every line item with quantity and unit price, currency, and due date if any — '
+                    . 'and getting an explicit yes. The invoice is saved as a draft (no payment link, no email is '
+                    . 'sent); Prince forwards the PDF to the client himself. Amounts are the real price per unit in '
+                    . 'major currency units (e.g. 4000 means 4000.00), never in cents.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'client_name' => ['type' => 'STRING', 'description' => 'The client or company being billed.'],
+                        'client_email' => ['type' => 'STRING', 'description' => 'The client\'s email address. Required — ask Prince for it if he has not given it.'],
+                        'currency' => ['type' => 'STRING', 'description' => 'ISO currency code, e.g. "GHS", "USD", "EUR". Defaults to GHS if Prince does not specify.'],
+                        'due_date' => ['type' => 'STRING', 'description' => 'Optional payment due date, YYYY-MM-DD. Resolve relative dates ("next Friday") to an actual date first.'],
+                        'notes' => ['type' => 'STRING', 'description' => 'Optional note shown on the invoice, e.g. payment terms or bank details.'],
+                        'items' => [
+                            'type' => 'ARRAY',
+                            'description' => 'One entry per line item. At least one is required.',
+                            'items' => [
+                                'type' => 'OBJECT',
+                                'properties' => [
+                                    'description' => ['type' => 'STRING', 'description' => 'What the line item is for.'],
+                                    'quantity' => ['type' => 'NUMBER', 'description' => 'Quantity, defaults to 1.'],
+                                    'unit_price' => ['type' => 'NUMBER', 'description' => 'Price per unit in major currency units (e.g. 4000 for GHS 4,000.00).'],
+                                ],
+                                'required' => ['description', 'unit_price'],
+                            ],
+                        ],
+                    ],
+                    'required' => ['client_name', 'client_email', 'items'],
+                ],
+            ];
         }
         return $tools;
     }
@@ -1987,6 +2094,15 @@ class LiveChatController
                 'signal_handoff' => self::toolSignalHandoff($args, $pdo),
                 'get_recent_calls' => $isOwner
                     ? self::toolRecentCalls($pdo, (string) ($args['business_name'] ?? ''))
+                    : ['error' => 'Owner verification is required.'],
+                'list_bookings' => $isOwner
+                    ? AppointmentController::listUpcomingBookings(
+                        (int) ($args['days'] ?? 14),
+                        trim((string) ($args['date'] ?? '')) !== '' ? (string) $args['date'] : null
+                    )
+                    : ['error' => 'Owner verification is required.'],
+                'create_invoice' => $isOwner
+                    ? InvoiceController::createFromAgent($args)
                     : ['error' => 'Owner verification is required.'],
                 default => ['error' => 'Unknown tool.'],
             };

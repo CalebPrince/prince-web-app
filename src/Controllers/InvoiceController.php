@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\EmailTemplate;
+use App\Support\InvoicePdf;
 use App\Support\Mailer;
 use App\Support\Response;
 
@@ -92,6 +93,69 @@ class InvoiceController
         ]);
 
         Response::json(self::findWithItems('id', $invoiceId), 201);
+    }
+
+    /**
+     * Create an invoice from an AI-agent tool call (Lisa on the owner's
+     * WhatsApp number) rather than an authenticated admin request. Same
+     * validation, numbering and item handling as store(); no HTTP response.
+     *
+     * The invoice is left as a `draft` with no payment link or client email —
+     * the owner reviews the PDF and forwards it himself. The branded PDF is
+     * rendered here so the caller can attach it to the WhatsApp reply.
+     *
+     * @param array<string,mixed> $args {client_name, client_email, currency?, due_date?, notes?, items:[{description, quantity, unit_price}]}
+     * @return array{ok:bool, errors?:list<string>, invoice_number?:string, client_name?:string, client_email?:string, currency?:string, total?:string, due_date?:string, invoice_url?:string, pdf_url?:?string, pdf_path?:?string}
+     */
+    public static function createFromAgent(array $args): array
+    {
+        [$fields, $items, $errors] = self::validate($args);
+        if ($errors) {
+            return ['ok' => false, 'errors' => array_values($errors)];
+        }
+
+        $pdo = Database::get();
+        $invoiceNumber = self::nextInvoiceNumber($pdo);
+        $token = bin2hex(random_bytes(12));
+
+        $pdo->prepare(
+            'INSERT INTO invoices (invoice_number, token, client_id, client_name, client_email, currency, issue_date, due_date, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $invoiceNumber,
+            $token,
+            $fields['client_id'],
+            $fields['client_name'],
+            $fields['client_email'],
+            $fields['currency'],
+            $fields['issue_date'],
+            $fields['due_date'],
+            $fields['notes'],
+        ]);
+        $invoiceId = (int) $pdo->lastInsertId();
+        self::replaceItems($pdo, $invoiceId, $items);
+
+        ActivityLog::log(['email' => 'Lisa (WhatsApp)'], 'created via Lisa', 'invoice', (string) $invoiceId, $invoiceNumber, [
+            'client' => $fields['client_name'],
+            'channel' => 'whatsapp',
+        ]);
+
+        $invoice = self::findWithItems('id', $invoiceId) ?? [];
+        $total = (int) ($invoice['total'] ?? 0);
+        $pdf = InvoicePdf::render($invoice);
+
+        return [
+            'ok' => true,
+            'invoice_number' => $invoiceNumber,
+            'client_name' => $fields['client_name'],
+            'client_email' => $fields['client_email'],
+            'currency' => $fields['currency'],
+            'total' => number_format($total / 100, 2),
+            'due_date' => $fields['due_date'] ?? '',
+            'invoice_url' => 'https://princecaleb.dev/invoice.html?token=' . $token,
+            'pdf_url' => $pdf['url'] ?? null,
+            'pdf_path' => $pdf['path'] ?? null,
+        ];
     }
 
     /** PUT /api/v1/admin/invoices/{id} — same body as store; drafts and sent invoices only */

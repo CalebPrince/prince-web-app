@@ -61,6 +61,37 @@ final class TwilioClient
     }
 
     /**
+     * Free-form reply carrying one media attachment (a document, image, etc.)
+     * within WhatsApp's 24h customer-service window. $mediaUrl must be a
+     * publicly reachable HTTPS URL — Twilio fetches it server-side and
+     * forwards it to WhatsApp, so it cannot be behind auth. WhatsApp allows a
+     * single media item per message; $caption rides along as the body text.
+     *
+     * @return array{ok:bool,id:?string,error:?string}
+     */
+    public static function sendMedia(string $recipient, string $mediaUrl, string $caption = '', ?string $from = null): array
+    {
+        $to = preg_replace('/\D+/', '', $recipient) ?? '';
+        $sender = $from !== null && $from !== '' ? (preg_replace('/\D+/', '', $from) ?? '') : self::senderDigits();
+        $mediaUrl = trim($mediaUrl);
+        if (!preg_match('/^[1-9]\d{7,14}$/', $to) || $sender === '' || !preg_match('#^https://#i', $mediaUrl)) {
+            return ['ok' => false, 'id' => null, 'error' => 'Twilio sender, recipient, or media URL is missing or not HTTPS.'];
+        }
+
+        $params = [
+            'To' => 'whatsapp:+' . $to,
+            'From' => 'whatsapp:+' . $sender,
+            'MediaUrl' => $mediaUrl,
+        ];
+        $caption = trim($caption);
+        if ($caption !== '') {
+            $params['Body'] = mb_substr($caption, 0, 1600);
+        }
+
+        return self::createMessage($params);
+    }
+
+    /**
      * Business-initiated first contact, outside any open session — WhatsApp
      * requires a pre-approved template for this (free text is rejected).
      * Twilio delivers templates through the Content API: $contentSid is the

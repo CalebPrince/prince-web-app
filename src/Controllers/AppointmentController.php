@@ -175,6 +175,58 @@ class AppointmentController
         ];
     }
 
+    /**
+     * Owner-only read for Lisa's `list_bookings` tool: upcoming non-cancelled
+     * appointments ordered by date then time, optionally narrowed to a single
+     * day. "Upcoming" is measured from today in the booking timezone, so a
+     * booking earlier today still shows until the day rolls over.
+     *
+     * @return array{timezone:string,count:int,from:string,to:?string,bookings:array<int,array<string,mixed>>}
+     */
+    public static function listUpcomingBookings(int $days = 14, ?string $date = null): array
+    {
+        $cfg = self::config();
+        $tz = $cfg['timezone'];
+        try {
+            $zone = new \DateTimeZone($tz);
+        } catch (\Exception) {
+            $zone = new \DateTimeZone('UTC');
+            $tz = 'UTC';
+        }
+        $today = (new \DateTime('now', $zone))->format('Y-m-d');
+        $cols = 'client_name, client_email, client_phone, appointment_date, appointment_time, '
+            . 'duration_minutes, topic, status';
+
+        $pdo = Database::get();
+        if ($date !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $stmt = $pdo->prepare(
+                "SELECT $cols FROM appointments
+                 WHERE appointment_date = ? AND status != 'cancelled'
+                 ORDER BY appointment_time"
+            );
+            $stmt->execute([$date]);
+            $to = $date;
+        } else {
+            $days = max(1, min(90, $days));
+            $to = (new \DateTime($today, $zone))->modify('+' . $days . ' days')->format('Y-m-d');
+            $stmt = $pdo->prepare(
+                "SELECT $cols FROM appointments
+                 WHERE appointment_date >= ? AND appointment_date <= ? AND status != 'cancelled'
+                 ORDER BY appointment_date, appointment_time"
+            );
+            $stmt->execute([$today, $to]);
+        }
+
+        $bookings = $stmt->fetchAll() ?: [];
+        return [
+            'timezone' => $tz,
+            'count' => count($bookings),
+            'from' => $date ?? $today,
+            'to' => $to,
+            'bookings' => $bookings,
+        ];
+    }
+
     /** POST /api/v1/appointments/book — public, honeypot + rate-limited */
     public static function book(): void
     {
