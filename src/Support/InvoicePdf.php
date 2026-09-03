@@ -144,13 +144,16 @@ class InvoicePdf
         }
         $pdf->SetY($top);
         foreach ($meta as [$label, $value]) {
+            // Label and value both right-aligned and butted together against
+            // the right margin so the pair reads as one unit rather than a
+            // label stranded on the left of the column.
             $pdf->SetX(114);
             $pdf->SetFont('Helvetica', '', 9);
             self::color($pdf, self::MUTED, 'text');
-            $pdf->Cell(34, 5.5, self::tx($label), 0, 0, 'L');
+            $pdf->Cell(52, 5.5, self::tx($label) . '  ', 0, 0, 'R');
             $pdf->SetFont('Helvetica', 'B', 9);
             self::color($pdf, self::INK, 'text');
-            $pdf->Cell(46, 5.5, self::tx($value), 0, 1, 'R');
+            $pdf->Cell(28, 5.5, self::tx($value), 0, 1, 'R');
         }
 
         $pdf->SetY(max($leftBottom, $pdf->GetY()) + 6);

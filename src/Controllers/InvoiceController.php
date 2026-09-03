@@ -114,6 +114,14 @@ class InvoiceController
             return ['ok' => false, 'errors' => array_values($errors)];
         }
 
+        // Lisa's spoken/typed line items arrive in whatever case the owner
+        // used ("website design"); title-case them for the invoice while
+        // leaving short acronyms (SEO, CMS, VAT) alone.
+        foreach ($items as &$item) {
+            $item['description'] = self::titleCaseLineItem($item['description']);
+        }
+        unset($item);
+
         $pdo = Database::get();
         $invoiceNumber = self::nextInvoiceNumber($pdo);
         $token = bin2hex(random_bytes(12));
@@ -436,6 +444,26 @@ class InvoiceController
             $items,
             array_values(array_unique($errors)),
         ];
+    }
+
+    /**
+     * "website design" -> "Website Design", "SEO audit & setup" -> "SEO Audit
+     * & Setup". Upper-cases the first letter of every word without touching
+     * the rest, so acronyms the owner already typed in caps survive. Word
+     * starts are letters not preceded by another letter or digit, so hyphens
+     * and slashes also start a word ("e-commerce" -> "E-Commerce").
+     */
+    private static function titleCaseLineItem(string $s): string
+    {
+        $s = trim($s);
+        if ($s === '') {
+            return $s;
+        }
+        return preg_replace_callback(
+            '/(?<![\p{L}\p{N}])\p{L}/u',
+            static fn (array $m): string => mb_strtoupper($m[0]),
+            $s
+        ) ?? $s;
     }
 
     private static function replaceItems(\PDO $pdo, int $invoiceId, array $items): void
