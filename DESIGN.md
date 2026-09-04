@@ -39,7 +39,7 @@ This renders San Francisco on Apple devices and the native UI face elsewhere wit
 - Section spacing: fluid from `4rem` on phones to `8rem` on wide screens.
 - Base radius: `12px`; compact controls: `10px`; pill shapes only when semantically useful.
 - Prefer hairline borders and material separation to heavy shadows.
-- Page, card, and navigation surfaces are opaque. Transparency is reserved for functional overlays such as modal scrims.
+- Page and card surfaces are opaque. The header is transparent at the top of a page, becomes solid after scrolling, and returns to transparent when the visitor reaches the top again. Other transparency is reserved for functional overlays such as modal scrims.
 
 ## Controls
 

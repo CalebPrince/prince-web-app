@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { FaqAccordion } from "@/components/FaqAccordion";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ImpactGrid } from "@/components/ImpactGrid";
+import { GoogleRatingStrip } from "@/components/GoogleRatingStrip";
 
 
 const PROCESS = [
@@ -257,6 +258,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <GoogleRatingStrip />
 
       {/* ── IMPACT ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-y border-hairline bg-bg-2/50 py-20 md:py-28">
