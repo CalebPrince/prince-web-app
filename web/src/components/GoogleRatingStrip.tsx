@@ -32,7 +32,12 @@ export function GoogleRatingStrip({
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
               <span className="flex items-center gap-1 text-accent" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
                 {Array.from({ length: 5 }, (_, index) => (
-                  <Star key={index} className="size-5 fill-current sm:size-6" strokeWidth={1.4} aria-hidden="true" />
+                  <Star
+                    key={index}
+                    className={cn("size-5 sm:size-6", index < Math.round(rating) && "fill-current")}
+                    strokeWidth={1.4}
+                    aria-hidden="true"
+                  />
                 ))}
               </span>
               <span className="tabular-nums text-sm font-medium text-muted sm:text-base">

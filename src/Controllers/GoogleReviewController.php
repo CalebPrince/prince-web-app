@@ -45,14 +45,15 @@ class GoogleReviewController
         }
 
         $place = json_decode((string) $body, true);
-        if (!is_array($place) || !isset($place['rating'], $place['userRatingCount'])) {
-            Response::error('Google returned incomplete rating data.', 502);
+        if (!is_array($place)) {
+            Response::error('Google returned invalid place data.', 502);
         }
 
         Response::json([
             'configured' => true,
-            'rating' => (float) $place['rating'],
-            'reviewCount' => (int) $place['userRatingCount'],
+            // Google omits both fields for a valid place that has no reviews yet.
+            'rating' => isset($place['rating']) ? (float) $place['rating'] : 0.0,
+            'reviewCount' => isset($place['userRatingCount']) ? (int) $place['userRatingCount'] : 0,
             'googleMapsUri' => isset($place['googleMapsUri']) ? (string) $place['googleMapsUri'] : null,
         ]);
     }
