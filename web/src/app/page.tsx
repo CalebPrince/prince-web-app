@@ -187,12 +187,18 @@ export default async function Home() {
       decimals: statDecimals(content?.stat_3_value, 1),
     },
   ];
-  const googleRating = liveGoogleRating?.configured && liveGoogleRating.rating != null
-    ? liveGoogleRating.rating
-    : statValue(content?.stat_4_value, 4.8);
-  const googleReviewCount = liveGoogleRating?.configured && liveGoogleRating.reviewCount != null
-    ? liveGoogleRating.reviewCount
-    : statValue(content?.google_review_count, 1724);
+  const useLiveGoogleRating = liveGoogleRating?.configured
+    && liveGoogleRating.rating != null
+    && liveGoogleRating.reviewCount != null
+    && liveGoogleRating.reviewCount >= 5;
+  const adminGoogleRating = statValue(content?.stat_4_value, 4.8);
+  const adminGoogleReviewCount = statValue(content?.google_review_count, 1724);
+  const googleRating = useLiveGoogleRating
+    ? (liveGoogleRating?.rating ?? adminGoogleRating)
+    : adminGoogleRating;
+  const googleReviewCount = useLiveGoogleRating
+    ? (liveGoogleRating?.reviewCount ?? adminGoogleReviewCount)
+    : adminGoogleReviewCount;
   const googleReviewUrl = content?.google_review_url || "https://g.page/r/CfBZ-YWdgM_UEBI/review";
   const quarterlyIntake = resolveQuarterlyIntake(content);
   const faqCount = parseInt(content?.faq_count || "0");
