@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 
@@ -265,10 +266,7 @@ export default function MarketingBrain() {
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Talk through your workflow
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Talk through your workflow</IntakeCta>
               <Link href="/lisa-ai-assistant" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 See Lisa in action
               </Link>

@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TiltCard } from "@/components/TiltCard";
 import { ProjectMasonry } from "@/components/ProjectMasonry";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { getSystems, categoriesOf, type SystemView } from "@/lib/systems";
 
@@ -166,10 +167,7 @@ export default function Systems() {
               <span className="text-accent">the next system.</span>
             </h2>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Book a Call{" "}
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Book a Call</IntakeCta>
               <Link href="/services" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 Explore services
               </Link>

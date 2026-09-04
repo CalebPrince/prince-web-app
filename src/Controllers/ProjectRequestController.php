@@ -10,6 +10,7 @@ use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
 use App\Support\Response;
+use App\Support\Settings;
 use App\Support\Validator;
 
 /**
@@ -37,6 +38,20 @@ class ProjectRequestController
         // Honeypot: silently pretend success so bots don't learn their submission was rejected.
         if (!empty($data['website'])) {
             Response::json(['status' => 'received'], 201);
+        }
+
+        // Quarterly intake gate. The /request page already shows the closed
+        // panel instead of the form when this is set, so a POST getting here
+        // means a stale client or a direct call — reject it rather than take
+        // on a request for a quarter that is full. Must stay in lockstep with
+        // resolveQuarterlyIntake() on the web side (exact string "closed").
+        if (strtolower(trim((string) Settings::get('quarterly_project_status'))) === 'closed') {
+            $nextOpen = trim((string) Settings::get('quarterly_next_open_date'));
+            Response::json(['errors' => [
+                'Project intake for this quarter is closed'
+                . ($nextOpen !== '' ? ', and reopens ' . $nextOpen . '.' : '.')
+                . ' Reach out through the contact page or WhatsApp to register interest for the next intake.',
+            ]], 422);
         }
 
         $errors = Validator::validateProjectRequest($data);

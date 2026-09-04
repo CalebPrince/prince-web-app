@@ -4,6 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { TiltCard } from "@/components/TiltCard";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
 
@@ -194,16 +195,13 @@ export default async function Pricing() {
                   ))}
                 </ul>
 
-                <Link
-                  href="/book"
-                  className={cn(
-                    buttonVariants({ variant: t.featured ? "primary" : "secondary", size: "lg" }),
-                    "group mt-8 w-full",
-                  )}
+                <IntakeCta
+                  kind="booking"
+                  openVariant={t.featured ? "primary" : "secondary"}
+                  className="mt-8 w-full"
                 >
                   Get a quote
-                  <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </Link>
+                </IntakeCta>
               </TiltCard>
             </Reveal>
           ))}
@@ -337,10 +335,7 @@ export default async function Pricing() {
               properly &mdash; no vague ranges.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Get a quote
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Get a quote</IntakeCta>
               <Link href="/contact" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 Send a message
               </Link>

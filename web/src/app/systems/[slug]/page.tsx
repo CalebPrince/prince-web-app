@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ExternalLink } from "lucide-react";
 import { FaGithub } from "react-icons/fa6";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { ProjectLiveDemo } from "@/components/ProjectLiveDemo";
 import { StackIcon } from "@/components/StackIcon";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { getSystem, getSystems, type SystemView } from "@/lib/systems";
 
@@ -277,10 +278,7 @@ export default async function SystemDetail({ params }: PageProps<"/systems/[slug
               <span className="text-accent">built for you?</span>
             </h2>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Book a Call
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Book a Call</IntakeCta>
               <Link href="/services" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 Explore services
               </Link>

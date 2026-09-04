@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -206,10 +206,7 @@ export default function AiAdoptionLadderPage() {
               the smallest useful step up the ladder, not a jump to Level 4 on day one.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Talk through your system
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Talk through your system</IntakeCta>
               <Link href="/ai-safety" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 See the safety approach
               </Link>

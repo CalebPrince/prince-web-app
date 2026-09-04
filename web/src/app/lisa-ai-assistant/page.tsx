@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ArrowRight,
   CalendarCheck,
   UserPlus,
   AlertTriangle,
@@ -21,6 +20,7 @@ import type { LucideIcon } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
 import { LisaVideoAgent } from "@/components/LisaVideoAgent";
@@ -230,10 +230,7 @@ export default async function Lisa() {
               ))}
             </Reveal>
             <Reveal delay={280} className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Plan your Lisa workflow
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Plan your Lisa workflow</IntakeCta>
               <a href="#pricing" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 See pricing
               </a>
@@ -445,12 +442,15 @@ export default async function Lisa() {
                   ))}
                 </ul>
 
-                <Link
-                  href="/book"
-                  className={cn(buttonVariants({ variant: t.featured ? "primary" : "secondary" }), "mt-8 w-full")}
+                <IntakeCta
+                  kind="booking"
+                  size="default"
+                  openVariant={t.featured ? "primary" : "secondary"}
+                  arrow={false}
+                  className="mt-8 w-full"
                 >
                   Get started
-                </Link>
+                </IntakeCta>
               </Reveal>
             ))}
 
@@ -473,9 +473,15 @@ export default async function Lisa() {
                 ))}
               </ul>
 
-              <Link href="/book" className={cn(buttonVariants({ variant: "secondary" }), "mt-8 w-full")}>
+              <IntakeCta
+                kind="booking"
+                size="default"
+                openVariant="secondary"
+                arrow={false}
+                className="mt-8 w-full"
+              >
                 {customTier.cta}
-              </Link>
+              </IntakeCta>
             </Reveal>
           </div>
 
@@ -508,10 +514,7 @@ export default async function Lisa() {
               today. We’ll map the smallest useful version first.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Plan your Lisa workflow
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Plan your Lisa workflow</IntakeCta>
               <Link href="/contact" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 Send a message
               </Link>

@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { IntakeCta } from "@/components/IntakeCta";
 
 // Ported from public/js/clinic-roi.js's core math. The site-wide currency
 // switcher (window.SiteCurrency) isn't part of this app, so this stays
@@ -114,12 +112,14 @@ export function ClinicRoiCalculator() {
           Illustrative estimate based entirely on the values you entered. It does not predict actual
           performance.
         </small>
-        <Link
-          href="/book?utm_source=clinic_roi&utm_medium=niche_landing&utm_campaign=clinic_voice_agent"
-          className={cn(buttonVariants({ size: "lg" }), "justify-self-start")}
+        <IntakeCta
+          kind="booking"
+          openHref="/book?utm_source=clinic_roi&utm_medium=niche_landing&utm_campaign=clinic_voice_agent"
+          arrow={false}
+          className="justify-self-start"
         >
           Review one call flow
-        </Link>
+        </IntakeCta>
       </aside>
     </div>
   );

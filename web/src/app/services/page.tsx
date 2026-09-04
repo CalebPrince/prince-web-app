@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight, Check } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { SERVICES } from "@/lib/services";
 
@@ -164,10 +165,7 @@ export default function Services() {
               obligation.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }))}>
-                Book a Call{" "}
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Book a Call</IntakeCta>
               <Link
                 href="/#work"
                 className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}

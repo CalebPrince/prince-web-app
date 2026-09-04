@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { api, type BuilderOsAgent } from "@/lib/api";
 
@@ -399,10 +400,7 @@ export default function BuilderOS() {
               that proves the result.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Map my workflow
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Map my workflow</IntakeCta>
               <Link href="/" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 Return home
               </Link>

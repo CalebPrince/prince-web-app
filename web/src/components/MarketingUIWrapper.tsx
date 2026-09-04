@@ -8,6 +8,7 @@ import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 import { CustomCursor } from "@/components/CustomCursor";
 import { PageTransition } from "@/components/PageTransition";
 import { ScrollWords } from "@/components/ScrollWords";
+import { QuarterlyIntakeProvider } from "@/components/QuarterlyIntakeProvider";
 
 export function MarketingUIWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,7 +19,7 @@ export function MarketingUIWrapper({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <>
+    <QuarterlyIntakeProvider>
       <CustomCursor />
       <PageTransition />
       <ScrollWords />
@@ -27,6 +28,6 @@ export function MarketingUIWrapper({ children }: { children: React.ReactNode }) 
       <SiteFooter />
       <WhatsAppFloatButton />
       <ChatWidget />
-    </>
+    </QuarterlyIntakeProvider>
   );
 }

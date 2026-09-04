@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
+import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { getArchiveEntries, getArchiveEntry } from "@/lib/archive";
 
@@ -118,10 +119,7 @@ export default async function ArticleDetail({ params }: PageProps<"/archive/[slu
               <span className="text-accent">writing about?</span>
             </h2>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Book a Call
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <IntakeCta kind="booking">Book a Call</IntakeCta>
               <Link href="/archive" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
                 Browse the archive
               </Link>

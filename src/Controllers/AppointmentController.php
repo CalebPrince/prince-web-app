@@ -42,6 +42,28 @@ class AppointmentController
         ];
     }
 
+    /**
+     * Quarterly project-intake gate. When the current quarter's intake is
+     * closed, new discovery calls are refused on every channel — the public
+     * /book page, Live Chat, WhatsApp, and the voice agent all route through
+     * createBooking(). Reschedules of existing bookings are deliberately not
+     * gated (rescheduleBooking does not call createBooking). Kept in lockstep
+     * with the web side's resolveQuarterlyIntake(): the trigger is the status
+     * being exactly the string "closed".
+     */
+    private static function intakeClosed(): bool
+    {
+        return strtolower(trim((string) Settings::get('quarterly_project_status'))) === 'closed';
+    }
+
+    private static function intakeClosedMessage(): string
+    {
+        $nextOpen = trim((string) Settings::get('quarterly_next_open_date'));
+        return 'Project intake for this quarter is full, so new calls are paused'
+            . ($nextOpen !== '' ? ' until ' . $nextOpen . '.' : ' until the next quarter.')
+            . ' Point the visitor to the contact page or WhatsApp so they can register interest for the next intake.';
+    }
+
     /** @return array<int,string> "HH:MM" slots for the given date, before removing booked ones */
     private static function possibleSlots(string $date, array $cfg): array
     {
@@ -258,6 +280,9 @@ class AppointmentController
         $cfg = self::config();
         if (!$cfg['enabled']) {
             return ['success' => false, 'error' => 'Booking is not available right now.'];
+        }
+        if (self::intakeClosed()) {
+            return ['success' => false, 'error' => self::intakeClosedMessage()];
         }
 
         $name = trim((string) ($data['name'] ?? ''));
