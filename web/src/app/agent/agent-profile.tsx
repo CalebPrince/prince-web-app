@@ -266,7 +266,7 @@ export function AgentProfile() {
               <span className="label text-accent">
                 {agent.key} / configured specialist
               </span>
-              <h1 className="mt-4 text-[clamp(2.4rem,6vw,5rem)] font-extrabold leading-[0.96] tracking-[-0.03em]">
+              <h1 className="page-hero-title mt-4">
                 {agent.name}
               </h1>
               <p className="mt-4 max-w-xl text-lg text-text-2">{agent.role}</p>

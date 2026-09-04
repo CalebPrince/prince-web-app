@@ -71,7 +71,7 @@ export default function AiSafetyPage() {
             <SectionLabel>AI trust &amp; safety</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-8 max-w-[16ch] text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-8 max-w-[16ch]">
               The <span className="text-accent">agent</span> should know when to stop.
             </h1>
           </Reveal>

@@ -25,7 +25,7 @@ export default function NotFound() {
           </div>
         </Reveal>
         <Reveal delay={80}>
-          <h1 className="mx-auto mt-8 max-w-2xl text-[clamp(2.4rem,6.5vw,5.5rem)] font-extrabold leading-[0.96] tracking-[-0.03em]">
+          <h1 className="page-hero-title mx-auto mt-8 max-w-2xl">
             This page went missing.
           </h1>
         </Reveal>

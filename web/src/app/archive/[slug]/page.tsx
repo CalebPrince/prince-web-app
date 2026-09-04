@@ -58,7 +58,7 @@ export default async function ArticleDetail({ params }: PageProps<"/archive/[slu
             )}
           </Reveal>
           <Reveal delay={140}>
-            <h1 className="mt-5 text-[clamp(2.2rem,5.5vw,4rem)] font-extrabold leading-[1.02] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-5">
               {article.title}
             </h1>
           </Reveal>

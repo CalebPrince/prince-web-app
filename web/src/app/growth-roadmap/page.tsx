@@ -82,7 +82,7 @@ export default function GrowthRoadmap() {
             <SectionLabel>Free Growth Roadmap</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-8 max-w-4xl text-[clamp(2.4rem,6.5vw,5.5rem)] font-extrabold leading-[0.96] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-8 max-w-4xl">
               Launch isn&rsquo;t the finish line. It&rsquo;s <span className="text-accent">day one</span>.
             </h1>
           </Reveal>

@@ -225,7 +225,7 @@ export default async function Home() {
               {hero.eyebrow}
             </p>
             <h1
-              className="rise text-[clamp(2.2rem,6vw,5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]"
+              className="page-hero-title rise"
               style={{ animationDelay: "0.2s" }}
             >
               {renderHeroTitle(hero.title)}

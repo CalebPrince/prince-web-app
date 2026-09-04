@@ -142,7 +142,7 @@ export default function MarketingBrain() {
             <SectionLabel>Free marketing brain</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-8 max-w-3xl text-[clamp(2.4rem,6.5vw,5.5rem)] font-extrabold leading-[0.96] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-8 max-w-3xl">
               Meet <span className="text-accent">{assistantName}</span>.
             </h1>
           </Reveal>

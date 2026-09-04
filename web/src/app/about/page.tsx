@@ -113,7 +113,7 @@ export default function About() {
               <SectionLabel index="00">About</SectionLabel>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="mt-8 text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+              <h1 className="page-hero-title mt-8">
                 Hi, I&rsquo;m Caleb.
                 <br />
                 <span className="text-text-2">I build the</span>{" "}

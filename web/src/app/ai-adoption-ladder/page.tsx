@@ -88,7 +88,7 @@ export default function AiAdoptionLadderPage() {
             <SectionLabel>Where does your business actually sit</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-8 max-w-[16ch] text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-8 max-w-[16ch]">
               The <span className="text-accent">5 levels</span> of AI adoption.
             </h1>
           </Reveal>

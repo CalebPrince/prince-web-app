@@ -57,7 +57,7 @@ export default function ArchiveClient({
             <SectionLabel>Technical Archive</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-8 max-w-4xl text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-8 max-w-4xl">
               Case studies for
               <br />
               <span className="text-accent">engineered systems.</span>

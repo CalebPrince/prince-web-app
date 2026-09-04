@@ -203,7 +203,7 @@ export default async function Lisa() {
             </Reveal>
             <Reveal delay={80}>
               <p className="label mt-6 text-muted">AI assistant by Prince Caleb</p>
-              <h1 className="mt-3 text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+              <h1 className="page-hero-title mt-3">
                 One assistant.
                 <br />
                 <span className="text-accent">Your tools, connected.</span>

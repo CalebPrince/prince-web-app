@@ -109,7 +109,7 @@ export default async function ClinicVoiceAgents() {
               <SectionLabel>AI call handling for clinics</SectionLabel>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="mt-8 text-[clamp(2.4rem,6.5vw,5.5rem)] font-extrabold leading-[0.96] tracking-[-0.03em]">
+              <h1 className="page-hero-title mt-8">
                 Your <span className="text-accent">front desk</span> is busy. Your phone still gets
                 answered.
               </h1>

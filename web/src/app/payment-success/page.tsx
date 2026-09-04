@@ -35,7 +35,7 @@ export default function PaymentSuccessPage() {
             <SectionLabel>Payment successful</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-8 text-[clamp(2.4rem,6.5vw,5.5rem)] font-extrabold leading-[0.96] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-8">
               Thank you. Your <span className="text-accent">payment</span> was received.
             </h1>
           </Reveal>
