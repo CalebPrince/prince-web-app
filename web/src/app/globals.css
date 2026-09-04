@@ -33,12 +33,10 @@
   /* The fixed "Prince Caleb" behind the page (BrandWatermark.tsx). Accent
      green here so it reads against the near-black; strong enough to be part
      of the page, light enough to keep the copy over it legible. */
-  --brandmark: rgba(98, 255, 152, 0.16);
-  --brandmark-dot: rgba(98, 255, 152, 0.42);
   /* Frosted card surfaces (.glass below). The tint has to stay heavy enough
      to read body copy over the brandmark passing behind it. --glass-solid is
      the opaque fallback where backdrop-filter is unsupported. */
-  --glass-bg: rgba(18, 20, 24, 0.58);
+  --glass-bg: #121418;
   --glass-solid: #121418;
   --glass-border: rgba(255, 255, 255, 0.12);
   /* The whole filter, not just its radius: Lightning CSS drops a
@@ -46,6 +44,12 @@
      standing for the entire value passes through untouched. */
   --glass-filter: blur(14px) saturate(140%);
   --radius: 12px;
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", sans-serif;
+  --font-code: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --control-height: 44px;
+  --control-height-lg: 52px;
+  --control-radius: 12px;
   color-scheme: dark;
 }
 
@@ -74,9 +78,7 @@
   --tilt-hover: 0 18px 28px -12px rgba(10, 11, 13, 0.36);
   --tilt-press: 0 4px 10px -8px rgba(10, 11, 13, 0.22);
   /* Black on paper, per the brief. */
-  --brandmark: rgba(10, 11, 13, 0.12);
-  --brandmark-dot: rgba(8, 120, 60, 0.5);
-  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-bg: #ffffff;
   --glass-solid: #ffffff;
   --glass-border: rgba(10, 11, 13, 0.1);
   color-scheme: light;
@@ -111,9 +113,7 @@
   --tilt-rest: 0 10px 20px -10px rgba(20, 10, 2, 0.62);
   --tilt-hover: 0 18px 30px -14px rgba(20, 10, 2, 0.68);
   --tilt-press: 0 5px 11px -8px rgba(20, 10, 2, 0.52);
-  --brandmark: rgba(255, 171, 94, 0.14);
-  --brandmark-dot: rgba(255, 171, 94, 0.42);
-  --glass-bg: rgba(25, 21, 18, 0.6);
+  --glass-bg: #191512;
   --glass-solid: #191512;
   --glass-border: rgba(255, 225, 190, 0.13);
   color-scheme: dark;
@@ -133,8 +133,8 @@
   --color-on-accent: var(--on-accent);
   --color-hairline: var(--hairline);
   --color-hairline-strong: var(--hairline-strong);
-  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-sans: var(--font-system);
+  --font-mono: var(--font-code);
 }
 
 html {
@@ -148,6 +148,28 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-synthesis: none;
+  line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+p { text-wrap: pretty; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 ::selection {
@@ -220,6 +242,13 @@ body {
    a control that pitches on hover is exactly the vestibular trigger the
    preference exists to silence. */
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
   .tilt-3d,
   .tilt-3d:hover:not(:disabled),
   .tilt-3d:active:not(:disabled),
@@ -310,8 +339,8 @@ body {
    surfaces diffuse is the site's own background rather than a flat colour. */
 .glass {
   background-color: var(--glass-bg);
-  -webkit-backdrop-filter: var(--glass-filter);
-  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Phones pay the most for a full-size backdrop filter and show it the least,

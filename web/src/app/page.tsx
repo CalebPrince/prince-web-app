@@ -201,7 +201,7 @@ export default async function Home() {
       {/* ── HERO ────────────────────────────────────────────── */}
       <section id="top" className="relative flex min-h-screen flex-col overflow-hidden">
         {/* bg-bg on the layer itself, not just the photograph: the fixed
-            BrandWatermark sits behind the page, and the hero is the one
+            The hero provides the opening page surface and is the one
             section that must never show it through — including if the image
             fails to load. */}
         <div className="absolute inset-0 -z-10 bg-bg">

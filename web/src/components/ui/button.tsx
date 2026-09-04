@@ -10,7 +10,7 @@ const buttonVariants = cva(
   // angle instead of each spelling out its own perspective transform. It sits
   // on the variants rather than here because ghost is a text button - a slab
   // of ground shadow under transparent copy reads as a rendering bug.
-  "group relative inline-flex items-center justify-center gap-2 rounded-full font-medium tracking-[-0.01em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-40",
+  "group relative inline-flex select-none items-center justify-center gap-2 rounded-[var(--control-radius)] font-semibold tracking-[-0.01em] transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-40",
   {
     variants: {
       variant: {
@@ -24,10 +24,10 @@ const buttonVariants = cva(
         ghost: "bg-transparent text-text-2 hover:text-accent",
       },
       size: {
-        default: "h-11 px-6 text-sm",
+        default: "h-[var(--control-height)] px-5 text-[0.9375rem]",
         sm: "h-9 px-4 text-[0.8rem]",
-        lg: "h-13 px-8 text-[0.95rem]",
-        icon: "h-11 w-11",
+        lg: "h-[var(--control-height-lg)] px-7 text-base",
+        icon: "size-[var(--control-height)] p-0",
       },
     },
     defaultVariants: {
