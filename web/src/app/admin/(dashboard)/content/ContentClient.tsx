@@ -92,8 +92,6 @@ const SECTIONS: Record<string, Section[]> = {
           t(`stat_${i}_suffix`, `Stat ${i} suffix`),
           t(`stat_${i}_label`, `Stat ${i} label`),
         ]),
-        { key: "stat_4_value", label: "Google rating", type: "number" },
-        { key: "google_review_count", label: "Google review count", type: "number" },
         {
           key: "google_review_url",
           label: "Google review link",
