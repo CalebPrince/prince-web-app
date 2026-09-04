@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Clock, MapPin } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -9,6 +9,7 @@ import { HiOutlineMail } from "react-icons/hi";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 // Contact page - real details from princecaleb.dev.
@@ -54,10 +55,45 @@ const BUDGETS = ["< $2k", "$2k – $5k", "$5k – $15k", "$15k +", "Not sure yet
 export default function Contact() {
   const [budget, setBudget] = useState<string>("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
+    if (!formRef.current) return;
+    const fd = new FormData(formRef.current);
+    const name = (fd.get("name") as string)?.trim() ?? "";
+    const email = (fd.get("email") as string)?.trim() ?? "";
+    const project = (fd.get("project") as string)?.trim() ?? "";
+    const body = (fd.get("message") as string)?.trim() ?? "";
+    const website = (fd.get("website") as string) ?? ""; // honeypot
+
+    // /api/v1/inquiries only stores name/email/message, so the "what" and the
+    // budget chip are folded into the message rather than lost.
+    const context = [
+      project && `Looking for: ${project}`,
+      budget && `Budget: ${budget}`,
+    ].filter(Boolean);
+    const message = context.length ? `${context.join("\n")}\n\n${body}` : body;
+
+    setError(null);
+    setSending(true);
+    try {
+      await api.submitInquiry({
+        name,
+        email,
+        message,
+        website,
+        source_project_id: null,
+        attribution: {},
+      });
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -182,10 +218,10 @@ export default function Contact() {
                     </a>
                   </div>
                 ) : (
-                  <form onSubmit={onSubmit} className="space-y-6">
+                  <form ref={formRef} onSubmit={onSubmit} className="space-y-6">
                     <div className="grid gap-6 sm:grid-cols-2">
                       <Field label="Name" htmlFor="name">
-                        <input id="name" name="name" required placeholder="Your name" className={inputCls} />
+                        <input id="name" name="name" required maxLength={255} placeholder="Your name" className={inputCls} />
                       </Field>
                       <Field label="Email" htmlFor="email">
                         <input
@@ -235,13 +271,25 @@ export default function Contact() {
                         name="message"
                         rows={5}
                         required
+                        maxLength={5000}
                         placeholder="A few lines on the problem, your timeline, and what success looks like."
                         className={cn(inputCls, "h-auto resize-none py-3.5")}
                       />
                     </Field>
 
-                    <Button type="submit" size="lg" className="w-full">
-                      Send message
+                    <div className="absolute -left-[9999px]" aria-hidden="true">
+                      <label htmlFor="website">Leave this blank</label>
+                      <input id="website" name="website" tabIndex={-1} autoComplete="off" />
+                    </div>
+
+                    {error && (
+                      <p className="rounded border border-red-900/50 bg-red-900/10 p-4 text-sm text-red-400">
+                        {error}
+                      </p>
+                    )}
+
+                    <Button type="submit" size="lg" className="w-full" disabled={sending}>
+                      {sending ? "Sending…" : "Send message"}
                       <ArrowRight className="size-4" />
                     </Button>
                     <p className="text-center text-sm text-muted">
