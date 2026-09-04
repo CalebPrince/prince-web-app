@@ -31,10 +31,32 @@ const AGENT_LABEL: Record<string, string> = {
   reel: "Reel",
 };
 
-type FieldSpec = { key: string; label: string; type?: "text" | "textarea" | "number" | "color" };
+type FieldSpec = {
+  key: string;
+  label: string;
+  type?: "text" | "textarea" | "number" | "color" | "select";
+  /** For type "select". Some keys (e.g. quarterly_next_open_date) build their
+   *  options at render time instead — see renderField. */
+  options?: { value: string; label: string }[];
+  hint?: string;
+};
 
 const t = (key: string, label: string): FieldSpec => ({ key, label });
 const ta = (key: string, label: string): FieldSpec => ({ key, label, type: "textarea" });
+
+/** The next N quarter-start dates ("1 October 2026", …), used for the
+ *  "next opening date" picker. The stored value is this exact human string —
+ *  it is shown verbatim on the site and in Lisa's booking replies — and the
+ *  format matches the homepage's own fallback (quarterDetails in lib/quarterly). */
+function quarterStartOptions(count = 8): { value: string; label: string }[] {
+  const now = new Date();
+  const currentQuarter = Math.floor(now.getMonth() / 3);
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), (currentQuarter + i + 1) * 3, 1);
+    const label = d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+    return { value: label, label };
+  });
+}
 
 type Section = { title: string; fields: FieldSpec[] };
 
@@ -77,9 +99,23 @@ const SECTIONS: Record<string, Section[]> = {
     {
       title: "Quarterly project intake",
       fields: [
-        t("quarterly_project_status", "Status (open or closed)"),
+        {
+          key: "quarterly_project_status",
+          label: "Status",
+          type: "select",
+          options: [
+            { value: "open", label: "Open — accepting projects" },
+            { value: "closed", label: "Closed — next quarter only" },
+          ],
+          hint: "Closed switches the project CTAs and the /request and /book forms to the next-quarter path and blocks new submissions.",
+        },
         { key: "quarterly_project_slots", label: "Available slots", type: "number" },
-        t("quarterly_next_open_date", "Next opening date"),
+        {
+          key: "quarterly_next_open_date",
+          label: "Next opening date",
+          type: "select",
+          hint: "Quarter starts only. Shown on the site and in Lisa's booking replies while intake is closed.",
+        },
       ],
     },
   ],
@@ -371,6 +407,32 @@ export default function ContentClient({
             value={values[spec.key] ?? ""}
             onChange={(e) => set(spec.key, e.target.value)}
           />
+        </Field>
+      );
+    }
+    if (spec.type === "select") {
+      // An unset status is "open" everywhere else, so show it that way here too.
+      const current =
+        (values[spec.key] ?? "") ||
+        (spec.key === "quarterly_project_status" ? "open" : "");
+      const options =
+        spec.key === "quarterly_next_open_date" ? quarterStartOptions() : spec.options ?? [];
+      // Keep a legacy or hand-entered value selectable rather than silently
+      // snapping it to the first option on the next save.
+      const knownValue = current === "" || options.some((o) => o.value === current);
+      return (
+        <Field key={spec.key} label={spec.label} hint={spec.hint}>
+          <Select value={current} onChange={(e) => set(spec.key, e.target.value)}>
+            {spec.key === "quarterly_next_open_date" && (
+              <option value="">Auto — first day of next quarter</option>
+            )}
+            {!knownValue && <option value={current}>{current} (current)</option>}
+            {options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
         </Field>
       );
     }
