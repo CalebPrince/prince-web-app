@@ -1,15 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Clock, Video } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-// Booking page - mirrors princecaleb.dev/book.html flow: pick a date,
-// choose a time, confirm with a short brief.
+// Booking page. Talks to the internal-availability endpoints:
+//   GET  /api/v1/appointments/config        -> { enabled }
+//   GET  /api/v1/appointments/availability  -> { slots: ["09:00", ...] }
+//   POST /api/v1/appointments/book          -> { status: "booked" } | error
+// The server owns the real lead/notice window and the quarterly intake gate;
+// this widget only renders what those endpoints return.
 
 const STEPS = [
   {
@@ -29,37 +34,74 @@ const STEPS = [
   },
 ];
 
-// Weekday slots, 30-min cadence.
-const SLOTS = [
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "13:00",
-  "13:30",
-  "14:00",
-  "15:00",
-  "15:30",
-  "16:00",
-];
-
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+function isoOffset(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
 }
 
 export function BookForm() {
+  // null = still checking; false = endpoint says booking is off.
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [slots, setSlots] = useState<string[] | null>(null);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [topic, setTopic] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot
+
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [booked, setBooked] = useState(false);
 
-  const isWeekend = useMemo(() => {
-    if (!date) return false;
-    const d = new Date(date + "T00:00:00");
-    return d.getDay() === 0 || d.getDay() === 6;
-  }, [date]);
+  const minDate = isoOffset(0);
+  const maxDate = isoOffset(60);
 
-  const times = isWeekend ? [] : SLOTS;
+  useEffect(() => {
+    api
+      .appointmentConfig()
+      .then((c) => setEnabled(c.enabled))
+      .catch(() => setEnabled(false));
+
+    // Deep links (e.g. from the clinic ROI calculator) can prefill context.
+    const params = new URLSearchParams(window.location.search);
+    setName(params.get("name") ?? "");
+    setEmail(params.get("email") ?? "");
+    setPhone(params.get("phone") ?? "");
+    setTopic(params.get("topic") ?? "");
+    const d = params.get("date");
+    if (d && d >= isoOffset(0) && d <= isoOffset(60)) setDate(d);
+  }, []);
+
+  useEffect(() => {
+    if (!date) {
+      setSlots(null);
+      return;
+    }
+    let active = true;
+    setSlots(null);
+    setSlotsError(null);
+    setTime("");
+    api
+      .appointmentAvailability(date)
+      .then((res) => {
+        if (active) setSlots(res.slots);
+      })
+      .catch((err) => {
+        if (active) {
+          setSlots([]);
+          setSlotsError(err instanceof Error ? err.message : "Could not load times, please try again.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [date]);
 
   const prettyDate = date
     ? new Date(date + "T00:00:00").toLocaleDateString(undefined, {
@@ -69,9 +111,29 @@ export function BookForm() {
       })
     : "";
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (date && time) setBooked(true);
+    if (!date || !time) {
+      setError("Please pick an available time.");
+      return;
+    }
+    setError(null);
+    setSending(true);
+    try {
+      await api.bookAppointment({ name, email, phone, date, time, topic, website, attribution: {} });
+      setBooked(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      // A slot can be taken between load and submit — refresh the list so the
+      // visitor can pick another without reloading.
+      api
+        .appointmentAvailability(date)
+        .then((res) => setSlots(res.slots))
+        .catch(() => {});
+      setTime("");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -147,7 +209,19 @@ export function BookForm() {
           <div className="lg:col-span-7">
             <Reveal>
               <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
-                {booked ? (
+                {enabled === null ? (
+                  <p className="py-16 text-center text-text-2">Loading availability…</p>
+                ) : enabled === false ? (
+                  <div className="flex flex-col items-center py-14 text-center">
+                    <h2 className="text-2xl font-bold tracking-tight">Booking is closed right now.</h2>
+                    <p className="mt-3 max-w-sm text-text-2">
+                      Send a message and I’ll reply to find a time that works.
+                    </p>
+                    <Link href="/contact" className={cn(buttonVariants({ variant: "secondary" }), "mt-8")}>
+                      Send a message
+                    </Link>
+                  </div>
+                ) : booked ? (
                   <div className="flex flex-col items-center py-16 text-center">
                     <span className="tilt-3d tilt-3d-tile grid size-14 place-items-center rounded-full bg-accent text-on-accent">
                       <Check className="icon-3d icon-3d-on-accent size-7" />
@@ -172,12 +246,10 @@ export function BookForm() {
                         id="date"
                         type="date"
                         required
-                        min={todayISO()}
+                        min={minDate}
+                        max={maxDate}
                         value={date}
-                        onChange={(e) => {
-                          setDate(e.target.value);
-                          setTime("");
-                        }}
+                        onChange={(e) => setDate(e.target.value)}
                         className="h-13 w-full rounded-[var(--radius)] border border-hairline-strong bg-bg/60 px-4 text-text [color-scheme:dark] focus:border-accent/60 focus:outline-none"
                       />
                     </div>
@@ -187,11 +259,15 @@ export function BookForm() {
                       <p className="label mb-3 text-muted">Available times</p>
                       {!date ? (
                         <p className="text-text-2">Pick a date to see available times.</p>
-                      ) : times.length === 0 ? (
+                      ) : slots === null ? (
+                        <p className="text-text-2">Loading times…</p>
+                      ) : slotsError ? (
+                        <p className="text-text-2">{slotsError}</p>
+                      ) : slots.length === 0 ? (
                         <p className="text-text-2">No times available that day, try another date.</p>
                       ) : (
                         <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
-                          {times.map((t) => (
+                          {slots.map((t) => (
                             <button
                               key={t}
                               type="button"
@@ -213,41 +289,75 @@ export function BookForm() {
                     {/* Details */}
                     <div className="grid gap-6 border-t border-hairline pt-8 sm:grid-cols-2">
                       <Field label="Name" htmlFor="name">
-                        <input id="name" name="name" required placeholder="Your name" className={inputCls} />
+                        <input
+                          id="name"
+                          required
+                          maxLength={255}
+                          placeholder="Your name"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className={inputCls}
+                        />
                       </Field>
                       <Field label="Email" htmlFor="email">
                         <input
                           id="email"
-                          name="email"
                           type="email"
                           required
+                          maxLength={255}
                           placeholder="you@company.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
                           className={inputCls}
                         />
                       </Field>
                       <Field label="Phone (optional)" htmlFor="phone">
-                        <input id="phone" name="phone" type="tel" placeholder="+233…" className={inputCls} />
-                      </Field>
-                      <Field label="Website (optional)" htmlFor="website">
-                        <input id="website" name="website" placeholder="yoursite.com" className={inputCls} />
+                        <input
+                          id="phone"
+                          type="tel"
+                          maxLength={30}
+                          placeholder="+233…"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className={inputCls}
+                        />
                       </Field>
                     </div>
 
-                    <Field label="Which workflow should we review? (optional)" htmlFor="workflow">
+                    <Field label="Which workflow should we review? (optional)" htmlFor="topic">
                       <textarea
-                        id="workflow"
-                        name="workflow"
+                        id="topic"
                         rows={3}
+                        maxLength={1000}
                         placeholder="The repetitive task that made you book this call."
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
                         className={cn(inputCls, "h-auto resize-none py-3.5")}
                       />
                     </Field>
 
-                    <Button type="submit" size="lg" className="w-full" disabled={!date || !time}>
-                      Confirm booking
+                    <div className="absolute -left-[9999px]" aria-hidden="true">
+                      <label htmlFor="website">Leave this blank</label>
+                      <input
+                        id="website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                      />
+                    </div>
+
+                    {error && (
+                      <p className="rounded border border-red-900/50 bg-red-900/10 p-4 text-sm text-red-400">
+                        {error}
+                      </p>
+                    )}
+
+                    <Button type="submit" size="lg" className="w-full" disabled={!date || !time || sending}>
+                      {sending ? "Booking…" : "Confirm booking"}
                       <ArrowRight className="size-4" />
                     </Button>
-                    {date && time && (
+                    {date && time && !sending && (
                       <p className="text-center text-sm text-muted">
                         {prettyDate} at {time}
                       </p>

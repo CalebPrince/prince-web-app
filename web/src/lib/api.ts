@@ -479,6 +479,24 @@ export const api = {
   subscribeNewsletter: (data: { email: string; website: string; attribution: Record<string, unknown> }) =>
     postJson<{ id: number }>("/api/v1/newsletter/subscribe", data),
   chatStatus: () => get<ChatStatus>("/api/v1/chat/status"),
+
+  // Internal-availability booking. `config` gates the whole widget; `availability`
+  // returns the real bookable "HH:MM" slots for one date (already minus booked
+  // ones and the lead/notice window); `book` writes the appointment. The quarterly
+  // intake guard lives server-side in AppointmentController::createBooking.
+  appointmentConfig: () => get<{ enabled: boolean }>("/api/v1/appointments/config"),
+  appointmentAvailability: (date: string) =>
+    get<{ slots: string[] }>(`/api/v1/appointments/availability?date=${encodeURIComponent(date)}`),
+  bookAppointment: (data: {
+    name: string;
+    email: string;
+    phone: string;
+    date: string;
+    time: string;
+    topic: string;
+    website: string;
+    attribution: Record<string, unknown>;
+  }) => postJson<{ status: string }>("/api/v1/appointments/book", data),
   
   // Client Portal Auth
   clientLogin: (data: any) => postJson<any>("/api/v1/client/auth/login", data),
