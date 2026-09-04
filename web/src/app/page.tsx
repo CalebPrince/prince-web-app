@@ -16,6 +16,7 @@ import { FaqAccordion } from "@/components/FaqAccordion";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ImpactGrid } from "@/components/ImpactGrid";
 import { GoogleRatingStrip } from "@/components/GoogleRatingStrip";
+import { QuarterlyAvailability } from "@/components/QuarterlyAvailability";
 
 
 const PROCESS = [
@@ -140,6 +141,19 @@ function renderHeroTitle(title: string): ReactNode {
   );
 }
 
+function quarterDetails(now = new Date()) {
+  const quarterNumber = Math.floor(now.getMonth() / 3) + 1;
+  const nextQuarterStart = new Date(now.getFullYear(), quarterNumber * 3, 1);
+  return {
+    label: `Q${quarterNumber} ${now.getFullYear()}`,
+    nextOpening: nextQuarterStart.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }),
+  };
+}
+
 export default async function Home() {
   const content = await api.content().catch(() => null);
   const hero = {
@@ -185,6 +199,10 @@ export default async function Home() {
   ];
   const googleRating = statValue(content?.stat_4_value, 4.8);
   const googleReviewCount = statValue(content?.google_review_count, 1724);
+  const currentQuarter = quarterDetails();
+  const quarterlyIntakeOpen = (content?.quarterly_project_status || "open").toLowerCase() === "open";
+  const quarterlySlots = statValue(content?.quarterly_project_slots, 2);
+  const quarterlyNextOpening = content?.quarterly_next_open_date || currentQuarter.nextOpening;
   const faqCount = parseInt(content?.faq_count || "0");
   const faqs = [];
   for (let i = 1; i <= faqCount; i++) {
@@ -256,6 +274,13 @@ export default async function Home() {
       </section>
 
       <GoogleRatingStrip rating={googleRating} reviewCount={googleReviewCount} />
+
+      <QuarterlyAvailability
+        isOpen={quarterlyIntakeOpen}
+        slots={quarterlySlots}
+        quarter={currentQuarter.label}
+        nextOpening={quarterlyNextOpening}
+      />
 
       {/* ── IMPACT ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-y border-hairline bg-bg-2/50 py-20 md:py-28">

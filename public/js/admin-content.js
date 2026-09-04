@@ -1,5 +1,6 @@
 const CONTENT_FIELDS = [
   "availability_badge", "hero_eyebrow", "hero_title", "hero_subtitle", "hero_atmosphere_intensity", "hero_motion_strength", "tech_badges",
+  "quarterly_project_status", "quarterly_project_slots", "quarterly_next_open_date",
   "hero_value_eyebrow",
   "hero_value_1_label", "hero_value_1_text",
   "hero_value_2_label", "hero_value_2_text",

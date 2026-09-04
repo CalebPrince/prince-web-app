@@ -92,6 +92,7 @@ class SettingsController
         'splash_screen_enabled',
         'animation_style',
         'hero_eyebrow', 'hero_title', 'hero_subtitle', 'availability_badge',
+        'quarterly_project_status', 'quarterly_project_slots', 'quarterly_next_open_date',
         'hero_video_url', 'live_demo_video_url',
         'hero_value_eyebrow',
         'hero_value_1_label', 'hero_value_1_text',

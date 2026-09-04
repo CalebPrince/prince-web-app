@@ -74,6 +74,14 @@ const SECTIONS: Record<string, Section[]> = {
         { key: "google_review_count", label: "Google review count", type: "number" },
       ],
     },
+    {
+      title: "Quarterly project intake",
+      fields: [
+        t("quarterly_project_status", "Status (open or closed)"),
+        { key: "quarterly_project_slots", label: "Available slots", type: "number" },
+        t("quarterly_next_open_date", "Next opening date"),
+      ],
+    },
   ],
   services: [
     {
