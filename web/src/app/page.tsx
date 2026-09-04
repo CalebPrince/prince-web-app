@@ -150,7 +150,7 @@ export default async function Home() {
 
   // Apps launched defaults to the real published-project count rather than a
   // made-up number - stat_1_value in Site Content overrides it if set.
-  // stat_2/stat_3/stat_4 (users served, uptime, client rating) have no
+  // stat_2/stat_3 (users served and uptime) have no
   // equivalent live source in this app - real approved testimonials would be
   // the honest source for a rating, but none exist yet (/api/v1/testimonials
   // returns an empty array locally) - so all three fall back to placeholders
@@ -162,6 +162,7 @@ export default async function Home() {
       icon: Rocket,
       label: content?.stat_1_label || "Apps launched",
       target: statValue(content?.stat_1_value, publishedProjects.length || 30),
+      prefix: "",
       suffix: content?.stat_1_suffix ?? "+",
       decimals: statDecimals(content?.stat_1_value, 0),
     },
@@ -169,6 +170,7 @@ export default async function Home() {
       icon: Users,
       label: content?.stat_2_label || "Users served",
       target: statValue(content?.stat_2_value, 5000),
+      prefix: "",
       suffix: content?.stat_2_suffix ?? "+",
       decimals: statDecimals(content?.stat_2_value, 0),
     },
@@ -176,19 +178,13 @@ export default async function Home() {
       icon: Activity,
       label: content?.stat_3_label || "Uptime",
       target: statValue(content?.stat_3_value, 99.9),
+      prefix: "",
       suffix: content?.stat_3_suffix ?? "%",
       decimals: statDecimals(content?.stat_3_value, 1),
     },
-    {
-      icon: Star,
-      label: content?.stat_4_label || "Client rating",
-      target: statValue(content?.stat_4_value, 4.5),
-      prefix: content?.stat_4_prefix ?? "",
-      suffix: content?.stat_4_suffix ?? "/5",
-      // At least one decimal - a rating reads as "4.5", never "5".
-      decimals: Math.max(1, statDecimals(content?.stat_4_value, 1)),
-    },
   ];
+  const googleRating = statValue(content?.stat_4_value, 4.8);
+  const googleReviewCount = statValue(content?.google_review_count, 1724);
   const faqCount = parseInt(content?.faq_count || "0");
   const faqs = [];
   for (let i = 1; i <= faqCount; i++) {
@@ -259,13 +255,13 @@ export default async function Home() {
         </div>
       </section>
 
-      <GoogleRatingStrip />
+      <GoogleRatingStrip rating={googleRating} reviewCount={googleReviewCount} />
 
       {/* ── IMPACT ──────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-y border-hairline bg-bg-2/50 py-20 md:py-28">
         <ImpactGrid />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-bg-2/60 via-transparent to-bg-2/60" />
-        <div className="relative mx-auto grid max-w-[1400px] grid-cols-2 gap-12 px-6 sm:grid-cols-4 md:px-10">
+        <div className="relative mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 sm:grid-cols-3 md:px-10">
           {impactStats.map((stat, i) => (
             <Reveal key={stat.label} delay={i * 120} className="flex flex-col items-center text-center">
               <div className="flex items-center justify-center gap-4">

@@ -137,7 +137,7 @@ class SettingsController
         'stat_1_value', 'stat_1_suffix', 'stat_1_label',
         'stat_2_value', 'stat_2_suffix', 'stat_2_label',
         'stat_3_value', 'stat_3_suffix', 'stat_3_label',
-        'stat_4_value', 'stat_4_prefix', 'stat_4_suffix', 'stat_4_label',
+        'stat_4_value', 'stat_4_prefix', 'stat_4_suffix', 'stat_4_label', 'google_review_count',
         'testimonial_1_quote', 'testimonial_1_name', 'testimonial_1_role',
         'testimonial_2_quote', 'testimonial_2_name', 'testimonial_2_role',
         'testimonial_3_quote', 'testimonial_3_name', 'testimonial_3_role',
