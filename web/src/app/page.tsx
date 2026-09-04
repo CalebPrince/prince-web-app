@@ -16,6 +16,7 @@ import { FaqAccordion } from "@/components/FaqAccordion";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ImpactGrid } from "@/components/ImpactGrid";
 import { GoogleRatingStrip } from "@/components/GoogleRatingStrip";
+import { GoogleReviewCard } from "@/components/GoogleReviewCard";
 import { QuarterlyAvailability } from "@/components/QuarterlyAvailability";
 import { IntakeCta } from "@/components/IntakeCta";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
@@ -144,8 +145,12 @@ function renderHeroTitle(title: string): ReactNode {
 }
 
 export default async function Home() {
-  const content = await api.content().catch(() => null);
-  const liveGoogleRating = await api.googleRating().catch(() => null);
+  const [content, liveGoogleRating, landingGoogleReviews, publishedProjects] = await Promise.all([
+    api.content().catch(() => null),
+    api.googleRating().catch(() => null),
+    api.googleReviews("landing").catch(() => []),
+    api.projects().catch(() => []),
+  ]);
   const hero = {
     eyebrow: content?.hero_eyebrow || FALLBACK_HERO.eyebrow,
     title: content?.hero_title || FALLBACK_HERO.title,
@@ -160,7 +165,6 @@ export default async function Home() {
   // returns an empty array locally) - so all three fall back to placeholders
   // an admin needs to replace with real figures under Admin -> Site Content
   // before this is trustworthy.
-  const publishedProjects = await api.projects().catch(() => []);
   const impactStats = [
     {
       icon: Rocket,
@@ -439,7 +443,11 @@ export default async function Home() {
           </Reveal>
 
           <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {TESTIMONIALS.map((t, i) => (
+            {landingGoogleReviews.length > 0 ? landingGoogleReviews.map((review, i) => (
+              <Reveal key={review.id} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
+                <GoogleReviewCard review={review} className="p-8" />
+              </Reveal>
+            )) : TESTIMONIALS.map((t, i) => (
               <Reveal key={t.name} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
                 <TiltCard className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-8 transition-colors hover:border-accent/30 glass">
                   <div>

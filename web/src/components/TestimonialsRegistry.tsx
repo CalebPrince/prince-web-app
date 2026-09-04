@@ -9,18 +9,23 @@ import { SampleWireframeScene } from "@/components/SampleWireframeScene";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { cn } from "@/lib/utils";
+import { GoogleReviewCard } from "@/components/GoogleReviewCard";
+import type { GoogleReview } from "@/lib/api";
 
 // A review only counts as a case study once it's linked to a published
 // project with a real, admin-entered outcome_metrics line - otherwise it
 // renders as a plain quote card.
 export function TestimonialsRegistry() {
   const [rows, setRows] = React.useState<Testimonial[] | null>(null);
+  const [googleReviews, setGoogleReviews] = React.useState<GoogleReview[] | null>(null);
   const [failed, setFailed] = React.useState(false);
 
   React.useEffect(() => {
-    api
-      .testimonials()
-      .then(setRows)
+    Promise.all([api.testimonials(), api.googleReviews("testimonials")])
+      .then(([testimonials, google]) => {
+        setRows(testimonials);
+        setGoogleReviews(google);
+      })
       .catch(() => setFailed(true));
   }, []);
 
@@ -55,7 +60,7 @@ export function TestimonialsRegistry() {
             <SectionLabel>Client signals</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-8 max-w-4xl text-[clamp(2.6rem,7vw,6rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+            <h1 className="page-hero-title mt-8 max-w-4xl">
               What <span className="text-accent">clients</span> say.
             </h1>
           </Reveal>
@@ -69,6 +74,26 @@ export function TestimonialsRegistry() {
       </section>
 
       {/* ── VERIFIED OUTCOMES ───────────────────────────────── */}
+      {googleReviews && googleReviews.length > 0 && (
+        <section className="border-t border-hairline">
+          <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
+            <Reveal className="max-w-2xl">
+              <SectionLabel index={nextIndex()}>Google reviews</SectionLabel>
+              <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
+                Published by clients on Google.
+              </h2>
+            </Reveal>
+            <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {googleReviews.map((review, index) => (
+                <Reveal key={review.id} delay={(index % 3) * 70}>
+                  <GoogleReviewCard review={review} />
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {caseStudies.length > 0 && (
         <section className="border-t border-hairline">
           <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
@@ -192,7 +217,7 @@ export function TestimonialsRegistry() {
           </Reveal>
         )}
 
-        {rows === null && !failed && (
+        {(rows === null || googleReviews === null) && !failed && (
           <div className="grid gap-5 md:grid-cols-3">
             {[0, 1, 2].map((i) => (
               <div
@@ -203,7 +228,7 @@ export function TestimonialsRegistry() {
           </div>
         )}
 
-        {(failed || (rows !== null && rows.length === 0)) && (
+        {(failed || (rows !== null && rows.length === 0 && (googleReviews?.length ?? 0) === 0)) && (
           <p className="py-10 text-center text-text-2">
             Reviews are on their way, check back soon, or{" "}
             <Link href="/contact" className="text-accent underline underline-offset-4 hover:text-accent-strong">

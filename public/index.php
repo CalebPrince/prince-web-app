@@ -111,6 +111,7 @@ $router->get('/api/v1/projects/{slug}', [ProjectController::class, 'show']);
 $router->get('/api/v1/tags', [TagController::class, 'index']);
 $router->get('/api/v1/content', [SettingsController::class, 'publicContent']);
 $router->get('/api/v1/google-rating', [GoogleReviewController::class, 'rating']);
+$router->get('/api/v1/google-reviews', [GoogleReviewController::class, 'publicReviews']);
 $router->get('/api/v1/health', [DashboardController::class, 'health']);
 $router->get('/api/v1/builder-os/team', [TeamController::class, 'publicSystemStatus']);
 $router->get('/api/v1/exchange-rate', [DashboardController::class, 'publicExchangeRate']);
@@ -231,6 +232,8 @@ $router->patch('/api/v1/admin/sage-chats/{id}', [SageController::class, 'markSee
 $router->delete('/api/v1/admin/sage-chats', [SageController::class, 'destroyAll']);
 $router->delete('/api/v1/admin/sage-chats/{id}', [SageController::class, 'destroy']);
 $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
+$router->get('/api/v1/admin/google-reviews', [GoogleReviewController::class, 'adminReviews']);
+$router->put('/api/v1/admin/google-reviews', [GoogleReviewController::class, 'updatePlacements']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
 $router->post('/api/v1/admin/settings/test-email', [SettingsController::class, 'sendTestEmail']);
 $router->get('/api/v1/admin/agent-capabilities', [SettingsController::class, 'capabilities']);

@@ -1,12 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { api, AdminTestimonial } from "@/lib/api";
-import { Plus, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { api, AdminTestimonial, type GoogleReview } from "@/lib/api";
+import { Plus, Trash2, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import TestimonialModal from "./TestimonialModal";
 
-export default function TestimonialsClient({ initialTestimonials }: { initialTestimonials: AdminTestimonial[] }) {
+export default function TestimonialsClient({
+  initialTestimonials,
+  initialGoogleReviews,
+  googleConfigured,
+}: {
+  initialTestimonials: AdminTestimonial[];
+  initialGoogleReviews: GoogleReview[];
+  googleConfigured: boolean;
+}) {
   const [testimonials, setTestimonials] = useState<AdminTestimonial[]>(initialTestimonials);
+  const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>(initialGoogleReviews);
+  const [savingGoogleId, setSavingGoogleId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const deleteTestimonial = async (id: number) => {
@@ -32,6 +42,20 @@ export default function TestimonialsClient({ initialTestimonials }: { initialTes
     await api.adminRequestTestimonial(data);
     // Refresh to show the newly requested row
     window.location.reload();
+  };
+
+  const toggleGooglePlacement = async (review: GoogleReview, placement: "landing" | "testimonials") => {
+    const current = review.placements ?? [];
+    const placements = current.includes(placement)
+      ? current.filter((item) => item !== placement)
+      : [...current, placement];
+    setSavingGoogleId(review.id);
+    try {
+      await api.adminUpdateGoogleReview(review.id, placements);
+      setGoogleReviews((rows) => rows.map((row) => row.id === review.id ? { ...row, placements } : row));
+    } finally {
+      setSavingGoogleId(null);
+    }
   };
 
   const renderStars = (rating?: number) => {
@@ -71,6 +95,61 @@ export default function TestimonialsClient({ initialTestimonials }: { initialTes
             Request a testimonial
           </button>
         </div>
+      </div>
+
+      <div className="rounded-xl border border-hairline bg-bg overflow-hidden">
+        <div className="flex flex-col gap-1 border-b border-hairline bg-bg-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold">Google reviews</h2>
+            <p className="mt-1 text-sm text-text-2">Choose exactly where each live Google review appears.</p>
+          </div>
+          <span className="text-xs font-medium uppercase tracking-wider text-text-3">Up to 5 supplied by Google</span>
+        </div>
+        {!googleConfigured ? (
+          <p className="p-6 text-sm text-text-2">Add your Google Places API key and Place ID under Settings → Integrations.</p>
+        ) : googleReviews.length === 0 ? (
+          <p className="p-6 text-sm text-text-2">Google has not returned any written reviews yet.</p>
+        ) : (
+          <div className="grid gap-px bg-hairline md:grid-cols-2">
+            {googleReviews.map((review) => (
+              <article key={review.id} className="bg-bg p-5">
+                <div className="flex items-start gap-3">
+                  {review.authorPhotoUri ? (
+                    <img src={review.authorPhotoUri} alt="" className="size-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="grid size-10 place-items-center rounded-full bg-bg-3 text-sm font-bold text-text-2">{review.authorName.slice(0, 1)}</div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-text">{review.authorName}</p>
+                    <p className="mt-0.5 text-sm text-yellow-500">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</p>
+                  </div>
+                  {review.googleMapsUri && (
+                    <a href={review.googleMapsUri} target="_blank" rel="noopener noreferrer" aria-label="Open review on Google" className="text-text-3 hover:text-accent">
+                      <ExternalLink className="size-4" />
+                    </a>
+                  )}
+                </div>
+                {review.text && <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-text-2">{review.text}</p>}
+                <div className="mt-5 flex flex-wrap gap-2 border-t border-hairline pt-4">
+                  {(["landing", "testimonials"] as const).map((placement) => {
+                    const active = review.placements?.includes(placement) ?? false;
+                    return (
+                      <button
+                        key={placement}
+                        type="button"
+                        disabled={savingGoogleId === review.id}
+                        onClick={() => toggleGooglePlacement(review, placement)}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${active ? "border-accent bg-accent/10 text-accent" : "border-hairline-strong text-text-2 hover:text-text"}`}
+                      >
+                        {active ? "Shown on" : "Show on"} {placement === "landing" ? "landing page" : "testimonials"}
+                      </button>
+                    );
+                  })}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-hairline bg-bg overflow-hidden">

@@ -12,11 +12,18 @@ export default async function TestimonialsPage() {
   const cookieHeader = cookieStore.toString();
   
   // Fetch initial testimonials SSR
-  const initialTestimonials = await api.adminTestimonials(cookieHeader).catch(() => []);
+  const [initialTestimonials, googleReviewData] = await Promise.all([
+    api.adminTestimonials(cookieHeader).catch(() => []),
+    api.adminGoogleReviews(cookieHeader).catch(() => ({ configured: false, reviews: [] })),
+  ]);
 
   return (
     <div className="space-y-8">
-      <TestimonialsClient initialTestimonials={initialTestimonials} />
+      <TestimonialsClient
+        initialTestimonials={initialTestimonials}
+        initialGoogleReviews={googleReviewData.reviews}
+        googleConfigured={googleReviewData.configured}
+      />
     </div>
   );
 }

@@ -257,6 +257,19 @@ export type Testimonial = {
   outcome_metrics?: string;
 };
 
+export type GoogleReview = {
+  id: string;
+  authorName: string;
+  authorUri: string;
+  authorPhotoUri: string;
+  rating: number;
+  text: string;
+  relativeTime: string;
+  publishTime: string;
+  googleMapsUri: string;
+  placements?: Array<"landing" | "testimonials">;
+};
+
 export type Inquiry = {
   id: number;
   name: string;
@@ -417,6 +430,9 @@ export const api = {
   adminDeleteBlogPost: (id: number) => postJson<{ status: string }>(`/api/v1/admin/blog/${id}`, {}, "DELETE"),
 
   adminTestimonials: (cookieHeader?: string) => get<AdminTestimonial[]>("/api/v1/admin/testimonials", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminGoogleReviews: (cookieHeader?: string) => get<{ configured: boolean; reviews: GoogleReview[] }>("/api/v1/admin/google-reviews", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminUpdateGoogleReview: (id: string, placements: Array<"landing" | "testimonials">) =>
+    postJson<{ status: string; placements: Array<"landing" | "testimonials"> }>("/api/v1/admin/google-reviews", { id, placements }, "PUT"),
   adminRequestTestimonial: (data: any) => postJson<any>("/api/v1/admin/testimonials", data),
   adminUpdateTestimonial: (id: number, data: any) => postJson<any>(`/api/v1/admin/testimonials/${id}`, data, "PATCH"),
   adminDeleteTestimonial: (id: number) => postJson<{ status: string }>(`/api/v1/admin/testimonials/${id}`, {}, "DELETE"),
@@ -455,6 +471,8 @@ export const api = {
     googleMapsUri?: string | null;
   }>("/api/v1/google-rating"),
   testimonials: () => get<Testimonial[]>("/api/v1/testimonials"),
+  googleReviews: (placement: "landing" | "testimonials") =>
+    get<GoogleReview[]>(`/api/v1/google-reviews?placement=${placement}`),
   getTestimonialToken: (token: string) => get<{ client_name?: string }>(`/api/v1/testimonials/${encodeURIComponent(token)}`),
   submitTestimonial: (token: string, data: { client_name: string; rating: number; quote: string }) =>
     postJson<{ status: string }>(`/api/v1/testimonials/${encodeURIComponent(token)}`, data),
