@@ -55,6 +55,66 @@ These edits use the existing settings/content API and `settings` table; no
 database schema, migrations, seed data, or stored records were changed for
 this redesign.
 
+## Quarterly intake gate and real booking/contact forms (2026-09-04 upgrade)
+
+Two related fixes to the `web/` (Next.js) site's project-acquisition paths.
+
+### Quarterly project intake gate
+
+The homepage already carried a "quarterly project availability" strip driven
+by three Site Content settings — `quarterly_project_status` (`open`/`closed`),
+`quarterly_project_slots`, and `quarterly_next_open_date`. Those settings now
+actually gate the two project entry points instead of only decorating the
+homepage:
+
+- **`/request` and `/book`** became server components (`force-dynamic`, so the
+  gate can't be served from a stale static shell mid-deploy). When intake is
+  `closed` they render `IntakeClosedPanel` — the next-opening date plus the
+  preserved non-project contact routes (`/contact`, WhatsApp, email) — instead
+  of their forms.
+- **Project CTAs site-wide** (`<IntakeCta>`, ~13 call sites: homepage,
+  services, pricing, systems, marketing-brain, builder-os, lisa-ai-assistant,
+  …) switch to a quieter "Join the next intake" button when closed. A single
+  client-side `/api/v1/content` fetch is shared through
+  `QuarterlyIntakeProvider` rather than one per CTA.
+- **Backend guards** — `ProjectRequestController::create` returns 422 and
+  `AppointmentController::createBooking` refuses when the status is exactly
+  `"closed"`. `createBooking` is the one path every booking channel uses, so
+  this also blocks Live Chat, WhatsApp Lisa, and the voice agent (each gets
+  the next-quarter message to relay). Reschedules of existing bookings are
+  deliberately not gated.
+- **Admin editor** — Site Content → Hero → *Quarterly project intake*: Status
+  is now an open/closed `<select>` and "next opening date" a `<select>` of the
+  upcoming quarter-start dates (or "auto"), not free-text inputs.
+
+Fail-open throughout: anything other than the literal string `"closed"` counts
+as open, in both the PHP guards and `web/src/lib/quarterly.ts`.
+
+### `/book` and `/contact` were mocks — now wired to the API
+
+Since the 2026-08-18 rebuild replaced `web/` wholesale, `/book` and `/contact`
+were visual shells whose submit handlers only flipped to a success screen —
+nothing was posted. `/book` even shipped a *visible* "Website" field that the
+booking endpoint treats as its honeypot, so a real visitor who filled it in
+had their booking silently dropped. The legacy `.html` versions that did work
+were then deleted with the rest of the old site, leaving the mocks as the only
+thing serving those URLs.
+
+- **`/book`** now checks `/api/v1/appointments/config`, loads real slots per
+  date from `/api/v1/appointments/availability`, and posts to
+  `/api/v1/appointments/book` — with a proper hidden honeypot, a booking-off
+  state, deep-link prefill, and slot-conflict recovery.
+- **`/contact`** now posts to `/api/v1/inquiries` (hidden honeypot added; the
+  "what" field and budget chip are folded into the message body, since that
+  endpoint stores only name/email/message).
+
+Every other public form (`/request`, `/growth-roadmap`, the `/archive`
+newsletter, testimonials, proposal-accept, both chat surfaces) was already
+calling its endpoint and is unchanged.
+
+No database migration or schema change — the three `quarterly_*` keys are
+plain `settings` rows.
+
 ## Figma rebuild replaces the Next.js front end (2026-08-18 upgrade)
 
 The Bootstrap-token "straight port" version of `web/` (see the September
@@ -595,9 +655,11 @@ detail — the project showcase, renamed from the old `/projects`), `/book`,
 `/lab`, `/archive` (+ detail), `/testimonials`, `/404`, `/privacy`,
 `/terms`, `/cookies`, `/search`, and `/ai-safety` /
 `/ai-adoption-ladder`. Real backend features (project/blog search, the
-Systems showcase, testimonials) call the same PHP `/api/v1/*` endpoints
-the rest of the site already uses — nothing is mocked. `/projects` and
-`/projects/:slug` permanently redirect to `/systems`. Seven pages aren't
+Systems showcase, testimonials, and every public form — contact, booking,
+project request, newsletter) call the same PHP `/api/v1/*` endpoints the
+rest of the site already uses; nothing is mocked (the `/book` and `/contact`
+forms were stubbed shells until the 2026-09-04 upgrade above). `/projects`
+and `/projects/:slug` permanently redirect to `/systems`. Seven pages aren't
 ported into the new design yet — `pricing`, `marketing-brain`,
 `lisa-ai-assistant`, `ai-voice-agents-for-clinics`, `growth-roadmap`,
 `builder-os`, and `agent` — so their extension-less routes temporarily
