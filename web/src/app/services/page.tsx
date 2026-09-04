@@ -30,7 +30,7 @@ const PROCESS = [
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "AI voice agents, business automations, and custom websites and mobile apps built around how your customers and team actually work.",
+    "UX/UI and product design, AI voice agents, business automations, and custom websites and mobile apps built around how your customers and team actually work.",
 };
 
 export default function Services() {
@@ -59,7 +59,7 @@ export default function Services() {
             </p>
           </Reveal>
           <Reveal delay={240} className="mt-8 flex flex-wrap gap-3">
-            {["AI voice agents", "Chatbots", "Automations"].map((t) => (
+            {["UX/UI design", "Product design", "AI voice agents", "Automations"].map((t) => (
               <span
                 key={t}
                 className="label rounded-full border border-hairline bg-bg-2/50 px-4 py-2.5 text-text-2 glass"

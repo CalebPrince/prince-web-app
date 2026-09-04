@@ -42,15 +42,29 @@ export interface Service {
 }
 
 /**
- * The three things the studio sells, in the order they are sold. The Services
+ * The four things the studio sells, in the order they are sold. The Services
  * page lays them out in full and the homepage runs them through the split
  * screen (SplitServices); both read from here so the copy cannot drift into
  * two versions of the offer.
  */
 export const SERVICES: Service[] = [
   {
-    id: "ai-agents",
+    id: "product-design",
     no: "01",
+    icon: PenTool,
+    title: "UX/UI & Product Design",
+    tagline: "Clarity before code",
+    body: "Digital products shaped from user needs and business goals into clear flows, confident interfaces and reusable design systems ready for development.",
+    features: [
+      { icon: Compass, label: "Product strategy and user flows" },
+      { icon: MousePointerClick, label: "Wireframes and interactive prototypes" },
+      { icon: Palette, label: "UX/UI design and visual direction" },
+      { icon: Layers, label: "Reusable product design systems" },
+    ],
+  },
+  {
+    id: "ai-agents",
+    no: "02",
     icon: Bot,
     title: "AI Agents",
     tagline: "Voice & chat agents",
@@ -64,7 +78,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "automations",
-    no: "02",
+    no: "03",
     icon: Workflow,
     title: "Business Automations",
     tagline: "Kill the manual work",
@@ -78,7 +92,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "websites-apps",
-    no: "03",
+    no: "04",
     icon: AppWindow,
     title: "Custom Websites & Mobile Apps",
     tagline: "Built around your workflow",
@@ -94,23 +108,23 @@ export const SERVICES: Service[] = [
 
 /**
  * The four things the homepage leads with, in the order it leads with them.
- * The Services page sells three packaged offers (SERVICES above); this is the
+ * The Services page carries the fuller packaged offers (SERVICES above); this is the
  * wider view of the practice, which is what the homepage has always shown.
  * The split screen (SplitServices) runs one per screen.
  */
 export const HOME_SERVICES: Service[] = [
   {
-    id: "web-design",
+    id: "product-design",
     no: "01",
     icon: PenTool,
-    title: "Web Design",
-    tagline: "Identity you can navigate",
-    body: "Conversion-focused websites with strong visual identities and exceptional user experiences.",
+    title: "UX/UI & Product Design",
+    tagline: "Clarity before code",
+    body: "Product strategy, user flows and interface systems that turn complex ideas into experiences people understand and enjoy using.",
     features: [
-      { icon: Palette, label: "Identity and art direction" },
-      { icon: LayoutGrid, label: "Conversion-focused layouts" },
-      { icon: Layers, label: "Design systems, not one-offs" },
-      { icon: MousePointerClick, label: "Prototypes you can click" },
+      { icon: Compass, label: "Product strategy and user flows" },
+      { icon: LayoutGrid, label: "Wireframes and interface design" },
+      { icon: MousePointerClick, label: "Interactive prototypes" },
+      { icon: Layers, label: "Scalable design systems" },
     ],
   },
   {

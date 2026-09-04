@@ -19,7 +19,7 @@ const SCREENS_PER_ITEM = 1;
  * where a panel stops — so the site keeps one way of covering and uncovering
  * things rather than growing a second, unrelated one here.
  *
- * The copy is HOME_SERVICES in @/lib/services, alongside the three packaged
+ * The copy is HOME_SERVICES in @/lib/services, alongside the packaged
  * offers the Services page sells.
  */
 export function SplitServices() {
@@ -128,9 +128,8 @@ export function SplitServices() {
                     {service.body}
                   </p>
 
-                  {/* Plain /services rather than an anchor: these four are
-                      the practice, while the Services page sells three
-                      packaged offers, so there is no id here to jump to. */}
+                  {/* The homepage presents the practice at a glance; the
+                      Services page carries the full packaged detail. */}
                   <Link
                     href="/services"
                     className="label group mt-12 inline-flex w-fit items-center gap-2 border-b border-hairline pb-2 text-text-2 transition-colors hover:border-accent hover:text-text"

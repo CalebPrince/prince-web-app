@@ -85,7 +85,7 @@ const navigation = [
 /** Unread counts the sidebar badges, keyed by the route they belong to. */
 type Badges = { inbox: number; notifications: number };
 
-export function AdminSidebar() {
+export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const [badges, setBadges] = useState<Badges>({ inbox: 0, notifications: 0 });
@@ -156,6 +156,7 @@ export function AdminSidebar() {
                   key={item.name}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  onClick={onNavigate}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     active
                       ? "bg-bg-3 text-text"
