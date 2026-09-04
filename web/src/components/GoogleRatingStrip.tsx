@@ -1,12 +1,22 @@
 import Image from "next/image";
-import { Star } from "lucide-react";
+import { ArrowUpRight, Star } from "lucide-react";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function GoogleRatingStrip({ rating, reviewCount }: { rating: number; reviewCount: number }) {
+export function GoogleRatingStrip({
+  rating,
+  reviewCount,
+  reviewUrl,
+}: {
+  rating: number;
+  reviewCount: number;
+  reviewUrl: string;
+}) {
   return (
     <section aria-label="Google rating" className="border-b border-hairline bg-bg">
       <div className="mx-auto flex max-w-[1400px] justify-center px-6 py-8 md:px-10 md:py-10">
-        <div className="flex w-full max-w-3xl items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2 p-4 sm:gap-6 sm:p-6">
+        <div className="flex w-full max-w-3xl flex-wrap items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2 p-4 sm:flex-nowrap sm:gap-6 sm:p-6">
           <span className="grid size-16 shrink-0 place-items-center rounded-full bg-white sm:size-20">
             <Image src="/img/logos/google.svg" alt="Google" width={36} height={36} className="size-8 sm:size-10" />
           </span>
@@ -30,6 +40,16 @@ export function GoogleRatingStrip({ rating, reviewCount }: { rating: number; rev
               </span>
             </div>
           </div>
+
+          <a
+            href={reviewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ variant: "secondary" }), "w-full shrink-0 sm:w-auto")}
+          >
+            Leave a review
+            <ArrowUpRight className="size-4" aria-hidden="true" />
+          </a>
         </div>
       </div>
     </section>

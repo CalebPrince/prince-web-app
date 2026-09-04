@@ -145,6 +145,7 @@ function renderHeroTitle(title: string): ReactNode {
 
 export default async function Home() {
   const content = await api.content().catch(() => null);
+  const liveGoogleRating = await api.googleRating().catch(() => null);
   const hero = {
     eyebrow: content?.hero_eyebrow || FALLBACK_HERO.eyebrow,
     title: content?.hero_title || FALLBACK_HERO.title,
@@ -186,8 +187,13 @@ export default async function Home() {
       decimals: statDecimals(content?.stat_3_value, 1),
     },
   ];
-  const googleRating = statValue(content?.stat_4_value, 4.8);
-  const googleReviewCount = statValue(content?.google_review_count, 1724);
+  const googleRating = liveGoogleRating?.configured && liveGoogleRating.rating != null
+    ? liveGoogleRating.rating
+    : statValue(content?.stat_4_value, 4.8);
+  const googleReviewCount = liveGoogleRating?.configured && liveGoogleRating.reviewCount != null
+    ? liveGoogleRating.reviewCount
+    : statValue(content?.google_review_count, 1724);
+  const googleReviewUrl = content?.google_review_url || "https://g.page/r/CfBZ-YWdgM_UEBI/review";
   const quarterlyIntake = resolveQuarterlyIntake(content);
   const faqCount = parseInt(content?.faq_count || "0");
   const faqs = [];
@@ -259,7 +265,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <GoogleRatingStrip rating={googleRating} reviewCount={googleReviewCount} />
+      <GoogleRatingStrip rating={googleRating} reviewCount={googleReviewCount} reviewUrl={googleReviewUrl} />
 
       <QuarterlyAvailability
         isOpen={quarterlyIntake.isOpen}

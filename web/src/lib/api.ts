@@ -448,6 +448,12 @@ export const api = {
   blog: () => get<BlogPost[]>("/api/v1/blog"),
   blogPost: (slug: string) => get<BlogPost>(`/api/v1/blog/${encodeURIComponent(slug)}`),
   content: () => get<SiteContent>("/api/v1/content"),
+  googleRating: () => get<{
+    configured: boolean;
+    rating?: number;
+    reviewCount?: number;
+    googleMapsUri?: string | null;
+  }>("/api/v1/google-rating"),
   testimonials: () => get<Testimonial[]>("/api/v1/testimonials"),
   getTestimonialToken: (token: string) => get<{ client_name?: string }>(`/api/v1/testimonials/${encodeURIComponent(token)}`),
   submitTestimonial: (token: string, data: { client_name: string; rating: number; quote: string }) =>

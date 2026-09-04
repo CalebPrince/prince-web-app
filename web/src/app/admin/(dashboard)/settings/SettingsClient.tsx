@@ -91,6 +91,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "serper_api_key", "hunter_api_key", "apify_api_key", "pagespeed_api_key", "dataforseo_login",
     "dataforseo_password", "slack_webhook_url", "integration_api_key",
     "notification_email", "google_client_id", "composio_api_key",
+    "google_places_api_key", "google_place_id",
     "composio_google_calendar_auth_config_id", "composio_gmail_auth_config_id",
     "composio_slack_auth_config_id", "composio_linkedin_auth_config_id",
     "composio_google_calendar_booking_tool", "composio_google_calendar_id",
@@ -147,6 +148,7 @@ const SECRET_KEYS = new Set([
   "whapi_webhook_secret", "wati_api_token", "wati_webhook_secret", "twilio_auth_token", "elevenlabs_phone_webhook_secret",
   "elevenlabs_phone_postcall_signing_secret", "serper_api_key", "hunter_api_key",
   "apify_api_key", "pagespeed_api_key", "dataforseo_password", "integration_api_key", "composio_api_key",
+  "google_places_api_key",
   "paystack_secret_key", "smtp_app_password",
 ]);
 

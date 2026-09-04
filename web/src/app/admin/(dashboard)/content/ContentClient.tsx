@@ -94,6 +94,11 @@ const SECTIONS: Record<string, Section[]> = {
         ]),
         { key: "stat_4_value", label: "Google rating", type: "number" },
         { key: "google_review_count", label: "Google review count", type: "number" },
+        {
+          key: "google_review_url",
+          label: "Google review link",
+          hint: "Opens Google's review form from the homepage rating strip.",
+        },
       ],
     },
     {
