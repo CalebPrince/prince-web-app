@@ -117,6 +117,14 @@ export default async function Pricing() {
     features: features(content, `pricing_tier_${i + 1}_features`, TIER_DEFAULTS[i].features),
   }));
 
+  // Lisa's own monthly tiers are edited on Admin -> Lisa. Quoting her entry
+  // price here from anything but those settings means this page keeps
+  // advertising an old figure the day they are raised.
+  const lisaFrom = [
+    field(content, "lisa_tier_1_price_ghs", "GHS 800"),
+    field(content, "lisa_tier_1_price_usd", "$55"),
+  ].join(" / ");
+
   const addons = ADDON_DEFAULTS.map((d, i) => ({
     name: field(content, `pricing_tier_${i + 4}_name`, d.name),
     blurb: field(content, `pricing_tier_${i + 4}_tagline`, d.tagline),
@@ -314,7 +322,7 @@ export default async function Pricing() {
               </h3>
               <p className="mt-3 max-w-xl text-text-2">
                 Lisa answers calls, WhatsApp, and web chat, works inside the tools you already use,
-                and is priced separately in GHS and USD, from GHS 800 / $55 a month.
+                and is priced separately in GHS and USD, from {lisaFrom} a month.
               </p>
             </div>
             <span className="label inline-flex shrink-0 items-center gap-2 text-accent">
