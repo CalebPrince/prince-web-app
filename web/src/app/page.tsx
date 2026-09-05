@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { WorkGallery } from "@/components/WorkGallery";
+import { PortfolioShowcase } from "@/components/PortfolioShowcase";
 import { SplitServices } from "@/components/SplitServices";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
@@ -112,7 +112,7 @@ export default async function Home() {
   return (
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section id="top" className="relative flex min-h-screen flex-col overflow-hidden">
+      <section id="top" className="portfolio-hero relative flex min-h-screen flex-col overflow-hidden">
         {/* bg-bg on the layer itself, not just the photograph: the fixed
             The hero provides the opening page surface and is the one
             section that must never show it through — including if the image
@@ -131,13 +131,13 @@ export default async function Home() {
           <HeroOrbs />
         </div>
 
-        <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-16 pt-28 md:px-10 lg:grid-cols-2 lg:gap-8">
+        <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-20 pt-32 md:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div className="max-w-3xl">
-            <p className="rise label mb-8 text-text-2" style={{ animationDelay: "0.1s" }}>
+            <p className="portfolio-eyebrow rise mb-6" style={{ animationDelay: "0.1s" }}>
               {hero.eyebrow}
             </p>
             <h1
-              className="page-hero-title rise"
+              className="portfolio-hero-title rise"
               style={{ animationDelay: "0.2s" }}
             >
               {renderHeroTitle(hero.title)}
@@ -150,15 +150,15 @@ export default async function Home() {
             </p>
             <div className="rise mt-10 flex flex-col gap-4 sm:flex-row" style={{ animationDelay: "0.5s" }}>
               <Link href="#work" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                View My Work{" "}
+                Explore my work{" "}
                 <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
-              <Link href="#contact" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
-                Let&rsquo;s Talk
+              <Link href="/contact" className="portfolio-text-link">
+                Start a project <ArrowRight className="size-4" />
               </Link>
             </div>
           </div>
-          <div className="rise relative mx-auto w-full max-w-md lg:ml-auto lg:mr-0" style={{ animationDelay: "0.6s" }}>
+          <div className="rise relative mx-auto w-full max-w-2xl lg:ml-auto lg:mr-0" style={{ animationDelay: "0.6s" }}>
             <WebsiteDesignPreview />
           </div>
         </div>
@@ -226,7 +226,17 @@ export default async function Home() {
             </Link>
           </Reveal>
 
-          <WorkGallery />
+          <div className="mb-16 flex flex-col gap-4">
+            <div className="h-1 w-[120px] overflow-hidden rounded-sm bg-bg-3">
+              <span className="ml-3 block h-full w-10 bg-accent shadow-[0_0_4px_0_var(--accent)]" />
+            </div>
+            <p className="max-w-[540px] text-base leading-relaxed text-text-2">
+              A curated display of high-fidelity interfaces, web applications and digital
+              products, each one shipped and running in production.
+            </p>
+          </div>
+
+          <PortfolioShowcase featured />
 
           <Reveal className="mt-16 flex justify-center md:hidden">
             <Link href="/work" className={cn(buttonVariants({ variant: "secondary" }))}>

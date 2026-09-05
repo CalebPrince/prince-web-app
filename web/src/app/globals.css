@@ -1,5 +1,66 @@
 @import "tailwindcss";
 
+/* Portfolio presentation — deep green stage, paper gallery, and real project covers. */
+.portfolio-hero { background: var(--bg); color: var(--text); }
+.portfolio-nav { color: var(--text); }
+.portfolio-hero-title { max-width: 13ch; font-size: clamp(2.75rem, 4.7vw, 5rem); font-weight: 750; line-height: .96; letter-spacing: -.05em; text-wrap: balance; }
+.portfolio-eyebrow { color: var(--accent); font-family: var(--font-code); font-size: .72rem; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; }
+.portfolio-text-link { display: inline-flex; align-items: center; gap: .6rem; font-size: .82rem; font-weight: 700; letter-spacing: .02em; }
+.portfolio-text-link:hover { color: var(--accent); }
+.portfolio-preview { display: block; color: inherit; }
+.portfolio-preview > span { display: flex; justify-content: space-between; gap: 1rem; padding-top: 1rem; color: var(--text-2); font-size: .85rem; }
+.portfolio-preview > span > span { display: flex; align-items: center; gap: .4rem; color: var(--accent); }
+.hero-device-composition { position: relative; }
+.hero-device-image { width: 100%; height: auto; object-fit: contain; }
+.portfolio-work-section { background: var(--bg); color: var(--text); padding: clamp(5rem, 9vw, 8.5rem) 1.5rem; }
+.portfolio-section-head { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 3rem; }
+.portfolio-section-head h2 { max-width: 15ch; margin-top: 1rem; font-size: clamp(2.5rem, 5vw, 4.8rem); font-weight: 750; line-height: .98; letter-spacing: -.05em; }
+.portfolio-section-head p:not(.portfolio-eyebrow) { max-width: 42rem; margin-top: 1rem; color: var(--text-2); }
+.portfolio-filters { display: flex; flex-wrap: wrap; gap: .65rem; margin-bottom: 1.8rem; }
+.portfolio-filters button { border: 1px solid var(--hairline); border-radius: 999px; background: var(--bg-3); padding: .65rem 1rem; color: var(--text-2); font-size: .76rem; font-weight: 650; transition: .2s ease; }
+.portfolio-filters button:hover { border-color: var(--hairline-strong); color: var(--text); }
+.portfolio-filters button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.portfolio-status { height: 1px; overflow: hidden; clip-path: inset(50%); }
+.portfolio-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.portfolio-card { overflow: hidden; border: 1px solid var(--hairline); border-radius: 1.15rem; background: var(--bg-2); box-shadow: var(--card-shadow); transition: transform .3s ease, box-shadow .3s ease; }
+.portfolio-card:hover { transform: translateY(-4px); box-shadow: var(--card-shadow-lift); }
+.project-devices { position: relative; aspect-ratio: 16/9; overflow: hidden; background: linear-gradient(135deg, var(--bg-3), var(--bg-2)); }
+.project-devices img { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform .65s cubic-bezier(.16,1,.3,1); }
+.portfolio-card:hover .project-devices img { transform: scale(1.025); }
+.project-image-empty { display: grid; place-items: center; background: radial-gradient(circle at 70% 20%, var(--accent-soft), transparent 35%), var(--bg-3); color: var(--text); }
+.project-image-empty span { font-size: 1.4rem; font-weight: 700; text-align: center; }
+.project-image-empty small { display: block; margin-top: .4rem; color: #9eb3af; font-size: .72rem; font-weight: 400; }
+.portfolio-card-body { padding: 1.25rem 1.35rem 1.35rem; }
+.portfolio-card h3 { font-size: 1.35rem; font-weight: 750; letter-spacing: -.025em; }
+.portfolio-card-body > p { min-height: 3.2em; margin-top: .45rem; color: var(--text-2); font-size: .9rem; line-height: 1.55; }
+.portfolio-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
+.portfolio-card-footer > a { display: inline-flex; flex-shrink: 0; align-items: center; gap: .4rem; color: var(--text); font-size: .76rem; font-weight: 750; }
+.portfolio-tags { display: flex; flex-wrap: wrap; gap: .4rem; }
+.portfolio-tags span { border-radius: 999px; background: var(--bg-3); padding: .38rem .7rem; color: var(--muted); font-size: .66rem; }
+.portfolio-skeleton { aspect-ratio: 4/3; border-radius: 1.15rem; background: linear-gradient(90deg, var(--bg-2), var(--bg-3), var(--bg-2)); background-size: 200% 100%; animation: portfolio-shimmer 1.5s infinite; }
+.portfolio-message { padding: 5rem 1rem; text-align: center; color: var(--text-2); }
+.portfolio-message button { margin-left: .35rem; text-decoration: underline; }
+.portfolio-cta-wrap { background: var(--bg); padding: 0 1.5rem 4rem; }
+.portfolio-cta { display: grid; grid-template-columns: 1.1fr .9fr; gap: 4rem; max-width: 1400px; margin: auto; border: 1px solid var(--hairline); border-radius: 1.25rem; background: radial-gradient(circle at 95% 100%, var(--accent-soft), transparent 34%), var(--bg-2); padding: clamp(2.5rem, 6vw, 5rem); color: var(--text); }
+.portfolio-cta h2 { margin: 1rem 0; font-size: clamp(2.3rem, 4.5vw, 4.5rem); font-weight: 750; line-height: .98; letter-spacing: -.045em; }
+.portfolio-cta > div > p:not(.portfolio-eyebrow) { max-width: 34rem; margin-bottom: 2rem; color: var(--text-2); }
+.portfolio-cta-details { display: flex; flex-direction: column; justify-content: center; border-left: 1px solid var(--hairline); padding-left: clamp(2rem, 5vw, 5rem); }
+.portfolio-cta-details > span { font-size: clamp(1.6rem, 3vw, 3rem); line-height: 1.1; }
+.portfolio-cta-details strong { color: var(--accent); }
+.portfolio-cta-details a { display: inline-flex; align-items: center; gap: .5rem; color: var(--accent); font-size: .82rem; font-weight: 700; }
+.portfolio-work-index { padding-top: 2rem; }
+@keyframes portfolio-shimmer { to { background-position: -200% 0; } }
+@media (max-width: 767px) {
+  .portfolio-hero-title { font-size: clamp(2.55rem, 11.5vw, 3.75rem); }
+  .hero-device-composition { padding-top: 1rem; }
+  .portfolio-section-head { align-items: flex-start; flex-direction: column; }
+  .portfolio-grid { grid-template-columns: 1fr; }
+  .portfolio-card-footer { align-items: flex-end; }
+  .portfolio-cta { grid-template-columns: 1fr; gap: 2.5rem; }
+  .portfolio-cta-details { border-top: 1px solid var(--hairline); border-left: 0; padding-top: 2.5rem; padding-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .portfolio-card, .project-devices img { transition: none; } .portfolio-skeleton { animation: none; } }
+
 :root {
   /* Adopted from the live princecaleb.dev dark theme — the default until a
      visitor (or their OS) picks light, toggled via [data-theme="light"]

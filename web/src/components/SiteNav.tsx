@@ -41,6 +41,7 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const portfolioHeader = pathname === "/" || pathname === "/work";
 
   const closeButton = useRef<HTMLButtonElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -92,6 +93,7 @@ export function SiteNav() {
       <header
         className={cn(
           "fixed inset-x-0 top-0 z-50 transition-all duration-500",
+          portfolioHeader && !scrolled && "portfolio-nav",
           scrolled
             ? "border-b border-hairline bg-bg"
             : "border-b border-transparent bg-transparent",
