@@ -60,7 +60,12 @@ function hasShot(system: SystemView): boolean {
 
 /** The project's own image, shown as supplied. Screenshots and device
  *  mockups are prepared outside the app and uploaded in Admin -> Projects,
- *  so nothing here frames, crops or decorates them. */
+ *  so nothing here frames or decorates them.
+ *
+ *  The one thing applied to it is the panel's stepped top-left and
+ *  bottom-right corners (.notched-panel), the shape the cards are built
+ *  around: the step under the tab lines the two up, and the one opposite it
+ *  keeps the shape from reading as an accident. */
 function Shot({ system, large }: { system: SystemView; large?: boolean }) {
   if (!hasShot(system)) {
     // No image on file. An invented one would be a fabricated picture of
@@ -68,7 +73,7 @@ function Shot({ system, large }: { system: SystemView; large?: boolean }) {
     return (
       <div
         className={cn(
-          "flex items-end bg-bg-3 p-5",
+          "notched-panel flex items-end bg-bg-3 p-5",
           large ? "aspect-[16/10]" : "aspect-[16/11]",
         )}
       >
@@ -78,7 +83,12 @@ function Shot({ system, large }: { system: SystemView; large?: boolean }) {
   }
 
   return (
-    <div className={cn("overflow-hidden bg-bg-3", large ? "aspect-[16/10]" : "aspect-[16/11]")}>
+    <div
+      className={cn(
+        "notched-panel overflow-hidden bg-bg-3",
+        large ? "aspect-[16/10]" : "aspect-[16/11]",
+      )}
+    >
       <img
         src={system.img}
         alt={`${system.name}, ${system.category}`}

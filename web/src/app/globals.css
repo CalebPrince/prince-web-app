@@ -751,6 +751,45 @@ html.custom-cursor-active * {
   color: var(--text-3);
 }
 
+/* ---- Notched panel ----
+
+   A step cut out of the top-left and bottom-right corners, so a project
+   image reads as a shape someone drew rather than a rectangle that happened
+   to fit. The card's own surface shows through the cuts.
+
+   Fixed sizes rather than percentages: the step is a piece of the design
+   system, and it should measure the same on the feature card as on the small
+   ones. --notch-w/--notch-h can be overridden per element. */
+
+.notched-panel {
+  --notch-w: 96px;
+  --notch-h: 28px;
+  clip-path: polygon(
+    var(--notch-w) 0,
+    100% 0,
+    100% calc(100% - var(--notch-h)),
+    calc(100% - var(--notch-w)) calc(100% - var(--notch-h)),
+    calc(100% - var(--notch-w)) 100%,
+    0 100%,
+    0 var(--notch-h),
+    var(--notch-w) var(--notch-h)
+  );
+}
+
+/* Below ~640px a 96px step eats a quarter of the card. */
+@media (max-width: 640px) {
+  .notched-panel {
+    --notch-w: 64px;
+    --notch-h: 20px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .notched-panel {
+    clip-path: none;
+  }
+}
+
 /* ---- Dither edge, borrowed by the rest of the site ---- */
 
 /* Same three bands as the curtain, in a form any panel can hang off its own
