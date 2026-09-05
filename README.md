@@ -1,4 +1,4 @@
-# Prince Caleb — Portfolio Platform
+# Prince Caleb: Portfolio Platform
 
 A portfolio and client-acquisition site for a **website designer and
 developer**: the public marketing site in Next.js, backed by a custom PHP
@@ -10,11 +10,11 @@ and an opt-in AI assistant, Lisa, who is also sold as a monthly product.
 
 Website design and development is the headline service. Applications, AI
 agents and automations are the work that follows it, and the site is
-structured in that order throughout — see the 2026-09-05 upgrade below.
+structured in that order throughout. See the 2026-09-05 upgrade below.
 
 Backend: plain PHP (no framework), PDO + SQLite.
-Frontend is two apps behind one domain: every public page — marketing,
-transactional and the client portal — is `web/`, a Next.js (App Router) +
+Frontend is two apps behind one domain. Every public page (marketing,
+transactional, and the client portal) is `web/`, a Next.js (App Router) +
 Tailwind CSS v4 + shadcn/ui app (see "Next.js + Tailwind + shadcn/ui
 rebuild" below). Only the admin panel is still static HTML + vanilla JS +
 Bootstrap 5, no build step, no bundler, talking to the same REST API.
@@ -27,19 +27,19 @@ The public site positions Prince Caleb as a website designer and developer
 who takes on a limited number of projects and agrees each one in writing
 before starting. The homepage runs in that order:
 
-1. **Hero** — the positioning line (or the day's generated headline, see
+1. **Hero**: the positioning line (or the day's generated headline, see
    below), with a piece of website design work as the panel beside it.
-2. **Google rating strip** — the live star rating, review count and a
+2. **Google rating strip**: the live star rating, review count and a
    "Leave a review" link, when the rating is published.
-3. **Quarterly availability** — how many of the six project slots this
+3. **Quarterly availability**: how many of the six project slots this
    quarter are still open.
-4. **Capabilities → Selected work → Process** — what is built, what has
+4. **Capabilities → Selected work → Process**: what is built, what has
    shipped, and the four stages every project runs through.
-5. **A clear way of working** — the written agreement, approval of changes,
+5. **A clear way of working**: the written agreement, approval of changes,
    and the fact that an enquiry reserves nothing.
-6. **Beyond the website** — AI agents and automation, carrying the voice
+6. **Beyond the website**: AI agents and automation, carrying the voice
    demo.
-7. **Client reviews** — approved Google reviews, or nothing at all.
+7. **Client reviews**: approved Google reviews, or nothing at all.
 
 Nothing on the site invents proof. There are no written-in testimonials and
 no unverifiable statistics anywhere: reviews come from Google (each approved
@@ -65,10 +65,10 @@ scope, cost and the start conditions were never agreed in writing.
 
 ### Positioning
 
-- **`/website-design`** — a page for a visitor who only wants a website:
+- **`/website-design`**: a page for a visitor who only wants a website:
   business sites, landing pages, redesigns, online stores, what is included,
   and how design is approved before development.
-- **`/working-together`** — the four stages, the quarterly limit, and what
+- **`/working-together`**: the four stages, the quarterly limit, and what
   the written agreement covers, with the live intake numbers on it.
 - The homepage hero leads with website work (`WebsiteDesignPreview`); the
   voice demo moved down to its own "beyond the website" section. Nav,
@@ -101,8 +101,8 @@ the one place the gate is decided:
   do **not** consume a slot; only a confirmed project does, which is why the
   count is set manually.
 - `ProjectRequestController::create` and `AppointmentController::createBooking`
-  both refuse through the same helper, so every booking channel — the `/book`
-  page, Live Chat, WhatsApp Lisa, the voice agent — is gated identically.
+  both refuse through the same helper, so every booking channel (the `/book`
+  page, Live Chat, WhatsApp Lisa, the voice agent) is gated identically.
 - `/request` requires an explicit acknowledgement that the enquiry reserves
   nothing and that work starts after an agreement and an initial payment.
   The wording is stored with the inquiry.
@@ -113,18 +113,18 @@ the one place the gate is decided:
 
 `App\Support\ProjectAgreement` carries the rules:
 
-- **Sending** — a proposal cannot be sent until it has scope, timeline,
+- **Sending**: a proposal cannot be sent until it has scope, timeline,
   terms and a first payment milestone with a real amount.
-- **Accepting** — the client ticks an explicit acceptance and posts the hash
+- **Accepting**: the client ticks an explicit acceptance and posts the hash
   of the exact scope, figures and terms they were shown
   (`ProjectAgreement::version`). If the proposal changed while they were
   reading it, acceptance is refused with a 409 rather than binding them to
   wording they never saw. The UPDATE re-checks every hashed field, so a save
   that lands mid-review loses the race instead of slipping through.
-- **Recording** — the accepted hash is stored on the row as
+- **Recording**: the accepted hash is stored on the row as
   `accepted_agreement_version`, so a later edit cannot quietly rewrite what
   was agreed.
-- **Paying** — `PaymentController::prepare` refuses a milestone payment
+- **Paying**: `PaymentController::prepare` refuses a milestone payment
   whose proposal has not been accepted.
 - The proposal page states the start conditions up front, marks the first
   milestone as required before work begins, and can be printed or saved.
@@ -138,8 +138,8 @@ the one place the gate is decided:
 - Each Google review is hidden until given a placement (`landing` and/or
   `testimonials`) in Admin → Testimonials.
 - The aggregate rating strip is shown by default and
-  `google_rating_published = '0'` takes it down — the opposite of the
-  per-review rule, because that figure is Google's own for the business.
+  `google_rating_published = '0'` takes it down. That is the opposite of
+  the per-review rule, because the figure is Google's own for the business.
 
 ### Pricing leads with website packages
 
@@ -155,14 +155,14 @@ the one place the gate is decided:
 - `/pricing`, `/lisa-ai-assistant` and `/ai-voice-agents-for-clinics` were
   statically prerendered while fetching `/api/v1/content`, so admin edits
   were frozen at build time and never appeared. All three are now
-  `force-dynamic` — deliberately not ISR, which is what blanked the homepage
+  `force-dynamic`: deliberately not ISR, which is what blanked the homepage
   in August.
 
 ### Lisa's tiers can be subscribed to
 
 `POST /api/v1/subscriptions/lisa` is the public counterpart to the admin
 subscription flow. A tier becomes purchasable only once
-`lisa_tier_N_amount` holds a real number — the displayed price is free text
+`lisa_tier_N_amount` holds a real number. The displayed price is free text
 and is never charged against. The form takes a name, an email and an
 explicit renewal acknowledgement, then hands off to Paystack's hosted
 checkout; no card details reach this app. One Paystack plan is minted per
@@ -184,7 +184,7 @@ version accepted.
   stale seeded `hero_*` copy as if it were fresh.
 - **Booking times state their timezone** and the visitor's local equivalent.
 - **Client-facing links pointed at deleted `.html` pages** (`/pay`,
-  `/invoice`, `/proposal`, `/testimonial`, `/book`) — fixed in the emails,
+  `/invoice`, `/proposal`, `/testimonial`, `/book`). Fixed in the emails,
   the client portal and the admin's copy-link buttons.
 - The route curtain is quicker (624ms), links prefetch on hover, and the
   entrance animation gained a slight scale and focus-in.
@@ -199,7 +199,7 @@ php database/strip_em_dashes.php --apply
 
 Then in the admin: set the quarterly slot count, approve the Google reviews
 to publish, and set a monthly charge per Lisa tier if those are to be sold
-online. The Lisa checkout has not been exercised against Paystack — run one
+online. The Lisa checkout has not been exercised against Paystack. Run one
 test-key signup before announcing it.
 
 ## Quarterly intake gate and real booking/contact forms (2026-09-04 upgrade)
@@ -209,28 +209,28 @@ Two related fixes to the `web/` (Next.js) site's project-acquisition paths.
 ### Quarterly project intake gate
 
 The homepage already carried a "quarterly project availability" strip driven
-by three Site Content settings — `quarterly_project_status` (`open`/`closed`),
+by three Site Content settings: `quarterly_project_status` (`open`/`closed`),
 `quarterly_project_slots`, and `quarterly_next_open_date`. Those settings now
 actually gate the two project entry points instead of only decorating the
 homepage:
 
 - **`/request` and `/book`** became server components (`force-dynamic`, so the
   gate can't be served from a stale static shell mid-deploy). When intake is
-  `closed` they render `IntakeClosedPanel` — the next-opening date plus the
-  preserved non-project contact routes (`/contact`, WhatsApp, email) — instead
+  `closed` they render `IntakeClosedPanel` (the next-opening date plus the
+  preserved non-project contact routes: `/contact`, WhatsApp, email) instead
   of their forms.
 - **Project CTAs site-wide** (`<IntakeCta>`, ~13 call sites: homepage,
   services, pricing, work, marketing-brain, builder-os, lisa-ai-assistant,
   …) switch to a quieter "Join the next intake" button when closed. A single
   client-side `/api/v1/content` fetch is shared through
   `QuarterlyIntakeProvider` rather than one per CTA.
-- **Backend guards** — `ProjectRequestController::create` returns 422 and
+- **Backend guards**: `ProjectRequestController::create` returns 422 and
   `AppointmentController::createBooking` refuses when the status is exactly
   `"closed"`. `createBooking` is the one path every booking channel uses, so
   this also blocks Live Chat, WhatsApp Lisa, and the voice agent (each gets
   the next-quarter message to relay). Reschedules of existing bookings are
   deliberately not gated.
-- **Admin editor** — Site Content → Hero → *Quarterly project intake*: Status
+- **Admin editor**: Site Content → Hero → *Quarterly project intake*: Status
   is now an open/closed `<select>` and "next opening date" a `<select>` of the
   upcoming quarter-start dates (or "auto"), not free-text inputs.
 
@@ -241,10 +241,10 @@ counts as open, in both the PHP guards and `web/src/lib/quarterly.ts`.
 six projects a quarter, closes intake when no slots remain, and moved both
 guards onto `App\Support\QuarterlyIntake`.
 
-### `/book` and `/contact` were mocks — now wired to the API
+### `/book` and `/contact` were mocks: now wired to the API
 
 Since the 2026-08-18 rebuild replaced `web/` wholesale, `/book` and `/contact`
-were visual shells whose submit handlers only flipped to a success screen —
+were visual shells whose submit handlers only flipped to a success screen:
 nothing was posted. `/book` even shipped a *visible* "Website" field that the
 booking endpoint treats as its honeypot, so a real visitor who filled it in
 had their booking silently dropped. The legacy `.html` versions that did work
@@ -253,7 +253,7 @@ thing serving those URLs.
 
 - **`/book`** now checks `/api/v1/appointments/config`, loads real slots per
   date from `/api/v1/appointments/availability`, and posts to
-  `/api/v1/appointments/book` — with a proper hidden honeypot, a booking-off
+  `/api/v1/appointments/book`: with a proper hidden honeypot, a booking-off
   state, deep-link prefill, and slot-conflict recovery.
 - **`/contact`** now posts to `/api/v1/inquiries` (hidden honeypot added; the
   "what" field and budget chip are folded into the message body, since that
@@ -263,21 +263,21 @@ Every other public form (`/request`, `/growth-roadmap`, the `/archive`
 newsletter, testimonials, proposal-accept, both chat surfaces) was already
 calling its endpoint and is unchanged.
 
-No database migration or schema change — the three `quarterly_*` keys are
+No database migration or schema change: the three `quarterly_*` keys are
 plain `settings` rows.
 
 ## Figma rebuild replaces the Next.js front end (2026-08-18 upgrade)
 
 The Bootstrap-token "straight port" version of `web/` (see the September
 Setup section below) was replaced outright by a real Figma-designed rebuild,
-folded into this repo rather than shipped as a separate one — a separate repo
+folded into this repo rather than shipped as a separate one, a separate repo
 would have meant re-deriving `.github/workflows/deploy.yml`'s pipeline from
 scratch (including two already-fixed production bugs: FTP-Deploy-Action
 sharing sync state across calls, and its default excludes dropping the
 `node_modules/` a standalone build needs) and still couldn't coordinate with
 the PHP API it reads, which OpenLiteSpeed routes on the same domain.
 
-- **One dark editorial theme, not four** — the old light/dark/midnight/paper
+- **One dark editorial theme, not four**: the old light/dark/midnight/paper
   theme system and its Bootstrap-derived tokens are gone. `globals.css` now
   ships a single dark palette lifted from princecaleb.dev's actual live dark
   theme (`--bg: #0b0c0e`, `--accent: #62ff98`, etc.), set on `:root` with no
@@ -286,20 +286,20 @@ the PHP API it reads, which OpenLiteSpeed routes on the same domain.
 - **New pages**: `/systems` (the project showcase, renamed from `/projects`,
   and renamed again to `/work` in the 2026-09-05 upgrade above) and its
   `:slug` detail, `/book` (booking landing), and `/lab` (an "open
-  experiments and prototypes, not client work" showcase page) — none of
+  experiments and prototypes, not client work" showcase page), none of
   these existed in the prior rebuild. `/projects` and `/projects/:slug` now
   permanently redirect to `/work`.
 - **Seven pages dropped back to legacy PHP for now**: `pricing`,
   `marketing-brain`, `lisa-ai-assistant`, `ai-voice-agents-for-clinics`,
   `growth-roadmap`, `builder-os`, and `agent` are not yet ported into the
   new design. Since OpenLiteSpeed resolves any real file before handing a
-  request to Node, their `.html` versions keep serving directly — but the
+  request to Node, their `.html` versions keep serving directly, but the
   extension-less route (e.g. `/pricing`) matches no file, falls through to
   this app, and would 404 without help. `next.config.ts`'s
   `LEGACY_HTML_ROUTES` list temporarily (non-permanent, so nothing caches)
   redirects each one to its `.html` page; deleting an entry from that list
   is the whole job of porting the page later.
-- **Systems showcase fields added to `projects`** — the new design presents
+- **Systems showcase fields added to `projects`**: the new design presents
   each project as a "system": what it does, who it was for, how long it
   took, before/after, and headline numbers. The `projects` table gained 11
   nullable columns (`tagline`, `showcase_category`, `result_headline`,
@@ -314,9 +314,9 @@ the PHP API it reads, which OpenLiteSpeed routes on the same domain.
   can be derived from existing data (grouping, tagline, year, stack from
   tags) and leaves client-specific fields (`client_name`, `role`, `timeline`,
   `result_headline`, `metrics`, `challenge`, `solution`) null rather than
-  invent facts about real client work — safe to re-run (`COALESCE` unless
+  invent facts about real client work, safe to re-run (`COALESCE` unless
   `--force`).
-- **Homepage showcase is now real data** — the "See what has already
+- **Homepage showcase is now real data**: the "See what has already
   shipped" section previously listed four invented projects (Aurora
   Commerce, Helio AI, Meridian Studio, Nova Platform) hardcoded in
   `page.tsx`. It now fetches published projects from the API client-side
@@ -324,7 +324,7 @@ the PHP API it reads, which OpenLiteSpeed routes on the same domain.
   column/checkbox the legacy homepage already used), in sort order, falling
   back to the first three published projects if none are ticked so the
   section is never empty.
-- **Nav link color matched to what PHP actually renders** — the PHP pages'
+- **Nav link color matched to what PHP actually renders**: the PHP pages'
   nav links render accent-green regardless of active state, because a
   higher-specificity global `app.css` rule beats the intended muted default.
   The Next.js nav was built against that losing (never-applied) PHP rule, so
@@ -334,18 +334,18 @@ the PHP API it reads, which OpenLiteSpeed routes on the same domain.
 No database migration is required beyond the new showcase columns
 (`php database/migrate.php` picks them up automatically).
 
-## Twilio fully removed — ElevenLabs now runs every calling and WhatsApp surface (2026-08-10 upgrade)
+## Twilio fully removed: ElevenLabs now runs every calling and WhatsApp surface (2026-08-10 upgrade)
 
 The Twilio account is being closed entirely. Every remaining Twilio-dependent
 code path was replaced or deleted, not just gated behind a toggle:
 
-- **Outbound Marketing Lead calls** — `OutreachController::initiateAiCall()`
+- **Outbound Marketing Lead calls**: `OutreachController::initiateAiCall()`
   now places calls through ElevenLabs' SIP-trunk outbound-call API
   (`POST /v1/convai/sip-trunk/outbound-call`) instead of Twilio's REST API.
   Every existing guardrail carries over unchanged: admin approval +
   recipient-consent confirmation required, a hard cap of five AI calls/day,
   and a 15-minute duplicate-call guard.
-- **Inbound public voice line and outbound call conversation handling** — a
+- **Inbound public voice line and outbound call conversation handling**: a
   new `VoiceDemoController` webhook trio (`elevenlabs/init`,
   `elevenlabs/tool`, `elevenlabs/post-call`) mirrors the pattern already
   proven on WhatsApp voice: ElevenLabs runs the actual conversation turn
@@ -358,12 +358,12 @@ code path was replaced or deleted, not just gated behind a toggle:
   per-utterance regex scanning (only possible because Twilio handed control
   back to PHP after every turn) to explicit tools the agent calls
   mid-conversation, the same pattern WhatsApp's `book_appointment` already
-  used — plus a same-post-call fallback that logs a `no_answer` call
+  used, plus a same-post-call fallback that logs a `no_answer` call
   attempt for any call that connects but never produces a real exchange.
-- **WhatsApp** — `whatsapp_provider` no longer accepts `twilio`; it's Whapi
+- **WhatsApp**: `whatsapp_provider` no longer accepts `twilio`; it's Whapi
   or ElevenLabs only. The Twilio inbound-message webhook and its
   request-signature verification are gone. *(Later reversed in part: Wati
-  and a rebuilt Twilio option were added back as selectable providers —
+  and a rebuilt Twilio option were added back as selectable providers:
   see `TwilioClient` and `LiveChatController::twilioWebhook()`. None of the
   removed Twilio voice/Content-API features came back.)*
 - **Owner operational alerts** (`WhatsAppNotifier`) now send only through
@@ -373,40 +373,40 @@ code path was replaced or deleted, not just gated behind a toggle:
   equivalent and was removed outright, along with the Twilio low-balance
   alert cron (`database/check_twilio_balance.php`) and its Attention-panel
   notification, the Twilio call-status reconciliation helper
-  (`CallOutcomeSync` — its logic is now inline in the ElevenLabs post-call
+  (`CallOutcomeSync`, its logic is now inline in the ElevenLabs post-call
   webhook), and the `voice-relay/` ConversationRelay WebSocket companion
-  app (deleted entirely — ElevenLabs terminates its own call audio and
+  app (deleted entirely, ElevenLabs terminates its own call audio and
   calls PHP webhooks directly, the same way WhatsApp voice already did, so
   no relay bridge is needed).
-- **Admin Settings** — the Twilio Voice/WhatsApp panels, the
+- **Admin Settings**: the Twilio Voice/WhatsApp panels, the
   ConversationRelay sub-panel, the low-balance alert card, and the post-call
   summary panel are gone, replaced by a single "ElevenLabs Phone (SIP
-  trunk)" panel (phone agent ID, phone number ID, and two webhook secrets —
+  trunk)" panel (phone agent ID, phone number ID, and two webhook secrets:
   independent from the ElevenLabs WhatsApp panel's agent/secrets, since a
   WhatsApp number and a real SIP-trunked phone number are two different
   ElevenLabs integrations even when they end up being the same physical
   number).
-- **Numbers** — the public AI voice line and the Ghana WhatsApp number are
+- **Numbers**: the public AI voice line and the Ghana WhatsApp number are
   no longer Twilio-hosted. Reaching feature parity on phone calling requires
   a non-Twilio SIP trunk provider (e.g. Telnyx) connected to ElevenLabs;
   until that's configured, `telephony_enabled` in Voice Demo reporting stays
   false and outbound Lisa calls to leads will fail with a clear setup error
   rather than silently doing nothing.
 
-No database migration is required — `telephony_calls.provider` was already
+No database migration is required, `telephony_calls.provider` was already
 a free-text column (every insert just used to hardcode `'twilio'`; new rows
 write `'elevenlabs'`), and every new Settings key is a plain row in the
 existing flexible `settings` table.
 
 ## Radar, ElevenLabs WhatsApp, and LinkedIn publishing hardening (2026-08-08 upgrade)
 
-- **Radar** — a seventh admin-only chat agent (`RadarController`, Talk to
+- **Radar**: a seventh admin-only chat agent (`RadarController`, Talk to
   Agents console) covering the safe subset of "LinkedIn AI agent"
   capabilities. It deliberately does **not** send messages or connect to
   anyone: LinkedIn's official API surface (via the existing Composio
   connection) has no messaging action at all, so real DM outreach would
   need an unofficial third-party automation tool and the account-ban risk
-  that comes with it. Instead Radar covers three grounded capabilities —
+  that comes with it. Instead Radar covers three grounded capabilities:
   `analyze_linkedin_url` (real profile/company data via the same Apify
   actor Beacon's engagement scraper already uses, falling back to pasted
   text when Apify isn't configured), `get_pipeline_report` (real counts
@@ -415,12 +415,12 @@ existing flexible `settings` table.
   outreach DMs for Caleb to copy and send himself, with a review queue
   linking back to the source post/profile (same pattern as Beacon's
   drafted replies). A fourth capability, `get_linkedin_post_performance`,
-  is confirmed impossible as of 2026-08-08 — Composio's LinkedIn toolkit
+  is confirmed impossible as of 2026-08-08, Composio's LinkedIn toolkit
   has no analytics/statistics tool at all (only create post, delete post,
-  get company info, get my info) — so it's gated behind an empty-by-default
+  get company info, get my info), so it's gated behind an empty-by-default
   Settings key and degrades to an explanatory note rather than calling a
   tool slug known not to exist.
-- **ElevenLabs native WhatsApp voice+chat channel** — ElevenLabs' Agents
+- **ElevenLabs native WhatsApp voice+chat channel**: ElevenLabs' Agents
   platform handles both WhatsApp chat and WhatsApp voice calls natively on
   one number, at the cost of its own hosted LLM running the live
   conversation loop instead of this app's `AiAgentEngine`. Kept on one
@@ -435,27 +435,27 @@ existing flexible `settings` table.
   conversation. `whatsapp_provider` gained a third value (`elevenlabs`)
   alongside `whapi`, with mutual-exclusion guards so only the selected
   provider's webhook processes a given number.
-- **LinkedIn publishing hardened** — `ComposioController` now discovers
+- **LinkedIn publishing hardened**: `ComposioController` now discovers
   real LinkedIn tool slugs from Composio's catalog instead of guessing
   them, prefers Composio's maintained `LINKEDIN_GET_MY_INFO` tool (falling
   back to proxying LinkedIn's userinfo endpoint directly) to auto-fill the
   author URN the post API requires, captures the real published post URN
   for display in the Social Drafts review modal and manual backfill, and
   no longer lets a SQLite lock during publish crash the approval request.
-- **Marketing-lead pitch drafting now runs through Sage for real** —
+- **Marketing-lead pitch drafting now runs through Sage for real**: 
   `MarketingLeadController::draftPitch()` previously built its own
   standalone prompt instructing the model to write "the way Sage would."
   It now calls `SageController::draftOutreachPitch()`, which runs the task
-  through Sage's actual persona, tools, and `AiAgentEngine` — the same
+  through Sage's actual persona, tools, and `AiAgentEngine`, the same
   brain visitors talk to, not a copy of it.
-- **"Powered by" infrastructure strip** on the homepage — real brand
+- **"Powered by" infrastructure strip** on the homepage, real brand
   SVG/PNG marks (sourced from each service's own site or Simple Icons)
   for the third-party services the platform is actually built on
   (Anthropic, OpenRouter, ElevenLabs, Composio, Apify, Paystack,
   Whapi, HeyGen/LiveAvatar, Hunter, Fly.io, Google, Meta, Groq), each
   paired with real CSS text since `<img>`-loaded SVGs don't inherit page
   CSS color.
-- **WhatsApp contact routing fixed** — the contact page and Lisa's own
+- **WhatsApp contact routing fixed**: the contact page and Lisa's own
   public grounding both previously pointed visitors at Caleb's personal
   WhatsApp number; both now point at Lisa's number
   (`+233 53 580 1359`, the Ghana number connected via ElevenLabs) so
@@ -472,20 +472,20 @@ video production pipeline was set up, and a public positioning page put the
 "levels of AI adoption" framing already implicit in the agent roster into
 words.
 
-- **The 5 Levels of AI Adoption** (`/ai-adoption-ladder.html`) — a
+- **The 5 Levels of AI Adoption** (`/ai-adoption-ladder.html`): a
   positioning page mapping the site's own real agent system (Beacon,
   Nurturer, Chief, the automations engine) onto a five-level adoption ladder
   (Asking → Supervised → Coordinated → Delegated → Autonomous), honestly
   framed as describing the current internal system, not a promised client
   outcome.
-- **Sage** — a public, no-auth, rate-limited marketing-frameworks chat agent
+- **Sage**: a public, no-auth, rate-limited marketing-frameworks chat agent
   (`SageController`, `/marketing-brain.html`) that works through a visitor's
   real marketing problem via the combined lens of Hormozi, Brunson, Ogilvy,
   Cialdini, and Godin, pushing back on vague questions rather than handing
   out generic advice. Every conversation persists to a new `sage_chats`
   table (mirrors `chat_sessions` minus Lisa's prototype-building fields) and
   is reviewable at `/admin/sage-chats.html`; a name/email is only ever
-  recorded if a visitor volunteers it (`log_contact` tool) — Sage never
+  recorded if a visitor volunteers it (`log_contact` tool), Sage never
   asks. Sage also:
   - has its own dedicated homepage feature section (`.home-sage-feature` in
     `home.html`) instead of a small in-deck link, and is listed on both the
@@ -494,26 +494,26 @@ words.
   - is admin-configurable from Site Content like every other agent (assistant
     name, voice gender, UK/US accent, a live preview button);
   - is the persona `MarketingLeadController::draftPitch()` now explicitly
-    channels when drafting cold-outreach pitch emails — applied, never named
-    in the email copy itself — while every existing safety rule (no invented
+    channels when drafting cold-outreach pitch emails, applied, never named
+    in the email copy itself, while every existing safety rule (no invented
     statistics, no fake urgency, real contact details appended separately in
     PHP) stays unchanged;
   - recognizes Prince Caleb specifically when he's logged into admin and
     chatting with it on the public page, via a new reusable
     `AuthMiddleware::tryAuth(): ?array` (the same JWT + `token_version` check
     as `requireAuth()`, but returns null instead of erroring rather than
-    halting the request — `LiveChatController::isOwnerSession()` now
+    halting the request, `LiveChatController::isOwnerSession()` now
     delegates to it instead of duplicating the same logic for Lisa).
-- **Reel** — an admin-only chat agent (`ReelController`; Talk to Agents
+- **Reel**: an admin-only chat agent (`ReelController`; Talk to Agents
   console and the Team page) that helps plan a video before it gets built:
   concept, scene breakdown, narration script, pacing, and visual style for
-  the HyperFrames pipeline below. It's a planning partner, not a builder — it
+  the HyperFrames pipeline below. It's a planning partner, not a builder, it
   never writes composition files, runs lint/check, or renders anything
   itself. It can `browse_url` a public website or YouTube link (the same
   SSRF-safe fetch pattern Dossier uses for site audits) to ground an idea in
   a real inspiration source, and is told to say plainly when a page is too
   JS-rendered to read rather than guess at its contents.
-- **HyperFrames video pipeline** (`video-assets/`) — a from-scratch setup for
+- **HyperFrames video pipeline** (`video-assets/`): a from-scratch setup for
   producing motion-graphic and narrated videos by rendering HTML/CSS/GSAP
   compositions to MP4. Each video is its own sub-project: a short
   motion-graphic brand sting, and a full 8-scene narrated "system online"
@@ -521,10 +521,10 @@ words.
   rendered. Rendering works natively on Windows or via WSL depending on the
   machine. Narration-driven scene timing is derived from a real Whisper
   transcript of the audio (a local `whisper.cpp` build), not a guessed
-  scene-duration schedule — even narration recorded against a planned script
+  scene-duration schedule, even narration recorded against a planned script
   rarely lands on those exact durations, and the gap compounds into visible
   audio/visual drift by the later scenes.
-- **Shared heading accent style** — a `.accent-word` utility class (the key
+- **Shared heading accent style**: a `.accent-word` utility class (the key
   word in a page's H1, styled in the site's signal-green accent) rolled out
   across the ~13 main marketing pages, including the dynamically-driven
   homepage hero title (special-cased in `content.js`, since the generic
@@ -545,33 +545,33 @@ replaced the earlier pure-monochrome accent with a deliberate green identity
 and added a dedicated `/builder-os.html` page plus supporting chrome used
 site-wide.
 
-- **Green accent system** — `--accent`/`--accent-strong`/`--accent-soft`
+- **Green accent system**: `--accent`/`--accent-strong`/`--accent-soft`
   (`public/css/app.css`) moved from a neutral ink tone to green across every
   theme (e.g. `#08783c` light, `#62ff98` dark), so links, active nav states,
   buttons, and system labels read as one consistent brand color instead of
   the prior strict grayscale.
-- **`/builder-os.html`** — a terminal-styled hero
+- **`/builder-os.html`**: a terminal-styled hero
   (`builder@princecaleb:~$ inspect network`), a live agent topology map
   (`#system-map`) rendered from the same team configuration the admin command
   centre uses, and an **interactive workflow simulator**: three real
   scenarios (after-hours clinic call, new business enquiry, invoice needing
   review) that play back a step-by-step execution log showing which agent
-  handled what — demonstration only, no client data involved. "Systems"
+  handled what, demonstration only, no client data involved. "Systems"
   replaced the generic "Projects" nav label site-wide, and the primary nav
   now includes a dedicated Builder OS link.
-- **Agent dossiers** (`/agent.html`, `js/agent-profile.js`) — each AI
+- **Agent dossiers** (`/agent.html`, `js/agent-profile.js`): each AI
   teammate gets its own profile page linked from the Builder OS topology and
   Team page, rather than a single shared roster block.
-- **System browser mockups** — homepage and services sections now frame
+- **System browser mockups**: homepage and services sections now frame
   screenshots inside a browser-chrome device frame (`js/home.js`,
   `public/css/app.css`) instead of plain image boxes, reinforcing the
   "inspect a running system" framing.
-- **Cinematic page transitions** (`js/cinematic-nav.js`) — internal
+- **Cinematic page transitions** (`js/cinematic-nav.js`): internal
   navigation between `.html` pages fades through a full-screen "BUILDER OS"
   branded loading overlay with a page-specific status line (e.g. "Opening
   agent dossier…"), skipped entirely under `prefers-reduced-motion` and for
   external links, downloads, and modified clicks.
-- **Consistent generated marketing** — AI-drafted adverts/social creative
+- **Consistent generated marketing**: AI-drafted adverts/social creative
   (`ContentAgentController`, Canvas) now standardize on the same Builder OS
   branding and green identity instead of the older generic template, so
   outbound creative matches the live site.
@@ -671,7 +671,7 @@ mobile-app delivery. This section consolidates every change shipped in commits
 ### Production voice agent and calling controls
 
 This section originally described a phone-calling implementation superseded
-by the 2026-08-10 upgrade above — the browser voice demo still answers
+by the 2026-08-10 upgrade above, the browser voice demo still answers
 side-effect-free, and Lisa still answers the public customer-service line
 and makes individually approved Marketing Leads calls, but the underlying
 telephony provider, admin settings, and audio-bridging companion described
@@ -687,7 +687,7 @@ before creating dependent indexes.
 
 ### WhatsApp and public contact rollout
 
-- WhatsApp inbound messaging (now via Whapi or ElevenLabs — see "Twilio fully
+- WhatsApp inbound messaging (now via Whapi or ElevenLabs, see "Twilio fully
   removed" above) reopens its conversation as unread and resets any
   previously dismissed notification for that thread on every new message.
 - Site Content holds the authoritative public WhatsApp link and wording.
@@ -704,10 +704,10 @@ Four public tiers are synchronized across the homepage, Pricing page, admin
 content settings, live chat, website demo, proposals, outreach copy, and the
 rest of the agent team:
 
-1. **AI Voice Agent Pilot** — from **GHS 5,000**.
-2. **Voice + WhatsApp** — from **GHS 15,000**.
-3. **AI Operations System** — from **GHS 25,000**.
-4. **Custom Websites & Mobile Apps** — business websites from **GHS 5,000**,
+1. **AI Voice Agent Pilot**: from **GHS 5,000**.
+2. **Voice + WhatsApp**: from **GHS 15,000**.
+3. **AI Operations System**: from **GHS 25,000**.
+4. **Custom Websites & Mobile Apps**: business websites from **GHS 5,000**,
    custom web applications from **GHS 15,000**, and iOS/Android mobile-app
    MVPs from **GHS 35,000**.
 
@@ -749,11 +749,11 @@ discovery. Arch's design upgrade itself requires no migration.
 Requires PHP 8.1+ with the `pdo_sqlite` extension. No Composer, and the PHP
 app itself needs no build step. `package.json` at the repo root builds the
 Tailwind CSS layer for the still-static `public/*.html` pages (`npm run
-build` → `public/css/tailwind.build.css`, gitignored) — Node is CI-only
-for that piece, the production host never runs it for the PHP app.
+build` → `public/css/tailwind.build.css`, gitignored). Node is CI-only
+for that piece: the production host never runs it for the PHP app.
 
 Node *does* run in production for `web/` (the Next.js + Tailwind + shadcn/ui
-rebuild — see "Next.js + Tailwind + shadcn/ui rebuild" below), via cPanel's
+rebuild, see "Next.js + Tailwind + shadcn/ui rebuild" below), via cPanel's
 Node.js Selector (Phusion Passenger), as a separate app alongside the PHP
 one. The two areas of this repo have different Node relationships:
 `public/`'s Tailwind build is CI-only tooling; `web/` is a real,
@@ -765,7 +765,7 @@ php database/migrate.php
 
 # 2. Seed an admin user + sample projects/tags
 php database/seed.php [admin-email] [admin-password]
-# defaults: admin@princecaleb.dev / change-me-now-123 — change this in production
+# defaults: admin@princecaleb.dev / change-me-now-123, change this in production
 
 # 3. Optional: seed the 52 blog posts + generate their visible SVG covers
 php database/generate_blog_covers.php
@@ -792,7 +792,7 @@ cd web && npm run dev
 ```
 
 `npm run dev` in `web/` starts the Next.js site and the PHP API together
-(`concurrently`), which is what the public pages need — they render on the
+(`concurrently`), which is what the public pages need: they render on the
 server and fetch `/api/v1/*` as they do. Visit `http://localhost:3000` for
 the site and `http://localhost:3000/admin` for the admin panel. To run the
 PHP side alone: `php -S localhost:8017 -t public public/index.php`.
@@ -800,8 +800,8 @@ PHP side alone: `php -S localhost:8017 -t public public/index.php`.
 ## Next.js + Tailwind + shadcn/ui rebuild (`web/`)
 
 `web/` is a from-scratch, Figma-designed rebuild of the public marketing
-site — Next.js (App Router) + Tailwind CSS v4 + shadcn/ui on
-`@base-ui/react` primitives — not a framework port of the PHP pages'
+site, Next.js (App Router) + Tailwind CSS v4 + shadcn/ui on
+`@base-ui/react` primitives, not a framework port of the PHP pages'
 Bootstrap markup (an earlier version of `web/` was that kind of straight
 port; the 2026-08-18 upgrade above replaced it outright). It runs one dark
 editorial theme (Manrope + JetBrains Mono, a signal-green `--accent` lifted
@@ -811,7 +811,7 @@ light/dark/midnight/paper system, and introduces new page concepts
 pages it does cover.
 
 **Confirmed live in production** at princecaleb.dev. Every public page is
-served by `web/` now — the legacy `.html` marketing pages were deleted on
+served by `web/` now. The legacy `.html` marketing pages were deleted on
 2026-08-20 and nothing falls back to them:
 
 - Marketing: `/`, `/website-design`, `/services`, `/pricing`,
@@ -825,7 +825,7 @@ served by `web/` now — the legacy `.html` marketing pages were deleted on
 - Legal and system: `/privacy`, `/terms`, `/cookies`, `/maintenance`, `/404`.
 
 Real backend features (project and blog search, the work showcase,
-testimonials, Google reviews, and every public form — contact, booking,
+testimonials, Google reviews, and every public form, contact, booking,
 project request, newsletter, proposal acceptance, Lisa subscriptions) call
 the same PHP `/api/v1/*` endpoints the rest of the site uses; nothing is
 mocked. `/projects`, `/projects/:slug`, `/systems` and `/systems/:slug`
@@ -843,7 +843,7 @@ princecaleb.dev:
   bound directly to the apex domain. `next.config.ts` sets
   `output: "standalone"` so the deploy is a minimal self-contained bundle
   (Next.js's own generated `server.js` + only the node_modules actually
-  used at runtime) rather than the full node_modules tree — see
+  used at runtime) rather than the full node_modules tree, see
   `.github/workflows/deploy.yml`'s `web/` build steps. Two real deploy
   bugs were found and fixed getting this pipeline solid: a second
   FTP-Deploy-Action call sharing sync state with the first was silently
@@ -851,14 +851,14 @@ princecaleb.dev:
   excludes were dropping the `node_modules/` the standalone build needs
   to run at all.
 - The PHP app keeps serving everything it always has, from `public_html/`
-  as today — this host runs OpenLiteSpeed, not Apache, and its Node
+  as today, this host runs OpenLiteSpeed, not Apache, and its Node
   integration only takes over a request when it doesn't match a real
   file or PHP route, so no `.htaccess` bypass rules were needed for
   `/admin/*`, `/api/*`, or the not-yet-migrated marketing pages to keep
   resolving through PHP.
 
 Local dev: `cd web && npm run dev` (Turbopack, port 3000). `next.config.ts`
-proxies `/api/*` to the local PHP dev server in development only — in
+proxies `/api/*` to the local PHP dev server in development only, in
 production `/api/*` just resolves to a real PHP route the same way any
 other request does, never through Next.js.
 
@@ -866,13 +866,13 @@ other request does, never through Next.js.
 
 ```
 web/                      # Next.js + Tailwind + shadcn/ui rebuild of the public
-                          #   marketing pages — see "Next.js + Tailwind + shadcn/ui
+                          #   marketing pages, see "Next.js + Tailwind + shadcn/ui
                           #   rebuild" below. Deployed as its own cPanel Node.js
                           #   app, separate from everything under public/ here.
   src/app/                 # App Router routes, one folder per page
   src/components/          # shared UI (SiteNav, Button, page-specific registries)
   src/lib/api.ts           # typed fetch client for the PHP /api/v1/* surface
-public/                  # web root — only this folder is web-exposed
+public/                  # web root: only this folder is web-exposed
   index.php               # front controller: routes /api/v1/* only
   .htaccess               # rewrite rules for production. EXCLUDED from the deploy:
                           #   it holds cPanel's Passenger block, and overwriting it
@@ -900,13 +900,13 @@ src/
                             AuthController, AiChatController, LiveChatController,
                             ContentAgentController, ContentStudioController,
                             ReportController, TeamController, ProposalDraftController,
-                            agent controllers — SageController (Sage),
+                            agent controllers: SageController (Sage),
                             ScoutController (Scout), ReelController (Reel),
                             BeaconController (Beacon), NurturerController
                             (Nurturer/Jason), OutreachController (Cold
                             Outreach Engine), DossierController (Dossier),
                             RadarController (Radar), ProposalAgentController
-                            (Ledger), LiveAvatarController (video Lisa) —
+                            (Ledger), LiveAvatarController (video Lisa),
                             plus AgentTaskController, AutomationController,
                             ComposioController, DashboardController,
                             AccountDemoController, ActivityLogController,
@@ -919,7 +919,7 @@ src/
                             VoiceDemoController, WhatsAppTemplateController,
                             ContactsController, ClientErrorController
   Middleware/              # AuthMiddleware (admin JWT), ClientAuthMiddleware
-                            (client portal JWT, isolated via a `type` claim —
+                            (client portal JWT, isolated via a `type` claim,
                             see #27), RateLimitMiddleware
   Support/                 # Database (PDO singleton), Jwt, Settings, Validator,
                             Response, Mailer, AiText (Gemini/OpenRouter/Groq
@@ -928,7 +928,7 @@ src/
                             (getOrCreate/resolve for the /s/{code} redirector),
                             AiImage (Gemini "Nano Banana" image generation for
                             Canvas's flyers, GD cover-crop to an exact size)
-  Router.php                # tiny hand-rolled router — no framework dependency
+  Router.php                # tiny hand-rolled router, no framework dependency
   autoload.php               # minimal PSR-4-style autoloader for the App\ namespace
 config/config.php         # env-based settings, memoized via appConfig()
 database/
@@ -976,7 +976,7 @@ storage/
 
 ## How it fits together
 
-1. **Public pages are static HTML** that fetch from `/api/v1/*` on load — no
+1. **Public pages are static HTML** that fetch from `/api/v1/*` on load, no
    server-side templating, so they're as fast as any static file plus one
    small JSON round-trip.
 2. **Auth** is JWT (hand-rolled HS256, no dependency) in httponly cookies,
@@ -984,7 +984,7 @@ storage/
    out everywhere invalidates all outstanding tokens instantly.
 3. **Contact form** is honeypot-protected, rate-limited (5/hour/IP by
    default), and queues a `webhook_queue` row instead of calling Slack inline
-   — run `php database/process_webhooks.php` on a schedule to drain it, so a
+run `php database/process_webhooks.php` on a schedule to drain it, so a
    slow third-party API never slows down the form response.
 4. **AI assistant** is fully optional infrastructure: its JS
    (`ai-widget.js`) only loads the first time a visitor clicks the toggle
@@ -995,7 +995,7 @@ storage/
    accessibility labels, and how the bot introduces itself when a visitor asks
    who they're speaking to (all served from `/api/v1/chat/status` and baked
    into the server-side system prompt), and the presented gender is derived
-   from the read-aloud voice gender below — so choosing a male name + male
+   from the read-aloud voice gender below, so choosing a male name + male
    voice makes the whole persona male in one step, no redeploy. Each of the
    assistant's replies plays a short chime and carries a speaker button that reads
    that message aloud on demand via the browser's Web Speech API (emoji are
@@ -1005,22 +1005,22 @@ storage/
    is spoken hands-free, and the composer has a **voice-input mic** that lets
    visitors dictate their message (Web Speech recognition, accent-matched to
    the voice setting). The voice is admin-configurable from Site Content →
-   Live Chat — gender (female/male/auto), accent (UK/US/auto English),
+   Live Chat, gender (female/male/auto), accent (UK/US/auto English),
    speaking speed, and pitch, with a live "Preview voice" button. The browser
    owns the actual voices, so these are preferences the widget matches against
    whatever the visitor's device offers (delivered in `/api/v1/chat/status`,
    matched with graceful fallback: accent+gender → gender → accent → any
    English → device default). The header avatar (`agent-face.js`, shared with
-   the admin agent console below) animates alongside all this — two staggered
+   the admin agent console below) animates alongside all this, two staggered
    rings expand outward while a reply is pending, and the avatar breathes
-   gently while it's actually being read aloud — so read-aloud and auto-speak
+   gently while it's actually being read aloud, so read-aloud and auto-speak
    read as a face reacting rather than a static icon; like every other
    animation on the site it disables under `prefers-reduced-motion`. Replies
-   land with an animated typing indicator and then reveal word-by-word (a client-side typewriter — it animates an
+   land with an animated typing indicator and then reveal word-by-word (a client-side typewriter, it animates an
    already-received reply and honors `prefers-reduced-motion`; it does not
    change how long the model takes). When a visitor explicitly asks for a code
    example, the assistant returns a short fenced ` ```lang ` snippet, and the
-   widget renders it as a **Carbon-style code card** — dark window frame with
+   widget renders it as a **Carbon-style code card**, dark window frame with
    the three traffic-light dots, a language tag, a copy-to-clipboard button
    (`navigator.clipboard` with an `execCommand` fallback), and a light,
    dependency-free syntax highlighter (comments/strings/numbers/keywords). All
@@ -1030,10 +1030,10 @@ storage/
    (`role=dialog`, the message list is an `aria-live` log, and the typewriter
    sets `aria-busy` so the reply is announced once), and an exit-intent trigger
    opens it if a visitor moves to leave before it has auto-shown. Every one of
-   these — chime, read-aloud, voice input, typewriter, code cards — is a progressive
+   these, chime, read-aloud, voice input, typewriter, code cards, is a progressive
    enhancement; the chat still works without Web Audio / speech support.
 5. **Admin panel** (`/admin/*`) is plain static HTML + JS calling the same
-   JWT-protected `/api/v1/admin/*` endpoints — projects CRUD, blog CRUD
+   JWT-protected `/api/v1/admin/*` endpoints, projects CRUD, blog CRUD
    (with cover image upload), an inquiries inbox (read/flag/archive) split
    into general contact vs. quote requests, a payments section (Paystack
    transaction log + generate-a-payment-link), tag management, site content
@@ -1053,14 +1053,14 @@ storage/
    OG/Twitter meta + JSON-LD structured data for SEO. The public presentation
    is now text-first and case-study-like, with no thumbnail grid on archive
    or related-entry cards. Posts are ordered newest-first everywhere they
-   surface — the archive list, the About mega-menu's featured card, the RSS
+   surface, the archive list, the About mega-menu's featured card, the RSS
    feed, and the homepage Technical Archive section, which now renders the
    three most recent posts live from `/api/v1/blog` (the static HTML entries
    are the API-down fallback). A newly published post automatically takes the
    top slot: `BlogController` orders by `sort_order DESC`, and a post created
    from the admin gets `MAX(sort_order)+1` unless an explicit position is set.
 7. **Project requests** (`/request.html`) are a richer, honeypot + rate
-   limited alternative to the plain contact form — project type, budget,
+   limited alternative to the plain contact form, project type, budget,
    timeline, feature checkboxes, and up to 5 file attachments (validated by
    extension *and* file signature, not just the extension string). They land
    in the same `inquiries` table (`type = 'project_request'`) but get their
@@ -1071,7 +1071,7 @@ storage/
    the browser from `/api/v1/payments/config`; the secret key never leaves
    the server. Two flows share one `payments` ledger table: the fixed-price
    tier checkout, and payment links (`/pay?token=...`) generated in the admin
-   or attached to a proposal milestone — those refuse payment until the
+   or attached to a proposal milestone, those refuse payment until the
    proposal's written agreement has been accepted. Recurring money is
    separate: `subscriptions` (+ `subscription_charges`) holds Paystack plans,
    created either by Caleb in the admin or by a visitor subscribing to a Lisa
@@ -1085,17 +1085,17 @@ storage/
    Paystack reference.
 9. **Site widgets** (Live Chat, WhatsApp) are on by default and can be
    switched off independently from Admin → Settings without touching the
-   underlying contact details — disabling Live Chat also cancels its
+   underlying contact details, disabling Live Chat also cancels its
    auto-open popup, not just the button.
 10. **Newsletter** signup lives on `/archive.html` (honeypot + rate-limited,
     same pattern as the other public forms). Subscribers land in
     `newsletter_subscribers` and get a one-click unsubscribe link
-    (`/api/v1/newsletter/unsubscribe?token=...`) — re-subscribing an
+    (`/api/v1/newsletter/unsubscribe?token=...`), re-subscribing an
     unsubscribed address just reactivates the existing row instead of
     erroring. Admin view/export/remove at `/admin/newsletter.html`.
 11. **PWA**: `public/manifest.json` + `public/sw.js` make the site
     installable. The app icons (`public/icons/`) are hand-encoded PNGs
-    written directly with PHP's zlib functions — no GD/Imagick dependency —
+    written directly with PHP's zlib functions, no GD/Imagick dependency:
     via `database/generate_pwa_icons.php` (re-run it if the icon design
     ever changes). The service worker deliberately never caches `/api/*`
     or `/admin/*`, only the static app shell, so nothing stale is ever
@@ -1107,7 +1107,7 @@ storage/
     -> Settings still holds the Paystack keys.
 13. **Project estimation calculator** on `/pricing.html` is pure client-side
     JS (project type + feature checkboxes + timeline → a rounded price
-    range) — no backend call, since it's explicitly a rough estimate, not
+    range), no backend call, since it's explicitly a rough estimate, not
     a quote. Links out to `/request.html` for an exact number.
 14. **Career timeline** and **GitHub activity feed** on `/about.html` are
     both admin-configurable and hidden until set: the timeline's five
@@ -1123,17 +1123,17 @@ storage/
     (`.skip-link`, visible on keyboard focus) targeting a landmark at the
     start of the page's main content.
 17. **Analytics** (`/admin/analytics.html`) is first-party and deliberately
-    minimal — `page_views` stores only path, referrer, and timestamp, no
+    minimal, `page_views` stores only path, referrer, and timestamp, no
     IP address or cookie/visitor ID, via a tiny fire-and-forget beacon
     (`js/analytics.js`) on every public page (never on `/admin/*`).
     Disclosed in the Privacy Policy.
 18. **Appointment booking** (`/book.html`) uses an internal availability
-    model, not an external calendar account — the admin sets bookable
+    model, not an external calendar account, the admin sets bookable
     weekdays/hours/slot length in Settings (same pattern as Live Chat
     hours), and slots are generated on the fly and checked against
     existing bookings. A partial unique index
     (`idx_appointments_slot_active`, `WHERE status != 'cancelled'`) is the
-    real source of truth for conflict prevention — a cancelled booking
+    real source of truth for conflict prevention, a cancelled booking
     frees its slot, but two active bookings can never collide even under
     a race. Admin view/cancel at `/admin/appointments.html`. A separate
     cron script (`database/send_appointment_reminders.php`) emails a
@@ -1148,34 +1148,34 @@ storage/
 20. **Site-wide search** (`/search.html`, reachable via the 🔍 icon next to
     the theme toggle on every public page) does simple keyword scoring
     across published projects and blog posts server-side
-    (`/api/v1/search?q=`) — no external search service, consistent with
+    (`/api/v1/search?q=`), no external search service, consistent with
     the rest of the app's zero-dependency approach.
 21. **Two-factor authentication** for the admin login is a hand-rolled RFC
-    6238 TOTP implementation (`src/Support/Totp.php`, no dependency —
+    6238 TOTP implementation (`src/Support/Totp.php`, no dependency:
     verified against the RFC 4226 reference test vectors), compatible with
     Google Authenticator/Authy. Enable/disable from Admin → Settings; once
     on, login is a two-step flow (`requires_2fa` from `/auth/login`, then
     `/auth/verify-2fa` with a code or one of 8 single-use backup codes
     issued at setup time). A short-lived `pending_2fa` cookie (5 min) links
-    the two steps — no full session exists until the second factor checks
+    the two steps, no full session exists until the second factor checks
     out.
-22. **Marketing Leads** (`/admin/marketing-leads.html`, admin-only — no
+22. **Marketing Leads** (`/admin/marketing-leads.html`, admin-only, no
     public routes at all) is an internal outreach tool: add a target
-    business (one at a time, or via "Find leads by niche" — see below), run
+    business (one at a time, or via "Find leads by niche", see below), run
     a real technical audit of its site (SSL, mobile viewport meta tag,
     title/meta description, response time, HTTP error status, and common
     broken-page signatures like a WordPress DB-connection error or an
-    unresolvable domain — genuinely verifiable, never fabricated), then
+    unresolvable domain, genuinely verifiable, never fabricated), then
     draft an AI pitch that only references the actual findings. By default
-    sending stays manual — "Approve & Send" opens the admin's own mail client
+    sending stays manual, "Approve & Send" opens the admin's own mail client
     with the draft prefilled (`mailto:`), and the lead is only marked `sent`
     after that. The **Cold Outreach Engine** (below) is the opt-in way to let
     that last step run itself. The audit fetch has an SSRF guard
     (`SharedAgentTools::isSafeUrl`, shared with Dossier's site fetch)
     blocking loopback/private/reserved
-    IP targets — a domain that simply fails to resolve is let through,
+    IP targets, a domain that simply fails to resolve is let through,
     though, since that's not an SSRF risk and is itself a real, useful
-    finding. `website_url` is optional — a business with no site yet is a
+    finding. `website_url` is optional, a business with no site yet is a
     valid lead too, and skips straight to a generic (not fabricated-findings)
     pitch instead of an audit. Every lead is computed into one outreach lane:
     **Broken website** (HTTP/DNS/SSL/blank/fatal-error evidence; repair or
@@ -1192,7 +1192,7 @@ storage/
 
     The **Cold Outreach Engine** (`OutreachController`,
     `database/send_cold_outreach.php`, "Outreach Engine" panel on the same
-    page) is the automated sending layer on top of that funnel — it turns
+    page) is the automated sending layer on top of that funnel, it turns
     "send 50 personalised emails a day, forever" into a cron instead of 50
     manual `mailto:` clicks. By default it only sends pitches Caleb has already
     reviewed (a lead is eligible only at `status = 'pitch_ready'` with an
@@ -1203,30 +1203,30 @@ storage/
     contact_email) to top today's queue up to the cap, then sends them the
     same run. It reuses `MarketingLeadController::performAudit()` and
     `draftPitch()` verbatim, so an auto-drafted pitch is identical to a
-    hand-triggered one and stays grounded in real audit findings — never
-    invented — and drafting is bounded per run (`AUTODRAFT_PER_RUN`, 10) so one
+    hand-triggered one and stays grounded in real audit findings, never
+    invented, and drafting is bounded per run (`AUTODRAFT_PER_RUN`, 10) so one
     cron tick can't stall on dozens of sequential audits. Because most
     Places-discovered leads arrive **phone-only** (Google Places returns phone
     numbers, not emails), the audit step also scrapes the fetched page for a
-    real *published* email — an address on the business's own domain, or a
+    real *published* email, an address on the business's own domain, or a
     free-provider address they list (`extractContactEmail()`,
-    `applyFoundEmail()`) — and fills an empty `contact_email` with it. When the
+    `applyFoundEmail()`), and fills an empty `contact_email` with it. When the
     site publishes nothing, an optional Hunter.io key (Admin -> Settings ->
-    Integrations) lets `EmailEnrichment` fall back to Hunter's domain search —
+    Integrations) lets `EmailEnrichment` fall back to Hunter's domain search:
     verified, confidence-gated addresses only. It never guesses `info@domain`
     (an unverified guess just bounces and burns sender reputation). A lead
     that still has no email but has a phone number isn't a dead end either:
     auto-draft prepares a **call script** for it instead (same
     `draftCallScript()` a hand-triggered phone pitch uses) and it joins the
-    **call queue** — the "Call list" modal on the same page. That list shows
+    **call queue**: the "Call list" modal on the same page. That list shows
     each phone lead's talking points and a `tel:` link (nothing ever dials or
     robocalls by itself); every attempt is logged to `call_log`
-    (`OutreachController::logCall()`) — no-answer/voicemail/callback keep the
+    (`OutreachController::logCall()`), no-answer/voicemail/callback keep the
     lead queued, connected/interested/not-interested/wrong-number close it
     out. A no-answer/busy/failed/canceled result, or a completed call whose
     linked voice session captured no speech, is logged automatically as one
     idempotent `no_answer` attempt (inline in `VoiceDemoController`'s
-    ElevenLabs post-call webhook — see "Twilio fully removed" above) and
+    ElevenLabs post-call webhook, see "Twilio fully removed" above) and
     leaves the lead `pitch_ready`, so it returns to the call list for a
     later retry: carrier completion only proves the greeting played, not
     that a conversation happened. Completed calls with actual transcript
@@ -1240,8 +1240,8 @@ storage/
     `outreach_daily_call_target`), whether a social post went out, a 14-day
     activity strip, and a streak of consecutive active days. "Active"
     deliberately means at least one outreach touch (email sent, call logged,
-    or post published) — the streak enforces "never a zero day", not
-    "hit the full cap or lose everything" — and an in-progress today never
+    or post published), the streak enforces "never a zero day", not
+    "hit the full cap or lose everything", and an in-progress today never
     breaks it.
     Guardrails: it's **off by default**
     (`outreach_enabled`), sends at most `outreach_daily_cap` (default 50) per
@@ -1252,12 +1252,12 @@ storage/
     and anyone who already opted out of a drip sequence. A successful send
     fires the same `marketing_pitch_sent` automation trigger a hand-sent pitch
     does, so the follow-up sequence starts either way. Hourly is a good cron
-    cadence — each run tops the day up toward the cap, spreading sends out more
+    cadence, each run tops the day up toward the cap, spreading sends out more
     naturally than one morning blast. The panel shows today's count vs the cap,
     how many reviewed pitches are queued, how many raw leads auto-draft could
     still pitch, and the on/off + auto-draft + cap dials; when the queue is dry
     the fix is to add more raw leads (Find leads by niche) and/or turn on
-    auto-draft — not to raise the cap.
+    auto-draft, not to raise the cap.
 
     **Jason owns the complete email cold-lead thread.** A successful
     `marketing_pitch_sent` enrollment enables his AI follow-ups automatically.
@@ -1272,8 +1272,8 @@ storage/
 
     "Find leads by niche" (`MarketingLeadController::discover()`) searches
     for real candidate businesses (e.g. "plumbers in Accra") via Serper's
-    Google Places search API — name, real website if one exists, address,
-    phone, rating — and shows them as a checklist for the admin to hand-pick
+    Google Places search API, name, real website if one exists, address,
+    phone, rating, and shows them as a checklist for the admin to hand-pick
     which to add (`bulkStore()`), flagging ones already tracked by URL so
     nothing gets double-added. This is deliberately a real search API call,
     not an AI-generated list: an LLM "finding" businesses for a niche would
@@ -1339,7 +1339,7 @@ storage/
 
     Outreach isn't email-only, either: a lead with a `contact_phone` but no
     `contact_email` gets a call script instead of an email pitch
-    (`generatePitch()` picks the channel — email when possible, phone only
+    (`generatePitch()` picks the channel, email when possible, phone only
     when there's no email to write to; either can be forced via `channel`
     in the request body). A call script is short talking points, not a
     script to read verbatim, grounded in the exact same real findings as an
@@ -1350,7 +1350,7 @@ storage/
     voice prompt requires Lisa to identify herself as an AI assistant calling
     on Caleb's behalf and explicitly ignores any legacy first-person wording.
     The outbound opening front-loads Lisa's identity and the reason for the
-    call before small talk — the prompt (`VoiceDemoController::prompt('outbound', ...)`,
+    call before small talk, the prompt (`VoiceDemoController::prompt('outbound', ...)`,
     reused directly by `OutreachController::initiateAiCall()` for the
     ElevenLabs conversation override) instructs the agent to state that
     disclosure first if the welcome greeting is interrupted by an early
@@ -1358,7 +1358,7 @@ storage/
     repeating identity, service lists, and canned closings, and responds to
     what the caller said before asking one question at a time. ElevenLabs
     owns turn-taking, interruption handling, and the configured phone-agent
-    voice directly — see "Twilio fully removed" above.
+    voice directly, see "Twilio fully removed" above.
     **Lisa instruction desk** in Admin Settings stores one owner-controlled
     instruction layer (`chat_persona`) for Lisa. Changes apply from her next
     response across public live chat, WhatsApp, verified-owner chat, Talk to
@@ -1384,20 +1384,20 @@ storage/
 
     **Dossier** (`DossierController::research()`, the "Research"/"View
     dossier" button per lead) is the recon step that sits one stage *before*
-    the audit/pitch flow: given a lead it builds a short internal briefing —
-    never sent to the business — from three real inputs. (1) A tech-stack
+    the audit/pitch flow: given a lead it builds a short internal briefing:
+    never sent to the business, from three real inputs. (1) A tech-stack
     fingerprint pattern-matched out of the lead's actual homepage HTML and
     response headers (WordPress, Shopify, Wix, React/Next.js, Google
     Analytics, Cloudflare, etc.), each signal carrying the concrete evidence
     it matched on, so it's defensible rather than guessed; the fetch reuses
     the same `SharedAgentTools::isSafeUrl` SSRF guard as the audit. (2) A real
-    Serper *news* search on the business name — real results only, AI kept out
+    Serper *news* search on the business name, real results only, AI kept out
     of this step for the same reason it's kept out of "Find leads by niche": a
     model "recalling" news is just inventing it. (3) A single AI summary that
     reasons *only* over (1), (2), and the stored audit findings, producing an
     outreach angle told to invent no pain point the evidence doesn't support.
-    Both external calls degrade gracefully — no Serper key just drops the news
-    section, no AI provider just drops the summary — so the always-available
+    Both external calls degrade gracefully, no Serper key just drops the news
+    section, no AI provider just drops the summary, so the always-available
     tech read means research never comes back empty-handed. The brief is
     stored on the lead row (`research_findings` JSON + `researched_at`) and
     never changes the lead's pitch-pipeline status. Dossier also appears as
@@ -1406,11 +1406,11 @@ storage/
     plain single-shot "prompt in, text out" AI call (pitch drafting,
     prototype generation, the secondary AI assistant) tries Gemini first
     and, if that fails for any reason (quota, outage, bad response), retries
-    against OpenRouter, then against Groq — using whichever keys/models are
+    against OpenRouter, then against Groq, using whichever keys/models are
     set in Admin → Settings → Integrations (OpenRouter defaults to
     `openrouter/free`, Groq to `llama-3.3-70b-versatile`, if no model is
     given). The third leg exists because Gemini and OpenRouter running out
-    of quota/credit at the same time isn't hypothetical — it's happened —
+    of quota/credit at the same time isn't hypothetical, it's happened:
     and Groq has its own independent quota. Centralized in one class rather
     than duplicated per controller, since the Gemini call itself has already
     been the source of several subtle bugs this project had to debug.
@@ -1422,7 +1422,7 @@ storage/
     `functionCall`/`functionResponse` shape (with a `thoughtSignature` that
     must round-trip verbatim) and the OpenAI-style `tools`/`tool_calls`
     (matched by `tool_call_id`) that both OpenRouter and Groq speak are
-    different enough that there's no safe way to hand off *mid-round* — a
+    different enough that there's no safe way to hand off *mid-round*, a
     failed turn is retried as a whole fresh turn on the next provider, each
     rebuilding its own native wire format from a provider-neutral transcript
     stored as plain role/text. Groq keeps its own method rather than reusing
@@ -1439,7 +1439,7 @@ storage/
     without the AI-driven tool calls. This whole design is written up in the
     "How I Used Three LLMs to Power One Live Chat" archive post.
 24. **Proposals & payment milestones** (`/admin/proposals.html`): admin turns
-    a quote request into a formal proposal — scope, timeline, currency, and
+    a quote request into a formal proposal, scope, timeline, currency, and
     a list of payment milestones, each auto-generating its own
     `payment_links` row. The client reviews at `/proposal.html?token=...`
     and must type their name and check an agreement box before accepting
@@ -1472,7 +1472,7 @@ storage/
     even though both share the same signing secret.
 28. **Production Logs / case study CMS improvements** (`/admin/projects.html`): projects can
     now carry a `outcome_metrics` results section, link to one approved
-    `testimonials` row (rendered as a quote on the case study page — HTML
+    `testimonials` row (rendered as a quote on the case study page, HTML
     escaped, since a testimonial's quote text originates from a public
     client-submission form, unlike the rest of a project's admin-authored
     fields), and an `is_featured` flag. Public project surfaces now render as
@@ -1482,7 +1482,7 @@ storage/
     falling back to the old behavior if none is set. Each project also carries
     an internal-only `delivery_status` (On track / Needs attention / At risk /
     Due this month, hand-set from the admin form) and a `progress_percent`
-    (0-100, shown as a filled bar per row) — both independent of
+    (0-100, shown as a filled bar per row), both independent of
     `is_published`, which is about public visibility, not build progress. The
     admin project list shows four live count cards (one per delivery status)
     above the table, recomputed client-side from the same fetch that renders
@@ -1490,18 +1490,18 @@ storage/
 29. **Make.com automation events** (`src/Support/MakeWebhook.php`): a single
     configurable webhook URL (Admin → Settings → Integrations) receives a
     JSON event for proposal acceptance, content publishing, testimonial
-    approval, newsletter signups, and stale quote requests — one Make.com
+    approval, newsletter signups, and stale quote requests, one Make.com
     scenario routes all of them with a Router module keyed on the `event`
     field. Every event is also logged to `integration_events` regardless of
     whether the live push succeeded, and `GET /api/v1/integrations/events`
     (Bearer-authenticated with a key generated in Settings) lets a scheduled
-    Make.com poller catch up on anything the webhook missed — it defaults to
+    Make.com poller catch up on anything the webhook missed, it defaults to
     only undelivered events, so the poller can run continuously alongside
     the push webhook with no double-processing.
 30. **AI social post drafts** (`/admin/social-drafts.html`): a scheduled
     (daily/weekly, Admin → Settings) or manually-triggered job drafts a
-    social post — a LinkedIn/Facebook-length version, an X/Twitter-length
-    version, and hashtags — from the most recently published blog post,
+    social post, a LinkedIn/Facebook-length version, an X/Twitter-length
+    version, and hashtags, from the most recently published blog post,
     case study, or approved testimonial that hasn't already been drafted,
     falling back to an original evergreen post (rotated across a few angles)
     when there's nothing new to spotlight. Reuses `AiText::generate()` (the
@@ -1511,26 +1511,26 @@ storage/
     in the review modal); evergreen and testimonial drafts have none by
     default since there's no natural image to attach. Admin reviews/edits
     before approving; approval fires the `social_post_approved` Make.com
-    event above for whatever platforms are wired up there, and — separately
-    — if a LinkedIn Composio account is connected (#33 below), also posts
+    event above for whatever platforms are wired up there, and, separately
+if a LinkedIn Composio account is connected (#33 below), also posts
     the draft to LinkedIn directly via `Composio::executeTool()`, recording
     the outcome in `published_at`/`publish_error` on the draft row (shown
     in the admin list) rather than just assuming Make.com handled it. Best
-    effort and non-blocking — a LinkedIn publish failure never fails the
+    effort and non-blocking, a LinkedIn publish failure never fails the
     approval itself. Each draft also records
     which provider (`ai_provider`: `gemini`, `openrouter`, or `groq`)
-    actually generated it, shown in the admin list and review modal —
+    actually generated it, shown in the admin list and review modal:
     useful for noticing if Gemini's quota is exhausted and everything is
     quietly falling back further down the chain. Blog/case-study links in the drafted text
     go through a self-hosted shortener (`src/Support/ShortLink.php`,
     `princecaleb.dev/s/{code}`, public redirect via `ShortLinkController`)
     rather than the full `/archive-post.html?slug=...` URL, since every
-    character counts on the X/Twitter-length version — `getOrCreate()`
+    character counts on the X/Twitter-length version, `getOrCreate()`
     reuses the same code if the same page is ever linked again.
 31. **Automated onboarding email**: `PaymentController::verifyAndRecord()`
-    sends a "payment received — next steps" email (via `Mailer::send()`)
+    sends a "payment received, next steps" email (via `Mailer::send()`)
     right after the genuine pending → success transition for a payment. It's
-    naturally guarded against firing twice — both the client-side `/verify`
+    naturally guarded against firing twice, both the client-side `/verify`
     call and the Paystack webhook route through the same method, and its
     existing idempotency check (`if ($payment['status'] === 'success') return
     'success';`) short-circuits every call after the first for a given
@@ -1539,13 +1539,13 @@ storage/
     must-have features).
 32. **Admin activity log** (`/admin/activity-log.html`): an audit trail of
     admin actions, written via `src/Support/ActivityLog.php` and stored in
-    `admin_activity_log` (never throws — a logging failure never blocks the
+    `admin_activity_log` (never throws, a logging failure never blocks the
     action that triggered it). Covers every admin DELETE endpoint (projects,
     blog posts, tags, payments, client files, newsletter subscribers,
     testimonials, marketing leads, social drafts), payment link creation,
     pricing settings changes, testimonial approve/reject, and inquiry
     status/pipeline-stage changes. The viewer page filters by entity type and
-    paginates 50 rows at a time — each row shows who acted, what action, on
+    paginates 50 rows at a time, each row shows who acted, what action, on
     which record (with a denormalized label so the entry stays readable even
     after the underlying record is deleted or renamed), and JSON-encoded
     extra details where relevant (e.g. changed pricing keys).
@@ -1559,26 +1559,26 @@ storage/
     opens Composio's OAuth authorization in a new tab. Booking actions can
     be configured per tool from the same Settings form. **Status: Google
     Calendar, Gmail, and Slack booking actions all confirmed working
-    end-to-end against a live Composio account (2026-07) — a Live Chat
+    end-to-end against a live Composio account (2026-07), a Live Chat
     booking correctly created a calendar event, sent the Gmail
     notification, and posted to Slack. Slack required inviting Composio's
     connected app into the target channel first (`/invite @Composio` or
     Channel → Integrations → Add an App) and approving it in workspace App
-    Management if the workspace restricts unapproved third-party apps —
+    Management if the workspace restricts unapproved third-party apps:
     without that, the message is silently dropped with no error surfaced
-    anywhere. WhatsApp Business via Composio was tried and removed — too
+    anywhere. WhatsApp Business via Composio was tried and removed, too
     much setup friction for what it added, in favor of the dedicated
     WhatsApp provider integration instead (#31/#32 above, Lisa on WhatsApp).
     LinkedIn connect
-    flow built, not yet exercised live** — see #30 above for what it's
+    flow built, not yet exercised live**, see #30 above for what it's
     wired to do once connected.
 34. **Client-side error capture** (`ClientErrorController::log()`,
-    `public/js/error-log.js`) — a small script, loaded first thing in
+    `public/js/error-log.js`), a small script, loaded first thing in
     `<head>` on every page across the whole site (public and admin alike),
     that catches uncaught JS errors (`window.onerror`) and unhandled
     promise rejections and POSTs them to `/api/v1/client-error`, which
     writes them through the same `error_log()` every PHP error already
-    uses — so a frontend bug (a broken button, a rendering exception in an
+    uses, so a frontend bug (a broken button, a rendering exception in an
     admin page) shows up in Admin -> Error Logs exactly like a backend one
     does, instead of being invisible to anyone without devtools open at the
     time. Deliberately unauthenticated (errors happen for anonymous
@@ -1601,7 +1601,7 @@ storage/
     background video (`hero_video_url`, Admin → Site Content): if a video is
     set the scene never mounts, and it tears itself down if the video appears
     later, so the two background treatments never stack. Three.js is vendored
-    in a *versioned* directory (an upgrade bumps the folder name — the module
+    in a *versioned* directory (an upgrade bumps the folder name, the module
     build internally imports `./three.core.min.js`, so both files ship
     together) and served with a long `immutable` cache header via
     `public/js/vendor/.htaccess`, unlike the app's own unhashed 1-hour-cached
@@ -1610,12 +1610,12 @@ storage/
     default 1200×630 share image (`public/uploads/og-image.png`, regenerated by
     `scripts/generate_og_image.py` in the monochrome brand palette). Blog posts
     and projects show their *own* preview when shared, rendered **server-side**
-    so real crawlers see it — `public/og-render.php` (Apache rewrites
+    so real crawlers see it, `public/og-render.php` (Apache rewrites
     `project.html`/`archive-post.html` through it, see `.htaccess`) reads the
     static HTML template and injects the per-item `og:image`/`title`/
     `description`/`url` for the requested `slug`. It's deliberately fail-open:
     any error (bad slug, missing row, DB hiccup) serves the untouched template,
-    so these pages can never break — the handler only ever improves the crawler
+    so these pages can never break, the handler only ever improves the crawler
     preview. This is necessary because the pages' own per-item meta swap is
     client-side JS, which social crawlers don't execute. Blog posts don't use
     their SVG cover for sharing (crawlers don't reliably render SVG); instead
@@ -1628,7 +1628,7 @@ storage/
     server-read dimensions so platforms don't mis-crop), falling back to the
     default otherwise. The two Python generators are dev-machine tools (Pillow);
     their output is committed and deploys as static files, so the server needs
-    no Python — re-run them after editing `blog_posts_data.php` or the brand
+    no Python, re-run them after editing `blog_posts_data.php` or the brand
     imagery, same cadence as `generate_blog_covers.php` and
     `seed_blog_posts.php`.
 37. **Beacon, Nurturer & Ledger growth agents** (`/admin/agent-chat.html`):
@@ -1636,7 +1636,7 @@ storage/
     themselves in real facts via `get_site_info`/`search_content` (shared with
     Lisa through `SharedAgentTools`) rather than inventing them. The same
     console also reaches **Lisa** herself, via `LiveChatController::adminChat()`
-    — her exact public-widget brain, but run in owner mode so she drops the
+her exact public-widget brain, but run in owner mode so she drops the
     lead-capture/sales script (no asking for name/email, no quote pitch) while
     keeping her useful tools (`check_availability`, `get_site_info`,
     `search_content`, `audit_website`). A WhatsApp sender matching either
@@ -1657,32 +1657,32 @@ storage/
     external automation (Bearer-authed on `integration_api_key`, like
     `IntegrationController`) and a `chat()` mode for talking to them directly
     from the admin page (session-authed). Ledger skips the Bearer-authed
-    `draft()` entirely — a proposal always starts from an admin action, never
-    external automation — in favor of an admin-session-authed `generate()`
+    `draft()` entirely, a proposal always starts from an admin action, never
+    external automation, in favor of an admin-session-authed `generate()`
     plus the same `chat()` pattern. Every `chat()` drops the rigid JSON
     contract in favor of tools of its own: Beacon's chat gets
     `log_qualified_lead`, so a post judged worth a reply mid-conversation is
     saved the same way a `qualified: true` draft() result is (`source` on
     `beacon_social_leads` distinguishes `chat`/`draft`/`cron`); Nurturer's
     chat gets `find_lead` (look up a real `drip_enrollments`/`marketing_leads`
-    record by name or email — industry, last action, nurturer send history,
-    audit findings, pitch status — so a draft grounds in what's actually on
+    record by name or email, industry, last action, nurturer send history,
+    audit findings, pitch status, so a draft grounds in what's actually on
     file instead of Caleb retyping it) and `check_availability` (Lisa's real
     bookable slots, for talking through a Sequence 3 close); Ledger's chat
     gets `find_inquiry` (a real `project_request` by name/email),
     `find_proposal` (an existing proposal's status and payment progress), and
     `draft_proposal` (a read-only wrapper around the same generation logic
     `generate()` uses, for narrating numbers mid-conversation). Ledger's
-    controller has no write path anywhere — every tool and both entry points
+    controller has no write path anywhere, every tool and both entry points
     only read or return JSON, deliberately stricter than Beacon's
     `log_qualified_lead` (which does write, once Caleb confirms), since a
     proposal commits to real payment terms a client may pay against. The
     admin console shows the same animated `agent-face.js` avatar Lisa's
-    widget uses (a circular avatar per agent — Beacon a radar/broadcast mark,
+    widget uses (a circular avatar per agent, Beacon a radar/broadcast mark,
     Nurturer a mail icon, Ledger a file/contract mark on its own navy-blue-gold
     gradient) that thinks while a reply is pending and talks while a reply is
     being read aloud, and each agent's read-aloud voice is admin-configurable
-    the same way Lisa's is — gender (female/male/auto) and accent (UK/US/auto
+    the same way Lisa's is, gender (female/male/auto) and accent (UK/US/auto
     English) from Site Content, with a live "Preview voice" button; only
     speaking speed/pitch stay Lisa-only.
     **Beacon** scores a social post as a lead and drafts a reply.
@@ -1691,8 +1691,8 @@ storage/
     Serper, runs new results through Beacon, and digests qualified ones to
     Slack/`notification_email`. `beacon_scan_seen` dedupes by URL so a repeat
     search result isn't re-scored and re-billed each run. It can't post
-    replies back — each platform needs its own developer API and OAuth app,
-    deliberately not built — so the digest is something to act on by hand, and
+    replies back, each platform needs its own developer API and OAuth app,
+    deliberately not built, so the digest is something to act on by hand, and
     since Serper returns a search snippet rather than the full post, Beacon
     judges on less context than a real scrape would give it.
     `run_beacon_discovery.php` also best-effort extracts the poster's real
@@ -1700,7 +1700,7 @@ storage/
     often preserves) instead of always passing `'unknown'`, so a
     business-sounding handle is visible to the qualification prompt as a
     signal. Every qualified lead in "Recent qualified leads" can be **flagged
-    as a false positive** with an optional note — this deletes the lead the
+    as a false positive** with an optional note, this deletes the lead the
     same as a plain delete, but first records it in `beacon_lead_feedback`,
     and the next several qualification calls (draft, chat, and cron alike)
     prepend Caleb's most recent corrections as concrete examples of mistakes
@@ -1710,18 +1710,18 @@ storage/
     and last action, both captured per-enrollment in `/admin/drip.html`.
     `database/send_nurturer_emails.php` (cron) sends them to enrollments with
     `nurturer_enabled`, on the day offsets under Drip -> AI Sends -> Send
-    timing. It only ever writes sequences 2 and 3 — sequence 1 stays whichever
+    timing. It only ever writes sequences 2 and 3, sequence 1 stays whichever
     fixed `drip_steps` template the lead also gets, since the first touch is
     the one you least want improvised. Sends are recorded in `nurturer_sends`
-    (not `drip_sends`, which only references a fixed template — wrong shape
+    (not `drip_sends`, which only references a fixed template, wrong shape
     for per-send unique content), UNIQUE per (enrollment, sequence) so
     overlapping runs can't double-send. `send_drip_emails.php` won't complete
     an enrollment while a Nurturer send is still outstanding; completing on
     the fixed steps alone would strand it, as only active enrollments are
     picked up. Pick offsets that don't collide with your active step days, or
     an opted-in lead gets two emails in one day.
-    **Ledger** drafts a project proposal — scope, timeline, terms, and a
-    payment milestone breakdown — from a real `project_request` inquiry
+    **Ledger** drafts a project proposal, scope, timeline, terms, and a
+    payment milestone breakdown, from a real `project_request` inquiry
     and/or a short brief typed on the fly, in the exact shape
     `ProposalController::store()`/`update()` already expect as input
     (milestone amounts are decimals, not subunits, so the AI output needs no
@@ -1731,16 +1731,16 @@ storage/
     aren't set, and says so plainly in a `grounding_note` before Caleb touches
     anything. `/admin/proposals.html` gets a **Draft with AI** button next to
     "Start from quote request" that calls `POST /api/v1/admin/proposals/generate`
-    and fills the existing form — Caleb still has to review and click
+    and fills the existing form, Caleb still has to review and click
     Create/Save; nothing is ever created or sent automatically. The chat tab
     additionally shows a "Proposals awaiting a decision" panel (sent, not yet
     accepted or declined), reusing the existing `GET /api/v1/admin/proposals`
     with a client-side status filter rather than a dedicated endpoint. No
-    schema changes were needed for any of this — Ledger only reads existing
+    schema changes were needed for any of this, Ledger only reads existing
     `inquiries`/`proposals`/`proposal_milestones` columns, and its assistant
     name/voice/accent settings ride the same generic `settings` key-value
     store every other admin-configurable setting already uses.
-    **Sketch** generates a concept mockup image for a proposal — a "Generate
+    **Sketch** generates a concept mockup image for a proposal, a "Generate
     mockup" button next to Scope on `/admin/proposals.html` calls
     `POST /api/v1/admin/proposals/generate-mockup` with whatever title/scope/
     service category are currently in the form (works before the proposal is
@@ -1758,7 +1758,7 @@ storage/
     Sketch also has a live chat tab in "Talk to Agents"
     (`SketchController::chat()`, `POST /api/v1/admin/agents/sketch/chat`)
     with the same name/voice/accent settings every other agent gets
-    (`sketch_assistant_name`/`sketch_voice_gender`/`sketch_voice_accent`) —
+    (`sketch_assistant_name`/`sketch_voice_gender`/`sketch_voice_accent`):
     but critically, its three tools (`generate_mockup`, `review_build`,
     `create_arch_link`) call the *exact same* underlying logic as the
     one-shot admin buttons, not a separate implementation: generate_mockup
@@ -1771,15 +1771,15 @@ storage/
     front door onto the same three capabilities, grounded in a system
     prompt that explicitly forbids claiming a tool succeeded when it
     wasn't actually called, or inventing a visual opinion about a
-    review_build page's actual appearance — it only ever reads markup.
+    review_build page's actual appearance, it only ever reads markup.
 
     **Style guide → Arch pre-fill:** Arch's own brief-driven chat has no
-    link to `projects` at all — it's a standalone conversation (any visitor,
+    link to `projects` at all, it's a standalone conversation (any visitor,
     or a client Caleb sends a link to) that already asks the client to pick
     a style and colors itself. To let Caleb set that in advance instead
     (`/admin/projects.html`, a "Style guide" section next to Project
     finances: style keyword, primary/accent color, admin-only, stripped
-    from public project API responses like the finance fields —
+    from public project API responses like the finance fields:
     `projects.arch_style_keyword`/`arch_primary_color`/`arch_accent_color`),
     "Copy Arch link" base64-encodes those choices (plus the project title as
     `business_name`) into `/chat.html?prefill=...`. `arch-chat.js` decodes
@@ -1789,18 +1789,18 @@ storage/
     direction step also captures brand personality and an optional visual
     reference, so Arch asks only for the strategic details still missing.
     This remains purely additive and stateless (no server-side storage of the
-    link) — a client who arrives without `?prefill=` chooses the complete
+    link), a client who arrives without `?prefill=` chooses the complete
     direction themselves.
 
     **Build review:** a "Review build" button next to the Live URL field on
     `/admin/projects.html` (`POST /api/v1/admin/projects/review-build`,
     `ProjectController::reviewBuild()`) fetches that URL's raw HTML
-    server-side (capped, content-type-checked, no headless browser — there
+    server-side (capped, content-type-checked, no headless browser, there
     isn't one on this shared PHP host) and asks Sketch for a structural/
     accessibility review: heading hierarchy, missing alt text, a responsive
     viewport meta tag, semantic landmarks vs generic divs, title/meta
     description, unlabeled form inputs, placeholder content. The prompt is
-    explicit that this is markup only — no rendering happened, so it must
+    explicit that this is markup only, no rendering happened, so it must
     never claim to judge colors, spacing, or how anything actually looks.
     Works on any live URL, not just a saved project's, same "no id
     required" pattern as Sketch's mockup generation. Findings come back as
@@ -1809,7 +1809,7 @@ storage/
 
     **Inbound Funnel (Lisa → Ledger):** the moment a visitor books a
     discovery call through Lisa's `book_appointment` tool, the exact chat
-    transcript that led to it — plus the real, validated name/email/phone —
+    transcript that led to it, plus the real, validated name/email/phone:
     is snapshotted into a `proposal_drafts` row (`status = 'queued'`) right
     inside that same request. It's a single fast INSERT, no AI call, so
     booking a call never gets slower for the visitor, and the insert is
@@ -1821,10 +1821,10 @@ storage/
     model echoed back with the real ones from the booking (never trust the
     model over what the visitor actually typed) before marking the row
     `drafted`. Nothing here ever touches the real `proposals` table on its
-    own — `/admin/proposals.html` shows an "AI-drafted from bookings" panel
+    own, `/admin/proposals.html` shows an "AI-drafted from bookings" panel
     (queued/drafted/failed) above the table; **Review & Create** pre-fills
     the same Create Proposal form "Draft with AI" does (both now share
-    `applyDraftToForm()`) and **Dismiss** just deletes the row — either way,
+    `applyDraftToForm()`) and **Dismiss** just deletes the row, either way,
     Caleb still has to click Create/Save before anything real exists, same
     as every other path to a proposal. The result: by the time Caleb picks
     up the call, a first-pass proposal is often already waiting for review
@@ -1832,15 +1832,15 @@ storage/
 38. **Canvas & Content Studio** (`/admin/agent-chat.html` "Content" tab,
     `/admin/content-studio.html`): a content-creation agent, also running
     through `AiAgentEngine` and grounded via the shared `get_site_info`/
-    `search_content` tools, but with no automated cron side — it exists only
+    `search_content` tools, but with no automated cron side, it exists only
     as a live `chat()` in the "Talk to Agents" console
     (`ContentAgentController`). Unlike the pipeline agents it can stage real,
     reviewable output via four tools: `get_brand_info`
     (`SharedAgentTools::getBrandInfo()`) returns the real primary/accent
-    colors, font, a style note, and the two real logo files — named for the
+    colors, font, a style note, and the two real logo files, named for the
     mark's own color, not the background it goes on: a dark-colored mark for
     white/light backgrounds, a white-colored mark for black/dark backgrounds
-    — sourced from `Settings` (`brand_primary_color`, `brand_accent_color`,
+sourced from `Settings` (`brand_primary_color`, `brand_accent_color`,
     `brand_font`, `brand_style_note`, `brand_logo_dark_url`,
     `brand_logo_white_url`, editable from Site Content → Brand) and
     defaulting to the site's actual monochrome editorial system and the two
@@ -1849,12 +1849,12 @@ storage/
     `create_flyer` generates an actual social graphic with
     Gemini's image model ("Nano Banana", `src/Support/AiImage.php`) at a real
     platform size (square 1080×1080, portrait 1080×1350, story 1080×1920, or
-    landscape 1200×630) — every call is grounded in `get_brand_info`'s colors/
+    landscape 1200×630), every call is grounded in `get_brand_info`'s colors/
     font/style automatically (not left to the model remembering to ask), and
     the matching real logo file is attached to the Gemini request as a second
     reference image (a `background: dark|light` param on the tool picks which
     variant), so the model works from Caleb's actual logo rather than
-    inventing a mark from a text description — it still won't reproduce it
+    inventing a mark from a text description, it still won't reproduce it
     pixel-perfect, so this is a faithful reference, not exact compositing. The
     model also returns whatever aspect ratio it likes regardless of the
     reference, so the result is always center-cropped with GD to the exact
@@ -1864,7 +1864,7 @@ storage/
     drafts land `is_published = 0`, and every item starts `status = 'draft'`.
     The Content Studio admin page lists everything Canvas has made, lets
     Caleb correct the copy/notes inline (PATCH) or delete an item, or
-    **promote** a reviewed item into the real pipeline — a blog item becomes
+    **promote** a reviewed item into the real pipeline, a blog item becomes
     an actual (still unpublished) `blog_posts` row reachable from the
     existing Blog page, and a social/flyer item becomes a
     `social_post_drafts` row (`ai_provider = 'content-agent'`) reachable from
@@ -1879,28 +1879,28 @@ storage/
     as a quick glance while chatting, linking out to the full Content Studio
     page for anything more.
 39. **Reports** (`/admin/reports.html`, `ReportController`): business/CRM
-    reporting, distinct from Analytics' web-traffic view — revenue
+    reporting, distinct from Analytics' web-traffic view, revenue
     (all-time/30-day/by-month/by-source/by-currency), the sales funnel and
     win rate, per-automation email performance, bookings, lead sources, and
     top clients by revenue, all computed live from existing tables in one
     request. A date-range picker (with This month/Last month/This
-    quarter/YTD presets) drives a separate "period" section — revenue and
+    quarter/YTD presets) drives a separate "period" section, revenue and
     average-accepted-deal-size cards showing % change against the
-    immediately-preceding period of equal length — plus a revenue-mix-by-
+    immediately-preceding period of equal length, plus a revenue-mix-by-
     service breakdown backed by a `proposals.service_category` field
     (Websites/Mobile apps/Brand systems/Strategy/Other, set on the proposal
     form), joined back through `proposal_milestones` to whichever payment it
     funded; a payment with no linked proposal (e.g. Starter-tier direct
     checkout) lands in "Uncategorized" rather than being dropped or
     misattributed. Gross margin is real whenever at least one project with a
-    contract value was *created* within the selected period — `(contract
+    contract value was *created* within the selected period, `(contract
     value - actual cost) / contract value`, rolled up from the same
-    project-level cost/hours tracking as #42 — and falls back to a flat,
+    project-level cost/hours tracking as #42, and falls back to a flat,
     explicitly-badged **estimate** only when no priced project falls in that
     window (`gross_margin_is_estimate` in the API response). `created_at` is
-    an imperfect proxy for "which period this cost belongs to" — a
+    an imperfect proxy for "which period this cost belongs to", a
     long-running project's entire cost lands in its creation month, since
-    there's no per-period cost ledger — but it's the only date the schema
+    there's no per-period cost ledger, but it's the only date the schema
     has. Utilization works the same way, against a configurable **weekly
     billable hours** capacity (Settings key `weekly_billable_hours`, set
     from a small input directly on the Utilization card): `hours logged /
@@ -1916,9 +1916,9 @@ storage/
     forecast. Target settings use the existing key/value `settings` table and
     need no migration.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
-    read-only roster of the studio — Caleb himself plus the AI agents
+    read-only roster of the studio, Caleb himself plus the AI agents
     (Lisa, Jason, Joan, Sharon, Ledger, Danielle, Arch, Sketch, Scout, Ada,
-    Chief) — each card showing its
+    Chief), each card showing its
     real role, a live headline stat pulled from its own table (e.g. Ledger
     shows proposals drafted, Danielle shows drafts created from
     `content_studio_items`, Sharon shows leads researched via
@@ -1995,10 +1995,10 @@ storage/
     combined.
 46. **Chief, the chief of staff** (`src/Agents/Chief.php`,
     `/admin/team.html`, `/admin/agent-chat.html` "Chief" tab): the one agent
-    whose subject is the rest of the studio — the other agents, and the rest
+    whose subject is the rest of the studio, the other agents, and the rest
     of the admin panel besides. `database/send_daily_brief.php` (cron,
-    daily) counts what each agent actually did in the last 24 hours — from
-    the same tables the Team page reads — writes it up, stores it in
+    daily) counts what each agent actually did in the last 24 hours, from
+    the same tables the Team page reads, writes it up, stores it in
     `agent_daily_briefs`, and sends it to `notification_email` plus the
     configured private owner WhatsApp number. Each channel is stamped
     separately so a retry cannot duplicate one that already succeeded. The latest
@@ -2009,7 +2009,7 @@ storage/
     an answer that isn't nine admin pages.
 
     Alongside per-agent figures, `snapshot()` also builds `command_center`:
-    everything else that happened in the admin panel that isn't agent work —
+    everything else that happened in the admin panel that isn't agent work:
     grouped counts from `admin_activity_log` (the audit trail nearly every
     controller already writes to on create/update/delete) plus the two things
     that happen with no admin session to log them at all: a Paystack payment
@@ -2018,17 +2018,17 @@ storage/
     the agent totals and rendered as its own section, so Caleb's own edits or
     an automatic payment never get credited to an agent that didn't do them.
 
-    Three design points worth keeping. **The counting is SQL, not AI** —
+    Three design points worth keeping. **The counting is SQL, not AI**:
     `snapshot()` produces the figures and the model is only allowed to write
     them up, because a supervisor that hallucinates its subordinates' output
     is worse than none. **The brief survives a provider outage**: with no AI
     key configured or every provider failing, the same snapshot is rendered
     deterministically and still sent, since a daily report that silently
     skips days is one you stop trusting. **Idleness is read asymmetrically**
-    — a quiet day from Lisa, Jason or Joan (which run on their own) is
+a quiet day from Lisa, Jason or Joan (which run on their own) is
     reported; a quiet day from the on-demand agents is not, because flagging
     "Ada did nothing" every morning would train you to ignore the brief.
-    `command_center` makes no idleness judgment either way — it just reports
+    `command_center` makes no idleness judgment either way, it just reports
     what it finds. Effort metrics (Joan's searches run, results scanned) are
     marked `context` and deliberately excluded from the action count, so a
     day of scanning a thousand results for nothing cannot report as a
@@ -2048,21 +2048,21 @@ storage/
     reporting calculation or AI-generated figures.
 47. **Scout, the tech & ideation specialist** (`src/Controllers/ScoutController.php`,
     `/admin/agent-chat.html` "Scout" tab): a chat-only agent, same shape as
-    Dossier/Danielle — no cron, no discovery pipeline. Its job is to keep
+    Dossier/Danielle, no cron, no discovery pipeline. Its job is to keep
     watch on emerging web, mobile, and AI tools/frameworks and brainstorm
     concrete, buildable project ideas with Caleb built on them. Alongside the
     shared `get_site_info`/`search_content` tools every ideation-style agent
-    gets, Scout has its own `search_web` tool — a real, live Serper search
-    (`google.serper.dev/search`) — so a claim about "the latest X" comes from
+    gets, Scout has its own `search_web` tool, a real, live Serper search
+    (`google.serper.dev/search`), so a claim about "the latest X" comes from
     an actual result instead of the model's training data pretending to be
     current. Degrades quietly (an explanatory note, not a thrown error) with
     no Serper key configured. Every exchange writes a real
     `admin_activity_log` row (`entity_type = 'scout_chat'`) rather than
-    inventing a counter — that's what the Team page's "ideas discussed" stat
+    inventing a counter, that's what the Team page's "ideas discussed" stat
     and Chief's daily brief both count, the same "real query, not a guess"
     discipline every other agent's stat follows. Scout also has its own
     dedicated ElevenLabs voice (`scout_elevenlabs_voice_id`, Settings → AI
-    providers) — `TextToSpeechController::speak()` now takes an `agent` key
+    providers), `TextToSpeechController::speak()` now takes an `agent` key
     and maps it to the right voice-ID setting, falling back to Lisa's voice
     if Scout's is unset, so it's never a hard failure. Assistant
     name/gender/accent settings ride the same generic `settings` store every
@@ -2075,7 +2075,7 @@ storage/
     a single connected service (calls/WhatsApp/web chat wired into social
     media tools, apps, and CRMs, not separate point tools), and three monthly
     pricing tiers plus one uncapped custom tier. Each of the three fixed
-    tiers carries its own GHS and USD monthly price shown side by side —
+    tiers carries its own GHS and USD monthly price shown side by side:
     deliberately two authored fields (`lisa_tier_N_price_ghs`/`_usd`) rather
     than one currency run through the homepage's live exchange-rate
     converter (`currency-switcher.js`), since a subscription price is a
@@ -2083,7 +2083,7 @@ storage/
     fixed price, only a tagline, feature list, and its own CTA label. All
     fields degrade to the hardcoded page copy when unset, the same
     fallback contract every other `[data-content]` field on the site follows.
-    No database migration needed — new keys live in the existing `settings`
+    No database migration needed, new keys live in the existing `settings`
     table via `SettingsController::CONTENT_KEYS`.
 
 ## Deployment (Namecheap cPanel)
@@ -2102,8 +2102,8 @@ Deploys are automatic: pushing to `main` triggers
 `.github/workflows/deploy.yml`, which FTPS-syncs `public/` into
 `public_html/` and `src/`, `config/`, `database/`, and the stateless
 `voice-relay/` Node companion into the home directory.
-It needs three repository secrets — `FTP_SERVER`, `FTP_USERNAME`,
-`FTP_PASSWORD` — for an FTP account rooted at the cPanel home directory.
+It needs three repository secrets, `FTP_SERVER`, `FTP_USERNAME`,
+`FTP_PASSWORD`: for an FTP account rooted at the cPanel home directory.
 `public/index.php` resolves the app via `dirname(__DIR__)`, so this split
 works unchanged. (Manual upload via cPanel File Manager still works too.)
 
@@ -2159,18 +2159,18 @@ One-time setup on a new host:
     setting rather than honour it. Also needs `serper_api_key` in
     Admin -> Settings:
     `/usr/local/bin/php /home/<cpanel-user>/database/run_beacon_discovery.php > /dev/null`
-4j. Add a tenth cron job (once a day) for database backups — snapshots
+4j. Add a tenth cron job (once a day) for database backups, snapshots
     the SQLite file to `storage/backups/` and keeps the last 14:
     `/usr/local/bin/php /home/<cpanel-user>/database/backup_db.php > /dev/null`
-    Periodically download a snapshot somewhere off the server too — an
+    Periodically download a snapshot somewhere off the server too, an
     on-host backup doesn't survive losing the hosting account itself.
 4k. Add an eleventh cron job (every 5-10 minutes) to draft proposals from
-    bookings Lisa takes — no-op whenever nothing's queued, so a short
+    bookings Lisa takes, no-op whenever nothing's queued, so a short
     interval just means less delay before a proposal is ready for Caleb to
     review:
     `/usr/local/bin/php /home/<cpanel-user>/database/draft_proposals_from_bookings.php > /dev/null`
 4l. Add a twelfth cron job (once a day, early morning) for Chief's daily
-    brief on the rest of the team — counts what each agent did in the last
+    brief on the rest of the team, counts what each agent did in the last
     24 hours, writes it up, and sends it to `notification_email` plus the
     configured owner WhatsApp number:
     `/usr/local/bin/php /home/<cpanel-user>/database/send_daily_brief.php > /dev/null`
@@ -2191,13 +2191,13 @@ One-time setup on a new host:
     pitches/call scripts):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_cold_outreach.php > /dev/null`
 4n. Add a fourteenth cron job (once a day) for stale-lead auto-follow-up (off
-    by default — toggle under Admin -> Pipeline). Any active pipeline lead
+    by default, toggle under Admin -> Pipeline). Any active pipeline lead
     with no follow-up already set and no activity across any linked source
     for the configured window (default 5 days) gets one auto-scheduled,
-    identical in effect to setting it by hand — same Agent Queue entry, same
+    identical in effect to setting it by hand, same Agent Queue entry, same
     Tasks-page entry once due:
     `/usr/local/bin/php /home/<cpanel-user>/database/schedule_stale_lead_followups.php > /dev/null`
-4o. Add a fifteenth cron job (hourly) for Beacon's second lead source — a
+4o. Add a fifteenth cron job (hourly) for Beacon's second lead source, a
     no-op until enabled under Admin -> Talk to Agents -> Beacon, with an
     `apify_api_key` set under Admin -> Settings -> Integrations, and at
     least one tracked LinkedIn profile plus both Apify actor IDs configured.
@@ -2206,7 +2206,7 @@ One-time setup on a new host:
     scores each engager on ICP fit, and feeds anything qualified into the
     same beacon_social_leads queue and digest as regular Beacon discovery:
     `/usr/local/bin/php /home/<cpanel-user>/database/run_beacon_apify_discovery.php > /dev/null`
-4p. Add a seventeenth cron job (daily) for Radar's tracked-page cache — a
+4p. Add a seventeenth cron job (daily) for Radar's tracked-page cache, a
     no-op until enabled under Admin -> Talk to Agents -> Radar -> Tracked
     Pages, with at least one tracked LinkedIn page (reuses the same
     `apify_api_key` and profile-posts Apify actor as Beacon's scraper
@@ -2217,21 +2217,21 @@ One-time setup on a new host:
     30-day plan:
     `/usr/local/bin/php /home/<cpanel-user>/database/run_radar_tracked_pages.php > /dev/null`
 4q. Add an eighteenth cron job (once a day, e.g. early morning) to generate
-    the homepage hero headline — replaces the old random-per-session A/B
+    the homepage hero headline, replaces the old random-per-session A/B
     variant with one AI-written eyebrow/title/subtitle set per calendar day,
     the same for every visitor (needs a DeepSeek/Gemini/OpenRouter/Groq key
     under Admin -> Settings -> Integrations; degrades to the static
     Site Content hero copy if no provider is configured or the call fails).
-    Idempotent — a second run on the same day is a no-op:
+    Idempotent, a second run on the same day is a no-op:
     `/usr/local/bin/php /home/<cpanel-user>/database/generate_daily_headline.php > /dev/null`
 4r. Add a nineteenth cron job (once a day) to refresh the Sites Technical tab
-    (domain expiry via RDAP, PageSpeed scores, last-deployment date — SSL
+    (domain expiry via RDAP, PageSpeed scores, last-deployment date, SSL
     expiry itself comes free off the existing uptime ping, no separate job;
-    PageSpeed scores stay blank until a `pagespeed_api_key` setting is added —
+    PageSpeed scores stay blank until a `pagespeed_api_key` setting is added:
     there's no Settings UI field for it yet, so set it directly:
     `INSERT INTO settings (name, value) VALUES ('pagespeed_api_key', '...')`):
     `/usr/local/bin/php /home/<cpanel-user>/database/check_site_technical.php > /dev/null`
-5. Confirm AutoSSL has issued a certificate — `.dev` domains are
+5. Confirm AutoSSL has issued a certificate, `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public
    and secret keys (start with the `pk_test_`/`sk_test_` pair). Then use
@@ -2245,8 +2245,8 @@ One-time setup on a new host:
    tab before the in-browser verify call fires.
 7. Optional integrations, all in Admin -> Settings -> Integrations: a Gemini,
    OpenRouter, and/or Groq API key powers Live Chat, Marketing Leads pitch
-   drafting, and AI social post drafts (all degrade gracefully — keyword
-   fallback, generic pitch, or a clear "could not generate" error — if
+   drafting, and AI social post drafts (all degrade gracefully, keyword
+   fallback, generic pitch, or a clear "could not generate" error, if
    none is configured). A Make.com webhook URL + a generated integration
    API key enable the automation events in #29; nothing breaks if these are
    left blank, the relevant code paths just no-op.
@@ -2255,21 +2255,21 @@ One-time setup on a new host:
 
 - Switch `db_path` to a proper path outside the web root, or move to
   MySQL/PostgreSQL (the `pdo_mysql`/`pdo_pgsql` extensions are already
-  enabled) if traffic grows — the `Database` class is the only place that
+  enabled) if traffic grows, the `Database` class is the only place that
   would need to change.
 - Serve `/uploads` via a CDN instead of directly from the PHP host.
 - Add response caching (APCu/Redis) in front of the three public GET
   endpoints (`/projects`, `/projects/{slug}`, `/tags`) once traffic
   justifies it.
 - Schedule `database/process_webhooks.php` via cron (Linux) or Windows Task
-  Scheduler — it's designed to run standalone, decoupled from requests.
+  Scheduler, it's designed to run standalone, decoupled from requests.
 - Change the seeded admin password immediately in any non-local environment.
 - Locked out (forgotten password, lost 2FA device *and* backup codes)? There
-  is deliberately no public forgot-password flow — run
+  is deliberately no public forgot-password flow, run
   `php database/reset_admin_password.php <email> <new-password> [--disable-2fa]`
   from the server (cPanel Terminal or SSH). It also invalidates every
   outstanding session.
-- `schema.sql` changes don't apply themselves — after any deploy that
+- `schema.sql` changes don't apply themselves, after any deploy that
   touches it, re-run `php database/migrate.php` on the server (it's
   idempotent: `CREATE TABLE IF NOT EXISTS` for new tables, guarded
   `ALTER TABLE ADD COLUMN` checks for columns added to existing tables).
@@ -2279,12 +2279,12 @@ The clinic landing page uses a dedicated, side-effect-free browser demo. The
 ElevenLabs phone webhooks use Lisa as Prince Caleb's inbound customer-service
 agent; they are not used by the Marketing Leads call queue:
 
-- `POST /api/v1/voice-demo/message` — web demo conversation
-- `POST /api/v1/voice-demo/event` — product/conversion events
-- `POST /api/v1/voice/elevenlabs/init` — conversation-initiation webhook, returns Lisa's current system prompt
-- `POST /api/v1/voice/elevenlabs/tool` — generic tool dispatcher (availability, booking, consent capture, opt-out)
-- `POST /api/v1/voice/elevenlabs/post-call` — finished-transcript webhook, HMAC-signed by ElevenLabs
-- `GET /api/v1/admin/voice-demo/stats` — authenticated reporting
+- `POST /api/v1/voice-demo/message`: web demo conversation
+- `POST /api/v1/voice-demo/event`: product/conversion events
+- `POST /api/v1/voice/elevenlabs/init`: conversation-initiation webhook, returns Lisa's current system prompt
+- `POST /api/v1/voice/elevenlabs/tool`: generic tool dispatcher (availability, booking, consent capture, opt-out)
+- `POST /api/v1/voice/elevenlabs/post-call`: finished-transcript webhook, HMAC-signed by ElevenLabs
+- `GET /api/v1/admin/voice-demo/stats`: authenticated reporting
 
 After deployment:
 
@@ -2295,7 +2295,7 @@ After deployment:
 3. In Admin → Settings, save the ElevenLabs phone agent ID, phone number ID,
    and the two webhook secrets (one you create, one ElevenLabs generates).
    Save an optional Owner voice number so calls from that number receive an
-   owner-aware greeting — caller ID matching is never treated as
+   owner-aware greeting, caller ID matching is never treated as
    authorization for private data or sensitive actions. The phone voice is
    configured directly on the ElevenLabs agent rather than in this app.
 
@@ -2322,7 +2322,7 @@ followed by tightly timed Gemini and OpenRouter fallbacks. Text chat retains
 the longer reliability-oriented fallback budgets. ElevenLabs website speech
 also uses a shorter connection/response budget. Phone conversations run
 entirely on ElevenLabs' own hosted LLM turn loop rather than this app's
-low-latency path — see "Twilio fully removed" above.
+low-latency path, see "Twilio fully removed" above.
 
 Every new inbound web-chat or WhatsApp message reopens its conversation as
 unread and clears any earlier bell dismissal for that thread. Lisa treats the
