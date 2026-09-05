@@ -10,12 +10,13 @@ import { type SystemView } from "@/lib/systems";
  * The work gallery: one project shown large, the rest in masonry columns
  * beside and beneath it.
  *
- * A card is a labelled window: a tab carrying the project's mark and its
- * address, then the image exactly as it was uploaded, then what the project
- * is. Device mockups and screenshots are prepared outside the app, so
- * nothing here frames or decorates them. It replaces the tilted equal-sized
- * tiles from the original Figma layout, where six small mockups gave every
- * project the same weight and none of them room to be seen.
+ * A card is a rounded panel with a step cut out of its top-left and
+ * bottom-right corners (.notched-card), holding the project's image exactly
+ * as it was uploaded and then what the project is. Device mockups and
+ * screenshots are prepared outside the app, so nothing here frames or
+ * decorates them. It replaces the tilted equal-sized tiles from the original
+ * Figma layout, where six small mockups gave every project the same weight
+ * and none of them room to be seen.
  *
  * Shared by the homepage and the /work index; what differs between them is
  * how the entrance is triggered, see `trigger` below.
@@ -62,10 +63,8 @@ function hasShot(system: SystemView): boolean {
  *  mockups are prepared outside the app and uploaded in Admin -> Projects,
  *  so nothing here frames or decorates them.
  *
- *  The one thing applied to it is the panel's stepped top-left and
- *  bottom-right corners (.notched-panel), the shape the cards are built
- *  around: the step under the tab lines the two up, and the one opposite it
- *  keeps the shape from reading as an accident. */
+ *  The card's own stepped corners (.notched-card) cut across it, which is
+ *  the shape doing its work: the cut belongs to the card, not the picture. */
 function Shot({ system, large }: { system: SystemView; large?: boolean }) {
   if (!hasShot(system)) {
     // No image on file. An invented one would be a fabricated picture of
@@ -73,7 +72,7 @@ function Shot({ system, large }: { system: SystemView; large?: boolean }) {
     return (
       <div
         className={cn(
-          "notched-panel flex items-end bg-bg-3 p-5",
+          "flex items-end bg-bg-3 p-5",
           large ? "aspect-[16/10]" : "aspect-[16/11]",
         )}
       >
@@ -84,34 +83,13 @@ function Shot({ system, large }: { system: SystemView; large?: boolean }) {
 
   return (
     <div
-      className={cn(
-        "notched-panel overflow-hidden bg-bg-3",
-        large ? "aspect-[16/10]" : "aspect-[16/11]",
-      )}
+      className={cn("overflow-hidden bg-bg-3", large ? "aspect-[16/10]" : "aspect-[16/11]")}
     >
       <img
         src={system.img}
         alt={`${system.name}, ${system.category}`}
         className="h-full w-full object-cover object-top transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
       />
-    </div>
-  );
-}
-
-/** The tab above the card, carrying the project's mark and its address.
- *  Borrowed from the reference design: the card reads as a window with a
- *  label rather than a plain tile, and the label is the one place the real
- *  address appears now that the browser chrome is gone. */
-function CardTab({ system }: { system: SystemView }) {
-  return (
-    <div className="flex items-center gap-2 rounded-t-2xl border border-b-0 border-hairline bg-bg-2 px-3.5 py-2">
-      <span
-        aria-hidden="true"
-        className="grid size-5 shrink-0 place-items-center rounded-md border border-hairline-strong bg-bg-3 font-mono text-[10px] font-bold text-accent"
-      >
-        {system.name.slice(0, 1)}
-      </span>
-      <span className="truncate font-mono text-[11px] text-text-2">{addressFor(system)}</span>
     </div>
   );
 }
@@ -146,8 +124,12 @@ function CardBody({ system, large }: { system: SystemView; large?: boolean }) {
   return (
     <div className={cn("flex flex-1 flex-col gap-3", large ? "p-6 md:p-7" : "p-5")}>
       <div className="flex items-center justify-between gap-3">
-        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
-          {system.category}
+        <p className="flex min-w-0 items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+          <span className="shrink-0">{system.category}</span>
+          <span className="shrink-0 text-hairline-strong" aria-hidden="true">
+            /
+          </span>
+          <span className="truncate normal-case tracking-normal">{addressFor(system)}</span>
         </p>
         {large && system.featured && (
           <span className="rounded bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
@@ -194,24 +176,20 @@ function CardBody({ system, large }: { system: SystemView; large?: boolean }) {
 function Card({ system, large }: { system: SystemView; large?: boolean }) {
   return (
     <CardShell system={system}>
-      {/* The tab sits on its own row, half the card's width, so the body
-          below it keeps a square top-left corner and the pair reads as one
-          notched shape. */}
-      <div className="flex">
-        <div className="min-w-0 max-w-[60%]">
-          <CardTab system={system} />
-        </div>
-      </div>
-
+      {/* The border and the notch live on the outer box, which cannot clip:
+          each bite has to paint over the border it interrupts. The inner box
+          does the clipping, so the image still follows the card's corners. */}
       <div
         className={cn(
-          "flex flex-1 flex-col overflow-hidden rounded-2xl rounded-tl-none border border-hairline bg-bg-2 glass",
+          "notched-card flex flex-1 flex-col rounded-2xl border border-hairline bg-bg-2 glass",
           "shadow-[var(--card-shadow)] transition-[box-shadow,border-color] duration-300",
           "group-hover:border-accent/40 group-hover:shadow-[var(--card-shadow-lift)]",
         )}
       >
-        <Shot system={system} large={large} />
-        <CardBody system={system} large={large} />
+        <div className="flex flex-1 flex-col overflow-hidden rounded-[inherit]">
+          <Shot system={system} large={large} />
+          <CardBody system={system} large={large} />
+        </div>
       </div>
     </CardShell>
   );

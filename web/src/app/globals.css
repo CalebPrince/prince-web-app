@@ -751,42 +751,64 @@ html.custom-cursor-active * {
   color: var(--text-3);
 }
 
-/* ---- Notched panel ----
+/* ---- Notched card ----
 
-   A step cut out of the top-left and bottom-right corners, so a project
-   image reads as a shape someone drew rather than a rectangle that happened
-   to fit. The card's own surface shows through the cuts.
+   A step taken out of the card's top-left and bottom-right corners, with
+   every edge of the step rounded like the rest of the card. The design
+   reference cuts the card, not the picture inside it, so the cut runs
+   through whatever the card holds.
 
-   Fixed sizes rather than percentages: the step is a piece of the design
-   system, and it should measure the same on the feature card as on the small
-   ones. --notch-w/--notch-h can be overridden per element. */
+   Drawn as two "bites": a block painted in the page's own background,
+   parked over each corner, with a rounded inner corner and a hairline on
+   the two edges that face into the card, so the card's outline carries on
+   round the cut. A clip-path cannot do this - it has no radii and it would
+   take the border off with the corner. */
 
-.notched-panel {
-  --notch-w: 96px;
-  --notch-h: 28px;
-  clip-path: polygon(
-    var(--notch-w) 0,
-    100% 0,
-    100% calc(100% - var(--notch-h)),
-    calc(100% - var(--notch-w)) calc(100% - var(--notch-h)),
-    calc(100% - var(--notch-w)) 100%,
-    0 100%,
-    0 var(--notch-h),
-    var(--notch-w) var(--notch-h)
-  );
+.notched-card {
+  --notch-w: clamp(88px, 32%, 190px);
+  --notch-h: 34px;
+  --notch-r: 16px;
+  position: relative;
 }
 
-/* Below ~640px a 96px step eats a quarter of the card. */
+.notched-card::before,
+.notched-card::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  width: var(--notch-w);
+  height: var(--notch-h);
+  background: var(--bg);
+  border-color: var(--hairline);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+
+/* Top-left, sitting under the tab. */
+.notched-card::before {
+  top: -1px;
+  left: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+  border-bottom-right-radius: var(--notch-r);
+}
+
+/* Bottom-right, answering it. */
+.notched-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+  border-top-left-radius: var(--notch-r);
+}
+
+/* Below ~640px a 92px step eats a quarter of the card. */
 @media (max-width: 640px) {
-  .notched-panel {
-    --notch-w: 64px;
-    --notch-h: 20px;
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .notched-panel {
-    clip-path: none;
+  .notched-card {
+    --notch-w: clamp(64px, 34%, 120px);
+    --notch-h: 24px;
+    --notch-r: 12px;
   }
 }
 
