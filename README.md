@@ -884,10 +884,10 @@ public/                  # web root: only this folder is web-exposed
   sitemap.xml, robots.txt, feed.xml
                           # No public .html pages any more: the marketing site is
                           #   served entirely by web/ (deleted 2026-08-20).
-  admin/                  # admin panel (static HTML + JS, JWT-protected API calls)
-    payments.html, quote-requests.html, blog.html, inquiries.html, ...
-  css/app.css             # public site design system
-  css/admin.css           # admin panel styling
+  admin/                  # nothing but .htaccess. The Next.js app owns /admin;
+                          #   its DirectorySlash Off stops mod_dir 301-ing to
+                          #   /admin/, which Next 308s back into a redirect loop
+  css/app.css             # design system for what PHP still serves
   js/                     # api.js (fetch wrapper), render/page scripts, ai-widget,
                           #   hero-3d.js (WebGL hero) + vendor/ (self-hosted Three.js)
   uploads/                # project covers, blog cover art, project-request attachments

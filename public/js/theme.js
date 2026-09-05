@@ -15,18 +15,16 @@
   var ICON_APPEARANCE = '<svg ' + SVG_ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>';
   var CHECK_SVG = '<svg class="theme-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="20 6 9 17 4 12"/></svg>';
 
-  var ALL_THEMES = [
+  // Every theme is offered everywhere. The narrowing to Light/Dark that used
+  // to happen here existed for the static admin panel, whose separate
+  // dark-theme system in admin.css covered neither Midnight nor Paper; that
+  // panel and its stylesheet are gone, so the test could never pass again.
+  var THEMES = [
     { id: "light", label: "Light", bg: "#fbfbfa" },
     { id: "dark", label: "Dark", bg: "#0b0c0e" },
     { id: "midnight", label: "Midnight", bg: "#060a14" },
     { id: "paper", label: "Paper", bg: "#f5efe0" },
   ];
-  // Admin pages maintain their own, separate dark-theme color system in
-  // admin.css (sidebar section colors, etc.) that doesn't cover Midnight or
-  // Paper, offer just Light/Dark there so the dashboard never ends up
-  // half-themed.
-  var isAdminContext = !!document.querySelector('link[href*="/css/admin.css"]');
-  var THEMES = isAdminContext ? ALL_THEMES.filter(t => t.id === "light" || t.id === "dark") : ALL_THEMES;
   var VALID_IDS = THEMES.map(t => t.id);
 
   function applyCanvas(theme) {

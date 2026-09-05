@@ -1447,9 +1447,8 @@ pre code.hljs {
   color: var(--heading-color);
 }
 
-/* Auth pages (admin + client login) — shared here rather than admin.css so
-   the public client-login page (which never loads admin.css) gets the same
-   full-height centered card, brand lockup, and form polish. */
+/* Auth pages (admin + client login) — the full-height centered card, brand
+   lockup, and form polish, kept together so both sign-ins look the same. */
 .auth-shell {
   min-height: 100vh;
   display: flex;
