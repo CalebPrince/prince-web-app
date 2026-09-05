@@ -494,6 +494,10 @@ export const api = {
     postJson<PaymentPrepared>("/api/v1/payments/prepare", data),
   prepareInvoicePayment: (data: { link_token: string }) =>
     postJson<PaymentPrepared>("/api/v1/payments/prepare", data),
+  // Starts a monthly Lisa subscription. Returns Paystack's hosted checkout
+  // URL; no card details ever pass through this app.
+  startLisaSubscription: (data: { tier: 1 | 2 | 3; name: string; email: string; tos_accepted: true }) =>
+    postJson<{ checkout_url: string }>("/api/v1/subscriptions/lisa", data),
   verifyPayment: (reference: string) => postJson<PaymentVerified>("/api/v1/payments/verify", { reference }),
   getInvoice: (token: string) => get<any>(`/api/v1/invoices/${encodeURIComponent(token)}`),
   getPaymentLink: (token: string) => get<any>(`/api/v1/payments/link/${encodeURIComponent(token)}`),

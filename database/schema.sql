@@ -1080,6 +1080,11 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   checkout_url TEXT,
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'active', 'past_due', 'cancelled')),
+  -- 'admin' is a subscription Caleb set up for a named client; 'lisa_page' is
+  -- a visitor who subscribed themselves from Lisa's pricing tiers.
+  source TEXT NOT NULL DEFAULT 'admin' CHECK (source IN ('admin', 'lisa_page')),
+  tos_accepted_at TEXT,
+  tos_version TEXT,
   next_payment_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

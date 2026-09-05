@@ -21,6 +21,7 @@ import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
 import { IntakeCta } from "@/components/IntakeCta";
+import { LisaSubscribe } from "@/components/LisaSubscribe";
 import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
 import { LisaVideoAgent } from "@/components/LisaVideoAgent";
@@ -185,6 +186,9 @@ export default async function Lisa() {
     usd: field(content, `lisa_tier_${i + 1}_price_usd`, d.usd),
     blurb: field(content, `lisa_tier_${i + 1}_tagline`, d.blurb),
     features: features(content, `lisa_tier_${i + 1}_features`, d.features),
+    // Payable only once a real monthly figure is set in Admin -> Lisa. The
+    // displayed price is free text and is never charged against.
+    payable: Number(field(content, `lisa_tier_${i + 1}_amount`, "0")) > 0,
   }));
 
   const customTier = {
@@ -447,15 +451,24 @@ export default async function Lisa() {
                   ))}
                 </ul>
 
-                <IntakeCta
-                  kind="booking"
-                  size="default"
-                  openVariant={t.featured ? "primary" : "secondary"}
-                  arrow={false}
-                  className="mt-8 w-full"
-                >
-                  Get started
-                </IntakeCta>
+                {t.payable ? (
+                  <LisaSubscribe
+                    tier={(i + 1) as 1 | 2 | 3}
+                    tierName={t.tag}
+                    price={t.ghs}
+                    featured={t.featured}
+                  />
+                ) : (
+                  <IntakeCta
+                    kind="booking"
+                    size="default"
+                    openVariant={t.featured ? "primary" : "secondary"}
+                    arrow={false}
+                    className="mt-8 w-full"
+                  >
+                    Get started
+                  </IntakeCta>
+                )}
               </Reveal>
             ))}
 

@@ -26,7 +26,8 @@ use App\Support\Settings;
 class PaymentController
 {
     private const API_BASE = 'https://api.paystack.co';
-    private const TOS_VERSION = '2026-07-07';
+    /** Public so SubscriptionController records the same version on a Lisa signup. */
+    public const TOS_VERSION = '2026-07-07';
 
     /** GET /api/v1/payments/config — public: what the checkout UI needs to render */
     public static function config(): void
@@ -121,18 +122,12 @@ class PaymentController
             $currency = Settings::get('pricing_currency') ?: 'GHS';
             $amountSubunits = (int) round(((float) $amountSetting) * 100);
 
-            $agreement = $pdo->prepare('SELECT p.status FROM proposals p JOIN proposal_milestones pm ON pm.proposal_id = p.id WHERE pm.payment_link_id = ?');
-            $agreement->execute([(int) $link['id']]);
-            $agreementStatus = $agreement->fetchColumn();
-            if ($agreementStatus !== false && $agreementStatus !== 'accepted') {
-                Response::error('Please review and accept your written project agreement before paying this milestone.', 422);
-            }
             $reference = self::createPaymentRow($pdo, [
                 'email' => $email,
                 'customer_name' => $name ?: null,
                 'amount' => $amountSubunits,
                 'currency' => $currency,
-                'description' => 'Starter tier — project deposit',
+                'description' => 'Starter tier: project deposit',
                 'source' => 'tier_checkout',
                 'payment_link_id' => null,
                 'tos_accepted' => 1,
@@ -145,7 +140,7 @@ class PaymentController
                 'amount' => $amountSubunits,
                 'currency' => $currency,
                 'email' => $email,
-                'description' => 'Starter tier — project deposit',
+                'description' => 'Starter tier: project deposit',
             ]);
             return;
         }

@@ -124,6 +124,7 @@ $router->get('/api/v1/payments/link/{token}', [PaymentController::class, 'showLi
 $router->post('/api/v1/payments/prepare', [PaymentController::class, 'prepare']);
 $router->post('/api/v1/payments/verify', [PaymentController::class, 'verify']);
 $router->post('/api/v1/payments/webhook', [PaymentController::class, 'webhook']);
+$router->post('/api/v1/subscriptions/lisa', [SubscriptionController::class, 'startLisa']);
 $router->get('/api/v1/invoices/{token}', [InvoiceController::class, 'show']);
 $router->get('/api/v1/proposals/{token}', [ProposalController::class, 'show']);
 $router->post('/api/v1/proposals/{token}/accept', [ProposalController::class, 'accept']);

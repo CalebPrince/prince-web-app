@@ -62,6 +62,7 @@ const FIELDS = [
     `lisa_tier_${i}_price_usd`,
     `lisa_tier_${i}_tagline`,
     `lisa_tier_${i}_features`,
+    `lisa_tier_${i}_amount`,
   ]),
   "lisa_custom_tier_name",
   "lisa_custom_tier_cta_label",
@@ -120,7 +121,7 @@ export default function LisaClient({
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
       {saved && !error && (
         <div className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-500">
-          Saved — the public Lisa page updates immediately.
+          Saved. The public Lisa page updates immediately.
         </div>
       )}
 
@@ -174,7 +175,7 @@ export default function LisaClient({
       {TIERS.map((i) => (
         <Card
           key={i}
-          title={`Tier ${i} — monthly`}
+          title={`Tier ${i}: monthly`}
           actions={i === 2 ? <StatusPill status="Most requested" tone="green" /> : undefined}
           bodyClassName="p-5 space-y-4"
         >
@@ -220,6 +221,17 @@ export default function LisaClient({
               placeholder="One feature per line"
               value={values[`lisa_tier_${i}_features`]}
               onChange={(e) => set(`lisa_tier_${i}_features`, e.target.value)}
+            />
+          </Field>
+          <Field
+            label="Monthly charge"
+            hint="The number actually billed each month, in your store currency, digits only (2000, not GHS 2,000). Fill it and this tier can be subscribed to from the Lisa page; leave it empty and the tier shows a Get in touch link instead. The prices above are only what visitors read."
+          >
+            <Input
+              inputMode="decimal"
+              placeholder="2000"
+              value={values[`lisa_tier_${i}_amount`]}
+              onChange={(e) => set(`lisa_tier_${i}_amount`, e.target.value)}
             />
           </Field>
         </Card>

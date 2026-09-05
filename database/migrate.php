@@ -1121,6 +1121,22 @@ if (!in_array('accepted_agreement_version', $proposalColumns, true)) {
     $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_agreement_version TEXT');
 }
 
+// Where a subscription came from, and the terms the subscriber accepted.
+// Rows created before this are all admin-created, which is what the default
+// says; a visitor signing up from the Lisa page records 'lisa_page' plus the
+// version of the terms that were on screen. No CHECK: SQLite's ALTER TABLE
+// ADD COLUMN cannot carry one, and schema.sql has it for fresh installs.
+$subscriptionColumns = array_column($pdo->query('PRAGMA table_info(subscriptions)')->fetchAll(), 'name');
+if (!in_array('source', $subscriptionColumns, true)) {
+    $pdo->exec("ALTER TABLE subscriptions ADD COLUMN source TEXT NOT NULL DEFAULT 'admin'");
+}
+if (!in_array('tos_accepted_at', $subscriptionColumns, true)) {
+    $pdo->exec('ALTER TABLE subscriptions ADD COLUMN tos_accepted_at TEXT');
+}
+if (!in_array('tos_version', $subscriptionColumns, true)) {
+    $pdo->exec('ALTER TABLE subscriptions ADD COLUMN tos_version TEXT');
+}
+
 // Delivery health per project — hand-set on the admin Projects page,
 // separate from is_published (public visibility). No CHECK here, same
 // pattern as inquiries.type above: SQLite's ALTER TABLE ADD COLUMN can't

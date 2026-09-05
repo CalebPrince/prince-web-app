@@ -151,12 +151,15 @@ class SettingsController
         'pricing_tier_4_name', 'pricing_tier_4_price', 'pricing_tier_4_tagline', 'pricing_tier_4_features',
         'pricing_tier_5_name', 'pricing_tier_5_price', 'pricing_tier_5_tagline', 'pricing_tier_5_features',
         'pricing_currency', 'pricing_tier_1_amount',
+        'website_tier_1_name', 'website_tier_1_price', 'website_tier_1_tagline', 'website_tier_1_features',
+        'website_tier_2_name', 'website_tier_2_price', 'website_tier_2_tagline', 'website_tier_2_features',
+        'website_tier_3_name', 'website_tier_3_price', 'website_tier_3_tagline', 'website_tier_3_features',
         'home_pricing_eyebrow', 'home_pricing_title', 'home_pricing_note',
         'lisa_page_eyebrow', 'lisa_page_subheadline', 'lisa_page_service_pitch', 'lisa_page_integrations_disclaimer',
         'lisa_pricing_eyebrow', 'lisa_pricing_title',
-        'lisa_tier_1_name', 'lisa_tier_1_price_ghs', 'lisa_tier_1_price_usd', 'lisa_tier_1_tagline', 'lisa_tier_1_features',
-        'lisa_tier_2_name', 'lisa_tier_2_price_ghs', 'lisa_tier_2_price_usd', 'lisa_tier_2_tagline', 'lisa_tier_2_features',
-        'lisa_tier_3_name', 'lisa_tier_3_price_ghs', 'lisa_tier_3_price_usd', 'lisa_tier_3_tagline', 'lisa_tier_3_features',
+        'lisa_tier_1_name', 'lisa_tier_1_price_ghs', 'lisa_tier_1_price_usd', 'lisa_tier_1_tagline', 'lisa_tier_1_features', 'lisa_tier_1_amount',
+        'lisa_tier_2_name', 'lisa_tier_2_price_ghs', 'lisa_tier_2_price_usd', 'lisa_tier_2_tagline', 'lisa_tier_2_features', 'lisa_tier_2_amount',
+        'lisa_tier_3_name', 'lisa_tier_3_price_ghs', 'lisa_tier_3_price_usd', 'lisa_tier_3_tagline', 'lisa_tier_3_features', 'lisa_tier_3_amount',
         'lisa_custom_tier_name', 'lisa_custom_tier_tagline', 'lisa_custom_tier_features', 'lisa_custom_tier_cta_label',
         'archive_eyebrow', 'archive_title',
         'archive_1_domain', 'archive_1_meta', 'archive_1_title', 'archive_1_desc', 'archive_1_link', 'archive_1_metric', 'archive_1_metric_label',
@@ -243,6 +246,18 @@ class SettingsController
         }
         if (isset($data['google_rating_published']) && !in_array((string) $data['google_rating_published'], ['0', '1'], true)) {
             Response::error('Choose whether to publish the Google rating.', 422);
+        }
+        // A Lisa tier's amount is what a visitor is actually charged every
+        // month, so a typo here is a wrong charge rather than wrong copy.
+        foreach ([1, 2, 3] as $tier) {
+            $key = "lisa_tier_{$tier}_amount";
+            if (!isset($data[$key]) || trim((string) $data[$key]) === '') {
+                continue;
+            }
+            $amount = trim((string) $data[$key]);
+            if (!is_numeric($amount) || (float) $amount <= 0 || (float) $amount > 1000000) {
+                Response::error("Lisa tier {$tier}'s monthly charge must be a number greater than zero.", 422);
+            }
         }
         $writtenKeys = [];
         $clearedKeys = [];

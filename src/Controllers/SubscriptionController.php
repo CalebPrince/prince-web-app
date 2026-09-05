@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
 use App\Support\Database;
 use App\Support\EmailTemplate;
@@ -120,6 +121,98 @@ class SubscriptionController
         ]);
 
         Response::json(['status' => 'created', 'checkout_url' => $checkout['authorization_url']], 201);
+    }
+
+    /**
+     * POST /api/v1/subscriptions/lisa — public, rate-limited.
+     * Body: {tier: 1|2|3, name, email, tos_accepted}
+     *
+     * Self-serve version of store() for Lisa's monthly tiers, driven by the
+     * lisa_tier_N_* settings the Lisa admin page owns. A tier is only
+     * purchasable once lisa_tier_N_amount holds a real figure: the displayed
+     * price is free text ("GHS 800"), and charging a customer against a
+     * string parsed out of marketing copy is not something to guess at.
+     *
+     * A plan is minted per subscriber rather than shared across all of them,
+     * matching store(): handleWebhookEvent() matches an incoming
+     * subscription.create by plan code, so one plan per row is what keeps
+     * that lookup unambiguous.
+     */
+    public static function startLisa(): void
+    {
+        require_once dirname(__DIR__, 2) . '/config/config.php';
+        RateLimitMiddleware::enforce('lisa_subscribe', appConfig()['contact_rate_limit']);
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $tier = (int) ($data['tier'] ?? 0);
+        $name = trim((string) ($data['name'] ?? ''));
+        $email = trim((string) ($data['email'] ?? ''));
+
+        if ($tier < 1 || $tier > 3) {
+            Response::error('Choose one of the Lisa plans.', 422);
+        }
+        if ($name === '' || mb_strlen($name) > 255) {
+            Response::error('Please enter your name.', 422);
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Response::error('A valid email address is required.', 422);
+        }
+        if (empty($data['tos_accepted'])) {
+            Response::error('Please accept the terms to continue.', 422);
+        }
+
+        $amount = (float) (Settings::get("lisa_tier_{$tier}_amount") ?? 0);
+        if ($amount <= 0) {
+            Response::error('This plan cannot be paid for online yet. Please get in touch and I will set it up with you.', 422);
+        }
+        $planName = trim((string) (Settings::get("lisa_tier_{$tier}_name") ?? '')) ?: "Lisa tier {$tier}";
+        $currency = Settings::get('pricing_currency') ?: 'GHS';
+
+        $secretKey = Settings::get('paystack_secret_key');
+        if (!$secretKey) {
+            Response::error('Online payment is unavailable right now. Please get in touch and I will send you a payment link.', 503);
+        }
+
+        $amountSubunits = (int) round($amount * 100);
+
+        $plan = self::paystackPost($secretKey, '/plan', [
+            'name' => "Lisa {$planName}: {$name}",
+            'amount' => $amountSubunits,
+            'interval' => 'monthly',
+            'currency' => $currency,
+        ]);
+        if (!$plan || empty($plan['plan_code'])) {
+            Response::error('The payment provider could not set up this plan. Please get in touch and I will help.', 502);
+        }
+
+        $checkout = self::paystackPost($secretKey, '/transaction/initialize', [
+            'email' => $email,
+            'amount' => $amountSubunits,
+            'currency' => $currency,
+            'plan' => $plan['plan_code'],
+        ]);
+        if (!$checkout || empty($checkout['authorization_url'])) {
+            Response::error('The payment provider did not return a checkout page. Please get in touch and I will help.', 502);
+        }
+
+        $pdo = Database::get();
+        $pdo->prepare(
+            "INSERT INTO subscriptions (client_name, client_email, plan_name, amount, currency, billing_interval,
+                                        paystack_plan_code, checkout_url, source, tos_accepted_at, tos_version)
+             VALUES (?, ?, ?, ?, ?, 'monthly', ?, ?, 'lisa_page', datetime('now'), ?)"
+        )->execute([
+            $name,
+            $email,
+            "Lisa {$planName}",
+            $amountSubunits,
+            $currency,
+            $plan['plan_code'],
+            $checkout['authorization_url'],
+            PaymentController::TOS_VERSION,
+        ]);
+
+        // No ActivityLog actor here: this is a visitor, not an admin user.
+        Response::json(['checkout_url' => $checkout['authorization_url']], 201);
     }
 
     /** POST /api/v1/admin/subscriptions/{id}/cancel */

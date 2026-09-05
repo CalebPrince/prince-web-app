@@ -8,12 +8,44 @@ import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { api, type SiteContent } from "@/lib/api";
 
-// Pricing page - tier copy is admin-editable (Admin -> Pricing, the same
-// `pricing_tier_1..5_*` settings princecaleb.dev/pricing.html reads), so it's
-// fetched from /api/v1/content rather than hardcoded. Tiers 1-3 are the
-// agent-workflow tiers; 4-5 are the add-on services (websites/apps, ads).
-// These defaults mirror the settings table's own seeded defaults and are
-// only ever shown if that fetch fails.
+// Pricing page. Every figure and every line of tier copy is admin-editable
+// and fetched from /api/v1/content, never hardcoded: `website_tier_1..3_*`
+// for the website packages this page leads with, `pricing_tier_1..3_*` for
+// the AI agent tiers, and `pricing_tier_5_*` for the ad creative add-on.
+// The defaults below mirror the seeded settings and are only ever shown if
+// that fetch fails.
+//
+// The website figures are the ones already published elsewhere on the site
+// (websites from GHS 5,000, web applications from GHS 15,000, mobile app
+// MVPs from GHS 35,000), so a stale fallback still quotes real numbers.
+
+
+const WEBSITE_DEFAULTS = [
+  {
+    name: "Business Website",
+    price: "From GHS 5,000",
+    tagline:
+      "A designed, responsive site that explains what you do and makes it easy for a customer to get in touch.",
+    features:
+      "Page structure planned around your customers\nCustom design, reviewed before development\nResponsive layouts for phone, tablet and desktop\nContact or enquiry forms\nLaunch, handover and basic analytics",
+  },
+  {
+    name: "Custom Web Application",
+    price: "From GHS 15,000",
+    tagline:
+      "A tool, portal or dashboard built around how your business actually runs, not around a template.",
+    features:
+      "Accounts, roles and permissions\nWorkflows and data modelled to your process\nIntegrations with the tools you already use\nPayments where the work calls for them\nStaged delivery with review points",
+  },
+  {
+    name: "Mobile App MVP",
+    price: "From GHS 35,000",
+    tagline:
+      "iOS and Android from one codebase, scoped down to the smallest version worth putting in front of customers.",
+    features:
+      "iOS and Android from a single build\nCore journeys designed and tested\nAPI and backend integration\nStore submission support\nA plan for what comes after launch",
+  },
+];
 
 const TIER_META: { tag: string; outcome: string; featured?: boolean }[] = [
   { tag: "Starter", outcome: "Answer and route one repeatable call" },
@@ -50,19 +82,11 @@ const TIER_DEFAULTS = [
 
 const ADDON_DEFAULTS = [
   {
-    name: "Custom Websites & Mobile Apps",
-    tagline:
-      "Mobile app MVPs start from GHS 35,000. Every build is scoped around your customers and operation.",
-    features:
-      "Business and e-commerce websites\nCustom web applications from GHS 15,000\niOS and Android mobile app MVPs from GHS 35,000\nAPIs, payments, and third-party integrations\nLaunch support and ongoing improvements",
-    cta: "Request a project",
-  },
-  {
     name: "Video & Image Ads",
     tagline:
       "Scroll-stopping video and image ad creative for Meta, TikTok, and Google, scripted, produced, and delivered ready to launch.",
     features:
-      "3–5 short-form video ads or a static image ad set\nPlatform-optimized formats (Meta, TikTok, Google)\nScripting, captions, and on-brand visuals\nOne round of revisions included",
+      "3-5 short-form video ads or a static image ad set\nPlatform-optimized formats (Meta, TikTok, Google)\nScripting, captions, and on-brand visuals\nOne round of revisions included",
     cta: "Get a quote",
   },
 ];
@@ -125,10 +149,19 @@ export default async function Pricing() {
     field(content, "lisa_tier_1_price_usd", "$55"),
   ].join(" / ");
 
-  const addons = ADDON_DEFAULTS.map((d, i) => ({
-    name: field(content, `pricing_tier_${i + 4}_name`, d.name),
-    blurb: field(content, `pricing_tier_${i + 4}_tagline`, d.tagline),
-    features: features(content, `pricing_tier_${i + 4}_features`, d.features),
+  const websitePackages = WEBSITE_DEFAULTS.map((d, i) => ({
+    name: field(content, `website_tier_${i + 1}_name`, d.name),
+    from: field(content, `website_tier_${i + 1}_price`, d.price),
+    blurb: field(content, `website_tier_${i + 1}_tagline`, d.tagline),
+    features: features(content, `website_tier_${i + 1}_features`, d.features),
+  }));
+
+  // Tier 5 only: the websites-and-apps add-on that used to sit here is now
+  // the section the page opens with.
+  const addons = ADDON_DEFAULTS.map((d) => ({
+    name: field(content, "pricing_tier_5_name", d.name),
+    blurb: field(content, "pricing_tier_5_tagline", d.tagline),
+    features: features(content, "pricing_tier_5_features", d.features),
     cta: d.cta,
   }));
 
@@ -145,9 +178,9 @@ export default async function Pricing() {
           </Reveal>
           <Reveal delay={80}>
             <h1 className="page-hero-title mt-8 max-w-4xl">
-              Start with one workflow.
+              What a project costs,
               <br />
-              <span className="text-accent">Expand after it works.</span>
+              <span className="text-accent">written down before we start.</span>
             </h1>
           </Reveal>
           <Reveal delay={160}>
@@ -155,17 +188,72 @@ export default async function Pricing() {
               {field(
                 content,
                 "pricing_intro",
-                "Start with one useful workflow, prove it with real conversations, then expand. These are implementation starting points; telephony, messaging, and AI usage are billed separately.",
+                "Starting points for the work I take on most often, with websites first. Every project is quoted on its own scope and confirmed in a written agreement before anything begins.",
               )}
             </p>
           </Reveal>
         </div>
       </section>
 
-      {/* ── TIERS ───────────────────────────────────────────── */}
+      {/* ── 01 · WEBSITE PACKAGES ───────────────────────────── */}
+      <section className="mx-auto max-w-[1400px] px-6 pb-8 md:px-10">
+        <Reveal className="mb-10 max-w-2xl">
+          <SectionLabel index="01">Website design and development</SectionLabel>
+          <h2 className="mt-6 text-[clamp(1.8rem,4vw,3rem)] font-bold leading-[1.05] tracking-[-0.03em]">
+            Start with the website.
+          </h2>
+          <p className="mt-4 text-text-2">
+            Design and development, quoted on the pages and features you actually need. Each one is
+            scoped in writing before work starts.
+          </p>
+        </Reveal>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {websitePackages.map((p, i) => (
+            <Reveal key={p.name} delay={i * 90}>
+              <TiltCard
+                maxTilt={5}
+                className="relative flex h-full flex-col rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/30 md:p-10"
+              >
+                <h3 className="text-2xl font-bold tracking-tight md:text-3xl">{p.name}</h3>
+                <p className="mt-3 text-text-2">{p.blurb}</p>
+
+                <div className="mt-8 border-t border-hairline pt-6">
+                  <span className="label text-muted">From</span>
+                  <p className="mt-1 text-[clamp(1.8rem,3vw,2.6rem)] font-extrabold tracking-[-0.03em]">
+                    {p.from}
+                  </p>
+                  <span className="label text-muted">quoted on your scope</span>
+                </div>
+
+                <ul className="mt-8 flex-1 space-y-3">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex gap-3 text-text-2">
+                      <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <IntakeCta
+                  kind="project"
+                  openHref="/request?service=website-design"
+                  openVariant={i === 0 ? "primary" : "secondary"}
+                  size="default"
+                  arrow={false}
+                  className="mt-8 w-full"
+                >
+                  Request a quote
+                </IntakeCta>
+              </TiltCard>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 02 · AI AGENT TIERS ─────────────────────────────── */}
       <section className="mx-auto max-w-[1400px] px-6 pb-8 md:px-10">
         <Reveal className="mb-10">
-          <SectionLabel index="01">Choose the first useful outcome</SectionLabel>
+          <SectionLabel index="02">AI agents and automation</SectionLabel>
         </Reveal>
         <div className="grid gap-6 lg:grid-cols-3">
           {tiers.map((t, i) => (
@@ -225,7 +313,7 @@ export default async function Pricing() {
       <section className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
           <Reveal className="lg:col-span-4">
-            <SectionLabel index="02">What changes month to month</SectionLabel>
+            <SectionLabel index="03">What changes month to month</SectionLabel>
             <h2 className="mt-6 text-[clamp(1.8rem,4vw,3rem)] font-bold leading-[1.05] tracking-[-0.03em]">
               Implementation and usage stay separate.
             </h2>
@@ -272,9 +360,9 @@ export default async function Pricing() {
       <section className="border-y border-hairline bg-bg-2/40">
         <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
           <Reveal>
-            <SectionLabel index="03">Beyond the agents</SectionLabel>
+            <SectionLabel index="04">Also available</SectionLabel>
             <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
-              Buy a working system, not a technology label.
+              Ad creative, when the site needs traffic.
             </h2>
           </Reveal>
 
