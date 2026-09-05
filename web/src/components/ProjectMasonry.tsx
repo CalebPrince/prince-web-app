@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
-import { BrowserFrame } from "@/components/BrowserFrame";
+import { DeviceShowcase } from "@/components/DeviceShowcase";
 import { cn } from "@/lib/utils";
 import { type SystemView } from "@/lib/systems";
 
@@ -11,12 +11,12 @@ import { type SystemView } from "@/lib/systems";
  * The work gallery: one project shown large, the rest in masonry columns
  * beside and beneath it.
  *
- * Every card is a browser window (BrowserFrame, the same one the homepage
- * hero's concept mockup uses) wrapped around the project's own screenshot,
- * so a card reads as a site you could visit rather than a thumbnail in a
- * box. It replaces the tilted equal-sized tiles from the original Figma
- * layout, where six small mockups gave every project the same weight and
- * none of them room to be seen.
+ * Every card shows the project on a laptop with its phone view standing in
+ * front of it (DeviceShowcase, shared with the homepage hero), so a card
+ * reads as a site someone can visit rather than a thumbnail in a box. It
+ * replaces the tilted equal-sized tiles from the original Figma layout,
+ * where six small mockups gave every project the same weight and none of
+ * them room to be seen.
  *
  * Shared by the homepage and the /work index; what differs between them is
  * how the entrance is triggered, see `trigger` below.
@@ -59,31 +59,49 @@ function hasShot(system: SystemView): boolean {
   return Boolean(system.img) && !system.img.includes("/placeholder-");
 }
 
-function Shot({ system, className }: { system: SystemView; className?: string }) {
+function Shot({ system }: { system: SystemView }) {
+  if (!hasShot(system)) {
+    // No screenshot on file. An invented one would be a fabricated picture
+    // of real client work, so the frame says what it is instead.
+    return (
+      <DeviceShowcase
+        address={addressFor(system)}
+        className="rounded-none border-0 border-b border-hairline"
+        laptop={
+          <div className="absolute inset-0 flex flex-col justify-end gap-1 p-3">
+            <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
+              {system.category}
+            </span>
+            <span className="text-[11px] text-text-2">Screenshot to come</span>
+          </div>
+        }
+      />
+    );
+  }
+
+  // One screenshot, two screens: the laptop shows the page as captured, the
+  // phone the same capture cropped to its left column, which is the part a
+  // narrow viewport keeps. It is the project's own pixels either way.
   return (
-    <BrowserFrame
+    <DeviceShowcase
       address={addressFor(system)}
-      size={className?.includes("aspect-[16/10]") ? "md" : "sm"}
-      className="h-full"
-      bodyClassName={cn("bg-bg-3", className)}
-    >
-      {hasShot(system) ? (
+      className="rounded-none border-0 border-b border-hairline"
+      laptop={
         <img
           src={system.img}
           alt={`${system.name}, ${system.category}`}
-          className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
+          className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
         />
-      ) : (
-        // No screenshot on file. An invented one would be a fabricated
-        // picture of real client work, so the frame says what it is instead.
-        <div className="absolute inset-0 flex flex-col justify-end gap-1.5 p-4">
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-            {system.category}
-          </span>
-          <span className="text-xs text-text-2">Screenshot to come</span>
-        </div>
-      )}
-    </BrowserFrame>
+      }
+      phone={
+        <img
+          src={system.img}
+          alt=""
+          aria-hidden="true"
+          className="absolute left-0 top-0 h-full w-[220%] max-w-none object-cover object-left-top"
+        />
+      }
+    />
   );
 }
 
@@ -100,7 +118,7 @@ function CardShell({
     <Link
       href={`/work/${system.slug}`}
       className={cn(
-        "group flex h-full flex-col gap-5 rounded-2xl border border-hairline bg-bg-2 p-5 glass",
+        "group flex h-full flex-col overflow-hidden rounded-2xl border border-hairline bg-bg-2 glass",
         "shadow-[var(--card-shadow)] transition-[transform,box-shadow,border-color] duration-300",
         "hover:-translate-y-1 hover:border-accent/40 hover:shadow-[var(--card-shadow-lift)]",
         className,
@@ -111,26 +129,24 @@ function CardShell({
   );
 }
 
-function Meta({ system, featured }: { system: SystemView; featured?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
-        {system.category}
-      </p>
-      {featured && system.featured && (
-        <span className="rounded bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
-          Featured
-        </span>
-      )}
-    </div>
-  );
-}
-
-function Footer({ system, large }: { system: SystemView; large?: boolean }) {
-  const tags = system.stack.slice(0, large ? 4 : 3);
+/** Everything under the image: what it is, what it was built with, and the
+ *  way in. Laid out like the card it sits in, tags and link on one line. */
+function CardBody({ system, large }: { system: SystemView; large?: boolean }) {
+  const tags = system.stack.slice(0, large ? 4 : 2);
 
   return (
-    <div className="mt-auto flex flex-col gap-3">
+    <div className={cn("flex flex-1 flex-col gap-3", large ? "p-6 md:p-7" : "p-5")}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+          {system.category}
+        </p>
+        {large && system.featured && (
+          <span className="rounded bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
+            Featured
+          </span>
+        )}
+      </div>
+
       <h3
         className={cn(
           "font-semibold leading-tight tracking-tight",
@@ -139,25 +155,28 @@ function Footer({ system, large }: { system: SystemView; large?: boolean }) {
       >
         {system.name}
       </h3>
-      {large && system.desc && (
-        <p className="max-w-xl leading-relaxed text-text-2">{system.desc}</p>
+
+      {system.desc && (
+        <p className={cn("leading-relaxed text-text-2", large ? "max-w-xl" : "text-sm")}>
+          {system.desc}
+        </p>
       )}
-      {tags.length > 0 && (
+
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
         <div className="flex flex-wrap gap-1.5">
           {tags.map((tag) => (
             <span
               key={tag.name}
-              className="rounded bg-bg-3 px-2 py-1 font-mono text-[11px] text-muted"
+              className="rounded-full bg-bg-3 px-2.5 py-1 font-mono text-[11px] text-muted"
             >
               {tag.name}
             </span>
           ))}
         </div>
-      )}
-      <div className="h-px w-full bg-hairline" />
-      <div className="flex items-center gap-1.5 font-mono text-[13px] font-medium text-text group-hover:text-accent">
-        View Project
-        <ArrowUpRight className="size-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        <span className="flex items-center gap-1.5 font-mono text-[13px] font-medium text-text group-hover:text-accent">
+          View Project
+          <ArrowUpRight className="size-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        </span>
       </div>
     </div>
   );
@@ -165,10 +184,9 @@ function Footer({ system, large }: { system: SystemView; large?: boolean }) {
 
 function FeatureCard({ system }: { system: SystemView }) {
   return (
-    <CardShell system={system} className="md:p-7">
-      <Meta system={system} featured />
-      <Shot system={system} className="aspect-[16/10]" />
-      <Footer system={system} large />
+    <CardShell system={system}>
+      <Shot system={system} />
+      <CardBody system={system} large />
     </CardShell>
   );
 }
@@ -176,9 +194,8 @@ function FeatureCard({ system }: { system: SystemView }) {
 function SmallCard({ system }: { system: SystemView }) {
   return (
     <CardShell system={system}>
-      <Meta system={system} />
-      <Shot system={system} className="aspect-[16/11]" />
-      <Footer system={system} />
+      <Shot system={system} />
+      <CardBody system={system} />
     </CardShell>
   );
 }
