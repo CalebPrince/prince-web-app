@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
-import { DeviceShowcase } from "@/components/DeviceShowcase";
 import { cn } from "@/lib/utils";
 import { type SystemView } from "@/lib/systems";
 
@@ -11,12 +10,12 @@ import { type SystemView } from "@/lib/systems";
  * The work gallery: one project shown large, the rest in masonry columns
  * beside and beneath it.
  *
- * Every card shows the project on a laptop with its phone view standing in
- * front of it (DeviceShowcase, shared with the homepage hero), so a card
- * reads as a site someone can visit rather than a thumbnail in a box. It
- * replaces the tilted equal-sized tiles from the original Figma layout,
- * where six small mockups gave every project the same weight and none of
- * them room to be seen.
+ * A card is a labelled window: a tab carrying the project's mark and its
+ * address, then the image exactly as it was uploaded, then what the project
+ * is. Device mockups and screenshots are prepared outside the app, so
+ * nothing here frames or decorates them. It replaces the tilted equal-sized
+ * tiles from the original Figma layout, where six small mockups gave every
+ * project the same weight and none of them room to be seen.
  *
  * Shared by the homepage and the /work index; what differs between them is
  * how the entrance is triggered, see `trigger` below.
@@ -59,49 +58,51 @@ function hasShot(system: SystemView): boolean {
   return Boolean(system.img) && !system.img.includes("/placeholder-");
 }
 
-function Shot({ system }: { system: SystemView }) {
+/** The project's own image, shown as supplied. Screenshots and device
+ *  mockups are prepared outside the app and uploaded in Admin -> Projects,
+ *  so nothing here frames, crops or decorates them. */
+function Shot({ system, large }: { system: SystemView; large?: boolean }) {
   if (!hasShot(system)) {
-    // No screenshot on file. An invented one would be a fabricated picture
-    // of real client work, so the frame says what it is instead.
+    // No image on file. An invented one would be a fabricated picture of
+    // real client work, so the space says what it is instead.
     return (
-      <DeviceShowcase
-        address={addressFor(system)}
-        className="rounded-none border-0 border-b border-hairline"
-        laptop={
-          <div className="absolute inset-0 flex flex-col justify-end gap-1 p-3">
-            <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
-              {system.category}
-            </span>
-            <span className="text-[11px] text-text-2">Screenshot to come</span>
-          </div>
-        }
-      />
+      <div
+        className={cn(
+          "flex items-end bg-bg-3 p-5",
+          large ? "aspect-[16/10]" : "aspect-[16/11]",
+        )}
+      >
+        <span className="text-sm text-text-2">Image to come</span>
+      </div>
     );
   }
 
-  // One screenshot, two screens: the laptop shows the page as captured, the
-  // phone the same capture cropped to its left column, which is the part a
-  // narrow viewport keeps. It is the project's own pixels either way.
   return (
-    <DeviceShowcase
-      address={addressFor(system)}
-      className="rounded-none border-0 border-b border-hairline"
-      laptop={
-        <img
-          src={system.img}
-          alt={`${system.name}, ${system.category}`}
-          className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
-        />
-      }
-      phone={
-        <img
-          src={system.img}
-          alt=""
-          aria-hidden="true"
-          className="absolute left-0 top-0 h-full w-[220%] max-w-none object-cover object-left-top"
-        />
-      }
-    />
+    <div className={cn("overflow-hidden bg-bg-3", large ? "aspect-[16/10]" : "aspect-[16/11]")}>
+      <img
+        src={system.img}
+        alt={`${system.name}, ${system.category}`}
+        className="h-full w-full object-cover object-top transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
+      />
+    </div>
+  );
+}
+
+/** The tab above the card, carrying the project's mark and its address.
+ *  Borrowed from the reference design: the card reads as a window with a
+ *  label rather than a plain tile, and the label is the one place the real
+ *  address appears now that the browser chrome is gone. */
+function CardTab({ system }: { system: SystemView }) {
+  return (
+    <div className="flex items-center gap-2 rounded-t-2xl border border-b-0 border-hairline bg-bg-2 px-3.5 py-2">
+      <span
+        aria-hidden="true"
+        className="grid size-5 shrink-0 place-items-center rounded-md border border-hairline-strong bg-bg-3 font-mono text-[10px] font-bold text-accent"
+      >
+        {system.name.slice(0, 1)}
+      </span>
+      <span className="truncate font-mono text-[11px] text-text-2">{addressFor(system)}</span>
+    </div>
   );
 }
 
@@ -118,9 +119,7 @@ function CardShell({
     <Link
       href={`/work/${system.slug}`}
       className={cn(
-        "group flex h-full flex-col overflow-hidden rounded-2xl border border-hairline bg-bg-2 glass",
-        "shadow-[var(--card-shadow)] transition-[transform,box-shadow,border-color] duration-300",
-        "hover:-translate-y-1 hover:border-accent/40 hover:shadow-[var(--card-shadow-lift)]",
+        "group flex h-full flex-col transition-transform duration-300 hover:-translate-y-1",
         className,
       )}
     >
@@ -182,23 +181,34 @@ function CardBody({ system, large }: { system: SystemView; large?: boolean }) {
   );
 }
 
-function FeatureCard({ system }: { system: SystemView }) {
+function Card({ system, large }: { system: SystemView; large?: boolean }) {
   return (
     <CardShell system={system}>
-      <Shot system={system} />
-      <CardBody system={system} large />
+      {/* The tab sits on its own row, half the card's width, so the body
+          below it keeps a square top-left corner and the pair reads as one
+          notched shape. */}
+      <div className="flex">
+        <div className="min-w-0 max-w-[60%]">
+          <CardTab system={system} />
+        </div>
+      </div>
+
+      <div
+        className={cn(
+          "flex flex-1 flex-col overflow-hidden rounded-2xl rounded-tl-none border border-hairline bg-bg-2 glass",
+          "shadow-[var(--card-shadow)] transition-[box-shadow,border-color] duration-300",
+          "group-hover:border-accent/40 group-hover:shadow-[var(--card-shadow-lift)]",
+        )}
+      >
+        <Shot system={system} large={large} />
+        <CardBody system={system} large={large} />
+      </div>
     </CardShell>
   );
 }
 
-function SmallCard({ system }: { system: SystemView }) {
-  return (
-    <CardShell system={system}>
-      <Shot system={system} />
-      <CardBody system={system} />
-    </CardShell>
-  );
-}
+const FeatureCard = ({ system }: { system: SystemView }) => <Card system={system} large />;
+const SmallCard = ({ system }: { system: SystemView }) => <Card system={system} />;
 
 function Skeleton({ className }: { className?: string }) {
   return (
