@@ -7,7 +7,6 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { WhatsAppFloatButton } from "@/components/WhatsAppFloatButton";
 import { CustomCursor } from "@/components/CustomCursor";
 import { PageTransition } from "@/components/PageTransition";
-import { ScrollWords } from "@/components/ScrollWords";
 import { QuarterlyIntakeProvider } from "@/components/QuarterlyIntakeProvider";
 
 export function MarketingUIWrapper({ children }: { children: React.ReactNode }) {
@@ -22,7 +21,6 @@ export function MarketingUIWrapper({ children }: { children: React.ReactNode }) 
     <QuarterlyIntakeProvider>
       <CustomCursor />
       <PageTransition />
-      <ScrollWords />
       <SiteNav />
       {children}
       <SiteFooter />

@@ -1525,51 +1525,19 @@ html.split-snapping {
   }
 }
 
-/* ============================================================
-   Headings that come apart on the way out — the words break
-   right as the heading leaves the screen and slide back into
-   line when it is scrolled back to. Driven by position, not by
-   a trigger, so it reads the same in both directions.
-   Component: src/components/ScrollWords.tsx.
-   ============================================================ */
+/* Headings used to come apart on the way out, each word sliding further
+   right than the last (ScrollWords). It is gone: for most of a scroll it
+   left the lines of a multi-line heading each starting at a different x,
+   so a heading stopped reading as left aligned. All that survives it is
+   the guard below.
 
-:root {
-  /* How far the furthest word travels once the heading has fully left. */
-  --sw-shift: 6.5rem;
-}
-
-@media (max-width: 767px) {
-  :root {
-    /* A phone's heading is a third of the width, so the same distance would
-       throw the words clean off the side of it. */
-    --sw-shift: 2.75rem;
-  }
-}
-
-/* Words travelling right push past their container, and scrollable overflow
-   counts transforms - without this the heading hands the page a horizontal
-   scrollbar on the way out. clip rather than hidden: hidden would make the
-   body a scroll container and take the sticky footer and the pinned split
-   screen with it. */
+   Oversized and transformed decoration still overhangs the viewport, and
+   scrollable overflow counts transforms, so without this the page picks
+   up a horizontal scrollbar. clip rather than hidden: hidden would make
+   the body a scroll container and take the sticky footer and the pinned
+   split screen with it. */
 body {
   overflow-x: clip;
-}
-
-.sw-word {
-  /* inline-block is what makes a word transformable at all; the whitespace
-     between words stays a text node, so the heading still wraps where it
-     always did. */
-  display: inline-block;
-  transform: translate3d(calc(var(--p, 0) * var(--w, 0) * var(--sw-shift)), 0, 0);
-}
-
-/* No transition: the position is the scroll position. A transition here
-   would only make the words lag the finger that is moving them. */
-
-@media (prefers-reduced-motion: reduce) {
-  .sw-word {
-    transform: none;
-  }
 }
 
 /* ============================================================
