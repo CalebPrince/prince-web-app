@@ -38,9 +38,14 @@ function stripEmDashes(string $text): string
 {
     $out = preg_replace('/^\x{2014}\x{20}/u', '- ', $text) ?? $text;
     $out = preg_replace('/\R\x{2014}\x{20}/u', "\n- ", $out) ?? $out;
+    // Punctuation that already ends the clause absorbs the dash, instead of
+    // the dash becoming a comma that a later pass has to clean up. A blanket
+    // "comma followed by punctuation" rule looks equivalent and is not: it
+    // also eats the comma between SQL placeholders ("?, ?") or in any other
+    // code a post happens to quote.
+    $out = preg_replace('/\x{20}*\x{2014}\x{20}*(?=[,.;:!?])/u', '', $out) ?? $out;
+    $out = preg_replace('/(?<=[,;:])\x{20}*\x{2014}\x{20}*/u', ' ', $out) ?? $out;
     $out = preg_replace('/\x{20}*\x{2014}\x{20}*/u', ', ', $out) ?? $out;
-    // ", ," and ",." are what a dash next to existing punctuation leaves behind.
-    $out = preg_replace('/,\s*([,.;:!?])/u', '$1', $out) ?? $out;
     return $out;
 }
 

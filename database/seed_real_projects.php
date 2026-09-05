@@ -46,7 +46,7 @@ function upsertTag(\PDO $pdo, string $name): int
         return (int) $row['id'];
     }
 
-    $pdo->prepare('INSERT INTO tags (name, slug) VALUES (??)')->execute([$name, $slug]);
+    $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)')->execute([$name, $slug]);
     return (int) $pdo->lastInsertId();
 }
 
@@ -78,7 +78,7 @@ foreach ($projects as $project) {
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, is_embeddable, is_published, sort_order)
-             VALUES (?????????, 1?)'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)'
         );
         $stmt->execute([
             $project['slug'],
@@ -99,7 +99,7 @@ foreach ($projects as $project) {
     $pdo->prepare('DELETE FROM project_tags WHERE project_id = ?')->execute([$projectId]);
     foreach ($project['tags'] as $tagName) {
         $tagId = upsertTag($pdo, $tagName);
-        $pdo->prepare('INSERT OR IGNORE INTO project_tags (project_id, tag_id) VALUES (??)')
+        $pdo->prepare('INSERT OR IGNORE INTO project_tags (project_id, tag_id) VALUES (?, ?)')
             ->execute([$projectId, $tagId]);
     }
 }
