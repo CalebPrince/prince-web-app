@@ -210,7 +210,7 @@ export default function Chat() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/3 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />
         </div>
-        <div className="mx-auto max-w-4xl px-6 pt-36 pb-12 md:px-10 md:pt-48 md:pb-16 text-center">
+        <div className="mx-auto max-w-4xl px-6 pt-28 pb-12 md:px-10 md:pt-36 md:pb-16 text-center">
           <Reveal>
             <div className="mx-auto mb-6 flex size-14 items-center justify-center rounded-2xl bg-accent/15 text-2xl font-bold text-accent">
               {currentSite ? "✓" : assistantName.charAt(0)}

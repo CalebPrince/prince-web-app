@@ -48,7 +48,7 @@ export default function WebsiteDesign() {
   return (
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="mx-auto grid max-w-[1400px] items-center gap-14 px-6 pb-20 pt-36 md:px-10 md:pt-48 lg:grid-cols-2">
+      <section className="mx-auto grid max-w-[1400px] items-center gap-14 px-6 pb-20 pt-28 md:px-10 md:pt-36 lg:grid-cols-2">
         <Reveal>
           <SectionLabel>Website designer &amp; developer &middot; Accra, Ghana</SectionLabel>
           <h1 className="page-hero-title mt-8">

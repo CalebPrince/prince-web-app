@@ -50,7 +50,7 @@ export async function TestimonialsRegistry() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/4 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />
         </div>
-        <div className="mx-auto max-w-[1400px] px-6 pb-20 pt-36 md:px-10 md:pb-24 md:pt-48">
+        <div className="mx-auto max-w-[1400px] px-6 pb-20 pt-28 md:px-10 md:pb-24 md:pt-36">
           <Reveal>
             <SectionLabel>Client reviews</SectionLabel>
           </Reveal>

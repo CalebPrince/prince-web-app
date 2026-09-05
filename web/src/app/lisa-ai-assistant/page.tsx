@@ -205,7 +205,7 @@ export default async function Lisa() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/3 top-0 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[160px] [animation:glowpulse_18s_ease-in-out_infinite]" />
         </div>
-        <div className="mx-auto grid max-w-[1400px] items-center gap-12 px-6 pt-36 pb-16 md:px-10 md:pt-48 md:pb-24 lg:grid-cols-12">
+        <div className="mx-auto grid max-w-[1400px] items-center gap-12 px-6 pt-28 pb-16 md:px-10 md:pt-36 md:pb-24 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <Reveal>
               <SectionLabel>{eyebrow(content, "lisa_page_eyebrow", "// Meet Lisa")}</SectionLabel>

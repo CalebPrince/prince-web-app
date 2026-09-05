@@ -25,7 +25,7 @@ export default function Services() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/4 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />
         </div>
-        <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-20 md:px-10 md:pt-48 md:pb-24">
+        <div className="mx-auto max-w-[1400px] px-6 pt-28 pb-20 md:px-10 md:pt-36 md:pb-24">
           <Reveal>
             <SectionLabel index="00">Services</SectionLabel>
           </Reveal>

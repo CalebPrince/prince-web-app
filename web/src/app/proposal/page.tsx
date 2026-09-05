@@ -71,7 +71,7 @@ export default function ProposalPage() {
 
   if (loading) {
     return (
-      <section className="mx-auto max-w-[920px] px-6 pt-32 pb-24 md:pt-48">
+      <section className="mx-auto max-w-[920px] px-6 pt-28 pb-24 md:pt-36">
         <div className="flex justify-center py-20">
           <Loader2 className="size-8 animate-spin text-accent" />
         </div>
@@ -81,7 +81,7 @@ export default function ProposalPage() {
 
   if (error) {
     return (
-      <section className="mx-auto max-w-[920px] px-6 pt-32 pb-24 md:pt-48">
+      <section className="mx-auto max-w-[920px] px-6 pt-28 pb-24 md:pt-36">
         <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center animate-in fade-in zoom-in duration-500 glass">
           <h4 className="mb-2 text-xl font-bold">{error.title}</h4>
           <p className="text-text-2">{error.desc}</p>
@@ -95,7 +95,7 @@ export default function ProposalPage() {
   const unavailable = proposal.status === "declined" || proposal.agreement_missing?.length > 0;
 
   return (
-    <section className="mx-auto max-w-[920px] px-6 pt-32 pb-24 md:pt-40">
+    <section className="mx-auto max-w-[920px] px-6 pt-28 pb-24 md:pt-36">
       <style>{`
         @media print {
           body { background: #fff !important; color: #000 !important; }

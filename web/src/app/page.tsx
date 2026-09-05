@@ -131,7 +131,7 @@ export default async function Home() {
           <HeroOrbs />
         </div>
 
-        <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-16 pt-32 md:px-10 lg:grid-cols-2 lg:gap-8">
+        <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-16 pt-28 md:px-10 lg:grid-cols-2 lg:gap-8">
           <div className="max-w-3xl">
             <p className="rise label mb-8 text-text-2" style={{ animationDelay: "0.1s" }}>
               {hero.eyebrow}
@@ -185,7 +185,7 @@ export default async function Home() {
 
       {/* ── 01 · SERVICES ───────────────────────────────────── */}
       <section id="services" className="border-y border-hairline bg-bg-2/40">
-        <div className="mx-auto max-w-[1400px] px-6 pt-28 md:px-10 md:pt-40">
+        <div className="mx-auto max-w-[1400px] px-6 pt-28 md:px-10 md:pt-36">
           <Reveal className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
               <SectionLabel index="01">Capabilities</SectionLabel>

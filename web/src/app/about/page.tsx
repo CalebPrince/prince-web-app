@@ -107,7 +107,10 @@ export default function About() {
     <>
       {/* ── HERO / INTRO ────────────────────────────────────── */}
       <section className="mx-auto max-w-[1400px] px-6 pt-28 pb-16 md:px-10 md:pt-36 md:pb-20">
-        <div className="grid gap-14 lg:grid-cols-12 lg:items-end">
+        {/* items-start, not items-end: bottom-aligning the text to the tall
+            studio panel beside it pushed the heading down the page, so this
+            hero started lower than every other one on the site. */}
+        <div className="grid gap-14 lg:grid-cols-12 lg:items-start">
           <div className="lg:col-span-7">
             <Reveal>
               <SectionLabel index="00">About</SectionLabel>

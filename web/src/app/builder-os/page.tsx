@@ -170,7 +170,7 @@ export default function BuilderOS() {
             }}
           />
         </div>
-        <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-16 md:px-10 md:pt-48 md:pb-24">
+        <div className="mx-auto max-w-[1400px] px-6 pt-28 pb-16 md:px-10 md:pt-36 md:pb-24">
           <Reveal>
             <SectionLabel>Builder OS</SectionLabel>
           </Reveal>

@@ -36,7 +36,7 @@ export default async function WorkingTogether() {
   return (
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1400px] px-6 pb-20 pt-36 md:px-10 md:pt-48">
+      <section className="mx-auto max-w-[1400px] px-6 pb-20 pt-28 md:px-10 md:pt-36">
         <Reveal>
           <SectionLabel>Working with Prince Caleb</SectionLabel>
         </Reveal>

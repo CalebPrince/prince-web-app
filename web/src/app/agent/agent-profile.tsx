@@ -216,7 +216,7 @@ export function AgentProfile() {
 
   if (failed) {
     return (
-      <section className="mx-auto max-w-[1400px] px-6 pt-36 pb-24 text-center md:px-10 md:pt-48">
+      <section className="mx-auto max-w-[1400px] px-6 pt-28 pb-24 text-center md:px-10 md:pt-36">
         <Reveal>
           <SectionLabel>Registry unavailable</SectionLabel>
           <h1 className="mx-auto mt-8 max-w-2xl text-[clamp(2rem,5vw,3.4rem)] font-bold tracking-[-0.03em]">
@@ -235,7 +235,7 @@ export function AgentProfile() {
 
   if (!agent) {
     return (
-      <section className="mx-auto max-w-[1400px] px-6 pt-36 pb-24 md:px-10 md:pt-48">
+      <section className="mx-auto max-w-[1400px] px-6 pt-28 pb-24 md:px-10 md:pt-36">
         <Reveal>
           <SectionLabel>Builder OS</SectionLabel>
           <h1 className="mt-8 text-[clamp(2rem,5vw,3.4rem)] font-bold tracking-[-0.03em]">
@@ -255,7 +255,7 @@ export function AgentProfile() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/3 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />
         </div>
-        <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-16 md:px-10 md:pt-48 md:pb-20">
+        <div className="mx-auto max-w-[1400px] px-6 pt-28 pb-16 md:px-10 md:pt-36 md:pb-20">
           <Reveal>
             <p className="mb-4 font-mono text-sm text-muted">
               builder@princecaleb:~$ inspect agent/{agent.key}

@@ -125,7 +125,7 @@ export default function PayPage() {
 
   if (loading) {
     return (
-      <section className="mx-auto max-w-[480px] px-6 pt-32 pb-24 md:pt-48">
+      <section className="mx-auto max-w-[480px] px-6 pt-28 pb-24 md:pt-36">
         <div className="flex justify-center py-20">
           <Loader2 className="size-8 animate-spin text-accent" />
         </div>
@@ -135,7 +135,7 @@ export default function PayPage() {
 
   if (error) {
     return (
-      <section className="mx-auto max-w-[480px] px-6 pt-32 pb-24 md:pt-48">
+      <section className="mx-auto max-w-[480px] px-6 pt-28 pb-24 md:pt-36">
         <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center animate-in fade-in zoom-in duration-500 glass">
           <h4 className="mb-2 text-xl font-bold">{error.title}</h4>
           <p className="text-text-2">{error.desc}</p>
@@ -158,7 +158,7 @@ export default function PayPage() {
   return (
     <>
       <Script src="https://js.paystack.co/v1/inline.js" strategy="lazyOnload" />
-      <section className="mx-auto max-w-[480px] px-6 pt-32 pb-24 md:pt-48">
+      <section className="mx-auto max-w-[480px] px-6 pt-28 pb-24 md:pt-36">
         <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500 glass">
           <h4 className="mb-1 text-xl font-bold">{link.description || "Payment"}</h4>
           <p className="mb-6 text-sm text-text-2">For {link.client_name || "Client"}</p>

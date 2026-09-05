@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 function Loading() {
   return (
-    <section className="mx-auto max-w-[1400px] px-6 pt-36 pb-24 md:px-10 md:pt-48">
+    <section className="mx-auto max-w-[1400px] px-6 pt-28 pb-24 md:px-10 md:pt-36">
       <Reveal>
         <SectionLabel>Builder OS</SectionLabel>
         <h1 className="mt-8 text-[clamp(2rem,5vw,3.4rem)] font-bold tracking-[-0.03em]">
