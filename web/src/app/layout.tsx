@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: "Prince Caleb | %s",
   },
   description:
-    "Custom website design and development by Prince Caleb in Accra, Ghana, working worldwide. Websites, apps and AI systems with clear scope, written agreements and limited quarterly intake.",
+    "Custom website design and development by Prince Caleb in Accra, Ghana, working worldwide. Websites, apps and AI tools with clear scope, written agreements and limited quarterly intake.",
 };
 
 // Applies a stored/OS theme preference before first paint, so there's no

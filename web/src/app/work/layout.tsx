@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   // detail pages below it with no template to inherit, so they would lose
   // the brand prefix. Carrying the template forward keeps both levels.
   title: {
-    default: "Systems",
+    default: "Selected Work",
     template: "Prince Caleb | %s",
   },
   description:
-    "Real systems, running in real businesses, with results worth measuring. Proof, not promises.",
+    "Websites, applications and AI tools built for real businesses, with results worth measuring. Proof, not promises.",
 };
 
-export default function SystemsLayout({ children }: { children: React.ReactNode }) {
+export default function WorkLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

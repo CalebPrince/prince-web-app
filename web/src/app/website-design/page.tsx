@@ -64,7 +64,7 @@ export default function WebsiteDesign() {
               Discuss your website
             </IntakeCta>
             <Link
-              href="/systems"
+              href="/work"
               className="label group inline-flex min-h-12 items-center gap-2 text-text-2 hover:text-text"
             >
               View my work

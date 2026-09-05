@@ -96,9 +96,9 @@ export default function TestimonialsClient({
         </p>
       )}
 
-      {/* The rating is published only once it has been approved here: an
-          unattended figure on the public site is the thing this whole page
-          exists to prevent. */}
+      {/* Google's own overall rating for the business, shown on the home
+          page by default. Unticking this takes it down; written reviews work
+          the other way round and stay hidden until placed. */}
       <div className="rounded-xl border border-hairline bg-bg-2 p-5">
         <label className="flex items-start gap-3">
           <input
@@ -125,9 +125,9 @@ export default function TestimonialsClient({
           <span>
             <strong>Publish my live Google rating and review count</strong>
             <span className="mt-1 block text-sm text-text-2">
-              Off until you approve. This is Google&rsquo;s overall rating for the business, not an
-              average of the reviews you select below &mdash; written reviews are approved
-              separately.
+              Shows the stars, the review count and a &ldquo;Leave a review&rdquo; link on the home
+              page. This is Google&rsquo;s overall rating for the business, not an average of the
+              reviews you select below. Untick it to take the strip down.
             </span>
           </span>
         </label>

@@ -192,8 +192,8 @@ export default function BuilderOS() {
               Inspect the network
               <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
             </a>
-            <Link href="/systems" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
-              View deployed systems
+            <Link href="/work" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
+              View published work
             </Link>
           </Reveal>
         </div>

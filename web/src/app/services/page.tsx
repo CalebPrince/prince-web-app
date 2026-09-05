@@ -124,7 +124,7 @@ export default function Services() {
           <Reveal delay={120} className="mt-16 flex items-center gap-3 text-text-2">
             <Check className="size-5 text-accent" aria-hidden="true" />
             <p>
-              Most systems ship in{" "}
+              Most projects ship in{" "}
               <span className="text-text">2 to 6 weeks</span>, depending on integrations, approvals
               and how much existing process cleanup is needed.
             </p>
@@ -145,7 +145,7 @@ export default function Services() {
               <span className="text-accent">actually needs?</span>
             </h2>
             <p className="mx-auto mt-8 max-w-xl text-lg text-text-2">
-              Book a 20-minute call and get a straight read on scope, cost and timeline &mdash; no
+              Book a 20-minute call and get a straight read on scope, cost and timeline. No
               obligation.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">

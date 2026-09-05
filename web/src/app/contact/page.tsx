@@ -125,8 +125,8 @@ export default function Contact() {
           <Reveal delay={160}>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
               Tell me about an AI voice agent, WhatsApp assistant, automation, or a website or app
-              you have in mind. I&rsquo;ll come back with a straight read on scope, cost and timeline
-              &mdash; no obligation.
+              you have in mind. I&rsquo;ll come back with a straight read on scope, cost and
+              timeline. No obligation.
             </p>
           </Reveal>
           <Reveal delay={220} className="mt-8 flex flex-wrap items-center gap-6">
@@ -213,7 +213,7 @@ export default function Contact() {
                     </span>
                     <h2 className="mt-6 text-2xl font-bold tracking-tight">Message sent.</h2>
                     <p className="mt-3 max-w-sm text-text-2">
-                      Thanks for reaching out &mdash; I&rsquo;ll reply within 24 hours. Need
+                      Thanks for reaching out. I&rsquo;ll reply within 24 hours. Need
                       something faster? Ping me on WhatsApp.
                     </p>
                     <a

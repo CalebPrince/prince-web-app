@@ -21,7 +21,7 @@ export type Project = {
   gallery?: string[];
   case_study_body?: string;
   testimonial?: { quote: string; client_name: string; rating?: number } | null;
-  // Public showcase fields backing the Systems pages. All optional - the
+  // Public showcase fields backing the /work pages. All optional - the
   // admin fills them in per project and the UI omits what is missing.
   tagline?: string;
   showcase_category?: string;

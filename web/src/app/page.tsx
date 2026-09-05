@@ -28,7 +28,7 @@ const FALLBACK_HERO = {
   eyebrow: "Digital Design • Development • AI",
   title: "Website design. Thoughtful development. **Clear commitments**.",
   subtitle:
-    "I'm Prince Caleb, a website designer and developer in Accra, working worldwide. I create custom websites, applications and AI systems, with a written scope, agreed costs and a clear delivery process.",
+    "I'm Prince Caleb, a website designer and developer in Accra, working worldwide. I create custom websites, applications and AI tools, with a written scope, agreed costs and a clear delivery process.",
 };
 
 // database/generate_daily_headline.php writes one AI-generated
@@ -205,7 +205,7 @@ export default async function Home() {
               </h2>
             </div>
             <Link
-              href="/systems"
+              href="/work"
               className="label group hidden items-center gap-2 text-text-2 hover:text-text md:flex"
             >
               View all work
@@ -216,7 +216,7 @@ export default async function Home() {
           <WorkGallery />
 
           <Reveal className="mt-16 flex justify-center md:hidden">
-            <Link href="/systems" className={cn(buttonVariants({ variant: "secondary" }))}>
+            <Link href="/work" className={cn(buttonVariants({ variant: "secondary" }))}>
               View all work <ArrowRight className="size-4" />
             </Link>
           </Reveal>
@@ -266,8 +266,8 @@ export default async function Home() {
             </h2>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-text-2">
               Once a site is live, the work often continues: voice assistants, chat, follow-up and
-              the automations behind them. Try the demo &mdash; it answers, qualifies and books like
-              it would for a clinic.
+              the automations behind them. Try the demo: it answers, qualifies and books like it
+              would for a clinic.
             </p>
             <Link href="/services" className="label group mt-8 inline-flex items-center gap-2 text-accent">
               Explore AI and automation

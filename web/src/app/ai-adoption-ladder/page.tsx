@@ -24,7 +24,7 @@ const RUNGS = [
   {
     num: "00",
     title: "Asking",
-    body: "You open a chat window, describe what you need, and copy the answer into an email, a doc, or your own code by hand. The AI never touches your files or your systems. Useful, but this is still 100% manual labor with a faster first draft.",
+    body: "You open a chat window, describe what you need, and copy the answer into an email, a doc, or your own code by hand. The AI never touches your files or your tools. Useful, but this is still 100% manual labor with a faster first draft.",
   },
   {
     num: "01",

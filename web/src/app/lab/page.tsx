@@ -68,7 +68,7 @@ const EXPERIMENTS: Experiment[] = [
     blurb: "Prompting a model to assemble on-brand section layouts from a design-token contract.",
     status: "Exploring",
     icon: SiReact,
-    tags: ["LLM", "Design systems"],
+    tags: ["LLM", "Component libraries"],
     span: "lg:col-span-7",
   },
   {
@@ -228,8 +228,8 @@ export default async function Lab() {
                 Let&rsquo;s Build
                 <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
-              <Link href="/systems" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
-                See shipped systems
+              <Link href="/work" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
+                See shipped work
               </Link>
             </div>
           </Reveal>

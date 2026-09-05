@@ -21,11 +21,11 @@ $projects = [
     [
         'slug' => 'opskeep',
         'title' => 'Opskeep',
-        'summary' => 'Open-source Agent Skills pack that installs operator workflows — winning work, scoping it, delivering it, getting paid, keeping clients, and improving — directly into the AI coding agent you already use.',
+        'summary' => 'Open-source Agent Skills pack that installs operator workflows, winning work, scoping it, delivering it, getting paid, keeping clients, and improving, directly into the AI coding agent you already use.',
         'case_study_body' =>
-            "AI coding agents are excellent at the craft — they write the code, ship the feature, close the ticket. What they don't know is how to run the business around that work: chasing an invoice, following up a client, keeping a pipeline full, or turning a finished job into a repeatable process. That operator half of the job still fell entirely on the human, every time, from scratch.\n\n" .
-            "Opskeep closes that gap by installing operator know-how as a skill pack directly into the agent already open — Claude Code, Cursor, Codex CLI, or Cline. It ships six business-lane skills (get work, define work, deliver work, get paid, keep clients, improve operations) plus meta skills for setup, memory, and automations, each one a folder of Markdown following the open Agent Skills standard, installable with a single command. A companion MCP server exposes reminders and time-tracking as callable tools for agents that want to act on the workflow, not just read about it.\n\n" .
-            "The whole business-lane pack is MIT-licensed and free to run entirely inside a user's own agent — no server, no account. A paid Pro tier adds the pieces that genuinely need server-side infrastructure: hosted customer replies and follow-up reminders, server-rendered audio session recaps, cross-session time/expense sync, and managed connectors (WhatsApp, Slack, GitHub, Gmail, Stripe, Notion, Linear, and more) for teams that want it always-on rather than session-triggered.",
+            "AI coding agents are excellent at the craft, they write the code, ship the feature, close the ticket. What they don't know is how to run the business around that work: chasing an invoice, following up a client, keeping a pipeline full, or turning a finished job into a repeatable process. That operator half of the job still fell entirely on the human, every time, from scratch.\n\n" .
+            "Opskeep closes that gap by installing operator know-how as a skill pack directly into the agent already open, Claude Code, Cursor, Codex CLI, or Cline. It ships six business-lane skills (get work, define work, deliver work, get paid, keep clients, improve operations) plus meta skills for setup, memory, and automations, each one a folder of Markdown following the open Agent Skills standard, installable with a single command. A companion MCP server exposes reminders and time-tracking as callable tools for agents that want to act on the workflow, not just read about it.\n\n" .
+            "The whole business-lane pack is MIT-licensed and free to run entirely inside a user's own agent, no server, no account. A paid Pro tier adds the pieces that genuinely need server-side infrastructure: hosted customer replies and follow-up reminders, server-rendered audio session recaps, cross-session time/expense sync, and managed connectors (WhatsApp, Slack, GitHub, Gmail, Stripe, Notion, Linear, and more) for teams that want it always-on rather than session-triggered.",
         'category' => 'custom_solution',
         'live_url' => null,
         'repo_url' => 'https://github.com/CalebPrince/opskeep-skills',
@@ -46,7 +46,7 @@ function upsertTag(\PDO $pdo, string $name): int
         return (int) $row['id'];
     }
 
-    $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)')->execute([$name, $slug]);
+    $pdo->prepare('INSERT INTO tags (name, slug) VALUES (??)')->execute([$name, $slug]);
     return (int) $pdo->lastInsertId();
 }
 
@@ -78,7 +78,7 @@ foreach ($projects as $project) {
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO projects (slug, title, summary, case_study_body, category, live_url, repo_url, cover_image_path, is_embeddable, is_published, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)'
+             VALUES (?????????, 1?)'
         );
         $stmt->execute([
             $project['slug'],
@@ -99,7 +99,7 @@ foreach ($projects as $project) {
     $pdo->prepare('DELETE FROM project_tags WHERE project_id = ?')->execute([$projectId]);
     foreach ($project['tags'] as $tagName) {
         $tagId = upsertTag($pdo, $tagName);
-        $pdo->prepare('INSERT OR IGNORE INTO project_tags (project_id, tag_id) VALUES (?, ?)')
+        $pdo->prepare('INSERT OR IGNORE INTO project_tags (project_id, tag_id) VALUES (??)')
             ->execute([$projectId, $tagId]);
     }
 }

@@ -16,9 +16,13 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      // The project showcase moved to /systems when the Figma design landed.
-      { source: "/projects", destination: "/systems", permanent: true },
-      { source: "/projects/:slug", destination: "/systems/:slug", permanent: true },
+      // The project showcase has moved twice: /projects when the Figma
+      // design landed, then /systems, and now /work. Both old paths are
+      // still linked from elsewhere, so both are kept pointing here.
+      { source: "/projects", destination: "/work", permanent: true },
+      { source: "/projects/:slug", destination: "/work/:slug", permanent: true },
+      { source: "/systems", destination: "/work", permanent: true },
+      { source: "/systems/:slug", destination: "/work/:slug", permanent: true },
     ];
   },
 

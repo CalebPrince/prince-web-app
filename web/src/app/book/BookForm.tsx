@@ -191,9 +191,9 @@ export function BookForm() {
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
-              A short call to cover what you need — a website, an application, or an automation —
-              what it should achieve, and what it would take to deliver. If it is a fit, you receive
-              a written agreement before any work starts.
+              A short call to cover what you need, whether that is a website, an application or an
+              automation, what it should achieve, and what it would take to deliver. If it is a fit,
+              you receive a written agreement before any work starts.
             </p>
           </Reveal>
           <Reveal delay={220} className="mt-8 flex flex-wrap items-center gap-6">

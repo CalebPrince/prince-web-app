@@ -40,7 +40,7 @@ export default function NotFound() {
             Back to home
             <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
-          <Link href="/systems" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
+          <Link href="/work" className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
             View my work
           </Link>
         </Reveal>

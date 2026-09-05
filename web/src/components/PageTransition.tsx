@@ -42,7 +42,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/website-design": "Website design",
   "/working-together": "Working together",
   "/builder-os": "Builder OS",
-  "/systems": "Systems",
+  "/work": "Selected work",
   "/pricing": "Pricing",
   "/lisa-ai-assistant": "Lisa",
   "/about": "About",

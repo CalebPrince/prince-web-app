@@ -8,7 +8,7 @@ import { TiltCard } from "@/components/TiltCard";
 import { cn } from "@/lib/utils";
 import { getFeaturedSystems, type SystemView } from "@/lib/systems";
 
-// Three cards, so the grid gets its own rhythm rather than the Systems
+// Three cards, so the grid gets its own rhythm rather than the work
 // page's repeating one: two side by side, then a full-width closer.
 const LAYOUT = [
   { span: "lg:col-span-7", ratio: "aspect-[16/10]" },
@@ -56,7 +56,7 @@ export function FeaturedSystems() {
         const layout = LAYOUT[i] ?? LAYOUT[LAYOUT.length - 1];
         return (
           <Reveal key={p.slug} className={layout.span} delay={(i % 2) * 100}>
-            <Link href={`/systems/${p.slug}`} className="group block">
+            <Link href={`/work/${p.slug}`} className="group block">
               <TiltCard
                 maxTilt={5}
                 className={cn(

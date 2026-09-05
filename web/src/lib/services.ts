@@ -59,7 +59,7 @@ export const SERVICES: Service[] = [
       { icon: Compass, label: "Website structure and user journeys" },
       { icon: MousePointerClick, label: "Wireframes and interactive prototypes" },
       { icon: Palette, label: "UX/UI design and visual direction" },
-      { icon: Layers, label: "Reusable product design systems" },
+      { icon: Layers, label: "Reusable component libraries" },
     ],
   },
   {
@@ -124,7 +124,7 @@ export const HOME_SERVICES: Service[] = [
       { icon: Compass, label: "Website structure and user journeys" },
       { icon: LayoutGrid, label: "Wireframes and interface design" },
       { icon: MousePointerClick, label: "Interactive prototypes" },
-      { icon: Layers, label: "Scalable design systems" },
+      { icon: Layers, label: "Scalable component libraries" },
     ],
   },
   {

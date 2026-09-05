@@ -49,7 +49,7 @@ const TOOLKIT: { group: string; items: Tool[] }[] = [
     items: [
       { name: "Figma", icon: SiFigma },
       { name: "Motion & prototyping", icon: SiFramer },
-      { name: "Design systems" },
+      { name: "Component libraries" },
       { name: "Brand identity" },
     ],
   },
@@ -154,16 +154,16 @@ export default function About() {
                 <p>
                   I started out obsessed with two things that rarely lived together: how something
                   looks, and how it&rsquo;s built. Most people pick a side. I spent years refusing
-                  to &mdash; learning to design interfaces and then engineer them to a standard
-                  neither discipline would compromise.
+                  to, learning to design interfaces and then engineer them to a standard neither
+                  discipline would compromise.
                 </p>
               </Reveal>
               <Reveal delay={120} as="div">
                 <p>
                   That obsession turned into a studio. Today I work with founders, product teams
-                  and creative agencies who need someone who can hold the whole picture &mdash;
-                  <span className="text-text"> strategy, design, engineering and AI</span> &mdash;
-                  without losing the thread between them.
+                  and creative agencies who need someone who can hold the whole picture:
+                  <span className="text-text"> strategy, design, engineering and AI</span>, without
+                  losing the thread between them.
                 </p>
               </Reveal>
               <Reveal delay={180} as="div">

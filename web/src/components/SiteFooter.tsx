@@ -11,7 +11,7 @@ const NAV_LINKS: { label: string; to: string }[] = [
   { label: "Working together", to: "/working-together" },
   { label: "Services", to: "/services" },
   { label: "Builder OS", to: "/builder-os" },
-  { label: "Selected work", to: "/systems" },
+  { label: "Selected work", to: "/work" },
   { label: "Pricing", to: "/pricing" },
   { label: "Lisa", to: "/lisa-ai-assistant" },
   { label: "About", to: "/about" },

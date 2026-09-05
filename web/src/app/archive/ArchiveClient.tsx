@@ -60,7 +60,7 @@ export default function ArchiveClient({
             <h1 className="page-hero-title mt-8 max-w-4xl">
               Case studies for
               <br />
-              <span className="text-accent">engineered systems.</span>
+              <span className="text-accent">engineered builds.</span>
             </h1>
           </Reveal>
           <Reveal delay={160}>

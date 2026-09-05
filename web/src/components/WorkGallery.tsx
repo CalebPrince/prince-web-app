@@ -15,7 +15,7 @@ import { getFeaturedSystems, type SystemView } from "@/lib/systems";
 
 /**
  * The homepage's "Selected Work" gallery — the marker bar, the masonry of
- * tilted browser mockups (ProjectMasonry, shared with the Systems index) and
+ * tilted browser mockups (ProjectMasonry, shared with the /work index) and
  * the specs legend.
  *
  * Ported from the Landing Pages Figma file (node 25:4). The design's timings

@@ -117,7 +117,7 @@ export async function TestimonialsRegistry() {
               {caseStudies.map((t, i) => (
                 <Reveal key={t.id} delay={(i % 2) * 90}>
                   <Link
-                    href={`/systems/${t.project_slug}`}
+                    href={`/work/${t.project_slug}`}
                     className="group block h-full rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-7 transition-colors hover:border-accent/30 glass"
                   >
                     <p className="text-2xl font-bold tracking-tight text-accent">{t.signals[0]}</p>
@@ -203,7 +203,7 @@ export async function TestimonialsRegistry() {
               Until then, the work itself is the better guide.
             </p>
             <Link
-              href="/systems"
+              href="/work"
               className="mt-6 inline-flex items-center gap-2 font-semibold text-accent"
             >
               View selected work

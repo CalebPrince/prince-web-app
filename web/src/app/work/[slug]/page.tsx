@@ -12,7 +12,7 @@ import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { getSystem, getSystems, type SystemView } from "@/lib/systems";
 
-export async function generateMetadata({ params }: PageProps<"/systems/[slug]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/work/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   try {
     const system = await getSystem(slug);
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps<"/systems/[slug]">)
   }
 }
 
-export default async function SystemDetail({ params }: PageProps<"/systems/[slug]">) {
+export default async function SystemDetail({ params }: PageProps<"/work/[slug]">) {
   const { slug } = await params;
 
   let system: SystemView;
@@ -63,10 +63,10 @@ export default async function SystemDetail({ params }: PageProps<"/systems/[slug
         <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-14 md:px-10 md:pt-48 md:pb-20">
           <Reveal>
             <Link
-              href="/systems"
+              href="/work"
               className="label inline-flex items-center gap-2 text-text-2 transition-colors hover:text-accent"
             >
-              <ArrowLeft className="size-3.5" /> All systems
+              <ArrowLeft className="size-3.5" /> All work
             </Link>
           </Reveal>
           <Reveal delay={80} className="mt-8 flex flex-wrap items-center gap-3">
@@ -243,7 +243,7 @@ export default async function SystemDetail({ params }: PageProps<"/systems/[slug
             </Reveal>
             <Reveal delay={80}>
               <Link
-                href={`/systems/${next.slug}`}
+                href={`/work/${next.slug}`}
                 className="group mt-8 flex flex-col justify-between gap-6 sm:flex-row sm:items-end"
               >
                 <div>

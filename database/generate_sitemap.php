@@ -7,7 +7,7 @@ declare(strict_types=1);
 // Re-run this any time projects or posts are added, removed, or unpublished
 // so both stay accurate — they are not generated automatically.
 //
-// URLs point at the Next.js routes (/about, /systems/{slug}, /archive/{slug}),
+// URLs point at the Next.js routes (/about, /work/{slug}, /archive/{slug}),
 // not the legacy .html pages those replaced.
 
 require dirname(__DIR__) . '/src/autoload.php';
@@ -25,7 +25,7 @@ $staticPages = [
     ['loc' => '/services', 'priority' => '0.7', 'changefreq' => 'monthly'],
     ['loc' => '/working-together', 'priority' => '0.7', 'changefreq' => 'monthly'],
     ['loc' => '/builder-os', 'priority' => '0.7', 'changefreq' => 'monthly'],
-    ['loc' => '/systems', 'priority' => '0.8', 'changefreq' => 'weekly'],
+    ['loc' => '/work', 'priority' => '0.8', 'changefreq' => 'weekly'],
     ['loc' => '/archive', 'priority' => '0.8', 'changefreq' => 'weekly'],
     ['loc' => '/lisa-ai-assistant', 'priority' => '0.7', 'changefreq' => 'monthly'],
     ['loc' => '/ai-voice-agents-for-clinics', 'priority' => '0.7', 'changefreq' => 'monthly'],
@@ -67,7 +67,7 @@ foreach ($staticPages as $page) {
 
 foreach ($projects as $project) {
     $xml->startElement('url');
-    $xml->writeElement('loc', BASE_URL . '/systems/' . rawurlencode($project['slug']));
+    $xml->writeElement('loc', BASE_URL . '/work/' . rawurlencode($project['slug']));
     $xml->writeElement('lastmod', substr($project['updated_at'], 0, 10));
     $xml->writeElement('changefreq', 'monthly');
     $xml->writeElement('priority', '0.7');

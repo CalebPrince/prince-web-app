@@ -107,7 +107,7 @@ const CONNECTIONS: { icon: LucideIcon; title: string; body: string }[] = [
   },
   {
     icon: Database,
-    title: "Your internal systems",
+    title: "Your internal tools",
     body: "Connect custom databases, admin dashboards, inventory tools, help desks, and APIs.",
   },
 ];

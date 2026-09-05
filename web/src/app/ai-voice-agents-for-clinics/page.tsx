@@ -269,7 +269,7 @@ export default async function ClinicVoiceAgents() {
               Not another isolated phone bot.
             </h2>
             <p className="mt-5 max-w-2xl text-text-2">
-              The useful build connects the call to the systems and people who need the result.
+              The useful build connects the call to the tools and people who need the result.
             </p>
           </Reveal>
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

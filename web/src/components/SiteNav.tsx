@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const NAV: { label: string; to: string; note: string }[] = [
   { label: "Services", to: "/services", note: "Websites, apps, AI & automation" },
   { label: "Website design", to: "/website-design", note: "Design, redesign & development" },
-  { label: "Selected work", to: "/systems", note: "Projects and case studies" },
+  { label: "Selected work", to: "/work", note: "Projects and case studies" },
   { label: "Pricing", to: "/pricing", note: "What it costs" },
   { label: "About", to: "/about", note: "Who you are hiring" },
   { label: "Working together", to: "/working-together", note: "Agreement, payment & delivery" },

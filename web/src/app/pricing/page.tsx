@@ -309,7 +309,7 @@ export default async function Pricing() {
               </h3>
               <p className="mt-3 max-w-xl text-text-2">
                 Lisa answers calls, WhatsApp, and web chat, works inside the tools you already use,
-                and is priced separately in GHS and USD &mdash; from GHS 800 / $55 a month.
+                and is priced separately in GHS and USD, from GHS 800 / $55 a month.
               </p>
             </div>
             <span className="label inline-flex shrink-0 items-center gap-2 text-accent">
@@ -332,7 +332,7 @@ export default async function Pricing() {
             </h2>
             <p className="mx-auto mt-6 max-w-xl text-lg text-text-2">
               Not sure which tier fits? A short discovery call gets your project scoped and quoted
-              properly &mdash; no vague ranges.
+              properly, with no vague ranges.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <IntakeCta kind="booking">Get a quote</IntakeCta>

@@ -2,38 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
-import { TiltCard } from "@/components/TiltCard";
 import { ProjectMasonry } from "@/components/ProjectMasonry";
 import { buttonVariants } from "@/components/ui/button";
 import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { getSystems, categoriesOf, type SystemView } from "@/lib/systems";
 
-const SIGNALS = [
-  {
-    quote:
-      "Prince took a vague idea and turned it into a real product in weeks, not months. He asked the right questions upfront so we never had to backtrack.",
-    name: "Amara K.",
-    role: "Founder, boutique retail brand",
-  },
-  {
-    quote:
-      "The performance difference was night and day. Our old site felt sluggish everywhere; the new one just feels instant, even on mobile.",
-    name: "David O.",
-    role: "Operations Lead, accounting firm",
-  },
-  {
-    quote:
-      "The voice agent books calls while we sleep. We stopped losing after-hours leads almost overnight, it paid for itself in the first month.",
-    name: "Lena M.",
-    role: "Director, home services company",
-  },
-];
 
-export default function Systems() {
+export default function SelectedWork() {
   const [systems, setSystems] = useState<SystemView[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState("All");
@@ -59,7 +37,7 @@ export default function Systems() {
         </div>
         <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-16 md:px-10 md:pt-48 md:pb-20">
           <Reveal>
-            <SectionLabel>Systems</SectionLabel>
+            <SectionLabel>Selected work</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
             <h1 className="page-hero-title mt-8 max-w-4xl">
@@ -68,7 +46,7 @@ export default function Systems() {
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
-              See what has already shipped &mdash; real systems, running in real businesses, with results worth
+              Websites, applications and AI tools built for real businesses, with results worth
               measuring.
             </p>
           </Reveal>
@@ -95,16 +73,16 @@ export default function Systems() {
         </div>
       </section>
 
-      {/* ── SYSTEMS GRID ────────────────────────────────────── */}
+      {/* ── WORK GRID ───────────────────────────────────────── */}
       {/* The homepage's Selected Work cards, same component — the index is
           just the unfiltered version of the same gallery. */}
       <section className="mx-auto max-w-[1400px] px-6 pb-24 md:px-10 md:pb-32">
         {failed && (
-          <p className="py-20 text-center text-text-2">Could not load systems right now.</p>
+          <p className="py-20 text-center text-text-2">Could not load this work right now.</p>
         )}
 
         {systems !== null && !failed && shown.length === 0 && (
-          <p className="py-20 text-center text-text-2">No systems match this filter yet.</p>
+          <p className="py-20 text-center text-text-2">Nothing matches this filter yet.</p>
         )}
 
         {!failed && (
@@ -118,42 +96,6 @@ export default function Systems() {
         )}
       </section>
 
-      {/* ── PROOF · CLIENT SIGNALS ──────────────────────────── */}
-      <section className="border-y border-hairline bg-bg-2/40">
-        <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
-          <Reveal>
-            <SectionLabel>Client signals</SectionLabel>
-            <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
-              What clients say after launch.
-            </h2>
-          </Reveal>
-
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {SIGNALS.map((t, i) => (
-              <Reveal key={t.name} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
-                <TiltCard className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg/60 p-8 transition-colors hover:border-accent/30 glass">
-                  <div>
-                    <div className="flex gap-0.5 text-accent">
-                      {Array.from({ length: 5 }).map((_, s) => (
-                        <Star key={s} className="size-4 fill-current" aria-hidden="true" />
-                      ))}
-                    </div>
-                    <p className="mt-5 text-lg leading-relaxed text-text">
-                      <span className="mr-1 text-3xl leading-none text-accent">&ldquo;</span>
-                      {t.quote}
-                    </p>
-                  </div>
-                  <div className="mt-10 border-t border-hairline pt-6">
-                    <p className="font-semibold text-text">{t.name}</p>
-                    <p className="label mt-1 text-muted">{t.role}</p>
-                  </div>
-                </TiltCard>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── CTA ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
@@ -164,7 +106,7 @@ export default function Systems() {
             <h2 className="mx-auto max-w-3xl text-[clamp(2.2rem,6vw,5rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
               Your business could be
               <br />
-              <span className="text-accent">the next system.</span>
+              <span className="text-accent">the next project.</span>
             </h2>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <IntakeCta kind="booking">Book a Call</IntakeCta>

@@ -10,7 +10,7 @@ import { type SystemView } from "@/lib/systems";
  * The tilted browser-mockup cards from the Landing Pages Figma file
  * (node 25:4), laid out as a masonry.
  *
- * Shared by the homepage's Selected Work gallery and the Systems index, so
+ * Shared by the homepage's Selected Work gallery and the /work index, so
  * the two read as one design. The card is identical in both; what differs is
  * how the entrance is triggered — see `trigger` below.
  */
@@ -76,7 +76,7 @@ function ProjectCard({ system, slot }: { system: SystemView; slot: Slot }) {
   const tags = system.stack.slice(0, 3);
 
   return (
-    <Link href={`/systems/${system.slug}`} className="group block">
+    <Link href={`/work/${system.slug}`} className="group block">
       <div className="[transform-style:preserve-3d]" style={{ rotate: `${slot.rotate}deg` }}>
         <div
           className={cn(
@@ -124,7 +124,7 @@ function ProjectCard({ system, slot }: { system: SystemView; slot: Slot }) {
               {system.img ? (
                 <img
                   src={system.img}
-                  alt={`${system.name} — ${system.category}`}
+                  alt={`${system.name}, ${system.category}`}
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                 />
               ) : (

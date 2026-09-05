@@ -203,7 +203,7 @@ export default function ProposalPage() {
           <h2 className="font-semibold">
             {proposal.ready_to_start
               ? "Agreement accepted and initial payment received"
-              : "Agreement accepted — initial payment outstanding"}
+              : "Agreement accepted: initial payment outstanding"}
           </h2>
           <p className="mt-2 text-sm text-text-2">
             {proposal.ready_to_start

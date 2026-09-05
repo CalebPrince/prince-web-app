@@ -113,7 +113,7 @@ const PROFILES: Record<string, Profile> = {
     path: [
       ["Brief", "Business context and the desired outcome are assembled."],
       ["Compose", "Information architecture and visual direction are created."],
-      ["Build", "Responsive interfaces and content systems are implemented."],
+      ["Build", "Responsive interfaces and content tools are implemented."],
       ["Release", "The approved system is deployed and monitored."],
     ],
   },

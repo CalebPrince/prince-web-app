@@ -91,7 +91,7 @@ export function IntakeClosedPanel({
               Discuss your project for the next intake.
             </h2>
             <p className="mt-3 text-text-2">
-              Questions, scoping, or planning ahead — the contact form, WhatsApp, and email
+              Questions, scoping, or planning ahead: the contact form, WhatsApp, and email
               are all still monitored between intakes. A place is confirmed only after a written agreement and initial payment.
             </p>
 
