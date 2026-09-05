@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { getSystem, getSystems, type SystemView } from "@/lib/systems";
+import { SITE_URL, jsonLd } from "@/lib/site";
 
 export async function generateMetadata({ params }: PageProps<"/work/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -53,8 +54,26 @@ export default async function SystemDetail({ params }: PageProps<"/work/[slug]">
     { k: "Result", v: system.result },
   ].filter((row) => row.v);
 
+  // The trail this page sits on. Google renders it in place of the bare URL
+  // in a result, and it is one of the signals that describes the site as a
+  // hierarchy rather than a pile of pages.
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Selected work", item: `${SITE_URL}/work` },
+      { "@type": "ListItem", position: 3, name: system.name, item: `${SITE_URL}/work/${system.slug}` },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLd(breadcrumbs)}
+      />
+
       {/* ── HERO ────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">

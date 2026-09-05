@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, OG_IMAGE } from "@/lib/site";
+
 import { MarketingUIWrapper } from "@/components/MarketingUIWrapper";
 
+// metadataBase is what turns every relative image and canonical below into an
+// absolute URL. Without it Next emits none of them, which is why this site
+// shipped with no og:* tags at all.
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   // Child segments set just their page name and get the brand prefixed here.
   // The template deliberately does not reach the home page: it only applies to
   // child segments, and the home page shares this one, so it keeps `default`.
@@ -11,8 +17,27 @@ export const metadata: Metadata = {
     default: "Prince Caleb | Website Designer & Developer",
     template: "Prince Caleb | %s",
   },
-  description:
-    "Custom website design and development by Prince Caleb in Accra, Ghana, working worldwide. Websites, apps and AI tools with clear scope, written agreements and limited quarterly intake.",
+  description: SITE_DESCRIPTION,
+  // No `alternates.canonical` here. Child segments inherit whatever this sets,
+  // so a canonical of "/" would have every page on the site name the home page
+  // as its canonical and ask Google to drop them all. The home page declares
+  // its own in app/page.tsx; pages that need one declare it themselves.
+  openGraph: {
+    type: "website",
+    // The row above the sitelinks in a branded Google result reads this, and
+    // it has to say the same thing as the WebSite schema on the home page.
+    siteName: SITE_NAME,
+    locale: "en_GB",
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
+    // Deliberately no title/description: Next falls back to each page's own
+    // resolved title and description when openGraph omits them, and setting
+    // them here would instead stamp the home page's copy onto all 30-odd
+    // pages, which is what the first pass at this did.
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [OG_IMAGE],
+  },
 };
 
 // Applies a stored/OS theme preference before first paint, so there's no

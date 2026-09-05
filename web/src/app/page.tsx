@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -19,6 +20,10 @@ import { IntakeCta } from "@/components/IntakeCta";
 import { PROJECT_STEPS as PROCESS, ProjectStandards } from "@/components/ProjectStandards";
 import { WebsiteDesignPreview } from "@/components/WebsiteDesignPreview";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
+import {
+  SITE_URL, SITE_NAME, SITE_ALTERNATE_NAME, SITE_DESCRIPTION,
+  PERSON_NAME, PERSON_JOB_TITLE, LOGO, SAME_AS, abs, jsonLd,
+} from "@/lib/site";
 
 
 // Static fallback, used when /api/v1/content is unreachable, when no
@@ -54,6 +59,14 @@ const FALLBACK_HERO = {
 // demand costs two loopback calls to the PHP API per hit and keeps the
 // markup permanently in lockstep with the running build's asset hashes.
 export const dynamic = "force-dynamic";
+
+// The home page's own canonical, rather than one on the root layout: a
+// canonical set there is inherited by every child segment, which would point
+// the whole site at "/".
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
 
 // Renders a hero_title's single `**phrase**` marker (see
 // generate_daily_headline.php's prompt) as the same accent-colored span the
@@ -109,8 +122,71 @@ export default async function Home() {
     if (q && a) faqs.push({ question: q, answer: a });
   }
 
+
+// Three linked entities, on the home page only: what the site is (WebSite),
+// who runs it (Organization), and who that is (Person). @id is what ties them
+// together - without stable ids Google reads three unrelated blobs instead of
+// one publisher. This is the structured-data half of what a branded result
+// needs before Google will consider showing sitelinks; the other half is the
+// site's own structure, which the nav and sitemap carry.
+const WEBSITE_ID = `${SITE_URL}/#website`;
+const ORG_ID = `${SITE_URL}/#organization`;
+const PERSON_ID = `${SITE_URL}/#person`;
+
+const siteSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": WEBSITE_ID,
+      url: `${SITE_URL}/`,
+      name: SITE_NAME,
+      alternateName: SITE_ALTERNATE_NAME,
+      description: SITE_DESCRIPTION,
+      inLanguage: "en",
+      publisher: { "@id": ORG_ID },
+    },
+    {
+      "@type": "Organization",
+      "@id": ORG_ID,
+      url: `${SITE_URL}/`,
+      name: SITE_NAME,
+      alternateName: SITE_ALTERNATE_NAME,
+      description: SITE_DESCRIPTION,
+      logo: {
+        "@type": "ImageObject",
+        url: abs(LOGO),
+        width: 180,
+        height: 180,
+      },
+      founder: { "@id": PERSON_ID },
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Accra",
+        addressCountry: "GH",
+      },
+      areaServed: "Worldwide",
+      sameAs: SAME_AS,
+    },
+    {
+      "@type": "Person",
+      "@id": PERSON_ID,
+      name: PERSON_NAME,
+      url: `${SITE_URL}/about`,
+      jobTitle: PERSON_JOB_TITLE,
+      worksFor: { "@id": ORG_ID },
+      sameAs: SAME_AS,
+    },
+  ],
+};
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLd(siteSchema)}
+      />
+
       {/* ── HERO ────────────────────────────────────────────── */}
       <section id="top" className="portfolio-hero relative flex min-h-screen flex-col overflow-hidden">
         {/* bg-bg on the layer itself, not just the photograph: the fixed
