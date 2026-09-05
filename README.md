@@ -1,59 +1,206 @@
 # Prince Caleb — Portfolio Platform
 
-A premium, zero-bloat portfolio and client-acquisition site for a web & mobile
-app developer: a fast static/vanilla-JS public site backed by a custom PHP
+A portfolio and client-acquisition site for a **website designer and
+developer**: the public marketing site in Next.js, backed by a custom PHP
 REST API, a full admin CRUD panel (projects, blog, inquiries, quote requests,
-proposals, payments, clients), a Paystack-powered checkout/invoicing flow, a
-password-protected client portal, an AI-assisted marketing pipeline (pitch
-drafting, social post drafts, Make.com automation events), and a secondary
-opt-in AI assistant widget.
+proposals, payments, clients), a Paystack-powered checkout, invoicing and
+subscription flow, a password-protected client portal, an AI-assisted
+marketing pipeline (pitch drafting, social post drafts, automation events),
+and an opt-in AI assistant, Lisa, who is also sold as a monthly product.
+
+Website design and development is the headline service. Applications, AI
+agents and automations are the work that follows it, and the site is
+structured in that order throughout — see the 2026-09-05 upgrade below.
 
 Backend: plain PHP (no framework), PDO + SQLite.
-Frontend is split across two apps behind one domain: the admin panel, the
-PHP REST API, and every not-yet-migrated/transactional page are still
-static HTML + vanilla JS (fetch-based hydration) + Bootstrap 5, no build
-step, no bundler — while every public marketing page has been rebuilt in
-`web/` on Next.js + Tailwind CSS + shadcn/ui (see "Next.js + Tailwind +
-shadcn/ui rebuild" below).
+Frontend is two apps behind one domain: every public page — marketing,
+transactional and the client portal — is `web/`, a Next.js (App Router) +
+Tailwind CSS v4 + shadcn/ui app (see "Next.js + Tailwind + shadcn/ui
+rebuild" below). Only the admin panel is still static HTML + vanilla JS +
+Bootstrap 5, no build step, no bundler, talking to the same REST API.
 
 Live at [princecaleb.dev](https://princecaleb.dev).
 
 ## Current look and feel
 
-The public site now positions Prince Caleb as a lean technical partner rather
-than a generic agency portfolio. The homepage is organized around four
-client-facing sections:
+The public site positions Prince Caleb as a website designer and developer
+who takes on a limited number of projects and agrees each one in writing
+before starting. The homepage runs in that order:
 
-1. **Asymmetric Value Hero** - direct positioning around building useful web
-   products "without platform bloat or agency overhead."
-2. **Technical Archive** - the former blog surface has been reframed as
-   engineering deep-dives and case-study notes, with text-first entries,
-   metrics, domains, and clean typography instead of image thumbnails.
-3. **Production Logs Registry** - the former project grid now reads like a
-   development record: text-only project entries, performance badges, stack
-   tags, delivery notes, and outcome metrics.
-4. **Live Demonstration Arena** - the homepage closes with an interactive
-   client-facing section for AI context, booking/scheduling, and immediate
-   project next steps.
+1. **Hero** — the positioning line (or the day's generated headline, see
+   below), with a piece of website design work as the panel beside it.
+2. **Google rating strip** — the live star rating, review count and a
+   "Leave a review" link, when the rating is published.
+3. **Quarterly availability** — how many of the six project slots this
+   quarter are still open.
+4. **Capabilities → Selected work → Process** — what is built, what has
+   shipped, and the four stages every project runs through.
+5. **A clear way of working** — the written agreement, approval of changes,
+   and the fact that an enquiry reserves nothing.
+6. **Beyond the website** — AI agents and automation, carrying the voice
+   demo.
+7. **Client reviews** — approved Google reviews, or nothing at all.
 
-Pricing is consistent across the homepage and `/pricing.html`: Starter,
-Growth, and Custom / Enterprise use the same tier names, amounts, summaries,
-and feature lists. The visible navigation no longer links to a generic Blog
-label; archive-style content remains available where the page itself is used.
+Nothing on the site invents proof. There are no written-in testimonials and
+no unverifiable statistics anywhere: reviews come from Google (each approved
+for a placement in the admin) or from testimonials clients submitted, and a
+section with no real data does not render.
 
-The hero can carry an optional WebGL depth layer (see #35) behind the copy.
-The former strictly-monochrome UI chrome has been superseded by the
-**Builder OS** system, below — the ink accent from this description now
-carries a green identity rather than a neutral one.
+Pricing is consistent between `/pricing` and Admin → Pricing, which is the
+single editor for every tier. The dark editorial theme (Manrope + JetBrains
+Mono, signal-green accent) is the **Builder OS** system described below.
 
-The admin styling was refreshed to match the public site: restrained
-monochrome surfaces, tighter cards, clearer section grouping, and a more
-technical editorial feel. New homepage content groups are editable from
-Admin -> Site Content, including the value hero panel, homepage pricing copy,
-technical archive entries, production log headings, and live demo arena copy.
-These edits use the existing settings/content API and `settings` table; no
-database schema, migrations, seed data, or stored records were changed for
-this redesign.
+The admin styling matches the public site: restrained surfaces, tighter
+cards, clearer section grouping. Public copy is editable from Admin → Site
+Content (hero, services, about, archive, FAQ, chat, brand), with two
+surfaces owning their own settings outright: **Admin → Pricing** for the
+website packages, AI tiers, currency and the charged amounts, and
+**Admin → Lisa** for her product page and monthly tiers.
+
+## Website-first restructure, written agreements and paid Lisa tiers (2026-09-05 upgrade)
+
+Prompted by two things: a client who could not tell from the site that
+website design is the core work, and a project that went wrong because
+scope, cost and the start conditions were never agreed in writing.
+
+### Positioning
+
+- **`/website-design`** — a page for a visitor who only wants a website:
+  business sites, landing pages, redesigns, online stores, what is included,
+  and how design is approved before development.
+- **`/working-together`** — the four stages, the quarterly limit, and what
+  the written agreement covers, with the live intake numbers on it.
+- The homepage hero leads with website work (`WebsiteDesignPreview`); the
+  voice demo moved down to its own "beyond the website" section. Nav,
+  footer, `/services`, the request form's project types and the page
+  metadata all lead with websites.
+- `ProjectStandards` is the shared section stating how projects start. It
+  appears on the homepage, `/services`, `/contact`, `/request`,
+  `/website-design` and `/working-together`, so the rules are worded once.
+
+### `/systems` is now `/work`
+
+The showcase route was renamed. `/systems`, `/systems/:slug` and the older
+`/projects` paths permanently redirect to `/work` and `/work/:slug` in
+`next.config.ts`, so links already posted elsewhere still resolve. The word
+"systems" is out of the visible copy site-wide; internal names
+(`lib/systems.ts`, `SystemView`, `getSystems`) are unchanged.
+
+Three invented client quotes on that page were deleted with the rename.
+
+### Quarterly project intake: a hard limit of six
+
+`QuarterlyIntake::PROJECT_LIMIT` is 6, and `App\Support\QuarterlyIntake` is
+the one place the gate is decided:
+
+- Intake closes when `quarterly_project_status` is `"closed"` **or** when
+  `quarterly_project_slots` reaches 0. `web/src/lib/quarterly.ts` matches
+  that, and clamps the slot count to the same limit.
+- Remaining slots are managed by hand in Admin → Site Content → Hero, which
+  now validates the number (0–6) server-side. Enquiries and discovery calls
+  do **not** consume a slot; only a confirmed project does, which is why the
+  count is set manually.
+- `ProjectRequestController::create` and `AppointmentController::createBooking`
+  both refuse through the same helper, so every booking channel — the `/book`
+  page, Live Chat, WhatsApp Lisa, the voice agent — is gated identically.
+- `/request` requires an explicit acknowledgement that the enquiry reserves
+  nothing and that work starts after an agreement and an initial payment.
+  The wording is stored with the inquiry.
+- Closed-intake CTAs say "Ask about the next intake" rather than implying a
+  slot is being held.
+
+### A written agreement before work starts
+
+`App\Support\ProjectAgreement` carries the rules:
+
+- **Sending** — a proposal cannot be sent until it has scope, timeline,
+  terms and a first payment milestone with a real amount.
+- **Accepting** — the client ticks an explicit acceptance and posts the hash
+  of the exact scope, figures and terms they were shown
+  (`ProjectAgreement::version`). If the proposal changed while they were
+  reading it, acceptance is refused with a 409 rather than binding them to
+  wording they never saw. The UPDATE re-checks every hashed field, so a save
+  that lands mid-review loses the race instead of slipping through.
+- **Recording** — the accepted hash is stored on the row as
+  `accepted_agreement_version`, so a later edit cannot quietly rewrite what
+  was agreed.
+- **Paying** — `PaymentController::prepare` refuses a milestone payment
+  whose proposal has not been accepted.
+- The proposal page states the start conditions up front, marks the first
+  milestone as required before work begins, and can be printed or saved.
+
+### Proof comes from Google, or not at all
+
+- The homepage's hardcoded testimonials and its "5,000 users / 99.9% uptime"
+  stat band are gone. `/testimonials` renders approved Google reviews plus
+  testimonials clients submitted, and an honest empty state when there are
+  none.
+- Each Google review is hidden until given a placement (`landing` and/or
+  `testimonials`) in Admin → Testimonials.
+- The aggregate rating strip is shown by default and
+  `google_rating_published = '0'` takes it down — the opposite of the
+  per-review rule, because that figure is Google's own for the business.
+
+### Pricing leads with website packages
+
+- `/pricing` opens with three website packages (`website_tier_1..3_*`),
+  quoting the figures published elsewhere on the site: websites from
+  GHS 5,000, web applications from GHS 15,000, mobile app MVPs from
+  GHS 35,000. AI agent tiers follow, then usage, then ad creative.
+- **Admin → Pricing is the only pricing editor.** Site Content used to carry
+  a second, partial copy of the same `pricing_tier_*` keys: whichever page
+  was saved last won, and that copy only reached tiers 1–4 with no intro,
+  currency or charged amount. It has been removed, along with the
+  `home_pricing_*` fields nothing has read since the Next.js rebuild.
+- `/pricing`, `/lisa-ai-assistant` and `/ai-voice-agents-for-clinics` were
+  statically prerendered while fetching `/api/v1/content`, so admin edits
+  were frozen at build time and never appeared. All three are now
+  `force-dynamic` — deliberately not ISR, which is what blanked the homepage
+  in August.
+
+### Lisa's tiers can be subscribed to
+
+`POST /api/v1/subscriptions/lisa` is the public counterpart to the admin
+subscription flow. A tier becomes purchasable only once
+`lisa_tier_N_amount` holds a real number — the displayed price is free text
+and is never charged against. The form takes a name, an email and an
+explicit renewal acknowledgement, then hands off to Paystack's hosted
+checkout; no card details reach this app. One Paystack plan is minted per
+subscriber, matching the admin flow, so `handleWebhookEvent`'s plan-code
+lookup stays unambiguous. Rows record `source = 'lisa_page'` and the terms
+version accepted.
+
+### Copy and craft
+
+- **No em dashes anywhere in the site's own copy.** The pages were rewritten,
+  the seed content swept, and `database/strip_em_dashes.php` does the
+  database half (blog posts, project case studies, Site Content) while
+  skipping anything a client wrote. The daily headline prompt forbids them
+  too.
+- **The daily AI headline is back on the hero**, and resolves per line:
+  a `positioning_*` value typed by hand wins, then today's generated
+  headline (only while the API returns `hero_is_daily`), then the static
+  fallback. The flag exists so a day the cron does not run cannot serve the
+  stale seeded `hero_*` copy as if it were fresh.
+- **Booking times state their timezone** and the visitor's local equivalent.
+- **Client-facing links pointed at deleted `.html` pages** (`/pay`,
+  `/invoice`, `/proposal`, `/testimonial`, `/book`) — fixed in the emails,
+  the client portal and the admin's copy-link buttons.
+- The route curtain is quicker (624ms), links prefetch on hover, and the
+  entrance animation gained a slight scale and focus-in.
+
+### Deploying this release
+
+```bash
+php database/migrate.php          # accepted_agreement_version, subscriptions.source/tos_*
+php database/strip_em_dashes.php  # dry run first
+php database/strip_em_dashes.php --apply
+```
+
+Then in the admin: set the quarterly slot count, approve the Google reviews
+to publish, and set a monthly charge per Lisa tier if those are to be sold
+online. The Lisa checkout has not been exercised against Paystack — run one
+test-key signup before announcing it.
 
 ## Quarterly intake gate and real booking/contact forms (2026-09-04 upgrade)
 
@@ -73,7 +220,7 @@ homepage:
   preserved non-project contact routes (`/contact`, WhatsApp, email) — instead
   of their forms.
 - **Project CTAs site-wide** (`<IntakeCta>`, ~13 call sites: homepage,
-  services, pricing, systems, marketing-brain, builder-os, lisa-ai-assistant,
+  services, pricing, work, marketing-brain, builder-os, lisa-ai-assistant,
   …) switch to a quieter "Join the next intake" button when closed. A single
   client-side `/api/v1/content` fetch is shared through
   `QuarterlyIntakeProvider` rather than one per CTA.
@@ -87,8 +234,12 @@ homepage:
   is now an open/closed `<select>` and "next opening date" a `<select>` of the
   upcoming quarter-start dates (or "auto"), not free-text inputs.
 
-Fail-open throughout: anything other than the literal string `"closed"` counts
-as open, in both the PHP guards and `web/src/lib/quarterly.ts`.
+Fail-open on the status string: anything other than the literal `"closed"`
+counts as open, in both the PHP guards and `web/src/lib/quarterly.ts`.
+
+**Superseded by the 2026-09-05 upgrade above**, which added the hard limit of
+six projects a quarter, closes intake when no slots remain, and moved both
+guards onto `App\Support\QuarterlyIntake`.
 
 ### `/book` and `/contact` were mocks — now wired to the API
 
@@ -132,11 +283,12 @@ the PHP API it reads, which OpenLiteSpeed routes on the same domain.
   theme (`--bg: #0b0c0e`, `--accent: #62ff98`, etc.), set on `:root` with no
   runtime theme switch. Typography moved to Manrope (body) + JetBrains Mono
   (headings/code), replacing the prior font stack.
-- **New pages**: `/systems` (the project showcase, renamed from `/projects`)
-  and `/systems/:slug`, `/book` (booking landing), and `/lab` (an "open
+- **New pages**: `/systems` (the project showcase, renamed from `/projects`,
+  and renamed again to `/work` in the 2026-09-05 upgrade above) and its
+  `:slug` detail, `/book` (booking landing), and `/lab` (an "open
   experiments and prototypes, not client work" showcase page) — none of
   these existed in the prior rebuild. `/projects` and `/projects/:slug` now
-  permanently redirect to `/systems`.
+  permanently redirect to `/work`.
 - **Seven pages dropped back to legacy PHP for now**: `pricing`,
   `marketing-brain`, `lisa-ai-assistant`, `ai-voice-agents-for-clinics`,
   `growth-roadmap`, `builder-os`, and `agent` are not yet ported into the
@@ -622,6 +774,12 @@ php database/seed_blog_posts.php
 # 4. Regenerate the sitemap after adding/publishing content
 php database/generate_sitemap.php
 
+# 5. Strip em dashes from copy already in the database (blog posts, project
+#    case studies, Site Content). Dry run by default; client-written text
+#    such as testimonials and reviews is never touched.
+php database/strip_em_dashes.php
+php database/strip_em_dashes.php --apply
+
 # Social share images are separate from visible blog covers. The committed
 # PNGs under public/uploads/og/blog/ are only for Open Graph/Twitter previews
 # and social draft image URLs. Regenerate them on a dev machine with Pillow
@@ -629,12 +787,15 @@ php database/generate_sitemap.php
 #   python scripts/generate_og_image.py
 #   python scripts/generate_blog_og_images.py
 
-# 5. Run the dev server
-php -S localhost:8010 -t public public/index.php
+# 6. Run both apps: the PHP API on :8017 and Next.js on :3000
+cd web && npm run dev
 ```
 
-Visit `http://localhost:8010` for the public site and
-`http://localhost:8010/admin/login.html` for the admin panel.
+`npm run dev` in `web/` starts the Next.js site and the PHP API together
+(`concurrently`), which is what the public pages need — they render on the
+server and fetch `/api/v1/*` as they do. Visit `http://localhost:3000` for
+the site and `http://localhost:3000/admin` for the admin panel. To run the
+PHP side alone: `php -S localhost:8017 -t public public/index.php`.
 
 ## Next.js + Tailwind + shadcn/ui rebuild (`web/`)
 
@@ -646,29 +807,34 @@ port; the 2026-08-18 upgrade above replaced it outright). It runs one dark
 editorial theme (Manrope + JetBrains Mono, a signal-green `--accent` lifted
 from the live site's dark palette) rather than the PHP pages' 4-theme
 light/dark/midnight/paper system, and introduces new page concepts
-(`/systems`, `/lab`, `/book`) alongside ported equivalents of the PHP
+(`/work`, `/lab`, `/book`) alongside ported equivalents of the PHP
 pages it does cover.
 
-**Confirmed live in production** at princecaleb.dev — `web/` currently
-serves `/`, `/about`, `/services`, `/contact`, `/systems` (+ `/systems/:slug`
-detail — the project showcase, renamed from the old `/projects`), `/book`,
-`/lab`, `/archive` (+ detail), `/testimonials`, `/404`, `/privacy`,
-`/terms`, `/cookies`, `/search`, and `/ai-safety` /
-`/ai-adoption-ladder`. Real backend features (project/blog search, the
-Systems showcase, testimonials, and every public form — contact, booking,
-project request, newsletter) call the same PHP `/api/v1/*` endpoints the
-rest of the site already uses; nothing is mocked (the `/book` and `/contact`
-forms were stubbed shells until the 2026-09-04 upgrade above). `/projects`
-and `/projects/:slug` permanently redirect to `/systems`. Seven pages aren't
-ported into the new design yet — `pricing`, `marketing-brain`,
-`lisa-ai-assistant`, `ai-voice-agents-for-clinics`, `growth-roadmap`,
-`builder-os`, and `agent` — so their extension-less routes temporarily
-redirect to the still-live `.html` version of each (see the 2026-08-18
-upgrade above); deleting an entry from `next.config.ts`'s
-`LEGACY_HTML_ROUTES` is what porting one of them later looks like.
-Everything not covered above — the admin panel, the PHP REST API, and
-every transactional page (`/pay.html`, `/chat.html`, etc.) — stays exactly
-as it is today, served by the existing PHP app.
+**Confirmed live in production** at princecaleb.dev. Every public page is
+served by `web/` now — the legacy `.html` marketing pages were deleted on
+2026-08-20 and nothing falls back to them:
+
+- Marketing: `/`, `/website-design`, `/services`, `/pricing`,
+  `/working-together`, `/about`, `/work` (+ `/work/:slug`), `/archive`
+  (+ detail), `/lab`, `/testimonials`, `/builder-os`, `/lisa-ai-assistant`,
+  `/marketing-brain`, `/ai-voice-agents-for-clinics`, `/ai-adoption-ladder`,
+  `/ai-safety`, `/growth-roadmap`, `/agent`, `/search`, `/contact`.
+- Transactional: `/book`, `/request`, `/proposal`, `/invoice`, `/pay`,
+  `/payment-success`, `/testimonial`, `/chat`, `/newsletter-unsubscribed`,
+  and the `/client/*` portal.
+- Legal and system: `/privacy`, `/terms`, `/cookies`, `/maintenance`, `/404`.
+
+Real backend features (project and blog search, the work showcase,
+testimonials, Google reviews, and every public form — contact, booking,
+project request, newsletter, proposal acceptance, Lisa subscriptions) call
+the same PHP `/api/v1/*` endpoints the rest of the site uses; nothing is
+mocked. `/projects`, `/projects/:slug`, `/systems` and `/systems/:slug`
+permanently redirect to `/work`.
+
+Only the admin panel (`public/admin/`) and the PHP REST API are still served
+by the PHP app. Because links in older emails and posts point at the deleted
+`.html` pages, any new client-facing URL must be written extension-less
+(`/pay?token=…`, not `/pay.html?token=…`).
 
 **Production is two apps behind one domain**, both reachable at
 princecaleb.dev:
@@ -708,9 +874,13 @@ web/                      # Next.js + Tailwind + shadcn/ui rebuild of the public
   src/lib/api.ts           # typed fetch client for the PHP /api/v1/* surface
 public/                  # web root — only this folder is web-exposed
   index.php               # front controller: routes /api/v1/* only
-  .htaccess               # Apache rewrite rules for production
-  index.html, services.html, projects.html, project.html, contact.html
-  archive.html, archive-post.html, pricing.html, request.html, pay.html, payment-success.html
+  .htaccess               # rewrite rules for production. EXCLUDED from the deploy:
+                          #   it holds cPanel's Passenger block, and overwriting it
+                          #   unbinds Next.js from the apex. Edit it by hand on the
+                          #   server (see the deployment notes).
+  sitemap.xml, robots.txt, feed.xml
+                          # No public .html pages any more: the marketing site is
+                          #   served entirely by web/ (deleted 2026-08-20).
   admin/                  # admin panel (static HTML + JS, JWT-protected API calls)
     payments.html, quote-requests.html, blog.html, inquiries.html, ...
   css/app.css             # public site design system
@@ -899,10 +1069,13 @@ storage/
    back to the requester.
 8. **Payments** use Paystack. The public key/checkout amount are fetched by
    the browser from `/api/v1/payments/config`; the secret key never leaves
-   the server. Two flows share one `payments` ledger table: a fixed-price
-   "pay deposit to start" button on `/pricing.html` for the bounded-scope
-   Starter tier, and admin-generated one-off payment links
-   (`/pay.html?token=...`) for custom-quoted work. Every charge is confirmed
+   the server. Two flows share one `payments` ledger table: the fixed-price
+   tier checkout, and payment links (`/pay?token=...`) generated in the admin
+   or attached to a proposal milestone — those refuse payment until the
+   proposal's written agreement has been accepted. Recurring money is
+   separate: `subscriptions` (+ `subscription_charges`) holds Paystack plans,
+   created either by Caleb in the admin or by a visitor subscribing to a Lisa
+   tier from `/lisa-ai-assistant`. Every charge is confirmed
    server-side against Paystack's verify API (never trusted from the
    client-side popup alone), with the webhook endpoint
    (`/api/v1/payments/webhook`, HMAC-SHA512 signature checked) as a backstop
