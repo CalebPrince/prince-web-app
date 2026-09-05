@@ -197,6 +197,10 @@ class SettingsController
             $out['hero_eyebrow'] = $todayHeadline['eyebrow'];
             $out['hero_title'] = $todayHeadline['title'];
             $out['hero_subtitle'] = $todayHeadline['subtitle'];
+            // Marks these three as generated today. Without it the homepage
+            // cannot distinguish them from the static hero_* Site Content
+            // defaults, which describe an older positioning entirely.
+            $out['hero_is_daily'] = '1';
         }
 
         Response::json($out);

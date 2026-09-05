@@ -21,11 +21,12 @@ import { WebsiteDesignPreview } from "@/components/WebsiteDesignPreview";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
 
 
-// Static fallback — used only if /api/v1/content is unreachable, or before
-// today's row exists yet. Matches the copy database/migrate.php seeds as the
-// hero_eyebrow/hero_title/hero_subtitle Site Content defaults.
+// Static fallback, used when /api/v1/content is unreachable, when no
+// positioning override is set, and when today's generated headline has not
+// been written yet. This is the plain statement of what the business does,
+// so it is safe to show on any day the AI headline is missing.
 const FALLBACK_HERO = {
-  eyebrow: "Digital Design • Development • AI",
+  eyebrow: "Website Design • Development • AI",
   title: "Website design. Thoughtful development. **Clear commitments**.",
   subtitle:
     "I'm Prince Caleb, a website designer and developer in Accra, working worldwide. I create custom websites, applications and AI tools, with a written scope, agreed costs and a clear delivery process.",
@@ -78,10 +79,22 @@ export default async function Home() {
     api.googleRating().catch(() => null),
     api.googleReviews("landing").catch(() => []),
   ]);
+  // Three sources, in order of authority. A positioning_* value is something
+  // typed by hand to pin the headline, so it wins. Otherwise today's
+  // generated headline runs, but only while hero_is_daily says the hero_*
+  // values really are today's - the static Site Content defaults underneath
+  // them describe an older positioning and must never surface as if fresh.
+  const daily = content?.hero_is_daily === "1";
   const hero = {
-    eyebrow: content?.positioning_eyebrow || content?.hero_eyebrow || FALLBACK_HERO.eyebrow,
-    title: content?.positioning_title || FALLBACK_HERO.title,
-    subtitle: content?.positioning_subtitle || FALLBACK_HERO.subtitle,
+    eyebrow:
+      content?.positioning_eyebrow ||
+      (daily ? content?.hero_eyebrow : "") ||
+      FALLBACK_HERO.eyebrow,
+    title: content?.positioning_title || (daily ? content?.hero_title : "") || FALLBACK_HERO.title,
+    subtitle:
+      content?.positioning_subtitle ||
+      (daily ? content?.hero_subtitle : "") ||
+      FALLBACK_HERO.subtitle,
   };
 
   const googleRating = liveGoogleRating?.rating ?? 0;

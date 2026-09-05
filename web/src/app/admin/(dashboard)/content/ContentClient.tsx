@@ -63,10 +63,18 @@ type Section = { title: string; fields: FieldSpec[] };
 const SECTIONS: Record<string, Section[]> = {
   hero: [
     {
-      title: "Website design positioning",
+      title: "Homepage headline override",
       fields: [
-        { key: "positioning_eyebrow", label: "Homepage eyebrow", hint: "Leave blank for Website Design / Development / AI. This stable positioning is not replaced by daily AI headlines." },
-        { key: "positioning_title", label: "Homepage title", hint: "Leave blank for the website designer and developer positioning. Wrap one phrase in ** to highlight it." },
+        {
+          key: "positioning_eyebrow",
+          label: "Homepage eyebrow",
+          hint: "Each field pins that one line of the homepage headline, replacing the daily AI version of it until you clear the field again. Leave all three blank to let the daily headline run on its own.",
+        },
+        {
+          key: "positioning_title",
+          label: "Homepage title",
+          hint: "Wrap one phrase in ** to highlight it in the accent colour.",
+        },
         ta("positioning_subtitle", "Homepage introduction"),
       ],
     },
@@ -74,7 +82,11 @@ const SECTIONS: Record<string, Section[]> = {
       title: "Hero",
       fields: [
         t("availability_badge", "Availability badge"),
-        t("hero_eyebrow", "Eyebrow"),
+        {
+          key: "hero_eyebrow",
+          label: "Eyebrow",
+          hint: "Rewritten daily by the AI headline generator. Editing it here has no effect on the homepage: use the override above to set the headline by hand.",
+        },
         t("hero_title", "Title"),
         ta("hero_subtitle", "Subtitle"),
         t("tech_badges", "Tech badges"),
