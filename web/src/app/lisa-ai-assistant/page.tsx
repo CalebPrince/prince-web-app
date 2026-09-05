@@ -170,6 +170,11 @@ function eyebrow(content: SiteContent | null, key: string, fallback: string): st
   return field(content, key, fallback).replace(/^\/\/\s*/, "");
 }
 
+// Reads admin-editable copy from /api/v1/content on every request. Not ISR:
+// a revalidating route writes its rendered .html on the server, and the FTP
+// deploy can then serve that stale file against chunks it has just replaced.
+export const dynamic = "force-dynamic";
+
 export default async function Lisa() {
   const content = await api.content().catch(() => null);
 

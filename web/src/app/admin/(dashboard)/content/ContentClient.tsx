@@ -208,25 +208,6 @@ const SECTIONS: Record<string, Section[]> = {
       ]),
     },
   ],
-  pricing: [
-    {
-      title: "Homepage pricing",
-      fields: [
-        t("home_pricing_eyebrow", "Eyebrow"),
-        t("home_pricing_title", "Title"),
-        ta("home_pricing_note", "Note"),
-      ],
-    },
-    {
-      title: "Pricing tiers",
-      fields: [1, 2, 3, 4].flatMap((i) => [
-        t(`pricing_tier_${i}_name`, `Tier ${i} name`),
-        t(`pricing_tier_${i}_price`, `Tier ${i} price`),
-        ta(`pricing_tier_${i}_tagline`, `Tier ${i} tagline`),
-        ta(`pricing_tier_${i}_features`, `Tier ${i} features (one per line)`),
-      ]),
-    },
-  ],
   archive: [
     {
       title: "Archive",
@@ -310,7 +291,6 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "hero", label: "Hero" },
   { value: "services", label: "Services" },
   { value: "about", label: "About" },
-  { value: "pricing", label: "Pricing" },
   { value: "archive", label: "Archive" },
   { value: "faq", label: "FAQ" },
   { value: "chat", label: "Chat" },
@@ -494,7 +474,7 @@ export default function ContentClient({
       <PageHeader
         kicker="Content"
         title="Every word on the public site."
-        description="Hero, services, pricing, FAQ and agent copy — edits go live immediately."
+        description="Hero, services, about, FAQ and agent copy. Edits go live immediately. Pricing tiers live on their own Pricing page."
         actions={
           <Button variant="primary" onClick={save} disabled={saving || loadFailed}>
             <Save className="w-4 h-4" />
