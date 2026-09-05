@@ -44,8 +44,9 @@ class ProjectRequestController
         // panel instead of the form when this is set, so a POST getting here
         // means a stale client or a direct call — reject it rather than take
         // on a request for a quarter that is full. Must stay in lockstep with
-        // resolveQuarterlyIntake() on the web side (exact string "closed").
-        if (strtolower(trim((string) Settings::get('quarterly_project_status'))) === 'closed') {
+        // resolveQuarterlyIntake() on the web side: the status string "closed",
+        // or no remaining slots in the quarter's project limit.
+        if (\App\Support\QuarterlyIntake::isClosed()) {
             $nextOpen = trim((string) Settings::get('quarterly_next_open_date'));
             Response::json(['errors' => [
                 'Project intake for this quarter is closed'
@@ -55,6 +56,7 @@ class ProjectRequestController
         }
 
         $errors = Validator::validateProjectRequest($data);
+        if (($data['process_acknowledged'] ?? '') !== '1') $errors[] = 'Please confirm you understand that a written agreement and initial payment are required before work starts.';
         if ($errors) {
             Response::json(['errors' => $errors], 422);
         }
@@ -79,7 +81,7 @@ class ProjectRequestController
         $stmt->execute([
             trim($data['name']),
             trim($data['email']),
-            trim($data['message']),
+            trim($data['message']) . "\n\nProject process acknowledged: written agreement and initial payment required before work starts. This inquiry is not agreement acceptance.",
             $_SERVER['REMOTE_ADDR'] ?? 'unknown',
             $_SERVER['HTTP_USER_AGENT'] ?? null,
             trim($data['project_type']),

@@ -8,9 +8,9 @@ import { usePathname, useRouter } from "next/navigation";
  *  enough for the stagger to read as a sweep rather than as one slab, without
  *  the sweep taking so long that navigation feels held up. */
 const COLUMNS = 8;
-const STAGGER_MS = 38;
-const COVER_MS = 480;
-const REVEAL_MS = 520;
+const STAGGER_MS = 32;
+const COVER_MS = 400;
+const REVEAL_MS = 460;
 /** Coverage of each dither band, densest first — the band nearest the solid
  *  edge is the one that has almost filled in. */
 const DITHER_STEPS = [75, 50, 25] as const;
@@ -39,6 +39,8 @@ type Phase = "idle" | "cover" | "covered" | "reveal";
 const ROUTE_LABELS: Record<string, string> = {
   "/": "Home",
   "/services": "Services",
+  "/website-design": "Website design",
+  "/working-together": "Working together",
   "/builder-os": "Builder OS",
   "/systems": "Systems",
   "/pricing": "Pricing",
@@ -149,6 +151,39 @@ export function PageTransition() {
     return () => cancelAnimationFrame(frame);
   }, [after]);
 
+  /** Warm the destination before the click. The curtain hides the route swap,
+   *  but it cannot hide a route that is still being fetched when the columns
+   *  have finished lifting — so the moment a link is pointed at or focused,
+   *  its payload is already on its way. Delegated, and once per path per
+   *  session: prefetch is a no-op after the router has the route cached, but
+   *  the bookkeeping here keeps us from asking on every mouse move. */
+  useEffect(() => {
+    const asked = new Set<string>();
+
+    const warm = (event: Event) => {
+      const anchor = (event.target as Element | null)?.closest?.("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#")) return;
+
+      const url = new URL((anchor as HTMLAnchorElement).href, window.location.href);
+      if (url.origin !== window.location.origin) return;
+      if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/client")) return;
+      if (url.pathname === window.location.pathname) return;
+      if (asked.has(url.pathname)) return;
+
+      asked.add(url.pathname);
+      router.prefetch(url.pathname);
+    };
+
+    document.addEventListener("pointerenter", warm, true);
+    document.addEventListener("focusin", warm, true);
+    return () => {
+      document.removeEventListener("pointerenter", warm, true);
+      document.removeEventListener("focusin", warm, true);
+    };
+  }, [router]);
+
   /** Intercept in the capture phase, before Link's own handler, so the cover
    *  plays first and the route is pushed into a screen the visitor cannot see
    *  changing. Document-level rather than a prop on every Link: this then also
@@ -166,6 +201,9 @@ export function PageTransition() {
       const target = url.pathname + url.search + url.hash;
 
       clearTimers();
+      // Asked for again here in case the visitor arrived by keyboard or touch
+      // without ever hovering: it costs nothing once the route is cached.
+      router.prefetch(url.pathname);
       pending.current = url.pathname;
       setLabel(labelFor(url.pathname));
       setPhase("cover");

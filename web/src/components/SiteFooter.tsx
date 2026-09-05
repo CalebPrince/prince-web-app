@@ -7,9 +7,11 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS: { label: string; to: string }[] = [
+  { label: "Website design", to: "/website-design" },
+  { label: "Working together", to: "/working-together" },
   { label: "Services", to: "/services" },
   { label: "Builder OS", to: "/builder-os" },
-  { label: "Systems", to: "/systems" },
+  { label: "Selected work", to: "/systems" },
   { label: "Pricing", to: "/pricing" },
   { label: "Lisa", to: "/lisa-ai-assistant" },
   { label: "About", to: "/about" },

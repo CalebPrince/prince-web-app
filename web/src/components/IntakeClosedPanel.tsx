@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 // Shown in place of the /request and /book forms when the quarter's project
 // intake is closed. It switches the visitor onto the next-quarter path while
 // keeping every non-project way of reaching out open — the contact form,
-// WhatsApp, and email are all still monitored between intakes.
+// WhatsApp, and email are all still monitored between intakes. A place is confirmed only after a written agreement and initial payment.
 
 const EMAIL = "hello@princecaleb.dev";
 const WHATSAPP_URL = "https://wa.me/233535801359";
@@ -70,7 +70,7 @@ export function IntakeClosedPanel({
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
-              I take on a fixed number of projects each quarter so the committed work gets full
+              I accept a maximum of six projects each quarter so the committed work gets full
               attention. {paused} until the next intake opens.
             </p>
           </Reveal>
@@ -88,11 +88,11 @@ export function IntakeClosedPanel({
           <div className="mx-auto max-w-3xl rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-6 md:p-10 glass">
             <p className="label text-muted">In the meantime</p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight">
-              Reach out now and I&rsquo;ll line you up for the next intake.
+              Discuss your project for the next intake.
             </h2>
             <p className="mt-3 text-text-2">
-              Questions, scoping, or just want a spot held — the contact form, WhatsApp, and email
-              are all still monitored between intakes.
+              Questions, scoping, or planning ahead — the contact form, WhatsApp, and email
+              are all still monitored between intakes. A place is confirmed only after a written agreement and initial payment.
             </p>
 
             <div className="mt-8 space-y-3">

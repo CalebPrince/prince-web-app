@@ -13,6 +13,8 @@ export function GoogleRatingStrip({
   reviewCount: number;
   reviewUrl: string;
 }) {
+  if (!Number.isFinite(rating) || rating <= 0 || rating > 5 || reviewCount <= 0) return null;
+
   return (
     <section aria-label="Google rating" className="border-b border-hairline bg-bg">
       <div className="mx-auto flex max-w-[1400px] justify-center px-6 py-8 md:px-10 md:py-10">

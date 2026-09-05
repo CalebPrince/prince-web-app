@@ -83,16 +83,16 @@ const GROUNDING_LABEL: Record<string, string> = {
   none: "No real pricing data to ground this in — these are placeholder numbers.",
 };
 
-const CURRENCIES = ["GHS", "USD", "EUR", "GBP", "NGN"];
+const CURRENCIES = ["GHS", "USD", "NGN", "ZAR"];
 
 const DEFAULT_TERMS =
-  "Work begins after the first milestone payment is confirmed. Scope changes may require a revised quote. Final files and deployment are handed over after all agreed milestones are paid.";
+  "Work begins only after the client accepts this written agreement and the initial payment is confirmed. The agreed timeline depends on timely delivery of the client materials and approvals listed in the scope. Additional requests outside the agreed scope require written approval of the added cost and timing before work proceeds. Included revisions, exclusions, handover, ownership, support and pause or cancellation terms must be specified in this project agreement.";
 
 type FormMilestone = { title: string; amount: string; due_note: string };
 
 const defaultMilestones = (): FormMilestone[] => [
-  { title: "50% deposit", amount: "", due_note: "Due before kickoff" },
-  { title: "50% final payment", amount: "", due_note: "Due before final handoff" },
+  { title: "Initial payment", amount: "", due_note: "Due before kickoff" },
+  { title: "Final payment", amount: "", due_note: "Due before final handoff" },
 ];
 
 const emptyForm = {
@@ -143,7 +143,7 @@ export default function ProposalsClient({
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const origin = typeof window === "undefined" ? "" : window.location.origin;
-  const proposalUrl = (p: Proposal) => `${origin}/proposal.html?token=${p.token}`;
+  const proposalUrl = (p: Proposal) => `${origin}/proposal?token=${p.token}`;
 
   const reloadProposals = async () => {
     setProposals(asList<Proposal>(await adminApi.get("/api/v1/admin/proposals")));
@@ -447,7 +447,7 @@ export default function ProposalsClient({
       <PageHeader
         kicker="Leads & Clients"
         title="Turn a conversation into a signed deal."
-        description="Scope, milestones and terms in one shareable page the client can accept online."
+        description="Prepare and review the written agreement, then send it to the client. Work begins only after acceptance and initial payment. Remaining quarterly slots are managed in Site Content."
         actions={
           <Button variant="primary" onClick={() => openNew()}>
             <Plus className="w-4 h-4" />
@@ -708,7 +708,7 @@ export default function ProposalsClient({
           </Field>
         </div>
 
-        <Field label="Scope">
+        <Field label="Scope & deliverables" hint="List pages, features, requirements, client materials, included revisions and exclusions. Confirm any AI draft before sharing.">
           <Textarea
             rows={6}
             value={form.scope}
@@ -741,7 +741,7 @@ export default function ProposalsClient({
             {milestones.map((m, i) => (
               <div key={i} className="grid grid-cols-[1fr_8rem_1fr_2rem] gap-2 items-center">
                 <Input
-                  placeholder="50% deposit"
+                  placeholder="Initial payment"
                   aria-label="Milestone"
                   value={m.title}
                   onChange={(e) => setMilestone(i, { title: e.target.value })}
@@ -773,7 +773,7 @@ export default function ProposalsClient({
           </div>
         </div>
 
-        <Field label="Terms">
+        <Field label="Project terms" hint="Complete the revision limits, change approval, ownership, support and cancellation terms for this project. Avoid unresolved placeholders.">
           <Textarea
             rows={4}
             value={form.terms}

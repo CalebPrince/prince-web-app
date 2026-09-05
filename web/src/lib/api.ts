@@ -430,7 +430,7 @@ export const api = {
   adminDeleteBlogPost: (id: number) => postJson<{ status: string }>(`/api/v1/admin/blog/${id}`, {}, "DELETE"),
 
   adminTestimonials: (cookieHeader?: string) => get<AdminTestimonial[]>("/api/v1/admin/testimonials", cookieHeader ? { Cookie: cookieHeader } : undefined),
-  adminGoogleReviews: (cookieHeader?: string) => get<{ configured: boolean; reviews: GoogleReview[] }>("/api/v1/admin/google-reviews", cookieHeader ? { Cookie: cookieHeader } : undefined),
+  adminGoogleReviews: (cookieHeader?: string) => get<{ configured: boolean; reviews: GoogleReview[]; ratingPublished?: boolean }>("/api/v1/admin/google-reviews", cookieHeader ? { Cookie: cookieHeader } : undefined),
   adminUpdateGoogleReview: (id: string, placements: Array<"landing" | "testimonials">) =>
     postJson<{ status: string; placements: Array<"landing" | "testimonials"> }>("/api/v1/admin/google-reviews", { id, placements }, "PUT"),
   adminRequestTestimonial: (data: any) => postJson<any>("/api/v1/admin/testimonials", data),
@@ -498,7 +498,7 @@ export const api = {
   getInvoice: (token: string) => get<any>(`/api/v1/invoices/${encodeURIComponent(token)}`),
   getPaymentLink: (token: string) => get<any>(`/api/v1/payments/link/${encodeURIComponent(token)}`),
   getProposal: (token: string) => get<any>(`/api/v1/proposals/${encodeURIComponent(token)}`),
-  acceptProposal: (token: string, data: { accepted_by_name: string }) =>
+  acceptProposal: (token: string, data: { accepted_by_name: string; terms_accepted: true; agreement_version: string }) =>
     postJson<{ status: string }>(`/api/v1/proposals/${encodeURIComponent(token)}/accept`, data),
   subscribeNewsletter: (data: { email: string; website: string; attribution: Record<string, unknown> }) =>
     postJson<{ id: number }>("/api/v1/newsletter/subscribe", data),
@@ -508,7 +508,7 @@ export const api = {
   // returns the real bookable "HH:MM" slots for one date (already minus booked
   // ones and the lead/notice window); `book` writes the appointment. The quarterly
   // intake guard lives server-side in AppointmentController::createBooking.
-  appointmentConfig: () => get<{ enabled: boolean }>("/api/v1/appointments/config"),
+  appointmentConfig: () => get<{ enabled: boolean; timezone: string; slotMinutes: number }>("/api/v1/appointments/config"),
   appointmentAvailability: (date: string) =>
     get<{ slots: string[] }>(`/api/v1/appointments/availability?date=${encodeURIComponent(date)}`),
   bookAppointment: (data: {

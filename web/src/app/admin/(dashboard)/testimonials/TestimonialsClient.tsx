@@ -9,14 +9,19 @@ export default function TestimonialsClient({
   initialTestimonials,
   initialGoogleReviews,
   googleConfigured,
+  ratingPublished,
 }: {
   initialTestimonials: AdminTestimonial[];
   initialGoogleReviews: GoogleReview[];
   googleConfigured: boolean;
+  ratingPublished: boolean;
 }) {
   const [testimonials, setTestimonials] = useState<AdminTestimonial[]>(initialTestimonials);
   const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>(initialGoogleReviews);
   const [savingGoogleId, setSavingGoogleId] = useState<string | null>(null);
+  const [publishedRating, setPublishedRating] = useState(ratingPublished);
+  const [savingRating, setSavingRating] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const deleteTestimonial = async (id: number) => {
@@ -49,10 +54,15 @@ export default function TestimonialsClient({
     const placements = current.includes(placement)
       ? current.filter((item) => item !== placement)
       : [...current, placement];
+    setGoogleError(null);
     setSavingGoogleId(review.id);
     try {
       await api.adminUpdateGoogleReview(review.id, placements);
       setGoogleReviews((rows) => rows.map((row) => row.id === review.id ? { ...row, placements } : row));
+    } catch (err) {
+      // A failed save must not leave the pill looking as though the review is
+      // published on the public site when it is not.
+      setGoogleError(err instanceof Error ? err.message : "Could not update where this review appears.");
     } finally {
       setSavingGoogleId(null);
     }
@@ -80,11 +90,53 @@ export default function TestimonialsClient({
 
   return (
     <div className="space-y-8">
+      {googleError && (
+        <p role="alert" className="rounded-xl border border-red-500/40 p-4 text-red-400">
+          {googleError}
+        </p>
+      )}
+
+      {/* The rating is published only once it has been approved here: an
+          unattended figure on the public site is the thing this whole page
+          exists to prevent. */}
+      <div className="rounded-xl border border-hairline bg-bg-2 p-5">
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            checked={publishedRating}
+            disabled={savingRating}
+            onChange={async (e) => {
+              const next = e.target.checked;
+              setSavingRating(true);
+              setGoogleError(null);
+              try {
+                await api.adminSaveSettings({ google_rating_published: next ? "1" : "0" });
+                setPublishedRating(next);
+              } catch (err) {
+                setGoogleError(
+                  err instanceof Error ? err.message : "Could not save rating visibility.",
+                );
+              } finally {
+                setSavingRating(false);
+              }
+            }}
+            className="mt-1 size-5 accent-accent"
+          />
+          <span>
+            <strong>Publish my live Google rating and review count</strong>
+            <span className="mt-1 block text-sm text-text-2">
+              Off until you approve. This is Google&rsquo;s overall rating for the business, not an
+              average of the reviews you select below &mdash; written reviews are approved
+              separately.
+            </span>
+          </span>
+        </label>
+      </div>
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-hairline pb-6">
         <div>
           <div className="text-sm font-medium text-text-3 uppercase tracking-wider mb-1">Content</div>
           <h2 className="text-3xl font-bold tracking-tight mb-1">Let happy clients do the talking.</h2>
-          <p className="text-text-2">Request reviews from past clients, then approve them for the public testimonials page.</p>
+          <p className="text-text-2">Publish Google reviews only after reviewing them. Direct testimonial requests remain in your records.</p>
         </div>
         <div className="flex gap-2">
           <button 
@@ -101,7 +153,7 @@ export default function TestimonialsClient({
         <div className="flex flex-col gap-1 border-b border-hairline bg-bg-2 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-semibold">Google reviews</h2>
-            <p className="mt-1 text-sm text-text-2">Choose exactly where each live Google review appears.</p>
+            <p className="mt-1 text-sm text-text-2">Reviews arrive from Google through the configured Places integration. New reviews stay hidden until you choose a placement.</p>
           </div>
           <span className="text-xs font-medium uppercase tracking-wider text-text-3">Up to 5 supplied by Google</span>
         </div>
@@ -137,7 +189,8 @@ export default function TestimonialsClient({
                       <button
                         key={placement}
                         type="button"
-                        disabled={savingGoogleId === review.id}
+                        disabled={savingGoogleId !== null}
+                        aria-pressed={active}
                         onClick={() => toggleGooglePlacement(review, placement)}
                         className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${active ? "border-accent bg-accent/10 text-accent" : "border-hairline-strong text-text-2 hover:text-text"}`}
                       >

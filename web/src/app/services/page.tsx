@@ -9,23 +9,7 @@ import { cn } from "@/lib/utils";
 import { SERVICES } from "@/lib/services";
 
 
-const PROCESS = [
-  {
-    no: "01",
-    title: "Discover",
-    body: "We identify the bottleneck, the people affected and the result worth measuring.",
-  },
-  {
-    no: "02",
-    title: "Build",
-    body: "I create the smallest dependable system, connect it to your tools and test the real workflow.",
-  },
-  {
-    no: "03",
-    title: "Improve",
-    body: "We review performance, remove friction and expand only after the first workflow proves useful.",
-  },
-];
+import { PROJECT_STEPS as PROCESS, ProjectStandards } from "@/components/ProjectStandards";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -47,19 +31,19 @@ export default function Services() {
           </Reveal>
           <Reveal delay={80}>
             <h1 className="page-hero-title mt-8 max-w-4xl">
-              Turn missed calls into
+              Website design, development
               <br />
-              <span className="text-accent">booked appointments.</span>
+              <span className="text-accent">and useful AI.</span>
             </h1>
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-8 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
-              AI voice agents answer, qualify, and book callers directly into your calendar &mdash;
-              while automations follow up with every missed lead instantly.
+              I design and develop business websites, landing pages, online stores and applications.
+              When your business needs it, I also build AI agents and automations. Every project starts with a written agreement and initial payment.
             </p>
           </Reveal>
           <Reveal delay={240} className="mt-8 flex flex-wrap gap-3">
-            {["UX/UI design", "Product design", "AI voice agents", "Automations"].map((t) => (
+            {["Website design", "Website development", "Apps", "AI & automation"].map((t) => (
               <span
                 key={t}
                 className="label rounded-full border border-hairline bg-bg-2/50 px-4 py-2.5 text-text-2 glass"
@@ -89,7 +73,7 @@ export default function Services() {
                   </h2>
                   <p className="mt-5 max-w-md text-lg leading-relaxed text-text-2">{s.body}</p>
                   <Link
-                    href="/contact"
+                    href={s.id === "product-design" ? "/website-design" : `/request?service=${s.id}`}
                     className="label group mt-8 inline-flex items-center gap-2 text-accent"
                   >
                     Explore this service
@@ -119,11 +103,11 @@ export default function Services() {
           <Reveal>
             <SectionLabel index="04">How we work</SectionLabel>
             <h2 className="mt-6 max-w-3xl text-[clamp(2rem,5vw,4rem)] font-bold leading-[1.02] tracking-[-0.03em]">
-              From a costly problem to a working system.
+              Clear expectations at every stage.
             </h2>
           </Reveal>
 
-          <div className="relative mt-16 grid gap-y-12 md:grid-cols-3 md:gap-x-8">
+          <div className="relative mt-16 grid gap-y-12 md:grid-cols-4 md:gap-x-8">
             <div className="absolute left-0 right-0 top-2 hidden h-px bg-hairline md:block" />
             {PROCESS.map((step, i) => (
               <Reveal key={step.no} delay={i * 90} className="relative">

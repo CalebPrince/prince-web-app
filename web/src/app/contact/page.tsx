@@ -9,6 +9,8 @@ import { HiOutlineMail } from "react-icons/hi";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ProjectStandards } from "@/components/ProjectStandards";
+import { IntakeCta } from "@/components/IntakeCta";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +52,13 @@ const SOCIAL: { label: string; href: string; icon: IconType }[] = [
   { label: "X", href: "https://x.com/princecay77", icon: FaXTwitter },
 ];
 
-const BUDGETS = ["< $2k", "$2k – $5k", "$5k – $15k", "$15k +", "Not sure yet"];
+const BUDGETS = [
+  "Under GHS 10,000",
+  "GHS 10,000 – GHS 50,000",
+  "GHS 50,000 – GHS 150,000",
+  "GHS 150,000+",
+  "Not sure yet",
+];
 
 export default function Contact() {
   const [budget, setBudget] = useState<string>("");
@@ -239,7 +247,7 @@ export default function Contact() {
                       <input
                         id="project"
                         name="project"
-                        placeholder="e.g. an AI voice agent for missed calls"
+                        placeholder="e.g. a new website for my business"
                         className={inputCls}
                       />
                     </Field>
@@ -307,6 +315,26 @@ export default function Contact() {
             </Reveal>
           </div>
         </div>
+      </section>
+
+      <ProjectStandards compact />
+
+      <section className="mx-auto max-w-3xl px-6 py-20 text-center md:py-28">
+        <Reveal>
+          <h2 className="text-[clamp(1.6rem,3.5vw,2.6rem)] font-bold tracking-[-0.03em]">
+            Ready to scope a project?
+          </h2>
+          <p className="mx-auto my-6 max-w-xl text-text-2">
+            A message is fine for a question. If you already know what you need, the project brief
+            gets you a written scope and quote faster.
+          </p>
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <IntakeCta kind="project">Send a project brief</IntakeCta>
+            <IntakeCta kind="booking" openVariant="secondary">
+              Book a call
+            </IntakeCta>
+          </div>
+        </Reveal>
       </section>
     </>
   );

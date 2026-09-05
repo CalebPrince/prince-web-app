@@ -10,7 +10,7 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 // Booking page. Talks to the internal-availability endpoints:
-//   GET  /api/v1/appointments/config        -> { enabled }
+//   GET  /api/v1/appointments/config        -> { enabled, timezone, slotMinutes }
 //   GET  /api/v1/appointments/availability  -> { slots: ["09:00", ...] }
 //   POST /api/v1/appointments/book          -> { status: "booked" } | error
 // The server owns the real lead/notice window and the quarterly intake gate;
@@ -25,14 +25,43 @@ const STEPS = [
   {
     no: "02",
     title: "We use the call to clarify",
-    body: "We’ll cover goals, constraints, timing, and fit, and whether a small pilot is worth building.",
+    body: "We’ll cover your goals, requirements, budget and timing, and whether the project is a fit.",
   },
   {
     no: "03",
-    title: "You get a considered next step",
-    body: "If a project makes sense, I’ll prepare a proposal for your review. No pressure either way.",
+    title: "You get a written agreement",
+    body: "If the project makes sense, I prepare a proposal and agreement setting out scope, cost and schedule for you to review. The call itself does not reserve a slot or start work.",
   },
 ];
+
+/** The slot times the API returns are wall-clock times in the business
+ *  timezone. Showing them without saying so is how a visitor books 09:00 and
+ *  turns up at the wrong hour, so every slot carries its zone, and a visitor
+ *  in a different one is also shown the time on their own clock. */
+function localEquivalent(date: string, time: string, tz: string): string | null {
+  try {
+    const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz || !viewerZone || viewerZone === tz) return null;
+    const [y, m, d] = date.split("-").map(Number);
+    const [hh, mm] = time.split(":").map(Number);
+    const asUtc = Date.UTC(y, m - 1, d, hh, mm);
+    const probe = new Date(asUtc);
+    // The wall time in `tz` minus the same instant read as UTC is that zone's
+    // offset on that date, DST included.
+    const offset =
+      new Date(probe.toLocaleString("en-US", { timeZone: tz })).getTime() -
+      new Date(probe.toLocaleString("en-US", { timeZone: "UTC" })).getTime();
+    return new Date(asUtc - offset).toLocaleString(undefined, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return null;
+  }
+}
 
 function isoOffset(days: number) {
   const d = new Date();
@@ -43,6 +72,8 @@ function isoOffset(days: number) {
 export function BookForm() {
   // null = still checking; false = endpoint says booking is off.
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [timezone, setTimezone] = useState("");
+  const [slotMinutes, setSlotMinutes] = useState<number | null>(null);
 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -65,7 +96,11 @@ export function BookForm() {
   useEffect(() => {
     api
       .appointmentConfig()
-      .then((c) => setEnabled(c.enabled))
+      .then((c) => {
+        setEnabled(c.enabled);
+        setTimezone(c.timezone || "");
+        setSlotMinutes(Number.isFinite(c.slotMinutes) ? c.slotMinutes : null);
+      })
       .catch(() => setEnabled(false));
 
     // Deep links (e.g. from the clinic ROI calculator) can prefill context.
@@ -149,15 +184,16 @@ export function BookForm() {
           </Reveal>
           <Reveal delay={80}>
             <h1 className="page-hero-title mt-8 max-w-4xl">
-              Bring one workflow
+              Bring the project
               <br />
-              <span className="text-accent">that keeps repeating.</span>
+              <span className="text-accent">you have in mind.</span>
             </h1>
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
-              We’ll map what happens now, what an agent could handle, when a person must take over,
-              and whether a small pilot is worth building.
+              A short call to cover what you need — a website, an application, or an automation —
+              what it should achieve, and what it would take to deliver. If it is a fit, you receive
+              a written agreement before any work starts.
             </p>
           </Reveal>
           <Reveal delay={220} className="mt-8 flex flex-wrap items-center gap-6">
@@ -228,8 +264,17 @@ export function BookForm() {
                     </span>
                     <h2 className="mt-6 text-2xl font-bold tracking-tight">You’re booked in.</h2>
                     <p className="mt-3 max-w-sm text-text-2">
-                      {prettyDate} at {time}, a confirmation email is on its way. Bring one workflow
-                      you’d like to review.
+                      {prettyDate} at {time}
+                      {timezone ? ` (${timezone})` : ""}. A confirmation email is on its way.
+                    </p>
+                    {localEquivalent(date, time, timezone) && (
+                      <p className="mt-2 max-w-sm text-sm text-muted">
+                        That is {localEquivalent(date, time, timezone)} in your timezone.
+                      </p>
+                    )}
+                    <p className="mt-4 max-w-sm text-sm text-text-2">
+                      Bring the goals and requirements you have so far. The call is a conversation:
+                      it does not reserve a project slot or start work.
                     </p>
                     <Link href="/" className={cn(buttonVariants({ variant: "secondary" }), "mt-8")}>
                       Back to home
@@ -256,7 +301,13 @@ export function BookForm() {
 
                     {/* Times */}
                     <div>
-                      <p className="label mb-3 text-muted">Available times</p>
+                      <p className="label mb-1 text-muted">
+                        Available times{timezone ? ` (${timezone})` : ""}
+                      </p>
+                      <p className="mb-3 text-sm text-text-2">
+                        {slotMinutes ? `${slotMinutes}-minute call. ` : ""}
+                        Times are shown in {timezone || "my local timezone"}.
+                      </p>
                       {!date ? (
                         <p className="text-text-2">Pick a date to see available times.</p>
                       ) : slots === null ? (
@@ -271,6 +322,7 @@ export function BookForm() {
                             <button
                               key={t}
                               type="button"
+                              aria-pressed={time === t}
                               onClick={() => setTime(t)}
                               className={cn(
                                 "rounded-[var(--radius)] border py-2.5 text-sm transition-colors",
@@ -324,12 +376,12 @@ export function BookForm() {
                       </Field>
                     </div>
 
-                    <Field label="Which workflow should we review? (optional)" htmlFor="topic">
+                    <Field label="What would you like to discuss? (optional)" htmlFor="topic">
                       <textarea
                         id="topic"
                         rows={3}
                         maxLength={1000}
-                        placeholder="The repetitive task that made you book this call."
+                        placeholder="The website, application or process you want to talk through."
                         value={topic}
                         onChange={(e) => setTopic(e.target.value)}
                         className={cn(inputCls, "h-auto resize-none py-3.5")}
@@ -348,7 +400,7 @@ export function BookForm() {
                     </div>
 
                     {error && (
-                      <p className="rounded border border-red-900/50 bg-red-900/10 p-4 text-sm text-red-400">
+                      <p role="alert" className="rounded border border-red-900/50 bg-red-900/10 p-4 text-sm text-red-400">
                         {error}
                       </p>
                     )}
@@ -360,6 +412,10 @@ export function BookForm() {
                     {date && time && !sending && (
                       <p className="text-center text-sm text-muted">
                         {prettyDate} at {time}
+                        {timezone ? ` (${timezone})` : ""}
+                        {localEquivalent(date, time, timezone)
+                          ? ` · ${localEquivalent(date, time, timezone)} your time`
+                          : ""}
                       </p>
                     )}
                   </form>

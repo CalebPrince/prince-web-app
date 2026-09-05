@@ -452,7 +452,7 @@ export default function PaymentsClient({
               <EmptyRow colSpan={5}>No payment links yet.</EmptyRow>
             ) : (
               links.map((l) => {
-                const url = `${typeof window === "undefined" ? "" : window.location.origin}/pay.html?token=${l.token}`;
+                const url = `${typeof window === "undefined" ? "" : window.location.origin}/pay?token=${l.token}`;
                 return (
                   <Row key={l.id}>
                     <Cell>

@@ -38,7 +38,7 @@ class ClientPortalController
             $mStmt->execute([$proposal['id']]);
             $milestones = $mStmt->fetchAll();
             foreach ($milestones as &$milestone) {
-                $milestone['payment_url'] = $milestone['payment_token'] ? '/pay.html?token=' . $milestone['payment_token'] : null;
+                $milestone['payment_url'] = $milestone['payment_token'] ? '/pay?token=' . $milestone['payment_token'] : null;
             }
             unset($milestone);
             $proposal['milestones'] = $milestones;

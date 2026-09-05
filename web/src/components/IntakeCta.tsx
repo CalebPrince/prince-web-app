@@ -34,7 +34,7 @@ export function IntakeCta({
   openHref,
   size = "lg",
   openVariant = "primary",
-  closedLabel = "Join the next intake",
+  closedLabel = "Ask about the next intake",
   arrow = true,
   className,
 }: Props) {

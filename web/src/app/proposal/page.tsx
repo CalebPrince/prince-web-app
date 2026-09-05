@@ -30,7 +30,7 @@ export default function ProposalPage() {
     api.getProposal(t)
       .then(p => {
         setProposal(p);
-        setAcceptName(p.client_name || "");
+        setAcceptName("");
         setLoading(false);
       })
       .catch(err => {
@@ -55,13 +55,13 @@ export default function ProposalPage() {
 
   const onAccept = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || !acceptTerms || !acceptName.trim()) return;
     
     setSubmitting(true);
     setSubmitError(null);
 
     try {
-      await api.acceptProposal(token, { accepted_by_name: acceptName });
+      await api.acceptProposal(token, { accepted_by_name: acceptName.trim(), terms_accepted: true, agreement_version: proposal.agreement_version });
       window.location.reload();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Could not accept proposal.");
@@ -92,6 +92,7 @@ export default function ProposalPage() {
 
   const accepted = proposal.status === "accepted";
   const milestones = proposal.milestones || [];
+  const unavailable = proposal.status === "declined" || proposal.agreement_missing?.length > 0;
 
   return (
     <section className="mx-auto max-w-[920px] px-6 pt-32 pb-24 md:pt-40">
@@ -107,7 +108,7 @@ export default function ProposalPage() {
         }
       `}</style>
       
-      <div className="contact-card mb-6 rounded-[24px] border border-hairline bg-card p-6 md:p-10">
+      <div className="contact-card mb-6 rounded-[24px] border border-hairline bg-bg-2 p-6 md:p-10">
         <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row">
           <div>
             <p className="eyebrow mb-3 uppercase tracking-widest text-accent">Project proposal</p>
@@ -129,7 +130,23 @@ export default function ProposalPage() {
           </div>
         )}
 
-        <h2 className="mb-4 text-xl font-bold">Scope</h2>
+        {/* Said before the detail, not after it: the client should know what
+            they are reading and what accepting it commits them to. */}
+        <div className="mb-8 rounded-xl border border-accent/30 bg-accent/5 p-5">
+          <p className="font-semibold">Written agreement before work begins</p>
+          <p className="mt-2 text-sm text-text-2">
+            Review the scope, requirements, total cost, timeline and terms below. Work starts only
+            after you accept this agreement and the initial payment clears.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="mt-4 min-h-11 font-semibold text-accent print:hidden"
+          >
+            Print or save a copy
+          </button>
+        </div>
+        <h2 className="mb-4 text-xl font-bold">Scope & deliverables</h2>
         <div className="prose-custom max-w-none">
           {paragraphHtml(proposal.scope)}
         </div>
@@ -151,13 +168,18 @@ export default function ProposalPage() {
         )}
       </div>
 
-      <div className="contact-card mb-6 rounded-[24px] border border-hairline bg-card p-6 md:p-10">
+      <div className="contact-card mb-6 rounded-[24px] border border-hairline bg-bg-2 p-6 md:p-10">
         <h2 className="mb-6 text-xl font-bold">Payment milestones</h2>
         <div className="flex flex-col gap-4">
           {milestones.map((m: any, i: number) => (
-            <div key={i} className="flex flex-col justify-between gap-4 rounded-xl bg-bg-soft p-5 md:flex-row md:items-center">
+            <div key={i} className="flex flex-col justify-between gap-4 rounded-xl bg-bg p-5 md:flex-row md:items-center">
               <div>
                 <div className="font-semibold text-text">{m.title}</div>
+                {i === 0 && (
+                  <p className="mt-1 text-sm text-text-2">
+                    Initial payment: required before work starts.
+                  </p>
+                )}
                 {m.due_note && <div className="mt-1 text-sm text-text-2">{m.due_note}</div>}
                 <div className="mt-2 text-sm font-medium text-accent">{formatAmount(m.amount, m.currency)}</div>
               </div>
@@ -176,7 +198,21 @@ export default function ProposalPage() {
         </div>
       </div>
 
-      <div className="contact-card rounded-[24px] border border-hairline bg-card p-6 text-center md:p-10">
+      {accepted && (
+        <div role="status" className="mb-6 rounded-xl border border-accent/30 bg-accent/5 p-5">
+          <h2 className="font-semibold">
+            {proposal.ready_to_start
+              ? "Agreement accepted and initial payment received"
+              : "Agreement accepted — initial payment outstanding"}
+          </h2>
+          <p className="mt-2 text-sm text-text-2">
+            {proposal.ready_to_start
+              ? "I will confirm your kickoff against the agreed schedule and the materials listed in the scope."
+              : "Please complete the first payment milestone above. Work has not started yet."}
+          </p>
+        </div>
+      )}
+      <div className="contact-card rounded-[24px] border border-hairline bg-bg-2 p-6 text-center md:p-10">
         <h2 className="mb-3 text-xl font-bold">{accepted ? "Proposal accepted" : "Ready to move forward?"}</h2>
         <p className="mb-6 text-text-2">
           {accepted 
@@ -194,12 +230,12 @@ export default function ProposalPage() {
         )}
 
         {submitError && (
-          <div className="mx-auto mb-6 max-w-[420px] rounded border border-red-900/50 bg-red-900/10 p-3 text-sm text-red-400">
+          <div role="alert" className="mx-auto mb-6 max-w-[420px] rounded border border-red-900/50 bg-red-900/10 p-3 text-sm text-red-400">
             {submitError}
           </div>
         )}
 
-        {accepted ? (
+        {unavailable ? <p role="status" className="text-text-2">This agreement is not available for acceptance. Please contact me to confirm the current scope and terms.</p> : accepted ? (
           <Button asChild variant="outline">
             <Link href="/contact">Contact me</Link>
           </Button>
@@ -225,11 +261,11 @@ export default function ProposalPage() {
                 className="mt-1 size-4 rounded border-hairline-strong bg-bg/60 text-accent focus:ring-accent/60 glass" 
               />
               <label htmlFor="accept-terms-check" className="text-sm text-text-2">
-                I have reviewed and agree to the scope, timeline, and terms above.
+                I have reviewed and agree to the scope, requirements, total cost, payment milestones, timeline and terms above. I understand that work starts after my initial payment clears.
               </label>
             </div>
             <Button type="submit" disabled={submitting || !acceptTerms} className="w-full h-12">
-              {submitting ? "Accepting..." : "Accept proposal"}
+              {submitting ? "Accepting..." : "Accept written agreement"}
             </Button>
           </form>
         )}

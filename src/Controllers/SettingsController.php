@@ -35,7 +35,7 @@ class SettingsController
         'integration_api_key', 'notification_email',
         'smtp_gmail_address', 'smtp_app_password', 'smtp_host', 'smtp_port', 'imap_host', 'mail_from', 'mail_from_name',
         'google_client_id',
-        'google_places_api_key', 'google_place_id', 'google_review_placements',
+        'google_places_api_key', 'google_place_id', 'google_review_placements', 'google_rating_published',
         'chat_persona',
         'chat_hours_enabled', 'chat_hours_days', 'chat_hours_start', 'chat_hours_end', 'chat_timezone',
         'maintenance_mode',
@@ -94,6 +94,7 @@ class SettingsController
         'animation_style',
         'hero_eyebrow', 'hero_title', 'hero_subtitle', 'availability_badge',
         'quarterly_project_status', 'quarterly_project_slots', 'quarterly_next_open_date',
+        'positioning_eyebrow', 'positioning_title', 'positioning_subtitle',
         'hero_video_url', 'live_demo_video_url',
         'hero_value_eyebrow',
         'hero_value_1_label', 'hero_value_1_text',
@@ -231,6 +232,14 @@ class SettingsController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         // Key NAMES only, never values — this list is written to the activity
         // log and ADMIN_ONLY_KEYS holds API keys and webhook secrets.
+        // Validate capacity before writing any settings in this request.
+        if (isset($data['quarterly_project_slots']) && trim((string) $data['quarterly_project_slots']) !== '') {
+            $slots = trim((string) $data['quarterly_project_slots']);
+            if (!ctype_digit($slots) || (int) $slots > 6) Response::error('Available project slots must be a whole number between 0 and 6.', 422);
+        }
+        if (isset($data['google_rating_published']) && !in_array((string) $data['google_rating_published'], ['0', '1'], true)) {
+            Response::error('Choose whether to publish the Google rating.', 422);
+        }
         $writtenKeys = [];
         $clearedKeys = [];
 

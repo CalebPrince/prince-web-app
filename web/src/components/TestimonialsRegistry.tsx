@@ -1,37 +1,30 @@
-"use client";
-
-import * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight, Star } from "lucide-react";
 import { api, type Testimonial } from "@/lib/api";
 import { SAMPLE_PROJECTS } from "@/lib/sample-projects-data";
 import { SampleWireframeScene } from "@/components/SampleWireframeScene";
+import { GoogleRatingStrip } from "@/components/GoogleRatingStrip";
+import { GoogleReviewCard } from "@/components/GoogleReviewCard";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { cn } from "@/lib/utils";
-import { GoogleReviewCard } from "@/components/GoogleReviewCard";
-import type { GoogleReview } from "@/lib/api";
 
-// A review only counts as a case study once it's linked to a published
-// project with a real, admin-entered outcome_metrics line - otherwise it
-// renders as a plain quote card.
-export function TestimonialsRegistry() {
-  const [rows, setRows] = React.useState<Testimonial[] | null>(null);
-  const [googleReviews, setGoogleReviews] = React.useState<GoogleReview[] | null>(null);
-  const [failed, setFailed] = React.useState(false);
-
-  React.useEffect(() => {
-    Promise.all([api.testimonials(), api.googleReviews("testimonials")])
-      .then(([testimonials, google]) => {
-        setRows(testimonials);
-        setGoogleReviews(google);
-      })
-      .catch(() => setFailed(true));
-  }, []);
+// Nothing on this page is written by me. Google's reviews arrive from the
+// business listing and appear only once they have been given the
+// "testimonials" placement in the admin; the rest are testimonials clients
+// submitted and I approved. A review only counts as a case study once it is
+// linked to a published project with a real, admin-entered outcome_metrics
+// line - otherwise it renders as a plain quote card.
+export async function TestimonialsRegistry() {
+  const [rating, googleReviews, rows] = await Promise.all([
+    api.googleRating().catch(() => null),
+    api.googleReviews("testimonials").catch(() => []),
+    api.testimonials().catch(() => []),
+  ]);
 
   const caseStudies: (Testimonial & { signals: string[] })[] = [];
   const plain: Testimonial[] = [];
-  (rows ?? []).forEach((t) => {
+  rows.forEach((t) => {
     const signals = String(t.outcome_metrics || "")
       .split(/\r?\n/)
       .map((l) => l.trim())
@@ -43,7 +36,9 @@ export function TestimonialsRegistry() {
     }
   });
 
-  // Section numbering skips any block that isn't rendered, so the labels
+  const hasReviews = googleReviews.length > 0 || rows.length > 0;
+
+  // Section numbering skips any block that is not rendered, so the labels
   // always read 01, 02, 03 in order regardless of what the API returned.
   let section = 0;
   const nextIndex = () => String(++section).padStart(2, "0");
@@ -55,9 +50,9 @@ export function TestimonialsRegistry() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/4 top-0 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-accent/15 blur-[150px] [animation:glowpulse_18s_ease-in-out_infinite]" />
         </div>
-        <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-20 md:px-10 md:pt-48 md:pb-24">
+        <div className="mx-auto max-w-[1400px] px-6 pb-20 pt-36 md:px-10 md:pb-24 md:pt-48">
           <Reveal>
-            <SectionLabel>Client signals</SectionLabel>
+            <SectionLabel>Client reviews</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
             <h1 className="page-hero-title mt-8 max-w-4xl">
@@ -66,15 +61,24 @@ export function TestimonialsRegistry() {
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-8 max-w-[60ch] text-lg leading-relaxed text-text-2 md:text-xl">
-              Real feedback from real projects, and the real numbers behind a few of them. Nothing here is
-              written by me.
+              Reviews clients published on my Google business listing, and testimonials they sent me
+              directly. Nothing here is written by me, and every Google review keeps its Google
+              attribution.
             </p>
           </Reveal>
         </div>
       </section>
 
-      {/* ── VERIFIED OUTCOMES ───────────────────────────────── */}
-      {googleReviews && googleReviews.length > 0 && (
+      {rating?.configured && (
+        <GoogleRatingStrip
+          rating={rating.rating ?? 0}
+          reviewCount={rating.reviewCount ?? 0}
+          reviewUrl={rating.googleMapsUri || "https://g.page/r/CfBZ-YWdgM_UEBI/review"}
+        />
+      )}
+
+      {/* ── GOOGLE REVIEWS ──────────────────────────────────── */}
+      {googleReviews.length > 0 && (
         <section className="border-t border-hairline">
           <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
             <Reveal className="max-w-2xl">
@@ -94,6 +98,7 @@ export function TestimonialsRegistry() {
         </section>
       )}
 
+      {/* ── VERIFIED OUTCOMES ───────────────────────────────── */}
       {caseStudies.length > 0 && (
         <section className="border-t border-hairline">
           <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
@@ -103,7 +108,8 @@ export function TestimonialsRegistry() {
                 Results, not just reviews.
               </h2>
               <p className="mt-4 text-text-2">
-                Every number below is pulled straight from the project it describes, not written by me.
+                Every number below is pulled straight from the project it describes, not written by
+                me.
               </p>
             </Reveal>
 
@@ -112,12 +118,9 @@ export function TestimonialsRegistry() {
                 <Reveal key={t.id} delay={(i % 2) * 90}>
                   <Link
                     href={`/systems/${t.project_slug}`}
-                    className="group block h-full rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 transition-colors hover:border-accent/40 glass"
+                    className="group block h-full rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-7 transition-colors hover:border-accent/30 glass"
                   >
-                    <span className="label text-accent">Measured result</span>
-                    <p className="mt-4 text-[clamp(1.25rem,2.2vw,1.6rem)] font-bold leading-[1.3] tracking-[-0.01em] text-text">
-                      {t.signals[0]}
-                    </p>
+                    <p className="text-2xl font-bold tracking-tight text-accent">{t.signals[0]}</p>
                     {t.signals.length > 1 && (
                       <ul className="mt-3 space-y-1.5 text-sm text-text-2">
                         {t.signals.slice(1, 3).map((s) => (
@@ -128,7 +131,7 @@ export function TestimonialsRegistry() {
                         ))}
                       </ul>
                     )}
-                    <p className="mt-5 border-t border-hairline pt-5 leading-relaxed text-text-2 italic">
+                    <p className="mt-5 border-t border-hairline pt-5 italic leading-relaxed text-text-2">
                       &ldquo;{t.quote}&rdquo;
                     </p>
                     <div className="mt-6 flex items-center justify-between gap-3 text-sm text-muted">
@@ -149,6 +152,67 @@ export function TestimonialsRegistry() {
         </section>
       )}
 
+      {/* ── PLAIN REVIEWS ───────────────────────────────────── */}
+      {plain.length > 0 && (
+        <section className="border-t border-hairline">
+          <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
+            <Reveal className="mb-16 max-w-2xl">
+              <SectionLabel index={nextIndex()}>Sent to me directly</SectionLabel>
+              <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
+                More client reviews.
+              </h2>
+            </Reveal>
+
+            <div className="grid gap-5 md:grid-cols-3">
+              {plain.map((t, i) => (
+                <Reveal
+                  key={t.id}
+                  delay={(i % 3) * 80}
+                  className="h-full rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-6 transition-colors hover:border-accent/30 glass"
+                >
+                  <div className="flex gap-0.5 text-accent">
+                    {Array.from({ length: 5 }).map((_, s) => (
+                      <Star
+                        key={s}
+                        className={cn("size-4", s < (t.rating || 0) ? "fill-current" : "opacity-25")}
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-4 leading-relaxed text-text-2">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="mt-5 border-t border-hairline pt-4">
+                    <p className="font-semibold text-text">{t.client_name}</p>
+                    {t.project_reference && (
+                      <p className="label mt-1 text-muted">{t.project_reference}</p>
+                    )}
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Nothing invented stands in for a review that does not exist yet. */}
+      {!hasReviews && (
+        <section className="mx-auto max-w-[1400px] px-6 py-24 md:px-10">
+          <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-8 md:p-10">
+            <h2 className="text-2xl font-bold tracking-tight">No published reviews yet.</h2>
+            <p className="mt-3 max-w-xl text-text-2">
+              Reviews appear here once clients publish them on Google or send them to me directly.
+              Until then, the work itself is the better guide.
+            </p>
+            <Link
+              href="/systems"
+              className="mt-6 inline-flex items-center gap-2 font-semibold text-accent"
+            >
+              View selected work
+              <ArrowUpRight className="size-4" />
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* ── WHAT I BUILD (illustrative) ─────────────────────── */}
       <section className="border-y border-hairline bg-bg-2/40">
         <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
@@ -158,8 +222,8 @@ export function TestimonialsRegistry() {
               A broader look at what I build.
             </h2>
             <p className="mt-4 text-text-2">
-              Illustrative concepts across the services I offer, not live client work, and not real customer
-              quotes.
+              Illustrative concepts across the services I offer, not live client work, and not real
+              customer quotes.
               {caseStudies.length > 0 && " For the real numbers, see the case studies above."}
             </p>
           </Reveal>
@@ -206,66 +270,6 @@ export function TestimonialsRegistry() {
             </div>
           ))}
         </div>
-      </section>
-
-      {/* ── PLAIN REVIEWS ───────────────────────────────────── */}
-      <section className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
-        {caseStudies.length > 0 && plain.length > 0 && (
-          <Reveal className="mb-16 max-w-2xl">
-            <SectionLabel index={nextIndex()}>Client signals</SectionLabel>
-            <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">More reviews.</h2>
-          </Reveal>
-        )}
-
-        {(rows === null || googleReviews === null) && !failed && (
-          <div className="grid gap-5 md:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-40 animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/50 glass"
-              />
-            ))}
-          </div>
-        )}
-
-        {(failed || (rows !== null && rows.length === 0 && (googleReviews?.length ?? 0) === 0)) && (
-          <p className="py-10 text-center text-text-2">
-            Reviews are on their way, check back soon, or{" "}
-            <Link href="/contact" className="text-accent underline underline-offset-4 hover:text-accent-strong">
-              get in touch
-            </Link>{" "}
-            to start a project.
-          </p>
-        )}
-
-        {plain.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-3">
-            {plain.map((t, i) => (
-              <Reveal
-                key={t.id}
-                delay={(i % 3) * 80}
-                className={cn(
-                  "h-full rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-6 transition-colors hover:border-accent/30 glass",
-                )}
-              >
-                <div className="flex gap-0.5 text-accent">
-                  {Array.from({ length: 5 }).map((_, s) => (
-                    <Star
-                      key={s}
-                      className={cn("size-4", s < (t.rating || 0) ? "fill-current" : "opacity-25")}
-                      aria-hidden="true"
-                    />
-                  ))}
-                </div>
-                <p className="mt-4 leading-relaxed text-text-2">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-5 border-t border-hairline pt-4">
-                  <p className="font-semibold text-text">{t.client_name}</p>
-                  {t.project_reference && <p className="label mt-1 text-muted">{t.project_reference}</p>}
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        )}
       </section>
     </>
   );

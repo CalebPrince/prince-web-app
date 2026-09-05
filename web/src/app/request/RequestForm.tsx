@@ -5,6 +5,8 @@ import { Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ProjectStandards } from "@/components/ProjectStandards";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +15,11 @@ const MAX_ATTACHMENTS = 5;
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 const PROJECT_TYPES = [
+  "Website design or redesign",
+  "Business website or landing page",
+  "Online store",
+  "Web application",
+  "Mobile application",
   "AI voice agent",
   "WhatsApp or chat assistant",
   "Business workflow automation",
@@ -38,6 +45,11 @@ const TIMELINES = [
 ];
 
 const FEATURES = [
+  "Custom website design",
+  "Responsive layouts",
+  "Content management",
+  "Contact or enquiry forms",
+  "Online payments or store",
   "Call answering",
   "WhatsApp or chat",
   "Booking or scheduling",
@@ -59,6 +71,7 @@ export function RequestForm() {
   const [website, setWebsite] = useState(""); // honeypot
   const [attachments, setAttachments] = useState<FileList | null>(null);
 
+  const [understandsProcess, setUnderstandsProcess] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -87,6 +100,16 @@ export function RequestForm() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    // /services and /website-design link in with ?service=, so the brief opens
+    // on the thing the visitor was reading about rather than on "Select one".
+    const serviceTypes: Record<string, string> = {
+      "website-design": "Website design or redesign",
+      "websites-apps": "Web application",
+      "ai-agents": "AI voice agent",
+      automations: "Business workflow automation",
+    };
+    const service = serviceTypes[params.get("service") ?? ""];
+    if (service) setProjectType(service);
     if (params.get("source") === "pricing-calculator") {
       localStorage.removeItem(DRAFT_KEY);
       const low = Number(params.get("estimate_low"));
@@ -139,6 +162,7 @@ export function RequestForm() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (currentStep !== 3) return;
+    if (!understandsProcess) { setError("Please confirm you understand the agreement and initial payment process."); return; }
     
     setError(null);
 
@@ -164,6 +188,7 @@ export function RequestForm() {
     formData.append("budget", budget);
     formData.append("timeline", timeline);
     formData.append("message", message);
+    formData.append("process_acknowledged", "1");
     formData.append("website", website);
     features.forEach(f => formData.append("features[]", f));
     if (attachments) {
@@ -192,16 +217,16 @@ export function RequestForm() {
         </div>
         <div className="mx-auto max-w-[1400px] px-6 pt-36 pb-16 md:px-10 md:pt-48 md:pb-20">
           <Reveal>
-            <SectionLabel>Request a workflow review</SectionLabel>
+            <SectionLabel>Request a project</SectionLabel>
           </Reveal>
           <Reveal delay={80}>
             <h1 className="page-hero-title mt-8 max-w-4xl">
-              Show me where the <span className="text-accent">work</span> gets stuck.
+              Tell me what you want to <span className="text-accent">design or build.</span>
             </h1>
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
-              Explain what triggers the work, what your team does now, and what should happen at the end. Attach an existing script, process, or reference if you have one.
+              Share your website, app or automation goals, requirements, budget and preferred timing. I accept up to six projects per quarter. If we are a good fit, you will receive a written agreement before work starts.
             </p>
           </Reveal>
         </div>
@@ -215,9 +240,9 @@ export function RequestForm() {
                 <span className="tilt-3d tilt-3d-tile grid size-14 place-items-center rounded-full bg-accent text-on-accent">
                   <Check className="icon-3d icon-3d-on-accent size-7" />
                 </span>
-                <p className="label mt-6 text-accent">Workflow request received</p>
-                <h3 className="mt-2 text-2xl font-bold tracking-tight">Thanks, I'll review your workflow.</h3>
-                <p className="mt-3 text-text-2">I will get back to you within a couple of business days with a tailored AI agent or automation proposal.</p>
+                <p className="label mt-6 text-accent">Project request received</p>
+                <h3 className="mt-2 text-2xl font-bold tracking-tight">Thanks, I will review your project brief.</h3>
+                <p className="mt-3 text-text-2">I will review your requirements and reply with next steps. This request does not reserve a slot. Before work begins, you will review and accept a written agreement and pay the initial milestone.</p>
               </div>
             ) : (
               <form ref={formRef} onSubmit={onSubmit} className="space-y-6">
@@ -304,12 +329,38 @@ export function RequestForm() {
                   </div>
                 </div>
 
+                {/* Set out before the brief is sent, so nobody leaves this form
+                    believing a slot is now held for them. */}
+                {currentStep === 3 && (
+                  <label className="flex items-start gap-3 rounded-xl border border-hairline bg-bg p-4 text-sm text-text-2">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={understandsProcess}
+                      onChange={(e) => setUnderstandsProcess(e.target.checked)}
+                      className="mt-1 size-5 shrink-0 accent-accent"
+                    />
+                    <span>
+                      I understand this is an enquiry, not a reserved project slot. Work begins
+                      after I accept a written agreement covering scope and costs, and pay the
+                      initial milestone.{" "}
+                      <Link
+                        href="/working-together"
+                        target="_blank"
+                        className="font-semibold text-accent underline"
+                      >
+                        Read how projects start (opens a new tab)
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                )}
                 <div className="absolute -left-[9999px]" aria-hidden="true">
                   <label htmlFor="website">Leave this blank</label>
                   <input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
                 </div>
 
-                {error && <p className="text-sm text-red-400 p-4 border border-red-900/50 rounded bg-red-900/10">{error}</p>}
+                {error && <p role="alert" className="text-sm text-red-400 p-4 border border-red-900/50 rounded bg-red-900/10">{error}</p>}
 
                 <div className="flex gap-3 pt-4">
                   {currentStep > 1 && (
@@ -323,7 +374,7 @@ export function RequestForm() {
                     </Button>
                   ) : (
                     <Button type="submit" disabled={sending} className="w-full">
-                      {sending ? "Sending…" : "Send workflow request"}
+                      {sending ? "Sending…" : "Send project request"}
                     </Button>
                   )}
                 </div>
@@ -332,6 +383,7 @@ export function RequestForm() {
           </div>
         </Reveal>
       </section>
+      <ProjectStandards compact />
     </>
   );
 }

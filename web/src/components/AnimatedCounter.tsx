@@ -30,7 +30,7 @@ export function AnimatedCounter({
   // it scrolls back into view.
   const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
   const reduceMotion = useReducedMotion();
-  const [display, setDisplay] = useState(0);
+  const [display, setDisplay] = useState(target);
 
   useEffect(() => {
     if (!inView) return;

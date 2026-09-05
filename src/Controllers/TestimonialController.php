@@ -141,7 +141,7 @@ class TestimonialController
             'INSERT INTO testimonials (token, client_name, client_email, project_reference) VALUES (?, ?, ?, ?)'
         )->execute([$token, $clientName, $clientEmail, $projectReference ?: null]);
 
-        $link = "https://princecaleb.dev/testimonial.html?token={$token}";
+        $link = "https://princecaleb.dev/testimonial?token={$token}";
 
         $message = EmailTemplate::render('testimonial_request', [
             'client_name' => $clientName,

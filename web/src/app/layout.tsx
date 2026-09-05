@@ -8,11 +8,11 @@ export const metadata: Metadata = {
   // The template deliberately does not reach the home page: it only applies to
   // child segments, and the home page shares this one, so it keeps `default`.
   title: {
-    default: "Prince Caleb | Digital Design, Development & AI",
+    default: "Prince Caleb | Website Designer & Developer",
     template: "Prince Caleb | %s",
   },
   description:
-    "I design and build high-performance websites, digital products and AI-powered experiences that help ambitious businesses move forward.",
+    "Custom website design and development by Prince Caleb in Accra, Ghana, working worldwide. Websites, apps and AI systems with clear scope, written agreements and limited quarterly intake.",
 };
 
 // Applies a stored/OS theme preference before first paint, so there's no

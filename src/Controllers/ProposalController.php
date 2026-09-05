@@ -14,6 +14,7 @@ use App\Support\Mailer;
 use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\Settings;
+use App\Support\ProjectAgreement;
 
 class ProposalController
 {
@@ -80,7 +81,11 @@ class ProposalController
             Response::error('Proposal not found.', 404);
         }
 
-        $url = self::absoluteUrl('/proposal.html?token=' . $proposal['token']);
+        $fullProposal = self::findProposalById($id);
+        $missing = ProjectAgreement::missing($fullProposal ?: []);
+        if ($missing) Response::error('Complete the agreement before sending: ' . implode(', ', $missing) . '.', 422);
+        if ($proposal['status'] === 'declined') Response::error('This proposal is no longer available.', 422);
+        $url = self::absoluteUrl('/proposal?token=' . $proposal['token']);
         $message = EmailTemplate::render('proposal_send', [
             'client_name' => $proposal['client_name'],
             'client_email' => $proposal['client_email'],
@@ -121,6 +126,10 @@ class ProposalController
             Response::error('Proposal not found.', 404);
         }
 
+        $proposal['agreement_version'] = ProjectAgreement::version($proposal);
+        $proposal['agreement_missing'] = ProjectAgreement::missing($proposal);
+        $proposal['ready_to_start'] = ProjectAgreement::readyToStart($proposal);
+        unset($proposal['accepted_ip'], $proposal['accepted_user_agent']);
         Response::json($proposal);
     }
 
@@ -260,7 +269,7 @@ class ProposalController
         Response::json([
             'id' => $proposalId,
             'token' => $token,
-            'url' => '/proposal.html?token=' . $token,
+            'url' => '/proposal?token=' . $token,
         ], 201);
     }
 
@@ -454,7 +463,7 @@ class ProposalController
             Response::error('Could not update proposal.', 500);
         }
 
-        Response::json(['status' => 'updated', 'url' => '/proposal.html?token=' . $existing['token']]);
+        Response::json(['status' => 'updated', 'url' => '/proposal?token=' . $existing['token']]);
     }
 
     /** GET /api/v1/proposals/{token} */
@@ -465,6 +474,10 @@ class ProposalController
             Response::error('Proposal not found.', 404);
         }
 
+        $proposal['agreement_version'] = ProjectAgreement::version($proposal);
+        $proposal['agreement_missing'] = ProjectAgreement::missing($proposal);
+        $proposal['ready_to_start'] = ProjectAgreement::readyToStart($proposal);
+        unset($proposal['accepted_ip'], $proposal['accepted_user_agent']);
         Response::json($proposal);
     }
 
@@ -483,21 +496,41 @@ class ProposalController
         }
 
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        if (($data['terms_accepted'] ?? false) !== true) Response::error('Please confirm you agree to the scope, costs, payment schedule and terms.', 422);
+        $missing = ProjectAgreement::missing($proposal);
+        if ($missing) Response::error('This agreement needs more detail before it can be accepted. Please contact Prince Caleb.', 422);
+        if (!hash_equals(ProjectAgreement::version($proposal), (string) ($data['agreement_version'] ?? ''))) {
+            Response::error('This agreement has changed. Reload the page and review the updated scope, price and terms before accepting.', 409);
+        }
         $acceptedByName = trim((string) ($data['accepted_by_name'] ?? ''));
-        if ($acceptedByName === '') {
+        if ($acceptedByName === '' || mb_strlen($acceptedByName) > 255) {
             Response::error('Please type your name to confirm acceptance.', 422);
         }
 
         $pdo = Database::get();
-        $pdo->prepare(
+        $acceptUpdate = $pdo->prepare(
+            // Every field the hash covers is re-checked in the WHERE clause, so
+            // an edit that lands between the read above and this write loses the
+            // race instead of silently binding the client to new terms. IS, not
+            // =, because these columns are nullable and NULL = NULL is not true.
             "UPDATE proposals SET status = 'accepted', accepted_at = datetime('now'), updated_at = datetime('now'),
-             accepted_by_name = ?, accepted_ip = ?, accepted_user_agent = ? WHERE token = ?"
-        )->execute([
+             accepted_by_name = ?, accepted_ip = ?, accepted_user_agent = ?, accepted_agreement_version = ?
+             WHERE token = ? AND status = ? AND updated_at = ? AND scope IS ? AND timeline IS ? AND terms IS ? AND total_amount IS ?"
+        );
+        $acceptUpdate->execute([
             $acceptedByName,
             $_SERVER['REMOTE_ADDR'] ?? 'unknown',
             $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ProjectAgreement::version($proposal),
             $params['token'],
+            $proposal['status'],
+            $proposal['updated_at'],
+            $proposal['scope'],
+            $proposal['timeline'],
+            $proposal['terms'],
+            $proposal['total_amount'],
         ]);
+        if ($acceptUpdate->rowCount() !== 1) Response::error('The agreement changed while you were reviewing it. Reload and review it again.', 409);
 
         if ($proposal['inquiry_id']) {
             $pdo->prepare("UPDATE inquiries SET pipeline_stage = 'won' WHERE id = ?")->execute([$proposal['inquiry_id']]);
@@ -538,7 +571,7 @@ class ProposalController
         $stmt->execute([$proposal['id']]);
         $milestones = $stmt->fetchAll();
         foreach ($milestones as &$milestone) {
-            $milestone['payment_url'] = $milestone['payment_token'] ? '/pay.html?token=' . $milestone['payment_token'] : null;
+            $milestone['payment_url'] = $milestone['payment_token'] ? '/pay?token=' . $milestone['payment_token'] : null;
         }
         unset($milestone);
 

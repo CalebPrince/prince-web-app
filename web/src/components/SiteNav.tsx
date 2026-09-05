@@ -10,18 +10,20 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV: { label: string; to: string; note: string }[] = [
-  { label: "Services", to: "/services", note: "Agents, automations, builds" },
-  { label: "Builder OS", to: "/builder-os", note: "How the work runs" },
-  { label: "Systems", to: "/systems", note: "What has shipped" },
+  { label: "Services", to: "/services", note: "Websites, apps, AI & automation" },
+  { label: "Website design", to: "/website-design", note: "Design, redesign & development" },
+  { label: "Selected work", to: "/systems", note: "Projects and case studies" },
   { label: "Pricing", to: "/pricing", note: "What it costs" },
   { label: "About", to: "/about", note: "Who you are hiring" },
-  { label: "Lab", to: "/lab", note: "Experiments in the open" },
+  { label: "Working together", to: "/working-together", note: "Agreement, payment & delivery" },
   { label: "Contact", to: "/contact", note: "Start something" },
 ];
 
 /** The short links under the list — the pages that matter but do not deserve
  *  a line of 5rem type. */
 const SECONDARY: { label: string; to: string }[] = [
+  { label: "Builder OS", to: "/builder-os" },
+  { label: "Lab", to: "/lab" },
   { label: "Lisa, the AI assistant", to: "/lisa-ai-assistant" },
   { label: "AI adoption ladder", to: "/ai-adoption-ladder" },
   { label: "Testimonials", to: "/testimonials" },

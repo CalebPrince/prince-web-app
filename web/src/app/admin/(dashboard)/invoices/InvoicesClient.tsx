@@ -253,7 +253,7 @@ export default function InvoicesClient({ initialInvoices }: { initialInvoices: I
                   <Cell>
                     <div className="flex items-center justify-end gap-1.5">
                       <a
-                        href={`/invoice.html?token=${encodeURIComponent(inv.token)}`}
+                        href={`/invoice?token=${encodeURIComponent(inv.token)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="View invoice"

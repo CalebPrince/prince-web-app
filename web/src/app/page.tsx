@@ -1,4 +1,4 @@
-import { ArrowRight, Star, Rocket, Users, Activity } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,67 +9,26 @@ import { SectionLabel } from "@/components/SectionLabel";
 import { TechStrip } from "@/components/TechStrip";
 import { VoiceDemo } from "@/components/VoiceDemo";
 import { HeroOrbs } from "@/components/HeroOrbs";
-import { TiltCard } from "@/components/TiltCard";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { FaqAccordion } from "@/components/FaqAccordion";
-import { AnimatedCounter } from "@/components/AnimatedCounter";
-import { ImpactGrid } from "@/components/ImpactGrid";
 import { GoogleRatingStrip } from "@/components/GoogleRatingStrip";
 import { GoogleReviewCard } from "@/components/GoogleReviewCard";
 import { QuarterlyAvailability } from "@/components/QuarterlyAvailability";
 import { IntakeCta } from "@/components/IntakeCta";
+import { PROJECT_STEPS as PROCESS, ProjectStandards } from "@/components/ProjectStandards";
+import { WebsiteDesignPreview } from "@/components/WebsiteDesignPreview";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
 
-
-const PROCESS = [
-  { no: "01", title: "Discover", body: "Understand the problem, audience and business objective." },
-  { no: "02", title: "Design", body: "Create the visual direction, UX and interface system." },
-  { no: "03", title: "Build", body: "Transform the approved design into a fast, responsive experience." },
-  { no: "04", title: "Launch", body: "Test, optimize and deploy the final product." },
-];
-
-const AI_CAPS = [
-  "AI Agents",
-  "Intelligent Automation",
-  "AI Interfaces",
-  "Workflow Automation",
-  "Generative Experiences",
-  "Human + AI Collaboration",
-];
-
-const TESTIMONIALS = [
-  {
-    quote:
-      "Caleb didn’t just build our website, he reframed how we think about our entire digital presence. The result outperformed every projection we set.",
-    name: "Elena Marsh",
-    role: "Founder",
-    company: "Northwind Labs",
-  },
-  {
-    quote:
-      "The most fluent designer-developer we’ve worked with. Ideas move from conversation to shipped product without ever losing their edge.",
-    name: "Daniel Osei",
-    role: "Head of Product",
-    company: "Aperture",
-  },
-  {
-    quote:
-      "He understood the AI layer better than our own engineers. What he delivered feels three years ahead of the market.",
-    name: "Priya Nair",
-    role: "CEO",
-    company: "Helio",
-  },
-];
 
 // Static fallback — used only if /api/v1/content is unreachable, or before
 // today's row exists yet. Matches the copy database/migrate.php seeds as the
 // hero_eyebrow/hero_title/hero_subtitle Site Content defaults.
 const FALLBACK_HERO = {
   eyebrow: "Digital Design • Development • AI",
-  title: "Digital experiences, built to **perform**.",
+  title: "Website design. Thoughtful development. **Clear commitments**.",
   subtitle:
-    "I design and build high-performance websites, digital products and AI-powered experiences that help ambitious businesses move forward.",
+    "I'm Prince Caleb, a website designer and developer in Accra, working worldwide. I create custom websites, applications and AI systems, with a written scope, agreed costs and a clear delivery process.",
 };
 
 // database/generate_daily_headline.php writes one AI-generated
@@ -98,37 +57,6 @@ export const dynamic = "force-dynamic";
 // Renders a hero_title's single `**phrase**` marker (see
 // generate_daily_headline.php's prompt) as the same accent-colored span the
 // static fallback copy uses.
-/** Site Content stat values are free-text fields, and the natural thing to
- *  type into one is the whole figure — "98.9%", "4.5/5", "12,000+" — with the
- *  separate suffix field left alone. `Number()` returns NaN for every one of
- *  those, and NaN is falsy, so the page quietly rendered its hardcoded
- *  placeholder instead of the figure that was entered: real numbers typed by
- *  an admin were displayed as invented ones, with nothing to indicate it.
- *  Strip the decoration and read the number rather than discarding the input. */
-/** Matches the FIRST number in the string rather than stripping out every
- *  non-digit: "4.5/5" has to read as 4.5, and deleting the "/" would leave
- *  "4.55". Tolerates thousands separators so "12,000+" works too. */
-function firstNumber(raw: string | undefined): string | null {
-  return (raw ?? "").match(/-?\d[\d,]*(?:\.\d+)?/)?.[0] ?? null;
-}
-
-function statValue(raw: string | undefined, fallback: number): number {
-  const token = firstNumber(raw);
-  if (token === null) return fallback;
-  const parsed = Number(token.replace(/,/g, ""));
-  // Number.isFinite, not `|| fallback`: 0 is a legitimate figure to publish.
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-/** Keeps however many decimal places were actually typed, so "98.9" renders
- *  as 98.9 rather than being rounded to 99. */
-function statDecimals(raw: string | undefined, fallback: number): number {
-  const token = firstNumber(raw);
-  if (token === null) return fallback;
-  const dot = token.indexOf(".");
-  return dot === -1 ? 0 : token.length - dot - 1;
-}
-
 function renderHeroTitle(title: string): ReactNode {
   const match = title.match(/\*\*([^*]+)\*\*/);
   if (!match) return title;
@@ -145,52 +73,17 @@ function renderHeroTitle(title: string): ReactNode {
 }
 
 export default async function Home() {
-  const [content, liveGoogleRating, landingGoogleReviews, publishedProjects] = await Promise.all([
+  const [content, liveGoogleRating, landingGoogleReviews] = await Promise.all([
     api.content().catch(() => null),
     api.googleRating().catch(() => null),
     api.googleReviews("landing").catch(() => []),
-    api.projects().catch(() => []),
   ]);
   const hero = {
-    eyebrow: content?.hero_eyebrow || FALLBACK_HERO.eyebrow,
-    title: content?.hero_title || FALLBACK_HERO.title,
-    subtitle: content?.hero_subtitle || FALLBACK_HERO.subtitle,
+    eyebrow: content?.positioning_eyebrow || content?.hero_eyebrow || FALLBACK_HERO.eyebrow,
+    title: content?.positioning_title || FALLBACK_HERO.title,
+    subtitle: content?.positioning_subtitle || FALLBACK_HERO.subtitle,
   };
 
-  // Apps launched defaults to the real published-project count rather than a
-  // made-up number - stat_1_value in Site Content overrides it if set.
-  // stat_2/stat_3 (users served and uptime) have no
-  // equivalent live source in this app - real approved testimonials would be
-  // the honest source for a rating, but none exist yet (/api/v1/testimonials
-  // returns an empty array locally) - so all three fall back to placeholders
-  // an admin needs to replace with real figures under Admin -> Site Content
-  // before this is trustworthy.
-  const impactStats = [
-    {
-      icon: Rocket,
-      label: content?.stat_1_label || "Apps launched",
-      target: statValue(content?.stat_1_value, publishedProjects.length || 30),
-      prefix: "",
-      suffix: content?.stat_1_suffix ?? "+",
-      decimals: statDecimals(content?.stat_1_value, 0),
-    },
-    {
-      icon: Users,
-      label: content?.stat_2_label || "Users served",
-      target: statValue(content?.stat_2_value, 5000),
-      prefix: "",
-      suffix: content?.stat_2_suffix ?? "+",
-      decimals: statDecimals(content?.stat_2_value, 0),
-    },
-    {
-      icon: Activity,
-      label: content?.stat_3_label || "Uptime",
-      target: statValue(content?.stat_3_value, 99.9),
-      prefix: "",
-      suffix: content?.stat_3_suffix ?? "%",
-      decimals: statDecimals(content?.stat_3_value, 1),
-    },
-  ];
   const googleRating = liveGoogleRating?.rating ?? 0;
   const googleReviewCount = liveGoogleRating?.reviewCount ?? 0;
   const googleReviewUrl = content?.google_review_url || "https://g.page/r/CfBZ-YWdgM_UEBI/review";
@@ -253,7 +146,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="rise relative mx-auto w-full max-w-md lg:ml-auto lg:mr-0" style={{ animationDelay: "0.6s" }}>
-            <VoiceDemo />
+            <WebsiteDesignPreview />
           </div>
         </div>
 
@@ -273,34 +166,6 @@ export default async function Home() {
         quarter={quarterlyIntake.quarter}
         nextOpening={quarterlyIntake.nextOpening}
       />
-
-      {/* ── IMPACT ──────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-y border-hairline bg-bg-2/50 py-20 md:py-28">
-        <ImpactGrid />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-bg-2/60 via-transparent to-bg-2/60" />
-        <div className="relative mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 sm:grid-cols-3 md:px-10">
-          {impactStats.map((stat, i) => (
-            <Reveal key={stat.label} delay={i * 120} className="flex flex-col items-center text-center">
-              <div className="flex items-center justify-center gap-4">
-                <stat.icon
-                  className="h-[clamp(2.25rem,5vw,4rem)] w-[clamp(2.25rem,5vw,4rem)] shrink-0 text-accent"
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
-                <p className="text-[clamp(2.25rem,5vw,4rem)] font-extrabold leading-none tracking-tight">
-                  <AnimatedCounter
-                    target={stat.target}
-                    prefix={stat.prefix}
-                    suffix={stat.suffix}
-                    decimals={stat.decimals}
-                  />
-                </p>
-              </div>
-              <p className="label mt-3 text-muted">{stat.label}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
 
       {/* ── TECH STRIP ──────────────────────────────────────── */}
       <TechStrip />
@@ -343,7 +208,7 @@ export default async function Home() {
               href="/systems"
               className="label group hidden items-center gap-2 text-text-2 hover:text-text md:flex"
             >
-              See all systems
+              View all work
               <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
             </Link>
           </Reveal>
@@ -352,7 +217,7 @@ export default async function Home() {
 
           <Reveal className="mt-16 flex justify-center md:hidden">
             <Link href="/systems" className={cn(buttonVariants({ variant: "secondary" }))}>
-              See all systems <ArrowRight className="size-4" />
+              View all work <ArrowRight className="size-4" />
             </Link>
           </Reveal>
         </div>
@@ -364,7 +229,7 @@ export default async function Home() {
           <Reveal>
             <SectionLabel index="03">Process</SectionLabel>
             <h2 className="mt-6 max-w-3xl text-[clamp(2.2rem,5vw,4.5rem)] font-bold leading-[1.02] tracking-[-0.03em]">
-              From idea to launch.
+              From brief to agreement to launch.
             </h2>
           </Reveal>
 
@@ -386,83 +251,56 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 04 · AI / FUTURE ────────────────────────────────── */}
-      <section className="relative overflow-hidden">
+      <ProjectStandards compact />
+
+      {/* ── 04 · BEYOND THE WEBSITE ─────────────────────────── */}
+      <section id="ai-automation" className="relative overflow-hidden border-t border-hairline">
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-1/2 h-[40rem] w-[40rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-[160px]" />
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage:
-                "linear-gradient(to right, #f5f5f2 1px, transparent 1px), linear-gradient(to bottom, #f5f5f2 1px, transparent 1px)",
-              backgroundSize: "60px 60px",
-            }}
-          />
         </div>
-        <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-44">
-          <Reveal className="mx-auto max-w-4xl text-center">
-            <SectionLabel index="04">The Future</SectionLabel>
-            <h2 className="mt-8 text-[clamp(2.2rem,6vw,5.5rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
-              The web is changing.
-              <br />
-              <span className="text-text-2">I&rsquo;m building for</span>{" "}
-              <span className="text-accent">what&rsquo;s next.</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={150} className="mx-auto mt-14 flex max-w-3xl flex-wrap justify-center gap-3">
-            {AI_CAPS.map((cap) => (
-              <span
-                key={cap}
-                className="label rounded-full border border-hairline bg-bg-2/50 px-5 py-3 text-text-2 backdrop-blur-sm transition-colors hover:border-accent/50 hover:text-text"
-              >
-                {cap}
-              </span>
-            ))}
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── 05 · TESTIMONIALS ───────────────────────────────── */}
-      <section className="border-t border-hairline">
-        <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
+        <div className="mx-auto grid max-w-[1400px] items-center gap-14 px-6 py-28 md:px-10 md:py-40 lg:grid-cols-2">
           <Reveal>
-            <SectionLabel index="05">Client signals</SectionLabel>
-            <h2 className="mt-6 text-[clamp(2.2rem,5vw,4.5rem)] font-bold tracking-[-0.03em]">
-              What clients say after launch.
+            <SectionLabel index="04">Beyond the website</SectionLabel>
+            <h2 className="mt-6 text-[clamp(2.2rem,5vw,4.5rem)] font-bold leading-[1.02] tracking-[-0.03em]">
+              Make the next conversation easier.
             </h2>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-text-2">
+              Once a site is live, the work often continues: voice assistants, chat, follow-up and
+              the automations behind them. Try the demo &mdash; it answers, qualifies and books like
+              it would for a clinic.
+            </p>
+            <Link href="/services" className="label group mt-8 inline-flex items-center gap-2 text-accent">
+              Explore AI and automation
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+            </Link>
           </Reveal>
-
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {landingGoogleReviews.length > 0 ? landingGoogleReviews.map((review, i) => (
-              <Reveal key={review.id} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
-                <GoogleReviewCard review={review} className="p-8" />
-              </Reveal>
-            )) : TESTIMONIALS.map((t, i) => (
-              <Reveal key={t.name} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
-                <TiltCard className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-hairline bg-bg-2/40 p-8 transition-colors hover:border-accent/30 glass">
-                  <div>
-                    <div className="flex gap-0.5 text-accent">
-                      {Array.from({ length: 5 }).map((_, s) => (
-                        <Star key={s} className="size-4 fill-current" aria-hidden="true" />
-                      ))}
-                    </div>
-                    <p className="mt-5 text-lg leading-relaxed text-text">
-                      <span className="mr-1 text-3xl leading-none text-accent">&ldquo;</span>
-                      {t.quote}
-                    </p>
-                  </div>
-                  <div className="mt-10 border-t border-hairline pt-6">
-                    <p className="font-semibold text-text">{t.name}</p>
-                    <p className="label mt-1 text-muted">
-                      {t.role} &bull; {t.company}
-                    </p>
-                  </div>
-                </TiltCard>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal delay={140} className="mx-auto w-full max-w-md">
+            <VoiceDemo />
+          </Reveal>
         </div>
       </section>
+
+      {/* ── 05 · CLIENT REVIEWS ─────────────────────────────── */}
+      {landingGoogleReviews.length > 0 && (
+        <section className="border-t border-hairline">
+          <div className="mx-auto max-w-[1400px] px-6 py-28 md:px-10 md:py-40">
+            <Reveal>
+              <SectionLabel index="05">Client reviews</SectionLabel>
+              <h2 className="mt-6 text-[clamp(2.2rem,5vw,4.5rem)] font-bold tracking-[-0.03em]">
+                Shared by clients on Google.
+              </h2>
+            </Reveal>
+
+            <div className="mt-16 grid gap-6 md:grid-cols-3">
+              {landingGoogleReviews.map((review, i) => (
+                <Reveal key={review.id} delay={i * 90} className={cn(i === 1 && "md:mt-10")}>
+                  <GoogleReviewCard review={review} className="p-8" />
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── FAQ ─────────────────────────────────────────────── */}
       {faqs.length > 0 && (
@@ -507,17 +345,14 @@ export default async function Home() {
               <span className="text-accent">Let&rsquo;s build it.</span>
             </h2>
             <p className="mx-auto mt-8 max-w-xl text-lg text-text-2">
-              Tell me what you&rsquo;re trying to build, and let&rsquo;s turn the idea into
-              something real.
+              Tell me about your website, app or workflow. Scope, cost and the initial payment
+              are agreed in writing before work starts.
             </p>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <IntakeCta kind="booking">Book a Call</IntakeCta>
-              <Link
-                href="/contact"
-                className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}
-              >
-                Start a Project
-              </Link>
+              <IntakeCta kind="project" openVariant="secondary">
+                Request a project
+              </IntakeCta>
             </div>
           </Reveal>
         </div>

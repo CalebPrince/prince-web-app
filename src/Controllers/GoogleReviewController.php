@@ -12,6 +12,7 @@ class GoogleReviewController
 {
     public static function rating(): void
     {
+        if (Settings::get('google_rating_published') !== '1') Response::json(['configured' => false]);
         $place = self::fetchPlace(false);
         if ($place === null) Response::json(['configured' => false]);
         Response::json([
@@ -41,13 +42,13 @@ class GoogleReviewController
     {
         AuthMiddleware::requireAuth();
         $place = self::fetchPlace(true);
-        if ($place === null) Response::json(['configured' => false, 'reviews' => []]);
+        if ($place === null) Response::json(['configured' => false, 'reviews' => [], 'ratingPublished' => Settings::get('google_rating_published') === '1']);
         $placements = self::placements();
         $reviews = array_map(static function (array $review) use ($placements): array {
             $review['placements'] = $placements[$review['id']] ?? [];
             return $review;
         }, self::normaliseReviews($place['reviews'] ?? []));
-        Response::json(['configured' => true, 'reviews' => $reviews]);
+        Response::json(['configured' => true, 'reviews' => $reviews, 'ratingPublished' => Settings::get('google_rating_published') === '1']);
     }
 
     public static function updatePlacements(): void

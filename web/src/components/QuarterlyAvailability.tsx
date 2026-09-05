@@ -29,7 +29,7 @@ export function QuarterlyAvailability({
             aria-hidden="true"
           />
           <div>
-            <p className="label text-muted">Quarterly project intake</p>
+            <p className="label text-muted">A maximum of 6 projects per quarter</p>
             <h2 id="quarterly-availability-title" className="mt-3 text-[clamp(1.75rem,4vw,3rem)] font-bold tracking-[-0.03em]">
               {isOpen
                 ? `${availableSlots} project slot${availableSlots === 1 ? "" : "s"} open for ${quarter}.`
@@ -37,13 +37,13 @@ export function QuarterlyAvailability({
             </h2>
             <p className="mt-4 flex items-center gap-2 text-text-2">
               <CalendarDays className="size-4 shrink-0 text-accent" aria-hidden="true" />
-              Next quarter opens {nextOpening}.
+              Next intake opens {nextOpening}.
             </p>
           </div>
         </div>
 
         <Link href="/request" className={cn(buttonVariants({ variant: isOpen ? "primary" : "secondary", size: "lg" }), "group")}>
-          {isOpen ? "Request a project slot" : "Join the next intake"}
+          {isOpen ? "Request a project slot" : "Ask about the next intake"}
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
         </Link>
       </Reveal>

@@ -63,6 +63,14 @@ type Section = { title: string; fields: FieldSpec[] };
 const SECTIONS: Record<string, Section[]> = {
   hero: [
     {
+      title: "Website design positioning",
+      fields: [
+        { key: "positioning_eyebrow", label: "Homepage eyebrow", hint: "Leave blank for Website Design / Development / AI. This stable positioning is not replaced by daily AI headlines." },
+        { key: "positioning_title", label: "Homepage title", hint: "Leave blank for the website designer and developer positioning. Wrap one phrase in ** to highlight it." },
+        ta("positioning_subtitle", "Homepage introduction"),
+      ],
+    },
+    {
       title: "Hero",
       fields: [
         t("availability_badge", "Availability badge"),
@@ -112,7 +120,7 @@ const SECTIONS: Record<string, Section[]> = {
           ],
           hint: "Closed switches the project CTAs and the /request and /book forms to the next-quarter path and blocks new submissions.",
         },
-        { key: "quarterly_project_slots", label: "Available slots", type: "number" },
+        { key: "quarterly_project_slots", label: "Remaining slots (0-6)", type: "number", hint: "Maximum: 6 projects per quarter. Update the remaining count when you confirm a project. Set 0 to close intake; inquiries and discovery calls do not consume slots." },
         {
           key: "quarterly_next_open_date",
           label: "Next opening date",

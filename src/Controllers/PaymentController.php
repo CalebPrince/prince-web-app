@@ -42,7 +42,7 @@ class PaymentController
         ]);
     }
 
-    /** GET /api/v1/payments/link/{token} — public: details for the /pay.html page */
+    /** GET /api/v1/payments/link/{token} — public: details for the /pay page */
     public static function showLink(array $params): void
     {
         $pdo = Database::get();
@@ -74,6 +74,12 @@ class PaymentController
                 Response::error('This payment link is invalid or already used.', 404);
             }
 
+            $agreement = $pdo->prepare('SELECT p.status FROM proposals p JOIN proposal_milestones pm ON pm.proposal_id = p.id WHERE pm.payment_link_id = ?');
+            $agreement->execute([(int) $link['id']]);
+            $agreementStatus = $agreement->fetchColumn();
+            if ($agreementStatus !== false && $agreementStatus !== 'accepted') {
+                Response::error('Please review and accept your written project agreement before paying this milestone.', 422);
+            }
             $reference = self::createPaymentRow($pdo, [
                 'email' => $link['client_email'],
                 'customer_name' => $link['client_name'],
@@ -115,6 +121,12 @@ class PaymentController
             $currency = Settings::get('pricing_currency') ?: 'GHS';
             $amountSubunits = (int) round(((float) $amountSetting) * 100);
 
+            $agreement = $pdo->prepare('SELECT p.status FROM proposals p JOIN proposal_milestones pm ON pm.proposal_id = p.id WHERE pm.payment_link_id = ?');
+            $agreement->execute([(int) $link['id']]);
+            $agreementStatus = $agreement->fetchColumn();
+            if ($agreementStatus !== false && $agreementStatus !== 'accepted') {
+                Response::error('Please review and accept your written project agreement before paying this milestone.', 422);
+            }
             $reference = self::createPaymentRow($pdo, [
                 'email' => $email,
                 'customer_name' => $name ?: null,
@@ -276,7 +288,7 @@ class PaymentController
         $description = $payment['description'] ?: 'your project';
         $amount = number_format(((int) $payment['amount']) / 100, 2);
         $currency = $payment['currency'] ?: 'GHS';
-        $bookingUrl = self::absoluteUrl('/book.html');
+        $bookingUrl = self::absoluteUrl('/book');
 
         $message = EmailTemplate::render('payment_success', [
             'name' => $name,
@@ -510,7 +522,7 @@ class PaymentController
             'description' => $description,
         ]);
 
-        Response::json(['token' => $token, 'url' => '/pay.html?token=' . $token], 201);
+        Response::json(['token' => $token, 'url' => '/pay?token=' . $token], 201);
     }
 
     /**

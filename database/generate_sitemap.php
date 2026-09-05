@@ -21,7 +21,9 @@ $today = date('Y-m-d');
 
 $staticPages = [
     ['loc' => '/', 'priority' => '1.0', 'changefreq' => 'weekly'],
+    ['loc' => '/website-design', 'priority' => '0.9', 'changefreq' => 'monthly'],
     ['loc' => '/services', 'priority' => '0.7', 'changefreq' => 'monthly'],
+    ['loc' => '/working-together', 'priority' => '0.7', 'changefreq' => 'monthly'],
     ['loc' => '/builder-os', 'priority' => '0.7', 'changefreq' => 'monthly'],
     ['loc' => '/systems', 'priority' => '0.8', 'changefreq' => 'weekly'],
     ['loc' => '/archive', 'priority' => '0.8', 'changefreq' => 'weekly'],

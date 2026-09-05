@@ -36,14 +36,14 @@ export function quarterDetails(now = new Date()): { label: string; nextOpening: 
 
 function parseSlots(value: string | undefined, fallback: number): number {
   const n = parseInt((value ?? "").replace(/[^0-9-]/g, ""), 10);
-  return Number.isFinite(n) ? Math.max(0, n) : fallback;
+  return Number.isFinite(n) ? Math.min(6, Math.max(0, n)) : fallback;
 }
 
 export function resolveQuarterlyIntake(content: SiteContent | null | undefined): QuarterlyIntake {
   const { label, nextOpening } = quarterDetails();
   const status = (content?.quarterly_project_status || "open").trim().toLowerCase();
   return {
-    isOpen: status !== "closed",
+    isOpen: status !== "closed" && parseSlots(content?.quarterly_project_slots, 2) > 0,
     slots: parseSlots(content?.quarterly_project_slots, 2),
     quarter: label,
     nextOpening: content?.quarterly_next_open_date?.trim() || nextOpening,

@@ -403,9 +403,22 @@ p { text-wrap: pretty; }
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+/* The entrance the page makes once the curtain has lifted. It comes in from
+   slightly below, marginally under-scaled and a touch out of focus, so the
+   first frame reads as something arriving rather than something switched on.
+   Reserved for the handful of elements above the fold — the blur is cheap at
+   that count and expensive by the dozen. */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(28px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.988);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 .rise {
   animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -579,9 +592,9 @@ html.custom-cursor-active * {
   --ease-shutter: cubic-bezier(0.76, 0, 0.24, 1);
   /* Overshoot, kept for small things that should feel sprung — the dot. */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --pt-cover: 480ms;
-  --pt-reveal: 520ms;
-  --pt-stagger: 38ms;
+  --pt-cover: 400ms;
+  --pt-reveal: 460ms;
+  --pt-stagger: 32ms;
   /* Dither cell, and the depth of each of the three bands. */
   --pt-check: 8px;
   --pt-dither-band: 40px;

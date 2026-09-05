@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     "What past clients say about working with Prince Caleb on web and mobile projects.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function TestimonialsPage() {
   return <TestimonialsRegistry />;
 }

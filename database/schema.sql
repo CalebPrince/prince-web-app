@@ -388,6 +388,8 @@ CREATE TABLE IF NOT EXISTS proposals (
   accepted_by_name TEXT,
   accepted_ip TEXT,
   accepted_user_agent TEXT,
+  -- Hash of the exact scope, terms and figures the client accepted.
+  accepted_agreement_version TEXT,
   service_category TEXT,
   -- AI-generated pitch mockup (Sketch), shown to the client alongside the
   -- proposal — a concept image, not a real screenshot of anything built.

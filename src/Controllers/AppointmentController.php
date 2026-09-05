@@ -48,12 +48,13 @@ class AppointmentController
      * /book page, Live Chat, WhatsApp, and the voice agent all route through
      * createBooking(). Reschedules of existing bookings are deliberately not
      * gated (rescheduleBooking does not call createBooking). Kept in lockstep
-     * with the web side's resolveQuarterlyIntake(): the trigger is the status
-     * being exactly the string "closed".
+     * with the web side's resolveQuarterlyIntake(): intake is closed when the
+     * status is exactly the string "closed", or when no slots remain in the
+     * quarter's limit of QuarterlyIntake::PROJECT_LIMIT projects.
      */
     private static function intakeClosed(): bool
     {
-        return strtolower(trim((string) Settings::get('quarterly_project_status'))) === 'closed';
+        return \App\Support\QuarterlyIntake::isClosed();
     }
 
     private static function intakeClosedMessage(): string
@@ -105,7 +106,8 @@ class AppointmentController
     /** GET /api/v1/appointments/config — public */
     public static function publicConfig(): void
     {
-        Response::json(['enabled' => self::config()['enabled']]);
+        $cfg = self::config();
+        Response::json(['enabled' => $cfg['enabled'], 'timezone' => $cfg['timezone'], 'slotMinutes' => $cfg['slotMinutes']]);
     }
 
     /** GET /api/v1/appointments/availability?date=YYYY-MM-DD — public */

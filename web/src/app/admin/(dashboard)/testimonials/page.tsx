@@ -14,7 +14,7 @@ export default async function TestimonialsPage() {
   // Fetch initial testimonials SSR
   const [initialTestimonials, googleReviewData] = await Promise.all([
     api.adminTestimonials(cookieHeader).catch(() => []),
-    api.adminGoogleReviews(cookieHeader).catch(() => ({ configured: false, reviews: [] })),
+    api.adminGoogleReviews(cookieHeader).catch(() => ({ configured: false, reviews: [], ratingPublished: false })),
   ]);
 
   return (
@@ -23,6 +23,7 @@ export default async function TestimonialsPage() {
         initialTestimonials={initialTestimonials}
         initialGoogleReviews={googleReviewData.reviews}
         googleConfigured={googleReviewData.configured}
+        ratingPublished={googleReviewData.ratingPublished ?? false}
       />
     </div>
   );

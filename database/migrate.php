@@ -1111,6 +1111,16 @@ if (!in_array('service_category', $proposalColumns, true)) {
     $pdo->exec('ALTER TABLE proposals ADD COLUMN service_category TEXT');
 }
 
+// The exact agreement a client accepted, as the hash of the scope, timeline,
+// terms, currency, total and milestones they had in front of them
+// (ProjectAgreement::version). Acceptance already refuses a stale version, so
+// this is the record afterwards: if the proposal is edited later, the stored
+// hash still says which wording was agreed to.
+$proposalColumns = array_column($pdo->query('PRAGMA table_info(proposals)')->fetchAll(), 'name');
+if (!in_array('accepted_agreement_version', $proposalColumns, true)) {
+    $pdo->exec('ALTER TABLE proposals ADD COLUMN accepted_agreement_version TEXT');
+}
+
 // Delivery health per project — hand-set on the admin Projects page,
 // separate from is_published (public visibility). No CHECK here, same
 // pattern as inquiries.type above: SQLite's ALTER TABLE ADD COLUMN can't

@@ -160,7 +160,7 @@ class InvoiceController
             'currency' => $fields['currency'],
             'total' => number_format($total / 100, 2),
             'due_date' => $fields['due_date'] ?? '',
-            'invoice_url' => 'https://princecaleb.dev/invoice.html?token=' . $token,
+            'invoice_url' => 'https://princecaleb.dev/invoice?token=' . $token,
             'pdf_url' => $pdf['url'] ?? null,
             'pdf_path' => $pdf['path'] ?? null,
         ];
@@ -284,7 +284,7 @@ class InvoiceController
                 ->execute([(int) $pdo->lastInsertId(), $invoice['id']]);
         }
 
-        $invoiceUrl = 'https://princecaleb.dev/invoice.html?token=' . $invoice['token'];
+        $invoiceUrl = 'https://princecaleb.dev/invoice?token=' . $invoice['token'];
         $amount = number_format($invoice['total'] / 100, 2);
         $due = $invoice['due_date'] ? "\nDue date: " . $invoice['due_date'] : '';
         $message = EmailTemplate::render('invoice_send', [
@@ -321,7 +321,7 @@ class InvoiceController
         Response::json(['status' => 'sent', 'url' => $invoiceUrl]);
     }
 
-    /** GET /api/v1/invoices/{token} — public: what /invoice.html renders */
+    /** GET /api/v1/invoices/{token} — public: what /invoice renders */
     public static function show(array $params): void
     {
         $invoice = self::findWithItems('token', $params['token']);
@@ -346,7 +346,7 @@ class InvoiceController
             'items' => $invoice['items'],
             'total' => $invoice['total'],
             'payment_url' => $invoice['status'] === 'sent' && $invoice['payment_token']
-                ? '/pay.html?token=' . $invoice['payment_token']
+                ? '/pay?token=' . $invoice['payment_token']
                 : null,
         ]);
     }
@@ -371,7 +371,7 @@ class InvoiceController
         $totalStmt = $pdo->prepare('SELECT COALESCE(SUM(quantity * unit_amount), 0) FROM invoice_items WHERE invoice_id = ?');
         $totalStmt->execute([$invoice['id']]);
         $amount = number_format(((int) round((float) $totalStmt->fetchColumn())) / 100, 2);
-        $invoiceUrl = 'https://princecaleb.dev/invoice.html?token=' . $invoice['token'];
+        $invoiceUrl = 'https://princecaleb.dev/invoice?token=' . $invoice['token'];
         $message = EmailTemplate::render('invoice_receipt', [
             'client_name' => $invoice['client_name'],
             'invoice_number' => $invoice['invoice_number'],
