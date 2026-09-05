@@ -13,11 +13,14 @@ agents and automations are the work that follows it, and the site is
 structured in that order throughout. See the 2026-09-05 upgrade below.
 
 Backend: plain PHP (no framework), PDO + SQLite.
-Frontend is two apps behind one domain. Every public page (marketing,
-transactional, and the client portal) is `web/`, a Next.js (App Router) +
-Tailwind CSS v4 + shadcn/ui app (see "Next.js + Tailwind + shadcn/ui
-rebuild" below). Only the admin panel is still static HTML + vanilla JS +
-Bootstrap 5, no build step, no bundler, talking to the same REST API.
+Frontend is one app behind one domain. Every page is `web/`, a Next.js
+(App Router) + Tailwind CSS v4 + shadcn/ui app talking to that REST API
+(see "Next.js + Tailwind + shadcn/ui rebuild" below) — marketing,
+transactional, the client portal, and the admin panel alike. The static
+HTML + vanilla JS admin panel it replaced is gone. `public/admin/`
+survives as an `.htaccess` and nothing else: without its
+`DirectorySlash Off`, mod_dir sees the directory and 301s `/admin` to
+`/admin/`, Next 308s back, and the loop takes the admin offline.
 
 Live at [princecaleb.dev](https://princecaleb.dev).
 
