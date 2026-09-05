@@ -10,13 +10,13 @@ import {
   useTransform,
   type Variants,
 } from "framer-motion";
-import { CARD_SLOTS, ProjectMasonry } from "@/components/ProjectMasonry";
+import { GALLERY_COUNT, ProjectMasonry } from "@/components/ProjectMasonry";
 import { getFeaturedSystems, type SystemView } from "@/lib/systems";
 
 /**
- * The homepage's "Selected Work" gallery — the marker bar, the masonry of
- * tilted browser mockups (ProjectMasonry, shared with the /work index) and
- * the specs legend.
+ * The homepage's "Selected Work" gallery: the marker bar, the masonry of
+ * browser mockups (ProjectMasonry, shared with the /work index) and the
+ * specs legend.
  *
  * Ported from the Landing Pages Figma file (node 25:4). The design's timings
  * come from its animation annotations and are reproduced exactly:
@@ -62,7 +62,7 @@ export function WorkGallery() {
   const cueOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
 
   useEffect(() => {
-    getFeaturedSystems(CARD_SLOTS.length)
+    getFeaturedSystems(GALLERY_COUNT)
       .then(setSystems)
       .catch(() => setFailed(true));
   }, []);

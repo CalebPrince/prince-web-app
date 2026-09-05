@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Lock, RotateCw, Search } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { BrowserFrame } from "@/components/BrowserFrame";
 
 /**
  * The hero's right-hand panel: a piece of website design doing the arguing,
@@ -28,28 +29,8 @@ export function WebsiteDesignPreview() {
         Concept
       </span>
 
-      {/* ── Browser chrome ──────────────────────────────────── */}
-      <div className="overflow-hidden rounded-[18px] border border-hairline-strong bg-bg-2 shadow-2xl">
-        <div className="flex items-center gap-3 border-b border-hairline bg-bg-3/70 px-3.5 py-2.5">
-          <span className="flex shrink-0 gap-1.5" aria-hidden="true">
-            <span className="size-2.5 rounded-full bg-[#ff5f57]" />
-            <span className="size-2.5 rounded-full bg-[#febc2e]" />
-            <span className="size-2.5 rounded-full bg-[#28c840]" />
-          </span>
-
-          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-hairline bg-bg px-2.5 py-1">
-            <Lock className="size-3 shrink-0 text-muted" aria-hidden="true" />
-            <span className="truncate font-mono text-[10px] text-text-2">
-              adaba-interiors.example
-            </span>
-          </div>
-
-          <span className="hidden shrink-0 items-center gap-2 text-muted sm:flex" aria-hidden="true">
-            <RotateCw className="size-3" />
-            <Search className="size-3" />
-          </span>
-        </div>
-
+      {/* Same window as every card in the work gallery. */}
+      <BrowserFrame address="adaba-interiors.example" className="shadow-2xl">
         {/* ── The page ────────────────────────────────────────── */}
         <div className="bg-[#faf7f2] text-[#2b2621]">
           {/* its own nav */}
@@ -121,7 +102,7 @@ export function WebsiteDesignPreview() {
             <span>hello@adaba-interiors.example</span>
           </div>
         </div>
-      </div>
+      </BrowserFrame>
 
       {/* ── What it is, said outside the frame ──────────────── */}
       <div className="mt-5 flex items-center justify-between gap-4 border-t border-hairline pt-4">
