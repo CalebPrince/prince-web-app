@@ -74,6 +74,10 @@ function WindowDots() {
 function ProjectCard({ system, slot }: { system: SystemView; slot: Slot }) {
   const accent = slot.accent;
   const tags = system.stack.slice(0, 3);
+  // The seeded sample projects point at /uploads/placeholder-N.svg, a flat
+  // drawing of a browser that reads as a broken screenshot inside a real
+  // browser frame. Treat those as no image at all.
+  const hasShot = Boolean(system.img) && !system.img.includes("/placeholder-");
 
   return (
     <Link href={`/work/${system.slug}`} className="group block">
@@ -121,14 +125,23 @@ function ProjectCard({ system, slot }: { system: SystemView; slot: Slot }) {
               <div className="h-2.5 w-8 shrink-0" />
             </div>
             <div className="relative min-h-0 flex-1">
-              {system.img ? (
+              {hasShot ? (
                 <img
                   src={system.img}
                   alt={`${system.name}, ${system.category}`}
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
                 />
               ) : (
-                <div className="absolute inset-0 bg-bg-3" />
+                // No screenshot on file. An invented one would be a
+                // fabricated picture of real client work, so the frame says
+                // what it is instead of guessing at what the project looked
+                // like.
+                <div className="absolute inset-0 flex flex-col justify-end gap-1.5 bg-bg-3 p-4">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+                    {system.category}
+                  </span>
+                  <span className="text-xs text-text-2">Screenshot to come</span>
+                </div>
               )}
             </div>
           </div>
