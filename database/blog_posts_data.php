@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Shared dataset for the 52 hand-written blog posts. Used by both
+// Shared dataset for the hand-written blog posts. Used by both
 // generate_blog_covers.php (cover art) and seed_blog_posts.php (DB rows).
 // Edit here, then re-run both scripts.
 
@@ -1038,6 +1038,156 @@ What I would tell anyone building this
 Model choice mattered less than I expected. All three providers, on their default models, hold up a requirements-gathering conversation fine. What actually determines whether the chat feels reliable is the plumbing: independent failure domains, whole-turn retries, bounded loops, honest timeouts, and a deterministic floor.
 
 Treat every LLM provider as something that will eventually be down, slow, out of quota, or confidently empty, because each of them, at some point, was. The three-LLM setup is not about any one model being smart. It is about the conversation never depending on any one of them.
+TXT,
+    ],
+    [
+        'title' => 'What AI Voice Agents Can and Can\'t Do When They Answer a Local Business\'s Phone',
+        'slug' => 'ai-voice-agents-answering-the-phone-local-businesses',
+        'category_key' => 'ai',
+        'industry_key' => 'technology',
+        'excerpt' => 'AI voice agents that pick up every call have gone from demo to deployable in about a year. Here\'s what they actually handle for a local business, where they still break, and how I\'d roll one out.',
+        'body' => <<<'TXT'
+The pitch for an AI voice agent is simple: it picks up every call, day or night, never puts anyone on hold, and never forgets to write down a message. For a lot of local businesses in Accra, clinics, salons, repair shops, law offices, the phone is still the main way customers get in touch, and a missed call is usually a lost job. So the pitch lands.
+
+What has actually changed in the last year is latency and voice quality. Speech-to-text, an LLM, and text-to-speech chained together used to leave a two-to-three second gap before the agent replied, long enough that callers talked over it or hung up. The current generation of voice models has closed that gap to something close to a natural pause, and the synthesized voice no longer sounds like a satnav. That is the difference between a demo and something you would put in front of paying customers.
+
+What it handles well
+
+The reliable use cases are narrow and repetitive: answering hours and location, taking a booking or a callback request, quoting a standard price, and capturing the details of a message so a human gets a clean summary instead of a voicemail. An agent connected to a real calendar can book, reschedule, and cancel appointments during the call, which is where most of the time savings come from.
+
+Where it breaks
+
+Accents and code-switching are a genuine problem here, a caller moving between English and Twi mid-sentence will trip most models, and a frustrated customer speaking quickly is exactly when the agent is most likely to mishear. Background noise on the caller's end makes it worse. And an AI voice agent should never be the only path to a human: the moment a caller asks for one, or the conversation goes sideways, it needs to transfer or take a message, not keep trying.
+
+The honest cost picture
+
+Per-minute pricing on the voice model, plus the phone number, plus the LLM calls, adds up faster than people expect. A business taking a few hundred calls a month should run the numbers before assuming it is cheaper than a part-time receptionist. Where it clearly wins is after-hours and overflow: calls that currently go unanswered and turn into lost revenue.
+
+How I'd deploy it
+
+Start it on after-hours calls only, with every conversation transcribed and reviewed for the first few weeks. Give it one job, booking and messages, and a fast path to a human. Expand only once the transcripts show it is actually getting things right, not once the demo sounds good.
+TXT,
+    ],
+    [
+        'title' => 'Putting an AI Customer Agent on WhatsApp: What It Takes for a Ghanaian Business',
+        'slug' => 'whatsapp-ai-customer-agents-ghana-businesses',
+        'category_key' => 'ai',
+        'industry_key' => 'technology',
+        'excerpt' => 'For most Ghanaian businesses, WhatsApp is the customer service channel. Here\'s what it actually takes to put an AI agent inside that thread, from the Business API to the retrieval problem to language.',
+        'body' => <<<'TXT'
+For most businesses I work with in Ghana, WhatsApp is the customer service channel. Not email, not a web chat widget, not a phone tree, WhatsApp. So when a business asks about an AI customer agent, what they are really asking is whether the agent can live inside the same WhatsApp thread the customer already uses.
+
+It can, but the path matters. A personal WhatsApp number or the WhatsApp Business app cannot be automated properly, you need the WhatsApp Business Platform (the API), which means going through Meta, getting the number verified, and using message templates for anything the business sends first. Inside the 24-hour window after a customer messages, the agent can reply freely; outside it, only approved templates. That single rule shapes what the agent can and cannot do.
+
+What a WhatsApp agent is good at
+
+The bread-and-butter is answering product and service questions, sharing pricing, checking order or delivery status, booking appointments, and collecting the details of an order or a complaint before a human picks it up. Because WhatsApp supports images and documents, the agent can also send a catalogue, a quote as a PDF, or a location pin, which covers a lot of what customers actually ask for.
+
+The retrieval problem
+
+An agent is only as good as what it knows. The businesses that get value out of this are the ones that let me pull their real information, current prices, what is in stock, opening hours, delivery zones, into a source the agent retrieves from, rather than hoping the model guesses right. If that information lives only in someone's head or a WhatsApp broadcast from last month, the agent will confidently tell customers the wrong thing.
+
+Language
+
+Ghanaian customers write to businesses in English, Twi, Pidgin, and a mix of all three. The current models handle English cleanly, Pidgin reasonably, and Twi unevenly. I usually have the agent detect when it is out of its depth and hand to a human rather than produce a confident bad translation.
+
+Cost and control
+
+Meta charges per conversation, not per message, and the rate depends on who started it and what category it falls into. For a business doing hundreds of conversations a day this is real money, so the agent should resolve or escalate quickly rather than chat. Every conversation should be logged where the owner can read it, and there should be a clear path to a human that always works.
+
+Where to start
+
+One narrow job, usually FAQ plus order or booking status, connected to real data, with a human watching the transcripts for the first month. Adding actions like taking payment or modifying an order comes later, once the basic loop is trustworthy.
+TXT,
+    ],
+    [
+        'title' => 'Agentic Automation for Local Businesses: When to Let AI Actually Do the Task, Not Just Draft It',
+        'slug' => 'agentic-ai-local-business-back-office-automations',
+        'category_key' => 'automation',
+        'industry_key' => 'technology',
+        'excerpt' => 'Assistive AI drafts the email and a human sends it. Agentic automation carries the whole task to completion. Here\'s where that shift is worth making for a small business, and where it isn\'t.',
+        'body' => <<<'TXT'
+Most AI automation in small businesses so far has been assistive: it drafts the email, suggests the reply, summarizes the document, and a human still does the actual sending and filing. The newer pattern, agentic automation, is the AI carrying a multi-step task to completion on its own: read the incoming invoice, match it to the purchase order, flag the discrepancy, enter it into the books, and queue the payment.
+
+The technology that makes this feasible now is tool-using models. Instead of only producing text, the model can call defined functions, look up a customer, create a calendar event, post to an accounting API, and chain those calls based on what it finds. Standards like the Model Context Protocol have made wiring a model to a business's actual tools less of a bespoke engineering project than it was a year ago.
+
+Where it's worth doing
+
+The tasks that suit agentic automation are high-volume, rules-based, and annoying: reconciling payments against invoices, chasing overdue accounts with a sequence of increasingly firm messages, sorting inbound email into the right queue and drafting first responses, keeping product data in sync across a website and a marketplace listing. These are jobs where a human adds little judgment but a lot of hours.
+
+Where it isn't
+
+Anything where a wrong action is expensive and hard to reverse, sending money, making commitments to customers, deleting records, should stay behind a human approval step. The agent prepares the action; a person clicks confirm. That single checkpoint removes most of the risk while keeping most of the time savings.
+
+The failure mode to design around
+
+An agent that is 95 percent reliable sounds good until you realize the 5 percent happens unsupervised. The businesses that get this right build in constraints the model cannot talk its way past: hard limits on amounts, allowlists of who it can contact, validation that rejects placeholder or malformed data, and a log of every action taken that the owner can actually review. The model reasons; the surrounding system enforces.
+
+Starting scope
+
+Pick one task, run the agent in propose-only mode for a few weeks so you can see what it would have done, then let it act on the low-stakes cases while the borderline ones still route to a person. The goal is not to remove humans from the loop, it is to move them from doing the task to reviewing the exceptions.
+TXT,
+    ],
+    [
+        'title' => 'The Difference Between an AI Customer Agent That Deflects and One That Resolves',
+        'slug' => 'ai-customer-agents-resolve-not-deflect',
+        'category_key' => 'ai',
+        'industry_key' => 'technology',
+        'excerpt' => 'The first generation of support bots hit their deflection targets by answering with a link. Resolution needs two things they never had: the customer\'s real situation, and the ability to act on it.',
+        'body' => <<<'TXT'
+Every business that adds an AI customer agent hopes for the same thing: fewer tickets reaching a human. The first generation of chatbots delivered that number by deflection, answering with a help article, a link, or a rephrased version of the question, and customers learned to skip straight past them. The deflection was real; the resolution was not.
+
+An agent that actually resolves needs two things the old bots did not have: access to the customer's real situation, and the ability to act on it.
+
+Knowing the customer
+
+Resolution starts with context. If a customer asks where their order is, an agent that can look up that specific order, see it is stuck at a depot, and say so is useful. An agent that responds with the general shipping policy is not. Connecting the agent, read-only is fine to start, to the order system, the CRM, and the booking calendar is what moves it from FAQ to support.
+
+Taking action
+
+The next step is letting the agent do the thing the customer wanted: reschedule the appointment, resend the invoice, apply the credit, update the delivery address, cancel the order within the allowed window. Each of these is a defined action with clear rules, and each one is a ticket that never reaches a human. This is where tool-using models earn their place, the conversation and the action happen in the same exchange.
+
+The guardrails that make it safe
+
+Giving an agent the ability to act means giving it the ability to act wrongly. The pattern that works: the agent can do low-stakes things freely (send a document, check status), needs to confirm medium-stakes things with the customer explicitly (I'm going to cancel order 4471, yes?), and simply cannot do high-stakes things (refunds above a threshold, account changes) without a human. The rules live in the system, not in the prompt, because a prompt can be argued with.
+
+Measuring the right thing
+
+Deflection rate flatters everyone. The number that matters is resolution rate, conversations that ended with the customer's problem actually solved and no follow-up ticket, plus how often customers re-contact within a few days. If that second number climbs, the agent is deflecting again, just more politely.
+
+Where to begin
+
+Start with read access and a handful of safe actions on your highest-volume, most repetitive request type. Prove the resolution rate on that one thing before widening scope.
+TXT,
+    ],
+    [
+        'title' => 'Keeping a Small Business\'s AI Customer Agent Accurate: Retrieval, Guardrails, and Knowing When to Hand Off',
+        'slug' => 'ai-customer-agents-accuracy-rag-guardrails-handoff',
+        'category_key' => 'ai',
+        'industry_key' => 'technology',
+        'excerpt' => 'One screenshot of an AI agent confidently telling a customer the wrong price does more damage than the agent saves in a month. The engineering that matters is accuracy and honesty about its limits.',
+        'body' => <<<'TXT'
+The fastest way to lose trust in an AI customer agent is for it to say something confidently wrong to a customer, a price that is out of date, a policy that does not exist, a promise the business cannot keep. For a small business, one screenshot of that circulating does more damage than the agent saves in a month. So the engineering that matters is not making the agent clever; it is making it accurate and honest about its limits.
+
+Retrieval over memory
+
+A model answering from its training data is guessing. The fix is retrieval: the agent's answers are grounded in the business's own documents, current price list, service descriptions, refund policy, opening hours, delivery zones, pulled in at the moment of the question. When those documents change, the agent's answers change the same day, with no retraining. The practical work here is unglamorous: getting the business's real information into one maintained place instead of scattered across WhatsApp messages and someone's memory.
+
+Guardrails
+
+Retrieval reduces hallucination but does not eliminate it. On top of it you want explicit boundaries: topics the agent will not discuss (anything medical, legal, or financial beyond stated facts), a rule that it cites the source for any price or policy it states, and a refusal to invent specifics when the retrieved documents do not cover the question. "I don't have that information, let me get someone who does" is a correct answer, and the agent should give it often.
+
+Handoff
+
+Every agent needs a clean exit to a human, and it should take it early rather than late: when the customer is upset, when the question is outside its knowledge, when it is about to do something irreversible, or simply when the customer asks. The handoff should carry the full conversation so the customer does not repeat themselves, nothing burns goodwill faster than being asked to re-explain something the bot already heard.
+
+Testing before launch
+
+Before it goes live, run the agent against a list of real past customer questions and read every answer. This is where you catch the confident wrong ones. Re-run that same test set whenever you change the prompt or the documents, so a fix in one place does not quietly break another.
+
+The standard to hold it to
+
+An AI customer agent does not have to answer everything. It has to be right when it answers, honest when it cannot be, and quick to hand over when it should. Get those three right and customers stop caring that it is an AI.
 TXT,
     ],
 ];

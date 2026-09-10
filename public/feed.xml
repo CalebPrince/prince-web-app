@@ -5,13 +5,53 @@
   <link>https://princecaleb.dev/archive</link>
   <description>Articles on web development, freelancing, and building software in Ghana.</description>
   <language>en</language>
-  <lastBuildDate>Wed, 19 Aug 2026 09:56:59 +0000</lastBuildDate>
+  <lastBuildDate>Thu, 10 Sep 2026 12:54:07 +0000</lastBuildDate>
   <atom:link href="https://princecaleb.dev/feed.xml" rel="self" type="application/rss+xml"/>
+  <item>
+   <title>Keeping a Small Business's AI Customer Agent Accurate: Retrieval, Guardrails, and Knowing When to Hand Off</title>
+   <link>https://princecaleb.dev/archive/ai-customer-agents-accuracy-rag-guardrails-handoff</link>
+   <guid>https://princecaleb.dev/archive/ai-customer-agents-accuracy-rag-guardrails-handoff</guid>
+   <description>One screenshot of an AI agent confidently telling a customer the wrong price does more damage than the agent saves in a month. The engineering that matters is accuracy and honesty about its limits.</description>
+   <category>AI &amp; Chatbots</category>
+   <pubDate>Thu, 10 Sep 2026 12:54:02 +0000</pubDate>
+  </item>
+  <item>
+   <title>The Difference Between an AI Customer Agent That Deflects and One That Resolves</title>
+   <link>https://princecaleb.dev/archive/ai-customer-agents-resolve-not-deflect</link>
+   <guid>https://princecaleb.dev/archive/ai-customer-agents-resolve-not-deflect</guid>
+   <description>The first generation of support bots hit their deflection targets by answering with a link. Resolution needs two things they never had: the customer's real situation, and the ability to act on it.</description>
+   <category>AI &amp; Chatbots</category>
+   <pubDate>Thu, 10 Sep 2026 12:54:02 +0000</pubDate>
+  </item>
+  <item>
+   <title>Agentic Automation for Local Businesses: When to Let AI Actually Do the Task, Not Just Draft It</title>
+   <link>https://princecaleb.dev/archive/agentic-ai-local-business-back-office-automations</link>
+   <guid>https://princecaleb.dev/archive/agentic-ai-local-business-back-office-automations</guid>
+   <description>Assistive AI drafts the email and a human sends it. Agentic automation carries the whole task to completion. Here's where that shift is worth making for a small business, and where it isn't.</description>
+   <category>Automation</category>
+   <pubDate>Thu, 10 Sep 2026 12:54:02 +0000</pubDate>
+  </item>
+  <item>
+   <title>Putting an AI Customer Agent on WhatsApp: What It Takes for a Ghanaian Business</title>
+   <link>https://princecaleb.dev/archive/whatsapp-ai-customer-agents-ghana-businesses</link>
+   <guid>https://princecaleb.dev/archive/whatsapp-ai-customer-agents-ghana-businesses</guid>
+   <description>For most Ghanaian businesses, WhatsApp is the customer service channel. Here's what it actually takes to put an AI agent inside that thread, from the Business API to the retrieval problem to language.</description>
+   <category>AI &amp; Chatbots</category>
+   <pubDate>Thu, 10 Sep 2026 12:54:02 +0000</pubDate>
+  </item>
+  <item>
+   <title>What AI Voice Agents Can and Can't Do When They Answer a Local Business's Phone</title>
+   <link>https://princecaleb.dev/archive/ai-voice-agents-answering-the-phone-local-businesses</link>
+   <guid>https://princecaleb.dev/archive/ai-voice-agents-answering-the-phone-local-businesses</guid>
+   <description>AI voice agents that pick up every call have gone from demo to deployable in about a year. Here's what they actually handle for a local business, where they still break, and how I'd roll one out.</description>
+   <category>AI &amp; Chatbots</category>
+   <pubDate>Thu, 10 Sep 2026 12:54:02 +0000</pubDate>
+  </item>
   <item>
    <title>How I Used Three LLMs to Power One Live Chat: The Gemini, OpenRouter, and Groq Failover Chain Behind This Site</title>
    <link>https://princecaleb.dev/archive/three-llms-live-chat-gemini-openrouter-groq</link>
    <guid>https://princecaleb.dev/archive/three-llms-live-chat-gemini-openrouter-groq</guid>
-   <description>The live chat on this website runs on three LLM providers at once — Gemini, OpenRouter, and Groq — not for cleverness, but for uptime. A case study on building a failover chain where a single conversation survives any provider going down.</description>
+   <description>The live chat on this website runs on three LLM providers at once, Gemini, OpenRouter, and Groq, not for cleverness, but for uptime. A case study on building a failover chain where a single conversation survives any provider going down.</description>
    <category>AI &amp; Chatbots</category>
    <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
@@ -59,7 +99,7 @@
    <title>AI Tutors and Chat Support for Schools and Training Centers in Accra</title>
    <link>https://princecaleb.dev/archive/ai-tutors-chat-support-schools-accra</link>
    <guid>https://princecaleb.dev/archive/ai-tutors-chat-support-schools-accra</guid>
-   <description>An AI tutor doesn't replace a teacher — it answers the question a student is too embarrassed to ask again in class.</description>
+   <description>An AI tutor doesn't replace a teacher, it answers the question a student is too embarrassed to ask again in class.</description>
    <category>AI &amp; Chatbots</category>
    <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
@@ -99,7 +139,7 @@
    <title>AI Chat Assistants for Clinics: Answering Patient Questions 24/7 in Accra</title>
    <link>https://princecaleb.dev/archive/ai-chat-assistants-clinics-accra</link>
    <guid>https://princecaleb.dev/archive/ai-chat-assistants-clinics-accra</guid>
-   <description>Patients ask the same handful of questions constantly — hours, services, insurance, directions. An AI assistant answers them at 11pm without waking up a receptionist.</description>
+   <description>Patients ask the same handful of questions constantly, hours, services, insurance, directions. An AI assistant answers them at 11pm without waking up a receptionist.</description>
    <category>AI &amp; Chatbots</category>
    <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>
@@ -123,47 +163,7 @@
    <title>Mobile Banking Apps for Microfinance Institutions in Accra</title>
    <link>https://princecaleb.dev/archive/mobile-banking-apps-microfinance-accra</link>
    <guid>https://princecaleb.dev/archive/mobile-banking-apps-microfinance-accra</guid>
-   <description>A mobile banking app for an MFI isn't a luxury feature — it's often the difference between a customer staying and one switching to a mobile money wallet instead.</description>
-   <category>Mobile Apps</category>
-   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
-  </item>
-  <item>
-   <title>Building a Client Portal App for Law Firms in Ghana</title>
-   <link>https://princecaleb.dev/archive/client-portal-app-law-firms-ghana</link>
-   <guid>https://princecaleb.dev/archive/client-portal-app-law-firms-ghana</guid>
-   <description>Clients calling to ask &quot;any updates on my case&quot; is a symptom — a client portal treats the actual problem, which is a lack of visibility.</description>
-   <category>Mobile Apps</category>
-   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
-  </item>
-  <item>
-   <title>Mobile Apps for Schools: Parent Communication and Fee Payments</title>
-   <link>https://princecaleb.dev/archive/mobile-apps-schools-parent-communication-fees</link>
-   <guid>https://princecaleb.dev/archive/mobile-apps-schools-parent-communication-fees</guid>
-   <description>Parent-teacher communication in most Ghanaian schools happens through a WhatsApp group that becomes unreadable within a week. A dedicated app fixes that without losing the immediacy.</description>
-   <category>Mobile Apps</category>
-   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
-  </item>
-  <item>
-   <title>Building a Delivery Tracking App for Logistics Companies in Accra</title>
-   <link>https://princecaleb.dev/archive/delivery-tracking-app-logistics-accra</link>
-   <guid>https://princecaleb.dev/archive/delivery-tracking-app-logistics-accra</guid>
-   <description>Customers don't want a tracking app — they want to know where their package is. Sometimes a link does that better than an app ever could.</description>
-   <category>Mobile Apps</category>
-   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
-  </item>
-  <item>
-   <title>Building a Table Reservation and Loyalty App for Restaurants in Ghana</title>
-   <link>https://princecaleb.dev/archive/table-reservation-loyalty-app-restaurants-ghana</link>
-   <guid>https://princecaleb.dev/archive/table-reservation-loyalty-app-restaurants-ghana</guid>
-   <description>Restaurant apps fail for the same reason most apps fail: nobody has a reason to open them more than once. Reservations and loyalty rewards give people that reason.</description>
-   <category>Mobile Apps</category>
-   <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
-  </item>
-  <item>
-   <title>Mobile Loyalty Apps for Retail Businesses in Accra</title>
-   <link>https://princecaleb.dev/archive/mobile-loyalty-apps-retail-accra</link>
-   <guid>https://princecaleb.dev/archive/mobile-loyalty-apps-retail-accra</guid>
-   <description>A loyalty app only works if customers open it more than once — which means the reward has to be worth more than the download.</description>
+   <description>A mobile banking app for an MFI isn't a luxury feature, it's often the difference between a customer staying and one switching to a mobile money wallet instead.</description>
    <category>Mobile Apps</category>
    <pubDate>Wed, 19 Aug 2026 09:41:13 +0000</pubDate>
   </item>

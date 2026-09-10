@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06b6d4" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#bg)"/>
+  <circle cx="160" cy="150" r="62" fill="none" stroke="#06b6d4" stroke-width="14" opacity="0.18"/>
+  <circle cx="160" cy="150" r="62" fill="none" stroke="#06b6d4" stroke-width="14" stroke-dasharray="18 14" opacity="0.35"/>
+  <path d="M 224 150 L 300 150" stroke="#0e7490" stroke-width="4" stroke-dasharray="6 8" opacity="0.5"/>
+  <path d="M 300 150 L 289 142 M 300 150 L 289 158" stroke="#0e7490" stroke-width="4" opacity="0.5" fill="none"/>
+  <rect x="150" y="126" width="70" height="46" rx="8" fill="white" stroke="#0e7490" stroke-width="3" opacity="0.95"/>
+  <rect x="316" y="86" width="200" height="228" rx="14" fill="white" stroke="#0e7490" stroke-width="4" opacity="0.96"/>
+  <path d="M 338 122 l 12 12 l 22 -24" stroke="#06b6d4" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <rect x="384" y="116" width="108" height="12" rx="6" fill="#0e7490" opacity="0.3"/>
+  <path d="M 338 172 l 12 12 l 22 -24" stroke="#06b6d4" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <rect x="384" y="166" width="108" height="12" rx="6" fill="#0e7490" opacity="0.3"/>
+  <path d="M 338 222 l 12 12 l 22 -24" stroke="#06b6d4" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <rect x="384" y="216" width="86" height="12" rx="6" fill="#0e7490" opacity="0.3"/>
+  <rect x="332" y="262" width="40" height="26" rx="6" fill="none" stroke="#0e7490" stroke-width="4" opacity="0.5"/>
+  <rect x="384" y="266" width="70" height="12" rx="6" fill="#0e7490" opacity="0.18"/>
+  <circle cx="150" cy="300" r="42" fill="none" stroke="#0e7490" stroke-width="10" opacity="0.2"/>
+  <rect x="24" y="336" width="124" height="34" rx="17" fill="#0e7490" opacity="0.92"/>
+  <text x="41" y="358" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="white">Technology</text>
+  <text x="24" y="46" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#0e7490" opacity="0.55" letter-spacing="1">Automation</text>
+</svg>
