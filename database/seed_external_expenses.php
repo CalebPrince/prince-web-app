@@ -36,7 +36,7 @@ $items = [
     ['Bank account & card fees',       4.00, 'fixed'],
 
     // --- Usage / variable ---
-    ['Vercel (on-demand usage)',      55.04, 'usage'],
+    ['Vercel on-demand (jdlcore.com & abyshub.com)', 55.04, 'usage'],
     ['Twilio (WhatsApp & SMS)',       50.00, 'usage'],
     ['Higgsfield (image/video credits)', 40.00, 'usage'],
     ['Google Cloud',                  25.00, 'usage'],
