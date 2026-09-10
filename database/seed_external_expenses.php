@@ -21,7 +21,7 @@ require dirname(__DIR__) . '/src/autoload.php';
 use App\Support\Settings;
 
 $currency = 'USD';
-$monthlyBudget = '350.00';
+$monthlyBudget = '400.00';
 
 // name | monthly USD | fixed|usage
 $items = [
@@ -36,6 +36,7 @@ $items = [
     ['Bank account & card fees',       4.00, 'fixed'],
 
     // --- Usage / variable ---
+    ['Vercel (on-demand usage)',      55.04, 'usage'],
     ['Twilio (WhatsApp & SMS)',       50.00, 'usage'],
     ['Higgsfield (image/video credits)', 40.00, 'usage'],
     ['Google Cloud',                  25.00, 'usage'],
