@@ -109,7 +109,7 @@ export type AdminSocialDraft = {
 export type AdminContentIdea = {
   id: number;
   day_number: number;
-  platform: 'linkedin' | 'youtube';
+  platform: 'linkedin' | 'youtube' | 'tiktok';
   title: string;
   description: string;
   grounded: boolean;

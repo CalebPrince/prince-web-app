@@ -53,7 +53,7 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
           <div className="text-sm font-medium text-text-3 uppercase tracking-wider mb-1">30-day plan</div>
           <h2 className="text-3xl font-bold tracking-tight mb-1">Content Ideas</h2>
           <p className="text-text-2">
-            LinkedIn ideas grounded in your tracked pages' real posts when available; YouTube ideas are AI-brainstormed from your service positioning.
+            LinkedIn ideas grounded in your tracked pages&apos; real posts when available; YouTube and TikTok ideas are AI-brainstormed from your service positioning.
           </p>
         </div>
         <div className="flex gap-2">
@@ -112,7 +112,11 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                        idea.platform === 'linkedin' ? 'bg-[#0a66c2]/10 text-[#0a66c2]' : 'bg-[#c4302b]/10 text-[#c4302b]'
+                        idea.platform === 'linkedin'
+                          ? 'bg-[#0a66c2]/10 text-[#0a66c2]'
+                          : idea.platform === 'youtube'
+                          ? 'bg-[#c4302b]/10 text-[#c4302b]'
+                          : 'bg-[#fe2c55]/10 text-[#fe2c55]'
                       }`}>
                         {idea.platform}
                       </span>

@@ -830,13 +830,13 @@ CREATE TABLE IF NOT EXISTS radar_tracked_page_findings (
 -- a planning list you refresh when you want fresh ideas, not an archive.
 -- grounded=1 marks an idea (LinkedIn only, today) that cites real posts from
 -- radar_tracked_page_findings rather than a plain AI brainstorm -- YouTube
--- ideas are always grounded=0 since no real YouTube data source exists in
--- this app; the prompt is explicitly told never to phrase those as
--- "trending" or cite invented metrics.
+-- and TikTok ideas are always grounded=0 since no real trend data source
+-- exists in this app for either; the prompt is explicitly told never to
+-- phrase those as "trending" or cite invented metrics.
 CREATE TABLE IF NOT EXISTS content_ideas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   day_number INTEGER NOT NULL,
-  platform TEXT NOT NULL CHECK (platform IN ('linkedin', 'youtube')),
+  platform TEXT NOT NULL CHECK (platform IN ('linkedin', 'youtube', 'tiktok')),
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   grounded INTEGER NOT NULL DEFAULT 0,

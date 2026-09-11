@@ -12,8 +12,8 @@ use App\Support\Response;
 use App\Support\SharedAgentTools;
 
 /**
- * 30-day LinkedIn/YouTube content-idea planning list (Admin -> Content
- * Ideas). One AI call, grounded in real business context
+ * 30-day LinkedIn/YouTube/TikTok content-idea planning list (Admin ->
+ * Content Ideas). One AI call, grounded in real business context
  * (SharedAgentTools::getSiteInfo() — actual services/bio, never invented).
  *
  * LinkedIn ideas are NEVER invented: every LinkedIn idea must be tied to a
@@ -25,12 +25,12 @@ use App\Support\SharedAgentTools;
  * batch. Each grounded idea's source_posted_at is the real post's own
  * publish date — looked up from an index the model references
  * (source_post_index), never transcribed by the model itself, so it can't
- * be hallucinated. YouTube has no equivalent real data source anywhere in this app,
- * so YouTube ideas are always plain AI brainstorms grounded only in service
- * positioning and fill whatever days LinkedIn doesn't use — the prompt is
- * explicit that they must never be phrased as "trending" or cite invented
- * metrics, the same anti-fabrication discipline Beacon/Dossier/Marketing
- * Leads already follow elsewhere in this codebase.
+ * be hallucinated. YouTube and TikTok have no equivalent real data source
+ * anywhere in this app, so their ideas are always plain AI brainstorms
+ * grounded only in service positioning, splitting whatever days LinkedIn
+ * doesn't use — the prompt is explicit that they must never be phrased as
+ * "trending" or cite invented metrics, the same anti-fabrication discipline
+ * Beacon/Dossier/Marketing Leads already follow elsewhere in this codebase.
  *
  * Deliberately just a planning list (title + description per day), not full
  * post copy or a video script. "Generate" replaces the full 30-row set each
@@ -39,13 +39,13 @@ use App\Support\SharedAgentTools;
  * draws from (oldest day_number, status 'idea', first) — both the manual
  * "Turn into draft" button here and the daily cron/"Generate now" button on
  * the Social Drafts page mark an idea 'used' once a draft is actually
- * created from it. YouTube ideas have no such link yet — turning one into a
- * planned video stays a manual next step (that would be Reel's job, not
- * built yet).
+ * created from it. YouTube and TikTok ideas have no such link yet — turning
+ * one into a planned video stays a manual next step (that would be Reel's
+ * job, not built yet).
  */
 class ContentIdeasController
 {
-    private const PLATFORMS = ['linkedin', 'youtube'];
+    private const PLATFORMS = ['linkedin', 'youtube', 'tiktok'];
     private const STATUSES = ['idea', 'used', 'dismissed'];
     /** Hard structural ceiling: the plan itself is only 30 days, so more real
      *  posts than that can't each get their own day regardless of how many
@@ -135,8 +135,9 @@ class ContentIdeasController
      * POST /api/v1/admin/content-ideas/{id}/draft — the one deliberate link
      * to Social Drafts: turns a LinkedIn idea into a real AI-drafted post via
      * SocialDraftController::generateFromIdea(), then marks the idea used.
-     * YouTube ideas are rejected here — a text post isn't the right output
-     * for a video idea; that's Reel's job (video planning), not built yet.
+     * YouTube and TikTok ideas are rejected here — a text post isn't the
+     * right output for a video idea; that's Reel's job (video planning), not
+     * built yet.
      */
     public static function createDraft(array $params): void
     {
@@ -150,7 +151,7 @@ class ContentIdeasController
             Response::error('Idea not found.', 404);
         }
         if ($idea['platform'] !== 'linkedin') {
-            Response::error('Only LinkedIn ideas can be turned into a Social Draft — YouTube ideas need video planning, not a text post.', 422);
+            Response::error('Only LinkedIn ideas can be turned into a Social Draft — YouTube and TikTok ideas need video planning, not a text post.', 422);
         }
 
         $draft = SocialDraftController::generateFromIdea($idea);
@@ -168,19 +169,19 @@ class ContentIdeasController
     {
         return "You are a content strategist producing a 30-day content-idea calendar for a solo developer's "
             . "business (AI voice agents, chatbots, workflow automation, custom web/mobile development), split "
-            . "across LinkedIn and YouTube. The audience is business owners and decision-makers who want to grow "
-            . "their business — not other developers.\n\n"
+            . "across LinkedIn, YouTube, and TikTok. The audience is business owners and decision-makers who want "
+            . "to grow their business — not other developers.\n\n"
             . "STRICT RULE ON LINKEDIN IDEAS: every single LinkedIn idea you produce must be grounded: true and "
             . "directly tied to one specific real post supplied below — never invent a LinkedIn idea from "
-            . "imagination, never brainstorm a LinkedIn idea the way you would for YouTube. Each real post below is "
-            . "numbered with an \"index\". For every grounded LinkedIn idea, include that exact number as "
+            . "imagination, never brainstorm a LinkedIn idea the way you would for YouTube or TikTok. Each real post "
+            . "below is numbered with an \"index\". For every grounded LinkedIn idea, include that exact number as "
             . "\"source_post_index\" in your JSON output — this is how the real post's original publish date gets "
             . "attached afterward, so it must be accurate, never guessed. The number of real posts provided is a "
             . "hard, exact requirement (not a maximum) for how many LinkedIn ideas to produce — one idea per "
             . "distinct real post (each index used exactly once, no repeats, no skips), and never two ideas that "
             . "are just reworded versions of the same post's theme. If zero real posts are provided, produce zero "
-            . "LinkedIn ideas — fill all 30 days with YouTube instead. Follow each grounded post's own real angle: "
-            . "if the post is about a marketing or business problem that has nothing to do with AI/automation/web "
+            . "LinkedIn ideas — fill all 30 days with YouTube and TikTok instead. Follow each grounded post's own "
+            . "real angle: if the post is about a marketing or business problem that has nothing to do with AI/automation/web "
             . "tech (e.g. lead follow-up, onboarding, pricing, retention, content strategy), let the idea mirror "
             . "that real problem in its own terms — do not force-fit an AI/automation/web-tech spin onto it just "
             . "to stay on-brand. Only frame a grounded idea around AI/automation/web outcomes if the source post "
@@ -195,8 +196,18 @@ class ContentIdeasController
             . "chain, HR, finance, security, logistics) the actual topic just to bolt 'AI' onto the title — that "
             . "reads as a generic AI-listicle, not a marketing idea. And never a coding tutorial, dev tool, "
             . "programming tip, or any angle aimed at a developer audience. Never claim something is 'trending' or "
-            . "cite an engagement number you don't actually have. YouTube ideas fill every day that isn't used by "
-            . "a grounded LinkedIn idea.\n\n"
+            . "cite an engagement number you don't actually have.\n\n"
+            . "TIKTOK IDEAS: also a plain brainstorm (always grounded: false, never claim a real trend, sound, or "
+            . "engagement number you don't actually have). Each one must be a currently-relevant angle on websites, "
+            . "mobile apps, custom software, or AI automation — framed for a business owner deciding whether to "
+            . "invest in one of those, not a developer learning to build one. Never a coding tutorial, framework "
+            . "comparison, dev-tool tip, or any angle aimed at a developer audience — the same rule as YouTube. "
+            . "Write it for a fast, hook-first vertical video: the title/hook should work as the first line spoken "
+            . "or shown on screen (a bold claim, a mistake business owners make, a before/after, a myth-bust), and "
+            . "the description is the short beat-by-beat angle for a 15-45 second video, not a script. TikTok ideas "
+            . "and YouTube ideas together fill every day that isn't used by a grounded LinkedIn idea — split those "
+            . "remaining days between the two platforms in a roughly even mix (never dedicate every non-LinkedIn "
+            . "day to just one of them).\n\n"
             . "Titles must sell the 'why it matters' — the business risk, opportunity, or payoff — not the 'how "
             . "it's built'. Avoid instructional/tutorial phrasing like 'How to Structure...', 'How to Build...', "
             . "or 'X Steps to...', which reads as a skill for the reader to learn themselves; prefer framing that "
@@ -208,10 +219,10 @@ class ContentIdeasController
             . "Return ONLY a raw JSON array of exactly 30 objects, no markdown fences, no commentary, in this "
             . "exact shape: [{\"day\": 1, \"platform\": \"linkedin\", \"title\": \"...\", \"description\": \"...\", "
             . "\"grounded\": false, \"source_post_index\": null}, ...]. day must run 1 through 30 with no gaps or "
-            . "repeats. platform must be exactly \"linkedin\" or \"youtube\", with the LinkedIn count matching the "
-            . "real-post count exactly as instructed above and YouTube filling the rest. source_post_index is "
-            . "required (the real post's number) on every grounded LinkedIn idea, and must be null for every "
-            . "YouTube idea.";
+            . "repeats. platform must be exactly \"linkedin\", \"youtube\", or \"tiktok\", with the LinkedIn count "
+            . "matching the real-post count exactly as instructed above and YouTube/TikTok splitting the rest "
+            . "roughly evenly. source_post_index is required (the real post's number) on every grounded LinkedIn "
+            . "idea, and must be null for every YouTube and TikTok idea.";
     }
 
     /**
@@ -283,13 +294,14 @@ class ContentIdeasController
                     . "LinkedIn idea(s) across the whole " . self::MAX_DAYS . "-day plan, one per distinct post "
                     . "below, each grounded: true with that post's index as source_post_index. Do not produce any "
                     . "other LinkedIn ideas. Fill the remaining " . (self::MAX_DAYS - $totalRealPosts)
-                    . " day(s) entirely with YouTube ideas (grounded: false):";
+                    . " day(s) with a roughly even mix of YouTube and TikTok ideas (grounded: false):";
                 $lines = array_merge($lines, $pageLines);
             }
         }
         if (!$postsByIndex) {
             $lines[] = "\nNo real cached LinkedIn posts are available — produce ZERO LinkedIn ideas. All "
-                . self::MAX_DAYS . " days must be platform: youtube (grounded: false).";
+                . self::MAX_DAYS . " days must be a roughly even mix of platform: youtube and platform: tiktok "
+                . "(grounded: false).";
         }
 
         return ['text' => implode("\n", $lines), 'postsByIndex' => $postsByIndex];

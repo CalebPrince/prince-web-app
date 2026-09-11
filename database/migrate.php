@@ -1854,4 +1854,41 @@ $pdo->exec(
 );
 $pdo->exec('CREATE INDEX IF NOT EXISTS idx_growth_roadmap_runs_created ON growth_roadmap_runs (created_at)');
 
+// Unrelated pre-existing data issue found while testing the TikTok migration
+// below: any uptime_checks row whose monitor_id no longer has a matching
+// uptime_monitors row (e.g. a monitor was deleted without cascading its
+// check history) fails rebuildTable()'s whole-database foreign_key_check and
+// blocks every rebuild after it, not just this one. Clean up before any
+// rebuild runs so a stale monitor never blocks an unrelated migration again.
+$pdo->exec(
+    'DELETE FROM uptime_checks WHERE monitor_id NOT IN (SELECT id FROM uptime_monitors)'
+);
+
+// Content Ideas gained a third platform (TikTok). SQLite can't ALTER a CHECK
+// constraint, so rebuild the table if 'tiktok' isn't an allowed platform yet
+// — same pattern as social_post_drafts' 'content_idea' widening above.
+$contentIdeasSql = (string) $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'content_ideas'"
+)->fetchColumn();
+if ($contentIdeasSql !== '' && !str_contains($contentIdeasSql, "'tiktok'")) {
+    rebuildTable(
+        $pdo,
+        'content_ideas',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            day_number INTEGER NOT NULL,
+            platform TEXT NOT NULL CHECK (platform IN ('linkedin', 'youtube', 'tiktok')),
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            grounded INTEGER NOT NULL DEFAULT 0,
+            source_posted_at TEXT,
+            status TEXT NOT NULL DEFAULT 'idea' CHECK (status IN ('idea', 'used', 'dismissed')),
+            generated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, day_number, platform, title, description, grounded, source_posted_at, status, generated_at',
+        ['CREATE INDEX IF NOT EXISTS idx_content_ideas_day ON content_ideas (day_number)']
+    );
+    echo "Rebuilt content_ideas — platform now allows 'tiktok'.\n";
+}
+
 echo "Schema applied.\n";
