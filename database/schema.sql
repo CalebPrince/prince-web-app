@@ -1057,6 +1057,37 @@ CREATE TABLE IF NOT EXISTS uptime_checks (
 );
 CREATE INDEX IF NOT EXISTS idx_uptime_checks_monitor ON uptime_checks (monitor_id, checked_at);
 
+-- Chloe's investigated incidents (Technical Operations & Monitoring agent,
+-- App\Support\ChloeInvestigator). One row per investigated incident, not per
+-- raw signal — uptime_checks and agent_tasks already hold the raw data, this
+-- holds Chloe's read of it (category, confidence, narrative) plus whether and
+-- when she escalated it. source_type/source_id mirrors agent_tasks' own
+-- entity_type/entity_id dedup pattern rather than a dedicated FK per source,
+-- since a single incident can come from either an uptime monitor or an
+-- agent_tasks row.
+CREATE TABLE IF NOT EXISTS chloe_incidents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category TEXT NOT NULL CHECK (category IN ('uptime', 'dns', 'deploy', 'infra', 'automation', 'anomaly')),
+  source_type TEXT NOT NULL CHECK (source_type IN ('uptime_monitor', 'agent_task')),
+  source_id INTEGER NOT NULL,
+  project_id INTEGER NULL REFERENCES projects(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  narrative TEXT NOT NULL,
+  evidence_json TEXT NOT NULL DEFAULT '{}',
+  confidence INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'investigating'
+    CHECK (status IN ('investigating', 'confirmed', 'escalated', 'resolved', 'dismissed')),
+  started_at TEXT NOT NULL DEFAULT (datetime('now')),
+  resolved_at TEXT,
+  escalated_at TEXT,
+  emailed_at TEXT,
+  whatsapp_sent_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_chloe_incidents_source ON chloe_incidents (source_type, source_id, status);
+CREATE INDEX IF NOT EXISTS idx_chloe_incidents_status ON chloe_incidents (status, started_at);
+
 -- Recurring billing (e.g. monthly maintenance retainers) via Paystack
 -- subscription plans. The admin creates a row, which creates a Paystack
 -- plan + checkout link; the client authorizing that checkout is what

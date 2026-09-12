@@ -13,7 +13,7 @@ import {
 
 type AgentKey =
   | "lisa" | "beacon" | "dossier" | "nurturer" | "proposal" | "content" | "arch"
-  | "sketch" | "ada" | "chief" | "scout" | "reel" | "sage" | "radar";
+  | "sketch" | "ada" | "chief" | "scout" | "reel" | "sage" | "radar" | "chloe";
 
 type AgentSpec = {
   key: AgentKey;
@@ -39,6 +39,7 @@ const AGENTS: AgentSpec[] = [
   { key: "reel", nameKey: "reel_assistant_name", fallbackName: "Reel" },
   { key: "sage", nameKey: "sage_assistant_name", fallbackName: "Sage" },
   { key: "radar", nameKey: "radar_assistant_name", fallbackName: "Radar" },
+  { key: "chloe", nameKey: "chloe_assistant_name", fallbackName: "Chloe" },
 ];
 
 type Turn = { role: "user" | "agent"; text: string };
@@ -223,17 +224,24 @@ export default function AgentChatClient({ settings }: { settings: Record<string,
     }
   };
 
-  // Lisa and Scout both have a dedicated ElevenLabs voice (see
+  // Lisa, Scout and Chloe each have a dedicated ElevenLabs voice (see
   // TextToSpeechController::AGENT_VOICE_SETTING); everyone else falls
   // through straight to the browser's own speechSynthesis, same as legacy
-  // admin-agent-chat.js.
+  // admin-agent-chat.js. Chloe's browser fallback specifically asks for a
+  // UK female voice rather than "auto" — she reads as a specific person
+  // (Chloe O'Brian) even on a browser that has never heard of ElevenLabs.
   const speak = useCallback((text: string) => {
     const spoken = stripForSpeech(text);
     if (!spoken) return;
     stopTts();
     stopBrowserSpeech();
-    const fallback = () => speakWithBrowser(spoken, { gender: "auto", accent: "auto", rate: 1, pitch: 1 });
-    if (active === "lisa" || active === "scout") {
+    const fallback = () => speakWithBrowser(
+      spoken,
+      active === "chloe"
+        ? { gender: "female", accent: "en-gb", rate: 1, pitch: 1 }
+        : { gender: "auto", accent: "auto", rate: 1, pitch: 1 }
+    );
+    if (active === "lisa" || active === "scout" || active === "chloe") {
       playTts(spoken, {}, active).catch(fallback);
       return;
     }

@@ -9,7 +9,7 @@ import {
   Languages, Bot, Contact, Inbox, Bell, GitBranch, FileCheck, Target, Map,
   Mail, Workflow, Mic, Sparkles, CalendarCheck, CreditCard, Receipt, Wallet,
   Tag, Activity, AudioLines, ListChecks, History, AlertTriangle, Settings,
-  LogOut, ExternalLink,
+  LogOut, ExternalLink, ShieldAlert,
 } from "lucide-react";
 import { adminApi, postJson } from "@/lib/api";
 
@@ -73,6 +73,7 @@ const navigation = [
     group: "System",
     items: [
       { name: "Sites", href: "/admin/sites", icon: Activity },
+      { name: "Chloe", href: "/admin/chloe", icon: ShieldAlert },
       { name: "Voice Demo", href: "/admin/voice-demo", icon: AudioLines },
       { name: "Agent Queue", href: "/admin/agent-tasks", icon: ListChecks },
       { name: "Activity Log", href: "/admin/activity-log", icon: History },

@@ -948,7 +948,7 @@ database/
   send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
   generate_social_drafts.php      # AI social post drafts on a daily/weekly cadence (cron)
   generate_daily_headline.php     # AI-writes the homepage hero headline once per calendar day (cron)
-  check_uptime.php                # pings uptime monitors, alerts on status change, captures SSL expiry (cron, ~5 min)
+  check_uptime.php                # pings uptime monitors, captures SSL expiry, then runs Chloe's investigation cycle (cron, ~5 min)
   check_site_technical.php        # Sites Technical tab: domain expiry (RDAP), PageSpeed scores, last deployment (cron, daily)
   schedule_stale_lead_followups.php  # auto-schedules a follow-up for active pipeline leads gone quiet too long (cron, daily; off by default)
   send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
@@ -2140,7 +2140,14 @@ One-time setup on a new host:
     fires if enabled in Admin -> Settings -> Content):
     `/usr/local/bin/php /home/<cpanel-user>/database/generate_social_drafts.php > /dev/null`
 4f. Add a sixth cron job (every 5 minutes) for the uptime monitors
-    (`/admin/sites` shows no data without it):
+    (`/admin/sites` shows no data without it). Since 2026-09-12 this same run
+    also drives Chloe (App\Support\ChloeInvestigator::runCycle) — she reviews
+    open incidents, investigates any monitor that just went down (DNS check,
+    fresh HTTP probe, cross-site correlation, deploy timing), and checks for
+    exhausted agent_tasks failures, escalating by email/WhatsApp only once
+    confident and the problem has persisted a few minutes. No separate cron
+    needed for her; `/admin/chloe` shows no data without this job running,
+    same as `/admin/sites`:
     `/usr/local/bin/php /home/<cpanel-user>/database/check_uptime.php > /dev/null`
 4g. Add a seventh cron job (hourly) for drip email sequences (no-op until
     a sequence is created in `/admin/drip.html`):

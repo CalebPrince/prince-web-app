@@ -7,78 +7,32 @@ declare(strict_types=1);
 // failure, timeout, or 4xx/5xx counts as down (a homepage serving 404s is
 // broken even if the server is technically alive). A down verdict is
 // re-checked once within the same run before it's trusted, so a single
-// transient blip doesn't wake anyone up. Status-change alert emails go to
-// the same notification address the rest of the app uses, and alert_sent
-// resets on recovery so the next real outage alerts again.
+// transient blip doesn't wake anyone up.
+//
+// This script's own job stops at recording the fact. It used to also send an
+// immediate raw "X is DOWN" email itself — Chloe (ChloeInvestigator::runCycle,
+// called at the end of this script) now owns telling Caleb anything, so the
+// same outage doesn't produce both a dumb instant email and a smarter,
+// investigated one moments later. alert_sent is no longer written here; Chloe
+// tracks her own escalation state on chloe_incidents instead.
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
+use App\Support\ChloeInvestigator;
 use App\Support\Database;
-use App\Support\Mailer;
-use App\Support\Settings;
+use App\Support\UptimeProbe;
 
-const TIMEOUT_SECONDS = 15;
 const KEEP_CHECKS_DAYS = 90;
-
-/** @return array{status: 'up'|'down', http_status: int, response_time_ms: int, ssl_expires_at: ?string} */
-function probe(string $url): array
-{
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'timeout' => TIMEOUT_SECONDS,
-            'ignore_errors' => true,
-            'user_agent' => 'princecaleb.dev uptime monitor',
-            'follow_location' => 1,
-            'max_redirects' => 5,
-        ],
-        // capture_peer_cert piggybacks the site's own TLS expiry off this
-        // same request — free (Technical tab), no separate check needed.
-        'ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'capture_peer_cert' => true],
-    ]);
-
-    $start = microtime(true);
-    $body = @file_get_contents($url, false, $context);
-    $elapsedMs = (int) round((microtime(true) - $start) * 1000);
-
-    $httpStatus = 0;
-    foreach ($http_response_header ?? [] as $header) {
-        if (preg_match('#^HTTP/\S+\s+(\d+)#', $header, $m)) {
-            $httpStatus = (int) $m[1]; // last status line wins after redirects
-        }
-    }
-
-    $isUp = $body !== false && $httpStatus >= 200 && $httpStatus < 400;
-
-    $sslExpiresAt = null;
-    $options = stream_context_get_options($context);
-    $cert = $options['ssl']['peer_certificate'] ?? null;
-    if ($cert !== null) {
-        $certInfo = openssl_x509_parse($cert);
-        if ($certInfo !== false && !empty($certInfo['validTo_time_t'])) {
-            $sslExpiresAt = gmdate('Y-m-d H:i:s', (int) $certInfo['validTo_time_t']);
-        }
-    }
-
-    return [
-        'status' => $isUp ? 'up' : 'down',
-        'http_status' => $httpStatus,
-        'response_time_ms' => $elapsedMs,
-        'ssl_expires_at' => $sslExpiresAt,
-    ];
-}
 
 $pdo = Database::get();
 $monitors = $pdo->query('SELECT * FROM uptime_monitors WHERE is_active = 1')->fetchAll();
-$notifyEmail = Settings::get('notification_email') ?: Settings::get('social_email');
 
 $checked = 0;
-$alerts = 0;
 foreach ($monitors as $monitor) {
-    $result = probe($monitor['url']);
+    $result = UptimeProbe::probe($monitor['url']);
     if ($result['status'] === 'down') {
         sleep(2);
-        $result = probe($monitor['url']); // confirm before believing a blip
+        $result = UptimeProbe::probe($monitor['url']); // confirm before believing a blip
     }
 
     $pdo->prepare(
@@ -97,35 +51,12 @@ foreach ($monitors as $monitor) {
             ->execute([$result['ssl_expires_at'], $monitor['project_id']]);
     }
 
-    if ($result['status'] === 'down' && !$monitor['alert_sent'] && $notifyEmail) {
-        $ok = Mailer::send(
-            $notifyEmail,
-            "\u{1F534} {$monitor['name']} is DOWN",
-            "{$monitor['name']} ({$monitor['url']}) is not responding.\n\n"
-                . 'HTTP status: ' . ($result['http_status'] ?: 'no response') . "\n"
-                . "Checked at: " . gmdate('Y-m-d H:i:s') . " UTC\n\n"
-                . "You'll get another email when it recovers."
-        );
-        if ($ok) {
-            $pdo->prepare('UPDATE uptime_monitors SET alert_sent = 1 WHERE id = ?')->execute([$monitor['id']]);
-            $alerts++;
-        }
-    } elseif ($result['status'] === 'up' && $monitor['alert_sent']) {
-        if ($notifyEmail) {
-            Mailer::send(
-                $notifyEmail,
-                "\u{2705} {$monitor['name']} is back up",
-                "{$monitor['name']} ({$monitor['url']}) is responding again "
-                    . "({$result['http_status']}, {$result['response_time_ms']}ms).\n\n"
-                    . 'Recovered at: ' . gmdate('Y-m-d H:i:s') . ' UTC'
-            );
-        }
-        $pdo->prepare('UPDATE uptime_monitors SET alert_sent = 0 WHERE id = ?')->execute([$monitor['id']]);
-    }
-
     $checked++;
 }
 
 $pdo->exec("DELETE FROM uptime_checks WHERE checked_at < datetime('now', '-" . KEEP_CHECKS_DAYS . " days')");
 
-echo "$checked monitor(s) checked, $alerts alert(s) sent.\n";
+$chloe = ChloeInvestigator::runCycle($pdo);
+
+echo "$checked monitor(s) checked. Chloe: {$chloe['opened']} incident(s) opened, "
+    . "{$chloe['resolved']} resolved, {$chloe['escalated']} escalated.\n";

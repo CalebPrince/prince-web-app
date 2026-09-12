@@ -81,6 +81,17 @@ class TeamController
             $mockupsGenerated = 0;
         }
         $briefsWritten = Chief::briefsWritten($pdo);
+        $chloeMonitorsWatched = (int) $pdo->query('SELECT COUNT(*) FROM uptime_monitors WHERE is_active = 1')->fetchColumn();
+        // Guarded like mockupsGenerated above — chloe_incidents is a new
+        // table, so a database ahead of its own migration shouldn't break
+        // the whole Team page over one stat.
+        try {
+            $chloeOpenIncidents = (int) $pdo->query(
+                "SELECT COUNT(*) FROM chloe_incidents WHERE status IN ('investigating', 'confirmed', 'escalated')"
+            )->fetchColumn();
+        } catch (\Throwable $e) {
+            $chloeOpenIncidents = 0;
+        }
 
         $agents = [
             [
@@ -309,6 +320,27 @@ class TeamController
                 'stat_label' => 'briefs written',
                 'manage_url' => '/admin/team.html',
                 'manage_label' => 'Latest brief',
+            ],
+            [
+                'key' => 'chloe',
+                'name' => Settings::get('chloe_assistant_name') ?: 'Chloe',
+                'role' => "Chloe O'Brian — Technical Operations & Monitoring",
+                'description' => 'Watches every monitored site continuously, and investigates before saying '
+                    . 'anything — checks DNS, the real HTTP status, whether other sites are down at the same '
+                    . 'time, and whether a deploy just landed — then escalates to you by email or WhatsApp only '
+                    . 'once she is confident and the problem has actually persisted.',
+                'icon' => 'bi-activity',
+                // Always-on like Chief/Beacon/Nurturer — she runs on the same
+                // cron as check_uptime.php, so "active" just means at least
+                // one site is currently being watched.
+                'status' => $chloeMonitorsWatched > 0 ? 'active' : 'standby',
+                'status_label' => $chloeMonitorsWatched === 0
+                    ? 'No sites monitored yet'
+                    : ($chloeOpenIncidents > 0 ? $chloeOpenIncidents . ' open incident(s)' : 'All clear'),
+                'stat_value' => $chloeMonitorsWatched,
+                'stat_label' => 'sites monitored',
+                'manage_url' => '/admin/chloe',
+                'manage_label' => 'Incidents',
             ],
         ];
 
