@@ -1068,7 +1068,7 @@ CREATE INDEX IF NOT EXISTS idx_uptime_checks_monitor ON uptime_checks (monitor_i
 CREATE TABLE IF NOT EXISTS chloe_incidents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   category TEXT NOT NULL CHECK (category IN ('uptime', 'dns', 'deploy', 'infra', 'automation', 'anomaly')),
-  source_type TEXT NOT NULL CHECK (source_type IN ('uptime_monitor', 'agent_task')),
+  source_type TEXT NOT NULL CHECK (source_type IN ('uptime_monitor', 'agent_task', 'anomaly')),
   source_id INTEGER NOT NULL,
   project_id INTEGER NULL REFERENCES projects(id) ON DELETE SET NULL,
   title TEXT NOT NULL,

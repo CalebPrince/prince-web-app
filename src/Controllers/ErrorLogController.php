@@ -132,6 +132,54 @@ class ErrorLogController
         Response::json(['cleared' => $cleared]);
     }
 
+    /**
+     * Real fatal/error counts in two adjacent trailing windows of the same
+     * log files this page reads — used by Chloe (ChloeInvestigator) to spot
+     * a genuine spike rather than a log's normal background rate. No
+     * separate history table: "normal" is just the hour before the recent
+     * window, in the same files, so a chatty app that always logs a lot
+     * doesn't get flagged for being itself.
+     *
+     * Best-effort like the rest of this page: entriesFromFile only tails a
+     * bounded number of lines per source, so on an unusually high-volume log
+     * the baseline window can undercount rather than reading the whole file.
+     *
+     * @return array{recent_count:int,recent_minutes:int,baseline_count:int,baseline_minutes:int}
+     */
+    public static function recentSeverityCounts(int $recentMinutes = 15, int $baselineMinutes = 60): array
+    {
+        $now = time();
+        $recentCutoff = $now - $recentMinutes * 60;
+        $baselineCutoff = $recentCutoff - $baselineMinutes * 60;
+
+        $recentCount = 0;
+        $baselineCount = 0;
+
+        foreach (array_filter(self::sources(), fn($s) => $s['readable']) as $source) {
+            foreach (self::entriesFromFile($source['path'], 2000) as $entry) {
+                if (!in_array($entry['severity'], ['fatal', 'error'], true) || empty($entry['timestamp'])) {
+                    continue;
+                }
+                $ts = strtotime((string) $entry['timestamp']);
+                if ($ts === false) {
+                    continue;
+                }
+                if ($ts >= $recentCutoff) {
+                    $recentCount++;
+                } elseif ($ts >= $baselineCutoff) {
+                    $baselineCount++;
+                }
+            }
+        }
+
+        return [
+            'recent_count' => $recentCount,
+            'recent_minutes' => $recentMinutes,
+            'baseline_count' => $baselineCount,
+            'baseline_minutes' => $baselineMinutes,
+        ];
+    }
+
     /** @return array<string,mixed>|null */
     private static function sourceForId(string $sourceId): ?array
     {

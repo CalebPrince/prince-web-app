@@ -45,6 +45,13 @@ use PDO;
  *    too, but are surfaced for review rather than auto-escalated — a single
  *    failed background task is real but rarely urgent enough for a WhatsApp
  *    ping, the same caution Beacon applies to a low-confidence lead.
+ *
+ * 4. "Unusual activity" reuses ErrorLogController's own log parsing
+ *    (recentSeverityCounts) rather than a new history table — the baseline
+ *    is just the hour of fatal/error entries right before the recent window,
+ *    in the same log files Admin -> Error Logs already reads. A spike is
+ *    opened but, like a fresh uptime incident, never escalated on the very
+ *    first pass — only once it's still elevated on the next review.
  */
 class ChloeInvestigator
 {
@@ -52,6 +59,11 @@ class ChloeInvestigator
 
     private const MIN_CONFIDENCE_TO_ESCALATE = 70;
     private const MIN_MINUTES_DOWN_TO_ESCALATE = 3;
+
+    /** A spike needs at least this many fatal/error entries in the recent window to count at all — otherwise a quiet log going from 1 error to 2 would "triple" its rate for no real reason. */
+    private const MIN_ANOMALY_COUNT = 5;
+    /** ...and the recent per-minute rate must be at least this many times the baseline per-minute rate. */
+    private const ANOMALY_RATIO = 3.0;
 
     public static function displayName(): string
     {
@@ -62,8 +74,9 @@ class ChloeInvestigator
 
     /**
      * Called once per uptime-check cron run: reviews incidents already open,
-     * opens new ones for monitors that just went down, and checks for
-     * automation failures. Safe to call as often as check_uptime.php runs.
+     * opens new ones for monitors that just went down, checks for automation
+     * failures, and checks the error logs for a genuine spike. Safe to call
+     * as often as check_uptime.php runs.
      *
      * @return array{opened:int,resolved:int,escalated:int}
      */
@@ -72,11 +85,12 @@ class ChloeInvestigator
         $review = self::reviewOpenUptimeIncidents($pdo);
         $fresh = self::detectNewUptimeIncidents($pdo);
         $automation = self::detectAutomationFailures($pdo);
+        $anomaly = self::detectAnomalies($pdo);
 
         return [
-            'opened' => $fresh['opened'] + $automation['opened'],
-            'resolved' => $review['resolved'],
-            'escalated' => $review['escalated'] + $fresh['escalated'],
+            'opened' => $fresh['opened'] + $automation['opened'] + $anomaly['opened'],
+            'resolved' => $review['resolved'] + $anomaly['resolved'],
+            'escalated' => $review['escalated'] + $fresh['escalated'] + $anomaly['escalated'],
         ];
     }
 
@@ -214,6 +228,97 @@ class ChloeInvestigator
         }
 
         return ['opened' => $opened];
+    }
+
+    /**
+     * A genuine spike in fatal/error log entries becomes one incident —
+     * "unusual activity" (see class doc, point 4). Singleton by design: the
+     * error logs are one shared stream, not per-site, so there is at most
+     * one open anomaly incident at a time (source_id is always 0). Opened
+     * un-escalated on first detection, same as a fresh uptime incident;
+     * escalates only if still elevated on a later review pass, and resolves
+     * itself once the rate returns to normal.
+     *
+     * @return array{opened:int,resolved:int,escalated:int}
+     */
+    private static function detectAnomalies(PDO $pdo): array
+    {
+        $counts = \App\Controllers\ErrorLogController::recentSeverityCounts();
+        $recentRate = $counts['recent_count'] / max(1, $counts['recent_minutes']);
+        $baselineRate = $counts['baseline_count'] / max(1, $counts['baseline_minutes']);
+        $isSpiking = $counts['recent_count'] >= self::MIN_ANOMALY_COUNT
+            && $recentRate >= $baselineRate * self::ANOMALY_RATIO;
+
+        $existing = $pdo->query(
+            "SELECT * FROM chloe_incidents WHERE source_type = 'anomaly' AND source_id = 0
+             AND status IN ('investigating', 'confirmed', 'escalated') LIMIT 1"
+        )->fetch(PDO::FETCH_ASSOC);
+
+        if (!$isSpiking) {
+            if (!$existing) {
+                return ['opened' => 0, 'resolved' => 0, 'escalated' => 0];
+            }
+            $pdo->prepare(
+                "UPDATE chloe_incidents SET status = 'resolved', resolved_at = datetime('now'), updated_at = datetime('now')
+                 WHERE id = ?"
+            )->execute([$existing['id']]);
+            if (!empty($existing['escalated_at'])) {
+                $message = 'Error-log activity has returned to its normal rate.';
+                $to = Settings::get('notification_email') ?: Settings::get('social_email');
+                if ($to) {
+                    Mailer::send($to, '✅ ' . self::displayName() . ': error rate back to normal', $message);
+                }
+                if (WhatsAppNotifier::isOwnerConfigured()) {
+                    WhatsAppNotifier::sendOwnerAlert('✅ ' . $message, [
+                        'name' => self::displayName(), 'reason' => 'Error rate back to normal',
+                        'summary' => $message, 'message' => $message,
+                    ]);
+                }
+            }
+            return ['opened' => 0, 'resolved' => 1, 'escalated' => 0];
+        }
+
+        $confidence = 60;
+        if ($counts['recent_count'] >= 15) {
+            $confidence += 15;
+        }
+        if ($counts['baseline_count'] === 0) {
+            $confidence += 10; // brand-new failures, not just a busier version of a steady trickle
+        }
+        $confidence = min(90, $confidence);
+
+        $title = 'Unusual error-log activity';
+        $narrative = 'Caleb, the error logs show ' . $counts['recent_count'] . ' error/fatal entries in the last '
+            . $counts['recent_minutes'] . ' minutes, against ' . $counts['baseline_count'] . ' in the '
+            . $counts['baseline_minutes'] . ' minutes before that. That is a real jump above the normal '
+            . 'background rate. I recommend checking Admin -> Error Logs for what is actually failing.';
+        $evidence = $counts + ['recent_rate' => round($recentRate, 3), 'baseline_rate' => round($baselineRate, 3)];
+
+        if (!$existing) {
+            $pdo->prepare(
+                "INSERT INTO chloe_incidents
+                    (category, source_type, source_id, project_id, title, narrative, evidence_json, confidence, status, started_at)
+                 VALUES ('anomaly', 'anomaly', 0, NULL, ?, ?, ?, ?, 'investigating', datetime('now'))"
+            )->execute([$title, $narrative, json_encode($evidence), $confidence]);
+            return ['opened' => 1, 'resolved' => 0, 'escalated' => 0];
+        }
+
+        $newStatus = $existing['status'] === 'investigating' && $confidence >= self::minConfidence()
+            ? 'confirmed' : $existing['status'];
+        $pdo->prepare(
+            "UPDATE chloe_incidents SET title = ?, narrative = ?, evidence_json = ?, confidence = ?, status = ?,
+                updated_at = datetime('now') WHERE id = ?"
+        )->execute([$title, $narrative, json_encode($evidence), $confidence, $newStatus, $existing['id']]);
+
+        // Never escalate on the pass that first opened it (existing already
+        // covers that, since this branch only runs when an incident from an
+        // earlier pass exists) — mirrors uptime's "not on the very first check".
+        if ($existing['status'] !== 'escalated' && $confidence >= self::minConfidence()) {
+            self::escalate($pdo, (int) $existing['id']);
+            return ['opened' => 0, 'resolved' => 0, 'escalated' => 1];
+        }
+
+        return ['opened' => 0, 'resolved' => 0, 'escalated' => 0];
     }
 
     // ------------------------------------------------------------ evidence

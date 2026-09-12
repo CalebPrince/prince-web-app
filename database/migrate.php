@@ -1891,4 +1891,44 @@ if ($contentIdeasSql !== '' && !str_contains($contentIdeasSql, "'tiktok'")) {
     echo "Rebuilt content_ideas — platform now allows 'tiktok'.\n";
 }
 
+// Chloe's log-anomaly detection (added after chloe_incidents first shipped)
+// needs a source_type of its own, distinct from an uptime monitor or an
+// agent task — same rebuild-for-CHECK pattern as above.
+$chloeIncidentsSql = (string) $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'chloe_incidents'"
+)->fetchColumn();
+if ($chloeIncidentsSql !== '' && str_contains($chloeIncidentsSql, "source_type IN ('uptime_monitor', 'agent_task'))")) {
+    rebuildTable(
+        $pdo,
+        'chloe_incidents',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT NOT NULL CHECK (category IN ('uptime', 'dns', 'deploy', 'infra', 'automation', 'anomaly')),
+            source_type TEXT NOT NULL CHECK (source_type IN ('uptime_monitor', 'agent_task', 'anomaly')),
+            source_id INTEGER NOT NULL,
+            project_id INTEGER NULL REFERENCES projects(id) ON DELETE SET NULL,
+            title TEXT NOT NULL,
+            narrative TEXT NOT NULL,
+            evidence_json TEXT NOT NULL DEFAULT '{}',
+            confidence INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'investigating'
+                CHECK (status IN ('investigating', 'confirmed', 'escalated', 'resolved', 'dismissed')),
+            started_at TEXT NOT NULL DEFAULT (datetime('now')),
+            resolved_at TEXT,
+            escalated_at TEXT,
+            emailed_at TEXT,
+            whatsapp_sent_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, category, source_type, source_id, project_id, title, narrative, evidence_json, confidence, status,
+            started_at, resolved_at, escalated_at, emailed_at, whatsapp_sent_at, created_at, updated_at',
+        [
+            'CREATE INDEX IF NOT EXISTS idx_chloe_incidents_source ON chloe_incidents (source_type, source_id, status)',
+            'CREATE INDEX IF NOT EXISTS idx_chloe_incidents_status ON chloe_incidents (status, started_at)',
+        ]
+    );
+    echo "Rebuilt chloe_incidents — source_type now allows 'anomaly'.\n";
+}
+
 echo "Schema applied.\n";
