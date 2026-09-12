@@ -68,7 +68,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
   ],
   voice: [
     "elevenlabs_api_key", "elevenlabs_tts_enabled", "elevenlabs_tts_model",
-    "elevenlabs_voice_id", "scout_elevenlabs_voice_id", "elevenlabs_webhook_secret",
+    "elevenlabs_voice_id", "scout_elevenlabs_voice_id", "chloe_elevenlabs_voice_id", "elevenlabs_webhook_secret",
     "elevenlabs_postcall_signing_secret", "liveavatar_enabled", "liveavatar_api_key",
     "liveavatar_avatar_id", "liveavatar_voice_id", "liveavatar_context_id",
     "liveavatar_llm_bridge_secret", "liveavatar_llm_configuration_id",
