@@ -210,6 +210,10 @@ export default function SettingsClient({
   const [introMsg, setIntroMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [introBusy, setIntroBusy] = useState(false);
 
+  const [assetTpl, setAssetTpl] = useState<IntroTemplate | null>(null);
+  const [assetMsg, setAssetMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [assetBusy, setAssetBusy] = useState(false);
+
   // Capability status is a convenience panel: a failure here should stay quiet
   // rather than surface as a settings error.
   useEffect(() => {
@@ -223,6 +227,7 @@ export default function SettingsClient({
   // failed initial read just leaves the status showing as unknown.
   useEffect(() => {
     void loadIntroTemplate();
+    void loadAssetTemplate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -230,6 +235,12 @@ export default function SettingsClient({
     adminApi
       .get<IntroTemplate>("/api/v1/admin/whatsapp-template")
       .then(setIntroTpl)
+      .catch(() => {});
+
+  const loadAssetTemplate = () =>
+    adminApi
+      .get<IntroTemplate>("/api/v1/admin/whatsapp-template/asset-request")
+      .then(setAssetTpl)
       .catch(() => {});
 
   const runIntroTemplate = async (
@@ -264,6 +275,41 @@ export default function SettingsClient({
       (t) =>
         t.status === "approved"
           ? "Approved — the Send Lisa intro button is live."
+          : `Still ${t.status}.`
+    );
+
+  const runAssetTemplate = async (
+    call: () => Promise<IntroTemplate>,
+    done: (t: IntroTemplate) => string
+  ) => {
+    setAssetBusy(true);
+    setAssetMsg(null);
+    try {
+      const t = await call();
+      setAssetTpl(t);
+      setAssetMsg({ ok: t.status !== "rejected", text: done(t) });
+    } catch (err) {
+      setAssetMsg({
+        ok: false,
+        text: err instanceof Error ? err.message : "Twilio rejected the request.",
+      });
+    } finally {
+      setAssetBusy(false);
+    }
+  };
+
+  const createAssetTemplate = () =>
+    runAssetTemplate(
+      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/asset-request"),
+      (t) => `Submitted to Meta — currently ${t.status}.`
+    );
+
+  const refreshAssetTemplate = () =>
+    runAssetTemplate(
+      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/asset-request/refresh"),
+      (t) =>
+        t.status === "approved"
+          ? "Approved — the Send asset request button is live."
           : `Still ${t.status}.`
     );
 
@@ -750,6 +796,62 @@ export default function SettingsClient({
             {introTpl?.body && (
               <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
                 {introTpl.body}
+              </pre>
+            )}
+          </Card>
+
+          <Card title="Asset request template (Twilio)" bodyClassName="p-5 space-y-3">
+            <p className="text-sm text-text-2">
+              For a client you&apos;ve already discussed a project with, asking them to
+              send over something needed for it (a logo, an Instagram link) when
+              they haven&apos;t written in to Lisa&apos;s number before — same
+              business-initiated template requirement as the intro above.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  assetTpl?.status === "approved"
+                    ? "bg-green-500/10 text-green-500"
+                    : assetTpl?.status === "rejected"
+                      ? "bg-red-500/10 text-red-400"
+                      : "bg-bg-3 text-text-2"
+                }`}
+              >
+                <Activity className="w-3 h-3" />
+                {assetTpl?.status ?? "…"}
+              </span>
+              {assetTpl?.content_sid && (
+                <code className="text-xs text-text-3">{assetTpl.content_sid}</code>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={createAssetTemplate}
+                disabled={assetBusy || !!assetTpl?.content_sid}
+              >
+                <Send className="w-4 h-4" />
+                {assetBusy ? "Working…" : "Create & submit"}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={refreshAssetTemplate}
+                disabled={assetBusy || !assetTpl?.content_sid}
+              >
+                Refresh status
+              </Button>
+              {assetMsg && (
+                <span className={`text-sm ${assetMsg.ok ? "text-green-500" : "text-red-400"}`}>
+                  {assetMsg.text}
+                </span>
+              )}
+            </div>
+
+            {assetTpl?.body && (
+              <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
+                {assetTpl.body}
               </pre>
             )}
           </Card>

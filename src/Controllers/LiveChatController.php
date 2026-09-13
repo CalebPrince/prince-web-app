@@ -847,6 +847,104 @@ class LiveChatController
     }
 
     /**
+     * POST /api/v1/admin/whatsapp/send-asset-request — admin-only. Same
+     * business-initiated-template requirement as sendIntro() above, but for
+     * asking a client Caleb has already discussed a project with to send
+     * over something needed for it (a logo, an Instagram link, etc.) rather
+     * than introducing Lisa. $requestText fills the template's second
+     * placeholder, so one approved template covers whatever is being asked
+     * for across different clients. Twilio-only — the asset-request template
+     * has no ElevenLabs equivalent.
+     */
+    public static function sendAssetRequest(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $contactName = trim((string) ($data['contact_name'] ?? ''));
+        $digits = self::normalizePhoneDigits((string) ($data['phone_number'] ?? ''));
+        $requestText = trim((string) ($data['request_text'] ?? ''));
+        if ($contactName === '' || mb_strlen($contactName) > 120) {
+            Response::error('Enter a contact name (up to 120 characters).', 422);
+        }
+        if ($digits === '' || mb_strlen($digits) < 8) {
+            Response::error('Enter the contact\'s WhatsApp number including country code.', 422);
+        }
+        if ($requestText === '' || mb_strlen($requestText) > 300) {
+            Response::error('Say what you want them to send (up to 300 characters).', 422);
+        }
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error(
+                'Asset-request templates only go out on the Twilio provider — '
+                . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.',
+                422
+            );
+        }
+        $sent = self::sendTwilioAssetRequest($digits, $contactName, $requestText);
+
+        $pdo = Database::get();
+        $pdo->prepare(
+            "INSERT INTO whatsapp_intros
+             (contact_name, phone_number, note, template_name, conversation_id, status, error_message)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )->execute([
+            $contactName,
+            '+' . $digits,
+            'Requested: ' . $requestText,
+            $sent['template'],
+            $sent['id'],
+            $sent['ok'] ? 'sent' : 'failed',
+            $sent['ok'] ? null : $sent['error'],
+        ]);
+
+        if (!$sent['ok']) {
+            Response::error((string) $sent['error'], 502);
+        }
+        Response::json(['sent' => true, 'conversation_id' => $sent['id']], 201);
+    }
+
+    /** @return array{ok:bool,id:?string,template:string,error:?string} */
+    private static function sendTwilioAssetRequest(string $digits, string $contactName, string $requestText): array
+    {
+        $contentSid = trim((string) Settings::get('twilio_asset_request_content_sid'));
+        if (!TwilioClient::isConfigured() || TwilioClient::senderDigits() === '') {
+            Response::error('Set the Twilio account SID, auth token, and WhatsApp number in Settings first.', 422);
+        }
+        if ($contentSid === '') {
+            Response::error(
+                'No asset-request template yet — create one under Settings → WhatsApp & phone → Asset request template.',
+                422
+            );
+        }
+        // Meta rejects a send against an unapproved template with an opaque
+        // error, so fail here with the actual reason instead.
+        $status = strtolower((string) Settings::get('twilio_asset_request_template_status'));
+        if ($status !== 'approved') {
+            Response::error(
+                'The asset-request template is not approved yet (currently ' . ($status ?: 'pending')
+                . '). Check Settings → WhatsApp & phone → Asset request template.',
+                422
+            );
+        }
+
+        $sent = TwilioClient::sendTemplate($digits, $contentSid, ['1' => $contactName, '2' => $requestText]);
+        if (!$sent['ok']) {
+            error_log('Twilio WhatsApp asset-request template failed: ' . (string) $sent['error']);
+        }
+
+        return [
+            'ok' => $sent['ok'],
+            'id' => $sent['id'],
+            'template' => $contentSid,
+            'error' => $sent['ok']
+                ? null
+                : 'Twilio could not send the template message. ' . (string) $sent['error'],
+        ];
+    }
+
+    /**
      * Twilio delivers approved templates through its Content API rather than
      * by name: twilio_intro_content_sid is the HX... id of the approved intro
      * template, and its body placeholders are keyed by position, so the

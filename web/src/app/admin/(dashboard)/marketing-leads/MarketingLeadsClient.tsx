@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { adminApi, asList } from "@/lib/api";
 import {
   Plus, Search, Star, Trash2, Trash, Telescope, ScanSearch, PenLine,
-  MonitorPlay, Send, Save, ArrowUpRight, MessageSquarePlus,
+  MonitorPlay, Send, Save, ArrowUpRight, MessageSquarePlus, ImagePlus,
 } from "lucide-react";
 import {
   PageHeader, Card, StatCard, Table, Row, Cell, EmptyRow, Button, IconButton,
@@ -68,6 +68,7 @@ const emptyLeadForm = {
 };
 
 const emptyIntroForm = { contact_name: "", phone_number: "", note: "" };
+const emptyAssetRequestForm = { contact_name: "", phone_number: "", request_text: "your logo and Instagram profile link" };
 
 function fitBand(lead: MarketingLead): FitFilter {
   if (lead.status === "rejected") return "rejected";
@@ -141,6 +142,11 @@ export default function MarketingLeadsClient({
   const [introForm, setIntroForm] = useState(emptyIntroForm);
   const [introNote, setIntroNote] = useState<{ text: string; ok: boolean } | null>(null);
   const [introSending, setIntroSending] = useState(false);
+
+  const [assetRequestOpen, setAssetRequestOpen] = useState(false);
+  const [assetRequestForm, setAssetRequestForm] = useState(emptyAssetRequestForm);
+  const [assetRequestNote, setAssetRequestNote] = useState<{ text: string; ok: boolean } | null>(null);
+  const [assetRequestSending, setAssetRequestSending] = useState(false);
 
   const researchName = leads[0]?.research_agent_name || "Dossier";
   const pitchName = leads[0]?.pitch_agent_name || "Beacon";
@@ -340,6 +346,41 @@ export default function MarketingLeadsClient({
     }
   };
 
+  // For a client you've already discussed a project with directly, asking
+  // them to send over something needed for it, when they haven't written in
+  // to Lisa's number before — same template requirement as sendIntro above.
+  const sendAssetRequest = async () => {
+    if (
+      !assetRequestForm.contact_name.trim() ||
+      !assetRequestForm.phone_number.trim() ||
+      !assetRequestForm.request_text.trim()
+    ) {
+      setAssetRequestNote({ ok: false, text: "Contact name, WhatsApp number, and what to ask for are required." });
+      return;
+    }
+    setAssetRequestSending(true);
+    setAssetRequestNote(null);
+    try {
+      await adminApi.post("/api/v1/admin/whatsapp/send-asset-request", {
+        contact_name: assetRequestForm.contact_name.trim(),
+        phone_number: assetRequestForm.phone_number.trim(),
+        request_text: assetRequestForm.request_text.trim(),
+      });
+      setAssetRequestNote({
+        ok: true,
+        text: `Asset request sent to ${assetRequestForm.contact_name.trim()}.`,
+      });
+      setAssetRequestForm(emptyAssetRequestForm);
+    } catch (err) {
+      setAssetRequestNote({
+        ok: false,
+        text: err instanceof Error ? err.message : "Could not send the asset request.",
+      });
+    } finally {
+      setAssetRequestSending(false);
+    }
+  };
+
   const savePitch = async () => {
     if (!pitchLead) return;
     await adminApi.patch(`/api/v1/admin/marketing-leads/${pitchLead.id}`, pitchForm);
@@ -446,6 +487,17 @@ export default function MarketingLeadsClient({
             >
               <MessageSquarePlus className="w-4 h-4" />
               Send Lisa intro
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAssetRequestForm(emptyAssetRequestForm);
+                setAssetRequestNote(null);
+                setAssetRequestOpen(true);
+              }}
+            >
+              <ImagePlus className="w-4 h-4" />
+              Send asset request
             </Button>
             <Button
               variant="primary"
@@ -778,6 +830,56 @@ export default function MarketingLeadsClient({
         {introNote && (
           <p className={`text-sm ${introNote.ok ? "text-emerald-400" : "text-red-400"}`}>
             {introNote.text}
+          </p>
+        )}
+      </Modal>
+
+      {/* Send asset request */}
+      <Modal
+        isOpen={assetRequestOpen}
+        onClose={() => setAssetRequestOpen(false)}
+        title="Send asset request"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setAssetRequestOpen(false)}>Close</Button>
+            <Button variant="primary" onClick={sendAssetRequest} disabled={assetRequestSending}>
+              <Send className="w-4 h-4" />
+              {assetRequestSending ? "Sending…" : "Send request"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-white/60">
+          For a client you&apos;ve already discussed a project with, asking them to
+          send over something you need, when they haven&apos;t written in to Lisa&apos;s
+          WhatsApp number before. WhatsApp requires an approved template as the
+          first business-initiated message, so this sends that template.
+        </p>
+        <Field label="Contact name">
+          <Input
+            required
+            value={assetRequestForm.contact_name}
+            onChange={(e) => setAssetRequestForm({ ...assetRequestForm, contact_name: e.target.value })}
+          />
+        </Field>
+        <Field label="WhatsApp number">
+          <Input
+            required
+            placeholder="+233…"
+            value={assetRequestForm.phone_number}
+            onChange={(e) => setAssetRequestForm({ ...assetRequestForm, phone_number: e.target.value })}
+          />
+        </Field>
+        <Field label="What to ask for">
+          <Textarea
+            rows={2}
+            value={assetRequestForm.request_text}
+            onChange={(e) => setAssetRequestForm({ ...assetRequestForm, request_text: e.target.value })}
+          />
+        </Field>
+        {assetRequestNote && (
+          <p className={`text-sm ${assetRequestNote.ok ? "text-emerald-400" : "text-red-400"}`}>
+            {assetRequestNote.text}
           </p>
         )}
       </Modal>
