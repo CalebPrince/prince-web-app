@@ -92,6 +92,12 @@ class TeamController
         } catch (\Throwable $e) {
             $chloeOpenIncidents = 0;
         }
+        // Same shape as Scout/Reel's own stat — a real log of exchanges,
+        // not an invented counter. Wendy has no artifact table of her own
+        // since she only chats and never writes anything.
+        $wendyChats = (int) $pdo->query(
+            "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'wendy_chat'"
+        )->fetchColumn();
 
         $agents = [
             [
@@ -251,7 +257,7 @@ class TeamController
                     "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'scout_chat'"
                 )->fetchColumn(),
                 'stat_label' => 'ideas discussed',
-                'manage_url' => '/admin/agent-chat.html',
+                'manage_url' => '/admin/agent-chat',
                 'manage_label' => 'Talk to Scout',
             ],
             [
@@ -269,7 +275,7 @@ class TeamController
                     "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'reel_chat'"
                 )->fetchColumn(),
                 'stat_label' => 'videos planned',
-                'manage_url' => '/admin/agent-chat.html',
+                'manage_url' => '/admin/agent-chat',
                 'manage_label' => 'Talk to Reel',
             ],
             [
@@ -302,7 +308,7 @@ class TeamController
                 // was a human decision, so crediting it to her would overstate her.
                 'stat_value' => (int) $pdo->query("SELECT COUNT(*) FROM invoices WHERE status = 'draft'")->fetchColumn(),
                 'stat_label' => 'invoices drafted',
-                'manage_url' => '/admin/agent-chat.html',
+                'manage_url' => '/admin/agent-chat',
                 'manage_label' => 'Talk to Ada',
             ],
             [
@@ -341,6 +347,22 @@ class TeamController
                 'stat_label' => 'sites monitored',
                 'manage_url' => '/admin/chloe',
                 'manage_label' => 'Incidents',
+            ],
+            [
+                'key' => 'wendy',
+                'name' => Settings::get('wendy_assistant_name') ?: 'Wendy',
+                'role' => 'Wendy Rhoades — Performance & Conflict Oversight',
+                'description' => 'Sits above the rest of the team — pulls real activity from every agent and '
+                    . 'Chloe\'s technical health, reads how the studio is actually running, coaches you on your '
+                    . 'own workload and what is piling up unreviewed, and works through conflicting signals with '
+                    . 'you when two agents point different directions.',
+                'icon' => 'bi-chat-square-heart',
+                'status' => 'ondemand',
+                'status_label' => 'On demand',
+                'stat_value' => $wendyChats,
+                'stat_label' => 'check-ins',
+                'manage_url' => '/admin/agent-chat',
+                'manage_label' => 'Talk to Wendy',
             ],
         ];
 
@@ -420,7 +442,11 @@ class TeamController
         }, $rows);
     }
 
-    private static function projectCapacity(\PDO $pdo): array
+    /**
+     * Public: also reused by WendyController for her own read on Caleb's
+     * actual workload — same real capacity data, no re-derivation.
+     */
+    public static function projectCapacity(\PDO $pdo): array
     {
         $rows = $pdo->query(
             "SELECT p.id,p.title,p.progress_percent,p.deadline,p.assigned_agent_key,

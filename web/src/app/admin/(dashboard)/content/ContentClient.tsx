@@ -12,7 +12,7 @@ const FAQ_MAX_ITEMS = 12;
 /** Every agent whose display name and voice are editable from this page. */
 const AGENTS = [
   "chat", "beacon", "dossier", "nurturer", "proposal", "sketch", "content",
-  "arch", "ada", "chief", "scout", "sage", "reel", "chloe",
+  "arch", "ada", "chief", "scout", "sage", "reel", "chloe", "wendy",
 ];
 
 const AGENT_LABEL: Record<string, string> = {
@@ -30,6 +30,7 @@ const AGENT_LABEL: Record<string, string> = {
   sage: "Sage",
   reel: "Reel",
   chloe: "Chloe",
+  wendy: "Wendy",
 };
 
 type FieldSpec = {

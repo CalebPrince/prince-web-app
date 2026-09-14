@@ -88,6 +88,7 @@ use App\Controllers\ShortLinkController;
 use App\Controllers\SketchController;
 use App\Controllers\ChloeController;
 use App\Controllers\RadarController;
+use App\Controllers\WendyController;
 use App\Controllers\ScoutController;
 use App\Controllers\SageController;
 use App\Controllers\ReelController;
@@ -416,6 +417,7 @@ $router->get('/api/v1/admin/chloe/incidents', [ChloeController::class, 'incident
 $router->get('/api/v1/admin/chloe/incidents/{id}', [ChloeController::class, 'incidentShow']);
 $router->post('/api/v1/admin/chloe/incidents/{id}/dismiss', [ChloeController::class, 'dismissIncident']);
 $router->post('/api/v1/admin/chloe/investigate', [ChloeController::class, 'investigateNow']);
+$router->post('/api/v1/admin/agents/wendy/chat', [WendyController::class, 'chat']);
 $router->get('/api/v1/admin/activity-log', [ActivityLogController::class, 'index']);
 $router->get('/api/v1/admin/activity-log/entity-types', [ActivityLogController::class, 'entityTypes']);
 $router->get('/api/v1/admin/error-logs', [ErrorLogController::class, 'index']);

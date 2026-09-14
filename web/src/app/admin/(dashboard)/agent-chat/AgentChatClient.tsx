@@ -13,7 +13,7 @@ import {
 
 type AgentKey =
   | "lisa" | "beacon" | "dossier" | "nurturer" | "proposal" | "content" | "arch"
-  | "sketch" | "ada" | "chief" | "scout" | "reel" | "sage" | "radar" | "chloe";
+  | "sketch" | "ada" | "chief" | "scout" | "reel" | "sage" | "radar" | "chloe" | "wendy";
 
 type AgentSpec = {
   key: AgentKey;
@@ -40,7 +40,19 @@ const AGENTS: AgentSpec[] = [
   { key: "sage", nameKey: "sage_assistant_name", fallbackName: "Sage" },
   { key: "radar", nameKey: "radar_assistant_name", fallbackName: "Radar" },
   { key: "chloe", nameKey: "chloe_assistant_name", fallbackName: "Chloe" },
+  { key: "wendy", nameKey: "wendy_assistant_name", fallbackName: "Wendy" },
 ];
+
+/** Browser-speechSynthesis fallback voice per agent, for the ones whose
+ *  ElevenLabs voice might not be configured or reachable. Chloe O'Brian is
+ *  British (24), Wendy Rhoades is American (Billions), hence the different
+ *  accent; everyone else stays "auto". Module-level so it's a stable
+ *  reference across renders (the React Compiler can't preserve memoization
+ *  for a callback that closes over a freshly-allocated object every render). */
+const BROWSER_VOICE: Partial<Record<AgentKey, { gender: string; accent: string; rate: number; pitch: number }>> = {
+  chloe: { gender: "female", accent: "en-gb", rate: 1, pitch: 1 },
+  wendy: { gender: "female", accent: "en-us", rate: 1, pitch: 1 },
+};
 
 type Turn = { role: "user" | "agent"; text: string };
 type Attachment = { name: string; data: string };
@@ -224,12 +236,10 @@ export default function AgentChatClient({ settings }: { settings: Record<string,
     }
   };
 
-  // Lisa, Scout and Chloe each have a dedicated ElevenLabs voice (see
+  // Lisa, Scout, Chloe and Wendy each have a dedicated ElevenLabs voice (see
   // TextToSpeechController::AGENT_VOICE_SETTING); everyone else falls
   // through straight to the browser's own speechSynthesis, same as legacy
-  // admin-agent-chat.js. Chloe's browser fallback specifically asks for a
-  // UK female voice rather than "auto" — she reads as a specific person
-  // (Chloe O'Brian) even on a browser that has never heard of ElevenLabs.
+  // admin-agent-chat.js.
   const speak = useCallback((text: string) => {
     const spoken = stripForSpeech(text);
     if (!spoken) return;
@@ -237,11 +247,9 @@ export default function AgentChatClient({ settings }: { settings: Record<string,
     stopBrowserSpeech();
     const fallback = () => speakWithBrowser(
       spoken,
-      active === "chloe"
-        ? { gender: "female", accent: "en-gb", rate: 1, pitch: 1 }
-        : { gender: "auto", accent: "auto", rate: 1, pitch: 1 }
+      BROWSER_VOICE[active] ?? { gender: "auto", accent: "auto", rate: 1, pitch: 1 }
     );
-    if (active === "lisa" || active === "scout" || active === "chloe") {
+    if (active === "lisa" || active === "scout" || active === "chloe" || active === "wendy") {
       playTts(spoken, {}, active).catch(fallback);
       return;
     }

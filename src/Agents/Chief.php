@@ -472,9 +472,12 @@ class Chief
      * one of these is a queue only Caleb can drain — the point of the brief is
      * as much "what is waiting" as "what happened".
      *
+     * Public: also reused by WendyController for her own "what's piling up
+     * on your desk" read — same real queues, no re-derivation.
+     *
      * @return array<int,array{label:string,count:int,url:string}>
      */
-    private static function waitingOnYou(PDO $pdo): array
+    public static function waitingOnYou(PDO $pdo): array
     {
         $queues = [
             ['proposals still in draft', "SELECT COUNT(*) FROM proposals WHERE status = 'draft'", '/admin/proposals.html'],
