@@ -945,6 +945,34 @@ class LiveChatController
     }
 
     /**
+     * GET /api/v1/admin/whatsapp-intros — every business-initiated template
+     * sent (intro, asset-request, and any future one — whatsapp_intros is
+     * shared), newest first, with whether that contact has replied since.
+     *
+     * A reply can only be known indirectly: sendIntro()/sendAssetRequest()
+     * never touch chat_sessions themselves (see sendIntro()'s own docblock —
+     * "nothing further is tracked here after the send"), so a matching
+     * chat_sessions row existing at all means the inbound webhook fired for
+     * that number at some point, i.e. they wrote back. replied_at is that
+     * session's updated_at, which also moves on Lisa's own replies, not only
+     * the contact's — an honest "last activity" reading, not a precise
+     * "they last spoke at" one.
+     */
+    public static function adminIntrosIndex(): void
+    {
+        AuthMiddleware::requireAuth();
+        $rows = Database::get()->query(
+            "SELECT wi.id, wi.contact_name, wi.phone_number, wi.note, wi.template_name, wi.status,
+                    wi.error_message, wi.created_at,
+                    cs.id AS chat_session_id, cs.updated_at AS replied_at
+             FROM whatsapp_intros wi
+             LEFT JOIN chat_sessions cs ON cs.token = 'whatsapp:' || wi.phone_number
+             ORDER BY wi.created_at DESC LIMIT 200"
+        )->fetchAll();
+        Response::json(['intros' => $rows]);
+    }
+
+    /**
      * Twilio delivers approved templates through its Content API rather than
      * by name: twilio_intro_content_sid is the HX... id of the approved intro
      * template, and its body placeholders are keyed by position, so the

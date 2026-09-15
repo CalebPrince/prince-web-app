@@ -339,6 +339,7 @@ $router->get('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::cla
 $router->post('/api/v1/admin/whatsapp-template', [WhatsAppTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/refresh', [WhatsAppTemplateController::class, 'refresh']);
 $router->post('/api/v1/admin/whatsapp/send-asset-request', [LiveChatController::class, 'sendAssetRequest']);
+$router->get('/api/v1/admin/whatsapp-intros', [LiveChatController::class, 'adminIntrosIndex']);
 $router->get('/api/v1/admin/whatsapp-template/asset-request', [WhatsAppAssetRequestTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/asset-request', [WhatsAppAssetRequestTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/asset-request/refresh', [WhatsAppAssetRequestTemplateController::class, 'refresh']);

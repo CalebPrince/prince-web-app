@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { adminApi, asList } from "@/lib/api";
 import {
   Plus, Search, Star, Trash2, Trash, Telescope, ScanSearch, PenLine,
@@ -42,6 +42,19 @@ export type OutreachStats = {
   sent_today?: number;
   daily_cap?: number;
   replies?: number;
+};
+
+export type WhatsAppIntro = {
+  id: number;
+  contact_name: string;
+  phone_number: string;
+  note: string | null;
+  template_name: string;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+  chat_session_id: number | null;
+  replied_at: string | null;
 };
 
 export type DiscoverResult = {
@@ -147,6 +160,29 @@ export default function MarketingLeadsClient({
   const [assetRequestForm, setAssetRequestForm] = useState(emptyAssetRequestForm);
   const [assetRequestNote, setAssetRequestNote] = useState<{ text: string; ok: boolean } | null>(null);
   const [assetRequestSending, setAssetRequestSending] = useState(false);
+
+  const [intros, setIntros] = useState<WhatsAppIntro[]>([]);
+  const [introsOpen, setIntrosOpen] = useState(false);
+  const [introsLoading, setIntrosLoading] = useState(false);
+
+  const loadIntros = async () => {
+    setIntrosLoading(true);
+    try {
+      const data = await adminApi.get<{ intros: WhatsAppIntro[] }>("/api/v1/admin/whatsapp-intros");
+      setIntros(data.intros ?? []);
+    } catch {
+      // Non-critical panel — leave whatever was already loaded rather than blocking the page.
+    } finally {
+      setIntrosLoading(false);
+    }
+  };
+
+  // Loaded once up front (not only when the panel opens) so the "sent" stat
+  // in its toggle button is accurate the moment the page renders.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate one-shot load on mount
+    loadIntros();
+  }, []);
 
   const researchName = leads[0]?.research_agent_name || "Dossier";
   const pitchName = leads[0]?.pitch_agent_name || "Beacon";
@@ -499,6 +535,10 @@ export default function MarketingLeadsClient({
               <ImagePlus className="w-4 h-4" />
               Send asset request
             </Button>
+            <Button variant="outline" onClick={() => setIntrosOpen((v) => !v)}>
+              <Send className="w-4 h-4" />
+              Templates sent ({intros.length})
+            </Button>
             <Button
               variant="primary"
               onClick={() => {
@@ -514,6 +554,53 @@ export default function MarketingLeadsClient({
       />
 
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
+
+      {introsOpen && (
+        <Card
+          title="Templates sent"
+          actions={
+            <Button variant="outline" onClick={loadIntros} disabled={introsLoading}>
+              {introsLoading ? "Refreshing…" : "Refresh"}
+            </Button>
+          }
+        >
+          <p className="px-6 pt-4 text-sm text-white/60">
+            Every business-initiated WhatsApp template sent (intro, asset request, and any future one) — the
+            outbound message itself, since it never appears in the reply-based chat transcript. &quot;Replied&quot;
+            only means the contact has written back at some point since, not necessarily to this exact message.
+          </p>
+          <Table head={["Contact", "Template", "Status", "Sent", "Replied"]}>
+            {intros.length === 0 ? (
+              <EmptyRow colSpan={5}>No templates sent yet.</EmptyRow>
+            ) : (
+              intros.map((intro) => (
+                <Row key={intro.id}>
+                  <Cell>
+                    <div className="font-medium">{intro.contact_name}</div>
+                    <div className="text-xs text-text-3">{intro.phone_number}</div>
+                    {intro.note && <div className="text-xs text-text-3 mt-0.5">{intro.note}</div>}
+                  </Cell>
+                  <Cell>{intro.template_name}</Cell>
+                  <Cell>
+                    <StatusPill status={intro.status} tone={intro.status === "sent" ? "green" : "red"} />
+                    {intro.error_message && (
+                      <div className="text-xs text-red-400 mt-1 max-w-xs">{intro.error_message}</div>
+                    )}
+                  </Cell>
+                  <Cell className="text-text-3 text-xs whitespace-nowrap">{formatDate(intro.created_at)}</Cell>
+                  <Cell className="text-xs whitespace-nowrap">
+                    {intro.replied_at ? (
+                      <span className="text-emerald-400">Yes · {formatDate(intro.replied_at)}</span>
+                    ) : (
+                      <span className="text-text-3">Not yet</span>
+                    )}
+                  </Cell>
+                </Row>
+              ))
+            )}
+          </Table>
+        </Card>
+      )}
 
       {stats && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
