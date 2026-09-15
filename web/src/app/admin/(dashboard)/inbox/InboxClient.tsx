@@ -278,6 +278,27 @@ export default function InboxClient({ initialItems }: { initialItems: InboxItem[
     }
   };
 
+  // Free-form outbound WhatsApp message, distinct from sendReply (client
+  // portal) above — only reachable inside WhatsApp's 24h session window,
+  // which the backend enforces and reports back if it's closed.
+  const sendWhatsAppMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!active || !reply.trim()) return;
+    setReplyStatus("Sending…");
+    try {
+      await adminApi.post("/api/v1/admin/whatsapp/send-message", {
+        chat_session_id: active.source_id,
+        message: reply,
+      });
+      setReplyStatus("Sent");
+      setReply("");
+      const data = await adminApi.get<{ items: InboxItem[] }>("/api/v1/admin/inbox");
+      setItems(data.items ?? []);
+    } catch (err) {
+      setReplyStatus(err instanceof Error ? err.message : "Could not send.");
+    }
+  };
+
   const facts = active
     ? ([
         ["Project", active.detail?.project_type],
@@ -545,6 +566,29 @@ export default function InboxClient({ initialItems }: { initialItems: InboxItem[
                   <div className="flex items-center gap-3">
                     <Button type="submit" variant="primary" disabled={!reply.trim()}>
                       Send reply
+                    </Button>
+                    {replyStatus && <span className="text-sm text-text-3">{replyStatus}</span>}
+                  </div>
+                </form>
+              )}
+
+              {active.source === "whatsapp" && !active.is_owner && (
+                <form onSubmit={sendWhatsAppMessage} className="p-5 border-t border-hairline space-y-3">
+                  <label htmlFor="inbox-whatsapp-message" className="block text-sm font-medium">
+                    Send a WhatsApp message as Lisa
+                  </label>
+                  <textarea
+                    id="inbox-whatsapp-message"
+                    rows={3}
+                    required
+                    placeholder="Only works while the contact is inside WhatsApp's 24h reply window"
+                    value={reply}
+                    onChange={(e) => setReply(e.target.value)}
+                    className="w-full rounded-md border border-hairline bg-bg px-3 py-2 text-sm text-text placeholder:text-text-3 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                  />
+                  <div className="flex items-center gap-3">
+                    <Button type="submit" variant="primary" disabled={!reply.trim()}>
+                      Send message
                     </Button>
                     {replyStatus && <span className="text-sm text-text-3">{replyStatus}</span>}
                   </div>

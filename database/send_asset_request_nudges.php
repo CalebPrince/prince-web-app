@@ -52,7 +52,14 @@ foreach (NUDGE_TIERS as $tier) {
     // DateTime) so it lines up exactly with how last_inbound_at itself was
     // written — both sides of the comparison are SQLite's own datetime('now').
     $candidates = $pdo->prepare(
-        "SELECT wi.id, wi.contact_name, wi.phone_number, wi.request_text,
+        "SELECT wi.id, wi.contact_name, wi.phone_number,
+                -- Same reconstruction as LiveChatController::adminIntrosIndex()
+                -- — a row sent before request_text existed still has it encoded
+                -- in note's 'Requested: <text>' shape.
+                COALESCE(
+                    NULLIF(wi.request_text, ''),
+                    CASE WHEN wi.note LIKE 'Requested:%' THEN trim(substr(wi.note, 12)) END
+                ) AS request_text,
                 (cs.last_inbound_at IS NOT NULL AND cs.last_inbound_at >= datetime('now', '-24 hours')) AS in_session
          FROM whatsapp_intros wi
          LEFT JOIN chat_sessions cs ON cs.token = 'whatsapp:' || wi.phone_number

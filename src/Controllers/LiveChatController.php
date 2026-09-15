@@ -1115,8 +1115,16 @@ class LiveChatController
         AuthMiddleware::requireAuth();
         $rows = Database::get()->query(
             "SELECT wi.id, wi.contact_name, wi.phone_number, wi.note, wi.template_name, wi.status,
-                    wi.error_message, wi.created_at, wi.request_text, wi.fulfilled_at,
-                    wi.nudge_4h_sent_at, wi.nudge_24h_sent_at,
+                    wi.error_message, wi.created_at,
+                    -- request_text is only populated by sendAssetRequest() since
+                    -- it started writing it; a row sent before that still has
+                    -- the same information in note's 'Requested: <text>' shape,
+                    -- so reconstruct it from there rather than showing nothing.
+                    COALESCE(
+                        NULLIF(wi.request_text, ''),
+                        CASE WHEN wi.note LIKE 'Requested:%' THEN trim(substr(wi.note, 12)) END
+                    ) AS request_text,
+                    wi.fulfilled_at, wi.nudge_4h_sent_at, wi.nudge_24h_sent_at,
                     cs.id AS chat_session_id, cs.updated_at AS replied_at
              FROM whatsapp_intros wi
              LEFT JOIN chat_sessions cs ON cs.token = 'whatsapp:' || wi.phone_number
@@ -1143,6 +1151,64 @@ class LiveChatController
         Database::get()
             ->prepare("UPDATE whatsapp_intros SET fulfilled_at = datetime('now') WHERE id = ? AND fulfilled_at IS NULL")
             ->execute([$id]);
+        Response::json(['ok' => true]);
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-message — admin-only. A free-form
+     * message sent as Lisa into an existing WhatsApp thread from the Inbox
+     * (e.g. asking a client to resend a file that failed to save) — the
+     * ad-hoc counterpart to sendIntro()/sendAssetRequest()'s pre-approved
+     * templates. Only works inside WhatsApp's 24h customer-service session
+     * window (the contact must have written in recently); outside it,
+     * WhatsApp rejects free text outright, so this fails with guidance to
+     * use a template instead rather than attempting a send that would just
+     * be silently dropped.
+     */
+    public static function sendAdminWhatsAppMessage(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $sessionId = (int) ($data['chat_session_id'] ?? 0);
+        $message = trim((string) ($data['message'] ?? ''));
+        if ($sessionId < 1) {
+            Response::error('Missing chat_session_id.', 422);
+        }
+        if ($message === '' || mb_strlen($message) > 1000) {
+            Response::error('A message under 1000 characters is required.', 422);
+        }
+
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT id, token, client_name, last_inbound_at FROM chat_sessions WHERE id = ?');
+        $stmt->execute([$sessionId]);
+        $session = $stmt->fetch();
+        if (!$session || !str_starts_with((string) $session['token'], 'whatsapp:')) {
+            Response::error('That conversation is not a WhatsApp thread.', 404);
+        }
+
+        $inSession = !empty($session['last_inbound_at'])
+            && (string) $session['last_inbound_at'] >= gmdate('Y-m-d H:i:s', strtotime('-24 hours'));
+        if (!$inSession) {
+            Response::error(
+                "This contact hasn't written in within the last 24 hours, so WhatsApp won't deliver a free-text "
+                    . 'message — send an approved template (Send Lisa intro / Send asset request) to reopen the thread first.',
+                422
+            );
+        }
+
+        $digits = self::normalizePhoneDigits((string) $session['token']);
+        if ($digits === '') {
+            Response::error("Could not read this contact's phone number.", 422);
+        }
+
+        $sent = TwilioClient::sendText($digits, $message);
+        if (!$sent['ok']) {
+            Response::error((string) $sent['error'], 502);
+        }
+
+        self::seedOutboundTemplate($pdo, $digits, (string) ($session['client_name'] ?? ''), $message);
+
         Response::json(['ok' => true]);
     }
 
