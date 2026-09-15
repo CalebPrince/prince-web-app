@@ -1104,6 +1104,11 @@ CREATE TABLE IF NOT EXISTS wendy_observations (
   evidence TEXT NOT NULL,
   wants_session INTEGER NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved', 'dismissed')),
+  -- Set once, the moment wants_session fires a real email/WhatsApp alert
+  -- (WendyController::notifySessionRequest) — same idempotency guard as
+  -- chloe_incidents, so a retry never double-sends.
+  emailed_at TEXT,
+  whatsapp_sent_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   resolved_at TEXT
 );

@@ -1931,4 +1931,14 @@ if ($chloeIncidentsSql !== '' && str_contains($chloeIncidentsSql, "source_type I
     echo "Rebuilt chloe_incidents — source_type now allows 'anomaly'.\n";
 }
 
+// Wendy's session-request alert (added after wendy_observations first
+// shipped) needs its own delivery-guard columns, same shape as
+// chloe_incidents' emailed_at/whatsapp_sent_at.
+$wendyObservationColumns = array_column($pdo->query('PRAGMA table_info(wendy_observations)')->fetchAll(), 'name');
+foreach (['emailed_at', 'whatsapp_sent_at'] as $col) {
+    if (!in_array($col, $wendyObservationColumns, true)) {
+        $pdo->exec("ALTER TABLE wendy_observations ADD COLUMN {$col} TEXT");
+    }
+}
+
 echo "Schema applied.\n";

@@ -10,9 +10,11 @@ use App\Support\ActivityLog;
 use App\Support\AiAgentEngine;
 use App\Support\ChloeInvestigator;
 use App\Support\Database;
+use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\WhatsAppNotifier;
 
 /**
  * Wendy Rhoades — performance coach and conflict mediator, sitting above the
@@ -128,10 +130,12 @@ class WendyController
             . "flagging — not every session, only a settled finding backed by real data — call save_observation "
             . "with a short summary, the fuller detail, and evidence naming exactly what backed it (which tool, "
             . "which numbers). Set wants_session true only for something that actually warrants Caleb opening "
-            . "this chat specifically to deal with it, not routine commentary — that flag is what surfaces a "
-            . "session request on the Team page rather than a quiet count. Once he's actually dealt with "
-            . "something you flagged, call resolve_observation so it stops showing as open. Save sparingly: a "
-            . "coach who logs every passing thought is noise, not oversight.\n\n"
+            . "this chat specifically to deal with it, not routine commentary — this isn't cosmetic, it sends "
+            . "him a real email and WhatsApp message immediately, in your own words (your summary and detail, "
+            . "verbatim), not just a quiet count on the Team page. Interrupting him is a real cost; reserve it "
+            . "for what actually earns it. Once he's actually dealt with something you flagged, call "
+            . "resolve_observation so it stops showing as open. Save sparingly: a coach who logs every passing "
+            . "thought is noise, not oversight.\n\n"
             . "CRITICAL: never state a number, status, or fact you did not just get from a tool call in this "
             . "conversation. pattern_history is built from Chief's own daily briefs, so it only has real history "
             . "as far back as that cron has actually been running — when it reports too few days of data, say so "
@@ -346,7 +350,10 @@ class WendyController
                         . 'window"). Never leave this vague.'],
                     'wants_session' => ['type' => 'BOOLEAN', 'description' =>
                         'True only if this genuinely warrants Caleb opening this chat specifically to deal with '
-                        . 'it — surfaces as a session request on the Team page. False for routine findings.'],
+                        . 'it. This is not cosmetic: it sends him a real email and WhatsApp message right now, '
+                        . 'in your voice (your summary and detail, verbatim), and marks the Team page with a '
+                        . 'session-requested flag until he deals with it. Reserve it for what actually earns an '
+                        . 'interruption — false for routine findings that can just sit as an open observation.'],
                 ],
                 'required' => ['summary', 'detail', 'evidence'],
             ],
@@ -365,13 +372,69 @@ class WendyController
         $category = in_array($args['category'] ?? '', ['pattern', 'tension', 'mediation'], true)
             ? $args['category'] : 'pattern';
 
+        $wantsSession = !empty($args['wants_session']);
+
         $stmt = $pdo->prepare(
             'INSERT INTO wendy_observations (category, summary, detail, evidence, wants_session)
              VALUES (?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$category, $summary, $detail, $evidence, !empty($args['wants_session']) ? 1 : 0]);
+        $stmt->execute([$category, $summary, $detail, $evidence, $wantsSession ? 1 : 0]);
+        $id = (int) $pdo->lastInsertId();
 
-        return ['saved' => true, 'id' => (int) $pdo->lastInsertId()];
+        if ($wantsSession) {
+            self::notifySessionRequest($pdo, $id);
+        }
+
+        return ['saved' => true, 'id' => $id];
+    }
+
+    /**
+     * Fires the actual "Wendy requests you" alert — the moment
+     * wants_session is set, not something Caleb has to notice on the Team
+     * page himself. Same shape as ChloeInvestigator::escalate(): per-channel
+     * emailed_at/whatsapp_sent_at guards so a retry can never double-send,
+     * and the message is Wendy's own summary/detail verbatim rather than a
+     * generic template — she wrote it, she should sound like herself saying it.
+     */
+    private static function notifySessionRequest(\PDO $pdo, int $observationId): void
+    {
+        $stmt = $pdo->prepare('SELECT * FROM wendy_observations WHERE id = ?');
+        $stmt->execute([$observationId]);
+        $observation = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$observation) {
+            return;
+        }
+
+        $name = Settings::get('wendy_assistant_name') ?: 'Wendy';
+        $body = $observation['summary'] . "\n\n" . $observation['detail']
+            . "\n\nBased on: " . $observation['evidence']
+            . "\n\nTalk to her: https://princecaleb.dev/admin/agent-chat";
+
+        $to = Settings::get('notification_email') ?: Settings::get('social_email');
+        $emailDone = !$to || !empty($observation['emailed_at']);
+        if (!$emailDone) {
+            $emailDone = Mailer::send($to, $name . ': session requested — ' . $observation['summary'], $body);
+        }
+        if ($emailDone && $to && empty($observation['emailed_at'])) {
+            $pdo->prepare("UPDATE wendy_observations SET emailed_at = datetime('now') WHERE id = ?")
+                ->execute([$observationId]);
+        }
+
+        $waConfigured = WhatsAppNotifier::isOwnerConfigured();
+        $waDone = !$waConfigured || !empty($observation['whatsapp_sent_at']);
+        if (!$waDone) {
+            $waBody = "\u{1F534} {$name} — session requested\n\n" . $body;
+            $waDone = WhatsAppNotifier::sendOwnerAlert($waBody, [
+                'name' => $name,
+                'reason' => 'Session requested: ' . $observation['summary'],
+                'summary' => mb_substr((string) $observation['detail'], 0, 900),
+                'message' => mb_substr($waBody, 0, 900),
+            ]);
+        }
+        if ($waDone && $waConfigured && empty($observation['whatsapp_sent_at'])) {
+            $pdo->prepare("UPDATE wendy_observations SET whatsapp_sent_at = datetime('now') WHERE id = ?")
+                ->execute([$observationId]);
+        }
     }
 
     private static function resolveObservationToolDeclaration(): array
