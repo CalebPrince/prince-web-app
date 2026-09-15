@@ -965,6 +965,7 @@ database/
   send_daily_brief.php            # Chief's daily brief on what every other agent did, emailed (cron, daily)
   dispatch_agent_tasks.php        # leases due durable agent work; retries safely and records outcomes (cron, ~1 min)
   process_whatsapp_call_followups.php  # sends the post-call WhatsApp follow-up template after a Lisa voice call (cron)
+  send_asset_request_nudges.php   # nudges a contact who hasn't sent an asset request's ask at 4h/24h; text if in WhatsApp's 24h session window, else resends the template (cron)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
   backfill_pending_review_leads.php  # one-time (not a cron): approves whatever's already sitting in pending_review after enabling beacon_auto_accept_all / outreach_auto_accept_all
@@ -2241,6 +2242,11 @@ One-time setup on a new host:
     there's no Settings UI field for it yet, so set it directly:
     `INSERT INTO settings (name, value) VALUES ('pagespeed_api_key', '...')`):
     `/usr/local/bin/php /home/<cpanel-user>/database/check_site_technical.php > /dev/null`
+4s. Add a twentieth cron job (hourly is plenty — it's a 4h/24h nudge, not a
+    minute-precision one) for asset-request follow-ups: no-op until the asset
+    request template is created and approved (Admin -> Marketing Leads ->
+    Send asset request):
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_asset_request_nudges.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate, `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

@@ -1941,4 +1941,19 @@ foreach (['emailed_at', 'whatsapp_sent_at'] as $col) {
     }
 }
 
+// send_asset_request_nudges.php needs to know when a contact last actually
+// wrote in (not chat_sessions.updated_at, which also moves on Lisa's own
+// replies) to decide whether a nudge can go out as free text or needs the
+// approved template again, plus per-request nudge/fulfilled tracking.
+$chatSessionColumns2 = array_column($pdo->query('PRAGMA table_info(chat_sessions)')->fetchAll(), 'name');
+if (!in_array('last_inbound_at', $chatSessionColumns2, true)) {
+    $pdo->exec('ALTER TABLE chat_sessions ADD COLUMN last_inbound_at TEXT');
+}
+$whatsappIntroColumns = array_column($pdo->query('PRAGMA table_info(whatsapp_intros)')->fetchAll(), 'name');
+foreach (['request_text', 'fulfilled_at', 'nudge_4h_sent_at', 'nudge_24h_sent_at'] as $col) {
+    if (!in_array($col, $whatsappIntroColumns, true)) {
+        $pdo->exec("ALTER TABLE whatsapp_intros ADD COLUMN {$col} TEXT");
+    }
+}
+
 echo "Schema applied.\n";

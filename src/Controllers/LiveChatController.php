@@ -503,6 +503,11 @@ class LiveChatController
                 $pdo->prepare('UPDATE chat_sessions SET client_phone = ?, client_name = ? WHERE id = ?')
                     ->execute(['+' . $digits, $profileName !== '' ? $profileName : null, $session['id']]);
             }
+            // Distinct from updated_at (set below by saveTranscript(), which
+            // also moves on Lisa's own replies) — this is what WhatsApp's 24h
+            // customer-service session window is actually measured from.
+            $pdo->prepare("UPDATE chat_sessions SET last_inbound_at = datetime('now') WHERE id = ?")
+                ->execute([$session['id']]);
 
             $transcript = self::rollingTranscript($transcript);
             $isOwner = self::isOwnerWhatsAppNumber($token);
@@ -898,8 +903,8 @@ class LiveChatController
         $pdo = Database::get();
         $pdo->prepare(
             "INSERT INTO whatsapp_intros
-             (contact_name, phone_number, note, template_name, conversation_id, status, error_message)
-             VALUES (?, ?, ?, ?, ?, ?, ?)"
+             (contact_name, phone_number, note, template_name, conversation_id, status, error_message, request_text)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         )->execute([
             $contactName,
             '+' . $digits,
@@ -908,6 +913,7 @@ class LiveChatController
             $sent['id'],
             $sent['ok'] ? 'sent' : 'failed',
             $sent['ok'] ? null : $sent['error'],
+            $requestText,
         ]);
 
         if (!$sent['ok']) {
@@ -982,13 +988,35 @@ class LiveChatController
         AuthMiddleware::requireAuth();
         $rows = Database::get()->query(
             "SELECT wi.id, wi.contact_name, wi.phone_number, wi.note, wi.template_name, wi.status,
-                    wi.error_message, wi.created_at,
+                    wi.error_message, wi.created_at, wi.request_text, wi.fulfilled_at,
+                    wi.nudge_4h_sent_at, wi.nudge_24h_sent_at,
                     cs.id AS chat_session_id, cs.updated_at AS replied_at
              FROM whatsapp_intros wi
              LEFT JOIN chat_sessions cs ON cs.token = 'whatsapp:' || wi.phone_number
              ORDER BY wi.created_at DESC LIMIT 200"
         )->fetchAll();
         Response::json(['intros' => $rows]);
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp-intros/{id}/fulfill — admin-only. Marks an
+     * asset-request as fulfilled so send_asset_request_nudges.php (cron)
+     * stops nudging it. Deliberately a manual admin action: inbound WhatsApp
+     * media isn't captured anywhere in this app, and a text reply could say
+     * anything, so there is no honest way to detect "they actually sent the
+     * asset" automatically.
+     */
+    public static function markIntroFulfilled(array $params): void
+    {
+        AuthMiddleware::requireAuth();
+        $id = (int) ($params['id'] ?? 0);
+        if ($id <= 0) {
+            Response::error('Invalid id.', 422);
+        }
+        Database::get()
+            ->prepare("UPDATE whatsapp_intros SET fulfilled_at = datetime('now') WHERE id = ? AND fulfilled_at IS NULL")
+            ->execute([$id]);
+        Response::json(['ok' => true]);
     }
 
     /**

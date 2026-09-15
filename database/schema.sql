@@ -269,7 +269,12 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
   admin_seen INTEGER NOT NULL DEFAULT 0,
   ready_for_prototype INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- Set only on an inbound WhatsApp message (twilioWebhook()), unlike
+  -- updated_at which also moves on Lisa's own replies. This is the honest
+  -- "did the contact just message us" timestamp WhatsApp's 24h
+  -- customer-service session window is measured from.
+  last_inbound_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_feedback ON chat_sessions (prototype_status, admin_seen);
 
@@ -1376,6 +1381,19 @@ CREATE TABLE IF NOT EXISTS whatsapp_intros (
   conversation_id TEXT,
   status TEXT NOT NULL DEFAULT 'sent',
   error_message TEXT,
+  -- What was asked for, machine-readable (note is the human-facing "Requested:
+  -- ..." string built from this). Only set by sendAssetRequest(); null for a
+  -- plain intro. send_asset_request_nudges.php needs this verbatim to refill
+  -- the asset-request template's {{2}} if it has to resend the template
+  -- outside WhatsApp's 24h session window.
+  request_text TEXT,
+  -- Admin marks this once the contact has actually sent the asset — there is
+  -- no reliable automatic signal (inbound WhatsApp media isn't captured, and
+  -- a text reply could be anything), so it's a manual action rather than a
+  -- guess. Set, send_asset_request_nudges.php stops nudging this row.
+  fulfilled_at TEXT,
+  nudge_4h_sent_at TEXT,
+  nudge_24h_sent_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_whatsapp_intros_created ON whatsapp_intros (created_at);

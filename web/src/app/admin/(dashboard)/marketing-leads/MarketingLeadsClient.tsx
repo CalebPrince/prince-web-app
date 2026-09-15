@@ -55,6 +55,10 @@ export type WhatsAppIntro = {
   created_at: string;
   chat_session_id: number | null;
   replied_at: string | null;
+  request_text: string | null;
+  fulfilled_at: string | null;
+  nudge_4h_sent_at: string | null;
+  nudge_24h_sent_at: string | null;
 };
 
 export type DiscoverResult = {
@@ -164,6 +168,7 @@ export default function MarketingLeadsClient({
   const [intros, setIntros] = useState<WhatsAppIntro[]>([]);
   const [introsOpen, setIntrosOpen] = useState(false);
   const [introsLoading, setIntrosLoading] = useState(false);
+  const [markingReceivedId, setMarkingReceivedId] = useState<number | null>(null);
 
   const loadIntros = async () => {
     setIntrosLoading(true);
@@ -174,6 +179,22 @@ export default function MarketingLeadsClient({
       // Non-critical panel — leave whatever was already loaded rather than blocking the page.
     } finally {
       setIntrosLoading(false);
+    }
+  };
+
+  // Only an admin can say a request was actually fulfilled — inbound
+  // WhatsApp media isn't captured anywhere in this app, and a text reply
+  // could say anything, so there's no honest way to detect it automatically.
+  // Marking it stops send_asset_request_nudges.php (cron) from nudging further.
+  const markReceived = async (introId: number) => {
+    setMarkingReceivedId(introId);
+    try {
+      await adminApi.post(`/api/v1/admin/whatsapp-intros/${introId}/fulfill`);
+      await loadIntros();
+    } catch {
+      // Non-critical panel — the row just won't show as received yet; retry is one click away.
+    } finally {
+      setMarkingReceivedId(null);
     }
   };
 
@@ -569,9 +590,9 @@ export default function MarketingLeadsClient({
             outbound message itself, since it never appears in the reply-based chat transcript. &quot;Replied&quot;
             only means the contact has written back at some point since, not necessarily to this exact message.
           </p>
-          <Table head={["Contact", "Template", "Status", "Sent", "Replied"]}>
+          <Table head={["Contact", "Template", "Status", "Sent", "Replied", "Asset"]}>
             {intros.length === 0 ? (
-              <EmptyRow colSpan={5}>No templates sent yet.</EmptyRow>
+              <EmptyRow colSpan={6}>No templates sent yet.</EmptyRow>
             ) : (
               intros.map((intro) => (
                 <Row key={intro.id}>
@@ -593,6 +614,34 @@ export default function MarketingLeadsClient({
                       <span className="text-emerald-400">Yes · {formatDate(intro.replied_at)}</span>
                     ) : (
                       <span className="text-text-3">Not yet</span>
+                    )}
+                  </Cell>
+                  <Cell className="text-xs whitespace-nowrap">
+                    {/* Only asset-request sends carry request_text — a plain
+                        intro has nothing to receive or nudge. */}
+                    {intro.request_text ? (
+                      intro.fulfilled_at ? (
+                        <span className="text-emerald-400">Received · {formatDate(intro.fulfilled_at)}</span>
+                      ) : (
+                        <div className="flex flex-col gap-1 items-start">
+                          <Button
+                            variant="outline"
+                            onClick={() => markReceived(intro.id)}
+                            disabled={markingReceivedId === intro.id}
+                          >
+                            {markingReceivedId === intro.id ? "Marking…" : "Mark received"}
+                          </Button>
+                          <span className="text-text-3">
+                            {intro.nudge_24h_sent_at
+                              ? "Nudged twice"
+                              : intro.nudge_4h_sent_at
+                                ? "Nudged once"
+                                : "No nudge yet"}
+                          </span>
+                        </div>
+                      )
+                    ) : (
+                      <span className="text-text-3">—</span>
                     )}
                   </Cell>
                 </Row>
