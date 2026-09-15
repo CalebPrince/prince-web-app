@@ -21,6 +21,13 @@ use App\Support\TwilioClient;
 use App\Support\WatiClient;
 use App\Support\WhapiClient;
 use App\Support\WhatsAppAssetRequestTemplateManager;
+use App\Support\WhatsAppAppointmentReminderTemplateManager;
+use App\Support\WhatsAppDeliveryReadyTemplateManager;
+use App\Support\WhatsAppFeedbackRequestTemplateManager;
+use App\Support\WhatsAppInvoiceReadyTemplateManager;
+use App\Support\WhatsAppMilestoneUpdateTemplateManager;
+use App\Support\WhatsAppPaymentReceivedTemplateManager;
+use App\Support\WhatsAppRenewalReminderTemplateManager;
 use App\Support\WhatsAppShowcaseFollowupTemplateManager;
 use App\Support\WhatsAppTemplateManager;
 
@@ -1200,6 +1207,339 @@ class LiveChatController
                 ? null
                 : 'Twilio could not send the template message. ' . (string) $sent['error'],
         ];
+    }
+
+    /**
+     * Shared send logic for every template beyond intro/asset-request/
+     * showcase-followup above: validate the contact + Twilio config, send
+     * through Twilio's Content API, and hand back a uniform result. Each
+     * template still gets its own thin public sendXxx() method (for its own
+     * field validation/messages) rather than one generic dynamic-key
+     * endpoint, keeping every route explicit and easy to find.
+     *
+     * @return array{ok:bool,id:?string,template:string,error:?string}
+     */
+    private static function sendTwilioNamedTemplate(
+        string $digits,
+        array $vars,
+        string $sidSetting,
+        string $statusSetting,
+        string $notConfiguredHint
+    ): array {
+        $contentSid = trim((string) Settings::get($sidSetting));
+        if (!TwilioClient::isConfigured() || TwilioClient::senderDigits() === '') {
+            Response::error('Set the Twilio account SID, auth token, and WhatsApp number in Settings first.', 422);
+        }
+        if ($contentSid === '') {
+            Response::error($notConfiguredHint, 422);
+        }
+        // Meta rejects a send against an unapproved template with an opaque
+        // error, so fail here with the actual reason instead.
+        $status = strtolower((string) Settings::get($statusSetting));
+        if ($status !== 'approved') {
+            Response::error('This template is not approved yet (currently ' . ($status ?: 'pending') . ').', 422);
+        }
+
+        $sent = TwilioClient::sendTemplate($digits, $contentSid, $vars);
+        if (!$sent['ok']) {
+            error_log('Twilio WhatsApp template failed (' . $sidSetting . '): ' . (string) $sent['error']);
+        }
+
+        return [
+            'ok' => $sent['ok'],
+            'id' => $sent['id'],
+            'template' => $contentSid,
+            'error' => $sent['ok']
+                ? null
+                : 'Twilio could not send the template message. ' . (string) $sent['error'],
+        ];
+    }
+
+    /**
+     * Shared validation + insert/seed for the sendXxx() methods below —
+     * every one of them collects contact_name/phone_number plus zero or
+     * more extra body fields, sends via sendTwilioNamedTemplate(), logs the
+     * attempt into whatsapp_intros, and seeds the outbound thread the same
+     * way. $extraFields is [request field name => [label, max length]] so
+     * each caller only declares what varies.
+     *
+     * @param array<string,array{0:string,1:int}> $extraFields
+     * @return array{contact_name:string,digits:string,extra:array<string,string>}
+     */
+    private static function readTemplateSendInput(array $data, array $extraFields): array
+    {
+        $contactName = trim((string) ($data['contact_name'] ?? ''));
+        $digits = self::normalizePhoneDigits((string) ($data['phone_number'] ?? ''));
+        if ($contactName === '' || mb_strlen($contactName) > 120) {
+            Response::error('Enter a contact name (up to 120 characters).', 422);
+        }
+        if ($digits === '' || mb_strlen($digits) < 8) {
+            Response::error('Enter the contact\'s WhatsApp number including country code.', 422);
+        }
+
+        $extra = [];
+        foreach ($extraFields as $field => [$label, $maxLen]) {
+            $value = trim((string) ($data[$field] ?? ''));
+            if ($value === '' || mb_strlen($value) > $maxLen) {
+                Response::error("Enter {$label} (up to {$maxLen} characters).", 422);
+            }
+            $extra[$field] = $value;
+        }
+
+        return ['contact_name' => $contactName, 'digits' => $digits, 'extra' => $extra];
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-invoice-ready — admin-only. Lets a
+     * client know their invoice is ready to view/pay, when they haven't
+     * written in to Lisa's connected number before. Twilio-only.
+     */
+    public static function sendInvoiceReady(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, [
+            'var2' => ['what the invoice is for', 200],
+            'var3' => ['the invoice/payment link', 300],
+        ]);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_invoice_ready_content_sid',
+            'twilio_invoice_ready_template_status',
+            'No invoice-ready template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppInvoiceReadyTemplateManager::renderBody($vars));
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-payment-received — admin-only.
+     * Confirms a client's payment came through, when they haven't written
+     * in to Lisa's connected number before. Twilio-only.
+     */
+    public static function sendPaymentReceived(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, [
+            'var2' => ['the amount', 100],
+            'var3' => ['what it was for', 200],
+        ]);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_payment_received_content_sid',
+            'twilio_payment_received_template_status',
+            'No payment-received template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppPaymentReceivedTemplateManager::renderBody($vars));
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-appointment-reminder — admin-only.
+     * Reminds a client about an upcoming call/meeting, when they haven't
+     * written in to Lisa's connected number before. Twilio-only.
+     */
+    public static function sendAppointmentReminder(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, [
+            'var2' => ['the date', 100],
+            'var3' => ['the time', 100],
+        ]);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_appointment_reminder_content_sid',
+            'twilio_appointment_reminder_template_status',
+            'No appointment-reminder template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppAppointmentReminderTemplateManager::renderBody($vars));
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-milestone-update — admin-only. Tells
+     * a client a project milestone is done, when they haven't written in to
+     * Lisa's connected number before. Twilio-only.
+     */
+    public static function sendMilestoneUpdate(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, [
+            'var2' => ['the project', 150],
+            'var3' => ['the milestone', 200],
+        ]);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_milestone_update_content_sid',
+            'twilio_milestone_update_template_status',
+            'No milestone-update template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppMilestoneUpdateTemplateManager::renderBody($vars));
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-delivery-ready — admin-only. Tells a
+     * client something is ready for their review, when they haven't written
+     * in to Lisa's connected number before. Twilio-only.
+     */
+    public static function sendDeliveryReady(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, [
+            'var2' => ["what's ready", 150],
+            'var3' => ['the link to review it', 300],
+        ]);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_delivery_ready_content_sid',
+            'twilio_delivery_ready_template_status',
+            'No delivery-ready template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppDeliveryReadyTemplateManager::renderBody($vars));
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-renewal-reminder — admin-only.
+     * Reminds a client their plan/subscription is renewing soon, when they
+     * haven't written in to Lisa's connected number before. Twilio-only.
+     */
+    public static function sendRenewalReminder(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, [
+            'var2' => ['the plan', 100],
+            'var3' => ['the renewal date', 100],
+        ]);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_renewal_reminder_content_sid',
+            'twilio_renewal_reminder_template_status',
+            'No renewal-reminder template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppRenewalReminderTemplateManager::renderBody($vars));
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-feedback-request — admin-only. Asks a
+     * client for a review/testimonial after delivering their project, when
+     * they haven't written in to Lisa's connected number before. Twilio-only.
+     */
+    public static function sendFeedbackRequest(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, [
+            'var2' => ['what was delivered', 150],
+            'var3' => ['the review link', 300],
+        ]);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_feedback_request_content_sid',
+            'twilio_feedback_request_template_status',
+            'No feedback-request template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppFeedbackRequestTemplateManager::renderBody($vars));
+    }
+
+    /**
+     * Shared tail end of every sendXxx() above: log the attempt into
+     * whatsapp_intros, bail with the Twilio error if it failed, otherwise
+     * seed the outbound thread with the real rendered body and respond.
+     * request_text stays null for these — none of them are "waiting on the
+     * client to send something back", so they don't need the asset-request
+     * fulfilled/nudge tracking that column drives.
+     *
+     * @param array{ok:bool,id:?string,template:string,error:?string} $sent
+     */
+    private static function logAndSendTemplate(string $contactName, string $digits, array $sent, string $renderedBody): void
+    {
+        $pdo = Database::get();
+        $pdo->prepare(
+            "INSERT INTO whatsapp_intros
+             (contact_name, phone_number, note, template_name, conversation_id, status, error_message)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )->execute([
+            $contactName,
+            '+' . $digits,
+            null,
+            $sent['template'],
+            $sent['id'],
+            $sent['ok'] ? 'sent' : 'failed',
+            $sent['ok'] ? null : $sent['error'],
+        ]);
+
+        if (!$sent['ok']) {
+            Response::error((string) $sent['error'], 502);
+        }
+
+        self::seedOutboundTemplate($pdo, $digits, $contactName, $renderedBody);
+
+        Response::json(['sent' => true, 'conversation_id' => $sent['id']], 201);
     }
 
     /**

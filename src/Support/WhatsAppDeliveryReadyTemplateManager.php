@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Support;
+
+/**
+ * Template for telling a client something is ready for their review (a
+ * design, a build, a draft), when they haven't written in to Lisa's
+ * connected number before.
+ *
+ * Shares its Twilio Content API plumbing with the other template managers
+ * via WhatsAppContentTemplateManager.
+ */
+final class WhatsAppDeliveryReadyTemplateManager extends WhatsAppContentTemplateManager
+{
+    protected const NAME = 'delivery_ready';
+    protected const LANGUAGE = 'en';
+
+    /** A status update on an existing project, not a promotion, so UTILITY. */
+    protected const CATEGORY = 'UTILITY';
+
+    /**
+     * {{1}} contact's name, {{2}} what's ready, {{3}} the link to review it —
+     * all filled in by LiveChatController::sendDeliveryReady().
+     */
+    protected const BODY = "Hi {{1}}, this is Lisa, Prince Caleb's assistant. "
+        . "Your {{2}} is ready for review: {{3}}";
+
+    protected const SAMPLE_VARIABLES = ['1' => 'Ama', '2' => 'website draft', '3' => 'https://princecaleb.dev/preview/123'];
+    protected const SID_SETTING = 'twilio_delivery_ready_content_sid';
+    protected const STATUS_SETTING = 'twilio_delivery_ready_template_status';
+}

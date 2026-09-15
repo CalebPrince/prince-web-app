@@ -69,6 +69,14 @@ use App\Controllers\OutreachController;
 use App\Controllers\WhatsAppTemplateController;
 use App\Controllers\WhatsAppAssetRequestTemplateController;
 use App\Controllers\WhatsAppShowcaseFollowupTemplateController;
+use App\Controllers\WhatsAppInvoiceReadyTemplateController;
+use App\Controllers\WhatsAppPaymentReceivedTemplateController;
+use App\Controllers\WhatsAppAppointmentReminderTemplateController;
+use App\Controllers\WhatsAppMilestoneUpdateTemplateController;
+use App\Controllers\WhatsAppDeliveryReadyTemplateController;
+use App\Controllers\WhatsAppRenewalReminderTemplateController;
+use App\Controllers\WhatsAppFeedbackRequestTemplateController;
+use App\Controllers\WhatsAppTemplateCatalogController;
 use App\Controllers\PaymentController;
 use App\Controllers\PipelineController;
 use App\Controllers\InboxController;
@@ -350,6 +358,43 @@ $router->post('/api/v1/admin/whatsapp/send-showcase-followup', [LiveChatControll
 $router->get('/api/v1/admin/whatsapp-template/showcase-followup', [WhatsAppShowcaseFollowupTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/showcase-followup', [WhatsAppShowcaseFollowupTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/showcase-followup/refresh', [WhatsAppShowcaseFollowupTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-invoice-ready', [LiveChatController::class, 'sendInvoiceReady']);
+$router->get('/api/v1/admin/whatsapp-template/invoice-ready', [WhatsAppInvoiceReadyTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/invoice-ready', [WhatsAppInvoiceReadyTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/invoice-ready/refresh', [WhatsAppInvoiceReadyTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-payment-received', [LiveChatController::class, 'sendPaymentReceived']);
+$router->get('/api/v1/admin/whatsapp-template/payment-received', [WhatsAppPaymentReceivedTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/payment-received', [WhatsAppPaymentReceivedTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/payment-received/refresh', [WhatsAppPaymentReceivedTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-appointment-reminder', [LiveChatController::class, 'sendAppointmentReminder']);
+$router->get('/api/v1/admin/whatsapp-template/appointment-reminder', [WhatsAppAppointmentReminderTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/appointment-reminder', [WhatsAppAppointmentReminderTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/appointment-reminder/refresh', [WhatsAppAppointmentReminderTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-milestone-update', [LiveChatController::class, 'sendMilestoneUpdate']);
+$router->get('/api/v1/admin/whatsapp-template/milestone-update', [WhatsAppMilestoneUpdateTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/milestone-update', [WhatsAppMilestoneUpdateTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/milestone-update/refresh', [WhatsAppMilestoneUpdateTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-delivery-ready', [LiveChatController::class, 'sendDeliveryReady']);
+$router->get('/api/v1/admin/whatsapp-template/delivery-ready', [WhatsAppDeliveryReadyTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/delivery-ready', [WhatsAppDeliveryReadyTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/delivery-ready/refresh', [WhatsAppDeliveryReadyTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-renewal-reminder', [LiveChatController::class, 'sendRenewalReminder']);
+$router->get('/api/v1/admin/whatsapp-template/renewal-reminder', [WhatsAppRenewalReminderTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/renewal-reminder', [WhatsAppRenewalReminderTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/renewal-reminder/refresh', [WhatsAppRenewalReminderTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-feedback-request', [LiveChatController::class, 'sendFeedbackRequest']);
+$router->get('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/feedback-request/refresh', [WhatsAppFeedbackRequestTemplateController::class, 'refresh']);
+
+$router->get('/api/v1/admin/whatsapp-templates', [WhatsAppTemplateCatalogController::class, 'index']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
 $router->get('/api/v1/admin/content-studio', [ContentStudioController::class, 'index']);

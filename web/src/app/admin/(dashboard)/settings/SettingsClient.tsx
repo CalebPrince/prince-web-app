@@ -10,8 +10,11 @@ import { ComposioAccounts } from "@/components/admin/ComposioAccounts";
 
 type CapabilityRow = { label: string; available: boolean; used_by: string[] };
 
-/** Lisa's WhatsApp intro template, as WhatsAppTemplateManager::status() reports it. */
-type IntroTemplate = {
+/** One Lisa WhatsApp template, as WhatsAppTemplateCatalogController::index() reports it. */
+type CatalogTemplate = {
+  key: string;
+  label: string;
+  description: string;
   content_sid: string | null;
   /** "not_created" until it exists, then Meta's verdict: pending/approved/rejected. */
   status: string;
@@ -20,7 +23,16 @@ type IntroTemplate = {
   category: string;
   body: string;
   provider: string;
+  status_url: string;
+  create_url: string;
+  refresh_url: string;
+  send_url: string;
+  /** Extra request-body field name => human label, for the send form in Marketing Leads. */
+  fields: Record<string, string>;
 };
+
+/** A MARKETING template idea not built yet — reference only. */
+type PlannedMarketing = { label: string; description: string; sample: string };
 
 type AiTestResult = {
   key_loaded?: boolean;
@@ -207,17 +219,10 @@ export default function SettingsClient({
   const [aiTest, setAiTest] = useState<{ text: string; ok: boolean } | null>(null);
   const [testingAi, setTestingAi] = useState(false);
 
-  const [introTpl, setIntroTpl] = useState<IntroTemplate | null>(null);
-  const [introMsg, setIntroMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [introBusy, setIntroBusy] = useState(false);
-
-  const [assetTpl, setAssetTpl] = useState<IntroTemplate | null>(null);
-  const [assetMsg, setAssetMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [assetBusy, setAssetBusy] = useState(false);
-
-  const [showcaseTpl, setShowcaseTpl] = useState<IntroTemplate | null>(null);
-  const [showcaseMsg, setShowcaseMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [showcaseBusy, setShowcaseBusy] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogTemplate[]>([]);
+  const [plannedMarketing, setPlannedMarketing] = useState<PlannedMarketing[]>([]);
+  const [catalogMsg, setCatalogMsg] = useState<Record<string, { text: string; ok: boolean }>>({});
+  const [catalogBusyKey, setCatalogBusyKey] = useState<string | null>(null);
 
   // Capability status is a convenience panel: a failure here should stay quiet
   // rather than surface as a settings error.
@@ -228,136 +233,51 @@ export default function SettingsClient({
       .catch(() => {});
   }, []);
 
-  // Same deal — the intro-template panel reports its own errors on demand, so a
+  // Same deal — the template catalog reports its own errors on demand, so a
   // failed initial read just leaves the status showing as unknown.
   useEffect(() => {
-    void loadIntroTemplate();
-    void loadAssetTemplate();
-    void loadShowcaseTemplate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadCatalog();
   }, []);
 
-  const loadIntroTemplate = () =>
+  const loadCatalog = () =>
     adminApi
-      .get<IntroTemplate>("/api/v1/admin/whatsapp-template")
-      .then(setIntroTpl)
+      .get<{ templates?: CatalogTemplate[]; planned_marketing?: PlannedMarketing[] }>(
+        "/api/v1/admin/whatsapp-templates"
+      )
+      .then((data) => {
+        setCatalog(data.templates ?? []);
+        setPlannedMarketing(data.planned_marketing ?? []);
+      })
       .catch(() => {});
 
-  const loadAssetTemplate = () =>
-    adminApi
-      .get<IntroTemplate>("/api/v1/admin/whatsapp-template/asset-request")
-      .then(setAssetTpl)
-      .catch(() => {});
-
-  const loadShowcaseTemplate = () =>
-    adminApi
-      .get<IntroTemplate>("/api/v1/admin/whatsapp-template/showcase-followup")
-      .then(setShowcaseTpl)
-      .catch(() => {});
-
-  const runIntroTemplate = async (
-    call: () => Promise<IntroTemplate>,
-    done: (t: IntroTemplate) => string
+  /** Shared by every row's Create & submit / Refresh status buttons. */
+  const runCatalogAction = async (
+    key: string,
+    url: string,
+    done: (t: CatalogTemplate) => string
   ) => {
-    setIntroBusy(true);
-    setIntroMsg(null);
+    setCatalogBusyKey(key);
+    setCatalogMsg((m) => ({ ...m, [key]: { text: "", ok: true } }));
     try {
-      const t = await call();
-      setIntroTpl(t);
-      setIntroMsg({ ok: t.status !== "rejected", text: done(t) });
+      const t = await adminApi.post<CatalogTemplate>(url);
+      setCatalog((list) => list.map((x) => (x.key === key ? { ...x, ...t } : x)));
+      setCatalogMsg((m) => ({ ...m, [key]: { ok: t.status !== "rejected", text: done(t) } }));
     } catch (err) {
-      setIntroMsg({
-        ok: false,
-        text: err instanceof Error ? err.message : "Twilio rejected the request.",
-      });
+      setCatalogMsg((m) => ({
+        ...m,
+        [key]: { ok: false, text: err instanceof Error ? err.message : "Twilio rejected the request." },
+      }));
     } finally {
-      setIntroBusy(false);
+      setCatalogBusyKey(null);
     }
   };
 
-  const createIntroTemplate = () =>
-    runIntroTemplate(
-      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template"),
-      (t) => `Submitted to Meta — currently ${t.status}.`
-    );
+  const createCatalogTemplate = (t: CatalogTemplate) =>
+    runCatalogAction(t.key, t.create_url, (r) => `Submitted to Meta — currently ${r.status}.`);
 
-  const refreshIntroTemplate = () =>
-    runIntroTemplate(
-      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/refresh"),
-      (t) =>
-        t.status === "approved"
-          ? "Approved — the Send Lisa intro button is live."
-          : `Still ${t.status}.`
-    );
-
-  const runAssetTemplate = async (
-    call: () => Promise<IntroTemplate>,
-    done: (t: IntroTemplate) => string
-  ) => {
-    setAssetBusy(true);
-    setAssetMsg(null);
-    try {
-      const t = await call();
-      setAssetTpl(t);
-      setAssetMsg({ ok: t.status !== "rejected", text: done(t) });
-    } catch (err) {
-      setAssetMsg({
-        ok: false,
-        text: err instanceof Error ? err.message : "Twilio rejected the request.",
-      });
-    } finally {
-      setAssetBusy(false);
-    }
-  };
-
-  const createAssetTemplate = () =>
-    runAssetTemplate(
-      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/asset-request"),
-      (t) => `Submitted to Meta — currently ${t.status}.`
-    );
-
-  const refreshAssetTemplate = () =>
-    runAssetTemplate(
-      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/asset-request/refresh"),
-      (t) =>
-        t.status === "approved"
-          ? "Approved — the Send asset request button is live."
-          : `Still ${t.status}.`
-    );
-
-  const runShowcaseTemplate = async (
-    call: () => Promise<IntroTemplate>,
-    done: (t: IntroTemplate) => string
-  ) => {
-    setShowcaseBusy(true);
-    setShowcaseMsg(null);
-    try {
-      const t = await call();
-      setShowcaseTpl(t);
-      setShowcaseMsg({ ok: t.status !== "rejected", text: done(t) });
-    } catch (err) {
-      setShowcaseMsg({
-        ok: false,
-        text: err instanceof Error ? err.message : "Twilio rejected the request.",
-      });
-    } finally {
-      setShowcaseBusy(false);
-    }
-  };
-
-  const createShowcaseTemplate = () =>
-    runShowcaseTemplate(
-      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/showcase-followup"),
-      (t) => `Submitted to Meta — currently ${t.status}.`
-    );
-
-  const refreshShowcaseTemplate = () =>
-    runShowcaseTemplate(
-      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/showcase-followup/refresh"),
-      (t) =>
-        t.status === "approved"
-          ? "Approved — the Send showcase follow-up button is live."
-          : `Still ${t.status}.`
+  const refreshCatalogTemplate = (t: CatalogTemplate) =>
+    runCatalogAction(t.key, t.refresh_url, (r) =>
+      r.status === "approved" ? "Approved — ready to send from Marketing Leads." : `Still ${r.status}.`
     );
 
   /** Asks the server to make one real call to the AI provider. */
@@ -791,172 +711,98 @@ export default function SettingsClient({
         <div className="space-y-4">
           {groupCard("messaging", "WhatsApp & phone")}
 
-          <Card title="Lisa intro template (Twilio)" bodyClassName="p-5 space-y-3">
+          <Card title="WhatsApp templates" bodyClassName="p-5 space-y-4">
             <p className="text-sm text-text-2">
-              WhatsApp only allows an approved template as the first message to
-              someone who hasn&apos;t written in. This builds it on Twilio and submits
-              it to Meta — no Console work. Approval is Meta&apos;s and takes minutes
-              to a day, so check back with Refresh.
+              Every business-initiated template Lisa can send — WhatsApp only allows
+              one of these as the first message to someone who hasn&apos;t written in.
+              Create & submit builds it on Twilio and sends it to Meta for approval
+              (usually minutes, sometimes up to a day — check back with Refresh).
+              Once a template shows <span className="text-green-500">approved</span>,
+              send it to a specific contact from Marketing Leads.
             </p>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  introTpl?.status === "approved"
-                    ? "bg-green-500/10 text-green-500"
-                    : introTpl?.status === "rejected"
-                      ? "bg-red-500/10 text-red-400"
-                      : "bg-bg-3 text-text-2"
-                }`}
-              >
-                <Activity className="w-3 h-3" />
-                {introTpl?.status ?? "…"}
-              </span>
-              {introTpl?.content_sid && (
-                <code className="text-xs text-text-3">{introTpl.content_sid}</code>
+            <div className="space-y-3">
+              {catalog.length === 0 && (
+                <p className="text-sm text-text-3">Loading templates…</p>
               )}
-            </div>
+              {catalog.map((t) => {
+                const msg = catalogMsg[t.key];
+                const busy = catalogBusyKey === t.key;
+                return (
+                  <div key={t.key} className="rounded-lg border border-hairline p-4 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="font-medium text-text">{t.label}</div>
+                        <div className="text-xs text-text-3">{t.description}</div>
+                      </div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium shrink-0 ${
+                          t.status === "approved"
+                            ? "bg-green-500/10 text-green-500"
+                            : t.status === "rejected"
+                              ? "bg-red-500/10 text-red-400"
+                              : "bg-bg-3 text-text-2"
+                        }`}
+                      >
+                        <Activity className="w-3 h-3" />
+                        {t.status}
+                      </span>
+                    </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={createIntroTemplate}
-                disabled={introBusy || !!introTpl?.content_sid}
-              >
-                <Send className="w-4 h-4" />
-                {introBusy ? "Working…" : "Create & submit"}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={refreshIntroTemplate}
-                disabled={introBusy || !introTpl?.content_sid}
-              >
-                Refresh status
-              </Button>
-              {introMsg && (
-                <span className={`text-sm ${introMsg.ok ? "text-green-500" : "text-red-400"}`}>
-                  {introMsg.text}
-                </span>
-              )}
-            </div>
+                    {t.content_sid && <code className="text-xs text-text-3">{t.content_sid}</code>}
 
-            {introTpl?.body && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
-                {introTpl.body}
-              </pre>
-            )}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => createCatalogTemplate(t)}
+                        disabled={busy || !!t.content_sid}
+                      >
+                        <Send className="w-4 h-4" />
+                        {busy ? "Working…" : "Create & submit"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => refreshCatalogTemplate(t)}
+                        disabled={busy || !t.content_sid}
+                      >
+                        Refresh status
+                      </Button>
+                      {msg?.text && (
+                        <span className={`text-sm ${msg.ok ? "text-green-500" : "text-red-400"}`}>
+                          {msg.text}
+                        </span>
+                      )}
+                    </div>
+
+                    {t.body && (
+                      <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
+                        {t.body}
+                      </pre>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </Card>
 
-          <Card title="Asset request template (Twilio)" bodyClassName="p-5 space-y-3">
+          <Card title="MARKETING templates (not built yet)" bodyClassName="p-5 space-y-3">
             <p className="text-sm text-text-2">
-              For a client you&apos;ve already discussed a project with, asking them to
-              send over something needed for it (a logo, an Instagram link) when
-              they haven&apos;t written in to Lisa&apos;s number before — same
-              business-initiated template requirement as the intro above.
+              Promotional/re-engagement ideas — worth more Meta scrutiny and need an
+              opt-in trail, so these are reference only until actually needed for this
+              business or a client&apos;s. Say the word and one gets built the same way
+              as the templates above.
             </p>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  assetTpl?.status === "approved"
-                    ? "bg-green-500/10 text-green-500"
-                    : assetTpl?.status === "rejected"
-                      ? "bg-red-500/10 text-red-400"
-                      : "bg-bg-3 text-text-2"
-                }`}
-              >
-                <Activity className="w-3 h-3" />
-                {assetTpl?.status ?? "…"}
-              </span>
-              {assetTpl?.content_sid && (
-                <code className="text-xs text-text-3">{assetTpl.content_sid}</code>
-              )}
+            <div className="space-y-3">
+              {plannedMarketing.map((m) => (
+                <div key={m.label} className="rounded-lg border border-hairline p-4 space-y-1">
+                  <div className="font-medium text-text">{m.label}</div>
+                  <div className="text-xs text-text-3">{m.description}</div>
+                  <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2 mt-2">
+                    {m.sample}
+                  </pre>
+                </div>
+              ))}
             </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={createAssetTemplate}
-                disabled={assetBusy || !!assetTpl?.content_sid}
-              >
-                <Send className="w-4 h-4" />
-                {assetBusy ? "Working…" : "Create & submit"}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={refreshAssetTemplate}
-                disabled={assetBusy || !assetTpl?.content_sid}
-              >
-                Refresh status
-              </Button>
-              {assetMsg && (
-                <span className={`text-sm ${assetMsg.ok ? "text-green-500" : "text-red-400"}`}>
-                  {assetMsg.text}
-                </span>
-              )}
-            </div>
-
-            {assetTpl?.body && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
-                {assetTpl.body}
-              </pre>
-            )}
-          </Card>
-
-          <Card title="Showcase follow-up template (Twilio)" bodyClassName="p-5 space-y-3">
-            <p className="text-sm text-text-2">
-              Checking in with a client already sent a demo showcase link (their new
-              website plus social pages) who hasn&apos;t replied, when they haven&apos;t
-              written in to Lisa&apos;s number before — same business-initiated
-              template requirement as the two templates above.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
-                  showcaseTpl?.status === "approved"
-                    ? "bg-green-500/10 text-green-500"
-                    : showcaseTpl?.status === "rejected"
-                      ? "bg-red-500/10 text-red-400"
-                      : "bg-bg-3 text-text-2"
-                }`}
-              >
-                <Activity className="w-3 h-3" />
-                {showcaseTpl?.status ?? "…"}
-              </span>
-              {showcaseTpl?.content_sid && (
-                <code className="text-xs text-text-3">{showcaseTpl.content_sid}</code>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={createShowcaseTemplate}
-                disabled={showcaseBusy || !!showcaseTpl?.content_sid}
-              >
-                <Send className="w-4 h-4" />
-                {showcaseBusy ? "Working…" : "Create & submit"}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={refreshShowcaseTemplate}
-                disabled={showcaseBusy || !showcaseTpl?.content_sid}
-              >
-                Refresh status
-              </Button>
-              {showcaseMsg && (
-                <span className={`text-sm ${showcaseMsg.ok ? "text-green-500" : "text-red-400"}`}>
-                  {showcaseMsg.text}
-                </span>
-              )}
-            </div>
-
-            {showcaseTpl?.body && (
-              <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
-                {showcaseTpl.body}
-              </pre>
-            )}
           </Card>
         </div>
       )}

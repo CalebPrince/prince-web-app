@@ -88,6 +88,25 @@ const emptyIntroForm = { contact_name: "", phone_number: "", note: "" };
 const emptyAssetRequestForm = { contact_name: "", phone_number: "", request_text: "your logo and Instagram profile link" };
 const emptyShowcaseFollowupForm = { contact_name: "", phone_number: "", note: "" };
 
+export type WhatsAppTemplateOption = {
+  key: string;
+  label: string;
+  status: string;
+  send_url: string;
+  /** Extra request-body field name => human label. */
+  fields: Record<string, string>;
+};
+
+/** Intro/asset-request/showcase-followup already have their own dedicated buttons above. */
+const LEGACY_TEMPLATE_KEYS = new Set(["intro", "asset_request", "showcase_followup"]);
+
+const emptySendTemplateForm = {
+  key: "",
+  contact_name: "",
+  phone_number: "",
+  fieldValues: {} as Record<string, string>,
+};
+
 function fitBand(lead: MarketingLead): FitFilter {
   if (lead.status === "rejected") return "rejected";
   const score = Number(lead.fit_score);
@@ -170,6 +189,24 @@ export default function MarketingLeadsClient({
   const [showcaseFollowupForm, setShowcaseFollowupForm] = useState(emptyShowcaseFollowupForm);
   const [showcaseFollowupNote, setShowcaseFollowupNote] = useState<{ text: string; ok: boolean } | null>(null);
   const [showcaseFollowupSending, setShowcaseFollowupSending] = useState(false);
+
+  // Every other WhatsApp template (invoice ready, payment received, etc.) —
+  // one picker instead of a dedicated button/modal per template, so this
+  // toolbar doesn't grow a new button every time a template gets added.
+  const [templateOptions, setTemplateOptions] = useState<WhatsAppTemplateOption[]>([]);
+  const [sendTemplateOpen, setSendTemplateOpen] = useState(false);
+  const [sendTemplateForm, setSendTemplateForm] = useState(emptySendTemplateForm);
+  const [sendTemplateNote, setSendTemplateNote] = useState<{ text: string; ok: boolean } | null>(null);
+  const [sendTemplateSending, setSendTemplateSending] = useState(false);
+
+  useEffect(() => {
+    adminApi
+      .get<{ templates?: WhatsAppTemplateOption[] }>("/api/v1/admin/whatsapp-templates")
+      .then((data) => setTemplateOptions((data.templates ?? []).filter((t) => !LEGACY_TEMPLATE_KEYS.has(t.key))))
+      .catch(() => {});
+  }, []);
+
+  const selectedTemplate = templateOptions.find((t) => t.key === sendTemplateForm.key) || null;
 
   const [intros, setIntros] = useState<WhatsAppIntro[]>([]);
   const [introsOpen, setIntrosOpen] = useState(false);
@@ -475,6 +512,48 @@ export default function MarketingLeadsClient({
     }
   };
 
+  // Covers every template beyond the three above (invoice ready, payment
+  // received, appointment reminder, etc.) — same "hasn't written in to
+  // Lisa's number before" template requirement, one field per placeholder
+  // the picked template actually declares (see WhatsAppTemplateCatalogController).
+  const sendCatalogTemplate = async () => {
+    const t = selectedTemplate;
+    if (!t) {
+      setSendTemplateNote({ ok: false, text: "Pick a template." });
+      return;
+    }
+    if (!sendTemplateForm.contact_name.trim() || !sendTemplateForm.phone_number.trim()) {
+      setSendTemplateNote({ ok: false, text: "Contact name and WhatsApp number are required." });
+      return;
+    }
+    const fieldNames = Object.keys(t.fields);
+    for (const field of fieldNames) {
+      if (!sendTemplateForm.fieldValues[field]?.trim()) {
+        setSendTemplateNote({ ok: false, text: `Enter ${t.fields[field].toLowerCase()}.` });
+        return;
+      }
+    }
+    setSendTemplateSending(true);
+    setSendTemplateNote(null);
+    try {
+      await adminApi.post(t.send_url, {
+        contact_name: sendTemplateForm.contact_name.trim(),
+        phone_number: sendTemplateForm.phone_number.trim(),
+        ...Object.fromEntries(fieldNames.map((field) => [field, sendTemplateForm.fieldValues[field].trim()])),
+      });
+      setSendTemplateNote({ ok: true, text: `${t.label} sent to ${sendTemplateForm.contact_name.trim()}.` });
+      setSendTemplateForm(emptySendTemplateForm);
+      await loadIntros();
+    } catch (err) {
+      setSendTemplateNote({
+        ok: false,
+        text: err instanceof Error ? err.message : "Could not send the template.",
+      });
+    } finally {
+      setSendTemplateSending(false);
+    }
+  };
+
   const savePitch = async () => {
     if (!pitchLead) return;
     await adminApi.patch(`/api/v1/admin/marketing-leads/${pitchLead.id}`, pitchForm);
@@ -603,6 +682,17 @@ export default function MarketingLeadsClient({
             >
               <MonitorPlay className="w-4 h-4" />
               Send showcase follow-up
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSendTemplateForm(emptySendTemplateForm);
+                setSendTemplateNote(null);
+                setSendTemplateOpen(true);
+              }}
+            >
+              <Send className="w-4 h-4" />
+              Send other template
             </Button>
             <Button variant="outline" onClick={() => setIntrosOpen((v) => !v)}>
               <Send className="w-4 h-4" />
@@ -1114,6 +1204,81 @@ export default function MarketingLeadsClient({
         {showcaseFollowupNote && (
           <p className={`text-sm ${showcaseFollowupNote.ok ? "text-emerald-400" : "text-red-400"}`}>
             {showcaseFollowupNote.text}
+          </p>
+        )}
+      </Modal>
+
+      {/* Send other template (invoice ready, payment received, etc.) */}
+      <Modal
+        isOpen={sendTemplateOpen}
+        onClose={() => setSendTemplateOpen(false)}
+        title="Send template"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setSendTemplateOpen(false)}>Close</Button>
+            <Button variant="primary" onClick={sendCatalogTemplate} disabled={sendTemplateSending}>
+              <Send className="w-4 h-4" />
+              {sendTemplateSending ? "Sending…" : "Send"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-white/60">
+          For a client who hasn&apos;t written in to Lisa&apos;s WhatsApp number before.
+          Only templates Meta has approved can actually send — check status under
+          Settings → Messaging → WhatsApp templates.
+        </p>
+        <Field label="Template">
+          <Select
+            value={sendTemplateForm.key}
+            onChange={(e) =>
+              setSendTemplateForm({ ...emptySendTemplateForm, key: e.target.value })
+            }
+          >
+            <option value="">Choose a template…</option>
+            {templateOptions.map((t) => (
+              <option key={t.key} value={t.key} disabled={t.status !== "approved"}>
+                {t.label}{t.status !== "approved" ? ` (${t.status})` : ""}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {selectedTemplate && (
+          <>
+            <Field label="Contact name">
+              <Input
+                required
+                value={sendTemplateForm.contact_name}
+                onChange={(e) => setSendTemplateForm({ ...sendTemplateForm, contact_name: e.target.value })}
+              />
+            </Field>
+            <Field label="WhatsApp number">
+              <Input
+                required
+                placeholder="+233…"
+                value={sendTemplateForm.phone_number}
+                onChange={(e) => setSendTemplateForm({ ...sendTemplateForm, phone_number: e.target.value })}
+              />
+            </Field>
+            {Object.entries(selectedTemplate.fields).map(([field, label]) => (
+              <Field key={field} label={label}>
+                <Input
+                  required
+                  value={sendTemplateForm.fieldValues[field] || ""}
+                  onChange={(e) =>
+                    setSendTemplateForm({
+                      ...sendTemplateForm,
+                      fieldValues: { ...sendTemplateForm.fieldValues, [field]: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            ))}
+          </>
+        )}
+        {sendTemplateNote && (
+          <p className={`text-sm ${sendTemplateNote.ok ? "text-emerald-400" : "text-red-400"}`}>
+            {sendTemplateNote.text}
           </p>
         )}
       </Modal>
