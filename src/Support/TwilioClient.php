@@ -160,6 +160,14 @@ final class TwilioClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 25,
             CURLOPT_USERPWD => $accountSid . ':' . $token,
+            // Twilio's MediaUrl answers with a 307 to the file's actual
+            // location rather than the bytes directly — without this, curl
+            // returns the redirect response itself (an HTML/JSON stub) as
+            // if it were the file. curl only re-sends the Authorization
+            // header on a same-host redirect by default, so this doesn't
+            // leak the account credentials to wherever Twilio redirects to.
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
         ]);
         $raw = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
