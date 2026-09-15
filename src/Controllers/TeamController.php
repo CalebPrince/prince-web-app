@@ -353,9 +353,10 @@ class TeamController
                 'name' => Settings::get('wendy_assistant_name') ?: 'Wendy',
                 'role' => 'Wendy Rhoades — Performance & Conflict Oversight',
                 'description' => 'Sits above the rest of the team — pulls real activity from every agent and '
-                    . 'Chloe\'s technical health, reads how the studio is actually running, coaches you on your '
-                    . 'own workload and what is piling up unreviewed, and works through conflicting signals with '
-                    . 'you when two agents point different directions.',
+                    . 'Chloe\'s technical health, reads how the studio is actually running, watches your own '
+                    . 'decisions and working patterns, identifies performance issues and unresolved tension, and '
+                    . 'steps in when you or the agents need challenging. When two agents point in different '
+                    . 'directions, she works through the conflict with you.',
                 'icon' => 'bi-chat-square-heart',
                 'status' => 'ondemand',
                 'status_label' => 'On demand',
