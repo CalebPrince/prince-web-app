@@ -127,7 +127,7 @@ class LiveChatController
 
         $transcript = self::rollingTranscript($transcript);
 
-        $transcript[] = ['role' => 'user', 'text' => $message];
+        $transcript[] = ['role' => 'user', 'text' => $message, 'ts' => gmdate('Y-m-d H:i:s')];
 
         $projects = self::projectCatalog($pdo);
         $result = self::generateReply($message, $transcript, $projects, $pdo, self::isOwnerSession(), [
@@ -136,7 +136,7 @@ class LiveChatController
             'phone' => $session['client_phone'] ?? '',
         ]);
 
-        $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+        $transcript[] = ['role' => 'assistant', 'text' => $result['reply'], 'ts' => gmdate('Y-m-d H:i:s')];
         $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
         self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
         self::markChatUnread($pdo, (int) $session['id']);
@@ -370,7 +370,7 @@ class LiveChatController
 
             $transcript = self::rollingTranscript($transcript);
             $isOwner = self::isOwnerWhatsAppNumber($from);
-            $transcript[] = ['role' => 'user', 'text' => $body];
+            $transcript[] = ['role' => 'user', 'text' => $body, 'ts' => gmdate('Y-m-d H:i:s')];
             $projects = self::projectCatalog($pdo);
             $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
                 'name' => $profileName,
@@ -382,7 +382,7 @@ class LiveChatController
                 error_log('Whapi Lisa reply failed: ' . (string) $sent['error']);
                 continue;
             }
-            $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+            $transcript[] = ['role' => 'assistant', 'text' => $result['reply'], 'ts' => gmdate('Y-m-d H:i:s')];
             $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
             self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
             self::markChatUnread($pdo, (int) $session['id']);
@@ -451,7 +451,7 @@ class LiveChatController
 
             $transcript = self::rollingTranscript($transcript);
             $isOwner = self::isOwnerWhatsAppNumber($from);
-            $transcript[] = ['role' => 'user', 'text' => $body];
+            $transcript[] = ['role' => 'user', 'text' => $body, 'ts' => gmdate('Y-m-d H:i:s')];
             $projects = self::projectCatalog($pdo);
             $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
                 'name' => $senderName,
@@ -463,7 +463,7 @@ class LiveChatController
                 error_log('Wati Lisa reply failed: ' . (string) $sent['error']);
                 continue;
             }
-            $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+            $transcript[] = ['role' => 'assistant', 'text' => $result['reply'], 'ts' => gmdate('Y-m-d H:i:s')];
             $readyForPrototype = (bool) $session['ready_for_prototype'] || $result['ready'];
             self::saveTranscript($pdo, (int) $session['id'], $transcript, $readyForPrototype);
             self::markChatUnread($pdo, (int) $session['id']);
@@ -549,7 +549,7 @@ class LiveChatController
                 : null;
             $turnText = $body !== '' ? $body : self::inboundAttachmentPlaceholder($attachment);
 
-            $userTurn = ['role' => 'user', 'text' => $turnText];
+            $userTurn = ['role' => 'user', 'text' => $turnText, 'ts' => gmdate('Y-m-d H:i:s')];
             if ($attachment !== null) {
                 $userTurn['attachment_url'] = $attachment['url'];
                 $userTurn['attachment_type'] = $attachment['type'];
@@ -570,7 +570,7 @@ class LiveChatController
                 error_log('Twilio Lisa reply failed: ' . (string) $sent['error']);
                 continue;
             }
-            $transcript[] = ['role' => 'assistant', 'text' => $result['reply']];
+            $transcript[] = ['role' => 'assistant', 'text' => $result['reply'], 'ts' => gmdate('Y-m-d H:i:s')];
 
             // A tool this turn (create_invoice) produced a file — send it as a
             // follow-up WhatsApp document. The text reply already landed, so a
@@ -589,6 +589,7 @@ class LiveChatController
                         'attachment_url' => (string) $result['attachment']['url'],
                         'attachment_type' => 'document',
                         'attachment_mime' => 'application/pdf',
+                        'ts' => gmdate('Y-m-d H:i:s'),
                     ];
                 } else {
                     error_log('Twilio Lisa invoice PDF send failed: ' . (string) $media['error']);
@@ -881,7 +882,15 @@ class LiveChatController
             $role = (string) ($turn['role'] ?? '');
             $text = trim((string) ($turn['message'] ?? $turn['text'] ?? ''));
             if ($text === '') continue;
-            $newTurns[] = ['role' => in_array($role, ['agent', 'assistant'], true) ? 'assistant' : 'user', 'text' => $text];
+            $newTurns[] = [
+                'role' => in_array($role, ['agent', 'assistant'], true) ? 'assistant' : 'user',
+                'text' => $text,
+                // ElevenLabs' payload carries no per-turn timestamp of its
+                // own — the whole call transcript lands in one batch after
+                // the call ends, so "now" (when it's recorded) is the
+                // honest value here, not when each line was actually said.
+                'ts' => gmdate('Y-m-d H:i:s'),
+            ];
         }
         if (!$newTurns) {
             Response::json(['ok' => false, 'reason' => 'Empty transcript.']);
@@ -1416,7 +1425,7 @@ class LiveChatController
         if (count($transcript) >= self::MAX_TRANSCRIPT_MESSAGES) {
             Response::error('This thread has gone on a while — please start a new one.', 422);
         }
-        $transcript[] = ['role' => 'user', 'text' => $description];
+        $transcript[] = ['role' => 'user', 'text' => $description, 'ts' => gmdate('Y-m-d H:i:s')];
 
         $html = self::prototypeWithGemini($transcript);
         if ($html === null) {
@@ -1825,12 +1834,21 @@ class LiveChatController
      * chat_sessions row twilioWebhook() will append to later, found by the
      * same token, so a reply lands in an existing thread rather than a new one.
      */
-    private static function seedOutboundTemplate(\PDO $pdo, string $digits, string $contactName, string $bodyText): void
+    /**
+     * Writes a business-initiated WhatsApp send (a template, or free text
+     * sent outside the normal reply flow — e.g. a nudge cron) into that
+     * contact's chat_sessions transcript, since neither is a reply to
+     * anything already in there and would otherwise never show up in the
+     * admin Inbox. Public so a standalone cron script (no controller
+     * context of its own) can call it too — see
+     * database/send_asset_request_nudges.php.
+     */
+    public static function seedOutboundTemplate(\PDO $pdo, string $digits, string $contactName, string $bodyText): void
     {
         $token = 'whatsapp:+' . $digits;
         $session = self::findOrCreateSessionByExactToken($pdo, $token);
         $transcript = self::rollingTranscript(json_decode((string) ($session['transcript_json'] ?? '[]'), true) ?: []);
-        $transcript[] = ['role' => 'assistant', 'text' => $bodyText];
+        $transcript[] = ['role' => 'assistant', 'text' => $bodyText, 'ts' => gmdate('Y-m-d H:i:s')];
         self::saveTranscript($pdo, (int) $session['id'], $transcript);
         if (empty($session['client_name'])) {
             $pdo->prepare('UPDATE chat_sessions SET client_name = ?, client_phone = ? WHERE id = ?')

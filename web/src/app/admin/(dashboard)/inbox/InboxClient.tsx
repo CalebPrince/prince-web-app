@@ -12,6 +12,9 @@ import { Button, Input, ErrorBanner } from "@/components/admin/ui";
 export type InboxMessage = {
   role: string;
   text: string;
+  // Absent on any turn recorded before per-message timestamps were added —
+  // render nothing for those rather than a misleading guessed time.
+  ts?: string | null;
   attachment_url?: string | null;
   attachment_type?: "image" | "document" | "audio" | "video" | null;
   attachment_mime?: string | null;
@@ -91,6 +94,16 @@ function shortTime(value: string) {
   return (Date.now() - date.getTime()) / 86400000 < 1
     ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
     : date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+/** Per-message stamp inside the chat, WhatsApp-style: just the time for
+ *  today, a short date ahead of it for anything older. */
+function messageTimestamp(value: string) {
+  const date = new Date(value.replace(" ", "T") + "Z");
+  if (isNaN(date.getTime())) return value;
+  const time = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const isToday = new Date().toDateString() === date.toDateString();
+  return isToday ? time : `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
 }
 
 const URL_PATTERN = /(https?:\/\/[^\s<>"']+)/g;
@@ -502,6 +515,7 @@ export default function InboxClient({ initialItems }: { initialItems: InboxItem[
                             ? "Prince Caleb · Owner"
                             : "Visitor"
                           : "Lisa"}
+                        {m.ts && <> · {messageTimestamp(m.ts)}</>}
                       </small>
                       <p className="text-sm whitespace-pre-wrap">{linkify(m.text)}</p>
                       <AttachmentPreview message={m} />

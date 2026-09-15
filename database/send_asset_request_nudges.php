@@ -18,9 +18,11 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
+use App\Controllers\LiveChatController;
 use App\Support\Database;
 use App\Support\Settings;
 use App\Support\TwilioClient;
+use App\Support\WhatsAppAssetRequestTemplateManager;
 
 const NUDGE_TIERS = [
     ['column' => 'nudge_4h_sent_at', 'hours' => 4],
@@ -68,21 +70,27 @@ foreach (NUDGE_TIERS as $tier) {
             continue;
         }
         $ask = trim((string) $row['request_text']) !== '' ? $row['request_text'] : 'that';
+        $contactName = (string) $row['contact_name'];
 
-        $result = $row['in_session']
-            ? TwilioClient::sendText(
-                $digits,
-                "Hi {$row['contact_name']}, just following up — still need {$ask} for your website "
-                    . "project when you get a chance. Let me know if you have any questions! — Lisa"
-            )
-            : TwilioClient::sendTemplate($digits, $contentSid, [
-                '1' => (string) $row['contact_name'],
-                '2' => (string) $ask,
-            ]);
+        // Built either way so a successful send has real text to record into
+        // the transcript below — not just a description of what happened.
+        if ($row['in_session']) {
+            $bodyText = "Hi {$contactName}, just following up — still need {$ask} for your website "
+                . "project when you get a chance. Let me know if you have any questions! — Lisa";
+            $result = TwilioClient::sendText($digits, $bodyText);
+        } else {
+            $bodyText = WhatsAppAssetRequestTemplateManager::renderBody(['1' => $contactName, '2' => $ask]);
+            $result = TwilioClient::sendTemplate($digits, $contentSid, ['1' => $contactName, '2' => $ask]);
+        }
 
         if ($result['ok']) {
             $pdo->prepare("UPDATE whatsapp_intros SET {$column} = datetime('now') WHERE id = ?")
                 ->execute([$row['id']]);
+            // Without this, the nudge reaches WhatsApp but never appears in
+            // the admin Inbox — the same gap already found and fixed once
+            // for the original template send (see seedOutboundTemplate()'s
+            // own docblock).
+            LiveChatController::seedOutboundTemplate($pdo, $digits, $contactName, $bodyText);
             $sent++;
         } else {
             error_log('Asset-request nudge failed for intro #' . $row['id'] . ': ' . (string) $result['error']);
