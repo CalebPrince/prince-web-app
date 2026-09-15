@@ -413,7 +413,14 @@ class WendyController
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         $emailDone = !$to || !empty($observation['emailed_at']);
         if (!$emailDone) {
-            $emailDone = Mailer::send($to, $name . ': session requested — ' . $observation['summary'], $body);
+            // The subject already said whose alert this was, but the body
+            // itself didn't — unlike the WhatsApp send below, which already
+            // prefixes $waBody with her name. Same fix, same reason.
+            $emailDone = Mailer::send(
+                $to,
+                $name . ': session requested — ' . $observation['summary'],
+                "{$name} here — {$body}"
+            );
         }
         if ($emailDone && $to && empty($observation['emailed_at'])) {
             $pdo->prepare("UPDATE wendy_observations SET emailed_at = datetime('now') WHERE id = ?")

@@ -55,7 +55,13 @@ use PDO;
  */
 class ChloeInvestigator
 {
-    public const AGENT_NAME = 'Chloe';
+    // The fuller persona name from her Team page role ("Chloe O'Brian —
+    // Technical Operations & Monitoring") — used here (alerts, third-person)
+    // so an email/WhatsApp message is unmistakably from her, not Lisa or a
+    // generic system notice. Her own chat system prompt (ChloeController)
+    // has a separate, deliberately short "Chloe" fallback for first-person
+    // self-introduction — this constant is not used there.
+    public const AGENT_NAME = "Chloe O'Brian";
 
     private const MIN_CONFIDENCE_TO_ESCALATE = 70;
     private const MIN_MINUTES_DOWN_TO_ESCALATE = 3;
@@ -263,14 +269,15 @@ class ChloeInvestigator
                  WHERE id = ?"
             )->execute([$existing['id']]);
             if (!empty($existing['escalated_at'])) {
+                $name = self::displayName();
                 $message = 'Error-log activity has returned to its normal rate.';
                 $to = Settings::get('notification_email') ?: Settings::get('social_email');
                 if ($to) {
-                    Mailer::send($to, '✅ ' . self::displayName() . ': error rate back to normal', $message);
+                    Mailer::send($to, "✅ {$name}: error rate back to normal", "{$name} here — {$message}");
                 }
                 if (WhatsAppNotifier::isOwnerConfigured()) {
-                    WhatsAppNotifier::sendOwnerAlert('✅ ' . $message, [
-                        'name' => self::displayName(), 'reason' => 'Error rate back to normal',
+                    WhatsAppNotifier::sendOwnerAlert("✅ {$name} — {$message}", [
+                        'name' => $name, 'reason' => 'Error rate back to normal',
                         'summary' => $message, 'message' => $message,
                     ]);
                 }
@@ -574,16 +581,17 @@ class ChloeInvestigator
             return; // never escalated — no recovery notice needed
         }
 
+        $name = self::displayName();
         $siteName = $incident['monitor_name'] ?? 'The site';
         $message = "{$siteName} has recovered and is responding normally again.";
 
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         if ($to) {
-            Mailer::send($to, '✅ ' . self::displayName() . ': ' . $siteName . ' recovered', $message);
+            Mailer::send($to, "✅ {$name}: {$siteName} recovered", "{$name} here — {$message}");
         }
         if (WhatsAppNotifier::isOwnerConfigured()) {
-            WhatsAppNotifier::sendOwnerAlert('✅ ' . $message, [
-                'name' => self::displayName(),
+            WhatsAppNotifier::sendOwnerAlert("✅ {$name} — {$message}", [
+                'name' => $name,
                 'reason' => $siteName . ' recovered',
                 'summary' => $message,
                 'message' => $message,
@@ -606,10 +614,15 @@ class ChloeInvestigator
             return;
         }
 
+        $name = self::displayName();
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         $emailDone = !$to || !empty($incident['emailed_at']);
         if (!$emailDone) {
-            $emailDone = Mailer::send($to, self::displayName() . ': ' . $incident['title'], $incident['narrative']);
+            $emailDone = Mailer::send(
+                $to,
+                "{$name}: " . $incident['title'],
+                "{$name} here — " . $incident['narrative']
+            );
         }
         if ($emailDone && $to && empty($incident['emailed_at'])) {
             $pdo->prepare("UPDATE chloe_incidents SET emailed_at = datetime('now') WHERE id = ?")->execute([$incidentId]);
@@ -618,11 +631,16 @@ class ChloeInvestigator
         $waConfigured = WhatsAppNotifier::isOwnerConfigured();
         $waDone = !$waConfigured || !empty($incident['whatsapp_sent_at']);
         if (!$waDone) {
-            $waDone = WhatsAppNotifier::sendOwnerAlert($incident['narrative'], [
-                'name' => self::displayName(),
+            // sendOwnerAlert()'s $fields (including 'name') only reaches the
+            // message on ElevenLabs' template provider — Twilio and Whapi
+            // send $body verbatim, so the identifier has to be baked into it
+            // here, the same way Wendy's WhatsApp alert already does.
+            $waBody = "\u{1F50D} {$name} — " . $incident['title'] . "\n\n" . $incident['narrative'];
+            $waDone = WhatsAppNotifier::sendOwnerAlert($waBody, [
+                'name' => $name,
                 'reason' => $incident['title'],
                 'summary' => mb_substr((string) $incident['narrative'], 0, 900),
-                'message' => mb_substr((string) $incident['narrative'], 0, 900),
+                'message' => mb_substr($waBody, 0, 900),
             ]);
         }
         if ($waDone && $waConfigured && empty($incident['whatsapp_sent_at'])) {
