@@ -20,6 +20,8 @@ use App\Support\SharedAgentTools;
 use App\Support\TwilioClient;
 use App\Support\WatiClient;
 use App\Support\WhapiClient;
+use App\Support\WhatsAppAssetRequestTemplateManager;
+use App\Support\WhatsAppTemplateManager;
 
 /**
  * Live Chat: a requirements-gathering conversation. The AI cannot build or
@@ -843,6 +845,15 @@ class LiveChatController
         if (!$sent['ok']) {
             Response::error((string) $sent['error'], 502);
         }
+
+        // Only Twilio's body is known locally (ElevenLabs owns its template
+        // text on its own dashboard, referenced here only by name) — an
+        // honest placeholder for that case rather than guessing the wording.
+        $bodyText = $provider === 'twilio'
+            ? WhatsAppTemplateManager::renderBody(['1' => $contactName])
+            : '[Template sent: ' . $sent['template'] . ']';
+        self::seedOutboundTemplate($pdo, $digits, $contactName, $bodyText);
+
         Response::json(['sent' => true, 'conversation_id' => $sent['id']], 201);
     }
 
@@ -902,6 +913,14 @@ class LiveChatController
         if (!$sent['ok']) {
             Response::error((string) $sent['error'], 502);
         }
+
+        self::seedOutboundTemplate(
+            $pdo,
+            $digits,
+            $contactName,
+            WhatsAppAssetRequestTemplateManager::renderBody(['1' => $contactName, '2' => $requestText])
+        );
+
         Response::json(['sent' => true, 'conversation_id' => $sent['id']], 201);
     }
 
@@ -1597,6 +1616,27 @@ class LiveChatController
             'id' => (int) $pdo->lastInsertId(), 'token' => $token, 'transcript_json' => '[]',
             'prototype_status' => 'none', 'ready_for_prototype' => 0,
         ];
+    }
+
+    /**
+     * Seeds (or appends to) the WhatsApp thread with the outbound template
+     * text at send time, so sendIntro()/sendAssetRequest() show up in Inbox
+     * as the opening message rather than leaving the thread to start
+     * mid-conversation the first time the contact replies — the same
+     * chat_sessions row twilioWebhook() will append to later, found by the
+     * same token, so a reply lands in an existing thread rather than a new one.
+     */
+    private static function seedOutboundTemplate(\PDO $pdo, string $digits, string $contactName, string $bodyText): void
+    {
+        $token = 'whatsapp:+' . $digits;
+        $session = self::findOrCreateSessionByExactToken($pdo, $token);
+        $transcript = self::rollingTranscript(json_decode((string) ($session['transcript_json'] ?? '[]'), true) ?: []);
+        $transcript[] = ['role' => 'assistant', 'text' => $bodyText];
+        self::saveTranscript($pdo, (int) $session['id'], $transcript);
+        if (empty($session['client_name'])) {
+            $pdo->prepare('UPDATE chat_sessions SET client_name = ?, client_phone = ? WHERE id = ?')
+                ->execute([$contactName, '+' . $digits, $session['id']]);
+        }
     }
 
     private static function requireSession(\PDO $pdo, string $token): array

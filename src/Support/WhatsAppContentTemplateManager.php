@@ -73,6 +73,23 @@ abstract class WhatsAppContentTemplateManager
         return static::status();
     }
 
+    /**
+     * The template's real body with {{n}} placeholders filled in — used to
+     * seed the WhatsApp chat_sessions thread with the actual outbound text
+     * at send time (LiveChatController::seedOutboundTemplate), so the
+     * message shows up in Inbox rather than only in the whatsapp_intros log.
+     *
+     * @param array<string,string> $vars Keyed "1", "2", ... matching the template's own placeholders.
+     */
+    public static function renderBody(array $vars): string
+    {
+        $body = static::BODY;
+        foreach ($vars as $key => $value) {
+            $body = str_replace('{{' . $key . '}}', $value, $body);
+        }
+        return $body;
+    }
+
     /** @return array<string,mixed> */
     public static function status(): array
     {
