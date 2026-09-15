@@ -1601,6 +1601,12 @@ class LiveChatController
      * so unlike that one, a miss always creates the row under the exact
      * $token given, never a fresh random one. That's what makes the same
      * WhatsApp number resume its own thread on every message.
+     *
+     * A brand-new WhatsApp session also backfills the most recent template
+     * whatsapp_intros shows was sent to this number — covers a reply to a
+     * send that predates seedOutboundTemplate(), and any future template
+     * path that forgets to call it, so a first reply here never opens a
+     * thread that looks like it starts mid-conversation.
      */
     private static function findOrCreateSessionByExactToken(\PDO $pdo, string $token): array
     {
@@ -1612,10 +1618,57 @@ class LiveChatController
         }
 
         $pdo->prepare('INSERT INTO chat_sessions (token) VALUES (?)')->execute([$token]);
+        $id = (int) $pdo->lastInsertId();
+        $transcriptJson = '[]';
+
+        if (str_starts_with($token, 'whatsapp:')) {
+            $phoneNumber = substr($token, strlen('whatsapp:'));
+            $stmt = $pdo->prepare(
+                "SELECT contact_name, note, template_name FROM whatsapp_intros
+                 WHERE phone_number = ? AND status = 'sent' ORDER BY created_at DESC LIMIT 1"
+            );
+            $stmt->execute([$phoneNumber]);
+            $intro = $stmt->fetch();
+            if ($intro) {
+                $bodyText = self::backfillTemplateBody($intro);
+                $transcriptJson = json_encode([['role' => 'assistant', 'text' => $bodyText]]);
+                $pdo->prepare('UPDATE chat_sessions SET transcript_json = ?, client_name = ?, client_phone = ? WHERE id = ?')
+                    ->execute([$transcriptJson, $intro['contact_name'], $phoneNumber, $id]);
+            }
+        }
+
         return [
-            'id' => (int) $pdo->lastInsertId(), 'token' => $token, 'transcript_json' => '[]',
+            'id' => $id, 'token' => $token, 'transcript_json' => $transcriptJson,
             'prototype_status' => 'none', 'ready_for_prototype' => 0,
         ];
+    }
+
+    /**
+     * Reconstructs the real body text of a whatsapp_intros row after the
+     * fact, for findOrCreateSessionByExactToken()'s backfill above.
+     * template_name holds Twilio's content SID for a Twilio send (matched
+     * against the two known template settings to know which one and get its
+     * real wording back via renderBody()); note holds "Requested: <text>"
+     * for an asset-request, the only place that second placeholder survived.
+     * Anything else (ElevenLabs, an unrecognised SID) gets an honest
+     * placeholder rather than a guessed-at wording.
+     *
+     * @param array<string,mixed> $intro
+     */
+    private static function backfillTemplateBody(array $intro): string
+    {
+        $sid = trim((string) $intro['template_name']);
+        $contactName = (string) $intro['contact_name'];
+
+        if ($sid !== '' && $sid === trim((string) Settings::get('twilio_intro_content_sid'))) {
+            return WhatsAppTemplateManager::renderBody(['1' => $contactName]);
+        }
+        if ($sid !== '' && $sid === trim((string) Settings::get('twilio_asset_request_content_sid'))) {
+            $note = (string) ($intro['note'] ?? '');
+            $requestText = str_starts_with($note, 'Requested: ') ? substr($note, strlen('Requested: ')) : '';
+            return WhatsAppAssetRequestTemplateManager::renderBody(['1' => $contactName, '2' => $requestText]);
+        }
+        return '[Earlier template message sent — see Marketing Leads → Templates sent for the exact text]';
     }
 
     /**
