@@ -27,6 +27,7 @@ use App\Support\WhatsAppFeedbackRequestTemplateManager;
 use App\Support\WhatsAppInvoiceReadyTemplateManager;
 use App\Support\WhatsAppMilestoneUpdateTemplateManager;
 use App\Support\WhatsAppPaymentReceivedTemplateManager;
+use App\Support\WhatsAppProjectKickoffTemplateManager;
 use App\Support\WhatsAppRenewalReminderTemplateManager;
 use App\Support\WhatsAppShowcaseFollowupTemplateManager;
 use App\Support\WhatsAppTemplateManager;
@@ -1102,6 +1103,77 @@ class LiveChatController
                 ? null
                 : 'Twilio could not send the template message. ' . (string) $sent['error'],
         ];
+    }
+
+    /**
+     * POST /api/v1/admin/whatsapp/send-project-kickoff — admin-only. Generic
+     * counterpart to sendAssetRequest() above for a client whose project
+     * isn't a website (a WhatsApp agent, an automation build, etc.) — same
+     * "ready to start, send me what I need" ask without naming a specific
+     * service. Like sendAssetRequest(), this IS waiting on the client to
+     * send something back, so it stores request_text the same way — that's
+     * what drives the fulfilled/nudge tracking in the "Templates sent"
+     * panel. Twilio-only.
+     */
+    public static function sendProjectKickoff(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $contactName = trim((string) ($data['contact_name'] ?? ''));
+        $digits = self::normalizePhoneDigits((string) ($data['phone_number'] ?? ''));
+        $requestText = trim((string) ($data['request_text'] ?? ''));
+        if ($contactName === '' || mb_strlen($contactName) > 120) {
+            Response::error('Enter a contact name (up to 120 characters).', 422);
+        }
+        if ($digits === '' || mb_strlen($digits) < 8) {
+            Response::error('Enter the contact\'s WhatsApp number including country code.', 422);
+        }
+        if ($requestText === '' || mb_strlen($requestText) > 300) {
+            Response::error('Say what you want them to send (up to 300 characters).', 422);
+        }
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error(
+                'Project-kickoff templates only go out on the Twilio provider — '
+                . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.',
+                422
+            );
+        }
+
+        $vars = ['1' => $contactName, '2' => $requestText];
+        $sent = self::sendTwilioNamedTemplate(
+            $digits,
+            $vars,
+            'twilio_project_kickoff_content_sid',
+            'twilio_project_kickoff_template_status',
+            'No project-kickoff template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        $pdo = Database::get();
+        $pdo->prepare(
+            "INSERT INTO whatsapp_intros
+             (contact_name, phone_number, note, template_name, conversation_id, status, error_message, request_text)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        )->execute([
+            $contactName,
+            '+' . $digits,
+            'Requested: ' . $requestText,
+            $sent['template'],
+            $sent['id'],
+            $sent['ok'] ? 'sent' : 'failed',
+            $sent['ok'] ? null : $sent['error'],
+            $requestText,
+        ]);
+
+        if (!$sent['ok']) {
+            Response::error((string) $sent['error'], 502);
+        }
+
+        self::seedOutboundTemplate($pdo, $digits, $contactName, WhatsAppProjectKickoffTemplateManager::renderBody($vars));
+
+        Response::json(['sent' => true, 'conversation_id' => $sent['id']], 201);
     }
 
     /**
@@ -2337,6 +2409,11 @@ class LiveChatController
         }
         if ($sid !== '' && $sid === trim((string) Settings::get('twilio_showcase_followup_content_sid'))) {
             return WhatsAppShowcaseFollowupTemplateManager::renderBody(['1' => $contactName]);
+        }
+        if ($sid !== '' && $sid === trim((string) Settings::get('twilio_project_kickoff_content_sid'))) {
+            $note = (string) ($intro['note'] ?? '');
+            $requestText = str_starts_with($note, 'Requested: ') ? substr($note, strlen('Requested: ')) : '';
+            return WhatsAppProjectKickoffTemplateManager::renderBody(['1' => $contactName, '2' => $requestText]);
         }
         return '[Earlier template message sent — see Marketing Leads → Templates sent for the exact text]';
     }

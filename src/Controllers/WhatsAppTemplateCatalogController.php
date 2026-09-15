@@ -13,6 +13,7 @@ use App\Support\WhatsAppFeedbackRequestTemplateManager;
 use App\Support\WhatsAppInvoiceReadyTemplateManager;
 use App\Support\WhatsAppMilestoneUpdateTemplateManager;
 use App\Support\WhatsAppPaymentReceivedTemplateManager;
+use App\Support\WhatsAppProjectKickoffTemplateManager;
 use App\Support\WhatsAppRenewalReminderTemplateManager;
 use App\Support\WhatsAppShowcaseFollowupTemplateManager;
 use App\Support\WhatsAppTemplateManager;
@@ -47,10 +48,18 @@ final class WhatsAppTemplateCatalogController
         ],
         'asset_request' => [
             'label' => 'Asset request',
-            'description' => 'Asks an already-discussed client to send over something needed for their project (logo, IG link, etc).',
+            'description' => 'Asks an already-discussed client to send over something needed for their project (logo, IG link, etc). Worded for a website project specifically.',
             'manager' => WhatsAppAssetRequestTemplateManager::class,
             'slug' => 'asset-request',
             'send' => '/api/v1/admin/whatsapp/send-asset-request',
+            'fields' => ['request_text' => 'What to ask for'],
+        ],
+        'project_kickoff' => [
+            'label' => 'Project kickoff',
+            'description' => 'Generic "ready to start, send me what I need" message for any already-discussed project — a WhatsApp agent, an automation build, or anything that isn\'t a website (use Asset request for those).',
+            'manager' => WhatsAppProjectKickoffTemplateManager::class,
+            'slug' => 'project-kickoff',
+            'send' => '/api/v1/admin/whatsapp/send-project-kickoff',
             'fields' => ['request_text' => 'What to ask for'],
         ],
         'showcase_followup' => [

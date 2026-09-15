@@ -77,6 +77,7 @@ use App\Controllers\WhatsAppDeliveryReadyTemplateController;
 use App\Controllers\WhatsAppRenewalReminderTemplateController;
 use App\Controllers\WhatsAppFeedbackRequestTemplateController;
 use App\Controllers\WhatsAppTemplateCatalogController;
+use App\Controllers\WhatsAppProjectKickoffTemplateController;
 use App\Controllers\PaymentController;
 use App\Controllers\PipelineController;
 use App\Controllers\InboxController;
@@ -393,6 +394,11 @@ $router->post('/api/v1/admin/whatsapp/send-feedback-request', [LiveChatControlle
 $router->get('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/feedback-request/refresh', [WhatsAppFeedbackRequestTemplateController::class, 'refresh']);
+
+$router->post('/api/v1/admin/whatsapp/send-project-kickoff', [LiveChatController::class, 'sendProjectKickoff']);
+$router->get('/api/v1/admin/whatsapp-template/project-kickoff', [WhatsAppProjectKickoffTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/project-kickoff', [WhatsAppProjectKickoffTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/project-kickoff/refresh', [WhatsAppProjectKickoffTemplateController::class, 'refresh']);
 
 $router->get('/api/v1/admin/whatsapp-templates', [WhatsAppTemplateCatalogController::class, 'index']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
