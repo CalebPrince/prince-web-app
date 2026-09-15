@@ -70,6 +70,9 @@ const STATUS_COLOR: Record<string, string> = {
   ondemand: "bg-sky-500",
   building: "bg-blue-500",
   paused: "bg-neutral-500",
+  // Wendy only — an open observation flagged wants_session (see
+  // WendyController::saveObservation).
+  alert: "bg-red-500",
 };
 
 const CAPACITY_LABEL: Record<string, string> = {

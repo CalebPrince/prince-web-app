@@ -1033,6 +1033,31 @@ class Chief
             . "Be brief and lead with the answer. Plain text, no markdown.";
     }
 
+    /**
+     * Raw daily snapshots for the last $days days — the full snapshot_json
+     * each brief was written from, not just its narrated headline/body.
+     * Public: this is what makes real multi-day pattern analysis possible
+     * (see WendyController::patternHistory) without a second history table —
+     * this cron already captures exactly the numbers a pattern needs, one
+     * row per day, for free.
+     *
+     * @return array<int,array{brief_date:string,snapshot_json:string}>
+     */
+    public static function recentSnapshots(PDO $pdo, int $days): array
+    {
+        $days = max(1, min(90, $days));
+        try {
+            $stmt = $pdo->prepare(
+                "SELECT brief_date, snapshot_json FROM agent_daily_briefs
+                 WHERE brief_date >= date('now', ?) ORDER BY brief_date ASC"
+            );
+            $stmt->execute(['-' . $days . ' days']);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
     /** @return array<int,array<string,mixed>> */
     private static function pastBriefs(PDO $pdo, int $limit): array
     {

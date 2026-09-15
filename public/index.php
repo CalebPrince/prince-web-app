@@ -418,6 +418,8 @@ $router->get('/api/v1/admin/chloe/incidents/{id}', [ChloeController::class, 'inc
 $router->post('/api/v1/admin/chloe/incidents/{id}/dismiss', [ChloeController::class, 'dismissIncident']);
 $router->post('/api/v1/admin/chloe/investigate', [ChloeController::class, 'investigateNow']);
 $router->post('/api/v1/admin/agents/wendy/chat', [WendyController::class, 'chat']);
+$router->get('/api/v1/admin/wendy/observations', [WendyController::class, 'observationsIndex']);
+$router->post('/api/v1/admin/wendy/observations/{id}/dismiss', [WendyController::class, 'dismissObservation']);
 $router->get('/api/v1/admin/activity-log', [ActivityLogController::class, 'index']);
 $router->get('/api/v1/admin/activity-log/entity-types', [ActivityLogController::class, 'entityTypes']);
 $router->get('/api/v1/admin/error-logs', [ErrorLogController::class, 'index']);

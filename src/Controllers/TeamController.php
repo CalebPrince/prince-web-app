@@ -92,12 +92,23 @@ class TeamController
         } catch (\Throwable $e) {
             $chloeOpenIncidents = 0;
         }
-        // Same shape as Scout/Reel's own stat — a real log of exchanges,
-        // not an invented counter. Wendy has no artifact table of her own
-        // since she only chats and never writes anything.
-        $wendyChats = (int) $pdo->query(
-            "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'wendy_chat'"
-        )->fetchColumn();
+        // Guarded like chloeOpenIncidents above — wendy_observations is a
+        // new table too.
+        try {
+            $wendyOpenObservations = (int) $pdo->query(
+                "SELECT COUNT(*) FROM wendy_observations WHERE status = 'open'"
+            )->fetchColumn();
+            $wendyUnresolvedPatterns = (int) $pdo->query(
+                "SELECT COUNT(*) FROM wendy_observations WHERE status = 'open' AND category = 'pattern'"
+            )->fetchColumn();
+            $wendySessionRequested = (int) $pdo->query(
+                "SELECT COUNT(*) FROM wendy_observations WHERE status = 'open' AND wants_session = 1"
+            )->fetchColumn() > 0;
+        } catch (\Throwable $e) {
+            $wendyOpenObservations = 0;
+            $wendyUnresolvedPatterns = 0;
+            $wendySessionRequested = false;
+        }
 
         $agents = [
             [
@@ -358,10 +369,12 @@ class TeamController
                     . 'steps in when you or the agents need challenging. When two agents point in different '
                     . 'directions, she works through the conflict with you.',
                 'icon' => 'bi-chat-square-heart',
-                'status' => 'ondemand',
-                'status_label' => 'On demand',
-                'stat_value' => $wendyChats,
-                'stat_label' => 'check-ins',
+                'status' => $wendySessionRequested ? 'alert' : 'ondemand',
+                'status_label' => $wendySessionRequested
+                    ? "\u{1F534} Session requested"
+                    : self::wendyStatusLabel($wendyOpenObservations, $wendyUnresolvedPatterns),
+                'stat_value' => $wendyOpenObservations,
+                'stat_label' => 'open observations',
                 'manage_url' => '/admin/agent-chat',
                 'manage_label' => 'Talk to Wendy',
             ],
@@ -507,5 +520,18 @@ class TeamController
     private static function emptyCapacity(): array
     {
         return ['active_projects' => 0, 'overdue_projects' => 0, 'due_soon' => 0, 'next_deadline' => null, 'level' => 'clear', 'projects' => []];
+    }
+
+    /** Wendy's card status when no session is requested — e.g. "2 observations · 1 unresolved pattern". */
+    private static function wendyStatusLabel(int $openObservations, int $unresolvedPatterns): string
+    {
+        if ($openObservations === 0) {
+            return 'On demand';
+        }
+        $parts = [$openObservations . ' observation' . ($openObservations === 1 ? '' : 's')];
+        if ($unresolvedPatterns > 0) {
+            $parts[] = $unresolvedPatterns . ' unresolved pattern' . ($unresolvedPatterns === 1 ? '' : 's');
+        }
+        return implode(' · ', $parts);
     }
 }

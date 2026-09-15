@@ -67,11 +67,19 @@ class WendyController
                 self::teamActivityToolDeclaration(),
                 self::operationalHealthToolDeclaration(),
                 self::founderWorkloadToolDeclaration(),
+                self::patternHistoryToolDeclaration(),
+                self::listOpenObservationsToolDeclaration(),
+                self::saveObservationToolDeclaration(),
+                self::resolveObservationToolDeclaration(),
             ],
             fn(string $name, array $args) => match ($name) {
                 'team_activity' => Chief::snapshot($pdo, (int) ($args['hours'] ?? 24)),
                 'operational_health' => ChloeInvestigator::snapshot($pdo),
                 'founder_workload' => self::founderWorkload($pdo),
+                'pattern_history' => self::patternHistory($pdo, (int) ($args['days'] ?? 14)),
+                'list_open_observations' => ['observations' => self::listOpenObservations($pdo)],
+                'save_observation' => self::saveObservation($pdo, $args),
+                'resolve_observation' => self::resolveObservation($pdo, (int) ($args['observation_id'] ?? 0)),
                 default => ['error' => 'Unknown tool.'],
             },
             $transcript
@@ -96,30 +104,45 @@ class WendyController
             . "team_activity (what every agent did, what's switched off, what's config-broken) and real technical "
             . "health from operational_health (site uptime, open incidents Chloe is tracking), and tell Caleb the "
             . "truth about how the studio is actually running — never a flattering gloss, never padding.\n\n"
-            . "Second, watch Caleb himself — not just his workload but his decisions and working patterns. "
-            . "founder_workload gives you his real project load, deadlines, and exactly what's sitting unreviewed "
-            . "in his queue; team_activity's command_center section covers his own logged actions across the "
-            . "admin panel, so you can see what he's actually been doing, not just what the agents did. Call "
-            . "team_activity at more than one window (a day, then a week) when you want to tell a one-off from a "
-            . "real pattern — a queue that keeps refilling rather than emptying, a deadline that keeps slipping, "
-            . "activity that shows him building or configuring instead of shipping what's actually due. When you "
-            . "see a real pattern — including unresolved tension, like an agent's config_note or health field "
-            . "flagging something he's visibly not acted on — name it plainly and push back. A coach who lets a "
-            . "repeat happen to keep the peace isn't doing the job, and that goes both directions: challenge the "
-            . "agents' output when it doesn't hold up too, not only Caleb.\n\n"
+            . "Second, watch Caleb himself — not just his workload but his decisions and working patterns over "
+            . "time. founder_workload gives you his real project load, deadlines, and exactly what's sitting "
+            . "unreviewed in his queue right now; pattern_history gives you real day-by-day history — team "
+            . "action counts, whether his queue was empty or piling up each day and its trend, and which "
+            . "chat-agents were first used within the window, a real signal for \"a new agent just got added.\" "
+            . "Reach for pattern_history whenever the question is about a pattern rather than a moment — a queue "
+            . "that keeps refilling rather than emptying, a habit of standing up a new agent while an existing "
+            . "one's output sits unreviewed. When it shows a real pattern, name it plainly and push back — "
+            . "including unresolved tension, like an agent's config_note or health field flagging something he's "
+            . "visibly not acted on. A coach who lets a repeat happen to keep the peace isn't doing the job, and "
+            . "that goes both directions: challenge the agents' output when it doesn't hold up too, not only "
+            . "Caleb.\n\n"
             . "Third, mediate: when Caleb tells you two agents (or two signals) are pointing different directions "
             . "— Beacon likes a lead Dossier's research makes him wary of, Chief's brief reads one way and "
             . "Chloe's incidents read another — don't referee from instinct. Pull the real data each one is "
             . "actually built on via your tools and reconcile it with him, the way she'd sit Bobby and Chuck down "
             . "and work the actual facts rather than picking a side.\n\n"
+            . "Fourth, you have real memory across conversations now — not of what was said, but of what you've "
+            . "actually found. Open any conversation that touches patterns or performance by calling "
+            . "list_open_observations, so you don't re-discover and re-save the same thing Caleb already knows "
+            . "about. When pattern_history, team_activity, or founder_workload shows something genuinely worth "
+            . "flagging — not every session, only a settled finding backed by real data — call save_observation "
+            . "with a short summary, the fuller detail, and evidence naming exactly what backed it (which tool, "
+            . "which numbers). Set wants_session true only for something that actually warrants Caleb opening "
+            . "this chat specifically to deal with it, not routine commentary — that flag is what surfaces a "
+            . "session request on the Team page rather than a quiet count. Once he's actually dealt with "
+            . "something you flagged, call resolve_observation so it stops showing as open. Save sparingly: a "
+            . "coach who logs every passing thought is noise, not oversight.\n\n"
             . "CRITICAL: never state a number, status, or fact you did not just get from a tool call in this "
-            . "conversation — and don't diagnose a pattern from a single data point when a wider window is one "
-            . "more tool call away. You have no memory between separate conversations, so never claim to have "
-            . "been watching something over days or sessions; every read comes from what your tools show you "
-            . "this turn, at whatever window you actually pulled. If a queue is empty or nothing is wrong, say so "
-            . "— manufacturing concern to sound useful is exactly the flattery-shaped failure a real coach "
-            . "doesn't commit. You are direct and unsentimental, but never cruel for its own sake — the read is "
-            . "always in service of Caleb doing better, not of you sounding sharp.\n\n"
+            . "conversation. pattern_history is built from Chief's own daily briefs, so it only has real history "
+            . "as far back as that cron has actually been running — when it reports too few days of data, say so "
+            . "plainly and treat anything it still shows as provisional, not a confirmed pattern. You have no "
+            . "memory of the words in a past conversation — every fact still has to come from a tool call this "
+            . "turn, including list_open_observations for anything you've previously found; never claim to "
+            . "recall something Caleb said in an earlier session that isn't sitting in an open observation you "
+            . "just read. If a queue is empty or nothing is wrong, say so — manufacturing concern to sound "
+            . "useful is exactly the flattery-shaped failure a real coach doesn't commit. You are direct and "
+            . "unsentimental, but never cruel for its own sake — the read is always in service of Caleb doing "
+            . "better, not of you sounding sharp.\n\n"
             . "Speak naturally, never output raw JSON. Be concise and lead with the read, not a recitation of "
             . "every number your tools returned.";
     }
@@ -176,5 +199,247 @@ class WendyController
             'capacity' => $capacity['owner'],
             'waiting_on_you' => Chief::waitingOnYou($pdo),
         ];
+    }
+
+    private static function patternHistoryToolDeclaration(): array
+    {
+        return [
+            'name' => 'pattern_history',
+            'description' => 'Real day-by-day history, not just right now: team action counts, whether Caleb\'s '
+                . 'waiting-on-you queue was empty or piling up each day and its trend (rising/falling/flat), and '
+                . 'which chat-agents were first used within the window — a real, honest signal for "a new agent '
+                . 'got added," since agent creation itself isn\'t a logged event but first use is. Built from '
+                . 'Chief\'s own daily briefs, so it only has data as far back as that cron has actually run, and '
+                . 'will say so plainly when there isn\'t enough history yet — never invent a trend when this tool '
+                . 'reports insufficient data.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'days' => ['type' => 'INTEGER', 'description' => 'How many days back to look. Default 14, min 3, max 60.'],
+                ],
+                'required' => [],
+            ],
+        ];
+    }
+
+    /**
+     * Reuses Chief's own daily-brief history (agent_daily_briefs) rather
+     * than a second snapshot table — that cron already captures exactly the
+     * numbers a pattern needs, one row per day, for free. "New agent" isn't
+     * a logged event anywhere, so it's approximated honestly by the first
+     * admin_activity_log row for each chat-agent's own entity_type — a real
+     * timestamp, not a guess.
+     *
+     * @return array<string,mixed>
+     */
+    private static function patternHistory(\PDO $pdo, int $days): array
+    {
+        $days = max(3, min(60, $days ?: 14));
+        $briefs = Chief::recentSnapshots($pdo, $days);
+
+        $dailySnapshots = [];
+        $queueTotals = [];
+        foreach ($briefs as $brief) {
+            $snapshot = json_decode((string) $brief['snapshot_json'], true) ?: [];
+            $waiting = $snapshot['waiting_on_you'] ?? [];
+            $queueTotal = array_sum(array_column($waiting, 'count'));
+            $dailySnapshots[] = [
+                'date' => $brief['brief_date'],
+                'team_actions' => (int) ($snapshot['totals']['actions'] ?? 0),
+                'agents_active' => (int) ($snapshot['totals']['agents_that_worked'] ?? 0),
+                'queue_total' => $queueTotal,
+                'queue_labels' => array_column($waiting, 'label'),
+            ];
+            $queueTotals[] = $queueTotal;
+        }
+
+        $trend = 'insufficient_data';
+        if (count($queueTotals) >= 4) {
+            $half = (int) floor(count($queueTotals) / 2);
+            $firstAvg = array_sum(array_slice($queueTotals, 0, $half)) / max(1, $half);
+            $secondAvg = array_sum(array_slice($queueTotals, -$half)) / max(1, $half);
+            if ($secondAvg > $firstAvg * 1.2) {
+                $trend = 'rising';
+            } elseif ($secondAvg < $firstAvg * 0.8) {
+                $trend = 'falling';
+            } else {
+                $trend = 'flat';
+            }
+        }
+
+        $newAgents = [];
+        try {
+            $since = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+            $stmt = $pdo->prepare(
+                "SELECT entity_type, MIN(created_at) AS first_used_at
+                 FROM admin_activity_log
+                 WHERE entity_type LIKE '%\\_chat' ESCAPE '\\'
+                 GROUP BY entity_type
+                 HAVING first_used_at >= ?
+                 ORDER BY first_used_at ASC"
+            );
+            $stmt->execute([$since]);
+            $newAgents = array_map(static fn(array $r): array => [
+                'agent' => str_replace('_chat', '', (string) $r['entity_type']),
+                'first_used_at' => $r['first_used_at'],
+            ], $stmt->fetchAll(\PDO::FETCH_ASSOC));
+        } catch (\Throwable $e) {
+            // admin_activity_log always exists — an unexpected failure here
+            // shouldn't fail the whole tool, just omit this one signal.
+        }
+
+        return [
+            'window_days' => $days,
+            'daily_snapshots_available' => count($dailySnapshots),
+            'daily_snapshots' => $dailySnapshots,
+            'queue_nonzero_days' => count(array_filter($queueTotals, static fn($n) => $n > 0)),
+            'queue_trend' => $trend,
+            'new_agents_first_used_in_window' => $newAgents,
+            'note' => count($dailySnapshots) < 3
+                ? "Fewer than 3 daily briefs exist in this window — Chief's daily-brief cron "
+                    . '(database/send_daily_brief.php) needs to run for several more days before a real trend is '
+                    . 'visible. Treat anything above as provisional, not a confirmed pattern.'
+                : null,
+        ];
+    }
+
+    // ------------------------------------------------------- observations
+
+    private static function listOpenObservationsToolDeclaration(): array
+    {
+        return [
+            'name' => 'list_open_observations',
+            'description' => 'Your own open findings from past conversations — what you\'ve already flagged and '
+                . 'haven\'t resolved yet. Call this at the start of any conversation touching patterns or '
+                . 'performance so you don\'t re-discover and re-save something Caleb already knows about.',
+            'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+        ];
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private static function listOpenObservations(\PDO $pdo): array
+    {
+        return $pdo->query(
+            "SELECT id, category, summary, detail, evidence, wants_session, created_at
+             FROM wendy_observations WHERE status = 'open' ORDER BY created_at DESC"
+        )->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private static function saveObservationToolDeclaration(): array
+    {
+        return [
+            'name' => 'save_observation',
+            'description' => 'Save a genuine finding so it persists across conversations — this is what gives '
+                . 'you real memory. Only call this for a settled finding actually backed by pattern_history, '
+                . 'team_activity, founder_workload, or operational_health data, never a passing impression. Not '
+                . 'for every conversation — save sparingly, the way a real coach writes down a real pattern, not '
+                . 'every session\'s small talk.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'category' => ['type' => 'STRING', 'description' => 'One of: pattern, tension, mediation.'],
+                    'summary' => ['type' => 'STRING', 'description' => 'One short line — what you found.'],
+                    'detail' => ['type' => 'STRING', 'description' => 'The fuller read: what it means and why it matters.'],
+                    'evidence' => ['type' => 'STRING', 'description' =>
+                        'Exactly what data backed this — which tool, which numbers (e.g. "pattern_history: queue '
+                        . 'non-zero 11 of last 14 days, trend rising; 2 new chat-agents first used in the same '
+                        . 'window"). Never leave this vague.'],
+                    'wants_session' => ['type' => 'BOOLEAN', 'description' =>
+                        'True only if this genuinely warrants Caleb opening this chat specifically to deal with '
+                        . 'it — surfaces as a session request on the Team page. False for routine findings.'],
+                ],
+                'required' => ['summary', 'detail', 'evidence'],
+            ],
+        ];
+    }
+
+    /** @return array{saved:true,id:int}|array{error:string} */
+    private static function saveObservation(\PDO $pdo, array $args): array
+    {
+        $summary = trim((string) ($args['summary'] ?? ''));
+        $detail = trim((string) ($args['detail'] ?? ''));
+        $evidence = trim((string) ($args['evidence'] ?? ''));
+        if ($summary === '' || $detail === '' || $evidence === '') {
+            return ['error' => 'Missing required fields — need summary, detail, and evidence.'];
+        }
+        $category = in_array($args['category'] ?? '', ['pattern', 'tension', 'mediation'], true)
+            ? $args['category'] : 'pattern';
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO wendy_observations (category, summary, detail, evidence, wants_session)
+             VALUES (?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([$category, $summary, $detail, $evidence, !empty($args['wants_session']) ? 1 : 0]);
+
+        return ['saved' => true, 'id' => (int) $pdo->lastInsertId()];
+    }
+
+    private static function resolveObservationToolDeclaration(): array
+    {
+        return [
+            'name' => 'resolve_observation',
+            'description' => 'Mark a previously saved observation resolved once Caleb has actually dealt with '
+                . 'it — in this conversation, he told you he\'s handled it or you both agreed it no longer '
+                . 'applies. Do not resolve something he has only acknowledged hearing; resolve means dealt with.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'observation_id' => ['type' => 'INTEGER', 'description' => 'The observation ID, from list_open_observations.'],
+                ],
+                'required' => ['observation_id'],
+            ],
+        ];
+    }
+
+    /** @return array{resolved:true}|array{error:string} */
+    private static function resolveObservation(\PDO $pdo, int $id): array
+    {
+        if ($id <= 0) {
+            return ['error' => 'A valid observation_id is required.'];
+        }
+        $stmt = $pdo->prepare(
+            "UPDATE wendy_observations SET status = 'resolved', resolved_at = datetime('now') WHERE id = ? AND status = 'open'"
+        );
+        $stmt->execute([$id]);
+        if ($stmt->rowCount() === 0) {
+            return ['error' => 'No open observation with that ID.'];
+        }
+        return ['resolved' => true];
+    }
+
+    // ------------------------------------------------------------ admin API
+
+    /** GET /api/v1/admin/wendy/observations?status=open */
+    public static function observationsIndex(): void
+    {
+        AuthMiddleware::requireAuth();
+        $pdo = Database::get();
+        $status = trim((string) ($_GET['status'] ?? '')) ?: null;
+
+        if ($status !== null) {
+            $stmt = $pdo->prepare('SELECT * FROM wendy_observations WHERE status = ? ORDER BY created_at DESC');
+            $stmt->execute([$status]);
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } else {
+            $rows = $pdo->query('SELECT * FROM wendy_observations ORDER BY created_at DESC LIMIT 100')->fetchAll(\PDO::FETCH_ASSOC);
+        }
+
+        Response::json(['observations' => $rows]);
+    }
+
+    /** POST /api/v1/admin/wendy/observations/{id}/dismiss — Caleb dismisses one directly, outside chat. */
+    public static function dismissObservation(array $params): void
+    {
+        $user = AuthMiddleware::requireAuth();
+        $id = (int) $params['id'];
+        $stmt = Database::get()->prepare(
+            "UPDATE wendy_observations SET status = 'dismissed', resolved_at = datetime('now') WHERE id = ? AND status = 'open'"
+        );
+        $stmt->execute([$id]);
+        if ($stmt->rowCount() === 0) {
+            Response::error('No open observation with that ID.', 404);
+        }
+        ActivityLog::log($user, 'dismissed', 'wendy_observation', $id);
+        Response::json(['status' => 'dismissed']);
     }
 }

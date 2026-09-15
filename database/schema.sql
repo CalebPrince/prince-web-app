@@ -1088,6 +1088,27 @@ CREATE TABLE IF NOT EXISTS chloe_incidents (
 CREATE INDEX IF NOT EXISTS idx_chloe_incidents_source ON chloe_incidents (source_type, source_id, status);
 CREATE INDEX IF NOT EXISTS idx_chloe_incidents_status ON chloe_incidents (status, started_at);
 
+-- Wendy's persisted observations (App\Controllers\WendyController) — what
+-- turns her from a stateless chat into something with real pattern memory.
+-- She only writes a row here herself, mid-conversation, via save_observation,
+-- when pattern_history or another tool actually backed up a genuine finding
+-- (mirrors Radar's own restraint saving DM drafts: not every exchange, only
+-- a settled one). evidence is free text naming which tool/data point it's
+-- grounded in, not a structured replay of the tool call — same trust level
+-- every other agent's "never invent a fact" discipline already runs on.
+CREATE TABLE IF NOT EXISTS wendy_observations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category TEXT NOT NULL DEFAULT 'pattern' CHECK (category IN ('pattern', 'tension', 'mediation')),
+  summary TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  evidence TEXT NOT NULL,
+  wants_session INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved', 'dismissed')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  resolved_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_wendy_observations_status ON wendy_observations (status, created_at);
+
 -- Recurring billing (e.g. monthly maintenance retainers) via Paystack
 -- subscription plans. The admin creates a row, which creates a Paystack
 -- plan + checkout link; the client authorizing that checkout is what
