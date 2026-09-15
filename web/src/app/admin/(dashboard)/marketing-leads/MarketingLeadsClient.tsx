@@ -86,6 +86,7 @@ const emptyLeadForm = {
 
 const emptyIntroForm = { contact_name: "", phone_number: "", note: "" };
 const emptyAssetRequestForm = { contact_name: "", phone_number: "", request_text: "your logo and Instagram profile link" };
+const emptyShowcaseFollowupForm = { contact_name: "", phone_number: "", note: "" };
 
 function fitBand(lead: MarketingLead): FitFilter {
   if (lead.status === "rejected") return "rejected";
@@ -164,6 +165,11 @@ export default function MarketingLeadsClient({
   const [assetRequestForm, setAssetRequestForm] = useState(emptyAssetRequestForm);
   const [assetRequestNote, setAssetRequestNote] = useState<{ text: string; ok: boolean } | null>(null);
   const [assetRequestSending, setAssetRequestSending] = useState(false);
+
+  const [showcaseFollowupOpen, setShowcaseFollowupOpen] = useState(false);
+  const [showcaseFollowupForm, setShowcaseFollowupForm] = useState(emptyShowcaseFollowupForm);
+  const [showcaseFollowupNote, setShowcaseFollowupNote] = useState<{ text: string; ok: boolean } | null>(null);
+  const [showcaseFollowupSending, setShowcaseFollowupSending] = useState(false);
 
   const [intros, setIntros] = useState<WhatsAppIntro[]>([]);
   const [introsOpen, setIntrosOpen] = useState(false);
@@ -438,6 +444,37 @@ export default function MarketingLeadsClient({
     }
   };
 
+  // For a client already sent a demo showcase link (their new website plus
+  // social pages) who hasn't replied, checking in when they haven't written
+  // in to Lisa's number before — same template requirement as sendIntro above.
+  const sendShowcaseFollowup = async () => {
+    if (!showcaseFollowupForm.contact_name.trim() || !showcaseFollowupForm.phone_number.trim()) {
+      setShowcaseFollowupNote({ ok: false, text: "Contact name and WhatsApp number are required." });
+      return;
+    }
+    setShowcaseFollowupSending(true);
+    setShowcaseFollowupNote(null);
+    try {
+      await adminApi.post("/api/v1/admin/whatsapp/send-showcase-followup", {
+        contact_name: showcaseFollowupForm.contact_name.trim(),
+        phone_number: showcaseFollowupForm.phone_number.trim(),
+        note: showcaseFollowupForm.note.trim(),
+      });
+      setShowcaseFollowupNote({
+        ok: true,
+        text: `Showcase follow-up sent to ${showcaseFollowupForm.contact_name.trim()}.`,
+      });
+      setShowcaseFollowupForm(emptyShowcaseFollowupForm);
+    } catch (err) {
+      setShowcaseFollowupNote({
+        ok: false,
+        text: err instanceof Error ? err.message : "Could not send the showcase follow-up.",
+      });
+    } finally {
+      setShowcaseFollowupSending(false);
+    }
+  };
+
   const savePitch = async () => {
     if (!pitchLead) return;
     await adminApi.patch(`/api/v1/admin/marketing-leads/${pitchLead.id}`, pitchForm);
@@ -555,6 +592,17 @@ export default function MarketingLeadsClient({
             >
               <ImagePlus className="w-4 h-4" />
               Send asset request
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowcaseFollowupForm(emptyShowcaseFollowupForm);
+                setShowcaseFollowupNote(null);
+                setShowcaseFollowupOpen(true);
+              }}
+            >
+              <MonitorPlay className="w-4 h-4" />
+              Send showcase follow-up
             </Button>
             <Button variant="outline" onClick={() => setIntrosOpen((v) => !v)}>
               <Send className="w-4 h-4" />
@@ -1016,6 +1064,56 @@ export default function MarketingLeadsClient({
         {assetRequestNote && (
           <p className={`text-sm ${assetRequestNote.ok ? "text-emerald-400" : "text-red-400"}`}>
             {assetRequestNote.text}
+          </p>
+        )}
+      </Modal>
+
+      {/* Send showcase follow-up */}
+      <Modal
+        isOpen={showcaseFollowupOpen}
+        onClose={() => setShowcaseFollowupOpen(false)}
+        title="Send showcase follow-up"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowcaseFollowupOpen(false)}>Close</Button>
+            <Button variant="primary" onClick={sendShowcaseFollowup} disabled={showcaseFollowupSending}>
+              <Send className="w-4 h-4" />
+              {showcaseFollowupSending ? "Sending…" : "Send follow-up"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-white/60">
+          For a client already sent a demo showcase link (their new website plus
+          social pages) who hasn&apos;t replied, when they haven&apos;t written in to
+          Lisa&apos;s WhatsApp number before. WhatsApp requires an approved template
+          as the first business-initiated message, so this sends that template.
+        </p>
+        <Field label="Contact name">
+          <Input
+            required
+            value={showcaseFollowupForm.contact_name}
+            onChange={(e) => setShowcaseFollowupForm({ ...showcaseFollowupForm, contact_name: e.target.value })}
+          />
+        </Field>
+        <Field label="WhatsApp number">
+          <Input
+            required
+            placeholder="+233…"
+            value={showcaseFollowupForm.phone_number}
+            onChange={(e) => setShowcaseFollowupForm({ ...showcaseFollowupForm, phone_number: e.target.value })}
+          />
+        </Field>
+        <Field label="Note (for your records only)">
+          <Textarea
+            rows={2}
+            value={showcaseFollowupForm.note}
+            onChange={(e) => setShowcaseFollowupForm({ ...showcaseFollowupForm, note: e.target.value })}
+          />
+        </Field>
+        {showcaseFollowupNote && (
+          <p className={`text-sm ${showcaseFollowupNote.ok ? "text-emerald-400" : "text-red-400"}`}>
+            {showcaseFollowupNote.text}
           </p>
         )}
       </Modal>

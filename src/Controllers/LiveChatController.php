@@ -21,6 +21,7 @@ use App\Support\TwilioClient;
 use App\Support\WatiClient;
 use App\Support\WhapiClient;
 use App\Support\WhatsAppAssetRequestTemplateManager;
+use App\Support\WhatsAppShowcaseFollowupTemplateManager;
 use App\Support\WhatsAppTemplateManager;
 
 /**
@@ -1097,6 +1098,111 @@ class LiveChatController
     }
 
     /**
+     * POST /api/v1/admin/whatsapp/send-showcase-followup — admin-only. Same
+     * business-initiated-template requirement as sendIntro()/
+     * sendAssetRequest() above, but for checking in with a client who was
+     * already sent a demo showcase link (their new website plus social
+     * pages) and hasn't replied — no per-send text beyond their name.
+     * Twilio-only — this template has no ElevenLabs equivalent.
+     */
+    public static function sendShowcaseFollowup(): void
+    {
+        AuthMiddleware::requireAuth();
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $contactName = trim((string) ($data['contact_name'] ?? ''));
+        $digits = self::normalizePhoneDigits((string) ($data['phone_number'] ?? ''));
+        $note = trim((string) ($data['note'] ?? ''));
+        if ($contactName === '' || mb_strlen($contactName) > 120) {
+            Response::error('Enter a contact name (up to 120 characters).', 422);
+        }
+        if ($digits === '' || mb_strlen($digits) < 8) {
+            Response::error('Enter the contact\'s WhatsApp number including country code.', 422);
+        }
+        if (mb_strlen($note) > 500) {
+            Response::error('Note is too long (500 characters max).', 422);
+        }
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error(
+                'Showcase follow-up templates only go out on the Twilio provider — '
+                . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.',
+                422
+            );
+        }
+        $sent = self::sendTwilioShowcaseFollowup($digits, $contactName);
+
+        $pdo = Database::get();
+        $pdo->prepare(
+            "INSERT INTO whatsapp_intros
+             (contact_name, phone_number, note, template_name, conversation_id, status, error_message)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )->execute([
+            $contactName,
+            '+' . $digits,
+            $note !== '' ? $note : null,
+            $sent['template'],
+            $sent['id'],
+            $sent['ok'] ? 'sent' : 'failed',
+            $sent['ok'] ? null : $sent['error'],
+        ]);
+
+        if (!$sent['ok']) {
+            Response::error((string) $sent['error'], 502);
+        }
+
+        self::seedOutboundTemplate(
+            $pdo,
+            $digits,
+            $contactName,
+            WhatsAppShowcaseFollowupTemplateManager::renderBody(['1' => $contactName])
+        );
+
+        Response::json(['sent' => true, 'conversation_id' => $sent['id']], 201);
+    }
+
+    /** @return array{ok:bool,id:?string,template:string,error:?string} */
+    private static function sendTwilioShowcaseFollowup(string $digits, string $contactName): array
+    {
+        $contentSid = trim((string) Settings::get('twilio_showcase_followup_content_sid'));
+        if (!TwilioClient::isConfigured() || TwilioClient::senderDigits() === '') {
+            Response::error('Set the Twilio account SID, auth token, and WhatsApp number in Settings first.', 422);
+        }
+        if ($contentSid === '') {
+            Response::error(
+                'No showcase follow-up template yet — create one under Settings → WhatsApp & phone → '
+                    . 'Showcase follow-up template.',
+                422
+            );
+        }
+        // Meta rejects a send against an unapproved template with an opaque
+        // error, so fail here with the actual reason instead.
+        $status = strtolower((string) Settings::get('twilio_showcase_followup_template_status'));
+        if ($status !== 'approved') {
+            Response::error(
+                'The showcase follow-up template is not approved yet (currently ' . ($status ?: 'pending')
+                . '). Check Settings → WhatsApp & phone → Showcase follow-up template.',
+                422
+            );
+        }
+
+        $sent = TwilioClient::sendTemplate($digits, $contentSid, ['1' => $contactName]);
+        if (!$sent['ok']) {
+            error_log('Twilio WhatsApp showcase-followup template failed: ' . (string) $sent['error']);
+        }
+
+        return [
+            'ok' => $sent['ok'],
+            'id' => $sent['id'],
+            'template' => $contentSid,
+            'error' => $sent['ok']
+                ? null
+                : 'Twilio could not send the template message. ' . (string) $sent['error'],
+        ];
+    }
+
+    /**
      * GET /api/v1/admin/whatsapp-intros — every business-initiated template
      * sent (intro, asset-request, and any future one — whatsapp_intros is
      * shared), newest first, with whether that contact has replied since.
@@ -1888,6 +1994,9 @@ class LiveChatController
             $note = (string) ($intro['note'] ?? '');
             $requestText = str_starts_with($note, 'Requested: ') ? substr($note, strlen('Requested: ')) : '';
             return WhatsAppAssetRequestTemplateManager::renderBody(['1' => $contactName, '2' => $requestText]);
+        }
+        if ($sid !== '' && $sid === trim((string) Settings::get('twilio_showcase_followup_content_sid'))) {
+            return WhatsAppShowcaseFollowupTemplateManager::renderBody(['1' => $contactName]);
         }
         return '[Earlier template message sent — see Marketing Leads → Templates sent for the exact text]';
     }

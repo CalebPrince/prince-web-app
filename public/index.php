@@ -68,6 +68,7 @@ use App\Controllers\NurturerController;
 use App\Controllers\OutreachController;
 use App\Controllers\WhatsAppTemplateController;
 use App\Controllers\WhatsAppAssetRequestTemplateController;
+use App\Controllers\WhatsAppShowcaseFollowupTemplateController;
 use App\Controllers\PaymentController;
 use App\Controllers\PipelineController;
 use App\Controllers\InboxController;
@@ -345,6 +346,10 @@ $router->post('/api/v1/admin/whatsapp/send-message', [LiveChatController::class,
 $router->get('/api/v1/admin/whatsapp-template/asset-request', [WhatsAppAssetRequestTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/asset-request', [WhatsAppAssetRequestTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/asset-request/refresh', [WhatsAppAssetRequestTemplateController::class, 'refresh']);
+$router->post('/api/v1/admin/whatsapp/send-showcase-followup', [LiveChatController::class, 'sendShowcaseFollowup']);
+$router->get('/api/v1/admin/whatsapp-template/showcase-followup', [WhatsAppShowcaseFollowupTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/showcase-followup', [WhatsAppShowcaseFollowupTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/showcase-followup/refresh', [WhatsAppShowcaseFollowupTemplateController::class, 'refresh']);
 $router->post('/api/v1/admin/agents/lisa/chat', [LiveChatController::class, 'adminChat']);
 $router->post('/api/v1/admin/agents/content/chat', [ContentAgentController::class, 'chat']);
 $router->get('/api/v1/admin/content-studio', [ContentStudioController::class, 'index']);

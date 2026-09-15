@@ -215,6 +215,10 @@ export default function SettingsClient({
   const [assetMsg, setAssetMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [assetBusy, setAssetBusy] = useState(false);
 
+  const [showcaseTpl, setShowcaseTpl] = useState<IntroTemplate | null>(null);
+  const [showcaseMsg, setShowcaseMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [showcaseBusy, setShowcaseBusy] = useState(false);
+
   // Capability status is a convenience panel: a failure here should stay quiet
   // rather than surface as a settings error.
   useEffect(() => {
@@ -229,6 +233,7 @@ export default function SettingsClient({
   useEffect(() => {
     void loadIntroTemplate();
     void loadAssetTemplate();
+    void loadShowcaseTemplate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -242,6 +247,12 @@ export default function SettingsClient({
     adminApi
       .get<IntroTemplate>("/api/v1/admin/whatsapp-template/asset-request")
       .then(setAssetTpl)
+      .catch(() => {});
+
+  const loadShowcaseTemplate = () =>
+    adminApi
+      .get<IntroTemplate>("/api/v1/admin/whatsapp-template/showcase-followup")
+      .then(setShowcaseTpl)
       .catch(() => {});
 
   const runIntroTemplate = async (
@@ -311,6 +322,41 @@ export default function SettingsClient({
       (t) =>
         t.status === "approved"
           ? "Approved — the Send asset request button is live."
+          : `Still ${t.status}.`
+    );
+
+  const runShowcaseTemplate = async (
+    call: () => Promise<IntroTemplate>,
+    done: (t: IntroTemplate) => string
+  ) => {
+    setShowcaseBusy(true);
+    setShowcaseMsg(null);
+    try {
+      const t = await call();
+      setShowcaseTpl(t);
+      setShowcaseMsg({ ok: t.status !== "rejected", text: done(t) });
+    } catch (err) {
+      setShowcaseMsg({
+        ok: false,
+        text: err instanceof Error ? err.message : "Twilio rejected the request.",
+      });
+    } finally {
+      setShowcaseBusy(false);
+    }
+  };
+
+  const createShowcaseTemplate = () =>
+    runShowcaseTemplate(
+      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/showcase-followup"),
+      (t) => `Submitted to Meta — currently ${t.status}.`
+    );
+
+  const refreshShowcaseTemplate = () =>
+    runShowcaseTemplate(
+      () => adminApi.post<IntroTemplate>("/api/v1/admin/whatsapp-template/showcase-followup/refresh"),
+      (t) =>
+        t.status === "approved"
+          ? "Approved — the Send showcase follow-up button is live."
           : `Still ${t.status}.`
     );
 
@@ -853,6 +899,62 @@ export default function SettingsClient({
             {assetTpl?.body && (
               <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
                 {assetTpl.body}
+              </pre>
+            )}
+          </Card>
+
+          <Card title="Showcase follow-up template (Twilio)" bodyClassName="p-5 space-y-3">
+            <p className="text-sm text-text-2">
+              Checking in with a client already sent a demo showcase link (their new
+              website plus social pages) who hasn&apos;t replied, when they haven&apos;t
+              written in to Lisa&apos;s number before — same business-initiated
+              template requirement as the two templates above.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  showcaseTpl?.status === "approved"
+                    ? "bg-green-500/10 text-green-500"
+                    : showcaseTpl?.status === "rejected"
+                      ? "bg-red-500/10 text-red-400"
+                      : "bg-bg-3 text-text-2"
+                }`}
+              >
+                <Activity className="w-3 h-3" />
+                {showcaseTpl?.status ?? "…"}
+              </span>
+              {showcaseTpl?.content_sid && (
+                <code className="text-xs text-text-3">{showcaseTpl.content_sid}</code>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={createShowcaseTemplate}
+                disabled={showcaseBusy || !!showcaseTpl?.content_sid}
+              >
+                <Send className="w-4 h-4" />
+                {showcaseBusy ? "Working…" : "Create & submit"}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={refreshShowcaseTemplate}
+                disabled={showcaseBusy || !showcaseTpl?.content_sid}
+              >
+                Refresh status
+              </Button>
+              {showcaseMsg && (
+                <span className={`text-sm ${showcaseMsg.ok ? "text-green-500" : "text-red-400"}`}>
+                  {showcaseMsg.text}
+                </span>
+              )}
+            </div>
+
+            {showcaseTpl?.body && (
+              <pre className="whitespace-pre-wrap rounded-lg bg-bg-3 p-3 text-xs text-text-2">
+                {showcaseTpl.body}
               </pre>
             )}
           </Card>
