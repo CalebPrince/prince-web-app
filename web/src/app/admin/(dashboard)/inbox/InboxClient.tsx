@@ -5,11 +5,17 @@ import { useSearchParams } from "next/navigation";
 import { adminApi } from "@/lib/api";
 import {
   Mail, FileText, MessageCircle, CalendarCheck, Users, Inbox as InboxIcon,
-  Flag, Archive, Trash2, ArrowUpRight, Phone,
+  Flag, Archive, Trash2, ArrowUpRight, Phone, Paperclip, Download,
 } from "lucide-react";
 import { Button, Input, ErrorBanner } from "@/components/admin/ui";
 
-export type InboxMessage = { role: string; text: string };
+export type InboxMessage = {
+  role: string;
+  text: string;
+  attachment_url?: string | null;
+  attachment_type?: "image" | "document" | "audio" | "video" | null;
+  attachment_mime?: string | null;
+};
 export type ClientMessage = { sender_type: string; body: string; created_at: string };
 
 export type InboxItem = {
@@ -85,6 +91,63 @@ function shortTime(value: string) {
   return (Date.now() - date.getTime()) / 86400000 < 1
     ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
     : date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+const URL_PATTERN = /(https?:\/\/[^\s<>"']+)/g;
+
+/** Renders message text with any bare URL (a link a contact pasted in,
+ *  e.g. their Instagram profile) turned into a clickable link. Splitting on
+ *  a capturing group interleaves plain text and matched URLs in order, so
+ *  odd indices are always the captured link — no separate .test() call
+ *  needed (which would be unsafe here anyway: it's the same stateful global
+ *  regex used for the split). */
+function linkify(text: string) {
+  return text.split(URL_PATTERN).map((part, i) =>
+    i % 2 === 1 ? (
+      <a key={i} href={part} target="_blank" rel="noreferrer" className="underline break-all">
+        {part}
+      </a>
+    ) : (
+      part && <span key={i}>{part}</span>
+    )
+  );
+}
+
+const ATTACHMENT_LABEL: Record<string, string> = {
+  image: "Photo",
+  audio: "Voice message",
+  video: "Video",
+  document: "Document",
+};
+
+/** A media/document a contact or Lisa sent — shown as a real thumbnail (for
+ *  an image) or a download link, so a client's logo/PDF/voice note is
+ *  actually reachable from the Inbox rather than just described in text. */
+function AttachmentPreview({ message }: { message: InboxMessage }) {
+  if (!message.attachment_url) return null;
+  if (message.attachment_type === "image") {
+    return (
+      <a href={message.attachment_url} target="_blank" rel="noreferrer" className="block mt-2">
+        <img
+          src={message.attachment_url}
+          alt="Attachment"
+          className="max-w-[220px] max-h-[220px] rounded-lg border border-hairline object-cover"
+        />
+      </a>
+    );
+  }
+  return (
+    <a
+      href={message.attachment_url}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-2 inline-flex items-center gap-1.5 text-xs underline"
+    >
+      <Paperclip className="w-3.5 h-3.5" />
+      {ATTACHMENT_LABEL[message.attachment_type ?? ""] ?? "Attachment"}
+      <Download className="w-3.5 h-3.5" />
+    </a>
+  );
 }
 
 export default function InboxClient({ initialItems }: { initialItems: InboxItem[] }) {
@@ -440,7 +503,8 @@ export default function InboxClient({ initialItems }: { initialItems: InboxItem[
                             : "Visitor"
                           : "Lisa"}
                       </small>
-                      <p className="text-sm">{m.text}</p>
+                      <p className="text-sm whitespace-pre-wrap">{linkify(m.text)}</p>
+                      <AttachmentPreview message={m} />
                     </div>
                   ))
                 ) : (

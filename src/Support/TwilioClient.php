@@ -23,6 +23,11 @@ final class TwilioClient
 {
     private const API_BASE = 'https://api.twilio.com/2010-04-01';
 
+    // A sanity ceiling on an inbound media download, not a real WhatsApp
+    // limit (documents can legitimately run to 100MB) — large enough for
+    // any logo, screenshot, or brand PDF a client would actually send.
+    private const MAX_MEDIA_DOWNLOAD_BYTES = 26_214_400; // 25MB
+
     public static function isConfigured(): bool
     {
         return trim((string) Settings::get('twilio_account_sid')) !== ''
@@ -124,6 +129,52 @@ final class TwilioClient
         }
 
         return self::createMessage($params);
+    }
+
+    /**
+     * Downloads an inbound media attachment from a Twilio-hosted MediaUrl
+     * (the URL Twilio's webhook posts as MediaUrl0 on an incoming WhatsApp
+     * message). Unlike an outbound MediaUrl, this one is not publicly
+     * fetchable — it requires the same account credentials as every other
+     * Twilio API call — so the bytes have to be pulled through here rather
+     * than linked to directly.
+     *
+     * @return array{ok:bool,bytes:?string,error:?string}
+     */
+    public static function downloadMedia(string $mediaUrl): array
+    {
+        $accountSid = trim((string) Settings::get('twilio_account_sid'));
+        $token = trim((string) Settings::get('twilio_auth_token'));
+        if ($accountSid === '' || $token === '') {
+            return ['ok' => false, 'bytes' => null, 'error' => 'Twilio account SID or auth token is not configured.'];
+        }
+        if (!preg_match('#^https://#i', $mediaUrl)) {
+            return ['ok' => false, 'bytes' => null, 'error' => 'Media URL is missing or not HTTPS.'];
+        }
+        if (!function_exists('curl_init')) {
+            return ['ok' => false, 'bytes' => null, 'error' => 'PHP cURL is unavailable.'];
+        }
+
+        $ch = curl_init($mediaUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 25,
+            CURLOPT_USERPWD => $accountSid . ':' . $token,
+        ]);
+        $raw = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+
+        if ($raw === false || $status < 200 || $status >= 300) {
+            $error = $curlError ?: ('HTTP ' . $status);
+            error_log('Twilio media download failed: ' . mb_substr($error, 0, 500));
+            return ['ok' => false, 'bytes' => null, 'error' => $error];
+        }
+        if (strlen($raw) > self::MAX_MEDIA_DOWNLOAD_BYTES) {
+            return ['ok' => false, 'bytes' => null, 'error' => 'Media exceeds the 25MB cap.'];
+        }
+
+        return ['ok' => true, 'bytes' => $raw, 'error' => null];
     }
 
     /**

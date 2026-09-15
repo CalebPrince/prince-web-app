@@ -40,6 +40,35 @@ class LiveChatController
     private const MAX_TRANSCRIPT_MESSAGES = 40;
     private const ROLLING_TRANSCRIPT_MESSAGES = 30;
 
+    /**
+     * MIME types WhatsApp itself allows a contact to attach, mapped to the
+     * file extension saveInboundMedia() stores them under. Twilio wouldn't
+     * have relayed a webhook for a type WhatsApp rejects, so this is a
+     * lookup for a known-good set, not a security filter.
+     */
+    private const MEDIA_EXTENSIONS = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'application/pdf' => 'pdf',
+        'application/msword' => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'application/vnd.ms-excel' => 'xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+        'application/vnd.ms-powerpoint' => 'ppt',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+        'text/plain' => 'txt',
+        'text/csv' => 'csv',
+        'audio/ogg' => 'ogg',
+        'audio/opus' => 'opus',
+        'audio/mpeg' => 'mp3',
+        'audio/mp4' => 'm4a',
+        'audio/aac' => 'aac',
+        'audio/amr' => 'amr',
+        'video/mp4' => 'mp4',
+        'video/3gpp' => '3gp',
+    ];
+
     /** GET /api/v1/chat/status — availability plus the editable widget copy */
     public static function status(): void
     {
@@ -483,9 +512,10 @@ class LiveChatController
             $messageId = mb_substr(trim((string) ($event['MessageSid'] ?? '')), 0, 255);
             $from = trim((string) ($event['From'] ?? ''));
             $body = trim((string) ($event['Body'] ?? ''));
-            // A media-only message carries no Body, so the empty-body check
-            // here is also what drops images, audio and documents.
-            if ($messageId === '' || $from === '' || $body === '' || mb_strlen($body) > 1000) continue;
+            $numMedia = (int) ($event['NumMedia'] ?? 0);
+            if ($messageId === '' || $from === '') continue;
+            if ($body === '' && $numMedia < 1) continue;
+            if (mb_strlen($body) > 1000) continue;
 
             $insert = $pdo->prepare('INSERT OR IGNORE INTO twilio_webhook_events (message_id) VALUES (?)');
             $insert->execute([$messageId]);
@@ -511,9 +541,23 @@ class LiveChatController
 
             $transcript = self::rollingTranscript($transcript);
             $isOwner = self::isOwnerWhatsAppNumber($token);
-            $transcript[] = ['role' => 'user', 'text' => $body];
+
+            // WhatsApp only ever attaches one media item per message
+            // (MediaUrl0), unlike SMS/MMS which can carry several.
+            $attachment = $numMedia > 0
+                ? self::saveInboundMedia((string) ($event['MediaUrl0'] ?? ''), (string) ($event['MediaContentType0'] ?? ''))
+                : null;
+            $turnText = $body !== '' ? $body : self::inboundAttachmentPlaceholder($attachment);
+
+            $userTurn = ['role' => 'user', 'text' => $turnText];
+            if ($attachment !== null) {
+                $userTurn['attachment_url'] = $attachment['url'];
+                $userTurn['attachment_type'] = $attachment['type'];
+                $userTurn['attachment_mime'] = $attachment['mime'];
+            }
+            $transcript[] = $userTurn;
             $projects = self::projectCatalog($pdo);
-            $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
+            $result = self::generateReply($turnText, $transcript, $projects, $pdo, $isOwner, [
                 'name' => $profileName,
                 'phone' => '+' . $digits,
             ]);
@@ -539,7 +583,13 @@ class LiveChatController
                     (string) ($event['To'] ?? '')
                 );
                 if ($media['ok']) {
-                    $transcript[] = ['role' => 'assistant', 'text' => '[attached ' . ($result['attachment']['caption'] ?: 'a document') . ']'];
+                    $transcript[] = [
+                        'role' => 'assistant',
+                        'text' => '[attached ' . ($result['attachment']['caption'] ?: 'a document') . ']',
+                        'attachment_url' => (string) $result['attachment']['url'],
+                        'attachment_type' => 'document',
+                        'attachment_mime' => 'application/pdf',
+                    ];
                 } else {
                     error_log('Twilio Lisa invoice PDF send failed: ' . (string) $media['error']);
                 }
@@ -561,6 +611,74 @@ class LiveChatController
         http_response_code(200);
         echo '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
         exit;
+    }
+
+    /**
+     * Downloads and stores one inbound WhatsApp media attachment (a photo,
+     * document, voice note, or video a contact sent Lisa) so the Inbox can
+     * show a real clickable/downloadable link. Twilio's own MediaUrl
+     * requires Twilio's account credentials to fetch — see
+     * TwilioClient::downloadMedia() — so it can't be linked to directly from
+     * a browser; the bytes have to be pulled through here and re-hosted.
+     *
+     * @return array{url:string,type:string,mime:string}|null
+     */
+    private static function saveInboundMedia(string $mediaUrl, string $contentType): ?array
+    {
+        if ($mediaUrl === '') {
+            return null;
+        }
+        $download = TwilioClient::downloadMedia($mediaUrl);
+        if (!$download['ok']) {
+            error_log('Inbound WhatsApp media download failed: ' . (string) $download['error']);
+            return null;
+        }
+
+        // Not one of WhatsApp's known outbound MIME types — still save it
+        // (Twilio wouldn't have relayed an attachment WhatsApp itself
+        // rejects) but fall back to a generic extension rather than
+        // guessing wrong.
+        $ext = self::MEDIA_EXTENSIONS[$contentType] ?? 'bin';
+        $category = match (true) {
+            str_starts_with($contentType, 'image/') => 'image',
+            str_starts_with($contentType, 'audio/') => 'audio',
+            str_starts_with($contentType, 'video/') => 'video',
+            default => 'document',
+        };
+
+        // Same DOCUMENT_ROOT guard as InvoicePdf::render() — the CLI SAPI
+        // sets it to an empty string rather than leaving it unset.
+        $docRoot = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__, 2) . '/public';
+        $dir = $docRoot . '/uploads/whatsapp-media';
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            error_log('saveInboundMedia: uploads/whatsapp-media is missing and could not be created.');
+            return null;
+        }
+
+        // Random filename — never derived from anything the sender controls.
+        $filename = bin2hex(random_bytes(16)) . '.' . $ext;
+        if (@file_put_contents($dir . '/' . $filename, $download['bytes']) === false) {
+            error_log('saveInboundMedia: could not write the attachment to uploads/whatsapp-media.');
+            return null;
+        }
+
+        return [
+            'url' => 'https://princecaleb.dev/uploads/whatsapp-media/' . $filename,
+            'type' => $category,
+            'mime' => $contentType,
+        ];
+    }
+
+    /** Transcript placeholder for a media message a contact sent with no caption. */
+    private static function inboundAttachmentPlaceholder(?array $attachment): string
+    {
+        return match ($attachment['type'] ?? null) {
+            'image' => '[sent a photo]',
+            'audio' => '[sent a voice message]',
+            'video' => '[sent a video]',
+            'document' => '[sent a document]',
+            default => "[sent an attachment — couldn't save it, check the Twilio Console]",
+        };
     }
 
     /**
