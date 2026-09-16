@@ -98,7 +98,7 @@ const ADDON_DEFAULTS: {
   },
   {
     name: "Website Care Plan",
-    price: "From GHS 2,200/month",
+    price: "From GHS 1,000/month",
     tagline:
       "Ongoing maintenance so the site you paid for keeps working: monitoring, backups, and security handled every month without you having to ask.",
     features:
