@@ -35,6 +35,14 @@ type FormItem = { description: string; quantity: string; unit_price: string };
 
 const blankItem = (): FormItem => ({ description: "", quantity: "1", unit_price: "" });
 
+// Matches the tiers on the public pricing page (pricing_tier_6_*) and the
+// Website Care Plan PDF, so an invoice line always quotes the same figure.
+const CARE_PLAN_TIERS = [
+  { label: "Basic — GHS 1,000/mo", description: "Website Care Plan — Basic (monthly)", price: "1000" },
+  { label: "Standard — GHS 3,000/mo", description: "Website Care Plan — Standard (monthly)", price: "3000" },
+  { label: "Growth — GHS 8,000/mo", description: "Website Care Plan — Growth (monthly)", price: "8000" },
+];
+
 const emptyForm = {
   client_name: "",
   client_email: "",
@@ -372,10 +380,31 @@ export default function InvoicesClient({ initialInvoices }: { initialInvoices: I
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Line items</span>
-            <Button variant="outline" onClick={() => setItems((prev) => [...prev, blankItem()])}>
-              <Plus className="w-4 h-4" />
-              Add line
-            </Button>
+            <div className="flex items-center gap-2">
+              <Select
+                className="w-56"
+                value=""
+                aria-label="Add a Care Plan tier as a line item"
+                onChange={(e) => {
+                  const tier = CARE_PLAN_TIERS.find((t) => t.description === e.target.value);
+                  if (!tier) return;
+                  const line: FormItem = { description: tier.description, quantity: "1", unit_price: tier.price };
+                  setItems((prev) => {
+                    const firstIsBlank = prev.length === 1 && !prev[0].description && !prev[0].unit_price;
+                    return firstIsBlank ? [line] : [...prev, line];
+                  });
+                }}
+              >
+                <option value="">+ Care Plan tier</option>
+                {CARE_PLAN_TIERS.map((t) => (
+                  <option key={t.description} value={t.description}>{t.label}</option>
+                ))}
+              </Select>
+              <Button variant="outline" onClick={() => setItems((prev) => [...prev, blankItem()])}>
+                <Plus className="w-4 h-4" />
+                Add line
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
