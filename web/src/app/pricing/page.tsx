@@ -11,7 +11,8 @@ import { api, type SiteContent } from "@/lib/api";
 // Pricing page. Every figure and every line of tier copy is admin-editable
 // and fetched from /api/v1/content, never hardcoded: `website_tier_1..3_*`
 // for the website packages this page leads with, `pricing_tier_1..3_*` for
-// the AI agent tiers, and `pricing_tier_5_*` for the ad creative add-on.
+// the AI agent tiers, and `pricing_tier_5_*` / `pricing_tier_6_*` for the
+// add-ons (ad creative, website care plan).
 // The defaults below mirror the seeded settings and are only ever shown if
 // that fetch fails.
 //
@@ -80,7 +81,13 @@ const TIER_DEFAULTS = [
   },
 ];
 
-const ADDON_DEFAULTS = [
+const ADDON_DEFAULTS: {
+  name: string;
+  price?: string;
+  tagline: string;
+  features: string;
+  cta: string;
+}[] = [
   {
     name: "Video & Image Ads",
     tagline:
@@ -88,6 +95,15 @@ const ADDON_DEFAULTS = [
     features:
       "3-5 short-form video ads or a static image ad set\nPlatform-optimized formats (Meta, TikTok, Google)\nScripting, captions, and on-brand visuals\nOne round of revisions included",
     cta: "Get a quote",
+  },
+  {
+    name: "Website Care Plan",
+    price: "From GHS 2,200/month",
+    tagline:
+      "Ongoing maintenance so the site you paid for keeps working: monitoring, backups, and security handled every month without you having to ask.",
+    features:
+      "Uptime monitoring, backups, and security patching\nPlugin, framework, and dependency updates\nContent or design edits within your plan's monthly allowance\nMonthly health report, priority turnaround on request",
+    cta: "Get maintenance pricing",
   },
 ];
 
@@ -156,14 +172,18 @@ export default async function Pricing() {
     features: features(content, `website_tier_${i + 1}_features`, d.features),
   }));
 
-  // Tier 5 only: the websites-and-apps add-on that used to sit here is now
-  // the section the page opens with.
-  const addons = ADDON_DEFAULTS.map((d) => ({
-    name: field(content, "pricing_tier_5_name", d.name),
-    blurb: field(content, "pricing_tier_5_tagline", d.tagline),
-    features: features(content, "pricing_tier_5_features", d.features),
-    cta: d.cta,
-  }));
+  // Tiers 5+: the websites-and-apps add-on that used to sit at tier 5 is now
+  // the section the page opens with, so 5 and 6 are free for add-ons here.
+  const addons = ADDON_DEFAULTS.map((d, i) => {
+    const tier = 5 + i;
+    return {
+      name: field(content, `pricing_tier_${tier}_name`, d.name),
+      price: d.price ? field(content, `pricing_tier_${tier}_price`, d.price) : undefined,
+      blurb: field(content, `pricing_tier_${tier}_tagline`, d.tagline),
+      features: features(content, `pricing_tier_${tier}_features`, d.features),
+      cta: d.cta,
+    };
+  });
 
   return (
     <>
@@ -362,7 +382,7 @@ export default async function Pricing() {
           <Reveal>
             <SectionLabel index="04">Also available</SectionLabel>
             <h2 className="mt-6 text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
-              Ad creative, when the site needs traffic.
+              Traffic and upkeep, after launch.
             </h2>
           </Reveal>
 
@@ -375,6 +395,9 @@ export default async function Pricing() {
               >
                 <h3 className="text-2xl font-bold tracking-tight">{a.name}</h3>
                 <p className="mt-3 text-text-2">{a.blurb}</p>
+                {a.price && (
+                  <p className="mt-4 text-xl font-extrabold tracking-[-0.02em] text-accent">{a.price}</p>
+                )}
                 <ul className="mt-8 flex-1 space-y-3">
                   {a.features.map((f) => (
                     <li key={f} className="flex gap-3 text-text-2">
