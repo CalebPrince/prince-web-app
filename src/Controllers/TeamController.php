@@ -109,6 +109,17 @@ class TeamController
             $wendyUnresolvedPatterns = 0;
             $wendySessionRequested = false;
         }
+        // Guarded like wendyOpenObservations above — allie_evaluations is a
+        // new table too.
+        try {
+            $allieToolsEvaluated = (int) $pdo->query('SELECT COUNT(*) FROM allie_evaluations')->fetchColumn();
+            $alliePendingApproval = (int) $pdo->query(
+                "SELECT COUNT(*) FROM allie_evaluations WHERE status = 'pending_approval'"
+            )->fetchColumn();
+        } catch (\Throwable $e) {
+            $allieToolsEvaluated = 0;
+            $alliePendingApproval = 0;
+        }
 
         $agents = [
             [
@@ -377,6 +388,24 @@ class TeamController
                 'stat_label' => 'open observations',
                 'manage_url' => '/admin/agent-chat',
                 'manage_label' => 'Talk to Wendy',
+            ],
+            [
+                'key' => 'allie',
+                'name' => Settings::get('allie_assistant_name') ?: 'Allie',
+                'role' => 'R&D — Tool Adoption Scout',
+                'description' => 'Modeled on the real Allie K. Miller\'s AI-first discipline — runs new AI/dev '
+                    . 'tools through a discover, evaluate, test, and compare pipeline, then hands the '
+                    . 'recommendation to Wendy for a team-impact review before it reaches you for the final '
+                    . 'adopt/reject call.',
+                'icon' => 'bi-compass',
+                'status' => $alliePendingApproval > 0 ? 'alert' : 'ondemand',
+                'status_label' => $alliePendingApproval > 0
+                    ? $alliePendingApproval . ' awaiting your call'
+                    : 'On demand',
+                'stat_value' => $allieToolsEvaluated,
+                'stat_label' => 'tools evaluated',
+                'manage_url' => '/admin/allie-evaluations',
+                'manage_label' => 'Allie Reviews',
             ],
         ];
 
