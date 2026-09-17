@@ -73,6 +73,8 @@ class WendyController
                 self::listOpenObservationsToolDeclaration(),
                 self::saveObservationToolDeclaration(),
                 self::resolveObservationToolDeclaration(),
+                self::listPendingToolReviewsToolDeclaration(),
+                self::submitToolReviewToolDeclaration(),
             ],
             fn(string $name, array $args) => match ($name) {
                 'team_activity' => Chief::snapshot($pdo, (int) ($args['hours'] ?? 24)),
@@ -82,6 +84,12 @@ class WendyController
                 'list_open_observations' => ['observations' => self::listOpenObservations($pdo)],
                 'save_observation' => self::saveObservation($pdo, $args),
                 'resolve_observation' => self::resolveObservation($pdo, (int) ($args['observation_id'] ?? 0)),
+                'list_pending_tool_reviews' => ['reviews' => self::listPendingToolReviews($pdo)],
+                'submit_tool_review' => self::submitToolReview(
+                    $pdo,
+                    (int) ($args['evaluation_id'] ?? 0),
+                    (string) ($args['impact_notes'] ?? '')
+                ),
                 default => ['error' => 'Unknown tool.'],
             },
             $transcript
@@ -136,6 +144,13 @@ class WendyController
             . "for what actually earns it. Once he's actually dealt with something you flagged, call "
             . "resolve_observation so it stops showing as open. Save sparingly: a coach who logs every passing "
             . "thought is noise, not oversight.\n\n"
+            . "Fifth, you're the team-impact gate on Allie's tool-adoption recommendations. Once she flags "
+            . "one for you (call list_pending_tool_reviews to see what's waiting), read it and think about it "
+            . "the way a coach thinks about a decision, not a technologist: what does adopting this actually "
+            . "do to how the team works — whose workload shifts, what process changes, where a new dependency "
+            . "or a new habit could quietly cause friction. Then call submit_tool_review with your honest "
+            . "impact read; that's what clears it for Caleb's own final call, so don't rubber-stamp it and "
+            . "don't invent a concern that isn't real either.\n\n"
             . "CRITICAL: never state a number, status, or fact you did not just get from a tool call in this "
             . "conversation. pattern_history is built from Chief's own daily briefs, so it only has real history "
             . "as far back as that cron has actually been running — when it reports too few days of data, say so "
@@ -475,6 +490,68 @@ class WendyController
             return ['error' => 'No open observation with that ID.'];
         }
         return ['resolved' => true];
+    }
+
+    // ------------------------------------------------------- tool reviews
+
+    private static function listPendingToolReviewsToolDeclaration(): array
+    {
+        return [
+            'name' => 'list_pending_tool_reviews',
+            'description' => 'Tool-adoption recommendations Allie has flagged for your team-impact review — '
+                . 'each one is waiting on your read before Caleb makes his final adopt/reject call. Call this '
+                . 'whenever Caleb asks what\'s waiting on you, or at the start of a conversation about a tool.',
+            'parameters' => ['type' => 'OBJECT', 'properties' => (object) []],
+        ];
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private static function listPendingToolReviews(\PDO $pdo): array
+    {
+        return $pdo->query(
+            "SELECT id, tool_name, vendor_url, category, evaluation_findings, comparison_findings,
+                    recommendation, recommendation_rationale, pilot_metric, pilot_owner, pilot_stop_loss, updated_at
+             FROM allie_evaluations WHERE status = 'wendy_review' ORDER BY updated_at ASC"
+        )->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private static function submitToolReviewToolDeclaration(): array
+    {
+        return [
+            'name' => 'submit_tool_review',
+            'description' => 'Submit your team-impact review of a tool-adoption recommendation, from '
+                . 'list_pending_tool_reviews. This clears it into Caleb\'s own approval queue — only call it '
+                . 'once you\'ve actually thought through the impact, not as a formality.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'evaluation_id' => ['type' => 'INTEGER', 'description' => 'The evaluation ID, from list_pending_tool_reviews.'],
+                    'impact_notes' => ['type' => 'STRING', 'description' =>
+                        'Your honest read on what adopting this would actually do to how the team works — '
+                        . 'whose workload shifts, what process changes, any friction or dependency risk you see. '
+                        . 'Say plainly if you see no real concern rather than inventing one.'],
+                ],
+                'required' => ['evaluation_id', 'impact_notes'],
+            ],
+        ];
+    }
+
+    /** @return array{reviewed:true}|array{error:string} */
+    private static function submitToolReview(\PDO $pdo, int $id, string $impactNotes): array
+    {
+        $impactNotes = trim($impactNotes);
+        if ($id <= 0 || $impactNotes === '') {
+            return ['error' => 'A valid evaluation_id and impact_notes are required.'];
+        }
+        $stmt = $pdo->prepare(
+            "UPDATE allie_evaluations SET wendy_review_notes = ?, wendy_reviewed_at = datetime('now'), "
+            . "status = 'pending_approval', updated_at = datetime('now') WHERE id = ? AND status = 'wendy_review'"
+        );
+        $stmt->execute([$impactNotes, $id]);
+        if ($stmt->rowCount() === 0) {
+            return ['error' => 'No evaluation awaiting review at that ID.'];
+        }
+        return ['reviewed' => true];
     }
 
     // ------------------------------------------------------------ admin API

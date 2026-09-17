@@ -1119,6 +1119,40 @@ CREATE TABLE IF NOT EXISTS wendy_observations (
 );
 CREATE INDEX IF NOT EXISTS idx_wendy_observations_status ON wendy_observations (status, created_at);
 
+-- Allie's tool-evaluation pipeline (App\Controllers\AllieController) — named
+-- and modeled after the real Allie K. Miller's discover -> evaluate -> test
+-- -> compare -> recommend discipline for new AI/dev tools, so Caleb doesn't
+-- have to personally chase every new tool. A single status enum drives the
+-- whole linear pipeline; wendy_review_notes/wendy_reviewed_at is Wendy's
+-- team-impact review gate (see her list_pending_tool_reviews/
+-- submit_tool_review tools), and decided_by/decided_at is Caleb's own final
+-- approve/reject call, same "nothing is silently discarded, only held for a
+-- human" idiom as marketing_leads.review_status.
+CREATE TABLE IF NOT EXISTS allie_evaluations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tool_name TEXT NOT NULL,
+  vendor_url TEXT,
+  category TEXT,
+  discovery_note TEXT,
+  evaluation_findings TEXT,
+  test_notes TEXT,
+  comparison_findings TEXT,
+  recommendation TEXT CHECK (recommendation IS NULL OR recommendation IN ('adopt', 'pilot', 'reject')),
+  recommendation_rationale TEXT,
+  pilot_metric TEXT,
+  pilot_owner TEXT,
+  pilot_stop_loss TEXT,
+  status TEXT NOT NULL DEFAULT 'discovered'
+    CHECK (status IN ('discovered','evaluating','tested','compared','recommended','wendy_review','pending_approval','approved','rejected','archived')),
+  wendy_review_notes TEXT,
+  wendy_reviewed_at TEXT,
+  decided_by TEXT,
+  decided_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_allie_evaluations_status ON allie_evaluations (status, updated_at);
+
 -- Recurring billing (e.g. monthly maintenance retainers) via Paystack
 -- subscription plans. The admin creates a row, which creates a Paystack
 -- plan + checkout link; the client authorizing that checkout is what

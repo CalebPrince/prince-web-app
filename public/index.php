@@ -99,6 +99,7 @@ use App\Controllers\SketchController;
 use App\Controllers\ChloeController;
 use App\Controllers\RadarController;
 use App\Controllers\WendyController;
+use App\Controllers\AllieController;
 use App\Controllers\ScoutController;
 use App\Controllers\SageController;
 use App\Controllers\ReelController;
@@ -480,6 +481,10 @@ $router->post('/api/v1/admin/chloe/investigate', [ChloeController::class, 'inves
 $router->post('/api/v1/admin/agents/wendy/chat', [WendyController::class, 'chat']);
 $router->get('/api/v1/admin/wendy/observations', [WendyController::class, 'observationsIndex']);
 $router->post('/api/v1/admin/wendy/observations/{id}/dismiss', [WendyController::class, 'dismissObservation']);
+$router->post('/api/v1/admin/agents/allie/chat', [AllieController::class, 'chat']);
+$router->get('/api/v1/admin/allie-evaluations', [AllieController::class, 'evaluationsIndex']);
+$router->post('/api/v1/admin/allie-evaluations/{id}/approve', [AllieController::class, 'approveEvaluation']);
+$router->post('/api/v1/admin/allie-evaluations/{id}/reject', [AllieController::class, 'rejectEvaluation']);
 $router->get('/api/v1/admin/activity-log', [ActivityLogController::class, 'index']);
 $router->get('/api/v1/admin/activity-log/entity-types', [ActivityLogController::class, 'entityTypes']);
 $router->get('/api/v1/admin/error-logs', [ErrorLogController::class, 'index']);

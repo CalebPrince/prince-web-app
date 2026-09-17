@@ -13,9 +13,9 @@ class TextToSpeechController
 {
     /**
      * Every agent that gets a real ElevenLabs voice, mapped to the Settings
-     * key holding its voice ID. Lisa is the original/default; Scout, Chloe
-     * and Wendy are the only other agents with a dedicated voice so far —
-     * everyone else still uses the browser's own speechSynthesis (see
+     * key holding its voice ID. Lisa is the original/default; Scout, Chloe,
+     * Wendy, and Allie are the only other agents with a dedicated voice so
+     * far — everyone else still uses the browser's own speechSynthesis (see
      * admin-agent-chat.js).
      */
     private const AGENT_VOICE_SETTING = [
@@ -23,6 +23,7 @@ class TextToSpeechController
         'scout' => 'scout_elevenlabs_voice_id',
         'chloe' => 'chloe_elevenlabs_voice_id',
         'wendy' => 'wendy_elevenlabs_voice_id',
+        'allie' => 'allie_elevenlabs_voice_id',
     ];
 
     /**
@@ -40,6 +41,7 @@ class TextToSpeechController
         'scout' => 3000,
         'chloe' => 3000,
         'wendy' => 3000,
+        'allie' => 3000,
     ];
 
     /**

@@ -13,7 +13,7 @@ import {
 
 type AgentKey =
   | "lisa" | "beacon" | "dossier" | "nurturer" | "proposal" | "content" | "arch"
-  | "sketch" | "ada" | "chief" | "scout" | "reel" | "sage" | "radar" | "chloe" | "wendy";
+  | "sketch" | "ada" | "chief" | "scout" | "reel" | "sage" | "radar" | "chloe" | "wendy" | "allie";
 
 type AgentSpec = {
   key: AgentKey;
@@ -41,6 +41,7 @@ const AGENTS: AgentSpec[] = [
   { key: "radar", nameKey: "radar_assistant_name", fallbackName: "Radar" },
   { key: "chloe", nameKey: "chloe_assistant_name", fallbackName: "Chloe" },
   { key: "wendy", nameKey: "wendy_assistant_name", fallbackName: "Wendy" },
+  { key: "allie", nameKey: "allie_assistant_name", fallbackName: "Allie" },
 ];
 
 /** Browser-speechSynthesis fallback voice per agent, for the ones whose
@@ -236,10 +237,10 @@ export default function AgentChatClient({ settings }: { settings: Record<string,
     }
   };
 
-  // Lisa, Scout, Chloe and Wendy each have a dedicated ElevenLabs voice (see
-  // TextToSpeechController::AGENT_VOICE_SETTING); everyone else falls
-  // through straight to the browser's own speechSynthesis, same as legacy
-  // admin-agent-chat.js.
+  // Lisa, Scout, Chloe, Wendy and Allie each have a dedicated ElevenLabs
+  // voice (see TextToSpeechController::AGENT_VOICE_SETTING); everyone else
+  // falls through straight to the browser's own speechSynthesis, same as
+  // legacy admin-agent-chat.js.
   const speak = useCallback((text: string) => {
     const spoken = stripForSpeech(text);
     if (!spoken) return;
@@ -249,7 +250,7 @@ export default function AgentChatClient({ settings }: { settings: Record<string,
       spoken,
       BROWSER_VOICE[active] ?? { gender: "auto", accent: "auto", rate: 1, pitch: 1 }
     );
-    if (active === "lisa" || active === "scout" || active === "chloe" || active === "wendy") {
+    if (active === "lisa" || active === "scout" || active === "chloe" || active === "wendy" || active === "allie") {
       playTts(spoken, {}, active).catch(fallback);
       return;
     }
