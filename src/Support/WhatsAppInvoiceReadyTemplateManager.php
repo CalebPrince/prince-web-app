@@ -20,17 +20,22 @@ final class WhatsAppInvoiceReadyTemplateManager extends WhatsAppContentTemplateM
     protected const CATEGORY = 'UTILITY';
 
     /**
-     * {{1}} contact's name, {{2}} what the invoice is for, {{3}} the link to
-     * view/pay it — all filled in by LiveChatController::sendInvoiceReady().
+     * {{1}} contact's name, {{2}} what the invoice is for, {{3}} the invoice
+     * token — all filled in by LiveChatController::sendInvoiceReady().
      *
-     * Dropped "and pay" from the original wording: Meta rejected that version
-     * under WhatsApp business-initiated approval, most likely because a link
-     * paired with payment language matches a common phishing template shape.
+     * Meta rejected the original body twice (with and without "pay"): every
+     * other approved template in this account has no link at all, so the
+     * real problem is a raw URL sitting in body text, not the wording. The
+     * link now goes out as a proper URL button instead, whose target must be
+     * a fixed base URL plus a {{n}} suffix — not a whole variable URL.
      */
     protected const BODY = "Hi {{1}}, this is Lisa, Prince Caleb's assistant. "
-        . "Your invoice for {{2}} is ready — you can view it here: {{3}}";
+        . "Your invoice for {{2}} is ready to view.";
 
-    protected const SAMPLE_VARIABLES = ['1' => 'Ama', '2' => 'your website project', '3' => 'https://princecaleb.dev/invoice/123'];
+    protected const BUTTON_TEXT = 'View invoice';
+    protected const BUTTON_URL = 'https://princecaleb.dev/invoice?token={{3}}';
+
+    protected const SAMPLE_VARIABLES = ['1' => 'Ama', '2' => 'your website project', '3' => 'sample-token-123'];
     protected const SID_SETTING = 'twilio_invoice_ready_content_sid';
     protected const STATUS_SETTING = 'twilio_invoice_ready_template_status';
 }

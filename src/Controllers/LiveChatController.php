@@ -1362,6 +1362,23 @@ class LiveChatController
     }
 
     /**
+     * Accepts either a bare invoice token or a full pasted invoice link
+     * (https://princecaleb.dev/invoice?token=...) and returns just the
+     * token, since the invoice-ready template's URL button can only carry a
+     * suffix variable, not a whole URL.
+     */
+    private static function extractInvoiceToken(string $input): string
+    {
+        $queryPos = strpos($input, '?');
+        if ($queryPos === false) {
+            return $input;
+        }
+        parse_str(substr($input, $queryPos + 1), $query);
+        $token = (string) ($query['token'] ?? '');
+        return $token !== '' ? $token : $input;
+    }
+
+    /**
      * POST /api/v1/admin/whatsapp/send-invoice-ready — admin-only. Lets a
      * client know their invoice is ready to view/pay, when they haven't
      * written in to Lisa's connected number before. Twilio-only.
@@ -1380,7 +1397,12 @@ class LiveChatController
             Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
         }
 
-        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        // The template's button URL is a fixed base with only the token as a
+        // suffix variable (Meta rejects a whole variable URL in body text),
+        // so accept either a bare token or the full pasted invoice link and
+        // pull the token back out of it.
+        $token = self::extractInvoiceToken($in['extra']['var3']);
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $token];
         $sent = self::sendTwilioNamedTemplate(
             $in['digits'],
             $vars,

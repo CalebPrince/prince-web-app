@@ -23,6 +23,17 @@ abstract class WhatsAppContentTemplateManager
     protected const SID_SETTING = '';
     protected const STATUS_SETTING = '';
 
+    /**
+     * Optional WhatsApp URL button — set both to submit as a
+     * "twilio/call-to-action" template instead of plain "twilio/text".
+     * Meta's business-initiated review rejects a raw link pasted into body
+     * text (it matches how phishing templates look); a link has to go
+     * through a proper URL button, whose target must be a fixed base URL
+     * with only a {{n}} suffix, not an entire variable URL.
+     */
+    protected const BUTTON_TEXT = '';
+    protected const BUTTON_URL = '';
+
     /** @return array<string,mixed> */
     public static function createAndSubmit(): array
     {
@@ -42,7 +53,7 @@ abstract class WhatsAppContentTemplateManager
             'friendly_name' => static::NAME,
             'language' => static::LANGUAGE,
             'variables' => static::SAMPLE_VARIABLES,
-            'types' => ['twilio/text' => ['body' => static::BODY]],
+            'types' => self::buildTypes(),
         ], true);
 
         $sid = (string) ($created['sid'] ?? '');
@@ -106,6 +117,13 @@ abstract class WhatsAppContentTemplateManager
         foreach ($vars as $key => $value) {
             $body = str_replace('{{' . $key . '}}', $value, $body);
         }
+        if (static::BUTTON_URL !== '') {
+            $url = static::BUTTON_URL;
+            foreach ($vars as $key => $value) {
+                $url = str_replace('{{' . $key . '}}', $value, $url);
+            }
+            $body .= "\n" . $url;
+        }
         return $body;
     }
 
@@ -121,6 +139,23 @@ abstract class WhatsAppContentTemplateManager
             'category' => static::CATEGORY,
             'body' => static::BODY,
             'provider' => (string) Settings::get('whatsapp_provider'),
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private static function buildTypes(): array
+    {
+        if (static::BUTTON_TEXT === '' || static::BUTTON_URL === '') {
+            return ['twilio/text' => ['body' => static::BODY]];
+        }
+
+        return [
+            'twilio/call-to-action' => [
+                'body' => static::BODY,
+                'actions' => [
+                    ['type' => 'URL', 'title' => static::BUTTON_TEXT, 'url' => static::BUTTON_URL],
+                ],
+            ],
         ];
     }
 
