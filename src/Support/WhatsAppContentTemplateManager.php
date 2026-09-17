@@ -26,8 +26,16 @@ abstract class WhatsAppContentTemplateManager
     /** @return array<string,mixed> */
     public static function createAndSubmit(): array
     {
-        if (self::isContentSid(trim((string) Settings::get(static::SID_SETTING)))) {
-            throw new \RuntimeException('This template already exists. Refresh its approval status instead.');
+        $existingSid = trim((string) Settings::get(static::SID_SETTING));
+        if (self::isContentSid($existingSid)) {
+            if (self::contentStillExists($existingSid)) {
+                throw new \RuntimeException('This template already exists. Refresh its approval status instead.');
+            }
+            // The saved SID was deleted on Twilio's side (e.g. after a
+            // rejection) — clear the stale settings so a fresh one can be
+            // created instead of refusing forever.
+            Settings::set(static::SID_SETTING, '');
+            Settings::set(static::STATUS_SETTING, '');
         }
 
         $created = self::request('POST', 'https://content.twilio.com/v1/Content', [
@@ -108,6 +116,16 @@ abstract class WhatsAppContentTemplateManager
     private static function isContentSid(string $value): bool
     {
         return (bool) preg_match('/^HX[0-9a-fA-F]{32}$/', $value);
+    }
+
+    private static function contentStillExists(string $sid): bool
+    {
+        try {
+            self::request('GET', "https://content.twilio.com/v1/Content/{$sid}");
+            return true;
+        } catch (\RuntimeException $e) {
+            return false;
+        }
     }
 
     /**
