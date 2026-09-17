@@ -364,6 +364,7 @@ $router->post('/api/v1/admin/whatsapp/send-invoice-ready', [LiveChatController::
 $router->get('/api/v1/admin/whatsapp-template/invoice-ready', [WhatsAppInvoiceReadyTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/invoice-ready', [WhatsAppInvoiceReadyTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/invoice-ready/refresh', [WhatsAppInvoiceReadyTemplateController::class, 'refresh']);
+$router->delete('/api/v1/admin/whatsapp-template/invoice-ready', [WhatsAppInvoiceReadyTemplateController::class, 'destroy']);
 
 $router->post('/api/v1/admin/whatsapp/send-payment-received', [LiveChatController::class, 'sendPaymentReceived']);
 $router->get('/api/v1/admin/whatsapp-template/payment-received', [WhatsAppPaymentReceivedTemplateController::class, 'status']);

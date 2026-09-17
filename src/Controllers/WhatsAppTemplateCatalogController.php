@@ -33,9 +33,12 @@ final class WhatsAppTemplateCatalogController
     /**
      * Built templates: key => [label, description, manager class, endpoint
      * slug used by the dedicated controller/routes, send endpoint, extra
-     * template fields beyond contact name + phone (name => label)].
+     * template fields beyond contact name + phone (name => label), and
+     * whether its controller has a destroy() wired up for delete+rebuild
+     * (only worth adding once a template actually needs rebuilding after a
+     * Meta rejection — see WhatsAppInvoiceReadyTemplateController).
      *
-     * @var array<string,array{label:string,description:string,manager:class-string,slug:string,send:string,fields:array<string,string>}>
+     * @var array<string,array{label:string,description:string,manager:class-string,slug:string,send:string,fields:array<string,string>,deletable?:bool}>
      */
     private const BUILT = [
         'intro' => [
@@ -77,6 +80,7 @@ final class WhatsAppTemplateCatalogController
             'slug' => 'invoice-ready',
             'send' => '/api/v1/admin/whatsapp/send-invoice-ready',
             'fields' => ['var2' => 'What the invoice is for', 'var3' => 'Invoice/payment link'],
+            'deletable' => true,
         ],
         'payment_received' => [
             'label' => 'Payment received',
@@ -175,13 +179,15 @@ final class WhatsAppTemplateCatalogController
             /** @var class-string $manager */
             $manager = $meta['manager'];
             $status = $manager::status();
+            $base = '/api/v1/admin/whatsapp-template' . ($meta['slug'] !== '' ? '/' . $meta['slug'] : '');
             $templates[] = [
                 'key' => $key,
                 'label' => $meta['label'],
                 'description' => $meta['description'],
-                'status_url' => '/api/v1/admin/whatsapp-template' . ($meta['slug'] !== '' ? '/' . $meta['slug'] : ''),
-                'create_url' => '/api/v1/admin/whatsapp-template' . ($meta['slug'] !== '' ? '/' . $meta['slug'] : ''),
-                'refresh_url' => '/api/v1/admin/whatsapp-template' . ($meta['slug'] !== '' ? '/' . $meta['slug'] : '') . '/refresh',
+                'status_url' => $base,
+                'create_url' => $base,
+                'refresh_url' => $base . '/refresh',
+                'delete_url' => ($meta['deletable'] ?? false) ? $base : null,
                 'send_url' => $meta['send'],
                 'fields' => (object) $meta['fields'],
             ] + $status;

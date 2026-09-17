@@ -26,6 +26,7 @@ type CatalogTemplate = {
   status_url: string;
   create_url: string;
   refresh_url: string;
+  delete_url: string | null;
   send_url: string;
   /** Extra request-body field name => human label, for the send form in Marketing Leads. */
   fields: Record<string, string>;
@@ -279,6 +280,32 @@ export default function SettingsClient({
     runCatalogAction(t.key, t.refresh_url, (r) =>
       r.status === "approved" ? "Approved — ready to send from Marketing Leads." : `Still ${r.status}.`
     );
+
+  /** Deletes the rejected/broken Content resource on Twilio, then resubmits it fresh. */
+  const deleteAndRebuildTemplate = async (t: CatalogTemplate) => {
+    if (!t.delete_url) return;
+    setCatalogBusyKey(t.key);
+    setCatalogMsg((m) => ({ ...m, [t.key]: { text: "", ok: true } }));
+    try {
+      await adminApi.del<CatalogTemplate>(t.delete_url);
+      const created = await adminApi.post<CatalogTemplate>(t.create_url);
+      setCatalog((list) => list.map((x) => (x.key === t.key ? { ...x, ...created } : x)));
+      setCatalogMsg((m) => ({
+        ...m,
+        [t.key]: {
+          ok: created.status !== "rejected",
+          text: `Deleted the old template and resubmitted — currently ${created.status}.`,
+        },
+      }));
+    } catch (err) {
+      setCatalogMsg((m) => ({
+        ...m,
+        [t.key]: { ok: false, text: err instanceof Error ? err.message : "Could not rebuild the template." },
+      }));
+    } finally {
+      setCatalogBusyKey(null);
+    }
+  };
 
   /** Asks the server to make one real call to the AI provider. */
   const testAi = async () => {
@@ -767,6 +794,15 @@ export default function SettingsClient({
                       >
                         Refresh status
                       </Button>
+                      {t.delete_url && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => deleteAndRebuildTemplate(t)}
+                          disabled={busy || !t.content_sid}
+                        >
+                          {busy ? "Working…" : "Delete & rebuild"}
+                        </Button>
+                      )}
                       {msg?.text && (
                         <span className={`text-sm ${msg.ok ? "text-green-500" : "text-red-400"}`}>
                           {msg.text}

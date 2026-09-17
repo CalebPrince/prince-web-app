@@ -78,6 +78,26 @@ abstract class WhatsAppContentTemplateManager
         return static::status();
     }
 
+    /**
+     * Deletes the template's Content resource on Twilio (e.g. to rebuild it
+     * from scratch after a Meta rejection) and clears the stored SID/status
+     * so the next createAndSubmit() creates a fresh one from the current
+     * BODY/button rather than refusing with "already exists".
+     *
+     * @return array<string,mixed>
+     */
+    public static function deleteAndReset(): array
+    {
+        $sid = trim((string) Settings::get(static::SID_SETTING));
+        if (self::isContentSid($sid)) {
+            self::deleteContent($sid);
+        }
+        Settings::set(static::SID_SETTING, '');
+        Settings::set(static::STATUS_SETTING, '');
+
+        return static::status();
+    }
+
     /** @return array<string,mixed> */
     public static function refresh(): array
     {
@@ -171,6 +191,38 @@ abstract class WhatsAppContentTemplateManager
             return true;
         } catch (\RuntimeException $e) {
             return false;
+        }
+    }
+
+    /**
+     * A plain DELETE, handled separately from request(): Twilio returns 204
+     * with an empty body on success, which request()'s JSON decode would
+     * mistake for a failure. A 404 is treated as success too — the content is
+     * gone either way, which is all deleteAndReset() cares about.
+     */
+    private static function deleteContent(string $sid): void
+    {
+        $accountSid = trim((string) Settings::get('twilio_account_sid'));
+        $token = trim((string) Settings::get('twilio_auth_token'));
+        if (!preg_match('/^AC[0-9a-fA-F]{32}$/', $accountSid) || $token === '') {
+            throw new \RuntimeException('Save a valid Twilio account SID and auth token first.');
+        }
+        if (!function_exists('curl_init')) {
+            throw new \RuntimeException('PHP cURL is unavailable.');
+        }
+
+        $ch = curl_init("https://content.twilio.com/v1/Content/{$sid}");
+        curl_setopt_array($ch, [
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_USERPWD => $accountSid . ':' . $token,
+        ]);
+        curl_exec($ch);
+        $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        if ($http >= 300 && $http !== 404) {
+            throw new \RuntimeException("Twilio refused to delete content {$sid} (HTTP {$http}): " . ($error ?: 'unknown error'));
         }
     }
 

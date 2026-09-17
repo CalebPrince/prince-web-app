@@ -43,4 +43,15 @@ final class WhatsAppInvoiceReadyTemplateController
             Response::error($e->getMessage(), 422);
         }
     }
+
+    /** DELETE /api/v1/admin/whatsapp-template/invoice-ready */
+    public static function destroy(): void
+    {
+        AuthMiddleware::requireAuth();
+        try {
+            Response::json(WhatsAppInvoiceReadyTemplateManager::deleteAndReset());
+        } catch (\Throwable $e) {
+            Response::error($e->getMessage(), 422);
+        }
+    }
 }
