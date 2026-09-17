@@ -75,7 +75,18 @@ abstract class WhatsAppContentTemplateManager
             return static::status();
         }
 
-        $response = self::request('GET', "https://content.twilio.com/v1/Content/{$sid}/ApprovalRequests");
+        try {
+            $response = self::request('GET', "https://content.twilio.com/v1/Content/{$sid}/ApprovalRequests");
+        } catch (\RuntimeException $e) {
+            if (!self::contentStillExists($sid)) {
+                // Deleted on Twilio's side (e.g. after a rejection) — clear
+                // the stale settings instead of surfacing a 404 forever.
+                Settings::set(static::SID_SETTING, '');
+                Settings::set(static::STATUS_SETTING, '');
+                return static::status();
+            }
+            throw $e;
+        }
         Settings::set(static::STATUS_SETTING, self::extractStatus($response) ?: 'pending');
 
         return static::status();
