@@ -2,9 +2,25 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // The repo root has its own package-lock.json (the separate Tailwind CLI
-  // build for the surviving PHP pages) which Turbopack otherwise mistakes
-  // for a monorepo root — pin resolution to this app instead.
+  // Dev only (`next dev` still uses Turbopack — fast, and never hit the issue
+  // below). The repo root has its own package-lock.json (the separate
+  // Tailwind CLI build for the surviving PHP pages) which Turbopack otherwise
+  // mistakes for a monorepo root — pin resolution to this app instead.
+  //
+  // package.json's "build" script passes --webpack, opting the PRODUCTION
+  // build out of Turbopack (the default bundler as of Next 16). Confirmed
+  // 2026-09-18: a Turbopack production build of this app intermittently
+  // produced a broken SSR module graph for exactly one route
+  // (/admin/drip) — "Module N was instantiated because it was required
+  // from module M, but the module factory is not available" — reproducible
+  // on the CI-built bundle actually deployed to production, but NOT
+  // reproducible across several local `next build` reruns of the identical
+  // source on a different machine, which points at Turbopack's production
+  // module-ID assignment being sensitive to build-environment parallelism/
+  // timing rather than anything wrong in the route's own code. --webpack is
+  // Next's own documented opt-out for exactly this bundler; do not remove it
+  // without first confirming a Turbopack production build survives repeated
+  // CI runs of this specific route.
   turbopack: {
     root: path.join(__dirname),
   },
