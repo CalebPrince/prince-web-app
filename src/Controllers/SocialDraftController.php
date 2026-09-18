@@ -188,6 +188,16 @@ class SocialDraftController
             if ($imageUrn !== null) {
                 $payload['images'] = [['id' => $imageUrn]];
             }
+            // Written unconditionally (success clears it to NULL) so this
+            // survives regardless of the overall post's outcome below —
+            // publish_error itself gets overwritten to NULL on a successful
+            // post, which is exactly what erased the evidence the first time
+            // this broke (see schema.sql's comment on this column).
+            self::writeWithRetry(
+                $pdo,
+                'UPDATE social_post_drafts SET image_publish_error = ? WHERE id = ?',
+                [self::$lastImageError, $draft['id']]
+            );
         }
 
         // Wrapped in try/catch: shared hosting runs several PHP workers and
@@ -244,19 +254,32 @@ class SocialDraftController
      * the PUT goes through Composio's proxy passing binary_body.url, which
      * has Composio fetch our public image URL itself and upload it with the
      * token attached server-side, rather than us handling raw bytes at all.
-     * Not yet confirmed against a live account (no draft has carried an
-     * image this far before) — both the initialize response's field nesting
-     * and the proxy's binary_body support are read from Composio's docs, not
-     * a real response. Logs the raw response at each step so a live failure
-     * shows exactly which assumption to correct, the same way the missing
-     * 'author' field was diagnosed. Returns null (never throws) on any
-     * failure — publishToLinkedIn() then just posts without an image rather
-     * than losing the whole post.
+     * Not yet confirmed against a live account — both the initialize
+     * response's field nesting and the proxy's binary_body support are read
+     * from Composio's docs, not a real response. Still calls error_log() at
+     * each step, but that turned out not to be reliable evidence on its own:
+     * a real draft published with a real image_url and got a real
+     * linkedin_post_urn back with zero matching log entries anywhere
+     * (confirmed 2026-09-18) — auto-approve runs this under the CLI SAPI
+     * (cron), where PHP's error_log defaults to stderr, and the cron entries
+     * in README.md redirect only stdout (`> /dev/null`), so stderr goes to
+     * the cron owner's mail (or nowhere) rather than a file
+     * Admin -> Error Logs reads. self::$lastImageError is the durable
+     * version: publishToLinkedIn() writes it to the draft's own
+     * image_publish_error column regardless of SAPI, so a future failure is
+     * visible in Admin -> Social Drafts itself. Returns null (never throws)
+     * on any failure — publishToLinkedIn() then just posts without an image
+     * rather than losing the whole post.
      */
+    private static string $lastImageError = '';
+
     private static function registerLinkedInImage(string $accountId, string $authorUrn, string $imageUrl): ?string
     {
+        self::$lastImageError = '';
+
         $init = Composio::executeTool('LINKEDIN_INITIALIZE_IMAGE_UPLOAD', $accountId, ['owner' => $authorUrn]);
         if ($init === null) {
+            self::$lastImageError = 'Initialize failed: ' . (Composio::lastError() ?: 'unknown');
             error_log('LinkedIn image upload: initialize failed: ' . (Composio::lastError() ?: 'unknown'));
             return null;
         }
@@ -270,12 +293,14 @@ class SocialDraftController
         $uploadUrl = $value['uploadUrl'] ?? null;
         $urn = $value['image'] ?? null;
         if (empty($uploadUrl) || empty($urn)) {
+            self::$lastImageError = 'Initialize response missing uploadUrl/image: ' . mb_substr(json_encode($init) ?: '', 0, 1200);
             error_log('LinkedIn image upload: initialize response missing uploadUrl/image: ' . json_encode($init));
             return null;
         }
 
         $put = Composio::executeProxy($accountId, (string) $uploadUrl, 'PUT', [], null, ['url' => $imageUrl]);
         if ($put === null) {
+            self::$lastImageError = 'PUT to presigned URL failed: ' . (Composio::lastError() ?: 'unknown');
             error_log('LinkedIn image upload: PUT to presigned URL failed: ' . (Composio::lastError() ?: 'unknown'));
             return null;
         }

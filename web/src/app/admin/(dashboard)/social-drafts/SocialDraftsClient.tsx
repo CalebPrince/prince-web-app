@@ -124,6 +124,11 @@ export default function SocialDraftsClient({ initialDrafts }: { initialDrafts: A
                       {d.publish_error && (
                         <div className="text-xs text-red-500 mt-1">Error: {d.publish_error}</div>
                       )}
+                      {!d.publish_error && d.image_publish_error && (
+                        <div className="text-xs text-amber-500 mt-1">
+                          Posted without image: {d.image_publish_error}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-4">
                       {getStatusBadge(d.status)}

@@ -104,6 +104,7 @@ export type AdminSocialDraft = {
   updated_at: string;
   published_at?: string;
   publish_error?: string;
+  image_publish_error?: string;
 };
 
 export type AdminContentIdea = {

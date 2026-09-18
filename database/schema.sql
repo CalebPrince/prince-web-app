@@ -938,6 +938,18 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
   -- has something to query against. NULL for anything published before this
   -- column existed, or if the create response never included one.
   linkedin_post_urn TEXT,
+  -- Separate from publish_error: the post itself can succeed (published_at
+  -- set, publish_error cleared) while the image still failed to attach —
+  -- registerLinkedInImage() is best-effort and never blocks the text post.
+  -- Without its own column that failure reason had nowhere durable to live:
+  -- publish_error gets overwritten to NULL on the overall success path, and
+  -- the error_log() calls inside registerLinkedInImage() turned out to be
+  -- unreliable for cron-triggered publishes (auto-approve runs under the CLI
+  -- SAPI, where PHP's default error_log destination is stderr, not one of
+  -- the files Admin -> Error Logs reads — confirmed 2026-09-18 by a post
+  -- with a real image_url and a real linkedin_post_urn but zero matching
+  -- log entries anywhere).
+  image_publish_error TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

@@ -1966,4 +1966,12 @@ foreach (['emailed_at', 'whatsapp_sent_at'] as $col) {
     }
 }
 
+// A published draft's own durable record of why its image didn't attach —
+// see schema.sql's comment on this column for why publish_error alone
+// wasn't enough to diagnose this.
+$socialPostDraftColumns = array_column($pdo->query('PRAGMA table_info(social_post_drafts)')->fetchAll(), 'name');
+if (!in_array('image_publish_error', $socialPostDraftColumns, true)) {
+    $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN image_publish_error TEXT');
+}
+
 echo "Schema applied.\n";
