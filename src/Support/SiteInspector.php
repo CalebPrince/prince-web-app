@@ -64,6 +64,42 @@ class SiteInspector
     }
 
     /**
+     * Reduces raw page HTML to a plain-text approximation of what a reader
+     * actually sees — script/style/nav/footer chrome stripped out, tags
+     * removed, entities decoded, whitespace collapsed — so an LLM tool call
+     * can read an article/docs/pricing page's real content instead of a
+     * search snippet. Not a true readability extractor (no main-content
+     * scoring), just enough cleanup that boilerplate doesn't drown the
+     * actual text; callers should still treat the result as noisy and cap
+     * how much of it they pass on.
+     *
+     * @return array{title:?string,text:string}
+     */
+    public static function extractReadableText(string $html): array
+    {
+        $title = null;
+        if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $m)) {
+            $title = trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES | ENT_HTML5));
+        }
+
+        $stripped = preg_replace(
+            '/<(head|script|style|noscript|svg|nav|footer|header)\b[^>]*>.*?<\/\1>/is',
+            ' ',
+            $html
+        ) ?? $html;
+        $stripped = preg_replace('/<!--.*?-->/s', ' ', $stripped) ?? $stripped;
+        // Block-level tags become a newline so paragraphs/headings/list items
+        // don't run together once the tags themselves are stripped.
+        $stripped = preg_replace('/<\/(p|div|li|h[1-6]|br|tr|section|article)>/i', "\n", $stripped) ?? $stripped;
+        $text = html_entity_decode(strip_tags($stripped), ENT_QUOTES | ENT_HTML5);
+        $text = preg_replace('/[ \t]+/', ' ', $text) ?? $text;
+        $text = preg_replace('/\n{3,}/', "\n\n", $text) ?? $text;
+        $text = trim($text);
+
+        return ['title' => $title !== '' ? $title : null, 'text' => $text];
+    }
+
+    /**
      * Pattern-matches known platform/framework/analytics fingerprints out of
      * real page HTML and response headers. Each hit records the concrete
      * evidence it matched on, so the result is defensible ("we saw X"), never

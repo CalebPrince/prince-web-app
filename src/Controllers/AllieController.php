@@ -13,6 +13,7 @@ use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\SiteInspector;
 use App\Support\WhatsAppNotifier;
 
 /**
@@ -84,6 +85,7 @@ class AllieController
             SharedAgentTools::siteInfoToolDeclaration(),
             SharedAgentTools::searchContentToolDeclaration(),
             self::searchWebToolDeclaration(),
+            self::browsePageToolDeclaration(),
             self::inspectGitHubRepositoryToolDeclaration(),
             self::listEvaluationsToolDeclaration(),
             self::saveEvaluationToolDeclaration(),
@@ -97,6 +99,7 @@ class AllieController
             'get_site_info' => SharedAgentTools::getSiteInfo(),
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
             'search_web' => self::searchWeb((string) ($args['query'] ?? '')),
+            'browse_page' => self::browsePage((string) ($args['url'] ?? '')),
             'inspect_github_repository' => self::inspectGitHubRepository((string) ($args['url'] ?? '')),
             'list_evaluations' => self::listEvaluations($pdo, isset($args['status']) ? (string) $args['status'] : null),
             'save_evaluation' => self::saveEvaluation($pdo, $args),
@@ -112,10 +115,10 @@ class AllieController
      * into something, since she has no independent judgment loop of her own
      * outside AiAgentEngine::run(). A generous tool-round budget because one
      * real pass chains several calls (list_evaluations to avoid repeating
-     * herself, then search_web/get_site_info/search_content, then one or
-     * more save_evaluation calls as she progresses a candidate, then
-     * flag_for_wendy_review) rather than the 1-2 calls a normal chat turn
-     * needs.
+     * herself, then search_web/browse_page/get_site_info/search_content,
+     * then one or more save_evaluation calls as she progresses a candidate,
+     * then flag_for_wendy_review) rather than the 1-2 calls a normal chat
+     * turn needs.
      *
      * @return array{reply: ?string, mode: string, provider: ?string, ready: bool}
      */
@@ -226,9 +229,12 @@ class AllieController
             . "- Intentional, not reflexive: landing on \"reject\" with a clear, well-reasoned no is just as "
             . "much your job as landing on \"adopt\" — never force a recommendation just to have one.\n\n"
             . "Ground every claim in a real tool call, never invented: search_web (a live web search, biased "
-            . "to the past year — use it for anything about pricing, release dates, benchmarks, or whether "
-            . "something is actually still current; always cite the source and its date, and say plainly when "
-            . "the freshest result you found is actually stale), inspect_github_repository (for a specific "
+            . "to the past month so this stays about what's actually current, not old news — use it for "
+            . "anything about pricing, release dates, benchmarks, or whether something is actually still "
+            . "current; always cite the source and its date, and say plainly when the freshest result you "
+            . "found is actually stale), browse_page (open a real URL — a changelog, docs page, pricing page, "
+            . "or announcement search_web only gave you a snippet of — and read its actual current content "
+            . "instead of guessing from the snippet alone), inspect_github_repository (for a specific "
             . "open-source tool — read its real README/metadata rather than guessing what it does), "
             . "get_site_info (Caleb's real bio, stack, and services — ground every \"compare against current "
             . "stack\" claim in what he's actually running), and search_content (his real past projects/posts, "
@@ -246,7 +252,7 @@ class AllieController
             . "that's a real gate, not ceremony, so don't skip it or tell Caleb something is \"ready to adopt\" "
             . "before she's weighed in.\n\n"
             . "CRITICAL: never state a spec, price, benchmark, or release date you didn't just get from "
-            . "search_web or inspect_github_repository this conversation — training data goes stale fast in "
+            . "search_web, browse_page, or inspect_github_repository this conversation — training data goes stale fast in "
             . "this space, and presenting a guess as current fact is exactly the kind of hype you exist to cut "
             . "through. If Caleb pushes for a take before you've actually looked something up, say so and go "
             . "look it up rather than freelancing an opinion.\n\n"
@@ -261,12 +267,12 @@ class AllieController
     {
         return [
             'name' => 'search_web',
-            'description' => 'Run a real, live web search, biased toward the past year so old articles don\'t get '
-                . 'mistaken for current news — use it to check pricing, release dates, benchmarks, or anything '
-                . 'about whether a tool is actually still current before making a claim about it. Each result '
-                . 'includes its source link and, when Google reports one, a publish date — always check the date '
-                . 'before treating something as current: a result from a year+ ago is stale, say so rather than '
-                . 'presenting it as current.',
+            'description' => 'Run a real, live web search, biased toward the past month so results reflect what\'s '
+                . 'actually current right now rather than old news — use it to check pricing, release dates, '
+                . 'benchmarks, or anything about whether a tool is actually still current before making a claim '
+                . 'about it. Each result includes its source link and, when Google reports one, a publish date — '
+                . 'always check the date before treating something as current: a result more than a month or so '
+                . 'old is stale, say so rather than presenting it as current.',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
@@ -276,6 +282,28 @@ class AllieController
                     ],
                 ],
                 'required' => ['query'],
+            ],
+        ];
+    }
+
+    private static function browsePageToolDeclaration(): array
+    {
+        return [
+            'name' => 'browse_page',
+            'description' => 'Fetch a real webpage — a changelog, docs page, pricing page, blog post, or '
+                . 'announcement — and read its actual current text content, not just a search snippet. Use this '
+                . 'on a URL search_web returned (or one Caleb shares) whenever the snippet alone isn\'t enough to '
+                . 'ground a claim about pricing, features, or a release. Only public http(s) pages; for a GitHub '
+                . 'repository use inspect_github_repository instead, it returns better-structured data.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'url' => [
+                        'type' => 'STRING',
+                        'description' => 'The full URL to read, e.g. "https://example.com/pricing".',
+                    ],
+                ],
+                'required' => ['url'],
             ],
         ];
     }
@@ -303,9 +331,14 @@ class AllieController
 
     /**
      * Real web search via Serper's search endpoint — same implementation as
-     * ScoutController::searchWeb(), kept in this controller rather than
-     * SharedAgentTools per the codebase's convention that agent-specific
-     * tools live with their own controller.
+     * ScoutController::searchWeb() except for the recency window
+     * (`tbs: qdr:m`, past month rather than past year): Allie's job is
+     * specifically catching what's new *right now* in a fast-moving space,
+     * so a query that only turns up year-old results should read as "nothing
+     * current found" rather than surface something stale as if it were
+     * fresh. Kept in this controller rather than SharedAgentTools per the
+     * codebase's convention that agent-specific tools live with their own
+     * controller.
      *
      * @return array{results?: array<int,array{title:string,link:?string,snippet:?string,date:?string}>, note?: string}
      */
@@ -332,7 +365,7 @@ class AllieController
                 'Content-Type: application/json',
                 'X-API-KEY: ' . $apiKey,
             ],
-            CURLOPT_POSTFIELDS => json_encode(['q' => $query, 'tbs' => 'qdr:y']),
+            CURLOPT_POSTFIELDS => json_encode(['q' => $query, 'tbs' => 'qdr:m']),
             CURLOPT_TIMEOUT => 15,
         ]);
         $response = curl_exec($ch);
@@ -371,6 +404,59 @@ class AllieController
         }
 
         return ['results' => $out];
+    }
+
+    /**
+     * Full-page browsing: fetches a real URL via SiteInspector::fetch() and
+     * reduces its HTML to plain text via SiteInspector::extractReadableText()
+     * — search_web only ever gives Allie a title/snippet/link, which isn't
+     * enough to ground a claim about, say, an actual current price or a
+     * changelog entry. Guarded by SharedAgentTools::isSafeUrl() the same way
+     * MarketingLeadController/DossierController guard their own arbitrary-URL
+     * fetches (no loopback/private/reserved targets) since, unlike
+     * inspect_github_repository, this accepts any http(s) URL rather than
+     * one constrained to a single known API. Truncates aggressively — this
+     * is tool-call output that goes straight into the model's context, not a
+     * page for a human to scroll.
+     *
+     * @return array{title?:?string,url?:string,text?:string,truncated?:bool,error?:string}
+     */
+    private static function browsePage(string $url): array
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return ['error' => 'No URL given.'];
+        }
+        if (!SharedAgentTools::isSafeUrl($url)) {
+            return ['error' => 'That URL can\'t be fetched — only public http(s) pages are allowed.'];
+        }
+
+        $page = SiteInspector::fetch($url);
+        if ($page === null || $page['html'] === '') {
+            return ['error' => 'Could not fetch that page — it may be down, blocking automated requests, or timed out.'];
+        }
+        if ($page['status'] >= 400) {
+            return ['error' => "That page returned HTTP {$page['status']}."];
+        }
+
+        $extracted = SiteInspector::extractReadableText($page['html']);
+        $text = $extracted['text'];
+        $truncated = false;
+        $limit = 6000;
+        if (mb_strlen($text) > $limit) {
+            $text = mb_substr($text, 0, $limit);
+            $truncated = true;
+        }
+        if ($text === '') {
+            return ['error' => 'That page loaded but had no readable text content (may be JS-rendered).'];
+        }
+
+        return [
+            'title' => $extracted['title'],
+            'url' => $page['final_url'],
+            'text' => $text,
+            'truncated' => $truncated,
+        ];
     }
 
     /**
