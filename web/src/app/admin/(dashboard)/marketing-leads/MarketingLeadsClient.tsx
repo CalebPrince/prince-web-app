@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { adminApi, asList } from "@/lib/api";
 import {
   Plus, Search, Star, Trash2, Trash, Telescope, ScanSearch, PenLine,
-  MonitorPlay, Send, Save, ArrowUpRight, MessageSquarePlus, ImagePlus,
+  MonitorPlay, Send, Save, ArrowUpRight, MessageSquarePlus, ImagePlus, MessageCircle,
 } from "lucide-react";
+import { WhatsAppQueueModal } from "./WhatsAppQueueModal";
 import {
   PageHeader, Card, StatCard, Table, Row, Cell, EmptyRow, Button, IconButton,
   Modal, Field, Input, Textarea, Select, FilterBar, Tabs, StatusPill,
@@ -209,6 +210,7 @@ export default function MarketingLeadsClient({
   const selectedTemplate = templateOptions.find((t) => t.key === sendTemplateForm.key) || null;
 
   const [intros, setIntros] = useState<WhatsAppIntro[]>([]);
+  const [whatsAppQueueOpen, setWhatsAppQueueOpen] = useState(false);
   const [introsOpen, setIntrosOpen] = useState(false);
   const [introsLoading, setIntrosLoading] = useState(false);
   const [markingReceivedId, setMarkingReceivedId] = useState<number | null>(null);
@@ -694,6 +696,10 @@ export default function MarketingLeadsClient({
               <Send className="w-4 h-4" />
               Send other template
             </Button>
+            <Button variant="outline" onClick={() => setWhatsAppQueueOpen(true)}>
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp list
+            </Button>
             <Button variant="outline" onClick={() => setIntrosOpen((v) => !v)}>
               <Send className="w-4 h-4" />
               Templates sent ({intros.length})
@@ -1157,6 +1163,12 @@ export default function MarketingLeadsClient({
           </p>
         )}
       </Modal>
+
+      <WhatsAppQueueModal
+        isOpen={whatsAppQueueOpen}
+        onClose={() => setWhatsAppQueueOpen(false)}
+        onChanged={() => void reload()}
+      />
 
       {/* Send showcase follow-up */}
       <Modal
