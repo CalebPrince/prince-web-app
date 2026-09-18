@@ -457,20 +457,27 @@ export function adminHref(url?: string | null): string {
   return url.replace(/^(\/admin\/[a-z0-9-]+)\.html/i, "$1");
 }
 
+// Fixed locale and timezone on purpose. Pages that render on the server (SSR)
+// and then hydrate must produce identical text in both places: the server's
+// timezone and the browser's differ, so a bare toLocaleDateString() showed
+// 9/17 in the HTML and 9/18 after hydration, which React reports as error #418.
+const DISPLAY_LOCALE = "en-US";
+const DISPLAY_TIME_ZONE = "UTC";
+
 export function formatDate(value?: string | null): string {
   if (!value) return "—";
   // The PHP API returns naive UTC timestamps ("2026-08-19 04:08:00"); the
   // legacy JS appended Z to stop the browser reading them as local time.
   const normalized = value.includes("T") ? value : value.replace(" ", "T") + "Z";
   const d = new Date(normalized);
-  return isNaN(d.getTime()) ? value : d.toLocaleDateString();
+  return isNaN(d.getTime()) ? value : d.toLocaleDateString(DISPLAY_LOCALE, { timeZone: DISPLAY_TIME_ZONE });
 }
 
 export function formatDateTime(value?: string | null): string {
   if (!value) return "—";
   const normalized = value.includes("T") ? value : value.replace(" ", "T") + "Z";
   const d = new Date(normalized);
-  return isNaN(d.getTime()) ? value : d.toLocaleString();
+  return isNaN(d.getTime()) ? value : d.toLocaleString(DISPLAY_LOCALE, { timeZone: DISPLAY_TIME_ZONE });
 }
 
 export function formatLabel(value?: string | null): string {

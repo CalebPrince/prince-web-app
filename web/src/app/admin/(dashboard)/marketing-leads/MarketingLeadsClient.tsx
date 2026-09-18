@@ -136,7 +136,7 @@ const FIT_LABEL: Record<FitFilter, string> = {
 
 function money(minor: number | null, currency: string | null) {
   if (!minor) return "—";
-  return `${currency || "GHS"} ${(Number(minor) / 100).toLocaleString(undefined, {
+  return `${currency || "GHS"} ${(Number(minor) / 100).toLocaleString("en-US", {
     maximumFractionDigits: 0,
   })}`;
 }
