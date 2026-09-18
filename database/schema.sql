@@ -1229,7 +1229,14 @@ CREATE TABLE IF NOT EXISTS automations (
   trigger_event TEXT NOT NULL DEFAULT 'manual' CHECK (trigger_event IN (
     'manual', 'marketing_pitch_sent', 'inquiry_created', 'quote_requested',
     'proposal_sent', 'payment_received', 'appointment_booked',
-    'project_completed', 'newsletter_subscribed', 'chat_lead_captured'
+    'project_completed', 'newsletter_subscribed', 'chat_lead_captured',
+    'pipeline_stage_changed'
+  )),
+  -- Only meaningful when trigger_event = 'pipeline_stage_changed': which of
+  -- PipelineController::STAGES the lead must move into to fire this
+  -- automation. NULL means "any stage" (fires on every pipeline move).
+  trigger_stage TEXT CHECK (trigger_stage IN (
+    'new', 'researching', 'contacted', 'discovery', 'proposal', 'won', 'lost'
   )),
   is_active INTEGER NOT NULL DEFAULT 0,
   -- When set, contacts this automation enrols inherit nurturer_enabled = 1, so
@@ -1251,6 +1258,15 @@ CREATE TABLE IF NOT EXISTS drip_steps (
   day_offset INTEGER NOT NULL,
   subject TEXT NOT NULL,
   body TEXT NOT NULL,
+  -- 'email' sends subject/body via Mailer as before. 'whatsapp' sends
+  -- whatsapp_template_sid through Twilio's Content API instead — subject/body
+  -- stay NOT NULL for schema simplicity but are ignored on that channel (the
+  -- admin UI hides them when whatsapp is selected).
+  channel TEXT NOT NULL DEFAULT 'email' CHECK (channel IN ('email', 'whatsapp')),
+  whatsapp_template_sid TEXT,
+  -- JSON map of Twilio Content API {{n}} placeholders to merge tokens, e.g.
+  -- {"1": "{{name}}", "2": "{{last_action}}"}, resolved at send time.
+  whatsapp_variables TEXT,
   is_active INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -1270,6 +1286,11 @@ CREATE TABLE IF NOT EXISTS drip_enrollments (
   automation_id INTEGER NOT NULL DEFAULT 1 REFERENCES automations(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   name TEXT,
+  -- Only set when the trigger call site had one (marketing_leads.contact_phone,
+  -- a WhatsApp-originated chat lead, ...). Required for this enrollment to
+  -- ever receive a channel='whatsapp' step — email-only enrollments simply
+  -- never match those steps in send_drip_whatsapp.php.
+  phone TEXT,
   source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'marketing_lead', 'trigger')),
   lead_id INTEGER NULL REFERENCES marketing_leads(id) ON DELETE SET NULL,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'stopped')),

@@ -23,6 +23,9 @@ use App\Support\Response;
  */
 class AutomationController
 {
+    /** Kept in step with PipelineController::STAGES and the trigger_stage CHECK in schema.sql. */
+    private const PIPELINE_STAGES = ['new', 'researching', 'contacted', 'discovery', 'proposal', 'won', 'lost'];
+
     /** GET /api/v1/admin/automations */
     public static function index(): void
     {
@@ -50,8 +53,8 @@ class AutomationController
         }
 
         $pdo = Database::get();
-        $pdo->prepare('INSERT INTO automations (name, description, trigger_event, is_active, nurturer_enabled) VALUES (?, ?, ?, ?, ?)')
-            ->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['is_active'], $fields['nurturer_enabled']]);
+        $pdo->prepare('INSERT INTO automations (name, description, trigger_event, trigger_stage, is_active, nurturer_enabled) VALUES (?, ?, ?, ?, ?, ?)')
+            ->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['trigger_stage'], $fields['is_active'], $fields['nurturer_enabled']]);
 
         $id = (string) $pdo->lastInsertId();
         ActivityLog::log($user, 'created', 'automation', $id, $fields['name']);
@@ -77,8 +80,8 @@ class AutomationController
         }
 
         $pdo->prepare(
-            "UPDATE automations SET name = ?, description = ?, trigger_event = ?, is_active = ?, nurturer_enabled = ?, updated_at = datetime('now') WHERE id = ?"
-        )->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['is_active'], $fields['nurturer_enabled'], $automation['id']]);
+            "UPDATE automations SET name = ?, description = ?, trigger_event = ?, trigger_stage = ?, is_active = ?, nurturer_enabled = ?, updated_at = datetime('now') WHERE id = ?"
+        )->execute([$fields['name'], $fields['description'], $fields['trigger_event'], $fields['trigger_stage'], $fields['is_active'], $fields['nurturer_enabled'], $automation['id']]);
 
         ActivityLog::log($user, 'updated', 'automation', (string) $automation['id'], $fields['name']);
         Response::json(['status' => 'updated']);
@@ -164,6 +167,7 @@ class AutomationController
         $name = trim((string) ($data['name'] ?? ''));
         $description = trim((string) ($data['description'] ?? '')) ?: null;
         $trigger = trim((string) ($data['trigger_event'] ?? 'manual'));
+        $triggerStage = trim((string) ($data['trigger_stage'] ?? '')) ?: null;
         $isActive = !empty($data['is_active']) ? 1 : 0;
         $nurturerEnabled = !empty($data['nurturer_enabled']) ? 1 : 0;
 
@@ -174,11 +178,21 @@ class AutomationController
         if (!in_array($trigger, Automations::TRIGGERS, true)) {
             $errors[] = 'Unknown trigger event.';
         }
+        // trigger_stage is only meaningful for pipeline_stage_changed (NULL there
+        // means "any stage") — anywhere else it must stay unset, so an automation
+        // can't silently gain a stage filter another trigger type would ignore.
+        if ($trigger === 'pipeline_stage_changed') {
+            if ($triggerStage !== null && !in_array($triggerStage, self::PIPELINE_STAGES, true)) {
+                $errors[] = 'Unknown pipeline stage.';
+            }
+        } else {
+            $triggerStage = null;
+        }
 
         return [
             [
                 'name' => $name, 'description' => $description, 'trigger_event' => $trigger,
-                'is_active' => $isActive, 'nurturer_enabled' => $nurturerEnabled,
+                'trigger_stage' => $triggerStage, 'is_active' => $isActive, 'nurturer_enabled' => $nurturerEnabled,
             ],
             $errors,
         ];

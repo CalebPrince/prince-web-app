@@ -6,7 +6,9 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
+use App\Support\Automations;
 use App\Support\Database;
+use App\Support\IntegrationEvent;
 use App\Support\Response;
 use App\Support\AgentTaskQueue;
 
@@ -153,11 +155,17 @@ class PipelineController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = (int) $params['id'];
         $pdo = Database::get();
-        $fields = []; $values = [];
+
+        $priorStmt = $pdo->prepare('SELECT lead_key, stage FROM pipeline_leads WHERE id = ?');
+        $priorStmt->execute([$id]);
+        $prior = $priorStmt->fetch();
+
+        $fields = []; $values = []; $newStage = null;
         if (array_key_exists('stage', $data)) {
             $stage = (string) $data['stage'];
             if (!in_array($stage, self::STAGES, true)) Response::error('Invalid pipeline stage.', 422);
             $fields[] = 'stage=?'; $values[] = $stage; $fields[] = 'manual_stage=1';
+            $newStage = $stage;
         }
         foreach (['notes' => 5000, 'next_action' => 500] as $field => $limit) {
             if (array_key_exists($field, $data)) { $value = trim((string) $data[$field]); if (mb_strlen($value) > $limit) Response::error(ucwords(str_replace('_',' ',$field)).' is too long.', 422); $fields[] = "$field=?"; $values[] = $value ?: null; }
@@ -169,6 +177,33 @@ class PipelineController
         $stmt->execute($values);
         if ($stmt->rowCount() === 0) Response::error('Pipeline lead not found.', 404);
         if (array_key_exists('follow_up_at', $data)) self::syncFollowUpQueue($pdo, $id, $follow ?: null, $data['next_action'] ?? null);
+
+        // A real stage move (not a same-stage re-save) is the pipeline board's
+        // half of the 'pipeline_stage_changed' automation trigger — the other
+        // half lives in Automations::fire()'s trigger_stage match. Logged to
+        // integration_events regardless of whether the lead has an email, since
+        // that's a general-purpose event feed; the automation itself can only
+        // fire where there's an address to enroll.
+        if ($newStage !== null && $prior && $prior['stage'] !== $newStage) {
+            $leadKey = (string) $prior['lead_key'];
+            $email = str_starts_with($leadKey, 'email:') ? substr($leadKey, 6) : '';
+            IntegrationEvent::log('pipeline_stage_changed', ['lead_id' => $id, 'email' => $email ?: null, 'stage' => $newStage]);
+            if ($email !== '') {
+                // No lead_id here: drip_enrollments.lead_id is a foreign key into
+                // marketing_leads specifically, and $id is a pipeline_leads id —
+                // a different table's row entirely. Passing it through would
+                // either hit an unrelated marketing_leads row by coincidence or
+                // (usually) fail the FK constraint outright.
+                // No 'source' override: drip_enrollments.source only allows
+                // manual/marketing_lead/trigger (schema CHECK), and this is a
+                // trigger-driven enrollment like any other — the default
+                // ('trigger') is correct, same as every other automated site.
+                Automations::fire('pipeline_stage_changed', $email, [
+                    'last_action' => 'Moved to the "' . $newStage . '" stage',
+                ], $pdo, $newStage);
+            }
+        }
+
         ActivityLog::log($user, 'pipeline_lead_updated', 'pipeline_lead', $id, null, array_intersect_key($data, array_flip(['stage','next_action','follow_up_at'])));
         Response::json(['status' => 'updated']);
     }

@@ -34,6 +34,7 @@ class Automations
         'project_completed',
         'newsletter_subscribed',
         'chat_lead_captured',
+        'pipeline_stage_changed',
     ];
 
     /**
@@ -48,10 +49,14 @@ class Automations
      *
      * @param array{
      *   name?:?string, source?:string, lead_id?:?int,
-     *   lead_industry?:?string, last_action?:?string, nurturer_enabled?:bool
+     *   lead_industry?:?string, last_action?:?string, nurturer_enabled?:bool,
+     *   phone?:?string
      * } $opts
+     * @param ?string $stage Only relevant to the 'pipeline_stage_changed'
+     *        event — the stage the lead just moved into. Matches automations
+     *        whose trigger_stage is NULL (any stage) or equal to this value.
      */
-    public static function fire(string $event, string $email, array $opts = [], ?\PDO $pdo = null): int
+    public static function fire(string $event, string $email, array $opts = [], ?\PDO $pdo = null, ?string $stage = null): int
     {
         $email = trim($email);
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -61,8 +66,11 @@ class Automations
         $pdo ??= Database::get();
 
         try {
-            $stmt = $pdo->prepare('SELECT id, nurturer_enabled FROM automations WHERE trigger_event = ? AND is_active = 1');
-            $stmt->execute([$event]);
+            $stmt = $pdo->prepare(
+                'SELECT id, nurturer_enabled FROM automations
+                 WHERE trigger_event = ? AND is_active = 1 AND (trigger_stage IS NULL OR trigger_stage = ?)'
+            );
+            $stmt->execute([$event, $stage]);
             $automations = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
         } catch (\Throwable $e) {
             error_log('Automations::fire lookup failed for ' . $event . ': ' . $e->getMessage());
@@ -91,7 +99,8 @@ class Automations
                     $opts['lead_id'] ?? null,
                     $nurturerEnabled,
                     $opts['lead_industry'] ?? null,
-                    $opts['last_action'] ?? null
+                    $opts['last_action'] ?? null,
+                    $opts['phone'] ?? null
                 );
                 if ($created) {
                     $enrolled++;

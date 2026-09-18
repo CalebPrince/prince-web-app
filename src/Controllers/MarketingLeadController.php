@@ -805,6 +805,7 @@ class MarketingLeadController
                 'source' => 'marketing_lead',
                 'lead_id' => (int) $lead['id'],
                 'last_action' => $lastAction,
+                'phone' => $lead['contact_phone'] ?: null,
             ], $pdo);
         }
 

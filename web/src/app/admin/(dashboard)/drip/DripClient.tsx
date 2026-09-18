@@ -16,6 +16,7 @@ export type Automation = {
   name: string;
   description: string | null;
   trigger_event: string;
+  trigger_stage: string | null;
   is_active: boolean | number;
   nurturer_enabled: boolean | number;
   step_count: number;
@@ -29,6 +30,9 @@ export type Step = {
   day_offset: number;
   subject: string;
   body: string;
+  channel: "email" | "whatsapp";
+  whatsapp_template_sid: string | null;
+  whatsapp_variables: string | null;
   is_active: boolean | number;
   sent_count: number;
 };
@@ -67,9 +71,13 @@ const TRIGGERS = [
   { value: "project_completed", label: "Session completed", hint: "You mark a booked session as completed." },
   { value: "newsletter_subscribed", label: "Newsletter signup", hint: "Someone subscribes to the newsletter." },
   { value: "chat_lead_captured", label: "Live chat lead", hint: "A visitor leaves their details in the live chat." },
+  { value: "pipeline_stage_changed", label: "Pipeline stage changed", hint: "A lead on the pipeline board moves into a stage you pick below." },
 ];
 
 const TRIGGER_MAP = Object.fromEntries(TRIGGERS.map((t) => [t.value, t]));
+
+/** Keep in step with PipelineController::STAGES / AutomationController::PIPELINE_STAGES. */
+const PIPELINE_STAGES = ["new", "researching", "contacted", "discovery", "proposal", "won", "lost"];
 
 const SOURCE_LABEL: Record<string, string> = {
   marketing_lead: "Marketing lead",
@@ -86,11 +94,15 @@ const emptyAutomationForm = {
   name: "",
   description: "",
   trigger_event: "manual",
+  trigger_stage: "",
   is_active: true,
   nurturer_enabled: false,
 };
 
-const emptyStepForm = { day_offset: "0", subject: "", body: "", is_active: true };
+const emptyStepForm = {
+  day_offset: "0", subject: "", body: "", is_active: true,
+  channel: "email" as "email" | "whatsapp", whatsapp_template_sid: "", whatsapp_variables: "",
+};
 
 export default function DripClient({
   initialAutomations,
@@ -197,6 +209,7 @@ export default function DripClient({
             name: a.name,
             description: a.description || "",
             trigger_event: a.trigger_event,
+            trigger_stage: a.trigger_stage || "",
             is_active: Boolean(Number(a.is_active)),
             nurturer_enabled: Boolean(Number(a.nurturer_enabled)),
           }
@@ -236,6 +249,9 @@ export default function DripClient({
             subject: step.subject,
             body: step.body,
             is_active: Boolean(step.is_active),
+            channel: step.channel || "email",
+            whatsapp_template_sid: step.whatsapp_template_sid || "",
+            whatsapp_variables: step.whatsapp_variables || "",
           }
         : emptyStepForm
     );
@@ -252,6 +268,9 @@ export default function DripClient({
       subject: stepForm.subject,
       body: stepForm.body,
       is_active: stepForm.is_active,
+      channel: stepForm.channel,
+      whatsapp_template_sid: stepForm.whatsapp_template_sid,
+      whatsapp_variables: stepForm.whatsapp_variables,
     };
     try {
       if (editingStepId) await adminApi.put(`/api/v1/admin/drip/steps/${editingStepId}`, payload);
@@ -360,8 +379,8 @@ export default function DripClient({
       <div className="space-y-8">
         <PageHeader
           kicker="Leads & Clients"
-          title="Email that sends itself."
-          description="Trigger-driven sequences that follow up without you remembering to."
+          title="Follow-up that sends itself."
+          description="Trigger-driven email and WhatsApp sequences that follow up without you remembering to."
           actions={
             <Button variant="primary" onClick={() => openAutomationModal()}>
               <Plus className="w-4 h-4" />
@@ -519,16 +538,25 @@ export default function DripClient({
             </Button>
           }
         >
-          <Table head={["When", "Email", "Active", "Sent", "Actions"]}>
+          <Table head={["When", "Step", "Active", "Sent", "Actions"]}>
             {steps.length === 0 ? (
-              <EmptyRow colSpan={5}>No steps yet. Add the first email in this sequence.</EmptyRow>
+              <EmptyRow colSpan={5}>No steps yet. Add the first step in this sequence.</EmptyRow>
             ) : (
               steps.map((s) => (
                 <Row key={s.id}>
                   <Cell className="font-semibold whitespace-nowrap">Day {s.day_offset}</Cell>
                   <Cell>
-                    <div className="font-medium text-text">{s.subject}</div>
-                    <div className="text-xs text-text-3 mt-0.5 line-clamp-1">{s.body}</div>
+                    <div className="flex items-center gap-1.5">
+                      {s.channel === "whatsapp" && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-500">
+                          WhatsApp
+                        </span>
+                      )}
+                      <div className="font-medium text-text">{s.subject}</div>
+                    </div>
+                    <div className="text-xs text-text-3 mt-0.5 line-clamp-1">
+                      {s.channel === "whatsapp" ? `Template: ${s.whatsapp_template_sid || "—"}` : s.body}
+                    </div>
                   </Cell>
                   <Cell>
                     <input
@@ -707,7 +735,7 @@ export default function DripClient({
           </>
         }
       >
-        <Field label="Day offset" hint="Days after enrolment that this email goes out.">
+        <Field label="Day offset" hint="Days after enrolment that this step goes out.">
           <Input
             type="number"
             min="0"
@@ -716,21 +744,54 @@ export default function DripClient({
             onChange={(e) => setStepForm({ ...stepForm, day_offset: e.target.value })}
           />
         </Field>
-        <Field label="Subject">
+        <Field label="Channel">
+          <Select
+            value={stepForm.channel}
+            onChange={(e) => setStepForm({ ...stepForm, channel: e.target.value as "email" | "whatsapp" })}
+          >
+            <option value="email">Email</option>
+            <option value="whatsapp">WhatsApp</option>
+          </Select>
+        </Field>
+        <Field label={stepForm.channel === "whatsapp" ? "Label" : "Subject"}>
           <Input
             required
             value={stepForm.subject}
             onChange={(e) => setStepForm({ ...stepForm, subject: e.target.value })}
           />
         </Field>
-        <Field label="Body">
-          <Textarea
-            rows={8}
-            required
-            value={stepForm.body}
-            onChange={(e) => setStepForm({ ...stepForm, body: e.target.value })}
-          />
-        </Field>
+        {stepForm.channel === "whatsapp" ? (
+          <>
+            <Field label="Twilio Content SID" hint="The approved WhatsApp template's HX... id from the Twilio Console.">
+              <Input
+                required
+                value={stepForm.whatsapp_template_sid}
+                onChange={(e) => setStepForm({ ...stepForm, whatsapp_template_sid: e.target.value })}
+                placeholder="HX..."
+              />
+            </Field>
+            <Field
+              label="Template variables (JSON)"
+              hint={'Maps the template\'s {{1}}, {{2}}... placeholders to merge tokens, e.g. {"1": "{{name}}", "2": "{{last_action}}"}.'}
+            >
+              <Textarea
+                rows={3}
+                value={stepForm.whatsapp_variables}
+                onChange={(e) => setStepForm({ ...stepForm, whatsapp_variables: e.target.value })}
+                placeholder='{"1": "{{name}}"}'
+              />
+            </Field>
+          </>
+        ) : (
+          <Field label="Body" hint="{{name}}, {{lead_industry}}, and {{last_action}} are replaced per recipient.">
+            <Textarea
+              rows={8}
+              required
+              value={stepForm.body}
+              onChange={(e) => setStepForm({ ...stepForm, body: e.target.value })}
+            />
+          </Field>
+        )}
         <label className="flex items-center gap-2.5 text-sm font-medium cursor-pointer">
           <input
             type="checkbox"
@@ -828,13 +889,27 @@ function AutomationModal({
       <Field label="Trigger" hint={TRIGGER_MAP[form.trigger_event]?.hint}>
         <Select
           value={form.trigger_event}
-          onChange={(e) => setForm({ ...form, trigger_event: e.target.value })}
+          onChange={(e) => setForm({ ...form, trigger_event: e.target.value, trigger_stage: "" })}
         >
           {TRIGGERS.map((t) => (
             <option key={t.value} value={t.value}>{t.label}</option>
           ))}
         </Select>
       </Field>
+
+      {form.trigger_event === "pipeline_stage_changed" && (
+        <Field label="Pipeline stage" hint="Leave on 'Any stage' to fire on every move, or pick one.">
+          <Select
+            value={form.trigger_stage}
+            onChange={(e) => setForm({ ...form, trigger_stage: e.target.value })}
+          >
+            <option value="">Any stage</option>
+            {PIPELINE_STAGES.map((s) => (
+              <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>
+            ))}
+          </Select>
+        </Field>
+      )}
 
       <label className="flex items-center gap-2.5 text-sm font-medium cursor-pointer">
         <input

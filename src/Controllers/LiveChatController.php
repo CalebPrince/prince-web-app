@@ -2144,7 +2144,7 @@ class LiveChatController
 
         LeadAttribution::capture($pdo, 'chat', (int) $session['id'], $data['attribution'] ?? null);
 
-        self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: $phone\n\n" : ' ') . $message);
+        self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: $phone\n\n" : ' ') . $message, $phone ?: null);
 
         Response::json(['status' => 'received'], 201);
     }
@@ -2520,8 +2520,13 @@ class LiveChatController
             ->execute(['chat:' . $sessionId]);
     }
 
-    /** Records an inquiry and queues it for Slack/email notification — shared by feedback(), inquiry(), and the log_inquiry tool. */
-    private static function recordInquiry(\PDO $pdo, string $name, string $email, string $message): void
+    /**
+     * Records an inquiry and queues it for Slack/email notification — shared
+     * by feedback(), inquiry(), and the log_inquiry/request_live_handoff
+     * tools. $phone is optional (not every call site has one) and, when
+     * present, lets a chat_lead_captured automation include a WhatsApp step.
+     */
+    private static function recordInquiry(\PDO $pdo, string $name, string $email, string $message, ?string $phone = null): void
     {
         $stmt = $pdo->prepare(
             'INSERT INTO inquiries (name, email, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)'
@@ -2538,6 +2543,7 @@ class LiveChatController
         Automations::fire('chat_lead_captured', $email, [
             'name' => $name ?: null,
             'last_action' => 'Left contact details in the live chat',
+            'phone' => $phone ?: null,
         ], $pdo);
     }
 
@@ -3194,7 +3200,7 @@ class LiveChatController
             return ['error' => 'Missing or invalid name, email, or summary — ask the visitor for whatever is missing, then call this again.'];
         }
 
-        self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: {$phone}\n\n" : ' ') . $summary);
+        self::recordInquiry($pdo, $name, $email, "[Live Chat]" . ($phone !== '' ? " Phone: {$phone}\n\n" : ' ') . $summary, $phone ?: null);
 
         return ['logged' => true];
     }
@@ -3349,7 +3355,8 @@ class LiveChatController
                 . "Reason: {$reason}"
                 . ($summary !== '' ? "\nRequest: {$summary}" : '')
                 . ($phone !== '' ? "\nPhone: {$phone}" : '')
-                . "\n\nOpen Admin Inbox: https://princecaleb.dev/admin/inbox.html"
+                . "\n\nOpen Admin Inbox: https://princecaleb.dev/admin/inbox.html",
+            $phone ?: null
         );
 
         $result = ['signaled' => true];

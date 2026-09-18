@@ -61,6 +61,7 @@ class SettingsController
         'radar_tracked_pages_posts_per_profile',
         'radar_tracked_pages_last_run', 'radar_tracked_pages_last_status',
         'stale_lead_followup_enabled', 'stale_lead_followup_days',
+        'whatsapp_drip_enabled',
         'composio_api_key',
         'composio_google_calendar_auth_config_id', 'composio_google_calendar_account_id',
         'composio_gmail_auth_config_id', 'composio_gmail_account_id',

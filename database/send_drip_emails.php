@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-// Sends any drip-sequence steps that have come due. Run on a cron (hourly
-// is plenty — offsets are whole days). For each active enrollment, a step
-// is due when `enrolled_at + day_offset days` has passed and that step
-// hasn't been sent to that enrollment yet (drip_sends is UNIQUE per pair,
-// so retries and overlapping runs can't double-send). Enrollments with no
-// remaining active steps are marked completed. {{name}} personalizes the
-// copy, and every email carries the enrollment's unsubscribe link.
+// Sends any drip-sequence EMAIL steps that have come due (channel='whatsapp'
+// steps are send_drip_whatsapp.php's job). Run on a cron (hourly is plenty —
+// offsets are whole days). For each active enrollment, a step is due when
+// `enrolled_at + day_offset days` has passed and that step hasn't been sent
+// to that enrollment yet (drip_sends is UNIQUE per pair, so retries and
+// overlapping runs can't double-send). Enrollments with no remaining active
+// steps are marked completed. {{name}}, {{lead_industry}}, and
+// {{last_action}} personalize the copy from the enrollment's own columns,
+// and every email carries the enrollment's unsubscribe link.
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
@@ -25,11 +27,11 @@ $pdo = Database::get();
 // promises. drip_sends stays UNIQUE per (enrollment, step), so a lead in
 // several automations at once still can't be double-sent the same step.
 $due = $pdo->query(
-    "SELECT e.id AS enrollment_id, e.email, e.name, e.unsubscribe_token, s.id AS step_id, s.subject, s.body,
-            a.trigger_event
+    "SELECT e.id AS enrollment_id, e.email, e.name, e.lead_industry, e.last_action, e.unsubscribe_token,
+            s.id AS step_id, s.subject, s.body, a.trigger_event
      FROM drip_enrollments e
      JOIN automations a ON a.id = e.automation_id AND a.is_active = 1
-     JOIN drip_steps s ON s.automation_id = e.automation_id AND s.is_active = 1
+     JOIN drip_steps s ON s.automation_id = e.automation_id AND s.is_active = 1 AND s.channel = 'email'
      WHERE e.status = 'active'
        AND datetime(e.enrolled_at, '+' || s.day_offset || ' days') <= datetime('now')
        AND NOT EXISTS (SELECT 1 FROM drip_sends ds WHERE ds.enrollment_id = e.id AND ds.step_id = s.id)
@@ -38,9 +40,13 @@ $due = $pdo->query(
 
 $sent = 0;
 foreach ($due as $row) {
-    $name = trim((string) ($row['name'] ?? '')) ?: 'there';
-    $subject = str_replace('{{name}}', $name, $row['subject']);
-    $message = str_replace('{{name}}', $name, $row['body']);
+    $tokens = [
+        '{{name}}' => trim((string) ($row['name'] ?? '')) ?: 'there',
+        '{{lead_industry}}' => trim((string) ($row['lead_industry'] ?? '')) ?: 'your business',
+        '{{last_action}}' => trim((string) ($row['last_action'] ?? '')),
+    ];
+    $subject = strtr($row['subject'], $tokens);
+    $message = strtr($row['body'], $tokens);
     $message = Utm::tagLinks($message, (string) $row['trigger_event']);
     $unsubscribeUrl = 'https://princecaleb.dev/api/v1/drip/unsubscribe?token=' . $row['unsubscribe_token'];
 

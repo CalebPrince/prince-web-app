@@ -1974,4 +1974,58 @@ if (!in_array('image_publish_error', $socialPostDraftColumns, true)) {
     $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN image_publish_error TEXT');
 }
 
+// WhatsApp as a second automations channel, and phone on enrollments so a
+// step actually has somewhere to send it. Plain ADD COLUMN is enough here —
+// channel's CHECK constraint only lives in fresh installs via schema.sql;
+// existing rows all default to 'email' either way, and DripController
+// validates the value in PHP on write.
+$dripStepColumns = array_column($pdo->query('PRAGMA table_info(drip_steps)')->fetchAll(), 'name');
+if (!in_array('channel', $dripStepColumns, true)) {
+    $pdo->exec("ALTER TABLE drip_steps ADD COLUMN channel TEXT NOT NULL DEFAULT 'email'");
+}
+if (!in_array('whatsapp_template_sid', $dripStepColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_steps ADD COLUMN whatsapp_template_sid TEXT');
+}
+if (!in_array('whatsapp_variables', $dripStepColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_steps ADD COLUMN whatsapp_variables TEXT');
+}
+$dripEnrollmentColumns = array_column($pdo->query('PRAGMA table_info(drip_enrollments)')->fetchAll(), 'name');
+if (!in_array('phone', $dripEnrollmentColumns, true)) {
+    $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN phone TEXT');
+}
+
+// The pipeline board's stage moves need their own trigger, but
+// trigger_event is a CHECK constraint SQLite can't ALTER in place — rebuild
+// the table (same approach as the payments 'manual' source above) only when
+// 'pipeline_stage_changed' isn't already an allowed value.
+$automationsTableSql = (string) $pdo->query(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'automations'"
+)->fetchColumn();
+if ($automationsTableSql !== '' && !str_contains($automationsTableSql, 'pipeline_stage_changed')) {
+    rebuildTable(
+        $pdo,
+        'automations',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            trigger_event TEXT NOT NULL DEFAULT 'manual' CHECK (trigger_event IN (
+                'manual', 'marketing_pitch_sent', 'inquiry_created', 'quote_requested',
+                'proposal_sent', 'payment_received', 'appointment_booked',
+                'project_completed', 'newsletter_subscribed', 'chat_lead_captured',
+                'pipeline_stage_changed'
+            )),
+            trigger_stage TEXT CHECK (trigger_stage IN (
+                'new', 'researching', 'contacted', 'discovery', 'proposal', 'won', 'lost'
+            )),
+            is_active INTEGER NOT NULL DEFAULT 0,
+            nurturer_enabled INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )",
+        'id, name, description, trigger_event, is_active, nurturer_enabled, created_at, updated_at'
+    );
+    echo "Rebuilt automations — trigger_event now allows 'pipeline_stage_changed'.\n";
+}
+
 echo "Schema applied.\n";

@@ -11,10 +11,11 @@ use App\Support\Response;
 
 /**
  * A single global drip sequence: steps go out N days after enrollment,
- * sent by database/send_drip_emails.php on a cron. Enrollment happens
- * automatically when a marketing-lead pitch is sent (follow-up sequence)
- * or manually from the admin page. Steps are created inactive so nothing
- * emails anyone until the copy has been reviewed and switched on.
+ * sent by database/send_drip_emails.php (channel='email') or
+ * database/send_drip_whatsapp.php (channel='whatsapp') on a cron.
+ * Enrollment happens automatically when a marketing-lead pitch is sent
+ * (follow-up sequence) or manually from the admin page. Steps are created
+ * inactive so nothing sends until the copy has been reviewed and switched on.
  */
 class DripController
 {
@@ -52,8 +53,13 @@ class DripController
             Response::json(['errors' => $errors], 422);
         }
 
-        $pdo->prepare('INSERT INTO drip_steps (automation_id, day_offset, subject, body, is_active) VALUES (?, ?, ?, ?, ?)')
-            ->execute([$automationId, $fields['day_offset'], $fields['subject'], $fields['body'], $fields['is_active']]);
+        $pdo->prepare(
+            'INSERT INTO drip_steps (automation_id, day_offset, subject, body, is_active, channel, whatsapp_template_sid, whatsapp_variables)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $automationId, $fields['day_offset'], $fields['subject'], $fields['body'], $fields['is_active'],
+            $fields['channel'], $fields['whatsapp_template_sid'], $fields['whatsapp_variables'],
+        ]);
 
         ActivityLog::log($user, 'created', 'drip_step', (string) $pdo->lastInsertId(), $fields['subject']);
         Response::json(['status' => 'created'], 201);
@@ -77,8 +83,13 @@ class DripController
             Response::json(['errors' => $errors], 422);
         }
 
-        $pdo->prepare("UPDATE drip_steps SET day_offset = ?, subject = ?, body = ?, is_active = ?, updated_at = datetime('now') WHERE id = ?")
-            ->execute([$fields['day_offset'], $fields['subject'], $fields['body'], $fields['is_active'], $step['id']]);
+        $pdo->prepare(
+            "UPDATE drip_steps SET day_offset = ?, subject = ?, body = ?, is_active = ?,
+             channel = ?, whatsapp_template_sid = ?, whatsapp_variables = ?, updated_at = datetime('now') WHERE id = ?"
+        )->execute([
+            $fields['day_offset'], $fields['subject'], $fields['body'], $fields['is_active'],
+            $fields['channel'], $fields['whatsapp_template_sid'], $fields['whatsapp_variables'], $step['id'],
+        ]);
 
         ActivityLog::log($user, 'updated', 'drip_step', (string) $step['id'], $fields['subject']);
         Response::json(['status' => 'updated']);
@@ -284,34 +295,64 @@ class DripController
         ?int $leadId,
         bool $nurturerEnabled = false,
         ?string $leadIndustry = null,
-        ?string $lastAction = null
+        ?string $lastAction = null,
+        ?string $phone = null
     ): bool {
         $stmt = $pdo->prepare(
-            'INSERT OR IGNORE INTO drip_enrollments (automation_id, email, name, source, lead_id, unsubscribe_token, nurturer_enabled, lead_industry, last_action)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT OR IGNORE INTO drip_enrollments (automation_id, email, name, source, lead_id, unsubscribe_token, nurturer_enabled, lead_industry, last_action, phone)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $automationId, strtolower($email), $name, $source, $leadId, bin2hex(random_bytes(16)),
-            $nurturerEnabled ? 1 : 0, $leadIndustry, $lastAction,
+            $nurturerEnabled ? 1 : 0, $leadIndustry, $lastAction, trim((string) $phone) ?: null,
         ]);
         return $stmt->rowCount() > 0;
     }
 
-    /** @return array{0: array<string,mixed>, 1: list<string>} */
+    /**
+     * subject doubles as the step's admin-facing label on every channel;
+     * body is the email content and is only required for channel='email' —
+     * a whatsapp step's actual content lives in whatsapp_template_sid (an
+     * approved Twilio Content SID, required instead) plus optional
+     * whatsapp_variables mapping its {{n}} placeholders to merge tokens.
+     *
+     * @return array{0: array<string,mixed>, 1: list<string>}
+     */
     private static function validateStep(array $data): array
     {
         $dayOffset = (int) ($data['day_offset'] ?? -1);
         $subject = trim((string) ($data['subject'] ?? ''));
         $body = trim((string) ($data['body'] ?? ''));
         $isActive = !empty($data['is_active']) ? 1 : 0;
+        $channel = trim((string) ($data['channel'] ?? 'email'));
+        $whatsappTemplateSid = trim((string) ($data['whatsapp_template_sid'] ?? '')) ?: null;
+        $whatsappVariables = $data['whatsapp_variables'] ?? null;
 
         $errors = [];
         if ($dayOffset < 0) $errors[] = 'Day offset must be 0 or more (days after enrollment).';
         if ($subject === '') $errors[] = 'Subject is required.';
-        if ($body === '') $errors[] = 'Body is required.';
+        if (!in_array($channel, ['email', 'whatsapp'], true)) $errors[] = 'Channel must be email or whatsapp.';
+
+        if ($channel === 'whatsapp') {
+            if ($whatsappTemplateSid === null) $errors[] = 'A Twilio Content SID is required for a WhatsApp step.';
+            if (is_array($whatsappVariables)) {
+                $whatsappVariables = json_encode($whatsappVariables, JSON_UNESCAPED_UNICODE);
+            } elseif ($whatsappVariables !== null) {
+                $decoded = json_decode((string) $whatsappVariables, true);
+                if (!is_array($decoded)) $errors[] = 'WhatsApp variables must be a JSON object.';
+                $whatsappVariables = (string) $whatsappVariables;
+            }
+        } else {
+            if ($body === '') $errors[] = 'Body is required.';
+            $whatsappTemplateSid = null;
+            $whatsappVariables = null;
+        }
 
         return [
-            ['day_offset' => $dayOffset, 'subject' => $subject, 'body' => $body, 'is_active' => $isActive],
+            [
+                'day_offset' => $dayOffset, 'subject' => $subject, 'body' => $body, 'is_active' => $isActive,
+                'channel' => $channel, 'whatsapp_template_sid' => $whatsappTemplateSid, 'whatsapp_variables' => $whatsappVariables,
+            ],
             $errors,
         ];
     }
