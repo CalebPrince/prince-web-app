@@ -4,6 +4,7 @@ import { useState } from "react";
 import { adminApi, asList } from "@/lib/api";
 import {
   Plus, Pencil, Trash2, ArrowLeft, Bot, ListOrdered, Users, Save, UserPlus,
+  Mail, MessageCircle,
 } from "lucide-react";
 import {
   PageHeader, Card, Table, Row, Cell, EmptyRow, Button, IconButton, Modal,
@@ -308,6 +309,30 @@ export default function DripClient({
     }
   };
 
+  const [draggedStepId, setDraggedStepId] = useState<number | null>(null);
+
+  // day_offset IS the ordering — there's no separate sort index — so dragging
+  // one step onto another means swapping their day_offset values, the same
+  // way toggleStep above PUTs the whole step object back with one field
+  // changed.
+  const reorderSteps = async (targetId: number) => {
+    const draggedId = draggedStepId;
+    setDraggedStepId(null);
+    if (!current || draggedId === null || draggedId === targetId) return;
+    const a = steps.find((s) => s.id === draggedId);
+    const b = steps.find((s) => s.id === targetId);
+    if (!a || !b) return;
+    try {
+      await Promise.all([
+        adminApi.put(`/api/v1/admin/drip/steps/${a.id}`, { ...a, day_offset: b.day_offset }),
+        adminApi.put(`/api/v1/admin/drip/steps/${b.id}`, { ...b, day_offset: a.day_offset }),
+      ]);
+      await loadSteps(current.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not reorder the steps.");
+    }
+  };
+
   const setEnrollmentStatus = async (en: Enrollment, status: string) => {
     if (!current) return;
     try {
@@ -563,7 +588,8 @@ export default function DripClient({
 
       {tab === "steps" && (
         <Card
-          title="Sequence steps"
+          title="Sequence"
+          bodyClassName="p-5"
           actions={
             <Button variant="primary" onClick={() => openStepModal()}>
               <Plus className="w-4 h-4" />
@@ -571,50 +597,16 @@ export default function DripClient({
             </Button>
           }
         >
-          <Table head={["When", "Step", "Active", "Sent", "Actions"]}>
-            {steps.length === 0 ? (
-              <EmptyRow colSpan={5}>No steps yet. Add the first step in this sequence.</EmptyRow>
-            ) : (
-              steps.map((s) => (
-                <Row key={s.id}>
-                  <Cell className="font-semibold whitespace-nowrap">Day {s.day_offset}</Cell>
-                  <Cell>
-                    <div className="flex items-center gap-1.5">
-                      {s.channel === "whatsapp" && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-500">
-                          WhatsApp
-                        </span>
-                      )}
-                      <div className="font-medium text-text">{s.subject}</div>
-                    </div>
-                    <div className="text-xs text-text-3 mt-0.5 line-clamp-1">
-                      {s.channel === "whatsapp" ? `Template: ${s.whatsapp_template_sid || "—"}` : s.body}
-                    </div>
-                  </Cell>
-                  <Cell>
-                    <input
-                      type="checkbox"
-                      className="accent-accent w-4 h-4"
-                      aria-label={`Step ${s.day_offset} active`}
-                      checked={!!s.is_active}
-                      onChange={(e) => toggleStep(s, e.target.checked)}
-                    />
-                  </Cell>
-                  <Cell className="text-text-3 tabular-nums">{s.sent_count} sent</Cell>
-                  <Cell>
-                    <div className="flex items-center justify-end gap-2">
-                      <IconButton title="Edit" onClick={() => openStepModal(s)}>
-                        <Pencil className="w-4 h-4" />
-                      </IconButton>
-                      <IconButton title="Delete" tone="danger" onClick={() => removeStep(s)}>
-                        <Trash2 className="w-4 h-4" />
-                      </IconButton>
-                    </div>
-                  </Cell>
-                </Row>
-              ))
-            )}
-          </Table>
+          <StepFlow
+            steps={steps}
+            onToggle={toggleStep}
+            onEdit={openStepModal}
+            onDelete={removeStep}
+            draggedId={draggedStepId}
+            onDragStart={setDraggedStepId}
+            onDragEnd={() => setDraggedStepId(null)}
+            onDrop={reorderSteps}
+          />
         </Card>
       )}
 
@@ -967,5 +959,114 @@ function AutomationModal({
         Let Nurturer send AI-personalised follow-ups
       </label>
     </Modal>
+  );
+}
+
+/**
+ * The automation's steps, drawn as a connected vertical chain instead of a
+ * table — order is entirely day_offset (there's no separate sort field), so
+ * dropping one card onto another swaps their day_offset via onDrop. This is
+ * a straight line on purpose: the engine has no branching, conditional, or
+ * wait-for-event capability anywhere (see send_drip_emails.php /
+ * send_drip_whatsapp.php's queries), so drawing anything but a line would
+ * promise control that doesn't exist.
+ */
+function StepFlow({
+  steps,
+  onToggle,
+  onEdit,
+  onDelete,
+  draggedId,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+}: {
+  steps: Step[];
+  onToggle: (step: Step, next: boolean) => void;
+  onEdit: (step: Step) => void;
+  onDelete: (step: Step) => void;
+  draggedId: number | null;
+  onDragStart: (id: number) => void;
+  onDragEnd: () => void;
+  onDrop: (targetId: number) => void;
+}) {
+  if (steps.length === 0) {
+    return (
+      <div className="text-center text-text-3 py-12 text-sm">
+        No steps yet. Add the first step in this sequence.
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="relative">
+        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-hairline -translate-x-1/2" aria-hidden />
+        <div className="relative flex flex-col items-center gap-6">
+          {steps.map((s) => (
+            <div
+              key={s.id}
+              draggable
+              onDragStart={() => onDragStart(s.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                onDrop(s.id);
+              }}
+              onDragEnd={onDragEnd}
+              className={`relative z-10 w-full max-w-md rounded-xl border bg-bg-2 p-4 cursor-grab active:cursor-grabbing transition-opacity ${
+                draggedId === s.id ? "opacity-40 border-hairline" : "border-hairline"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-accent-soft text-accent tabular-nums">
+                    Day {s.day_offset}
+                  </span>
+                  {s.channel === "whatsapp" ? (
+                    <span title="WhatsApp" className="inline-flex items-center gap-1 text-xs text-green-500">
+                      <MessageCircle className="w-3.5 h-3.5" />
+                    </span>
+                  ) : (
+                    <span title="Email" className="inline-flex items-center gap-1 text-xs text-text-3">
+                      <Mail className="w-3.5 h-3.5" />
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="checkbox"
+                  className="accent-accent w-4 h-4"
+                  aria-label={`Step ${s.day_offset} active`}
+                  checked={!!s.is_active}
+                  onChange={(e) => onToggle(s, e.target.checked)}
+                />
+              </div>
+
+              <div className="mt-2">
+                <div className="font-medium text-text">{s.subject}</div>
+                <div className="text-xs text-text-3 mt-0.5 line-clamp-1">
+                  {s.channel === "whatsapp" ? `Template: ${s.whatsapp_template_sid || "—"}` : s.body}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-hairline">
+                <span className="text-xs text-text-3 tabular-nums">{s.sent_count} sent</span>
+                <div className="flex items-center gap-1">
+                  <IconButton title="Edit" onClick={() => onEdit(s)}>
+                    <Pencil className="w-4 h-4" />
+                  </IconButton>
+                  <IconButton title="Delete" tone="danger" onClick={() => onDelete(s)}>
+                    <Trash2 className="w-4 h-4" />
+                  </IconButton>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-center text-xs text-text-3 mt-6">
+        Any reply or unsubscribe stops the sequence here — a global guardrail, not something set per step.
+      </p>
+    </div>
   );
 }
