@@ -951,7 +951,8 @@ database/
   check_uptime.php                # pings uptime monitors, captures SSL expiry, then runs Chloe's investigation cycle (cron, ~5 min)
   check_site_technical.php        # Sites Technical tab: domain expiry (RDAP), PageSpeed scores, last deployment (cron, daily)
   schedule_stale_lead_followups.php  # auto-schedules a follow-up for active pipeline leads gone quiet too long (cron, daily; off by default)
-  send_drip_emails.php            # sends due drip-sequence steps (cron, hourly)
+  send_drip_emails.php            # sends due drip-sequence EMAIL steps (cron, hourly)
+  send_drip_whatsapp.php          # sends due drip-sequence WHATSAPP steps via Twilio (cron, hourly; off by default via whatsapp_drip_enabled)
   send_nurturer_emails.php        # Nurturer's AI-written sequence 2/3 follow-ups (cron, hourly)
   sync_nurturer_replies.php       # Jason: imports replies, pauses drip, safely continues threads (cron, hourly)
   send_cold_outreach.php          # Cold Outreach Engine: sends reviewed marketing-lead pitches, capped/day (cron, hourly)
@@ -2155,6 +2156,11 @@ One-time setup on a new host:
 4g. Add a seventh cron job (hourly) for drip email sequences (no-op until
     a sequence is created in `/admin/drip.html`):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_drip_emails.php > /dev/null`
+4g-b. Add another hourly cron for drip WhatsApp steps — the channel="whatsapp"
+    counterpart to 4g. No-op until `whatsapp_drip_enabled` is switched on in
+    `/admin/drip` AND Twilio is configured in Settings (both gate the send,
+    same off-by-default posture as every other autonomous send path here):
+    `/usr/local/bin/php /home/<cpanel-user>/database/send_drip_whatsapp.php > /dev/null`
 4h. Add an eighth cron job (hourly) for Nurturer's AI-written sequence 2/3
     follow-ups (no-op until a lead is enrolled with "AI-personalize via
     Nurturer" ticked in `/admin/drip.html`):
