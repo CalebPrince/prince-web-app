@@ -130,6 +130,11 @@ export default function DripClient({
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [enrollForm, setEnrollForm] = useState({ name: "", email: "" });
 
+  // Global kill switch for send_drip_whatsapp.php — off by default like every
+  // other autonomous send path here, so a WhatsApp step someone builds can't
+  // reach a real lead until this is deliberately switched on.
+  const [whatsappDripEnabled, setWhatsappDripEnabled] = useState(settings.whatsapp_drip_enabled === "1");
+
   const [offsets, setOffsets] = useState({
     2: settings.nurturer_sequence_2_day_offset || String(NURTURER_DEFAULTS[2]),
     3: settings.nurturer_sequence_3_day_offset || String(NURTURER_DEFAULTS[3]),
@@ -341,6 +346,16 @@ export default function DripClient({
     }
   };
 
+  const toggleWhatsappDrip = async (next: boolean) => {
+    setWhatsappDripEnabled(next);
+    try {
+      await adminApi.put("/api/v1/admin/settings", { whatsapp_drip_enabled: next ? "1" : "0" });
+    } catch (err) {
+      setWhatsappDripEnabled(!next);
+      setError(err instanceof Error ? err.message : "Could not update the WhatsApp sending switch.");
+    }
+  };
+
   const enroll = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!current) return;
@@ -390,6 +405,24 @@ export default function DripClient({
         />
 
         {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
+
+        <Card bodyClassName="p-5">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              className="accent-accent w-4 h-4 mt-0.5"
+              checked={whatsappDripEnabled}
+              onChange={(e) => toggleWhatsappDrip(e.target.checked)}
+            />
+            <span>
+              <span className="block text-sm font-medium">Send WhatsApp steps</span>
+              <span className="block text-xs text-text-3 mt-0.5">
+                Master switch for every channel=&quot;whatsapp&quot; step across all automations. Off by default —
+                switch on once Twilio is configured in Settings and you&apos;ve reviewed a step&apos;s copy.
+              </span>
+            </span>
+          </label>
+        </Card>
 
         {automations.length === 0 ? (
           <Card>
