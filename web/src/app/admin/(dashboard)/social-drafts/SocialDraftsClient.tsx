@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/components/admin/ui";
 import { useState } from "react";
 import { api, AdminSocialDraft } from "@/lib/api";
 import { Sparkles, Trash2, Edit } from "lucide-react";
@@ -134,7 +135,7 @@ export default function SocialDraftsClient({ initialDrafts }: { initialDrafts: A
                       {getStatusBadge(d.status)}
                     </td>
                     <td className="px-4 py-4 text-text-2">
-                      {new Date(d.created_at).toLocaleDateString()}
+                      {formatDate(d.created_at)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">

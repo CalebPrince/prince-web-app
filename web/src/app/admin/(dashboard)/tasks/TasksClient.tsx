@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, CalendarDays, User, Link2, TrendingUp } from "luc
 import {
   PageHeader, Card, StatCard, Button, IconButton, Modal, Field, Input,
   Textarea, Select, FilterBar, ErrorBanner, Pagination, formatLabel,
+  formatDateTime,
 } from "@/components/admin/ui";
 
 export type Task = {
@@ -52,10 +53,12 @@ const isOverdue = (t: Task) =>
 
 function formatTaskDate(value?: string | null) {
   if (!value) return "";
-  const d = new Date(value);
-  return isNaN(d.getTime())
-    ? value
-    : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  // due_at is a naive wall-clock time ("2026-08-10 09:00:31" or the
+  // datetime-local "2026-08-10T09:00"). Read it as UTC and format in UTC so
+  // the wall time shows exactly as entered, on the server and in the browser.
+  const hasZone = /(Z|[+-]\d{2}:?\d{2})$/.test(value);
+  const iso = value.replace(" ", "T");
+  return formatDateTime(hasZone ? iso : `${iso}Z`, { dateStyle: "medium", timeStyle: "short" });
 }
 
 export default function TasksClient({ initialTasks }: { initialTasks: Task[] }) {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api, Inquiry } from "@/lib/api";
+import { formatDate } from "@/components/admin/ui";
 import { Search, MoreHorizontal, CheckCircle, Archive, Trash2, Mail } from "lucide-react";
 import Link from "next/link";
 
@@ -169,11 +170,7 @@ export default function InquiriesClient({ initialInquiries }: { initialInquiries
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-text-3">
-                      {new Date(inquiry.created_at).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {formatDate(inquiry.created_at, { month: "short", day: "numeric", year: "numeric" })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-2">

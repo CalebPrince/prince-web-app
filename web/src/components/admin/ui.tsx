@@ -464,20 +464,25 @@ export function adminHref(url?: string | null): string {
 const DISPLAY_LOCALE = "en-US";
 const DISPLAY_TIME_ZONE = "UTC";
 
-export function formatDate(value?: string | null): string {
+/** Optional Intl options keep a page's existing look ("Sep 18, 2026") while the locale and timezone stay fixed. */
+export function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions): string {
   if (!value) return "—";
   // The PHP API returns naive UTC timestamps ("2026-08-19 04:08:00"); the
   // legacy JS appended Z to stop the browser reading them as local time.
   const normalized = value.includes("T") ? value : value.replace(" ", "T") + "Z";
   const d = new Date(normalized);
-  return isNaN(d.getTime()) ? value : d.toLocaleDateString(DISPLAY_LOCALE, { timeZone: DISPLAY_TIME_ZONE });
+  return isNaN(d.getTime())
+    ? value
+    : d.toLocaleDateString(DISPLAY_LOCALE, { ...options, timeZone: DISPLAY_TIME_ZONE });
 }
 
-export function formatDateTime(value?: string | null): string {
+export function formatDateTime(value?: string | null, options?: Intl.DateTimeFormatOptions): string {
   if (!value) return "—";
   const normalized = value.includes("T") ? value : value.replace(" ", "T") + "Z";
   const d = new Date(normalized);
-  return isNaN(d.getTime()) ? value : d.toLocaleString(DISPLAY_LOCALE, { timeZone: DISPLAY_TIME_ZONE });
+  return isNaN(d.getTime())
+    ? value
+    : d.toLocaleString(DISPLAY_LOCALE, { ...options, timeZone: DISPLAY_TIME_ZONE });
 }
 
 export function formatLabel(value?: string | null): string {

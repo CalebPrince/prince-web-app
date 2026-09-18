@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/components/admin/ui";
 import { useState } from "react";
 import { api, AdminContentStudioItem } from "@/lib/api";
 import { Trash2, ArrowUpRight, Image as ImageIcon, FileText, Megaphone, ExternalLink } from "lucide-react";
@@ -105,7 +106,7 @@ function StudioItemCard({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-text-3">{new Date(item.created_at).toLocaleDateString()}</span>
+          <span className="text-xs text-text-3">{formatDate(item.created_at)}</span>
           <button
             onClick={handleDelete}
             disabled={isDeleting}

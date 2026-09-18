@@ -12,6 +12,7 @@ import {
 import {
   PageHeader, Card, Button, Modal, Field, Input, Textarea, Select,
   FilterBar, Tabs, ErrorBanner, formatDateTime,
+  formatDate,
 } from "@/components/admin/ui";
 
 export type PipelineSource = { type: string; id: number; url: string };
@@ -522,10 +523,7 @@ export default function PipelineClient({
 
                           <footer className="flex items-center justify-between text-xs pt-1 border-t border-hairline">
                             <time className="text-text-3">
-                              {new Date(lead.latest_at).toLocaleDateString(undefined, {
-                                month: "short",
-                                day: "numeric",
-                              })}
+                              {formatDate(lead.latest_at, { month: "short", day: "numeric" })}
                             </time>
                             {leadMoney(lead) && <strong className="tabular-nums">{leadMoney(lead)}</strong>}
                           </footer>
@@ -645,8 +643,8 @@ export default function PipelineClient({
                 [
                   ["Stage", STAGE_META[openLead.stage]?.label ?? openLead.stage],
                   ["Value", leadMoney(openLead) || "—"],
-                  ["First seen", new Date(openLead.created_at).toLocaleDateString()],
-                  ["Last activity", new Date(openLead.latest_at).toLocaleDateString()],
+                  ["First seen", formatDate(openLead.created_at)],
+                  ["Last activity", formatDate(openLead.latest_at)],
                 ] as [string, string][]
               ).map(([label, value]) => (
                 <div key={label}>

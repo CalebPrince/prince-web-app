@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/components/admin/ui";
 import { useState } from "react";
 import { api, AdminBlogPost } from "@/lib/api";
 import { Plus, Edit, ExternalLink, Trash2 } from "lucide-react";
@@ -96,7 +97,7 @@ export default function BlogClient({ initialPosts }: { initialPosts: AdminBlogPo
                       {post.category || "—"}
                     </td>
                     <td className="px-4 py-4 text-text-2">
-                      {post.published_at ? new Date(post.published_at).toLocaleDateString() : "—"}
+                      {formatDate(post.published_at)}
                     </td>
                     <td className="px-4 py-4">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${

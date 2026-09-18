@@ -9,6 +9,7 @@ import { FileCheck, UserPlus, Workflow } from "lucide-react";
 import {
   PageHeader, Card, StatCard, Table, Row, Cell, EmptyRow, Button, Input,
   FilterBar, Modal, ErrorBanner,
+  formatDateTime,
 } from "@/components/admin/ui";
 
 export type Contact = {
@@ -76,7 +77,7 @@ function money(subunits: number, currency: string) {
 
 function whenLabel(at?: string | null) {
   if (!at || at.startsWith("1970-01-01")) return "—";
-  return new Date(at.replace(" ", "T") + "Z").toLocaleString();
+  return formatDateTime(at);
 }
 
 function monthLabel(ym: string) {

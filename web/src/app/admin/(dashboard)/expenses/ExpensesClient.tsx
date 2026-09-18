@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import {
   PageHeader, Card, StatCard, Button, IconButton, Input, Select, Tabs,
+  formatDateTime,
 } from "@/components/admin/ui";
 
 type Money = { total: number; currency: string };
@@ -272,10 +273,7 @@ export default function ExpensesClient({
             <span>
               1 USD = {usdGhsRate.toFixed(4)} GHS · {fx?.provider || "cached rate"} · updated{" "}
               {fx?.updated_at
-                ? new Date(fx.updated_at).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })
+                ? formatDateTime(fx.updated_at, { dateStyle: "medium", timeStyle: "short" })
                 : "recently"}
             </span>
           </>

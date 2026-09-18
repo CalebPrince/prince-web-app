@@ -9,6 +9,7 @@ import {
 import {
   PageHeader, Card, Table, Row, Cell, EmptyRow, Button, IconButton, Modal,
   Field, Input, Textarea, Select, StatusPill, ErrorBanner, formatDateTime,
+  formatDate,
 } from "@/components/admin/ui";
 
 export type Milestone = { title: string; amount: number; due_note: string };
@@ -634,7 +635,7 @@ export default function ProposalsClient({
             {quoteRequests.map((q) => (
               <option key={q.id} value={q.id}>
                 {q.name} — {q.project_type || "Project"} —{" "}
-                {new Date(q.created_at).toLocaleDateString()}
+                {formatDate(q.created_at)}
               </option>
             ))}
           </Select>

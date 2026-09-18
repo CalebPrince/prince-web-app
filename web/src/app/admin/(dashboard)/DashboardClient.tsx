@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/components/admin/ui";
 import { useEffect, useState } from "react";
 import { 
   Kanban, Inbox, Calendar, Users, Activity, CreditCard, 
@@ -131,7 +132,7 @@ export default function DashboardClient({
                         {inquiry.status}
                       </span>
                       <span className="text-sm text-text-3 whitespace-nowrap">
-                        {new Date(inquiry.created_at).toLocaleDateString()}
+                        {formatDate(inquiry.created_at)}
                       </span>
                     </div>
                   </div>
@@ -167,7 +168,7 @@ export default function DashboardClient({
                         {payment.status}
                       </span>
                       <span className="text-sm text-text-3 whitespace-nowrap">
-                        {new Date(payment.created_at).toLocaleDateString()}
+                        {formatDate(payment.created_at)}
                       </span>
                     </div>
                   </div>

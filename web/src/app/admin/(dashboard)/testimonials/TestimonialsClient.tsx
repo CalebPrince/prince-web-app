@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@/components/admin/ui";
 import { useState } from "react";
 import { api, AdminTestimonial, type GoogleReview } from "@/lib/api";
 import { Plus, Trash2, CheckCircle, XCircle, ExternalLink } from "lucide-react";
@@ -256,7 +257,7 @@ export default function TestimonialsClient({
                       )}
                     </td>
                     <td className="px-4 py-4 text-text-2">
-                      {t.requested_at ? new Date(t.requested_at).toLocaleDateString() : "—"}
+                      {formatDate(t.requested_at)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">

@@ -7,7 +7,7 @@ import {
   Mail, FileText, MessageCircle, CalendarCheck, Users, Inbox as InboxIcon,
   Flag, Archive, Trash2, ArrowUpRight, Phone, Paperclip, Download,
 } from "lucide-react";
-import { Button, Input, ErrorBanner } from "@/components/admin/ui";
+import { Button, Input, ErrorBanner, formatDateTime } from "@/components/admin/ui";
 
 export type InboxMessage = {
   role: string;
@@ -92,8 +92,8 @@ function shortTime(value: string) {
   const date = new Date(value.replace(" ", "T") + "Z");
   if (isNaN(date.getTime())) return value;
   return (Date.now() - date.getTime()) / 86400000 < 1
-    ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-    : date.toLocaleDateString([], { month: "short", day: "numeric" });
+    ? date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" })
+    : date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 /** Per-message stamp inside the chat, WhatsApp-style: just the time for
@@ -101,9 +101,11 @@ function shortTime(value: string) {
 function messageTimestamp(value: string) {
   const date = new Date(value.replace(" ", "T") + "Z");
   if (isNaN(date.getTime())) return value;
-  const time = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  const isToday = new Date().toDateString() === date.toDateString();
-  return isToday ? time : `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
+  const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
+  const isToday = new Date().toISOString().slice(0, 10) === date.toISOString().slice(0, 10);
+  return isToday
+    ? time
+    : `${date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}, ${time}`;
 }
 
 const URL_PATTERN = /(https?:\/\/[^\s<>"']+)/g;
@@ -515,7 +517,7 @@ export default function InboxClient({ initialItems }: { initialItems: InboxItem[
                     >
                       <small className="text-xs text-text-3 block mb-1">
                         {m.sender_type === "client" ? "Client" : "Prince Caleb"} ·{" "}
-                        {new Date(m.created_at.replace(" ", "T") + "Z").toLocaleString()}
+                        {formatDateTime(m.created_at)}
                       </small>
                       <p className="text-sm">{m.body}</p>
                     </div>

@@ -10,6 +10,7 @@ import {
   PageHeader, Card, StatCard, Table, Row, Cell, EmptyRow, Button, IconButton,
   Modal, Field, Input, Select, Textarea, FilterBar, StatusPill, ErrorBanner,
   Pagination, formatDate,
+  formatDateTime,
 } from "@/components/admin/ui";
 
 export type ClientRow = {
@@ -874,7 +875,7 @@ export default function ClientsClient({
                       >
                         <p className="text-sm">{m.body}</p>
                         <span className="text-xs text-text-3 mt-1 block">
-                          {new Date(m.created_at.replace(" ", "T") + "Z").toLocaleString()}
+                          {formatDateTime(m.created_at)}
                         </span>
                       </div>
                     ))
