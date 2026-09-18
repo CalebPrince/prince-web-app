@@ -122,6 +122,8 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "chat_hours_days", "chat_hours_start", "chat_hours_end", "chat_timezone",
     "chat_persona", "social_draft_enabled", "social_draft_frequency",
     "social_draft_auto_approve",
+    "allie_discovery_enabled", "allie_discovery_frequency",
+    "wendy_review_enabled", "wendy_review_frequency",
   ],
   booking: [
     "booking_enabled", "booking_days", "booking_start_time", "booking_end_time",
@@ -153,6 +155,7 @@ const BOOLEAN_KEYS = new Set([
   "splash_screen_enabled", "maintenance_mode", "live_chat_enabled",
   "whatsapp_button_enabled", "chat_hours_enabled", "booking_enabled",
   "social_draft_enabled", "social_draft_auto_approve",
+  "allie_discovery_enabled", "wendy_review_enabled",
 ]);
 
 /** Keys whose value is a credential — masked with a password input. */
@@ -172,6 +175,8 @@ const CHOICES: Record<string, string[]> = {
   default_theme: ["dark", "light", "midnight", "paper"],
   animation_style: ["full", "subtle", "off"],
   social_draft_frequency: ["daily", "weekly", "monthly"],
+  allie_discovery_frequency: ["hourly", "daily", "weekly"],
+  wendy_review_frequency: ["hourly", "daily", "weekly"],
 };
 
 function labelFor(key: string) {

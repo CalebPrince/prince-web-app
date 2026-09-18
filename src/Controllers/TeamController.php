@@ -71,6 +71,8 @@ class TeamController
             "SELECT COUNT(*) FROM automations WHERE nurturer_enabled = 1 AND is_active = 1"
         )->fetchColumn() > 0;
         $beaconEnabled = (string) Settings::get('beacon_discovery_enabled') === '1';
+        $allieDiscoveryEnabled = (string) Settings::get('allie_discovery_enabled') === '1';
+        $wendyReviewEnabled = (string) Settings::get('wendy_review_enabled') === '1';
         $capacity = self::projectCapacity($pdo);
         // Guarded like archActivity() below — keeps the Team page usable
         // during the short deploy window before mockup_image_url's
@@ -380,10 +382,12 @@ class TeamController
                     . 'steps in when you or the agents need challenging. When two agents point in different '
                     . 'directions, she works through the conflict with you.',
                 'icon' => 'bi-chat-square-heart',
-                'status' => $wendySessionRequested ? 'alert' : 'ondemand',
+                'status' => $wendySessionRequested ? 'alert' : ($wendyReviewEnabled ? 'active' : 'ondemand'),
                 'status_label' => $wendySessionRequested
                     ? "\u{1F534} Session requested"
-                    : self::wendyStatusLabel($wendyOpenObservations, $wendyUnresolvedPatterns),
+                    : ($wendyReviewEnabled
+                        ? 'Reviewing ' . (Settings::get('wendy_review_frequency') ?: 'daily')
+                        : self::wendyStatusLabel($wendyOpenObservations, $wendyUnresolvedPatterns)),
                 'stat_value' => $wendyOpenObservations,
                 'stat_label' => 'open observations',
                 'manage_url' => '/admin/agent-chat',
@@ -398,10 +402,12 @@ class TeamController
                     . 'recommendation to Wendy for a team-impact review before it reaches you for the final '
                     . 'adopt/reject call.',
                 'icon' => 'bi-compass',
-                'status' => $alliePendingApproval > 0 ? 'alert' : 'ondemand',
+                'status' => $alliePendingApproval > 0 ? 'alert' : ($allieDiscoveryEnabled ? 'active' : 'ondemand'),
                 'status_label' => $alliePendingApproval > 0
                     ? $alliePendingApproval . ' awaiting your call'
-                    : 'On demand',
+                    : ($allieDiscoveryEnabled
+                        ? 'Scouting ' . (Settings::get('allie_discovery_frequency') ?: 'daily')
+                        : 'On demand'),
                 'stat_value' => $allieToolsEvaluated,
                 'stat_label' => 'tools evaluated',
                 'manage_url' => '/admin/allie-evaluations',

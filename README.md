@@ -958,6 +958,8 @@ database/
   run_beacon_discovery.php        # Serper keyword search -> Beacon scoring -> qualified-lead digest (cron, hourly)
   run_beacon_apify_discovery.php  # tracked LinkedIn profiles -> Apify engagers -> ICP-fit scoring -> qualified-lead digest (cron, hourly)
   run_radar_tracked_pages.php     # tracked LinkedIn pages -> cached recent posts, no AI call (cron, daily; feeds Radar's chat + the 30-day Content Ideas page)
+  allie_discover.php              # Allie's autonomous discovery pass: researches, evaluates, and flags a recommendation to Wendy, emails/WhatsApps Caleb (cron, hourly self-checked cadence; off by default)
+  wendy_review.php                # Wendy's autonomous review pass: checks team activity/health/workload/pending tool reviews, only interrupts Caleb when it genuinely earns it (cron, hourly self-checked cadence; off by default)
   discover_marketing_leads.php    # standalone runner for the same daily-gated Marketing Leads discovery send_cold_outreach.php already invokes (testing/dedicated cron; --force to bypass the gate)
   draft_proposals_from_bookings.php  # Lisa's booked calls -> Ledger-drafted proposal, ready to review (cron, ~5-10 min)
   draft_newsletters_from_blog.php    # Published blog posts -> Jason newsletter drafts, ready to review (cron, ~5-10 min)
@@ -2247,6 +2249,23 @@ One-time setup on a new host:
     request template is created and approved (Admin -> Marketing Leads ->
     Send asset request):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_asset_request_nudges.php > /dev/null`
+4t. Add a twenty-first cron job (hourly — same self-checked cadence pattern
+    as 4i/4o, so a less frequent cron would cap the setting rather than
+    honour it) for Allie's autonomous discovery pass, off by default
+    (Admin -> Settings -> Site: `allie_discovery_enabled`,
+    `allie_discovery_frequency`). Runs her full chat tool loop with a
+    synthetic prompt in place of Caleb asking her to look into something —
+    she researches, evaluates, and flags a recommendation to Wendy, emailing
+    and WhatsApp-ing Caleb the moment she does:
+    `/usr/local/bin/php /home/<cpanel-user>/database/allie_discover.php > /dev/null`
+4u. Add a twenty-second cron job (hourly, same self-checked cadence) for
+    Wendy's autonomous review pass, off by default (Admin -> Settings -> Site:
+    `wendy_review_enabled`, `wendy_review_frequency`). She checks team
+    activity, operational health, founder workload, pattern history, and any
+    pending tool reviews without being asked, and still only interrupts
+    Caleb (email/WhatsApp) via wants_session for something that genuinely
+    earns it:
+    `/usr/local/bin/php /home/<cpanel-user>/database/wendy_review.php > /dev/null`
 5. Confirm AutoSSL has issued a certificate, `.dev` domains are
    HSTS-preloaded and will not load over plain HTTP.
 6. In Admin -> Settings -> Payments (Paystack), paste in your Paystack public

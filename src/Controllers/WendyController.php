@@ -25,12 +25,15 @@ use App\Support\WhatsAppNotifier;
  *
  * Deliberately NOT a second Chief. Chief (src/Agents/Chief.php) is the
  * quantitative reporter — it counts what each agent did, writes a daily
- * brief, and pushes it out on a cron. A second daily-brief agent would be
- * exactly the "another agent constantly throwing alerts at me" problem Caleb
- * already pushed back on once (see Chloe's design). So Wendy is chat-only,
- * on demand, no cron, no push notification of her own — Caleb goes to her,
- * not the other way round. She reuses Chief's and Chloe's own data rather
- * than re-deriving it (Chief::snapshot, Chief::waitingOnYou,
+ * brief, and pushes it out on a cron. Wendy still isn't that: she doesn't
+ * recite numbers on a schedule, and chat() stays available for Caleb to go
+ * to her directly any time. But she's no longer purely reactive either — her
+ * own cron (database/wendy_review.php, gated by wendy_review_enabled, off by
+ * default) runs runReviewPass() on a cadence so she actually looks without
+ * being asked, the same restraint she already applies in chat: save
+ * sparingly, and only wants_session=true earns Caleb an interruption (see
+ * notifySessionRequest). She reuses Chief's and Chloe's own data rather than
+ * re-deriving it (Chief::snapshot, Chief::waitingOnYou,
  * ChloeInvestigator::snapshot, TeamController::projectCapacity), because the
  * facts are already computed correctly elsewhere; what she adds is the
  * coaching read on them and, when Caleb describes two agents giving
@@ -65,33 +68,8 @@ class WendyController
         $pdo = Database::get();
         $result = AiAgentEngine::run(
             self::buildChatSystemPrompt(),
-            [
-                self::teamActivityToolDeclaration(),
-                self::operationalHealthToolDeclaration(),
-                self::founderWorkloadToolDeclaration(),
-                self::patternHistoryToolDeclaration(),
-                self::listOpenObservationsToolDeclaration(),
-                self::saveObservationToolDeclaration(),
-                self::resolveObservationToolDeclaration(),
-                self::listPendingToolReviewsToolDeclaration(),
-                self::submitToolReviewToolDeclaration(),
-            ],
-            fn(string $name, array $args) => match ($name) {
-                'team_activity' => Chief::snapshot($pdo, (int) ($args['hours'] ?? 24)),
-                'operational_health' => ChloeInvestigator::snapshot($pdo),
-                'founder_workload' => self::founderWorkload($pdo),
-                'pattern_history' => self::patternHistory($pdo, (int) ($args['days'] ?? 14)),
-                'list_open_observations' => ['observations' => self::listOpenObservations($pdo)],
-                'save_observation' => self::saveObservation($pdo, $args),
-                'resolve_observation' => self::resolveObservation($pdo, (int) ($args['observation_id'] ?? 0)),
-                'list_pending_tool_reviews' => ['reviews' => self::listPendingToolReviews($pdo)],
-                'submit_tool_review' => self::submitToolReview(
-                    $pdo,
-                    (int) ($args['evaluation_id'] ?? 0),
-                    (string) ($args['impact_notes'] ?? '')
-                ),
-                default => ['error' => 'Unknown tool.'],
-            },
+            self::toolDeclarations(),
+            self::toolDispatcher($pdo),
             $transcript
         );
         if ($result['reply'] === null) {
@@ -101,6 +79,79 @@ class WendyController
         ActivityLog::log($user, 'reported', 'wendy_chat', null, mb_substr($message, 0, 120));
 
         Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private static function toolDeclarations(): array
+    {
+        return [
+            self::teamActivityToolDeclaration(),
+            self::operationalHealthToolDeclaration(),
+            self::founderWorkloadToolDeclaration(),
+            self::patternHistoryToolDeclaration(),
+            self::listOpenObservationsToolDeclaration(),
+            self::saveObservationToolDeclaration(),
+            self::resolveObservationToolDeclaration(),
+            self::listPendingToolReviewsToolDeclaration(),
+            self::submitToolReviewToolDeclaration(),
+        ];
+    }
+
+    private static function toolDispatcher(\PDO $pdo): \Closure
+    {
+        return fn(string $name, array $args) => match ($name) {
+            'team_activity' => Chief::snapshot($pdo, (int) ($args['hours'] ?? 24)),
+            'operational_health' => ChloeInvestigator::snapshot($pdo),
+            'founder_workload' => self::founderWorkload($pdo),
+            'pattern_history' => self::patternHistory($pdo, (int) ($args['days'] ?? 14)),
+            'list_open_observations' => ['observations' => self::listOpenObservations($pdo)],
+            'save_observation' => self::saveObservation($pdo, $args),
+            'resolve_observation' => self::resolveObservation($pdo, (int) ($args['observation_id'] ?? 0)),
+            'list_pending_tool_reviews' => ['reviews' => self::listPendingToolReviews($pdo)],
+            'submit_tool_review' => self::submitToolReview(
+                $pdo,
+                (int) ($args['evaluation_id'] ?? 0),
+                (string) ($args['impact_notes'] ?? '')
+            ),
+            default => ['error' => 'Unknown tool.'],
+        };
+    }
+
+    /**
+     * The autonomous entry point, run from database/wendy_review.php on a
+     * cron. Same engine, same tools, same persona and same restraint as a
+     * real chat turn — a synthetic prompt standing in for Caleb actually
+     * opening a conversation with her. She still only interrupts him via
+     * wants_session/notifySessionRequest for something that genuinely earns
+     * it; this just means she looks on a schedule instead of only when he
+     * happens to ask. A generous tool-round budget since one real pass can
+     * chain: list_open_observations, then several read tools, then
+     * list_pending_tool_reviews, then zero or more save_observation/
+     * submit_tool_review calls.
+     *
+     * @return array{reply: ?string, mode: string, provider: ?string, ready: bool}
+     */
+    public static function runReviewPass(): array
+    {
+        $pdo = Database::get();
+        $prompt = "Run your regular review. Call list_open_observations first so you don't repeat a finding "
+            . "you've already flagged. Then check team_activity, operational_health, founder_workload, and "
+            . "pattern_history for anything genuinely worth surfacing — a real pattern, an unresolved tension, "
+            . "something stuck or quietly failing. Also call list_pending_tool_reviews and give an honest "
+            . "team-impact read on anything waiting there via submit_tool_review. Only call save_observation for "
+            . "a settled finding actually backed by tool data, and only set wants_session true for something that "
+            . "genuinely earns interrupting Caleb right now. If nothing meets that bar, say so plainly and don't "
+            . "manufacture a finding just to have one.";
+
+        return AiAgentEngine::run(
+            self::buildChatSystemPrompt(),
+            self::toolDeclarations(),
+            self::toolDispatcher($pdo),
+            [['role' => 'user', 'text' => $prompt]],
+            null,
+            null,
+            6
+        );
     }
 
     private static function buildChatSystemPrompt(): string

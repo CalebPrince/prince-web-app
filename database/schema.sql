@@ -1148,6 +1148,12 @@ CREATE TABLE IF NOT EXISTS allie_evaluations (
   wendy_reviewed_at TEXT,
   decided_by TEXT,
   decided_at TEXT,
+  -- Set once notifyFinding() actually delivers on that channel, same
+  -- idempotency guard as wendy_observations/chloe_incidents, so a retry
+  -- (e.g. the cron re-running before the next cadence window) never
+  -- double-sends for the same evaluation.
+  emailed_at TEXT,
+  whatsapp_sent_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

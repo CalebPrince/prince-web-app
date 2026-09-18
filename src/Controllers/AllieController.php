@@ -9,9 +9,11 @@ use App\Support\ActivityLog;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
 use App\Support\GithubClient;
+use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\WhatsAppNotifier;
 
 /**
  * Allie: Prince Caleb's R&D scout for new AI/dev tools, modeled on how the
@@ -62,25 +64,8 @@ class AllieController
         $pdo = Database::get();
         $result = AiAgentEngine::run(
             self::buildChatSystemPrompt(),
-            [
-                SharedAgentTools::siteInfoToolDeclaration(),
-                SharedAgentTools::searchContentToolDeclaration(),
-                self::searchWebToolDeclaration(),
-                self::inspectGitHubRepositoryToolDeclaration(),
-                self::listEvaluationsToolDeclaration(),
-                self::saveEvaluationToolDeclaration(),
-                self::flagForWendyReviewToolDeclaration(),
-            ],
-            fn(string $name, array $args) => match ($name) {
-                'get_site_info' => SharedAgentTools::getSiteInfo(),
-                'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
-                'search_web' => self::searchWeb((string) ($args['query'] ?? '')),
-                'inspect_github_repository' => self::inspectGitHubRepository((string) ($args['url'] ?? '')),
-                'list_evaluations' => self::listEvaluations($pdo, isset($args['status']) ? (string) $args['status'] : null),
-                'save_evaluation' => self::saveEvaluation($pdo, $args),
-                'flag_for_wendy_review' => self::flagForWendyReview($pdo, (int) ($args['evaluation_id'] ?? 0)),
-                default => ['error' => 'Unknown tool.'],
-            },
+            self::toolDeclarations(),
+            self::toolDispatcher($pdo),
             $transcript
         );
         if ($result['reply'] === null) {
@@ -90,6 +75,128 @@ class AllieController
         ActivityLog::log($user, 'evaluated', 'allie_chat', null, mb_substr($message, 0, 120));
 
         Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private static function toolDeclarations(): array
+    {
+        return [
+            SharedAgentTools::siteInfoToolDeclaration(),
+            SharedAgentTools::searchContentToolDeclaration(),
+            self::searchWebToolDeclaration(),
+            self::inspectGitHubRepositoryToolDeclaration(),
+            self::listEvaluationsToolDeclaration(),
+            self::saveEvaluationToolDeclaration(),
+            self::flagForWendyReviewToolDeclaration(),
+        ];
+    }
+
+    private static function toolDispatcher(\PDO $pdo): \Closure
+    {
+        return fn(string $name, array $args) => match ($name) {
+            'get_site_info' => SharedAgentTools::getSiteInfo(),
+            'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+            'search_web' => self::searchWeb((string) ($args['query'] ?? '')),
+            'inspect_github_repository' => self::inspectGitHubRepository((string) ($args['url'] ?? '')),
+            'list_evaluations' => self::listEvaluations($pdo, isset($args['status']) ? (string) $args['status'] : null),
+            'save_evaluation' => self::saveEvaluation($pdo, $args),
+            'flag_for_wendy_review' => self::flagForWendyReview($pdo, (int) ($args['evaluation_id'] ?? 0)),
+            default => ['error' => 'Unknown tool.'],
+        };
+    }
+
+    /**
+     * The autonomous entry point, run from database/allie_discover.php on a
+     * cron. Same engine, same tools, same persona as a real chat turn — just
+     * a synthetic prompt standing in for Caleb actually asking her to look
+     * into something, since she has no independent judgment loop of her own
+     * outside AiAgentEngine::run(). A generous tool-round budget because one
+     * real pass chains several calls (list_evaluations to avoid repeating
+     * herself, then search_web/get_site_info/search_content, then one or
+     * more save_evaluation calls as she progresses a candidate, then
+     * flag_for_wendy_review) rather than the 1-2 calls a normal chat turn
+     * needs.
+     *
+     * @return array{reply: ?string, mode: string, provider: ?string, ready: bool}
+     */
+    public static function runDiscoveryPass(): array
+    {
+        $pdo = Database::get();
+        $prompt = "Run your regular discovery pass. Call list_evaluations first so you don't repeat a tool you're "
+            . "already tracking. Then look for one genuinely new or newly-relevant AI/dev tool worth Caleb's "
+            . "attention right now, and take it as far through the pipeline as the evidence actually supports — "
+            . "discovered, evaluating, compared, and recommended if you have enough to land on adopt/pilot/reject "
+            . "with a real rationale. Skip the tested stage; that needs an actual hands-on trial, which this pass "
+            . "can't do. Once you reach recommended, call flag_for_wendy_review so it lands in front of Wendy and "
+            . "Caleb. If nothing genuinely worth tracking turns up, say so plainly and don't force a recommendation "
+            . "just to have one to report.";
+
+        return AiAgentEngine::run(
+            self::buildChatSystemPrompt(),
+            self::toolDeclarations(),
+            self::toolDispatcher($pdo),
+            [['role' => 'user', 'text' => $prompt]],
+            null,
+            null,
+            6
+        );
+    }
+
+    /**
+     * Fires the actual "Allie found something" alert the moment a
+     * recommendation is flagged for Wendy — not something Caleb has to
+     * notice by checking the admin page himself. Same shape as
+     * WendyController::notifySessionRequest()/ChloeInvestigator::escalate():
+     * per-channel emailed_at/whatsapp_sent_at guards so a retry (e.g. the
+     * next discovery-pass cron running before this one's notification
+     * finished) can never double-send, and the message speaks in her own
+     * voice with her own name, not a generic template.
+     */
+    private static function notifyFinding(\PDO $pdo, int $evaluationId): void
+    {
+        $stmt = $pdo->prepare('SELECT * FROM allie_evaluations WHERE id = ?');
+        $stmt->execute([$evaluationId]);
+        $evaluation = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$evaluation) {
+            return;
+        }
+
+        $name = Settings::get('allie_assistant_name') ?: 'Allie';
+        $recommendation = $evaluation['recommendation'] ? strtoupper((string) $evaluation['recommendation']) : 'A CALL';
+        $body = "{$recommendation}: " . $evaluation['tool_name']
+            . "\n\n" . ($evaluation['recommendation_rationale'] ?: 'See the full evaluation for details.')
+            . "\n\nFlagged to Wendy for a team-impact review before it reaches you for the final call."
+            . "\n\nReview it: https://princecaleb.dev/admin/allie-evaluations";
+
+        $to = Settings::get('notification_email') ?: Settings::get('social_email');
+        $emailDone = !$to || !empty($evaluation['emailed_at']);
+        if (!$emailDone) {
+            $emailDone = Mailer::send(
+                $to,
+                $name . ': ' . $evaluation['tool_name'] . ' — ' . $recommendation,
+                "{$name} here — {$body}"
+            );
+        }
+        if ($emailDone && $to && empty($evaluation['emailed_at'])) {
+            $pdo->prepare("UPDATE allie_evaluations SET emailed_at = datetime('now') WHERE id = ?")
+                ->execute([$evaluationId]);
+        }
+
+        $waConfigured = WhatsAppNotifier::isOwnerConfigured();
+        $waDone = !$waConfigured || !empty($evaluation['whatsapp_sent_at']);
+        if (!$waDone) {
+            $waBody = "\u{1F9ED} {$name} — " . $evaluation['tool_name'] . "\n\n" . $body;
+            $waDone = WhatsAppNotifier::sendOwnerAlert($waBody, [
+                'name' => $name,
+                'reason' => $evaluation['tool_name'] . ' — ' . $recommendation,
+                'summary' => mb_substr((string) ($evaluation['recommendation_rationale'] ?: ''), 0, 900),
+                'message' => mb_substr($waBody, 0, 900),
+            ]);
+        }
+        if ($waDone && $waConfigured && empty($evaluation['whatsapp_sent_at'])) {
+            $pdo->prepare("UPDATE allie_evaluations SET whatsapp_sent_at = datetime('now') WHERE id = ?")
+                ->execute([$evaluationId]);
+        }
     }
 
     private static function buildChatSystemPrompt(): string
@@ -490,6 +597,7 @@ class AllieController
         if ($stmt->rowCount() === 0) {
             return ['error' => 'No recommended evaluation with a recommendation set at that ID.'];
         }
+        self::notifyFinding($pdo, $id);
         return ['flagged' => true];
     }
 

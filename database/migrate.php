@@ -1956,4 +1956,14 @@ foreach (['request_text', 'fulfilled_at', 'nudge_4h_sent_at', 'nudge_24h_sent_at
     }
 }
 
+// Allie's notifyFinding() alert (added after allie_evaluations first shipped)
+// needs its own delivery-guard columns, same shape as wendy_observations'
+// emailed_at/whatsapp_sent_at above.
+$allieEvaluationColumns = array_column($pdo->query('PRAGMA table_info(allie_evaluations)')->fetchAll(), 'name');
+foreach (['emailed_at', 'whatsapp_sent_at'] as $col) {
+    if (!in_array($col, $allieEvaluationColumns, true)) {
+        $pdo->exec("ALTER TABLE allie_evaluations ADD COLUMN {$col} TEXT");
+    }
+}
+
 echo "Schema applied.\n";
