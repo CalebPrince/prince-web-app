@@ -326,7 +326,16 @@ class DripController
         $isActive = !empty($data['is_active']) ? 1 : 0;
         $channel = trim((string) ($data['channel'] ?? 'email'));
         $whatsappTemplateSid = trim((string) ($data['whatsapp_template_sid'] ?? '')) ?: null;
+        // The frontend always sends this key, even when the textarea is
+        // empty (an empty string, not absent) — normalize that the same way
+        // whatsapp_template_sid does above, or an untouched, optional field
+        // fails json_decode('') below and blocks the save with a confusing
+        // "must be a JSON object" error on every whatsapp step that doesn't
+        // need variables.
         $whatsappVariables = $data['whatsapp_variables'] ?? null;
+        if (is_string($whatsappVariables) && trim($whatsappVariables) === '') {
+            $whatsappVariables = null;
+        }
 
         $errors = [];
         if ($dayOffset < 0) $errors[] = 'Day offset must be 0 or more (days after enrollment).';
