@@ -133,10 +133,10 @@ final class WhatsAppTemplateCatalogController
         ],
         'drip_followup' => [
             'label' => 'Drip follow-up',
-            'description' => 'Cold-lead outreach for the WhatsApp steps of a drip automation. Marketing category, so Meta reviews it more strictly. Sent by the drip cron, not manually: paste its SID into a WhatsApp step.',
+            'description' => 'Cold-lead outreach to someone who has never spoken to Lisa or Caleb. Marketing category, so Meta reviews it more strictly. Sent by hand only.',
             'manager' => WhatsAppDripFollowupTemplateManager::class,
             'slug' => 'drip-followup',
-            'send' => '', // no manual send: only the drip cron uses it
+            'send' => '/api/v1/admin/whatsapp/send-drip-followup',
             'fields' => [],
         ],
     ];

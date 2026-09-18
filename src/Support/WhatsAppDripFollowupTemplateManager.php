@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace App\Support;
 
 /**
- * Template for the WhatsApp steps of a drip automation (database/
- * send_drip_whatsapp.php). Unlike the other templates, this one is aimed at
- * people who have never spoken to Lisa or Caleb — cold leads — so it states
- * who's writing and why in the first line and gives an easy way out.
+ * Template for cold-lead outreach, sent by hand from Marketing Leads →
+ * Templates (LiveChatController::sendDripFollowup()). Unlike the other
+ * templates, this one is aimed at people who have never spoken to Lisa or
+ * Caleb, so it states who's writing and why in the first line and gives an
+ * easy way out.
  *
  * Shares its Twilio Content API plumbing with the other template managers
- * via WhatsAppContentTemplateManager. There is no dedicated send endpoint:
- * the drip cron sends it, using the SID pasted into a step.
+ * via WhatsAppContentTemplateManager. Deliberately not wired to the drip
+ * cron: cold WhatsApp goes out one contact at a time, by a person.
  */
 final class WhatsAppDripFollowupTemplateManager extends WhatsAppContentTemplateManager
 {
@@ -27,10 +28,10 @@ final class WhatsAppDripFollowupTemplateManager extends WhatsAppContentTemplateM
     protected const CATEGORY = 'MARKETING';
 
     /**
-     * {{1}} is the contact's name, mapped from a step's whatsapp_variables
-     * (e.g. {"1": "{{name}}"}). Only the name is a variable on purpose: the
-     * other merge tokens (industry, research summary) are free text and read
-     * badly dropped into a fixed sentence.
+     * {{1}} is the contact's name, filled in by
+     * LiveChatController::sendDripFollowup(). Only the name is a variable on
+     * purpose: free text (industry, research summary) reads badly dropped
+     * into a fixed sentence.
      *
      * Inbound WhatsApp replies aren't auto-parsed for STOP, so the opt-out is
      * worded as "just say so" — Lisa reads every reply.

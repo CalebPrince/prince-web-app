@@ -398,7 +398,8 @@ $router->get('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedba
 $router->post('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/feedback-request/refresh', [WhatsAppFeedbackRequestTemplateController::class, 'refresh']);
 
-$router->get('/api/v1/admin/whatsapp-template/drip-followup', [WhatsAppDripFollowupTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp/send-drip-followup', [LiveChatController::class, 'sendDripFollowup']);
+$router->get('/api/v1/admin/whatsapp-template/drip-followup',[WhatsAppDripFollowupTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/drip-followup', [WhatsAppDripFollowupTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/drip-followup/refresh', [WhatsAppDripFollowupTemplateController::class, 'refresh']);
 

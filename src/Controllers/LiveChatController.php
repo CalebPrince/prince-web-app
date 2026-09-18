@@ -23,6 +23,7 @@ use App\Support\WhapiClient;
 use App\Support\WhatsAppAssetRequestTemplateManager;
 use App\Support\WhatsAppAppointmentReminderTemplateManager;
 use App\Support\WhatsAppDeliveryReadyTemplateManager;
+use App\Support\WhatsAppDripFollowupTemplateManager;
 use App\Support\WhatsAppFeedbackRequestTemplateManager;
 use App\Support\WhatsAppInvoiceReadyTemplateManager;
 use App\Support\WhatsAppMilestoneUpdateTemplateManager;
@@ -1601,6 +1602,35 @@ class LiveChatController
     }
 
     /**
+     * POST /api/v1/admin/whatsapp/send-drip-followup — admin-only. Cold-lead
+     * outreach for someone who hasn't spoken to Lisa or Caleb, sent by hand
+     * from Marketing Leads (never by a cron). Twilio-only. Only the contact's
+     * name goes into the template.
+     */
+    public static function sendDripFollowup(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, []);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_drip_followup_content_sid',
+            'twilio_drip_followup_template_status',
+            'No drip follow-up template yet — create one under Settings → WhatsApp & phone → Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppDripFollowupTemplateManager::renderBody($vars));
+    }
+
+    /**
      * Shared tail end of every sendXxx() above: log the attempt into
      * whatsapp_intros, bail with the Twilio error if it failed, otherwise
      * seed the outbound thread with the real rendered body and respond.
@@ -2436,6 +2466,9 @@ class LiveChatController
             $note = (string) ($intro['note'] ?? '');
             $requestText = str_starts_with($note, 'Requested: ') ? substr($note, strlen('Requested: ')) : '';
             return WhatsAppProjectKickoffTemplateManager::renderBody(['1' => $contactName, '2' => $requestText]);
+        }
+        if ($sid !== '' && $sid === trim((string) Settings::get('twilio_drip_followup_content_sid'))) {
+            return WhatsAppDripFollowupTemplateManager::renderBody(['1' => $contactName]);
         }
         return '[Earlier template message sent — see Marketing Leads → Templates sent for the exact text]';
     }
