@@ -9,6 +9,7 @@ use App\Support\Response;
 use App\Support\WhatsAppAssetRequestTemplateManager;
 use App\Support\WhatsAppAppointmentReminderTemplateManager;
 use App\Support\WhatsAppDeliveryReadyTemplateManager;
+use App\Support\WhatsAppDripFollowupTemplateManager;
 use App\Support\WhatsAppFeedbackRequestTemplateManager;
 use App\Support\WhatsAppInvoiceReadyTemplateManager;
 use App\Support\WhatsAppMilestoneUpdateTemplateManager;
@@ -129,6 +130,14 @@ final class WhatsAppTemplateCatalogController
             'slug' => 'feedback-request',
             'send' => '/api/v1/admin/whatsapp/send-feedback-request',
             'fields' => ['var2' => 'What was delivered', 'var3' => 'Review link'],
+        ],
+        'drip_followup' => [
+            'label' => 'Drip follow-up',
+            'description' => 'Cold-lead outreach for the WhatsApp steps of a drip automation. Marketing category, so Meta reviews it more strictly. Sent by the drip cron, not manually: paste its SID into a WhatsApp step.',
+            'manager' => WhatsAppDripFollowupTemplateManager::class,
+            'slug' => 'drip-followup',
+            'send' => '', // no manual send: only the drip cron uses it
+            'fields' => [],
         ],
     ];
 

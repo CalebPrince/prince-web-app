@@ -202,7 +202,7 @@ export default function MarketingLeadsClient({
   useEffect(() => {
     adminApi
       .get<{ templates?: WhatsAppTemplateOption[] }>("/api/v1/admin/whatsapp-templates")
-      .then((data) => setTemplateOptions((data.templates ?? []).filter((t) => !LEGACY_TEMPLATE_KEYS.has(t.key))))
+      .then((data) => setTemplateOptions((data.templates ?? []).filter((t) => t.send_url && !LEGACY_TEMPLATE_KEYS.has(t.key))))
       .catch(() => {});
   }, []);
 
