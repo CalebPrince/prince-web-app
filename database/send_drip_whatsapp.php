@@ -31,12 +31,17 @@ $pdo = Database::get();
 // Only enrollments with a phone on file can ever match — one enrolled purely
 // by email (no phone captured at the trigger site) simply never appears
 // here, the same way an enrollment with no active whatsapp steps never does.
+// LEFT JOIN marketing_leads for the same reason send_drip_emails.php does:
+// lead_id is nullable (NULL for pipeline_stage_changed-triggered enrollments)
+// and must never filter a row out, only add two optional columns.
 $due = $pdo->query(
     "SELECT e.id AS enrollment_id, e.phone, e.name, e.lead_industry, e.last_action,
+            ml.audit_findings, ml.research_findings,
             s.id AS step_id, s.whatsapp_template_sid, s.whatsapp_variables
      FROM drip_enrollments e
      JOIN automations a ON a.id = e.automation_id AND a.is_active = 1
      JOIN drip_steps s ON s.automation_id = e.automation_id AND s.is_active = 1 AND s.channel = 'whatsapp'
+     LEFT JOIN marketing_leads ml ON ml.id = e.lead_id
      WHERE e.status = 'active'
        AND e.phone IS NOT NULL AND trim(e.phone) <> ''
        AND datetime(e.enrolled_at, '+' || s.day_offset || ' days') <= datetime('now')
@@ -46,10 +51,14 @@ $due = $pdo->query(
 
 $sent = 0;
 foreach ($due as $row) {
+    $audit = json_decode((string) ($row['audit_findings'] ?? ''), true);
+    $research = json_decode((string) ($row['research_findings'] ?? ''), true);
     $tokens = [
         '{{name}}' => trim((string) ($row['name'] ?? '')) ?: 'there',
         '{{lead_industry}}' => trim((string) ($row['lead_industry'] ?? '')) ?: 'your business',
         '{{last_action}}' => trim((string) ($row['last_action'] ?? '')),
+        '{{audit_highlight}}' => trim((string) ($audit['issues'][0]['detail'] ?? '')) ?: 'your online presence',
+        '{{research_summary}}' => trim((string) ($research['summary'] ?? '')) ?: 'your business',
     ];
 
     $variables = [];

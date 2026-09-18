@@ -805,7 +805,7 @@ export default function DripClient({
             </Field>
             <Field
               label="Template variables (JSON)"
-              hint={'Maps the template\'s {{1}}, {{2}}... placeholders to merge tokens, e.g. {"1": "{{name}}", "2": "{{last_action}}"}.'}
+              hint={'Maps the template\'s {{1}}, {{2}}... placeholders to merge tokens ({{name}}, {{lead_industry}}, {{last_action}}, {{audit_highlight}}, {{research_summary}}), e.g. {"1": "{{name}}", "2": "{{last_action}}"}.'}
             >
               <Textarea
                 rows={3}
@@ -816,7 +816,10 @@ export default function DripClient({
             </Field>
           </>
         ) : (
-          <Field label="Body" hint="{{name}}, {{lead_industry}}, and {{last_action}} are replaced per recipient.">
+          <Field
+            label="Body"
+            hint="{{name}}, {{lead_industry}}, {{last_action}}, {{audit_highlight}}, and {{research_summary}} are replaced per recipient (the last two only when the enrollment traces back to an audited/researched marketing lead)."
+          >
             <Textarea
               rows={8}
               required

@@ -8,9 +8,11 @@ declare(strict_types=1);
 // `enrolled_at + day_offset days` has passed and that step hasn't been sent
 // to that enrollment yet (drip_sends is UNIQUE per pair, so retries and
 // overlapping runs can't double-send). Enrollments with no remaining active
-// steps are marked completed. {{name}}, {{lead_industry}}, and
-// {{last_action}} personalize the copy from the enrollment's own columns,
-// and every email carries the enrollment's unsubscribe link.
+// steps are marked completed. {{name}}, {{lead_industry}}, {{last_action}},
+// {{audit_highlight}}, and {{research_summary}} personalize the copy (the
+// first three from the enrollment's own columns, the last two from the
+// source marketing_leads row when lead_id points to one), and every email
+// carries the enrollment's unsubscribe link.
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
@@ -26,12 +28,18 @@ $pdo = Database::get();
 // halts every sequence in flight, the master-switch behaviour the admin UI
 // promises. drip_sends stays UNIQUE per (enrollment, step), so a lead in
 // several automations at once still can't be double-sent the same step.
+// LEFT JOIN — lead_id is nullable (NULL for enrollments the pipeline_stage_changed
+// trigger creates, since a pipeline_leads id isn't a marketing_leads id) and
+// ON DELETE SET NULL if the source lead is later removed, so this must never
+// filter a row out; it only adds two optional columns when a match exists.
 $due = $pdo->query(
     "SELECT e.id AS enrollment_id, e.email, e.name, e.lead_industry, e.last_action, e.unsubscribe_token,
+            ml.audit_findings, ml.research_findings,
             s.id AS step_id, s.subject, s.body, a.trigger_event
      FROM drip_enrollments e
      JOIN automations a ON a.id = e.automation_id AND a.is_active = 1
      JOIN drip_steps s ON s.automation_id = e.automation_id AND s.is_active = 1 AND s.channel = 'email'
+     LEFT JOIN marketing_leads ml ON ml.id = e.lead_id
      WHERE e.status = 'active'
        AND datetime(e.enrolled_at, '+' || s.day_offset || ' days') <= datetime('now')
        AND NOT EXISTS (SELECT 1 FROM drip_sends ds WHERE ds.enrollment_id = e.id AND ds.step_id = s.id)
@@ -40,10 +48,19 @@ $due = $pdo->query(
 
 $sent = 0;
 foreach ($due as $row) {
+    $audit = json_decode((string) ($row['audit_findings'] ?? ''), true);
+    $research = json_decode((string) ($row['research_findings'] ?? ''), true);
     $tokens = [
         '{{name}}' => trim((string) ($row['name'] ?? '')) ?: 'there',
         '{{lead_industry}}' => trim((string) ($row['lead_industry'] ?? '')) ?: 'your business',
         '{{last_action}}' => trim((string) ($row['last_action'] ?? '')),
+        // First entry only — performAudit() always lists its single most
+        // compelling finding first, and each 'detail' is already a clean,
+        // short sentence safe to drop straight into outbound copy.
+        '{{audit_highlight}}' => trim((string) ($audit['issues'][0]['detail'] ?? '')) ?: 'your online presence',
+        // DossierController's AI-written prose paragraph — the only
+        // research_findings sub-field short/clean enough for a merge token.
+        '{{research_summary}}' => trim((string) ($research['summary'] ?? '')) ?: 'your business',
     ];
     $subject = strtr($row['subject'], $tokens);
     $message = strtr($row['body'], $tokens);
