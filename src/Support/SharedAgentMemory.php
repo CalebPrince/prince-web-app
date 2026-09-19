@@ -50,18 +50,15 @@ final class SharedAgentMemory
 
     private static function memoryKey(): ?string
     {
-        require_once dirname(__DIR__, 2) . '/config/config.php';
-        $config = appConfig();
-        return trim((string) ($config['model_agnostic_memory_key'] ?? '')) ?: null;
+        return trim((string) (Settings::get('model_agnostic_memory_key') ?? '')) ?: null;
     }
 
     private static function request(string $method, string $path, ?array $body = null): ?array
     {
-        require_once dirname(__DIR__, 2) . '/config/config.php';
-        $config = appConfig();
-        $token = trim((string) ($config['model_agnostic_memory_token'] ?? ''));
+        $token = trim((string) (Settings::get('model_agnostic_memory_token') ?? ''));
         if ($token === '') return null;
-        $url = rtrim((string) $config['model_agnostic_memory_url'], '/') . $path;
+        $url = rtrim((string) (Settings::get('model_agnostic_memory_url') ?? ''), '/') . $path;
+        if ($url === $path) return null;
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
