@@ -154,7 +154,7 @@ export default function TestimonialsClient({
         <div className="flex flex-col gap-1 border-b border-hairline bg-bg-2 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-semibold">Google reviews</h2>
-            <p className="mt-1 text-sm text-text-2">Reviews arrive from Google through the configured Places integration. New reviews stay hidden until you choose a placement.</p>
+            <p className="mt-1 text-sm text-text-2">Reviews arrive from Google through the configured Places integration. New reviews stay hidden until you choose a placement. The testimonials page shows every review you approve for it; the landing page shows only the five newest you approve for it.</p>
           </div>
           <span className="text-xs font-medium uppercase tracking-wider text-text-3">Up to 5 supplied by Google</span>
         </div>

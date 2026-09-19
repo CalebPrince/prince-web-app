@@ -10,6 +10,9 @@ use App\Support\Settings;
 
 class GoogleReviewController
 {
+    /** How many of the newest approved reviews the landing page shows. */
+    private const LANDING_LIMIT = 5;
+
     public static function rating(): void
     {
         if (Settings::get('google_rating_published') === '0') Response::json(['configured' => false]);
@@ -32,10 +35,18 @@ class GoogleReviewController
         $place = self::fetchPlace(true);
         if ($place === null) Response::json([]);
         $placements = self::placements();
-        Response::json(array_values(array_filter(
+
+        // A review only appears where the admin clicked its button for that
+        // placement. The testimonials page shows every review approved for it;
+        // the landing page shows only the five most recent approved for it.
+        $approved = array_values(array_filter(
             self::normaliseReviews($place['reviews'] ?? []),
             static fn(array $review): bool => in_array($placement, $placements[$review['id']] ?? [], true)
-        )));
+        ));
+        // publishTime is RFC 3339 UTC, so it sorts correctly as a string.
+        usort($approved, static fn(array $a, array $b): int => strcmp($b['publishTime'], $a['publishTime']));
+
+        Response::json($placement === 'landing' ? array_slice($approved, 0, self::LANDING_LIMIT) : $approved);
     }
 
     public static function adminReviews(): void
