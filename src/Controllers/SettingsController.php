@@ -19,7 +19,8 @@ class SettingsController
     /** Secrets and behavior config — admin read/write only, never exposed publicly. */
     private const ADMIN_ONLY_KEYS = [
         'deepseek_api_key', 'deepseek_model',
-        'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'pagespeed_api_key', 'dataforseo_login', 'dataforseo_password', 'slack_webhook_url',
+        'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model',
+        'openai_api_key', 'openai_model', 'anthropic_api_key', 'anthropic_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'pagespeed_api_key', 'dataforseo_login', 'dataforseo_password', 'slack_webhook_url',
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'wati_api_endpoint', 'wati_api_token', 'wati_webhook_secret',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'twilio_webhook_url',

@@ -7,10 +7,15 @@ namespace App\Support;
 /**
  * Shared tool-calling engine for AI agents: given a system prompt, a set of
  * tool declarations (Gemini functionDeclarations shape), and a tool
- * executor, runs the same three-provider fallback (Gemini -> OpenRouter ->
- * Groq, each only if its key is configured) and tool-calling
+ * executor, runs the same provider fallback (Gemini -> Anthropic -> OpenAI
+ * -> OpenRouter -> Groq, each only if its key is configured) and tool-calling
  * round-trip loop that Live Chat's "Lisa" agent originally had built in
- * directly. DeepSeek remains available through AiText for plain generation,
+ * directly. Anthropic and OpenAI sit ahead of OpenRouter/Groq deliberately:
+ * both are paid-from-first-token, so they don't carry the free-tier
+ * timeout/quota flakiness documented on the constants below (confirmed live
+ * 2026-09-19: Gemini timing out and Groq's TPM cap both firing on the same
+ * turn, with no paid leg configured to absorb it). DeepSeek remains available
+ * through AiText for plain generation,
  * but is excluded here because its compatible endpoint has repeatedly leaked
  * native DSML tool syntax instead of returning valid tool_calls.
  * Extracted so a second, differently-configured agent (different persona,
@@ -41,11 +46,17 @@ class AiAgentEngine
     // provider, not a free tier, so its own timeout budget doesn't need the
     // generous headroom the free-tier legs below need.
     private const DEEPSEEK_CHAT_TIMEOUT_SECONDS = 15;
-    // Was 12s; confirmed live in production 2026-09-19 that a normal
-    // tool-round-trip turn (Allie) can legitimately take longer than that on
-    // the forced-text final round — curl timed out with 0 bytes received,
-    // not a real Gemini error, and the whole turn fell through to Groq.
-    private const GEMINI_CHAT_TIMEOUT_SECONDS = 20;
+    // Was 12s, then 20s; confirmed live in production 2026-09-19 that a
+    // normal tool-round-trip turn (Allie) can legitimately take longer than
+    // either on the forced-text final round — curl timed out with 0 bytes
+    // received, not a real Gemini error, and the whole turn fell through to
+    // Groq. Raised again with real headroom now that Anthropic/OpenAI exist
+    // as paid legs, so a slow-but-real Gemini call gets to finish instead of
+    // being killed mid-flight and pushed down the chain.
+    private const GEMINI_CHAT_TIMEOUT_SECONDS = 25;
+    // Paid-from-first-token, same reasoning as DeepSeek above.
+    private const ANTHROPIC_CHAT_TIMEOUT_SECONDS = 20;
+    private const OPENAI_CHAT_TIMEOUT_SECONDS = 20;
     // Free-tier OpenRouter models are often slower than Gemini — reusing
     // Gemini's 12s budget here was cutting the fallback off mid-response
     // (curl reports the 200 status from the headers it did receive, but
@@ -59,6 +70,8 @@ class AiAgentEngine
     private const FAST_GROQ_TIMEOUT_SECONDS = 6;
     private const FAST_GEMINI_TIMEOUT_SECONDS = 6;
     private const FAST_OPENROUTER_TIMEOUT_SECONDS = 8;
+    private const FAST_ANTHROPIC_TIMEOUT_SECONDS = 8;
+    private const FAST_OPENAI_TIMEOUT_SECONDS = 8;
 
     /**
      * @param array<int,array<string,mixed>> $toolDeclarations Gemini functionDeclarations shape; translated internally for OpenRouter/Groq.
@@ -101,9 +114,46 @@ class AiAgentEngine
             }
         }
 
-        // Gemini failed outright, or produced no usable reply text — retry
-        // the whole turn against OpenRouter. This is a fresh, independent
-        // turn on the other provider, not a mid-conversation handoff.
+        // Gemini failed outright, or produced no usable reply text — try the
+        // paid legs next, ahead of the free/flakier OpenRouter and Groq
+        // fallbacks below. Each is a fresh, independent turn on that
+        // provider, not a mid-conversation handoff.
+        if ($reply === null) {
+            $anthropicKey = Settings::get('anthropic_api_key');
+            if (!empty($anthropicKey)) {
+                $result = self::chatWithAnthropic(
+                    $anthropicKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, $onExhaustedFallback, $maxToolRounds
+                );
+                if ($result !== null) {
+                    $ready = $ready || $result['ready'];
+                    if ($result['reply'] !== null) {
+                        $reply = $result['reply'];
+                        $mode = 'ai';
+                        $provider = 'anthropic';
+                    }
+                }
+            }
+        }
+
+        if ($reply === null) {
+            $openAiKey = Settings::get('openai_api_key');
+            if (!empty($openAiKey)) {
+                $result = self::chatWithOpenAI(
+                    $openAiKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, $onExhaustedFallback, $maxToolRounds
+                );
+                if ($result !== null) {
+                    $ready = $ready || $result['ready'];
+                    if ($result['reply'] !== null) {
+                        $reply = $result['reply'];
+                        $mode = 'ai';
+                        $provider = 'openai';
+                    }
+                }
+            }
+        }
+
+        // Gemini, Anthropic and OpenAI all failed (or none is configured) —
+        // fall through to the free-tier legs.
         if ($reply === null) {
             $openRouterKey = Settings::get('openrouter_api_key');
             if (!empty($openRouterKey)) {
@@ -121,10 +171,9 @@ class AiAgentEngine
             }
         }
 
-        // Gemini and OpenRouter both failed (or neither is configured) —
-        // last AI attempt. Groq has its own independent quota/billing, so
-        // it's the one leg still standing when the other two are both out
-        // of credit at once.
+        // Every other leg failed (or wasn't configured) — last AI attempt.
+        // Groq has its own independent quota/billing, so it's the one leg
+        // still standing when everything else is out of credit at once.
         if ($reply === null) {
             $groqKey = Settings::get('groq_api_key');
             if (!empty($groqKey)) {
@@ -194,6 +243,32 @@ class AiAgentEngine
             );
             if (is_array($result) && is_string($result['reply'] ?? null) && trim($result['reply']) !== '') {
                 return ['reply' => $result['reply'], 'mode' => 'ai', 'provider' => 'openrouter', 'ready' => (bool) $result['ready']];
+            }
+        }
+
+        // Anthropic/OpenAI last here (not first, unlike run()): they're the
+        // most reliable legs but not necessarily the fastest, and a voice
+        // turn only reaches this point once every free-tier option above has
+        // already failed — better to try them than give up.
+        $anthropicKey = Settings::get('anthropic_api_key');
+        if (!empty($anthropicKey)) {
+            $result = self::chatWithAnthropic(
+                $anthropicKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript,
+                null, $maxToolRounds, self::FAST_ANTHROPIC_TIMEOUT_SECONDS
+            );
+            if (is_array($result) && is_string($result['reply'] ?? null) && trim($result['reply']) !== '') {
+                return ['reply' => $result['reply'], 'mode' => 'ai', 'provider' => 'anthropic', 'ready' => (bool) $result['ready']];
+            }
+        }
+
+        $openAiKey = Settings::get('openai_api_key');
+        if (!empty($openAiKey)) {
+            $result = self::chatWithOpenAI(
+                $openAiKey, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript,
+                null, $maxToolRounds, self::FAST_OPENAI_TIMEOUT_SECONDS
+            );
+            if (is_array($result) && is_string($result['reply'] ?? null) && trim($result['reply']) !== '') {
+                return ['reply' => $result['reply'], 'mode' => 'ai', 'provider' => 'openai', 'ready' => (bool) $result['ready']];
             }
         }
 
@@ -457,6 +532,176 @@ class AiAgentEngine
                     'content' => json_encode($toolResult),
                 ];
             }
+        }
+
+        return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+    }
+
+    /**
+     * OpenAI's own Chat Completions API is what OpenRouter/Groq/DeepSeek
+     * above already emulate, so this is the same tools/tool_calls shape and
+     * a straight copy-and-adjust of chatWithOpenRouter — just OpenAI's own
+     * endpoint/key/model, no OpenRouter-specific headers.
+     *
+     * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to the next provider)
+     */
+    private static function chatWithOpenAI(
+        string $apiKey,
+        string $system,
+        array $toolDeclarations,
+        callable $toolExecutor,
+        array $transcript,
+        ?callable $onExhaustedFallback,
+        int $maxToolRounds,
+        int $timeoutSeconds = self::OPENAI_CHAT_TIMEOUT_SECONDS
+    ): ?array {
+        $messages = [['role' => 'system', 'content' => $system]];
+        foreach ($transcript as $turn) {
+            $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
+        }
+
+        $tools = self::toolDeclarationsOpenAiFormat($toolDeclarations);
+        $model = Settings::get('openai_model') ?: 'gpt-4o-mini';
+        $ready = false;
+
+        for ($round = 0; $round < $maxToolRounds; $round++) {
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 1024];
+            // See chatWithGemini — force text on the last round so a model
+            // wanting a second sequential tool call can't run out the clock
+            // on tool_calls and never produce a reply.
+            if ($round < $maxToolRounds - 1) {
+                $payload['tools'] = $tools;
+                $payload['tool_choice'] = 'auto';
+            }
+            $result = self::callOpenAIRaw($apiKey, $payload, $timeoutSeconds);
+            if ($result === null) {
+                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+            }
+
+            $message = $result['choices'][0]['message'] ?? null;
+            if (!is_array($message)) {
+                error_log('OpenAI chat: no message in response: ' . json_encode($result));
+                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+            }
+
+            $toolCalls = $message['tool_calls'] ?? null;
+            if (!$toolCalls) {
+                $text = $message['content'] ?? null;
+                // See chatWithDeepSeek — chopped off mid-sentence by
+                // max_tokens, not actually finished; fall through instead of
+                // showing it to a user.
+                if (($result['choices'][0]['finish_reason'] ?? null) === 'length') {
+                    error_log('OpenAI chat: reply truncated by max_tokens (finish_reason=length); falling back.');
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+                }
+                return ['reply' => $text !== null && $text !== '' ? $text : null, 'ready' => $ready];
+            }
+
+            $messages[] = $message;
+            foreach ($toolCalls as $call) {
+                $name = $call['function']['name'] ?? '';
+                $args = json_decode($call['function']['arguments'] ?? '{}', true) ?: [];
+                $toolResult = $toolExecutor($name, $args);
+                $messages[] = [
+                    'role' => 'tool',
+                    'tool_call_id' => $call['id'] ?? '',
+                    'content' => json_encode($toolResult),
+                ];
+            }
+        }
+
+        return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+    }
+
+    /**
+     * Anthropic's Messages API is shaped differently from the OpenAI-style
+     * providers above: the system prompt is a top-level field rather than a
+     * message, and tool use is its own tool_use/tool_result content-block
+     * pair (closer to Gemini's functionCall/functionResponse than to
+     * OpenAI's tool_calls), so this gets its own request/response handling
+     * instead of reusing toolDeclarationsOpenAiFormat.
+     *
+     * @return array{reply: ?string, ready: bool}|null null only on a hard failure (caller falls back to the next provider)
+     */
+    private static function chatWithAnthropic(
+        string $apiKey,
+        string $system,
+        array $toolDeclarations,
+        callable $toolExecutor,
+        array $transcript,
+        ?callable $onExhaustedFallback,
+        int $maxToolRounds,
+        int $timeoutSeconds = self::ANTHROPIC_CHAT_TIMEOUT_SECONDS
+    ): ?array {
+        $messages = [];
+        foreach ($transcript as $turn) {
+            $messages[] = ['role' => $turn['role'] === 'user' ? 'user' : 'assistant', 'content' => $turn['text']];
+        }
+
+        $tools = self::toolDeclarationsAnthropicFormat($toolDeclarations);
+        $model = Settings::get('anthropic_model') ?: 'claude-sonnet-4-5-20250929';
+        $ready = false;
+
+        for ($round = 0; $round < $maxToolRounds; $round++) {
+            $payload = [
+                'model' => $model,
+                'system' => $system,
+                'messages' => $messages,
+                'max_tokens' => 1024,
+            ];
+            // See chatWithGemini — force text on the last round so a model
+            // wanting a second sequential tool call can't run out the clock
+            // on tool_use and never produce a reply.
+            if ($round < $maxToolRounds - 1) {
+                $payload['tools'] = $tools;
+            }
+            $result = self::callAnthropicRaw($apiKey, $payload, $timeoutSeconds);
+            if ($result === null) {
+                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+            }
+
+            $blocks = $result['content'] ?? null;
+            if (!is_array($blocks)) {
+                error_log('Anthropic chat: no content in response: ' . json_encode($result));
+                return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+            }
+
+            $toolUses = [];
+            $textParts = [];
+            foreach ($blocks as $block) {
+                if (($block['type'] ?? null) === 'tool_use') {
+                    $toolUses[] = $block;
+                } elseif (($block['type'] ?? null) === 'text' && isset($block['text'])) {
+                    $textParts[] = $block['text'];
+                }
+            }
+            $text = $textParts ? implode('', $textParts) : '';
+
+            if (!$toolUses) {
+                // stop_reason "max_tokens" means the answer was cut off
+                // mid-sentence by the output-token cap, not that the model
+                // actually finished — see chatWithGemini.
+                if (($result['stop_reason'] ?? null) === 'max_tokens') {
+                    error_log(sprintf('Anthropic chat: reply truncated by max_tokens (round %d); falling back.', $round));
+                    return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
+                }
+                return ['reply' => $text !== '' ? $text : null, 'ready' => $ready];
+            }
+
+            // Echo the assistant's own tool_use turn back verbatim, then one
+            // user message carrying a tool_result block per call, matched by
+            // tool_use_id — Anthropic's equivalent of OpenAI's tool_call_id.
+            $messages[] = ['role' => 'assistant', 'content' => $blocks];
+            $resultBlocks = [];
+            foreach ($toolUses as $call) {
+                $toolResult = $toolExecutor((string) ($call['name'] ?? ''), is_array($call['input'] ?? null) ? $call['input'] : []);
+                $resultBlocks[] = [
+                    'type' => 'tool_result',
+                    'tool_use_id' => $call['id'] ?? '',
+                    'content' => json_encode($toolResult),
+                ];
+            }
+            $messages[] = ['role' => 'user', 'content' => $resultBlocks];
         }
 
         return $onExhaustedFallback !== null ? $onExhaustedFallback() : null;
@@ -744,6 +989,71 @@ class AiAgentEngine
         return json_decode($response, true);
     }
 
+    private static function callOpenAIRaw(string $apiKey, array $payload, int $timeout): ?array
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'OpenAI chat call failed: status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 800) : 'n/a'
+            ));
+            return null;
+        }
+
+        return json_decode($response, true);
+    }
+
+    private static function callAnthropicRaw(string $apiKey, array $payload, int $timeout): ?array
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'x-api-key: ' . $apiKey,
+                'anthropic-version: 2023-06-01',
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => $timeout,
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'Anthropic chat call failed: status=%s body=%s',
+                $status,
+                is_string($response) ? substr($response, 0, 800) : 'n/a'
+            ));
+            return null;
+        }
+
+        return json_decode($response, true);
+    }
+
     private static function callDeepSeekRaw(string $apiKey, array $payload, int $timeout): ?array
     {
         if (!function_exists('curl_init')) {
@@ -827,6 +1137,20 @@ class AiAgentEngine
                     'description' => $decl['description'],
                     'parameters' => self::normalizeSchemaForOpenAi($decl['parameters']),
                 ],
+            ];
+        }
+        return $tools;
+    }
+
+    /** Translates Gemini-format tool declarations to Anthropic's tools shape — input_schema instead of parameters. */
+    private static function toolDeclarationsAnthropicFormat(array $toolDeclarations): array
+    {
+        $tools = [];
+        foreach ($toolDeclarations as $decl) {
+            $tools[] = [
+                'name' => $decl['name'],
+                'description' => $decl['description'],
+                'input_schema' => self::normalizeSchemaForOpenAi($decl['parameters']),
             ];
         }
         return $tools;

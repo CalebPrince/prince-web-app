@@ -21,11 +21,12 @@ final class AgentCapabilities
     public static function status(): array
     {
         $has = static fn(string $key): bool => trim((string) Settings::get($key)) !== '';
-        $aiProvider = $has('deepseek_api_key') || $has('gemini_api_key') || $has('openrouter_api_key') || $has('groq_api_key');
+        $aiProvider = $has('deepseek_api_key') || $has('gemini_api_key') || $has('anthropic_api_key')
+            || $has('openai_api_key') || $has('openrouter_api_key') || $has('groq_api_key');
 
         return [
             'ai_provider' => [
-                'label' => 'AI provider (DeepSeek / Gemini / OpenRouter / Groq)',
+                'label' => 'AI provider (DeepSeek / Gemini / Anthropic / OpenAI / OpenRouter / Groq)',
                 'available' => $aiProvider,
                 'used_by' => ['Beacon', 'Dossier', 'Sage', 'Scout', 'Lisa', 'Chief', 'Marketing lead pitch drafting'],
             ],

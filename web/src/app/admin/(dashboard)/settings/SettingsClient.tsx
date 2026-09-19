@@ -77,6 +77,7 @@ type Tab =
 const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
   ai: [
     "deepseek_api_key", "deepseek_model", "gemini_api_key", "gemini_model",
+    "anthropic_api_key", "anthropic_model", "openai_api_key", "openai_model",
     "groq_api_key", "groq_model", "openrouter_api_key", "openrouter_model",
   ],
   voice: [
@@ -163,6 +164,7 @@ const BOOLEAN_KEYS = new Set([
 /** Keys whose value is a credential — masked with a password input. */
 const SECRET_KEYS = new Set([
   "deepseek_api_key", "gemini_api_key", "groq_api_key", "openrouter_api_key",
+  "anthropic_api_key", "openai_api_key",
   "elevenlabs_api_key", "elevenlabs_webhook_secret", "elevenlabs_postcall_signing_secret",
   "liveavatar_api_key", "liveavatar_llm_bridge_secret", "whapi_api_token",
   "whapi_webhook_secret", "wati_api_token", "wati_webhook_secret", "twilio_auth_token", "elevenlabs_phone_webhook_secret",
