@@ -115,6 +115,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "composio_linkedin_post_tool", "composio_linkedin_author_urn",
     "composio_linkedin_stats_tool",
     "model_agnostic_memory_url", "model_agnostic_memory_token", "model_agnostic_memory_key",
+    "model_agnostic_agent_token",
   ],
   payments: ["paystack_public_key", "paystack_secret_key"],
   site: [
@@ -169,6 +170,7 @@ const SECRET_KEYS = new Set([
   "apify_api_key", "pagespeed_api_key", "dataforseo_password", "integration_api_key", "composio_api_key",
   "google_places_api_key",
   "model_agnostic_memory_token",
+  "model_agnostic_agent_token",
   "paystack_secret_key", "smtp_app_password",
 ]);
 

@@ -32,7 +32,7 @@ class AuthMiddleware
         $config = appConfig();
 
         $token = self::bearerToken() ?? ($_COOKIE['access_token'] ?? null);
-        $serviceToken = trim((string) ($config['model_agnostic_agent_token'] ?? ''));
+        $serviceToken = trim((string) (\App\Support\Settings::get('model_agnostic_agent_token') ?? ''));
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
         if ($serviceToken !== '' && self::bearerToken() !== null
             && hash_equals($serviceToken, self::bearerToken())

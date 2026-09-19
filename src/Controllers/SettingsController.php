@@ -35,7 +35,7 @@ class SettingsController
         'liveavatar_enabled', 'liveavatar_api_key', 'liveavatar_avatar_id', 'liveavatar_context_id', 'liveavatar_voice_id',
         'liveavatar_llm_bridge_secret', 'liveavatar_llm_configuration_id', 'liveavatar_sandbox_enabled',
         'integration_api_key', 'notification_email',
-        'model_agnostic_memory_url', 'model_agnostic_memory_token', 'model_agnostic_memory_key',
+        'model_agnostic_memory_url', 'model_agnostic_memory_token', 'model_agnostic_memory_key', 'model_agnostic_agent_token',
         'smtp_gmail_address', 'smtp_app_password', 'smtp_host', 'smtp_port', 'imap_host', 'mail_from', 'mail_from_name',
         'google_client_id',
         'google_places_api_key', 'google_place_id', 'google_review_placements', 'google_rating_published',
