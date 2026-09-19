@@ -41,7 +41,11 @@ class AiAgentEngine
     // provider, not a free tier, so its own timeout budget doesn't need the
     // generous headroom the free-tier legs below need.
     private const DEEPSEEK_CHAT_TIMEOUT_SECONDS = 15;
-    private const GEMINI_CHAT_TIMEOUT_SECONDS = 12;
+    // Was 12s; confirmed live in production 2026-09-19 that a normal
+    // tool-round-trip turn (Allie) can legitimately take longer than that on
+    // the forced-text final round — curl timed out with 0 bytes received,
+    // not a real Gemini error, and the whole turn fell through to Groq.
+    private const GEMINI_CHAT_TIMEOUT_SECONDS = 20;
     // Free-tier OpenRouter models are often slower than Gemini — reusing
     // Gemini's 12s budget here was cutting the fallback off mid-response
     // (curl reports the 200 status from the headers it did receive, but
