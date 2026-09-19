@@ -269,6 +269,8 @@ export type GoogleReview = {
   publishTime: string;
   googleMapsUri: string;
   placements?: Array<"landing" | "testimonials">;
+  /** Approved earlier but no longer returned by Google; shown from the copy saved at approval. */
+  archived?: boolean;
 };
 
 export type Inquiry = {
