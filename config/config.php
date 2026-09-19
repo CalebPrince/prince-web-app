@@ -52,6 +52,9 @@ if (!function_exists('appConfig')) {
                 'slack_webhook_url' => env('SLACK_WEBHOOK_URL'),
                 'mail_from' => env('MAIL_FROM', 'no-reply@princecaleb.dev'),
                 'mail_from_name' => env('MAIL_FROM_NAME', 'Prince Caleb'),
+                'model_agnostic_memory_url' => env('MODEL_AGNOSTIC_MEMORY_URL', 'http://localhost:8000'),
+                'model_agnostic_memory_token' => env('MODEL_AGNOSTIC_MEMORY_TOKEN', ''),
+                'model_agnostic_memory_key' => env('MODEL_AGNOSTIC_MEMORY_KEY', 'prince-caleb'),
             ];
         }
         return $config;

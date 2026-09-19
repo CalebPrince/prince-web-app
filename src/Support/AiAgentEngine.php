@@ -73,6 +73,7 @@ class AiAgentEngine
         ?callable $onGroqFailedGeneration = null,
         int $maxToolRounds = 2
     ): array {
+        $transcript = SharedAgentMemory::restore($transcript);
         $systemPrompt .= "\n\n" . SharedAgentTools::publicContactContext();
         $reply = null;
         $mode = 'fallback';
@@ -138,6 +139,7 @@ class AiAgentEngine
             }
         }
 
+        SharedAgentMemory::append($transcript, $reply);
         return ['reply' => $reply, 'mode' => $mode, 'provider' => $provider, 'ready' => $ready];
     }
 
