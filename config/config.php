@@ -55,6 +55,7 @@ if (!function_exists('appConfig')) {
                 'model_agnostic_memory_url' => env('MODEL_AGNOSTIC_MEMORY_URL', 'http://localhost:8000'),
                 'model_agnostic_memory_token' => env('MODEL_AGNOSTIC_MEMORY_TOKEN', ''),
                 'model_agnostic_memory_key' => env('MODEL_AGNOSTIC_MEMORY_KEY', 'prince-caleb'),
+                'model_agnostic_agent_token' => env('MODEL_AGNOSTIC_AGENT_TOKEN', ''),
             ];
         }
         return $config;

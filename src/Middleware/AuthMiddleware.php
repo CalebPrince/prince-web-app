@@ -10,6 +10,21 @@ use App\Support\Response;
 
 class AuthMiddleware
 {
+    /** Authenticate server-to-server agent chat without reusing a short-lived
+     * browser JWT. The token is accepted only on agent chat routes. */
+    public static function requireAgentAuth(): array
+    {
+        require_once dirname(__DIR__, 2) . '/config/config.php';
+        $config = appConfig();
+        $configured = trim((string) ($config['model_agnostic_agent_token'] ?? ''));
+        $provided = self::bearerToken();
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+        if ($configured !== '' && $provided !== null && hash_equals($configured, $provided)
+            && preg_match('#^/api/v1/admin/agents/[^/]+/chat$#', $path)) {
+            return ['id' => 'inteli-space-service', 'is_service' => true];
+        }
+        return self::requireAuth();
+    }
     /** Returns the authenticated user row, or halts the request with a 401. */
     public static function requireAuth(): array
     {
@@ -17,6 +32,13 @@ class AuthMiddleware
         $config = appConfig();
 
         $token = self::bearerToken() ?? ($_COOKIE['access_token'] ?? null);
+        $serviceToken = trim((string) ($config['model_agnostic_agent_token'] ?? ''));
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
+        if ($serviceToken !== '' && self::bearerToken() !== null
+            && hash_equals($serviceToken, self::bearerToken())
+            && preg_match('#^/api/v1/admin/agents/[^/]+/chat$#', $path)) {
+            return ['id' => 'inteli-space-service', 'is_service' => true];
+        }
         if (!$token) {
             Response::error('Not authenticated', 401);
         }
