@@ -20,7 +20,7 @@ class AuthMiddleware
         $provided = self::bearerToken();
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '';
         if ($configured !== '' && $provided !== null && hash_equals($configured, $provided)
-            && preg_match('#^/api/v1/admin/agents/[^/]+/chat$#', $path)) {
+            && preg_match('#^/api/v1/admin/(agents/[^/]+/chat|agent-names)$#', $path)) {
             return ['id' => 'inteli-space-service', 'is_service' => true];
         }
         return self::requireAuth();

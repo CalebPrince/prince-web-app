@@ -380,6 +380,22 @@ class SettingsController
         Response::json(['status' => 'saved']);
     }
 
+    /** Names used by the external Inteli-Space agent roster. */
+    public static function agentNames(): void
+    {
+        AuthMiddleware::requireAgentAuth();
+        $keys = [
+            'lisa', 'content', 'beacon', 'dossier', 'nurturer', 'proposal', 'arch', 'ada',
+            'chief', 'sketch', 'scout', 'radar', 'reel', 'chloe', 'wendy', 'allie', 'sage',
+        ];
+        $names = [];
+        foreach ($keys as $key) {
+            $value = Settings::get($key . '_assistant_name');
+            if ($value !== null && trim($value) !== '') $names[$key] = trim($value);
+        }
+        Response::json($names);
+    }
+
     /**
      * GET /api/v1/admin/email-template-defaults
      * The built-in copy for every template, shown as placeholders in the

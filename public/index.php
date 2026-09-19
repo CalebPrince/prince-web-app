@@ -248,6 +248,7 @@ $router->patch('/api/v1/admin/sage-chats/{id}', [SageController::class, 'markSee
 $router->delete('/api/v1/admin/sage-chats', [SageController::class, 'destroyAll']);
 $router->delete('/api/v1/admin/sage-chats/{id}', [SageController::class, 'destroy']);
 $router->get('/api/v1/admin/settings', [SettingsController::class, 'adminGet']);
+$router->get('/api/v1/admin/agent-names', [SettingsController::class, 'agentNames']);
 $router->get('/api/v1/admin/google-reviews', [GoogleReviewController::class, 'adminReviews']);
 $router->put('/api/v1/admin/google-reviews', [GoogleReviewController::class, 'updatePlacements']);
 $router->put('/api/v1/admin/settings', [SettingsController::class, 'adminUpdate']);
