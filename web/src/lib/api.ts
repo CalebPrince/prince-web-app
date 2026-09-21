@@ -420,10 +420,13 @@ export const api = {
   adminUploadFile: async (file: File): Promise<{ path: string }> => {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch(apiUrl("/api/v1/admin/uploads"), { method: "POST", body: formData });
+    const res = await fetch(apiUrl("/api/v1/admin/uploads"), { method: "POST", body: formData, credentials: "include" });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      throw new Error(body?.error ?? body?.errors?.join(" ") ?? res.statusText);
+      if (res.status === 413) {
+        throw new Error("Upload failed: the file is too large. Keep images under 5MB.");
+      }
+      throw new Error(body?.error ?? body?.errors?.join(" ") ?? (res.statusText || `Upload failed (HTTP ${res.status})`));
     }
     return res.json();
   },

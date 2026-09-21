@@ -21,6 +21,7 @@ export default function SocialDraftModal({
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   useEffect(() => {
     if (isOpen && draft) {
@@ -42,12 +43,15 @@ export default function SocialDraftModal({
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    setUploadError("");
     setIsUploading(true);
     try {
-      const { path } = await api.adminUploadFile(file);
-      setFormData(prev => ({ ...prev, image_url: path }));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Image upload failed.");
+      const result = await api.adminUploadFile(file);
+      if (!result?.path) throw new Error("Upload succeeded but no path was returned.");
+      setFormData(prev => ({ ...prev, image_url: result.path }));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err) || "Image upload failed.";
+      setUploadError(msg);
     } finally {
       setIsUploading(false);
     }
@@ -120,6 +124,13 @@ export default function SocialDraftModal({
           </button>
         </div>
         
+        {uploadError && (
+          <div className="px-4 pt-3">
+            <div className="rounded-md bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-500">
+              ⚠ {uploadError}
+            </div>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-4">
           <div>
             <label className="block text-sm font-semibold mb-1">Post (LinkedIn / Facebook / Instagram)</label>
@@ -149,10 +160,11 @@ export default function SocialDraftModal({
             <div className="mt-2 flex items-center gap-3">
               <label className="inline-flex cursor-pointer items-center rounded-md border border-hairline bg-bg-2 px-3 py-1.5 text-sm hover:bg-bg-3 transition-colors">
                 {isUploading ? "Uploading..." : "Upload image"}
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageUpload} disabled={isUploading} className="hidden" />
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" onChange={handleImageUpload} disabled={isUploading} className="hidden" />
               </label>
-              <span className="text-xs text-text-3">PNG, JPG or WebP, up to 5MB. Replaces the current image. Save or Approve to keep it.</span>
+              <span className="text-xs text-text-3">PNG, JPG, WebP, GIF or SVG, up to 5MB. Replaces the current image. Save or Approve to keep it.</span>
             </div>
+
           </div>
 
           {draft.research_notes && (
