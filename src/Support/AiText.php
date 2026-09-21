@@ -81,6 +81,10 @@ class AiText
         $chain = [
             ['deepseek', Settings::get('deepseek_api_key'), fn($k, $t) => self::callDeepSeek($k, $prompt, $systemInstruction, $t, $maxTokens)],
             ['gemini', Settings::get('gemini_api_key'), fn($k, $t) => self::callGemini($k, $prompt, $systemInstruction, $t, $maxTokens)],
+            // Paid-from-first-token like DeepSeek, so they sit ahead of the
+            // free-tier OpenRouter/Groq legs, the same order AiAgentEngine uses.
+            ['anthropic', Settings::get('anthropic_api_key'), fn($k, $t) => self::callAnthropic($k, $prompt, $systemInstruction, $t, $maxTokens)],
+            ['openai', Settings::get('openai_api_key'), fn($k, $t) => self::callOpenAi($k, $prompt, $systemInstruction, $t, $maxTokens)],
             ['openrouter', Settings::get('openrouter_api_key'), fn($k, $t) => self::callOpenRouter($k, $prompt, $systemInstruction, $t, $maxTokens)],
             ['groq', Settings::get('groq_api_key'), fn($k, $t) => self::callGroq($k, $prompt, $systemInstruction, $t, $maxTokens)],
         ];
@@ -199,6 +203,114 @@ class AiText
                 'DeepSeek returned no text (finishReason=%s) — the model may have spent the token budget before answering.',
                 $decoded['candidates'][0]['finishReason'] ?? $decoded['choices'][0]['finish_reason'] ?? 'unknown'
             );
+        }
+        return $text;
+    }
+
+    private static function callAnthropic(string $apiKey, string $prompt, ?string $system, int $timeout, int $maxTokens): ?string
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $payload = [
+            'model' => Settings::get('anthropic_model') ?: 'claude-sonnet-4-5-20250929',
+            'max_tokens' => $maxTokens,
+            'messages' => [['role' => 'user', 'content' => $prompt]],
+        ];
+        if ($system !== null) {
+            $payload['system'] = $system;
+        }
+
+        $ch = curl_init('https://api.anthropic.com/v1/messages');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'x-api-key: ' . $apiKey,
+                'anthropic-version: 2023-06-01',
+            ],
+            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_CONNECTTIMEOUT => min(self::CONNECT_TIMEOUT, $timeout),
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'AiText: Anthropic call failed: status=%s curl_error=%s body=%s',
+                $status,
+                $curlError !== '' ? $curlError : 'none',
+                is_string($response) ? substr($response, 0, 500) : 'n/a'
+            ));
+            self::$lastError = sprintf('Anthropic returned HTTP %s: %s', $status, is_string($response) ? substr($response, 0, 200) : 'no response');
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        $text = null;
+        foreach ($decoded['content'] ?? [] as $block) {
+            if (($block['type'] ?? '') === 'text' && !empty($block['text'])) {
+                $text = (string) $block['text'];
+                break;
+            }
+        }
+        if ($text === null) {
+            self::$lastError = sprintf('Anthropic returned no text (stop_reason=%s).', $decoded['stop_reason'] ?? 'unknown');
+        }
+        return $text;
+    }
+
+    private static function callOpenAi(string $apiKey, string $prompt, ?string $system, int $timeout, int $maxTokens): ?string
+    {
+        if (!function_exists('curl_init')) {
+            return null;
+        }
+
+        $messages = [];
+        if ($system !== null) {
+            $messages[] = ['role' => 'system', 'content' => $system];
+        }
+        $messages[] = ['role' => 'user', 'content' => $prompt];
+
+        $ch = curl_init('https://api.openai.com/v1/chat/completions');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_POSTFIELDS => json_encode([
+                'model' => Settings::get('openai_model') ?: 'gpt-4o-mini',
+                'messages' => $messages,
+                'max_tokens' => $maxTokens,
+            ]),
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_CONNECTTIMEOUT => min(self::CONNECT_TIMEOUT, $timeout),
+        ]);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+
+        if ($response === false || $status !== 200) {
+            error_log(sprintf(
+                'AiText: OpenAI call failed: status=%s curl_error=%s body=%s',
+                $status,
+                $curlError !== '' ? $curlError : 'none',
+                is_string($response) ? substr($response, 0, 500) : 'n/a'
+            ));
+            self::$lastError = sprintf('OpenAI returned HTTP %s: %s', $status, is_string($response) ? substr($response, 0, 200) : 'no response');
+            return null;
+        }
+
+        $decoded = json_decode($response, true);
+        $text = $decoded['choices'][0]['message']['content'] ?? null;
+        if ($text === null) {
+            self::$lastError = sprintf('OpenAI returned no text (finish_reason=%s).', $decoded['choices'][0]['finish_reason'] ?? 'unknown');
         }
         return $text;
     }
