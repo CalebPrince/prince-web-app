@@ -1976,6 +1976,12 @@ if (!in_array('image_publish_error', $socialPostDraftColumns, true)) {
 if (!in_array('research_notes', $socialPostDraftColumns, true)) {
     $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN research_notes TEXT');
 }
+$contentIdeaColumns = array_column($pdo->query('PRAGMA table_info(content_ideas)')->fetchAll(), 'name');
+foreach (['source_post_text', 'source_post_url'] as $col) {
+    if (!in_array($col, $contentIdeaColumns, true)) {
+        $pdo->exec("ALTER TABLE content_ideas ADD COLUMN {$col} TEXT");
+    }
+}
 
 // WhatsApp as a second automations channel, and phone on enrollments so a
 // step actually has somewhere to send it. Plain ADD COLUMN is enough here —

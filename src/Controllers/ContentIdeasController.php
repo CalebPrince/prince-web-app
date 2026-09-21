@@ -46,6 +46,8 @@ use App\Support\SharedAgentTools;
 class ContentIdeasController
 {
     private const PLATFORMS = ['linkedin', 'youtube', 'tiktok'];
+    private const POST_TEXT_KEYS = ['text', 'commentary', 'description', 'content', 'posttext', 'body'];
+    private const POST_URL_KEYS = ['posturl', 'linkedinurl', 'permalink', 'url'];
     private const STATUSES = ['idea', 'used', 'dismissed'];
     /** Hard structural ceiling: the plan itself is only 30 days, so more real
      *  posts than that can't each get their own day regardless of how many
@@ -95,13 +97,13 @@ class ContentIdeasController
         $pdo->beginTransaction();
         $pdo->exec('DELETE FROM content_ideas');
         $insert = $pdo->prepare(
-            'INSERT INTO content_ideas (day_number, platform, title, description, grounded, source_posted_at)
-             VALUES (?, ?, ?, ?, ?, ?)'
+            'INSERT INTO content_ideas (day_number, platform, title, description, grounded, source_posted_at, source_post_text, source_post_url)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
         foreach ($ideas as $idea) {
             $insert->execute([
                 $idea['day'], $idea['platform'], $idea['title'], $idea['description'], $idea['grounded'] ? 1 : 0,
-                $idea['source_posted_at'],
+                $idea['source_posted_at'], $idea['source_post_text'], $idea['source_post_url'],
             ]);
         }
         $pdo->commit();
@@ -273,13 +275,18 @@ class ContentIdeasController
                     if (!is_array($rawPost)) {
                         continue;
                     }
-                    $text = self::deepFindString($rawPost, ['text', 'commentary', 'description', 'content', 'posttext', 'body'], 500);
+                    $text = self::deepFindString($rawPost, self::POST_TEXT_KEYS, 500);
                     if ($text === null) {
                         continue;
                     }
                     $postedAt = self::deepFindString($rawPost, ['postedatiso', 'postedat', 'publishedat', 'postdate', 'timestamp', 'createdat', 'date'], 40);
                     $index = count($postsByIndex) + 1;
-                    $postsByIndex[$index] = ['page_url' => (string) $page['page_url'], 'posted_at' => $postedAt];
+                    $postsByIndex[$index] = [
+                        'page_url' => (string) $page['page_url'],
+                        'posted_at' => $postedAt,
+                        'text' => self::deepFindString($rawPost, self::POST_TEXT_KEYS, 1500),
+                        'url' => self::deepFindString($rawPost, self::POST_URL_KEYS, 500),
+                    ];
                     $pagePosts[] = ['index' => $index, 'text' => $text];
                     $remainingDays--;
                 }
@@ -305,6 +312,47 @@ class ContentIdeasController
         }
 
         return ['text' => implode("\n", $lines), 'postsByIndex' => $postsByIndex];
+    }
+
+    /**
+     * The real post an idea was grounded on. Ideas made after source_post_text
+     * existed carry it directly; older ones only kept source_posted_at, so
+     * those are matched back to the cached post with that same timestamp.
+     * Null when nothing can be tied to it, and the draft is then written from
+     * the idea alone.
+     *
+     * @param array<string,mixed> $idea a content_ideas row
+     * @return array{text:string,url:?string}|null
+     */
+    public static function sourcePostFor(\PDO $pdo, array $idea): ?array
+    {
+        $text = trim((string) ($idea['source_post_text'] ?? ''));
+        if ($text !== '') {
+            $url = trim((string) ($idea['source_post_url'] ?? ''));
+            return ['text' => $text, 'url' => $url !== '' ? $url : null];
+        }
+
+        $postedAt = trim((string) ($idea['source_posted_at'] ?? ''));
+        if ($postedAt === '') {
+            return null;
+        }
+        $rows = $pdo->query('SELECT findings_json FROM radar_tracked_page_findings')->fetchAll();
+        foreach ($rows as $row) {
+            foreach (json_decode((string) $row['findings_json'], true) ?: [] as $rawPost) {
+                if (!is_array($rawPost)) {
+                    continue;
+                }
+                $candidate = self::deepFindString($rawPost, ['postedatiso', 'postedat', 'publishedat', 'postdate', 'timestamp', 'createdat', 'date'], 40);
+                if ($candidate !== $postedAt) {
+                    continue;
+                }
+                $found = self::deepFindString($rawPost, self::POST_TEXT_KEYS, 1500);
+                if ($found !== null) {
+                    return ['text' => $found, 'url' => self::deepFindString($rawPost, self::POST_URL_KEYS, 500)];
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -382,6 +430,8 @@ class ContentIdeasController
             }
 
             $sourcePostedAt = null;
+            $sourcePostText = null;
+            $sourcePostUrl = null;
             if ($platform === 'linkedin') {
                 $sourceIndex = (int) ($item['source_post_index'] ?? 0);
                 if (!isset($postsByIndex[$sourceIndex]) || isset($usedPostIndices[$sourceIndex])) {
@@ -391,6 +441,8 @@ class ContentIdeasController
                 }
                 $usedPostIndices[$sourceIndex] = true;
                 $sourcePostedAt = $postsByIndex[$sourceIndex]['posted_at'];
+                $sourcePostText = $postsByIndex[$sourceIndex]['text'] ?? null;
+                $sourcePostUrl = $postsByIndex[$sourceIndex]['url'] ?? null;
             }
 
             $seenDays[$day] = true;
@@ -401,6 +453,8 @@ class ContentIdeasController
                 'description' => mb_substr($description, 0, 1000),
                 'grounded' => $grounded,
                 'source_posted_at' => $sourcePostedAt,
+                'source_post_text' => $sourcePostText,
+                'source_post_url' => $sourcePostUrl,
             ];
         }
 

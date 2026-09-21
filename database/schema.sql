@@ -846,6 +846,10 @@ CREATE TABLE IF NOT EXISTS content_ideas (
   description TEXT NOT NULL,
   grounded INTEGER NOT NULL DEFAULT 0,
   source_posted_at TEXT,
+  -- The real post this idea was grounded on, kept so a draft can be built from
+  -- it instead of only the idea's one-line title and angle.
+  source_post_text TEXT,
+  source_post_url TEXT,
   status TEXT NOT NULL DEFAULT 'idea' CHECK (status IN ('idea', 'used', 'dismissed')),
   generated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

@@ -473,8 +473,9 @@ class SocialDraftController
     public static function generateFromIdea(array $idea): ?array
     {
         $pdo = Database::get();
+        $source = ContentIdeasController::sourcePostFor($pdo, $idea);
         $research = WebResearch::search((string) ($idea['title'] ?? ''));
-        $result = AiText::generateWithProvider(self::promptForContentIdea($idea, $research), null, 20);
+        $result = AiText::generateWithProvider(self::promptForContentIdea($idea, $research, $source), null, 20);
         if ($result === null) {
             error_log('Social draft generation from content idea: all configured AI providers failed.');
             return null;
@@ -503,7 +504,7 @@ class SocialDraftController
             !empty($parsed['hashtags']) ? (string) $parsed['hashtags'] : null,
             $image['url'] ?? null,
             $result['provider'],
-            self::buildResearchNotes($parsed['angles'] ?? [], $research),
+            self::buildResearchNotes($parsed['angles'] ?? [], $research, $source),
         ]);
 
         return ['id' => (int) $pdo->lastInsertId()];
@@ -511,8 +512,9 @@ class SocialDraftController
 
     /**
      * @param array<int,array{title:string,link:string,snippet:string,date:?string}> $research
+     * @param array{text:string,url:?string}|null $source the real post this idea came from
      */
-    private static function promptForContentIdea(array $idea, array $research = []): string
+    private static function promptForContentIdea(array $idea, array $research = [], ?array $source = null): string
     {
         $base = 'You are drafting a social media post for Prince Caleb, a solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering. '
             . "Keep it authentic and professional, not salesy or hyperbolic — no invented statistics or false urgency.\n\n";
@@ -524,6 +526,7 @@ class SocialDraftController
 
         return $base . "Write a LinkedIn post based on this content idea from Caleb's own content calendar:\n"
             . "Title/hook: {$idea['title']}\nAngle: {$idea['description']}\n\n"
+            . self::sourcePromptBlock($source)
             . self::researchPromptBlock($research)
             . "Structure it in this order, as short lines with a blank line between each block:\n"
             . "1. HOOK: line 1 is a strong observation or a claim most people in the industry get wrong. "
@@ -549,6 +552,26 @@ class SocialDraftController
             . "- Do not put hashtags inside the post; they go in the hashtags field.\n"
             . "- Expand the idea into a real post, do not just restate the title and angle, and never invent "
             . "statistics, client names or results.\n\n{$jsonSpec}";
+    }
+
+    /**
+     * The real post this content idea was grounded on, so the draft builds on
+     * what that post actually said instead of only the idea's short title
+     * and angle.
+     *
+     * @param array{text:string,url:?string}|null $source
+     */
+    private static function sourcePromptBlock(?array $source): string
+    {
+        if ($source === null) {
+            return '';
+        }
+        return "Source post: this idea was grounded on a real LinkedIn post"
+            . ($source['url'] ? " ({$source['url']})" : '') . ". Its text is below. Build the new post on this "
+            . "post's core topic and point, then add Caleb's own perspective on it (the SHIFT). It must be an "
+            . "original post in different words and a different structure: do not copy sentences or phrases, "
+            . "do not mention or link the source, and do not present its claims or numbers as Caleb's own results.\n"
+            . "\"" . $source['text'] . "\"\n\n";
     }
 
     /**
@@ -580,10 +603,15 @@ class SocialDraftController
      *
      * @param mixed $angles
      * @param array<int,array{title:string,link:string,snippet:string,date:?string}> $research
+     * @param array{text:string,url:?string}|null $source
      */
-    private static function buildResearchNotes(mixed $angles, array $research): ?string
+    private static function buildResearchNotes(mixed $angles, array $research, ?array $source = null): ?string
     {
         $parts = [];
+        if ($source !== null) {
+            $parts[] = 'Based on the linked post' . ($source['url'] ? ': ' . $source['url'] : '')
+                . "\n\"" . mb_substr($source['text'], 0, 300) . (mb_strlen($source['text']) > 300 ? '...' : '') . "\"";
+        }
         if (is_array($angles)) {
             $lines = array_values(array_filter(array_map(
                 static fn($a) => is_string($a) ? trim($a) : '',
