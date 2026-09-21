@@ -537,14 +537,16 @@ class DashboardController
         AuthMiddleware::requireAuth();
         $pdo = Database::get();
         $insert = $pdo->prepare("INSERT OR REPLACE INTO notification_reads (notification_key, read_at) VALUES (?, datetime('now'))");
-        foreach (self::notificationItems($pdo) as $item) $insert->execute([$item['key']]);
+        // No limit: the feed shows only the newest 100, and marking just those
+        // left everything older unread, so it reappeared after every click.
+        foreach (self::notificationItems($pdo, null) as $item) $insert->execute([$item['key']]);
         $pdo->exec("UPDATE inquiries SET status='read' WHERE status='unread'");
         $pdo->exec("UPDATE chat_sessions SET admin_seen=1 WHERE admin_seen=0 AND (transcript_json!='[]' OR client_email IS NOT NULL)");
         $pdo->exec("UPDATE client_messages SET read_by_admin=1 WHERE sender_type='client'");
         Response::json(['status' => 'read']);
     }
 
-    private static function notificationItems(\PDO $pdo): array
+    private static function notificationItems(\PDO $pdo, ?int $limit = 100): array
     {
         $read = [];
         $exists = $pdo->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='notification_reads'")->fetchColumn();
@@ -581,6 +583,6 @@ class DashboardController
         if ($replyTable) foreach ($pdo->query("SELECT id,from_email,subject,classification,received_at FROM nurturer_replies WHERE status='review'") as $r)
             $add('nurturer_reply:'.$r['id'], 'Follow-up', 'Jason needs reply approval', $r['from_email'].' · '.$r['subject'], '/admin/agent-chat.html', $r['received_at'], 'warning');
         usort($items, static fn($a,$b) => strcmp($b['date'], $a['date']));
-        return array_slice($items, 0, 100);
+        return $limit === null ? $items : array_slice($items, 0, $limit);
     }
 }
