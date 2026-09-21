@@ -100,7 +100,11 @@ class AiText
         // the entire request — PHP's execution limit would kill it before the
         // fallback was ever tried, and the caller could only report that
         // nothing answered.
-        $perCall = max(self::MIN_PROVIDER_TIMEOUT, intdiv($timeoutSeconds, count($configured)));
+        // Shared over at most three legs, not all of them: with six providers
+        // configured the old even split gave every leg the 8s floor, which
+        // timed out a long generation on the first two before a working
+        // fallback was ever reached.
+        $perCall = max(self::MIN_PROVIDER_TIMEOUT, intdiv($timeoutSeconds, min(count($configured), 3)));
         $deadline = microtime(true) + $timeoutSeconds;
         // Every attempted leg's failure reason is kept, not just the last —
         // otherwise a later provider's failure silently overwrites an

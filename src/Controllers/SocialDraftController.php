@@ -475,7 +475,11 @@ class SocialDraftController
         $pdo = Database::get();
         $source = ContentIdeasController::sourcePostFor($pdo, $idea);
         $research = WebResearch::search((string) ($idea['title'] ?? ''));
-        $result = AiText::generateWithProvider(self::promptForContentIdea($idea, $research, $source), null, 20);
+        // A full structured post plus JSON needs far more than the 8s a short
+        // reply does, and a 20s budget shared across six providers timed out
+        // DeepSeek and Gemini before Anthropic was tried.
+        set_time_limit(120);
+        $result = AiText::generateWithProvider(self::promptForContentIdea($idea, $research, $source), null, 75);
         if ($result === null) {
             error_log('Social draft generation from content idea: all configured AI providers failed.');
             return null;
