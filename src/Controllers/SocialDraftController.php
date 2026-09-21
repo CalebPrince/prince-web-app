@@ -479,7 +479,7 @@ class SocialDraftController
         }
 
         $text = trim((string) preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['text']));
-        $parsed = json_decode($text, true);
+        $parsed = self::decodeModelJson($text);
         if (!is_array($parsed) || empty($parsed['content'])) {
             error_log('Social draft generation from content idea: could not parse JSON from model output: ' . substr($text, 0, 800));
             return null;
@@ -511,12 +511,48 @@ class SocialDraftController
         $base = 'You are drafting a social media post for Prince Caleb, a solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering. '
             . "Keep it authentic and professional, not salesy or hyperbolic — no invented statistics or false urgency.\n\n";
         $base .= SharedAgentTools::publicContactContext() . "\n\n";
-        $jsonSpec = 'Return JSON only: {"content": "2-4 sentence post for LinkedIn", '
+        $jsonSpec = 'Return JSON only: {"content": "the full LinkedIn post, with every line break written as \n", '
             . '"short_content": "a punchier version under 260 characters", '
             . '"hashtags": "3-5 relevant hashtags separated by spaces"} — no markdown fences, no commentary.';
 
         return $base . "Write a LinkedIn post based on this content idea from Caleb's own content calendar:\n"
             . "Title/hook: {$idea['title']}\nAngle: {$idea['description']}\n\n"
-            . "Expand it into a real post — don't just restate the title and angle verbatim.\n\n{$jsonSpec}";
+            . "Format it the way high-engagement LinkedIn posts are written, not as one paragraph of plain text:\n"
+            . "- Line 1 is a hook that stops the scroll: a bold claim, a surprising fact, or a sharp question. "
+            . "Under 12 words, and it must make sense on its own because LinkedIn cuts the post off after it.\n"
+            . "- Then a blank line. Write in very short paragraphs of 1 or 2 sentences, each separated by a blank line. "
+            . "Lots of white space, never a wall of text.\n"
+            . "- Somewhere in the middle give the reader something concrete to take away: 3 to 5 short points "
+            . "(each on its own line, starting with a simple dash or a number), a before and after, or a tiny "
+            . "example from real work.\n"
+            . "- Conversational first person, plain words, like Caleb talking to a business owner. No corporate jargon.\n"
+            . "- Finish with one specific question that invites business owners to reply in the comments.\n"
+            . "- 900 to 1,300 characters in total. No emojis, no em dashes, no bold or markdown symbols, and avoid "
+            . "parentheses and square brackets (LinkedIn's API can cut a post off at them). Number lists as '1.' not '1)'. "
+            . "Do not put hashtags inside the post; they go in the hashtags field.\n"
+            . "Expand the idea into a real post, do not just restate the title and angle, and never invent "
+            . "statistics, client names or results.\n\n{$jsonSpec}";
+    }
+
+    /**
+     * Decodes the model's JSON reply. A multi-line post makes models emit raw
+     * newlines inside the "content" string, which is invalid JSON, so a first
+     * failure retries with newlines inside string values escaped.
+     *
+     * @return array<string,mixed>|null
+     */
+    private static function decodeModelJson(string $text): ?array
+    {
+        $parsed = json_decode($text, true);
+        if (is_array($parsed)) {
+            return $parsed;
+        }
+        $fixed = preg_replace_callback(
+            '/"(?:[^"\\\\]|\\\\.)*"/s',
+            static fn(array $m): string => str_replace(["\r\n", "\n", "\r", "\t"], ['\n', '\n', '\n', ' '], $m[0]),
+            $text
+        );
+        $parsed = is_string($fixed) ? json_decode($fixed, true) : null;
+        return is_array($parsed) ? $parsed : null;
     }
 }
