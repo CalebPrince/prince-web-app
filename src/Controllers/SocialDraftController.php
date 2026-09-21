@@ -295,9 +295,12 @@ class SocialDraftController
      * the PUT goes through Composio's proxy passing binary_body.url, which
      * has Composio fetch our public image URL itself and upload it with the
      * token attached server-side, rather than us handling raw bytes at all.
-     * Not yet confirmed against a live account — both the initialize
-     * response's field nesting and the proxy's binary_body support are read
-     * from Composio's docs, not a real response. Still calls error_log() at
+     * Confirmed against a live account 2026-09-21 (draft #451): the
+     * initialize response nests the urn/upload url directly under `data`
+     * (no `response_dict`/`value` wrapper) and uses snake_case `upload_url`,
+     * not `uploadUrl` — the camelCase-only check was silently treating every
+     * successful initialize call as a failure and skipping the PUT entirely,
+     * so no post ever actually got an image attached. Still calls error_log() at
      * each step, but that turned out not to be reliable evidence on its own:
      * a real draft published with a real image_url and got a real
      * linkedin_post_urn back with zero matching log entries anywhere
@@ -331,7 +334,7 @@ class SocialDraftController
             ?? $init['value']
             ?? $init['data']
             ?? [];
-        $uploadUrl = $value['uploadUrl'] ?? null;
+        $uploadUrl = $value['uploadUrl'] ?? $value['upload_url'] ?? null;
         $urn = $value['image'] ?? null;
         if (empty($uploadUrl) || empty($urn)) {
             self::$lastImageError = 'Initialize response missing uploadUrl/image: ' . mb_substr(json_encode($init) ?: '', 0, 1200);
