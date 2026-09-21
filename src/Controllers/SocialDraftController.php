@@ -15,6 +15,7 @@ use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
 use App\Support\SocialImage;
+use App\Support\WebResearch;
 use App\Support\WhatsAppNotifier;
 
 /**
@@ -472,7 +473,8 @@ class SocialDraftController
     public static function generateFromIdea(array $idea): ?array
     {
         $pdo = Database::get();
-        $result = AiText::generateWithProvider(self::promptForContentIdea($idea), null, 20);
+        $research = WebResearch::search((string) ($idea['title'] ?? ''));
+        $result = AiText::generateWithProvider(self::promptForContentIdea($idea, $research), null, 20);
         if ($result === null) {
             error_log('Social draft generation from content idea: all configured AI providers failed.');
             return null;
@@ -491,7 +493,7 @@ class SocialDraftController
         }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, image_url, ai_provider) VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO social_post_drafts (source_type, source_id, content, short_content, hashtags, image_url, ai_provider, research_notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             'content_idea',
@@ -501,22 +503,28 @@ class SocialDraftController
             !empty($parsed['hashtags']) ? (string) $parsed['hashtags'] : null,
             $image['url'] ?? null,
             $result['provider'],
+            self::buildResearchNotes($parsed['angles'] ?? [], $research),
         ]);
 
         return ['id' => (int) $pdo->lastInsertId()];
     }
 
-    private static function promptForContentIdea(array $idea): string
+    /**
+     * @param array<int,array{title:string,link:string,snippet:string,date:?string}> $research
+     */
+    private static function promptForContentIdea(array $idea, array $research = []): string
     {
         $base = 'You are drafting a social media post for Prince Caleb, a solo developer who builds AI voice agents, chatbots, and business automations on 12+ years of web & mobile engineering. '
             . "Keep it authentic and professional, not salesy or hyperbolic — no invented statistics or false urgency.\n\n";
         $base .= SharedAgentTools::publicContactContext() . "\n\n";
         $jsonSpec = 'Return JSON only: {"content": "the full LinkedIn post, with every line break written as \n", '
+            . '"angles": ["3 to 4 short lines, each one a prevailing take from the research, saying which one the post is built on"], '
             . '"short_content": "a punchier version under 260 characters", '
             . '"hashtags": "3-5 relevant hashtags separated by spaces"} — no markdown fences, no commentary.';
 
         return $base . "Write a LinkedIn post based on this content idea from Caleb's own content calendar:\n"
             . "Title/hook: {$idea['title']}\nAngle: {$idea['description']}\n\n"
+            . self::researchPromptBlock($research)
             . "Structure it in this order, as short lines with a blank line between each block:\n"
             . "1. HOOK: line 1 is a strong observation or a claim most people in the industry get wrong. "
             . "Under 15 words, and it must work alone because LinkedIn cuts the post off after the first lines.\n"
@@ -541,6 +549,57 @@ class SocialDraftController
             . "- Do not put hashtags inside the post; they go in the hashtags field.\n"
             . "- Expand the idea into a real post, do not just restate the title and angle, and never invent "
             . "statistics, client names or results.\n\n{$jsonSpec}";
+    }
+
+    /**
+     * @param array<int,array{title:string,link:string,snippet:string,date:?string}> $research
+     */
+    private static function researchPromptBlock(array $research): string
+    {
+        if ($research === []) {
+            return '';
+        }
+        $lines = [];
+        foreach ($research as $i => $r) {
+            $lines[] = ($i + 1) . '. ' . $r['title'] . ($r['date'] ? ' (' . $r['date'] . ')' : '')
+                . ($r['snippet'] !== '' ? ': ' . $r['snippet'] : '');
+        }
+        return "Research: this is what people are currently saying about the topic (live web search). "
+            . "Use it to find the strongest, most useful current take. Build the post on the best perspective, or "
+            . "on a clear stance against the consensus when Caleb's own work supports it, and write it as his own "
+            . "view in first person ('I think', 'In my experience'). Do not copy phrasing from any result, do not "
+            . "quote anyone, and do not state a fact from a result that isn't in the snippet. Never invent a "
+            . "personal story or client result for Caleb; opinions are fine, made-up experiences are not.\n"
+            . implode("\n", $lines) . "\n\n";
+    }
+
+    /**
+     * The "angles considered" note shown with the draft so Caleb can see what
+     * the post was built on before approving: the model's own summary of the
+     * takes it weighed, then the source links it searched.
+     *
+     * @param mixed $angles
+     * @param array<int,array{title:string,link:string,snippet:string,date:?string}> $research
+     */
+    private static function buildResearchNotes(mixed $angles, array $research): ?string
+    {
+        $parts = [];
+        if (is_array($angles)) {
+            $lines = array_values(array_filter(array_map(
+                static fn($a) => is_string($a) ? trim($a) : '',
+                $angles
+            )));
+            if ($lines !== []) {
+                $parts[] = "Angles considered:\n- " . implode("\n- ", $lines);
+            }
+        }
+        if ($research !== []) {
+            $parts[] = "Sources searched:\n" . implode("\n", array_map(
+                static fn(array $r): string => '- ' . $r['title'] . ' ' . $r['link'],
+                $research
+            ));
+        }
+        return $parts === [] ? null : implode("\n\n", $parts);
     }
 
     /**

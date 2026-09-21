@@ -1973,6 +1973,9 @@ $socialPostDraftColumns = array_column($pdo->query('PRAGMA table_info(social_pos
 if (!in_array('image_publish_error', $socialPostDraftColumns, true)) {
     $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN image_publish_error TEXT');
 }
+if (!in_array('research_notes', $socialPostDraftColumns, true)) {
+    $pdo->exec('ALTER TABLE social_post_drafts ADD COLUMN research_notes TEXT');
+}
 
 // WhatsApp as a second automations channel, and phone on enrollments so a
 // step actually has somewhere to send it. Plain ADD COLUMN is enough here —

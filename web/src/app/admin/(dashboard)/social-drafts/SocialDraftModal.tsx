@@ -155,6 +155,19 @@ export default function SocialDraftModal({
             </div>
           </div>
 
+          {draft.research_notes && (
+            <div>
+              <label className="block text-sm font-semibold mb-1">Angles considered</label>
+              <pre className="whitespace-pre-wrap break-words rounded-md border border-hairline bg-bg-3 p-3 text-xs text-text-2 font-sans">
+                {draft.research_notes}
+              </pre>
+              <div className="text-xs text-text-3 mt-1">
+                What the AI found people saying about this topic and which take it built the post on. Check the
+                post still says what you actually think before approving.
+              </div>
+            </div>
+          )}
+
           {draft.linkedin_post_urn && (
             <div>
               <label className="block text-sm font-semibold mb-1">LinkedIn post URN</label>

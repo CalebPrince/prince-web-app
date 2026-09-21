@@ -950,6 +950,9 @@ CREATE TABLE IF NOT EXISTS social_post_drafts (
   -- with a real image_url and a real linkedin_post_urn but zero matching
   -- log entries anywhere).
   image_publish_error TEXT,
+  -- The takes the draft was built on plus the sources searched, so Caleb can
+  -- review the angle before approving. NULL when no search key was set.
+  research_notes TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
