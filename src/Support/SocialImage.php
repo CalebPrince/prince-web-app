@@ -61,7 +61,17 @@ class SocialImage
         // sets DOCUMENT_ROOT to an empty string rather than leaving it unset,
         // so `??` never falls back and every path below silently resolves
         // against the filesystem root instead of the app.
-        $docRoot = !empty($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : dirname(__DIR__, 2) . '/public';
+        //
+        // The fallback itself must also prefer public_html/: production
+        // deploys public/'s contents into public_html/ (see deploy.yml), so
+        // there is no literal public/ folder on the server. Falling back to
+        // it made every cron-generated card fail the font check and return
+        // null, so no draft made by the cron ever carried an image (found
+        // 2026-09-21 from draft #400 having an empty image_url).
+        $appRoot = dirname(__DIR__, 2);
+        $docRoot = !empty($_SERVER['DOCUMENT_ROOT'])
+            ? $_SERVER['DOCUMENT_ROOT']
+            : (is_dir($appRoot . '/public_html') ? $appRoot . '/public_html' : $appRoot . '/public');
         $fontDir = $docRoot . '/fonts/social-template/';
         $fBlack = $fontDir . 'ArchivoBlack-Regular.ttf';
         $fMonoBold = $fontDir . 'JetBrainsMono-Bold.ttf';
