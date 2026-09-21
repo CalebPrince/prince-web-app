@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: AdminContentIdea[] }) {
   const [ideas, setIdeas] = useState<AdminContentIdea[]>(initialIdeas);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [draftingId, setDraftingId] = useState<number | null>(null);
   const router = useRouter();
 
   const handleGenerate = async () => {
@@ -34,6 +35,8 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
   };
 
   const handleTurnIntoDraft = async (id: number) => {
+    if (draftingId !== null) return;
+    setDraftingId(id);
     try {
       await api.adminCreateDraftFromIdea(id);
       // Update status locally to 'used'
@@ -43,6 +46,7 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Failed to create draft.");
+      setDraftingId(null);
     }
   };
 
@@ -131,13 +135,23 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
                     
                     <div className="flex items-center gap-2">
                       {idea.status === 'idea' && idea.platform === 'linkedin' && (
+                        <>
                         <button 
                           onClick={() => handleTurnIntoDraft(idea.id)}
-                          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent bg-bg-3 hover:bg-bg-3/80 text-text h-7 px-3 gap-1.5"
+                          disabled={draftingId !== null}
+                          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent bg-bg-3 hover:bg-bg-3/80 text-text h-7 px-3 gap-1.5 disabled:pointer-events-none disabled:opacity-60"
                         >
-                          <FileText className="w-3.5 h-3.5" />
-                          Turn into draft
+                          {draftingId === idea.id ? (
+                            <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-accent border-t-transparent"></div>
+                          ) : (
+                            <FileText className="w-3.5 h-3.5" />
+                          )}
+                          {draftingId === idea.id ? "Turning into draft..." : "Turn into draft"}
                         </button>
+                        {draftingId === idea.id && (
+                          <span className="text-xs text-text-3">Researching and writing, this can take up to a minute.</span>
+                        )}
+                        </>
                       )}
                       
                       {idea.status === 'idea' && (
