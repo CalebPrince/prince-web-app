@@ -2037,4 +2037,14 @@ if ($automationsTableSql !== '' && !str_contains($automationsTableSql, 'pipeline
     echo "Rebuilt automations — trigger_event now allows 'pipeline_stage_changed'.\n";
 }
 
+// A content idea whose draft was deleted stayed "used" forever. Give those
+// back so they can be drafted again (SocialDraftController::destroy() now does
+// this on delete; this fixes the ones already stranded).
+$pdo->exec(
+    "UPDATE content_ideas SET status = 'idea'
+     WHERE status = 'used' AND platform = 'linkedin'
+       AND NOT EXISTS (SELECT 1 FROM social_post_drafts d
+                       WHERE d.source_type = 'content_idea' AND d.source_id = content_ideas.id)"
+);
+
 echo "Schema applied.\n";

@@ -403,7 +403,21 @@ class SocialDraftController
     {
         $user = AuthMiddleware::requireAuth();
         $id = (int) ($params['id'] ?? 0);
-        Database::get()->prepare('DELETE FROM social_post_drafts WHERE id = ?')->execute([$id]);
+        $pdo = Database::get();
+        $stmt = $pdo->prepare('SELECT source_type, source_id, status FROM social_post_drafts WHERE id = ?');
+        $stmt->execute([$id]);
+        $draft = $stmt->fetch();
+        $pdo->prepare('DELETE FROM social_post_drafts WHERE id = ?')->execute([$id]);
+        // Give the idea back so it can be drafted again, unless the post already
+        // went out or another draft still uses it.
+        if ($draft && $draft['source_type'] === 'content_idea' && $draft['status'] !== 'approved') {
+            $pdo->prepare(
+                "UPDATE content_ideas SET status = 'idea'
+                 WHERE id = ? AND status = 'used'
+                   AND NOT EXISTS (SELECT 1 FROM social_post_drafts d
+                                   WHERE d.source_type = 'content_idea' AND d.source_id = content_ideas.id)"
+            )->execute([(int) $draft['source_id']]);
+        }
         ActivityLog::log($user, 'deleted', 'social_draft', $id);
         Response::json(['status' => 'deleted']);
     }
@@ -436,13 +450,32 @@ class SocialDraftController
 
         $dayNumber = (int) ((strtotime(gmdate('Y-m-d')) - strtotime((string) $planStart)) / 86400) + 1;
 
+        // An idea is available when it is still unused, or was used but its
+        // draft has since been deleted (a deleted draft used to leave its idea
+        // stuck on "used" forever, so it could never be drafted again).
+        $available = "(status = 'idea' OR (status = 'used' AND NOT EXISTS (
+            SELECT 1 FROM social_post_drafts d
+            WHERE d.source_type = 'content_idea' AND d.source_id = content_ideas.id)))";
+
         $stmt = $pdo->prepare(
-            "SELECT * FROM content_ideas WHERE day_number = ? AND platform = 'linkedin' AND status = 'idea' LIMIT 1"
+            "SELECT * FROM content_ideas WHERE day_number = ? AND platform = 'linkedin' AND {$available} LIMIT 1"
         );
         $stmt->execute([$dayNumber]);
         $idea = $stmt->fetch();
+
+        // Nothing for today's date (a YouTube/TikTok day, or that idea already
+        // has a draft): go back to the beginning of the plan and take the
+        // earliest LinkedIn idea that was never drafted, for as long as the
+        // 30-day plan is still running. Once the plan's 30 days are over,
+        // stop rather than keep drafting from a stale plan.
+        if (!$idea && $dayNumber >= 1 && $dayNumber <= 30) {
+            $idea = $pdo->query(
+                "SELECT * FROM content_ideas WHERE platform = 'linkedin' AND {$available}
+                 ORDER BY day_number ASC LIMIT 1"
+            )->fetch();
+        }
         if (!$idea) {
-            error_log("Social draft generation: no unused LinkedIn idea for today (plan day {$dayNumber}) — either it's a YouTube day, already drafted, or outside the current 30-day plan.");
+            error_log("Social draft generation: no unused LinkedIn idea left to draft (plan day {$dayNumber}) — every LinkedIn idea has a draft, or the 30-day plan is over. Generate a new plan in Admin -> Content Ideas.");
             return null;
         }
 
