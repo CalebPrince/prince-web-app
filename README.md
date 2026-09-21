@@ -2141,7 +2141,10 @@ One-time setup on a new host:
     fires if a Make.com webhook URL is set in Admin -> Settings):
     `/usr/local/bin/php /home/<cpanel-user>/database/send_stale_lead_alerts.php > /dev/null`
 4e. Add a fifth cron job (once a day) for AI social post drafts (only
-    fires if enabled in Admin -> Settings -> Content):
+    fires if enabled in Admin -> Settings -> Content). It drafts the LinkedIn
+    idea for today's plan day, or the earliest undrafted one when today has
+    none, and once the 30-day Content Ideas plan runs out it generates the
+    next plan itself and sends a WhatsApp/email reminder:
     `/usr/local/bin/php /home/<cpanel-user>/database/generate_social_drafts.php > /dev/null`
 4f. Add a sixth cron job (every 5 minutes) for the uptime monitors
     (`/admin/sites` shows no data without it). Since 2026-09-12 this same run

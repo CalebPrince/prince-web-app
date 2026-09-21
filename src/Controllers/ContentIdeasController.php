@@ -8,8 +8,11 @@ use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AiText;
 use App\Support\Database;
+use App\Support\Mailer;
 use App\Support\Response;
+use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\WhatsAppNotifier;
 
 /**
  * 30-day LinkedIn/YouTube/TikTok content-idea planning list (Admin ->
@@ -74,6 +77,26 @@ class ContentIdeasController
     public static function generate(): void
     {
         $user = AuthMiddleware::requireAuth();
+
+        $result = self::regeneratePlan();
+        if (!$result['ok']) {
+            Response::error((string) $result['error'], 502);
+        }
+
+        ActivityLog::log($user, 'generated', 'content_ideas', null, '30-day content plan');
+
+        self::index();
+    }
+
+    /**
+     * Builds and saves a fresh 30-day plan, replacing the old one. Shared by the
+     * admin button and the daily social draft cron, which regenerates
+     * automatically once the previous plan's 30 days are over.
+     *
+     * @return array{ok:bool,error:?string,count:int,linkedin:int}
+     */
+    public static function regeneratePlan(): array
+    {
         $pdo = Database::get();
 
         // With only DeepSeek and Gemini funded, a 45s budget gives each leg
@@ -86,12 +109,12 @@ class ContentIdeasController
         $built = self::buildPrompt($pdo);
         $text = AiText::generate($built['text'], self::systemInstruction(), 100);
         if ($text === null) {
-            Response::error('Could not generate content ideas — ' . (AiText::lastError() ?? 'no AI provider answered.'), 502);
+            return ['ok' => false, 'error' => 'Could not generate content ideas — ' . (AiText::lastError() ?? 'no AI provider answered.'), 'count' => 0, 'linkedin' => 0];
         }
 
         $ideas = self::parseIdeas((string) $text, $built['postsByIndex']);
         if ($ideas === null) {
-            Response::error('The AI response could not be parsed into a 30-day plan. Try generating again.', 502);
+            return ['ok' => false, 'error' => 'The AI response could not be parsed into a 30-day plan. Try generating again.', 'count' => 0, 'linkedin' => 0];
         }
 
         $pdo->beginTransaction();
@@ -108,9 +131,72 @@ class ContentIdeasController
         }
         $pdo->commit();
 
-        ActivityLog::log($user, 'generated', 'content_ideas', null, '30-day content plan');
+        return [
+            'ok' => true,
+            'error' => null,
+            'count' => count($ideas),
+            'linkedin' => count(array_filter($ideas, static fn(array $i): bool => $i['platform'] === 'linkedin')),
+        ];
+    }
 
-        self::index();
+    /**
+     * Called by the daily social draft cron. When there is no plan yet, or the
+     * current one has run its 30 days (day 1 is the date it was generated),
+     * generates the next one automatically and tells Caleb, so drafting carries
+     * on without anyone remembering to press Generate.
+     *
+     * @return string|null a one-line description of what happened, or null when the plan is still running
+     */
+    public static function refreshPlanIfExpired(): ?string
+    {
+        $pdo = Database::get();
+        $planStart = $pdo->query('SELECT MIN(date(generated_at)) FROM content_ideas')->fetchColumn();
+        $expired = empty($planStart)
+            || ((int) ((strtotime(gmdate('Y-m-d')) - strtotime((string) $planStart)) / 86400) + 1) > self::MAX_DAYS;
+        if (!$expired) {
+            return null;
+        }
+
+        $result = self::regeneratePlan();
+        if (!$result['ok']) {
+            error_log('Content plan auto-refresh failed: ' . $result['error']);
+            self::notifyOwner(
+                'Content plan could not refresh',
+                'The 30-day content plan ended and the automatic refresh failed: ' . $result['error']
+                . ' Press Generate 30-day plan in Content Ideas to try again. Drafting is paused until then.'
+            );
+            return 'Plan expired; automatic refresh failed: ' . $result['error'];
+        }
+
+        self::notifyOwner(
+            'New 30-day content plan is ready',
+            "A new 30-day content plan was generated automatically with {$result['linkedin']} LinkedIn ideas out of "
+            . "{$result['count']}. Drafting starts from it today. Turn into draft and the daily draft cron both use it now."
+        );
+        return "Plan expired; generated a new one ({$result['linkedin']} LinkedIn ideas).";
+    }
+
+    /** WhatsApp (owner alert) plus an email backup; never throws. */
+    private static function notifyOwner(string $reason, string $summary): void
+    {
+        try {
+            $link = 'https://princecaleb.dev/admin/content-ideas';
+            $body = $reason . "\n\n" . $summary . "\n\n" . $link;
+            if (WhatsAppNotifier::isOwnerConfigured()) {
+                WhatsAppNotifier::sendOwnerAlert($body, [
+                    'name' => 'Content ideas',
+                    'reason' => $reason,
+                    'summary' => $summary,
+                    'message' => mb_substr($body, 0, 900),
+                ]);
+            }
+            $to = Settings::get('notification_email') ?: Settings::get('social_email');
+            if ($to) {
+                Mailer::send($to, $reason, $body);
+            }
+        } catch (\Throwable $e) {
+            error_log('Content plan notification failed: ' . $e->getMessage());
+        }
     }
 
     /** PATCH /api/v1/admin/content-ideas/{id} — body: {status: 'idea'|'used'|'dismissed'} */

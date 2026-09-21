@@ -9,12 +9,21 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
+use App\Controllers\ContentIdeasController;
 use App\Controllers\SocialDraftController;
 use App\Support\Settings;
 
 if (Settings::get('social_draft_enabled') !== '1') {
     echo "Social post draft generation is disabled.\n";
     exit;
+}
+
+// Once the 30-day plan has run out, generate the next one (and notify Caleb)
+// before deciding what to draft, so drafting never stalls waiting for a manual
+// Generate click.
+$planNote = ContentIdeasController::refreshPlanIfExpired();
+if ($planNote !== null) {
+    echo $planNote . "\n";
 }
 
 $frequency = Settings::get('social_draft_frequency') ?: 'daily';
