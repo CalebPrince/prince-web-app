@@ -890,6 +890,24 @@ export default function SettingsClient({
                 ...plannedMarketing.map(() => "not_created"),
               ])}
             />
+            {catalog.some((t) => t.category === "MARKETING") && (
+              <div className="rounded-lg border border-hairline p-3 text-sm space-y-1">
+                <div className="text-xs text-text-3">
+                  Built marketing templates. Their Create, Refresh and other buttons are on their
+                  own cards in the list above.
+                </div>
+                {catalog
+                  .filter((t) => t.category === "MARKETING")
+                  .map((t) => (
+                    <div key={t.key} className="flex items-center justify-between gap-2">
+                      <span className="text-text">{t.label}</span>
+                      <span className={t.status === "approved" ? "text-green-500" : t.status === "rejected" ? "text-red-400" : "text-text-2"}>
+                        {t.status}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
             <div className="space-y-3">
               {plannedMarketing.map((m) => (
                 <div key={m.label} className="rounded-lg border border-hairline p-4 space-y-1">
