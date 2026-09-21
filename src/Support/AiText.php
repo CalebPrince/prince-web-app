@@ -113,16 +113,20 @@ class AiText
         // outage.
         $failures = [];
 
-        foreach ($configured as [$name, $key, $call]) {
+        $legCount = count($configured);
+        foreach ($configured as $position => [$name, $key, $call]) {
+            // Every configured provider gets a real attempt: a leg's time is
+            // whatever is left after reserving the minimum for the legs still
+            // behind it, never less than the minimum itself. The budget used
+            // to cut the chain off ("ran out of time before trying ..."),
+            // which left working keys untried while earlier ones timed out.
             $remaining = (int) floor($deadline - microtime(true));
-            if ($remaining < self::MIN_PROVIDER_TIMEOUT) {
-                $failures[] = sprintf('ran out of time before trying %s (%ds budget)', $name, $timeoutSeconds);
-                break;
-            }
+            $reserve = self::MIN_PROVIDER_TIMEOUT * ($legCount - $position - 1);
+            $legTimeout = max(self::MIN_PROVIDER_TIMEOUT, min($perCall, $remaining - $reserve));
 
             $startedAt = microtime(true);
             self::$lastError = null;
-            $text = $call($key, min($perCall, $remaining));
+            $text = $call($key, $legTimeout);
 
             if ($text !== null) {
                 // OpenRouter fronts many underlying models, so report the
