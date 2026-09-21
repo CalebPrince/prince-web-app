@@ -402,18 +402,26 @@ class SocialDraftController
     }
 
     /**
-     * Confirmed against a live account (2026-08-08): LinkedIn's Posts API
-     * returns the new post's ID only in the x-restli-id response header, not
-     * the JSON body — Composio surfaces it as data.x_restli_id, already
-     * formatted as a full share URN (e.g. "urn:li:share:749..."), which is
-     * exactly the shape RadarController's LINKEDIN_GET_SHARE_STATISTICS
-     * lookup expects for its shareUrn parameter. The other keys are kept as
-     * a fallback in case Composio's shape varies by tool/account.
+     * Confirmed against a live account (2026-09-21, draft #457/db id 21):
+     * LinkedIn's Posts API returns the new post's ID only in the
+     * x-restli-id response header, not the JSON body (data is "" on a 201).
+     * Since publishToLinkedIn() now calls executeProxy() directly rather
+     * than the old managed tool, Composio surfaces response headers under
+     * result.headers (hyphenated key, e.g. "x-restli-id"), not data.
+     * Already formatted as a full share URN (e.g. "urn:li:share:749..."),
+     * which is exactly the shape RadarController's
+     * LINKEDIN_GET_SHARE_STATISTICS lookup expects for its shareUrn
+     * parameter. The data/top-level keys are kept as a fallback in case
+     * Composio ever returns a non-empty body instead.
      *
-     * @param array<string,mixed> $result Composio::executeTool()'s decoded response
+     * @param array<string,mixed> $result Composio::executeProxy()'s decoded response
      */
     private static function extractPostUrn(array $result): ?string
     {
+        $headerUrn = $result['headers']['x-restli-id'] ?? null;
+        if (is_string($headerUrn) && $headerUrn !== '') {
+            return $headerUrn;
+        }
         foreach (['x_restli_id', 'id', 'postId', 'post_id', 'urn', 'shareUrn', 'activityUrn'] as $key) {
             $value = $result['data'][$key] ?? $result[$key] ?? null;
             if (is_string($value) && $value !== '') {
