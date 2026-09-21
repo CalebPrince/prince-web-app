@@ -9,7 +9,7 @@ import {
   Languages, Bot, Contact, Inbox, Bell, GitBranch, FileCheck, Target, Map,
   Mail, Workflow, Mic, Sparkles, CalendarCheck, CreditCard, Receipt, Wallet,
   Tag, Activity, AudioLines, ListChecks, History, AlertTriangle, Settings,
-  LogOut, ExternalLink, ShieldAlert, Compass,
+  LogOut, ExternalLink, ShieldAlert, Compass, MessageSquareHeart,
 } from "lucide-react";
 import { adminApi, postJson } from "@/lib/api";
 
@@ -58,6 +58,7 @@ const navigation = [
       { name: "Talk to Agents", href: "/admin/agent-chat", icon: Mic },
       { name: "Sage Chats", href: "/admin/sage-chats", icon: Sparkles },
       { name: "Allie Reviews", href: "/admin/allie-evaluations", icon: Compass },
+      { name: "Wendy", href: "/admin/wendy", icon: MessageSquareHeart },
     ],
   },
   {

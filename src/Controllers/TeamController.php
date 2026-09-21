@@ -390,8 +390,8 @@ class TeamController
                         : self::wendyStatusLabel($wendyOpenObservations, $wendyUnresolvedPatterns)),
                 'stat_value' => $wendyOpenObservations,
                 'stat_label' => 'open observations',
-                'manage_url' => '/admin/agent-chat',
-                'manage_label' => 'Talk to Wendy',
+                'manage_url' => '/admin/wendy',
+                'manage_label' => "See Wendy's findings",
             ],
             [
                 'key' => 'allie',
