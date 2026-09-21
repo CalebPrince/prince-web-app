@@ -189,7 +189,6 @@ class SocialDraftController
         if (empty($accountId)) {
             return;
         }
-        $tool = Settings::get('composio_linkedin_post_tool') ?: 'LINKEDIN_CREATE_LINKED_IN_POST';
 
         // Confirmed against a live account (2026-08-08): LinkedIn's post API
         // rejects requests missing 'author' (the poster's URN) — the earlier
@@ -210,24 +209,35 @@ class SocialDraftController
             $text .= "\n\n" . trim((string) $draft['hashtags']);
         }
 
-        $payload = ['author' => $authorUrn, 'commentary' => $text, 'visibility' => 'PUBLIC'];
+        // Posted directly against LinkedIn's own REST API (via Composio's
+        // proxy) rather than the managed LINKEDIN_CREATE_LINKED_IN_POST tool
+        // — confirmed live 2026-09-21 (draft #454/db id 20) that the managed
+        // tool 500s with 426 NONEXISTENT_VERSION: Composio pins it to a
+        // LinkedIn-Version ("20241101") LinkedIn has since deactivated, and
+        // nothing in executeTool()'s params can override that header. Body
+        // shape is LinkedIn's own documented Posts API schema (Microsoft
+        // Learn, /rest/posts), not the flat author/commentary/images shape
+        // the old managed tool used.
+        $payload = [
+            'author' => $authorUrn,
+            'commentary' => $text,
+            'visibility' => 'PUBLIC',
+            'distribution' => [
+                'feedDistribution' => 'MAIN_FEED',
+                'targetEntities' => [],
+                'thirdPartyDistributionChannels' => [],
+            ],
+            'lifecycleState' => 'PUBLISHED',
+            'isReshareDisabledByAuthor' => false,
+        ];
 
-        // Earlier version of this guessed 'content.media.id' — that's the raw
-        // LinkedIn REST field name, not this Composio tool's own parameter
-        // (its schema is flat: author/commentary/images/visibility/
-        // lifecycleState), so it was silently dropped as an unrecognized
-        // field: the post always published, just without the image, and
-        // with no error to signal why. LINKEDIN_CREATE_LINKED_IN_POST reads
-        // 'images' — an array of {id: urn:li:image:...} — and that urn has
-        // to be a real registered LinkedIn image asset, not a plain public
-        // URL (see registerLinkedInImage()).
         if (!empty($draft['image_url'])) {
             $imageUrl = str_starts_with((string) $draft['image_url'], 'http')
                 ? (string) $draft['image_url']
                 : 'https://princecaleb.dev' . $draft['image_url'];
             $imageUrn = self::registerLinkedInImage($accountId, $authorUrn, $imageUrl);
             if ($imageUrn !== null) {
-                $payload['images'] = [['id' => $imageUrn]];
+                $payload['content'] = ['media' => ['id' => $imageUrn]];
             }
             // Written unconditionally (success clears it to NULL) so this
             // survives regardless of the overall post's outcome below —
@@ -248,7 +258,19 @@ class SocialDraftController
         // approval itself, a DB write failure here should degrade to a log
         // line, not a 500 that also wipes out the approval's own status update.
         try {
-            $result = Composio::executeTool($tool, $accountId, $payload);
+            $result = Composio::executeProxy(
+                $accountId,
+                'https://api.linkedin.com/rest/posts',
+                'POST',
+                [
+                    // LinkedIn requires this header on every /rest call and does
+                    // not default to a version itself (Microsoft Learn, Posts
+                    // API docs, fetched 2026-09-21) — YYYYMM, supported >=1 year.
+                    ['name' => 'Linkedin-Version', 'value' => date('Ym'), 'type' => 'header'],
+                    ['name' => 'X-Restli-Protocol-Version', 'value' => '2.0.0', 'type' => 'header'],
+                ],
+                $payload
+            );
             if ($result !== null) {
                 // Field name for the created post's ID/URN isn't confirmed
                 // against a live account yet — try the plausible candidates
@@ -276,8 +298,8 @@ class SocialDraftController
                 'UPDATE social_post_drafts SET publish_error = ? WHERE id = ?',
                 [$lastError, $draft['id']]
             );
-            Settings::set('composio_linkedin_last_error', date('c') . ' - LinkedIn publish failed using ' . $tool . ': ' . $lastError);
-            error_log("Composio LinkedIn publish failed for draft {$draft['id']} using {$tool}: {$lastError}");
+            Settings::set('composio_linkedin_last_error', date('c') . ' - LinkedIn publish failed: ' . $lastError);
+            error_log("Composio LinkedIn publish failed for draft {$draft['id']}: {$lastError}");
         } catch (\Throwable $e) {
             error_log("Composio LinkedIn publish for draft {$draft['id']} threw: " . $e->getMessage());
         }
