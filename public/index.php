@@ -77,6 +77,7 @@ use App\Controllers\WhatsAppDeliveryReadyTemplateController;
 use App\Controllers\WhatsAppRenewalReminderTemplateController;
 use App\Controllers\WhatsAppFeedbackRequestTemplateController;
 use App\Controllers\WhatsAppDripFollowupTemplateController;
+use App\Controllers\WhatsAppOwnerAlertTemplateController;
 use App\Controllers\WhatsAppTemplateCatalogController;
 use App\Controllers\WhatsAppProjectKickoffTemplateController;
 use App\Controllers\PaymentController;
@@ -403,6 +404,9 @@ $router->post('/api/v1/admin/whatsapp/send-drip-followup', [LiveChatController::
 $router->get('/api/v1/admin/whatsapp-template/drip-followup',[WhatsAppDripFollowupTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/drip-followup', [WhatsAppDripFollowupTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/drip-followup/refresh', [WhatsAppDripFollowupTemplateController::class, 'refresh']);
+$router->get('/api/v1/admin/whatsapp-template/owner-alert', [WhatsAppOwnerAlertTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/owner-alert', [WhatsAppOwnerAlertTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/owner-alert/refresh', [WhatsAppOwnerAlertTemplateController::class, 'refresh']);
 
 $router->post('/api/v1/admin/whatsapp/send-project-kickoff', [LiveChatController::class, 'sendProjectKickoff']);
 $router->get('/api/v1/admin/whatsapp-template/project-kickoff', [WhatsAppProjectKickoffTemplateController::class, 'status']);

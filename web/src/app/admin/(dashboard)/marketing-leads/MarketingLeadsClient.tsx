@@ -99,7 +99,7 @@ export type WhatsAppTemplateOption = {
 };
 
 /** Intro/asset-request/showcase-followup already have their own dedicated buttons above. */
-const LEGACY_TEMPLATE_KEYS = new Set(["intro", "asset_request", "showcase_followup"]);
+const LEGACY_TEMPLATE_KEYS = new Set(["intro", "asset_request", "showcase_followup", "owner_alert"]);
 
 const emptySendTemplateForm = {
   key: "",

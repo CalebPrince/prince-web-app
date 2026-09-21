@@ -13,6 +13,7 @@ use App\Support\WhatsAppDripFollowupTemplateManager;
 use App\Support\WhatsAppFeedbackRequestTemplateManager;
 use App\Support\WhatsAppInvoiceReadyTemplateManager;
 use App\Support\WhatsAppMilestoneUpdateTemplateManager;
+use App\Support\WhatsAppOwnerAlertTemplateManager;
 use App\Support\WhatsAppPaymentReceivedTemplateManager;
 use App\Support\WhatsAppProjectKickoffTemplateManager;
 use App\Support\WhatsAppRenewalReminderTemplateManager;
@@ -137,6 +138,14 @@ final class WhatsAppTemplateCatalogController
             'manager' => WhatsAppDripFollowupTemplateManager::class,
             'slug' => 'drip-followup',
             'send' => '/api/v1/admin/whatsapp/send-drip-followup',
+            'fields' => [],
+        ],
+        'owner_alert' => [
+            'label' => 'Owner alert',
+            'description' => 'Lets Chief, Chloe, Allie, Wendy, Lisa and the social draft reminder reach YOUR WhatsApp at any time. Plain text only works within 24h of your last message to the Twilio number. Sent by the system, never by hand.',
+            'manager' => WhatsAppOwnerAlertTemplateManager::class,
+            'slug' => 'owner-alert',
+            'send' => '',
             'fields' => [],
         ],
     ];
