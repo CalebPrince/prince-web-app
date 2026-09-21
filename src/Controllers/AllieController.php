@@ -126,7 +126,11 @@ class AllieController
     {
         $pdo = Database::get();
         $prompt = "Run your regular discovery pass. Call list_evaluations first so you don't repeat a tool you're "
-            . "already tracking. Then look for one genuinely new or newly-relevant AI/dev tool worth Caleb's "
+            . "already tracking. Finish what you've started before starting anything new: if any evaluation is "
+            . "still in discovered, evaluating, or compared, pick the oldest and advance it with fresh research "
+            . "(pass its evaluation_id to save_evaluation), through to recommended if the evidence supports it, or "
+            . "archive it if it turned out not to matter. Only when nothing is left to advance, or fewer than 5 "
+            . "are in progress, look for one genuinely new or newly-relevant AI/dev tool worth Caleb's "
             . "attention right now, and take it as far through the pipeline as the evidence actually supports — "
             . "discovered, evaluating, compared, and recommended if you have enough to land on adopt/pilot/reject "
             . "with a real rationale. Skip the tested stage; that needs an actual hands-on trial, which this pass "
