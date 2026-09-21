@@ -32,6 +32,39 @@ type CatalogTemplate = {
   fields: Record<string, string>;
 };
 
+type TemplateTally = { approved: number; pending: number; rejected: number; notCreated: number };
+
+/** Buckets template statuses for the tracking cards; anything Meta reports that isn't approved/rejected counts as pending. */
+function tallyTemplates(statuses: string[]): TemplateTally {
+  const tally: TemplateTally = { approved: 0, pending: 0, rejected: 0, notCreated: 0 };
+  for (const status of statuses) {
+    if (status === "approved") tally.approved++;
+    else if (status === "rejected") tally.rejected++;
+    else if (status === "not_created") tally.notCreated++;
+    else tally.pending++;
+  }
+  return tally;
+}
+
+function TemplateTallyCards({ tally }: { tally: TemplateTally }) {
+  const cards = [
+    { label: "Approved", value: tally.approved, tone: "text-green-500" },
+    { label: "Pending", value: tally.pending, tone: "text-text" },
+    { label: "Rejected", value: tally.rejected, tone: "text-red-400" },
+    { label: "Not created", value: tally.notCreated, tone: "text-text-2" },
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {cards.map((c) => (
+        <div key={c.label} className="rounded-lg border border-hairline p-3">
+          <div className={`text-2xl font-semibold ${c.tone}`}>{c.value}</div>
+          <div className="text-xs text-text-3">{c.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** A MARKETING template idea not built yet — reference only. */
 type PlannedMarketing = { label: string; description: string; sample: string };
 
@@ -767,6 +800,10 @@ export default function SettingsClient({
               send it to a specific contact from Marketing Leads.
             </p>
 
+            {catalog.length > 0 && (
+              <TemplateTallyCards tally={tallyTemplates(catalog.map((t) => t.status))} />
+            )}
+
             <div className="space-y-3">
               {catalog.length === 0 && (
                 <p className="text-sm text-text-3">Loading templates…</p>
@@ -840,13 +877,19 @@ export default function SettingsClient({
             </div>
           </Card>
 
-          <Card title="MARKETING templates (not built yet)" bodyClassName="p-5 space-y-3">
+          <Card title="MARKETING templates" bodyClassName="p-5 space-y-3">
             <p className="text-sm text-text-2">
               Promotional/re-engagement ideas — worth more Meta scrutiny and need an
               opt-in trail, so these are reference only until actually needed for this
               business or a client&apos;s. Say the word and one gets built the same way
               as the templates above.
             </p>
+            <TemplateTallyCards
+              tally={tallyTemplates([
+                ...catalog.filter((t) => t.category === "MARKETING").map((t) => t.status),
+                ...plannedMarketing.map(() => "not_created"),
+              ])}
+            />
             <div className="space-y-3">
               {plannedMarketing.map((m) => (
                 <div key={m.label} className="rounded-lg border border-hairline p-4 space-y-1">
