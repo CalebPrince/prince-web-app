@@ -43,4 +43,15 @@ final class WhatsAppDeliveryReadyTemplateController
             Response::error($e->getMessage(), 422);
         }
     }
+
+    /** DELETE /api/v1/admin/whatsapp-template/delivery-ready */
+    public static function destroy(): void
+    {
+        AuthMiddleware::requireAuth();
+        try {
+            Response::json(WhatsAppDeliveryReadyTemplateManager::deleteAndReset());
+        } catch (\Throwable $e) {
+            Response::error($e->getMessage(), 422);
+        }
+    }
 }

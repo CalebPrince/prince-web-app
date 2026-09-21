@@ -1519,7 +1519,6 @@ class LiveChatController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $in = self::readTemplateSendInput($data, [
             'var2' => ["what's ready", 150],
-            'var3' => ['the link to review it', 300],
         ]);
 
         $provider = (string) Settings::get('whatsapp_provider');
@@ -1527,7 +1526,7 @@ class LiveChatController
             Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
         }
 
-        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2']];
         $sent = self::sendTwilioNamedTemplate(
             $in['digits'],
             $vars,
@@ -1581,7 +1580,6 @@ class LiveChatController
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
         $in = self::readTemplateSendInput($data, [
             'var2' => ['what was delivered', 150],
-            'var3' => ['the review link', 300],
         ]);
 
         $provider = (string) Settings::get('whatsapp_provider');
@@ -1589,7 +1587,7 @@ class LiveChatController
             Response::error('Templates only go out on the Twilio provider — ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
         }
 
-        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2'], '3' => $in['extra']['var3']];
+        $vars = ['1' => $in['contact_name'], '2' => $in['extra']['var2']];
         $sent = self::sendTwilioNamedTemplate(
             $in['digits'],
             $vars,

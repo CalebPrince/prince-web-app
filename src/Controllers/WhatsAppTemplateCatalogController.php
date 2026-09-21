@@ -99,6 +99,7 @@ final class WhatsAppTemplateCatalogController
             'slug' => 'appointment-reminder',
             'send' => '/api/v1/admin/whatsapp/send-appointment-reminder',
             'fields' => ['var2' => 'Date', 'var3' => 'Time'],
+            'deletable' => true,
         ],
         'milestone_update' => [
             'label' => 'Milestone update',
@@ -114,7 +115,8 @@ final class WhatsAppTemplateCatalogController
             'manager' => WhatsAppDeliveryReadyTemplateManager::class,
             'slug' => 'delivery-ready',
             'send' => '/api/v1/admin/whatsapp/send-delivery-ready',
-            'fields' => ['var2' => "What's ready", 'var3' => 'Link to review'],
+            'fields' => ['var2' => "What's ready"],
+            'deletable' => true,
         ],
         'renewal_reminder' => [
             'label' => 'Renewal reminder',
@@ -130,7 +132,8 @@ final class WhatsAppTemplateCatalogController
             'manager' => WhatsAppFeedbackRequestTemplateManager::class,
             'slug' => 'feedback-request',
             'send' => '/api/v1/admin/whatsapp/send-feedback-request',
-            'fields' => ['var2' => 'What was delivered', 'var3' => 'Review link'],
+            'fields' => ['var2' => 'What was delivered'],
+            'deletable' => true,
         ],
         'drip_followup' => [
             'label' => 'Drip follow-up',

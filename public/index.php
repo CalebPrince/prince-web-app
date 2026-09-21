@@ -379,6 +379,7 @@ $router->post('/api/v1/admin/whatsapp/send-appointment-reminder', [LiveChatContr
 $router->get('/api/v1/admin/whatsapp-template/appointment-reminder', [WhatsAppAppointmentReminderTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/appointment-reminder', [WhatsAppAppointmentReminderTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/appointment-reminder/refresh', [WhatsAppAppointmentReminderTemplateController::class, 'refresh']);
+$router->delete('/api/v1/admin/whatsapp-template/appointment-reminder', [WhatsAppAppointmentReminderTemplateController::class, 'destroy']);
 
 $router->post('/api/v1/admin/whatsapp/send-milestone-update', [LiveChatController::class, 'sendMilestoneUpdate']);
 $router->get('/api/v1/admin/whatsapp-template/milestone-update', [WhatsAppMilestoneUpdateTemplateController::class, 'status']);
@@ -389,6 +390,7 @@ $router->post('/api/v1/admin/whatsapp/send-delivery-ready', [LiveChatController:
 $router->get('/api/v1/admin/whatsapp-template/delivery-ready', [WhatsAppDeliveryReadyTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/delivery-ready', [WhatsAppDeliveryReadyTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/delivery-ready/refresh', [WhatsAppDeliveryReadyTemplateController::class, 'refresh']);
+$router->delete('/api/v1/admin/whatsapp-template/delivery-ready', [WhatsAppDeliveryReadyTemplateController::class, 'destroy']);
 
 $router->post('/api/v1/admin/whatsapp/send-renewal-reminder', [LiveChatController::class, 'sendRenewalReminder']);
 $router->get('/api/v1/admin/whatsapp-template/renewal-reminder', [WhatsAppRenewalReminderTemplateController::class, 'status']);
@@ -399,6 +401,7 @@ $router->post('/api/v1/admin/whatsapp/send-feedback-request', [LiveChatControlle
 $router->get('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/feedback-request/refresh', [WhatsAppFeedbackRequestTemplateController::class, 'refresh']);
+$router->delete('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'destroy']);
 
 $router->post('/api/v1/admin/whatsapp/send-drip-followup', [LiveChatController::class, 'sendDripFollowup']);
 $router->get('/api/v1/admin/whatsapp-template/drip-followup',[WhatsAppDripFollowupTemplateController::class, 'status']);

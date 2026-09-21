@@ -43,4 +43,15 @@ final class WhatsAppAppointmentReminderTemplateController
             Response::error($e->getMessage(), 422);
         }
     }
+
+    /** DELETE /api/v1/admin/whatsapp-template/appointment-reminder */
+    public static function destroy(): void
+    {
+        AuthMiddleware::requireAuth();
+        try {
+            Response::json(WhatsAppAppointmentReminderTemplateManager::deleteAndReset());
+        } catch (\Throwable $e) {
+            Response::error($e->getMessage(), 422);
+        }
+    }
 }

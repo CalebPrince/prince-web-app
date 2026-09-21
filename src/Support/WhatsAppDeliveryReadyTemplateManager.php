@@ -21,13 +21,15 @@ final class WhatsAppDeliveryReadyTemplateManager extends WhatsAppContentTemplate
     protected const CATEGORY = 'UTILITY';
 
     /**
-     * {{1}} contact's name, {{2}} what's ready, {{3}} the link to review it —
-     * all filled in by LiveChatController::sendDeliveryReady().
+     * {{1}} contact's name, {{2}} what's ready, filled in by
+     * LiveChatController::sendDeliveryReady(). No link in the body: Meta
+     * rejected the earlier version that ended on a pasted URL variable, so
+     * Lisa sends the link once the contact replies (inside the 24h window).
      */
     protected const BODY = "Hi {{1}}, this is Lisa, Prince Caleb's assistant. "
-        . "Your {{2}} is ready for review: {{3}}";
+        . "Your {{2}} is ready for you to review. Reply here and I'll send it over right away.";
 
-    protected const SAMPLE_VARIABLES = ['1' => 'Ama', '2' => 'website draft', '3' => 'https://princecaleb.dev/preview/123'];
+    protected const SAMPLE_VARIABLES = ['1' => 'Ama', '2' => 'website draft'];
     protected const SID_SETTING = 'twilio_delivery_ready_content_sid';
     protected const STATUS_SETTING = 'twilio_delivery_ready_template_status';
 }

@@ -118,7 +118,9 @@ abstract class WhatsAppContentTemplateManager
             }
             throw $e;
         }
-        Settings::set(static::STATUS_SETTING, self::extractStatus($response) ?: 'pending');
+        $status = self::extractStatus($response) ?: 'pending';
+        Settings::set(static::STATUS_SETTING, $status);
+        Settings::set(static::STATUS_SETTING . '_reason', $status === 'rejected' ? (self::extractRejectionReason($response) ?? '') : '');
 
         return static::status();
     }
@@ -159,6 +161,9 @@ abstract class WhatsAppContentTemplateManager
             'category' => static::CATEGORY,
             'body' => static::BODY,
             'provider' => (string) Settings::get('whatsapp_provider'),
+            'rejection_reason' => (Settings::get(static::STATUS_SETTING) === 'rejected'
+                ? trim((string) Settings::get(static::STATUS_SETTING . '_reason'))
+                : '') ?: null,
         ];
     }
 
@@ -292,6 +297,20 @@ abstract class WhatsAppContentTemplateManager
         foreach ($response as $value) {
             if (is_array($value) && ($status = self::extractStatus($value))) {
                 return $status;
+            }
+        }
+        return null;
+    }
+
+    /** Meta's stated reason for a rejection, wherever Twilio nests it in the approval response. */
+    private static function extractRejectionReason(array $response): ?string
+    {
+        foreach ($response as $key => $value) {
+            if ($key === 'rejection_reason' && is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+            if (is_array($value) && ($reason = self::extractRejectionReason($value))) {
+                return $reason;
             }
         }
         return null;

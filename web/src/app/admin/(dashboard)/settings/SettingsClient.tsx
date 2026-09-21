@@ -23,6 +23,8 @@ type CatalogTemplate = {
   category: string;
   body: string;
   provider: string;
+  /** Meta's stated reason, when the template was rejected and Twilio reported one. */
+  rejection_reason?: string | null;
   status_url: string;
   create_url: string;
   refresh_url: string;
@@ -833,6 +835,12 @@ export default function SettingsClient({
                     </div>
 
                     {t.content_sid && <code className="text-xs text-text-3">{t.content_sid}</code>}
+
+                    {t.status === "rejected" && (
+                      <div className="text-xs text-red-400">
+                        Meta&apos;s reason: {t.rejection_reason || "not reported. Press Refresh status to fetch it."}
+                      </div>
+                    )}
 
                     <div className="flex flex-wrap items-center gap-3">
                       <Button

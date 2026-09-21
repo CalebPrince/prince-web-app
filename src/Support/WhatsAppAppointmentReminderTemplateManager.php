@@ -24,7 +24,8 @@ final class WhatsAppAppointmentReminderTemplateManager extends WhatsAppContentTe
      * by LiveChatController::sendAppointmentReminder().
      */
     protected const BODY = "Hi {{1}}, this is Lisa, Prince Caleb's assistant. "
-        . "Just a reminder — your call with Caleb is on {{2}} at {{3}}.";
+        . "This is a reminder that your call with Caleb is scheduled for {{2}} at {{3}}. "
+        . "Reply here if you need to change the time.";
 
     protected const SAMPLE_VARIABLES = ['1' => 'Ama', '2' => 'Thursday', '3' => '3pm'];
     protected const SID_SETTING = 'twilio_appointment_reminder_content_sid';

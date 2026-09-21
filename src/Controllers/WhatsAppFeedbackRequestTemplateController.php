@@ -43,4 +43,15 @@ final class WhatsAppFeedbackRequestTemplateController
             Response::error($e->getMessage(), 422);
         }
     }
+
+    /** DELETE /api/v1/admin/whatsapp-template/feedback-request */
+    public static function destroy(): void
+    {
+        AuthMiddleware::requireAuth();
+        try {
+            Response::json(WhatsAppFeedbackRequestTemplateManager::deleteAndReset());
+        } catch (\Throwable $e) {
+            Response::error($e->getMessage(), 422);
+        }
+    }
 }
