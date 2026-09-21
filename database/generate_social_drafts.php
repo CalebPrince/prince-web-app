@@ -35,6 +35,8 @@ if ($result) {
         SocialDraftController::applyApproval(\App\Support\Database::get(), (int) $result['id']);
         echo "1 social post draft generated and auto-approved (id {$result['id']}).\n";
     } else {
+        // Nothing posts until Caleb approves it, so ping him or it sits unnoticed.
+        SocialDraftController::notifyDraftReady((int) $result['id']);
         echo "1 social post draft generated (id {$result['id']}).\n";
     }
 } else {

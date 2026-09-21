@@ -10,10 +10,12 @@ use App\Support\AiText;
 use App\Support\Composio;
 use App\Support\Database;
 use App\Support\IntegrationEvent;
+use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
 use App\Support\SocialImage;
+use App\Support\WhatsAppNotifier;
 
 /**
  * AI-drafted social posts. generateDraft() is shared between the scheduled
@@ -129,6 +131,44 @@ class SocialDraftController
         $pdo->prepare("UPDATE social_post_drafts SET status = 'approved', sent_to_makecom = 1, updated_at = datetime('now') WHERE id = ?")->execute([$id]);
 
         self::publishToLinkedIn($pdo, $fresh);
+    }
+
+    /**
+     * Reminds Caleb by WhatsApp (and email, as a backup since Twilio free text
+     * is rejected outside its 24h session window) that a fresh draft is
+     * waiting for him to add an image and approve. Only called for drafts that
+     * won't post on their own (auto-approve off). Never throws.
+     */
+    public static function notifyDraftReady(int $draftId): void
+    {
+        try {
+            $stmt = Database::get()->prepare('SELECT content FROM social_post_drafts WHERE id = ?');
+            $stmt->execute([$draftId]);
+            $content = (string) ($stmt->fetchColumn() ?: '');
+            $snippet = mb_substr(trim($content), 0, 160) . (mb_strlen(trim($content)) > 160 ? '...' : '');
+            $link = 'https://princecaleb.dev/admin/social-drafts';
+            $body = "New LinkedIn draft #{$draftId} is ready. Add your image and approve it to post.
+
+\"{$snippet}\"
+
+{$link}";
+
+            if (WhatsAppNotifier::isOwnerConfigured()) {
+                WhatsAppNotifier::sendOwnerAlert($body, [
+                    'name' => 'Social drafts',
+                    'reason' => 'New LinkedIn draft ready to review',
+                    'summary' => $snippet,
+                    'message' => mb_substr($body, 0, 900),
+                ]);
+            }
+
+            $to = Settings::get('notification_email') ?: Settings::get('social_email');
+            if ($to) {
+                Mailer::send($to, "LinkedIn draft #{$draftId} is ready to review", $body);
+            }
+        } catch (\Throwable $e) {
+            error_log('Social draft ready notification failed: ' . $e->getMessage());
+        }
     }
 
     /**
