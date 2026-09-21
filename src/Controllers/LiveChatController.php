@@ -2240,47 +2240,20 @@ class LiveChatController
         ]);
     }
 
-    /** GET /api/v1/admin/ai-test — admin-only Gemini connectivity diagnostic */
+    /** GET /api/v1/admin/ai-test — admin-only: one real call to every configured AI provider */
     public static function aiTest(): void
     {
         AuthMiddleware::requireAuth();
 
-        $geminiKey = Settings::get('gemini_api_key');
-        if (empty($geminiKey)) {
-            Response::json([
-                'key_loaded' => false,
-                'hint' => 'No Gemini key found — paste it in Settings → Integrations (or set GEMINI_API_KEY in .env).',
-            ]);
-        }
         if (!function_exists('curl_init')) {
             Response::json([
-                'key_loaded' => true,
                 'curl_available' => false,
+                'providers' => [],
                 'hint' => 'The PHP curl extension is not enabled on this host — enable it in Select PHP Version.',
             ]);
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key='
-            . $geminiKey;
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => json_encode(['contents' => [['parts' => [['text' => 'Say "pong".']]]]]),
-            CURLOPT_TIMEOUT => 15,
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        Response::json([
-            'key_loaded' => true,
-            'http_status' => $status,
-            'curl_error' => $curlError !== '' ? $curlError : null,
-            'response_snippet' => is_string($response) ? substr($response, 0, 500) : null,
-        ]);
+        Response::json(['curl_available' => true, 'providers' => AiText::testProviders()]);
     }
 
     /** PATCH /api/v1/admin/chats/{id} — body: {"admin_seen": true} */

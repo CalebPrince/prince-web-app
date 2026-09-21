@@ -36,12 +36,9 @@ type CatalogTemplate = {
 type PlannedMarketing = { label: string; description: string; sample: string };
 
 type AiTestResult = {
-  key_loaded?: boolean;
   curl_available?: boolean;
-  http_status?: number;
-  curl_error?: string;
-  response_snippet?: string;
   hint?: string;
+  providers?: { name: string; configured: boolean; ok: boolean; detail: string }[];
 };
 
 export type EmailTemplateDefaults = Record<
@@ -230,6 +227,7 @@ export default function SettingsClient({
   const [testStatus, setTestStatus] = useState<Record<string, string>>({});
   const [capabilities, setCapabilities] = useState<CapabilityRow[]>([]);
   const [aiTest, setAiTest] = useState<{ text: string; ok: boolean } | null>(null);
+  const [aiProviders, setAiProviders] = useState<NonNullable<AiTestResult["providers"]>>([]);
   const [testingAi, setTestingAi] = useState(false);
 
   const [catalog, setCatalog] = useState<CatalogTemplate[]>([]);
@@ -319,26 +317,26 @@ export default function SettingsClient({
     }
   };
 
-  /** Asks the server to make one real call to the AI provider. */
+  /** Asks the server to make one real call to every AI provider that has a key. */
   const testAi = async () => {
     setTestingAi(true);
     setAiTest(null);
+    setAiProviders([]);
     try {
       const r = await adminApi.get<AiTestResult>("/api/v1/admin/ai-test");
-      if (!r.key_loaded || r.curl_available === false) {
-        setAiTest({ ok: false, text: r.hint || "The AI provider is not configured." });
-      } else if (r.http_status === 200) {
-        setAiTest({ ok: true, text: "Gemini is working — live chat is fully AI-powered." });
-      } else if (r.curl_error) {
-        setAiTest({
-          ok: false,
-          text: `Connection problem: ${r.curl_error} — the host may be blocking outbound requests.`,
-        });
+      const providers = r.providers ?? [];
+      const configured = providers.filter((p) => p.configured);
+      if (r.curl_available === false) {
+        setAiTest({ ok: false, text: r.hint || "The PHP curl extension is not enabled on this host." });
+      } else if (configured.length === 0) {
+        setAiTest({ ok: false, text: "No AI provider key is set yet." });
       } else {
+        const working = configured.filter((p) => p.ok).length;
         setAiTest({
-          ok: false,
-          text: `Gemini rejected the key (HTTP ${r.http_status}): ${r.response_snippet ?? ""}`,
+          ok: working === configured.length,
+          text: `${working} of ${configured.length} configured providers working.`,
         });
+        setAiProviders(providers);
       }
     } catch (err) {
       setAiTest({ ok: false, text: err instanceof Error ? err.message : "Could not run the test." });
@@ -706,7 +704,7 @@ export default function SettingsClient({
 
           <Card title="Connection test" bodyClassName="p-5 space-y-3">
             <p className="text-sm text-text-2">
-              Makes one real call to the provider and reports exactly what came back.
+              Makes one real call to every AI provider that has a key and reports what came back.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Button variant="outline" onClick={testAi} disabled={testingAi}>
@@ -719,6 +717,15 @@ export default function SettingsClient({
                 </span>
               )}
             </div>
+            {aiProviders.length > 0 && (
+              <ul className="space-y-1 text-sm">
+                {aiProviders.map((p) => (
+                  <li key={p.name} className={p.ok ? "text-green-500" : p.configured ? "text-red-400" : "text-text-3"}>
+                    {p.name}: {p.detail}
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
 
           {capabilities.length > 0 && (

@@ -4,6 +4,7 @@ namespace App\Agents;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\AiAgentEngine;
+use App\Support\AiDocumentReader;
 use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
@@ -195,7 +196,8 @@ class Ada
     /**
      * Turn one uploaded document into text.
      *
-     * Plain text is decoded directly. PDFs and images go to Gemini, which reads
+     * Plain text is decoded directly. PDFs and images go to a vision model (Gemini, then
+     * Anthropic, then OpenAI via AiDocumentReader), which reads
      * them natively — that keeps layout meaning (which column a figure sits in
      * on an invoice) instead of flattening it away with a local text scrape.
      *
@@ -222,49 +224,17 @@ class Ada
             );
         }
 
-        $key = Settings::get('gemini_api_key');
-        if (empty($key)) {
-            throw new \RuntimeException('reading PDFs and images needs a Gemini key in Settings');
-        }
-
-        $payload = json_encode([
-            'contents' => [[
-                'role' => 'user',
-                'parts' => [
-                    ['inline_data' => ['mime_type' => self::NATIVE_MIME[$ext], 'data' => $base64]],
-                    ['text' =>
-                        "Transcribe this document as plain text. Preserve every figure, date, "
-                        . "reference number and line item exactly as written, and keep the table "
-                        . "structure readable. Do not summarise, comment or omit anything."],
-                ],
-            ]],
-        ]);
-
-        $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . urlencode($key));
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_TIMEOUT => self::EXTRACT_TIMEOUT_SECONDS,
-        ]);
-        $body = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($body === false || $status !== 200) {
-            error_log("Ada document extract failed: status={$status}");
-            throw new \RuntimeException('could not be read (the AI provider rejected it)');
-        }
-
-        $json = json_decode((string) $body, true);
-        $text = '';
-        foreach ($json['candidates'][0]['content']['parts'] ?? [] as $part) {
-            $text .= $part['text'] ?? '';
-        }
-        $text = trim($text);
-        if ($text === '') {
-            throw new \RuntimeException('appears to be empty or unreadable');
+        $text = AiDocumentReader::transcribe(
+            self::NATIVE_MIME[$ext],
+            $base64,
+            "Transcribe this document as plain text. Preserve every figure, date, "
+            . "reference number and line item exactly as written, and keep the table "
+            . "structure readable. Do not summarise, comment or omit anything.",
+            self::EXTRACT_TIMEOUT_SECONDS
+        );
+        if ($text === null) {
+            error_log('Ada document extract failed: ' . AiDocumentReader::lastError());
+            throw new \RuntimeException('could not be read (' . AiDocumentReader::lastError() . ')');
         }
         return mb_substr($text, 0, self::EXTRACT_LIMIT);
     }

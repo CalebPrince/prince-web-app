@@ -142,6 +142,47 @@ class AiText
         return null;
     }
 
+    /**
+     * One tiny real call to every provider that has a key, for the admin's
+     * "Test AI connection" button, so a dead fallback is found before it is
+     * needed rather than during an outage.
+     *
+     * @return array<int,array{name:string,configured:bool,ok:bool,detail:string}>
+     */
+    public static function testProviders(): array
+    {
+        $prompt = 'Reply with the single word: pong';
+        $legs = [
+            ['DeepSeek', 'deepseek_api_key', fn($k, $t) => self::callDeepSeek($k, $prompt, null, $t, 64)],
+            ['Gemini', 'gemini_api_key', fn($k, $t) => self::callGemini($k, $prompt, null, $t, 64)],
+            ['Anthropic', 'anthropic_api_key', fn($k, $t) => self::callAnthropic($k, $prompt, null, $t, 64)],
+            ['OpenAI', 'openai_api_key', fn($k, $t) => self::callOpenAi($k, $prompt, null, $t, 64)],
+            ['OpenRouter', 'openrouter_api_key', fn($k, $t) => self::callOpenRouter($k, $prompt, null, $t, 64)],
+            ['Groq', 'groq_api_key', fn($k, $t) => self::callGroq($k, $prompt, null, $t, 64)],
+        ];
+
+        $results = [];
+        foreach ($legs as [$name, $setting, $call]) {
+            $key = trim((string) Settings::get($setting));
+            if ($key === '') {
+                $results[] = ['name' => $name, 'configured' => false, 'ok' => false, 'detail' => 'No key set'];
+                continue;
+            }
+            self::$lastError = null;
+            $startedAt = microtime(true);
+            $text = $call($key, 20);
+            $results[] = [
+                'name' => $name,
+                'configured' => true,
+                'ok' => $text !== null,
+                'detail' => $text !== null
+                    ? sprintf('Working (%.1fs)', microtime(true) - $startedAt)
+                    : (self::$lastError ?? 'No response (check the key, billing/credits, and the error log)'),
+            ];
+        }
+        return $results;
+    }
+
     /** Why the last generate() call produced nothing, for surfacing to the admin. */
     public static function lastError(): ?string
     {
