@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AdminSocialDraft } from "@/lib/api";
+import { AdminSocialDraft, api } from "@/lib/api";
 
 import { X, ExternalLink } from "lucide-react";
 
@@ -20,6 +20,7 @@ export default function SocialDraftModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (isOpen && draft) {
@@ -35,6 +36,21 @@ export default function SocialDraftModal({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const { path } = await api.adminUploadFile(file);
+      setFormData(prev => ({ ...prev, image_url: path }));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Image upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -129,6 +145,13 @@ export default function SocialDraftModal({
                 <img src={formData.image_url} alt="Preview" className="w-16 h-16 object-cover rounded-md border border-hairline" />
               )}
               <input name="image_url" value={formData.image_url || ""} onChange={handleChange} className="flex-1 bg-bg-2 border border-hairline rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent" placeholder="https://..." />
+            </div>
+            <div className="mt-2 flex items-center gap-3">
+              <label className="inline-flex cursor-pointer items-center rounded-md border border-hairline bg-bg-2 px-3 py-1.5 text-sm hover:bg-bg-3 transition-colors">
+                {isUploading ? "Uploading..." : "Upload image"}
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageUpload} disabled={isUploading} className="hidden" />
+              </label>
+              <span className="text-xs text-text-3">PNG, JPG or WebP, up to 5MB. Replaces the current image. Save or Approve to keep it.</span>
             </div>
           </div>
 
