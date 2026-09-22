@@ -4,8 +4,8 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { adminApi } from "@/lib/api";
 import { Button, Card, ErrorBanner, PageHeader } from "@/components/admin/ui";
 import {
-  Bot, Check, CheckCircle2, ChevronRight, Code2, FileCode2, Loader2,
-  RotateCcw, Send, ShieldCheck, Sparkles, X,
+  Bot, Check, CheckCircle2, ChevronDown, Code2, FileCode2, Loader2,
+  RotateCcw, Send, Sparkles, X,
 } from "lucide-react";
 
 type Provider = { id: string; label: string; model: string };
@@ -14,6 +14,19 @@ type Change = { path: string; content: string; summary: string; original_hash: s
 type ChatResponse = { reply: string; provider: string; changes: Change[] };
 
 const STORAGE_KEY = "admin-code-agent-v1";
+
+function cleanAgentReply(text: string) {
+  return text
+    .replace(/^\s*```[^\n]*\n?/gm, "")
+    .replace(/```\s*$/gm, "")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s*>\s?/gm, "")
+    .replace(/^\s*[-+*]\s+/gm, "")
+    .replace(/\*+/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/_{2}([^_]+)_{2}/g, "$1")
+    .trim();
+}
 
 export default function CodeAgentClient() {
   const [providers, setProviders] = useState<Provider[]>([]);
@@ -24,6 +37,7 @@ export default function CodeAgentClient() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
@@ -64,7 +78,7 @@ export default function CodeAgentClient() {
       const result = await adminApi.post<ChatResponse>("/api/v1/admin/coding-agent/chat", {
         provider, message, transcript: history,
       });
-      saveTurns([...turns, { role: "user", text: message }, { role: "agent", text: result.reply, provider: result.provider }]);
+      saveTurns([...turns, { role: "user", text: message }, { role: "agent", text: cleanAgentReply(result.reply), provider: result.provider }]);
       if (result.changes.length) {
         setChanges(result.changes);
         setSelected(Object.fromEntries(result.changes.map((change) => [change.path, true])));
@@ -117,27 +131,7 @@ export default function CodeAgentClient() {
         </div>
       )}
 
-      <div className="grid min-h-[calc(100vh-15rem)] gap-4 xl:grid-cols-[15rem_minmax(0,1fr)_22rem]">
-        <Card className="h-fit" bodyClassName="p-3">
-          <div className="px-2 pb-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-text-3">Connected model</div>
-            <p className="mt-1 text-xs text-text-3">Keys stay on the server.</p>
-          </div>
-          <div className="space-y-1">
-            {providers.map((item) => (
-              <button key={item.id} onClick={() => setProvider(item.id)} className={`w-full rounded-lg px-3 py-3 text-left transition-colors ${provider === item.id ? "bg-accent-soft ring-1 ring-accent/30" : "hover:bg-bg-2"}`}>
-                <span className="flex items-center gap-2 text-sm font-semibold"><span className={`h-2 w-2 rounded-full ${provider === item.id ? "bg-accent" : "bg-green-500"}`} />{item.label}</span>
-                <span className="mt-1 block truncate pl-4 text-xs text-text-3">{item.model}</span>
-              </button>
-            ))}
-            {!providers.length && <a href="/admin/settings" className="block rounded-lg border border-dashed border-hairline p-3 text-sm text-text-2 hover:bg-bg-2">Connect an AI key in Settings <ChevronRight className="inline h-3.5 w-3.5" /></a>}
-          </div>
-          <div className="mt-4 border-t border-hairline px-2 pt-4 text-xs leading-5 text-text-3">
-            <ShieldCheck className="mb-2 h-4 w-4 text-green-500" />
-            Secret files, uploads, dependencies, and database data are blocked from the agent.
-          </div>
-        </Card>
-
+      <div className="grid min-h-[calc(100vh-15rem)] gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <Card className="flex min-h-[40rem] flex-col" bodyClassName="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center justify-between border-b border-hairline bg-bg-2 px-5 py-3">
             <div className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-accent-soft text-accent"><Code2 className="h-4 w-4" /></span><div><div className="text-sm font-semibold">Code Agent</div><div className="text-xs text-text-3">{activeProvider ? `${activeProvider.label} · ${activeProvider.model}` : "No provider connected"}</div></div></div>
@@ -167,7 +161,52 @@ export default function CodeAgentClient() {
           <form onSubmit={send} className="border-t border-hairline p-4">
             <div className="rounded-xl border border-hairline-strong bg-bg-2 p-2 focus-within:ring-1 focus-within:ring-accent">
               <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} rows={3} disabled={!provider || busy} placeholder={provider ? "Describe a bug, feature, or refactor…" : "Connect an AI provider in Settings first"} className="w-full resize-none bg-transparent px-2 py-1 text-sm outline-none placeholder:text-text-3" />
-              <div className="flex items-center justify-between gap-3 px-1"><span className="text-xs text-text-3">Enter to send · Shift+Enter for a new line</span><Button type="submit" variant="accent" disabled={!provider || !input.trim() || busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Send</Button></div>
+              <div className="flex items-end justify-between gap-3 px-1">
+                <div className="relative">
+                  <button
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded={pickerOpen}
+                    onClick={() => setPickerOpen((open) => !open)}
+                    className="flex max-w-[14rem] items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-text-2 transition-colors hover:bg-bg-3 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                  >
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeProvider ? "bg-green-500" : "bg-text-3"}`} />
+                    <span className="truncate">{activeProvider?.label || "Select model"}</span>
+                    <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {pickerOpen && (
+                    <div role="listbox" aria-label="Connected models" className="absolute bottom-full left-0 z-20 mb-2 w-72 overflow-hidden rounded-xl border border-hairline-strong bg-bg shadow-xl">
+                      <div className="border-b border-hairline px-3 py-2">
+                        <div className="text-xs font-semibold text-text">Choose a model</div>
+                        <div className="text-[11px] text-text-3">API keys stay on the server.</div>
+                      </div>
+                      <div className="max-h-64 space-y-1 overflow-y-auto p-1.5">
+                        {providers.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            role="option"
+                            aria-selected={provider === item.id}
+                            onClick={() => { setProvider(item.id); setPickerOpen(false); }}
+                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${provider === item.id ? "bg-accent-soft" : "hover:bg-bg-2"}`}
+                          >
+                            <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${provider === item.id ? "border-accent" : "border-hairline-strong"}`}>
+                              {provider === item.id && <span className="h-2 w-2 rounded-full bg-accent" />}
+                            </span>
+                            <span className="min-w-0"><span className="block text-sm font-medium text-text">{item.label}</span><span className="block truncate text-xs text-text-3">{item.model}</span></span>
+                          </button>
+                        ))}
+                        {!providers.length && <a href="/admin/settings" className="block rounded-lg p-3 text-sm text-accent hover:bg-bg-2">Connect an AI key in Settings</a>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="hidden text-xs text-text-3 sm:inline">Enter to send · Shift+Enter for a new line</span>
+                  <Button type="submit" variant="accent" disabled={!provider || !input.trim() || busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}Send</Button>
+                </div>
+              </div>
             </div>
           </form>
         </Card>
