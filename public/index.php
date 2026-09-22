@@ -88,6 +88,7 @@ use App\Controllers\TeamController;
 use App\Controllers\ContentAgentController;
 use App\Controllers\ContentIdeasController;
 use App\Controllers\ContentStudioController;
+use App\Controllers\CodingAgentController;
 use App\Controllers\ProposalAgentController;
 use App\Controllers\ProposalController;
 use App\Controllers\ProposalDraftController;
@@ -444,6 +445,9 @@ $router->post('/api/v1/admin/content-ideas/generate', [ContentIdeasController::c
 $router->patch('/api/v1/admin/content-ideas/{id}', [ContentIdeasController::class, 'updateStatus']);
 $router->post('/api/v1/admin/content-ideas/{id}/draft', [ContentIdeasController::class, 'createDraft']);
 $router->post('/api/v1/admin/agents/reel/chat', [ReelController::class, 'chat']);
+$router->get('/api/v1/admin/coding-agent/providers', [CodingAgentController::class, 'providers']);
+$router->post('/api/v1/admin/coding-agent/chat', [CodingAgentController::class, 'chat']);
+$router->post('/api/v1/admin/coding-agent/apply', [CodingAgentController::class, 'apply']);
 $router->post('/api/v1/admin/agents/sage/chat', [SageController::class, 'adminChat']);
 $router->get('/api/v1/admin/beacon-leads', [BeaconController::class, 'adminLeads']);
 $router->delete('/api/v1/admin/beacon-leads/{id}', [BeaconController::class, 'destroyLead']);

@@ -73,6 +73,48 @@ class AiAgentEngine
     private const FAST_ANTHROPIC_TIMEOUT_SECONDS = 8;
     private const FAST_OPENAI_TIMEOUT_SECONDS = 8;
 
+    /** Run one tool-capable provider chosen explicitly by an authenticated admin. */
+    public static function runWithProvider(
+        string $provider,
+        string $systemPrompt,
+        array $toolDeclarations,
+        callable $toolExecutor,
+        array $transcript,
+        int $maxToolRounds = 6
+    ): array {
+        $provider = strtolower(trim($provider));
+        $settings = [
+            'gemini' => 'gemini_api_key',
+            'anthropic' => 'anthropic_api_key',
+            'openai' => 'openai_api_key',
+            'openrouter' => 'openrouter_api_key',
+            'groq' => 'groq_api_key',
+        ];
+        if (!isset($settings[$provider])) {
+            return ['reply' => null, 'mode' => 'fallback', 'provider' => null, 'ready' => false];
+        }
+
+        $key = trim((string) Settings::get($settings[$provider]));
+        if ($key === '') {
+            return ['reply' => null, 'mode' => 'fallback', 'provider' => null, 'ready' => false];
+        }
+
+        $result = match ($provider) {
+            'gemini' => self::chatWithGemini($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
+            'anthropic' => self::chatWithAnthropic($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
+            'openai' => self::chatWithOpenAI($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
+            'openrouter' => self::chatWithOpenRouter($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
+            'groq' => self::chatWithGroq($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, null, $maxToolRounds),
+        };
+
+        return [
+            'reply' => $result['reply'] ?? null,
+            'mode' => isset($result['reply']) ? 'ai' : 'fallback',
+            'provider' => isset($result['reply']) ? $provider : null,
+            'ready' => (bool) ($result['ready'] ?? false),
+        ];
+    }
+
     /**
      * @param array<int,array<string,mixed>> $toolDeclarations Gemini functionDeclarations shape; translated internally for OpenRouter/Groq.
      * @param callable $toolExecutor fn(string $name, array $args): array
