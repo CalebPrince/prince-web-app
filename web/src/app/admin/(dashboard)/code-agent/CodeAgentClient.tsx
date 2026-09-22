@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { adminApi } from "@/lib/api";
 import { CodeAgentTurn, loadCodeAgentChats, newCodeAgentChatId, saveCodeAgentChat } from "@/lib/code-agent-chats";
 import { Button, Card, ErrorBanner, PageHeader } from "@/components/admin/ui";
+import { ProviderLogo } from "@/components/admin/ProviderLogo";
 import {
   Bot, Check, CheckCircle2, ChevronDown, Code2, FileCode2, Loader2,
   FolderGit2, HardDrive, RotateCcw, Send, Sparkles, X,
@@ -14,6 +15,13 @@ type Provider = { id: string; label: string; model: string };
 type Turn = CodeAgentTurn;
 type Change = { workspace?: "local" | "github"; path: string; content: string; summary: string; original_hash: string; is_new: boolean };
 type ChatResponse = { reply: string; provider: string; changes: Change[] };
+
+const QUICK_PROMPTS = [
+  { label: "Improve a page", text: "Review the page I describe, identify the highest-impact design and usability improvements, then stage the changes for review." },
+  { label: "Fix a bug", text: "Investigate the bug I describe, trace its root cause across the frontend and backend, then stage a focused fix for review." },
+  { label: "Build a feature", text: "Plan and implement the feature I describe using the existing project conventions, then stage every required file for review." },
+  { label: "Review the code", text: "Review the area I describe for correctness, security, accessibility, and maintainability, then stage only the necessary improvements." },
+];
 
 function cleanAgentReply(text: string) {
   return text
@@ -193,6 +201,21 @@ export default function CodeAgentClient() {
           </div>
 
           <form onSubmit={send} className="border-t border-hairline p-4">
+            <div className="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+              {QUICK_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt.label}
+                  type="button"
+                  onClick={() => {
+                    setInput(prompt.text);
+                  }}
+                  disabled={busy}
+                  className={`rounded-lg border px-3 py-2.5 text-left text-xs font-medium transition-colors disabled:opacity-50 ${input === prompt.text ? "border-accent/50 bg-accent-soft text-text" : "border-hairline bg-bg-2 text-text-2 hover:border-hairline-strong hover:text-text"}`}
+                >
+                  {prompt.label}
+                </button>
+              ))}
+            </div>
             <div className="rounded-xl border border-hairline-strong bg-bg-2 p-2 focus-within:ring-1 focus-within:ring-accent">
               <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }} rows={3} disabled={!provider || busy} placeholder={provider ? "Describe a bug, feature, or refactor…" : "Connect an AI provider in Settings first"} className="w-full resize-none bg-transparent px-2 py-1 text-sm outline-none placeholder:text-text-3" />
               <div className="flex items-end justify-between gap-3 px-1">
@@ -205,7 +228,7 @@ export default function CodeAgentClient() {
                     onClick={() => setPickerOpen((open) => !open)}
                     className="flex max-w-[14rem] items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium text-text-2 transition-colors hover:bg-bg-3 hover:text-text focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${activeProvider ? "bg-green-500" : "bg-text-3"}`} />
+                    {activeProvider ? <ProviderLogo provider={activeProvider.id} className="size-3.5 shrink-0" /> : <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-text-3" />}
                     <span className="truncate">{activeProvider?.label || "Select model"}</span>
                     <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
                   </button>
@@ -226,9 +249,7 @@ export default function CodeAgentClient() {
                             onClick={() => { setProvider(item.id); setPickerOpen(false); }}
                             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${provider === item.id ? "bg-accent-soft" : "hover:bg-bg-2"}`}
                           >
-                            <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${provider === item.id ? "border-accent" : "border-hairline-strong"}`}>
-                              {provider === item.id && <span className="h-2 w-2 rounded-full bg-accent" />}
-                            </span>
+                            <span className={`grid size-8 shrink-0 place-items-center rounded-lg border ${provider === item.id ? "border-accent/50 bg-accent-soft text-accent" : "border-hairline bg-bg-3 text-text-2"}`}><ProviderLogo provider={item.id} className="size-4" /></span>
                             <span className="min-w-0"><span className="block text-sm font-medium text-text">{item.label}</span><span className="block truncate text-xs text-text-3">{item.model}</span></span>
                           </button>
                         ))}
@@ -253,7 +274,7 @@ export default function CodeAgentClient() {
 
         <div className="space-y-4">
         <Card title="Model settings" bodyClassName="space-y-4 p-4">
-          <div><label className="mb-1.5 block text-xs font-medium text-text-3">Selected model</label><select value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full rounded-lg border border-hairline bg-bg-2 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-accent">{providers.map((item) => <option key={item.id} value={item.id}>{item.label} · {item.model}</option>)}</select></div>
+          <div><label className="mb-1.5 block text-xs font-medium text-text-3">Selected model</label><div className="flex items-center gap-2 rounded-lg border border-hairline bg-bg-2 pl-3"><span className="grid size-7 shrink-0 place-items-center rounded-md bg-bg-3 text-text-2">{activeProvider ? <ProviderLogo provider={activeProvider.id} className="size-4" /> : null}</span><select value={provider} onChange={(e) => setProvider(e.target.value)} className="min-w-0 flex-1 bg-transparent py-2.5 pr-3 text-sm outline-none">{providers.map((item) => <option key={item.id} value={item.id}>{item.label} · {item.model}</option>)}</select></div></div>
           <div><label className="mb-1.5 block text-xs font-medium text-text-3">File workspace</label><div className="grid grid-cols-2 gap-2"><button type="button" onClick={() => setWorkspace("local")} className={`rounded-lg border px-3 py-2 text-sm ${workspace === "local" ? "border-accent/40 bg-accent-soft text-text" : "border-hairline text-text-2"}`}><HardDrive className="mr-1.5 inline size-3.5" />Local</button><button type="button" onClick={() => setWorkspace("github")} className={`rounded-lg border px-3 py-2 text-sm ${workspace === "github" ? "border-accent/40 bg-accent-soft text-text" : "border-hairline text-text-2"}`}><FolderGit2 className="mr-1.5 inline size-3.5" />GitHub</button></div></div>
           <div><div className="mb-2 flex items-center justify-between text-xs"><label htmlFor="code-temperature" className="font-medium text-text-2">Temperature</label><span className="rounded bg-bg-3 px-2 py-1 font-mono">{temperature.toFixed(1)}</span></div><input id="code-temperature" type="range" min="0" max="2" step="0.1" value={temperature} onChange={(e) => setTemperature(Number(e.target.value))} className="w-full accent-accent" /></div>
           <div><div className="mb-2 flex items-center justify-between text-xs"><label htmlFor="code-top-p" className="font-medium text-text-2">Top P</label><span className="rounded bg-bg-3 px-2 py-1 font-mono">{topP.toFixed(2)}</span></div><input id="code-top-p" type="range" min="0" max="1" step="0.05" value={topP} onChange={(e) => setTopP(Number(e.target.value))} className="w-full accent-accent" /></div>
