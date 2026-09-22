@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowRight, CalendarDays, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { PortfolioShowcase } from "@/components/PortfolioShowcase";
@@ -18,24 +17,13 @@ import { GoogleReviewCard } from "@/components/GoogleReviewCard";
 import { QuarterlyAvailability } from "@/components/QuarterlyAvailability";
 import { IntakeCta } from "@/components/IntakeCta";
 import { PROJECT_STEPS as PROCESS, ProjectStandards } from "@/components/ProjectStandards";
-import { WebsiteDesignPreview } from "@/components/WebsiteDesignPreview";
+import { BusinessHeroSlider } from "@/components/BusinessHeroSlider";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
 import {
   SITE_URL, SITE_NAME, SITE_ALTERNATE_NAME, SITE_DESCRIPTION,
   PERSON_NAME, PERSON_JOB_TITLE, LOGO, SAME_AS, abs, jsonLd,
 } from "@/lib/site";
 
-
-// Static fallback, used when /api/v1/content is unreachable, when no
-// positioning override is set, and when today's generated headline has not
-// been written yet. This is the plain statement of what the business does,
-// so it is safe to show on any day the AI headline is missing.
-const FALLBACK_HERO = {
-  eyebrow: "Website Design • Development • AI",
-  title: "Website design. Thoughtful development. **Clear commitments**.",
-  subtitle:
-    "I'm Prince Caleb, a website designer and developer in Accra, working worldwide. I create custom websites, applications and AI tools, with a written scope, agreed costs and a clear delivery process.",
-};
 
 // database/generate_daily_headline.php writes one AI-generated
 // eyebrow/title/subtitle set per day; SettingsController::publicContent()
@@ -68,48 +56,12 @@ export const metadata: Metadata = {
 };
 
 
-// Renders a hero_title's single `**phrase**` marker (see
-// generate_daily_headline.php's prompt) as the same accent-colored span the
-// static fallback copy uses.
-function renderHeroTitle(title: string): ReactNode {
-  const match = title.match(/\*\*([^*]+)\*\*/);
-  if (!match) return title;
-  const start = match.index ?? 0;
-  const before = title.slice(0, start);
-  const after = title.slice(start + match[0].length);
-  return (
-    <>
-      {before}
-      <span className="text-accent">{match[1]}</span>
-      {after}
-    </>
-  );
-}
-
 export default async function Home() {
   const [content, liveGoogleRating, landingGoogleReviews] = await Promise.all([
     api.content().catch(() => null),
     api.googleRating().catch(() => null),
     api.googleReviews("landing").catch(() => []),
   ]);
-  // Three sources, in order of authority. A positioning_* value is something
-  // typed by hand to pin the headline, so it wins. Otherwise today's
-  // generated headline runs, but only while hero_is_daily says the hero_*
-  // values really are today's - the static Site Content defaults underneath
-  // them describe an older positioning and must never surface as if fresh.
-  const daily = content?.hero_is_daily === "1";
-  const hero = {
-    eyebrow:
-      content?.positioning_eyebrow ||
-      (daily ? content?.hero_eyebrow : "") ||
-      FALLBACK_HERO.eyebrow,
-    title: content?.positioning_title || (daily ? content?.hero_title : "") || FALLBACK_HERO.title,
-    subtitle:
-      content?.positioning_subtitle ||
-      (daily ? content?.hero_subtitle : "") ||
-      FALLBACK_HERO.subtitle,
-  };
-
   const googleRating = liveGoogleRating?.rating ?? 0;
   const googleReviewCount = liveGoogleRating?.reviewCount ?? 0;
   const googleReviewUrl = content?.google_review_url || "https://g.page/r/CfBZ-YWdgM_UEBI/review";
@@ -207,37 +159,7 @@ const siteSchema = {
           <HeroOrbs />
         </div>
 
-        <div className="mx-auto grid w-full max-w-[1400px] flex-1 grid-cols-1 items-center gap-12 px-6 pb-20 pt-32 md:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          <div className="max-w-3xl">
-            <p className="portfolio-eyebrow rise mb-6" style={{ animationDelay: "0.1s" }}>
-              {hero.eyebrow}
-            </p>
-            <h1
-              className="portfolio-hero-title rise"
-              style={{ animationDelay: "0.2s" }}
-            >
-              {renderHeroTitle(hero.title)}
-            </h1>
-            <p
-              className="rise mt-8 max-w-xl text-lg leading-relaxed text-text-2 md:text-xl"
-              style={{ animationDelay: "0.35s" }}
-            >
-              {hero.subtitle}
-            </p>
-            <div className="rise mt-10 flex flex-col gap-4 sm:flex-row" style={{ animationDelay: "0.5s" }}>
-              <Link href="#work" className={cn(buttonVariants({ size: "lg" }), "group")}>
-                Explore my work{" "}
-                <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
-              <Link href="/contact" className="portfolio-text-link">
-                Start a project <ArrowRight className="size-4" />
-              </Link>
-            </div>
-          </div>
-          <div className="rise relative mx-auto w-full max-w-2xl lg:ml-auto lg:mr-0" style={{ animationDelay: "0.6s" }}>
-            <WebsiteDesignPreview />
-          </div>
-        </div>
+        <BusinessHeroSlider />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center">
           <div className="flex items-center gap-3">
@@ -277,6 +199,36 @@ const siteSchema = {
             vocabulary - see SplitServices. */}
         <div className="mt-16">
           <SplitServices />
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden border-b border-hairline bg-bg">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_82%_50%,var(--accent-soft),transparent_32%)]" />
+        <div className="mx-auto grid max-w-[1400px] gap-12 px-6 py-20 md:px-10 md:py-28 lg:grid-cols-[1.15fr_.85fr] lg:items-center">
+          <Reveal>
+            <SectionLabel index="Audit">Free 7-day business systems audit</SectionLabel>
+            <h2 className="mt-6 max-w-3xl text-[clamp(2.2rem,5vw,4.5rem)] font-bold leading-[1.02] tracking-[-0.03em]">
+              See where your business is losing time and customers.
+            </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-text-2">
+              For seven days, I review how enquiries, orders, payments and follow-up move through your business. You receive a practical plan for what to improve, connect or automate.
+            </p>
+            <Link href="/request?service=business-systems-audit" className={cn(buttonVariants({ size: "lg" }), "group mt-9")}>
+              Request your free audit <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Reveal>
+
+          <Reveal delay={120} className="rounded-[1.35rem] border border-hairline bg-bg-2 p-6 shadow-[var(--card-shadow)] md:p-8">
+            <div className="flex items-center justify-between border-b border-hairline pb-6">
+              <div><p className="portfolio-eyebrow">Your audit includes</p><p className="mt-2 text-sm text-text-3">A focused review, not a generic report.</p></div>
+              <div className="grid size-20 place-items-center rounded-2xl border border-accent/30 bg-accent-soft text-center"><CalendarDays className="size-5 text-accent" /><strong className="-mt-3 text-lg">7 days</strong></div>
+            </div>
+            <ul className="mt-6 space-y-4">
+              {["Where enquiries and leads are being lost", "Manual work that can be automated", "Process improvements in priority order", "Recommended systems and likely business impact"].map((item) => (
+                <li key={item} className="flex gap-3 text-text-2"><CheckCircle2 className="mt-0.5 size-5 shrink-0 text-accent" /><span>{item}</span></li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
       </section>
 
