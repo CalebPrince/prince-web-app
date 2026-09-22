@@ -22,6 +22,7 @@ const NAV_LINKS: { label: string; to: string }[] = [
 ];
 
 const RESOURCE_LINKS: { label: string; to: string }[] = [
+  { label: "Rate compass", to: "/rate-compass" },
   { label: "AI adoption ladder", to: "/ai-adoption-ladder" },
   { label: "AI trust & safety", to: "/ai-safety" },
   { label: "Search", to: "/search" },

@@ -13,6 +13,7 @@ const PROJECTS = [
   { name: "E-commerce site", low: 15000, high: 35000 },
   { name: "Web app / SaaS (MVP)", low: 25000, high: 70000 },
   { name: "Mobile app — one platform", low: 20000, high: 45000 },
+  { name: "Mobile apps — Android + iOS", low: 35000, high: 80000 },
   { name: "AI agent / automation", low: 12000, high: 40000 },
 ];
 
