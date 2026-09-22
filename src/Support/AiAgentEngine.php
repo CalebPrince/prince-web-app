@@ -80,7 +80,8 @@ class AiAgentEngine
         array $toolDeclarations,
         callable $toolExecutor,
         array $transcript,
-        int $maxToolRounds = 6
+        int $maxToolRounds = 6,
+        array $generationOptions = []
     ): array {
         $provider = strtolower(trim($provider));
         $settings = [
@@ -100,11 +101,11 @@ class AiAgentEngine
         }
 
         $result = match ($provider) {
-            'gemini' => self::chatWithGemini($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
-            'anthropic' => self::chatWithAnthropic($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
-            'openai' => self::chatWithOpenAI($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
-            'openrouter' => self::chatWithOpenRouter($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds),
-            'groq' => self::chatWithGroq($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, null, $maxToolRounds),
+            'gemini' => self::chatWithGemini($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds, self::GEMINI_CHAT_TIMEOUT_SECONDS, $generationOptions),
+            'anthropic' => self::chatWithAnthropic($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds, self::ANTHROPIC_CHAT_TIMEOUT_SECONDS, $generationOptions),
+            'openai' => self::chatWithOpenAI($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds, self::OPENAI_CHAT_TIMEOUT_SECONDS, $generationOptions),
+            'openrouter' => self::chatWithOpenRouter($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, $maxToolRounds, self::OPENROUTER_CHAT_TIMEOUT_SECONDS, $generationOptions),
+            'groq' => self::chatWithGroq($key, $systemPrompt, $toolDeclarations, $toolExecutor, $transcript, null, null, $maxToolRounds, self::GROQ_CHAT_TIMEOUT_SECONDS, $generationOptions),
         };
 
         return [
@@ -326,7 +327,8 @@ class AiAgentEngine
         array $transcript,
         ?callable $onExhaustedFallback,
         int $maxToolRounds,
-        int $timeoutSeconds = self::GEMINI_CHAT_TIMEOUT_SECONDS
+        int $timeoutSeconds = self::GEMINI_CHAT_TIMEOUT_SECONDS,
+        array $generationOptions = []
     ): ?array {
         // The full transcript is sent, not a truncated tail — messages here
         // are short and providers' context windows are enormous, so there's
@@ -353,7 +355,11 @@ class AiAgentEngine
                 // starts, so a tight cap here silently truncates a real reply
                 // mid-sentence (caught below via finishReason, but better to
                 // just not hit it as often).
-                'generationConfig' => ['maxOutputTokens' => 4096],
+                'generationConfig' => [
+                    'maxOutputTokens' => $generationOptions['max_tokens'] ?? 4096,
+                    'temperature' => $generationOptions['temperature'] ?? 0.7,
+                    'topP' => $generationOptions['top_p'] ?? 0.95,
+                ],
             ];
             // On the last allowed round, don't offer tools at all — otherwise
             // a model that wants a second sequential tool call (e.g. search
@@ -505,7 +511,8 @@ class AiAgentEngine
         array $transcript,
         ?callable $onExhaustedFallback,
         int $maxToolRounds,
-        int $timeoutSeconds = self::OPENROUTER_CHAT_TIMEOUT_SECONDS
+        int $timeoutSeconds = self::OPENROUTER_CHAT_TIMEOUT_SECONDS,
+        array $generationOptions = []
     ): ?array {
         $messages = [['role' => 'system', 'content' => $system]];
         // See chatWithGemini — full transcript, not a truncated tail.
@@ -527,7 +534,7 @@ class AiAgentEngine
             // Kept well under 2048 (also seen live: a 402 for lacking the last
             // ~80 tokens of that budget on a low/near-zero balance) since a
             // real chat reply never needs anywhere close to it.
-            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 1024];
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => $generationOptions['max_tokens'] ?? 1024, 'temperature' => $generationOptions['temperature'] ?? 0.7, 'top_p' => $generationOptions['top_p'] ?? 0.95];
             // See chatWithGemini — force text on the last round so a model
             // wanting a second sequential tool call can't run out the clock
             // on functionCalls and never produce a reply.
@@ -595,7 +602,8 @@ class AiAgentEngine
         array $transcript,
         ?callable $onExhaustedFallback,
         int $maxToolRounds,
-        int $timeoutSeconds = self::OPENAI_CHAT_TIMEOUT_SECONDS
+        int $timeoutSeconds = self::OPENAI_CHAT_TIMEOUT_SECONDS,
+        array $generationOptions = []
     ): ?array {
         $messages = [['role' => 'system', 'content' => $system]];
         foreach ($transcript as $turn) {
@@ -607,7 +615,7 @@ class AiAgentEngine
         $ready = false;
 
         for ($round = 0; $round < $maxToolRounds; $round++) {
-            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 1024];
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => $generationOptions['max_tokens'] ?? 1024, 'temperature' => $generationOptions['temperature'] ?? 0.7, 'top_p' => $generationOptions['top_p'] ?? 0.95];
             // See chatWithGemini — force text on the last round so a model
             // wanting a second sequential tool call can't run out the clock
             // on tool_calls and never produce a reply.
@@ -673,7 +681,8 @@ class AiAgentEngine
         array $transcript,
         ?callable $onExhaustedFallback,
         int $maxToolRounds,
-        int $timeoutSeconds = self::ANTHROPIC_CHAT_TIMEOUT_SECONDS
+        int $timeoutSeconds = self::ANTHROPIC_CHAT_TIMEOUT_SECONDS,
+        array $generationOptions = []
     ): ?array {
         $messages = [];
         foreach ($transcript as $turn) {
@@ -689,7 +698,9 @@ class AiAgentEngine
                 'model' => $model,
                 'system' => $system,
                 'messages' => $messages,
-                'max_tokens' => 1024,
+                'max_tokens' => $generationOptions['max_tokens'] ?? 1024,
+                'temperature' => $generationOptions['temperature'] ?? 0.7,
+                'top_p' => $generationOptions['top_p'] ?? 0.95,
             ];
             // See chatWithGemini — force text on the last round so a model
             // wanting a second sequential tool call can't run out the clock
@@ -869,7 +880,8 @@ class AiAgentEngine
         ?callable $onExhaustedFallback,
         ?callable $onGroqFailedGeneration,
         int $maxToolRounds,
-        int $timeoutSeconds = self::GROQ_CHAT_TIMEOUT_SECONDS
+        int $timeoutSeconds = self::GROQ_CHAT_TIMEOUT_SECONDS,
+        array $generationOptions = []
     ): ?array {
         $messages = [['role' => 'system', 'content' => $system]];
         foreach ($transcript as $turn) {
@@ -886,7 +898,7 @@ class AiAgentEngine
             // See chatWithOpenRouter — same reasoning: cap output tokens to what
             // a short chat reply actually needs, both to avoid an affordability
             // rejection and to stop padding the daily token budget unnecessarily.
-            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => 2048];
+            $payload = ['model' => $model, 'messages' => $messages, 'max_tokens' => $generationOptions['max_tokens'] ?? 2048, 'temperature' => $generationOptions['temperature'] ?? 0.7, 'top_p' => $generationOptions['top_p'] ?? 0.95];
             if ($round < $maxToolRounds - 1) {
                 $payload['tools'] = $tools;
                 $payload['tool_choice'] = 'auto';

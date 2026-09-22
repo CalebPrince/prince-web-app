@@ -1,5 +1,6 @@
 export type CodeAgentTurn = { role: "user" | "agent"; text: string; provider?: string };
-export type CodeAgentChat = { id: string; title: string; updatedAt: string; turns: CodeAgentTurn[] };
+export type CodeAgentChatSettings = { provider: string; workspace: "local" | "github"; temperature: number; topP: number; maxTokens: number; useSystemPrompt: boolean; systemPrompt: string };
+export type CodeAgentChat = { id: string; title: string; updatedAt: string; turns: CodeAgentTurn[]; settings?: CodeAgentChatSettings };
 
 const KEY = "admin-code-agent-chats-v2";
 export const CHAT_EVENT = "code-agent:chats-changed";

@@ -45,6 +45,9 @@ class CodingAgentController
         $workspace = ($data['workspace'] ?? 'local') === 'github' ? 'github' : 'local';
         $message = trim((string) ($data['message'] ?? ''));
         $customInstructions = mb_substr(trim((string) ($data['custom_instructions'] ?? '')), 0, 2000);
+        $temperature = max(0.0, min(2.0, (float) ($data['temperature'] ?? 0.7)));
+        $topP = max(0.0, min(1.0, (float) ($data['top_p'] ?? 0.95)));
+        $maxTokens = max(256, min(8192, (int) ($data['max_tokens'] ?? 4096)));
         $transcript = is_array($data['transcript'] ?? null) ? array_slice($data['transcript'], -24) : [];
         if (!isset(self::PROVIDERS[$provider]) || trim((string) Settings::get(self::PROVIDERS[$provider]['key'])) === '') {
             Response::error('Choose a connected coding provider.', 422);
@@ -64,7 +67,8 @@ class CodingAgentController
             self::tools(),
             $executor,
             $transcript,
-            8
+            8,
+            ['temperature' => $temperature, 'top_p' => $topP, 'max_tokens' => $maxTokens]
         );
         if (!is_string($result['reply'] ?? null) || trim($result['reply']) === '') {
             Response::error('The selected provider did not return a usable response. Check its key, model, and credits.', 502);

@@ -39,6 +39,9 @@ export default function CodeAgentClient() {
   const [workspace, setWorkspace] = useState<"local" | "github">("local");
   const [useCustomInstructions, setUseCustomInstructions] = useState(false);
   const [customInstructions, setCustomInstructions] = useState("");
+  const [temperature, setTemperature] = useState(0.7);
+  const [topP, setTopP] = useState(0.95);
+  const [maxTokens, setMaxTokens] = useState(4096);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [changes, setChanges] = useState<Change[]>([]);
@@ -64,6 +67,15 @@ export default function CodeAgentClient() {
     const selected = !isNewChat && requestedChat ? chats.find((chat) => chat.id === requestedChat) : null;
     setChatId(selected?.id || newCodeAgentChatId());
     setTurns(selected?.turns || []);
+    if (selected?.settings) {
+      setProvider(selected.settings.provider);
+      setWorkspace(selected.settings.workspace);
+      setTemperature(selected.settings.temperature);
+      setTopP(selected.settings.topP);
+      setMaxTokens(selected.settings.maxTokens);
+      setUseCustomInstructions(selected.settings.useSystemPrompt);
+      setCustomInstructions(selected.settings.systemPrompt);
+    }
     setChanges([]);
     setSelected({});
     setNotice(null);
@@ -78,7 +90,7 @@ export default function CodeAgentClient() {
     const id = chatId || newCodeAgentChatId();
     if (!chatId) setChatId(id);
     const firstRequest = next.find((turn) => turn.role === "user")?.text || "New coding chat";
-    saveCodeAgentChat({ id, title: firstRequest.slice(0, 52), updatedAt: new Date().toISOString(), turns: next });
+    saveCodeAgentChat({ id, title: firstRequest.slice(0, 52), updatedAt: new Date().toISOString(), turns: next, settings: { provider, workspace, temperature, topP, maxTokens, useSystemPrompt: useCustomInstructions, systemPrompt: customInstructions } });
     if (requestedChat !== id) router.replace(`/admin/code-agent?chat=${encodeURIComponent(id)}`, { scroll: false });
   };
 
@@ -96,6 +108,7 @@ export default function CodeAgentClient() {
       const result = await adminApi.post<ChatResponse>("/api/v1/admin/coding-agent/chat", {
         provider, workspace, message, transcript: history,
         custom_instructions: useCustomInstructions ? customInstructions.trim() : "",
+        temperature, top_p: topP, max_tokens: maxTokens,
       });
       saveTurns([...turns, { role: "user", text: message }, { role: "agent", text: cleanAgentReply(result.reply), provider: result.provider }]);
       if (result.changes.length) {
@@ -242,7 +255,10 @@ export default function CodeAgentClient() {
         <Card title="Model settings" bodyClassName="space-y-4 p-4">
           <div><label className="mb-1.5 block text-xs font-medium text-text-3">Selected model</label><select value={provider} onChange={(e) => setProvider(e.target.value)} className="w-full rounded-lg border border-hairline bg-bg-2 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-accent">{providers.map((item) => <option key={item.id} value={item.id}>{item.label} · {item.model}</option>)}</select></div>
           <div><label className="mb-1.5 block text-xs font-medium text-text-3">File workspace</label><div className="grid grid-cols-2 gap-2"><button type="button" onClick={() => setWorkspace("local")} className={`rounded-lg border px-3 py-2 text-sm ${workspace === "local" ? "border-accent/40 bg-accent-soft text-text" : "border-hairline text-text-2"}`}><HardDrive className="mr-1.5 inline size-3.5" />Local</button><button type="button" onClick={() => setWorkspace("github")} className={`rounded-lg border px-3 py-2 text-sm ${workspace === "github" ? "border-accent/40 bg-accent-soft text-text" : "border-hairline text-text-2"}`}><FolderGit2 className="mr-1.5 inline size-3.5" />GitHub</button></div></div>
-          <label className="flex items-center justify-between gap-3 text-sm"><span><span className="block font-medium">Custom instructions</span><span className="text-xs text-text-3">Add guidance to this chat</span></span><input type="checkbox" checked={useCustomInstructions} onChange={(e) => setUseCustomInstructions(e.target.checked)} className="size-4 accent-accent" /></label>
+          <div><div className="mb-2 flex items-center justify-between text-xs"><label htmlFor="code-temperature" className="font-medium text-text-2">Temperature</label><span className="rounded bg-bg-3 px-2 py-1 font-mono">{temperature.toFixed(1)}</span></div><input id="code-temperature" type="range" min="0" max="2" step="0.1" value={temperature} onChange={(e) => setTemperature(Number(e.target.value))} className="w-full accent-accent" /></div>
+          <div><div className="mb-2 flex items-center justify-between text-xs"><label htmlFor="code-top-p" className="font-medium text-text-2">Top P</label><span className="rounded bg-bg-3 px-2 py-1 font-mono">{topP.toFixed(2)}</span></div><input id="code-top-p" type="range" min="0" max="1" step="0.05" value={topP} onChange={(e) => setTopP(Number(e.target.value))} className="w-full accent-accent" /></div>
+          <div><label htmlFor="code-max-tokens" className="mb-1.5 block text-xs font-medium text-text-3">Maximum output tokens</label><input id="code-max-tokens" type="number" min="256" max="8192" step="256" value={maxTokens} onChange={(e) => setMaxTokens(Math.max(256, Math.min(8192, Number(e.target.value) || 256)))} className="w-full rounded-lg border border-hairline bg-bg-2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-accent" /></div>
+          <label className="flex items-center justify-between gap-3 text-sm"><span><span className="block font-medium">Use custom system prompt</span><span className="text-xs text-text-3">Add guidance to this chat</span></span><input type="checkbox" checked={useCustomInstructions} onChange={(e) => setUseCustomInstructions(e.target.checked)} className="size-4 accent-accent" /></label>
           {useCustomInstructions && <textarea rows={4} value={customInstructions} onChange={(e) => setCustomInstructions(e.target.value)} placeholder="For example: preserve existing APIs and add tests." className="w-full resize-none rounded-lg border border-hairline bg-bg-2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-accent" />}
         </Card>
         <Card title={`Proposed changes${changes.length ? ` (${changes.length})` : ""}`} bodyClassName="flex flex-col">
