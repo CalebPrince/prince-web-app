@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { api } from "@/lib/api";
 import { redirect } from "next/navigation";
 
@@ -24,6 +24,6 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   return (
-    <AdminShell email={auth.email}>{children}</AdminShell>
+    <Suspense><AdminShell email={auth.email}>{children}</AdminShell></Suspense>
   );
 }

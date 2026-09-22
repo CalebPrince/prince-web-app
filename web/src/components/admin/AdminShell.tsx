@@ -4,9 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { CodeAgentSidebar } from "@/components/admin/CodeAgentSidebar";
+import { usePathname } from "next/navigation";
 
 export function AdminShell({ children, email }: { children: React.ReactNode; email: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const inCodeWorkspace = pathname.startsWith("/admin/code-agent");
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -69,7 +73,7 @@ export function AdminShell({ children, email }: { children: React.ReactNode; ema
           </button>
         </div>
 
-        <AdminSidebar onNavigate={closeSidebar} />
+        {inCodeWorkspace ? <CodeAgentSidebar onNavigate={closeSidebar} /> : <AdminSidebar onNavigate={closeSidebar} />}
 
         <div className="flex-shrink-0 border-t border-hairline p-4">
           <p className="text-xs text-text-2">Logged in as</p>
@@ -78,9 +82,8 @@ export function AdminShell({ children, email }: { children: React.ReactNode; ema
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col">
-        <div className="flex-1 overflow-y-auto p-4 pt-20 custom-scrollbar md:p-8">{children}</div>
+        <div className={`flex-1 overflow-y-auto p-4 pt-20 custom-scrollbar md:p-8 ${inCodeWorkspace ? "md:p-5" : ""}`}>{children}</div>
       </main>
     </div>
   );
 }
-
