@@ -24,16 +24,20 @@ class CodingAgentController
     public static function providers(): void
     {
         AuthMiddleware::requireAuth();
+        require_once dirname(__DIR__, 2) . '/config/config.php';
+        $isDevelopment = (appConfig()['environment'] ?? 'production') === 'development';
         $items = [];
         foreach (self::PROVIDERS as $id => $config) {
-            if (trim((string) Settings::get($config['key'])) === '') continue;
             $items[] = [
                 'id' => $id,
                 'label' => $config['label'],
                 'model' => (string) (Settings::get($config['model']) ?: 'Default model'),
+                'configured' => trim((string) Settings::get($config['key'])) !== '',
+                'subscription_supported' => in_array($id, ['openai', 'anthropic'], true),
+                'connection' => (string) (Settings::get('coding_' . $id . '_connection') ?: 'api'),
             ];
         }
-        Response::json(['providers' => $items]);
+        Response::json(['providers' => $items, 'environment' => $isDevelopment ? 'development' : 'production']);
     }
 
     public static function chat(): void

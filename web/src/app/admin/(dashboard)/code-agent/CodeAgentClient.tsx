@@ -11,7 +11,7 @@ import {
   FolderGit2, HardDrive, RotateCcw, Send, Sparkles, X,
 } from "lucide-react";
 
-type Provider = { id: string; label: string; model: string };
+type Provider = { id: string; label: string; model: string; configured: boolean };
 type Turn = CodeAgentTurn;
 type Change = { workspace?: "local" | "github"; path: string; content: string; summary: string; original_hash: string; is_new: boolean };
 type ChatResponse = { reply: string; provider: string; changes: Change[] };
@@ -64,8 +64,9 @@ export default function CodeAgentClient() {
   useEffect(() => {
     adminApi.get<{ providers: Provider[] }>("/api/v1/admin/coding-agent/providers")
       .then((result) => {
-        setProviders(result.providers);
-        setProvider((current) => current || result.providers[0]?.id || "");
+        const connected = result.providers.filter((item) => item.configured);
+        setProviders(connected);
+        setProvider((current) => current || connected[0]?.id || "");
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Could not load connected providers."));
   }, []);
