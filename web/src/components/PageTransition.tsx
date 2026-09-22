@@ -52,6 +52,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/contact": "Contact",
   "/ai-adoption-ladder": "AI adoption ladder",
   "/ai-safety": "AI trust & safety",
+  "/rate-compass": "Rate compass",
   "/search": "Search",
 };
 
@@ -199,6 +200,13 @@ export function PageTransition() {
       event.preventDefault();
       const url = new URL((anchor as HTMLAnchorElement).href, window.location.href);
       const target = url.pathname + url.search + url.hash;
+      // LiteSpeed sits in front of the production Next server. Its cache can
+      // occasionally return the homepage RSC payload for a prefetched footer
+      // destination even though a direct document request for that same URL
+      // is correct. Footer links are far enough down the page that their
+      // destination is already hidden by the curtain, so use a document
+      // navigation there and bypass the ambiguous RSC cache entirely.
+      const useDocumentNavigation = Boolean(anchor.closest("footer"));
 
       clearTimers();
       // Asked for again here in case the visitor arrived by keyboard or touch
@@ -213,6 +221,10 @@ export function PageTransition() {
       // one animation the visitor is actually looking at.
       after(SWEEP_MS, () => {
         setPhase("covered");
+        if (useDocumentNavigation) {
+          window.location.assign(target);
+          return;
+        }
         router.push(target);
       });
       after(SWEEP_MS + STUCK_MS, () => {
