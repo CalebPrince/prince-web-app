@@ -39,11 +39,11 @@ export function BusinessHeroSlider({ content }: { content?: ManagedContent }) {
           <span className="grid size-8 place-items-center rounded-full border border-accent/30 bg-accent/10 text-accent">
             <ShieldCheck className="size-4" aria-hidden="true" />
           </span>
-          <span>
+          <span className="leading-relaxed">
             <strong className="font-semibold text-text">{content?.hero_security_title || "Secure by design."}</strong>{" "}
             {content?.hero_security_text || "Risk-led scope, minimum access and verified handover."}
+            <ArrowRight className="ml-1 inline-block size-3.5 align-[-0.12em] text-accent transition-transform group-hover:translate-x-1" />
           </span>
-          <ArrowRight className="ml-1 size-3.5 shrink-0 text-accent transition-transform group-hover:translate-x-1" />
         </Link>
 
         <div className="mt-8 flex flex-col gap-4 sm:flex-row">
