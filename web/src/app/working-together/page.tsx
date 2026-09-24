@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import { api } from "@/lib/api";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
 import { QuarterlyAvailability } from "@/components/QuarterlyAvailability";
-import { PROJECT_STEPS, ProjectStandards } from "@/components/ProjectStandards";
+import { ProjectStandards, resolveProjectSteps } from "@/components/ProjectStandards";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { IntakeCta } from "@/components/IntakeCta";
+import { SecurityStandards } from "@/components/SecurityStandards";
 
 export const metadata: Metadata = {
   title: "Working Together",
   description:
-    "How Prince Caleb scopes, designs and delivers projects: a limited quarterly intake, a written agreement, clear payment milestones and client approvals before work starts.",
+    "How Prince Caleb scopes and delivers secure projects: risk-led discovery, a written agreement, controlled milestones, verification and clear handover.",
 };
 
 // Reads the live intake numbers, so this page can never promise availability
@@ -23,15 +24,25 @@ export const dynamic = "force-dynamic";
 const AGREEMENT_COVERS = [
   "Objectives, pages, features and deliverables",
   "What is included, and what is explicitly excluded",
+  "Data, access, integrations and security responsibilities",
   "Total cost, currency and payment milestones",
   "Timeline, review stages and the materials you supply",
   "Included revisions, and how extra work is quoted",
-  "Handover, access, ownership and ongoing support",
+  "Verification, handover, ownership and ongoing support",
   "Pause, cancellation and other project-specific terms",
 ];
 
+function HighlightTitle({ value }: { value: string }) {
+  const match = value.match(/\*\*([^*]+)\*\*/);
+  if (!match) return value;
+  const start = match.index ?? 0;
+  return <>{value.slice(0, start)}<span className="text-accent">{match[1]}</span>{value.slice(start + match[0].length)}</>;
+}
+
 export default async function WorkingTogether() {
-  const intake = resolveQuarterlyIntake(await api.content().catch(() => null));
+  const content = await api.content().catch(() => null);
+  const intake = resolveQuarterlyIntake(content);
+  const projectSteps = resolveProjectSteps(content);
 
   return (
     <>
@@ -42,14 +53,12 @@ export default async function WorkingTogether() {
         </Reveal>
         <Reveal delay={80}>
           <h1 className="page-hero-title mt-8 max-w-4xl">
-            A good project starts with <span className="text-accent">a clear agreement.</span>
+            <HighlightTitle value={content?.working_together_title || "A good project starts with **clarity and control.**"} />
           </h1>
         </Reveal>
         <Reveal delay={160}>
           <p className="mt-8 max-w-2xl text-lg leading-relaxed text-text-2 md:text-xl">
-            Before design or development starts, we agree what you need, what I will deliver, what it
-            costs and how we will work together. You have time to read it and ask questions before
-            committing to anything.
+            {content?.working_together_intro || "Before design or development starts, we agree the outcome, scope, risks, responsibilities, cost and way of working. Security is shaped around the real system from the beginning, not added after the important decisions have already been made."}
           </p>
         </Reveal>
       </section>
@@ -66,7 +75,7 @@ export default async function WorkingTogether() {
         </Reveal>
 
         <div className="mt-16 grid gap-10 md:grid-cols-2">
-          {PROJECT_STEPS.map((step, i) => (
+          {projectSteps.map((step, i) => (
             <Reveal key={step.no} delay={(i % 2) * 90} className="border-t border-hairline pt-8">
               <span className="label text-accent">{step.no}</span>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight">{step.title}</h3>
@@ -104,7 +113,11 @@ export default async function WorkingTogether() {
         </div>
       </section>
 
-      <ProjectStandards compact />
+      <ProjectStandards compact content={content} />
+
+      <div id="security" className="scroll-mt-24">
+        <SecurityStandards content={content} />
+      </div>
 
       {/* ── CTA ─────────────────────────────────────────────── */}
       <section className="mx-auto max-w-3xl px-6 py-24 text-center md:py-32">

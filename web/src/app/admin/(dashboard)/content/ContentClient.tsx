@@ -178,6 +178,54 @@ const SECTIONS: Record<string, Section[]> = {
       ],
     },
   ],
+  security: [
+    {
+      title: "Landing-page security positioning",
+      fields: [
+        t("hero_security_title", "Hero security statement"),
+        ta("hero_security_text", "Hero security supporting line"),
+      ],
+    },
+    {
+      title: "Working Together introduction",
+      fields: [
+        { key: "working_together_title", label: "Page title", hint: "Wrap one phrase in ** to highlight it in the accent colour." },
+        ta("working_together_intro", "Page introduction"),
+        t("project_standards_title", "Project standards title"),
+        ta("project_standards_intro", "Project standards introduction"),
+      ],
+    },
+    {
+      title: "Four-stage project method",
+      fields: [1, 2, 3, 4].flatMap((i) => [
+        t(`project_step_${i}_title`, `Stage ${i} title`),
+        ta(`project_step_${i}_body`, `Stage ${i} description`),
+      ]),
+    },
+    {
+      title: "Security standard",
+      fields: [
+        t("security_eyebrow", "Eyebrow"),
+        t("security_title", "Title"),
+        ta("security_intro", "Introduction"),
+        ...[1, 2, 3, 4].flatMap((i) => [
+          t(`security_control_${i}_label`, `Principle ${i} label`),
+          t(`security_control_${i}_title`, `Principle ${i} title`),
+          ta(`security_control_${i}_body`, `Principle ${i} explanation`),
+        ]),
+      ],
+    },
+    {
+      title: "Security review mockup",
+      fields: [
+        ...[1, 2, 3, 4, 5].flatMap((i) => [
+          t(`security_ledger_${i}_label`, `Row ${i} label`),
+          t(`security_ledger_${i}_value`, `Row ${i} value`),
+        ]),
+        ta("security_disclaimer", "Mockup disclaimer"),
+      ],
+    },
+  ],
   about: [
     {
       title: "About & contact",
@@ -294,6 +342,7 @@ type Tab = keyof typeof SECTIONS | "faq" | "agents";
 const TABS: { value: Tab; label: string }[] = [
   { value: "hero", label: "Hero" },
   { value: "services", label: "Services" },
+  { value: "security", label: "Security & process" },
   { value: "about", label: "About" },
   { value: "archive", label: "Archive" },
   { value: "faq", label: "FAQ" },

@@ -16,8 +16,9 @@ import { GoogleRatingStrip } from "@/components/GoogleRatingStrip";
 import { GoogleReviewCard } from "@/components/GoogleReviewCard";
 import { QuarterlyAvailability } from "@/components/QuarterlyAvailability";
 import { IntakeCta } from "@/components/IntakeCta";
-import { PROJECT_STEPS as PROCESS, ProjectStandards } from "@/components/ProjectStandards";
+import { ProjectStandards, resolveProjectSteps } from "@/components/ProjectStandards";
 import { BusinessHeroSlider } from "@/components/BusinessHeroSlider";
+import { SecurityStandards } from "@/components/SecurityStandards";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
 import {
   SITE_URL, SITE_NAME, SITE_ALTERNATE_NAME, SITE_DESCRIPTION,
@@ -66,6 +67,7 @@ export default async function Home() {
   const googleReviewCount = liveGoogleRating?.reviewCount ?? 0;
   const googleReviewUrl = content?.google_review_url || "https://g.page/r/CfBZ-YWdgM_UEBI/review";
   const quarterlyIntake = resolveQuarterlyIntake(content);
+  const process = resolveProjectSteps(content);
   const faqCount = parseInt(content?.faq_count || "0");
   const faqs = [];
   for (let i = 1; i <= faqCount; i++) {
@@ -159,7 +161,7 @@ const siteSchema = {
           <HeroOrbs />
         </div>
 
-        <BusinessHeroSlider />
+        <BusinessHeroSlider content={content} />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center">
           <div className="flex items-center gap-3">
@@ -286,7 +288,7 @@ const siteSchema = {
 
           <div className="relative mt-20 grid gap-y-12 md:grid-cols-4 md:gap-x-8">
             <div className="absolute left-0 right-0 top-2 hidden h-px bg-hairline md:block" />
-            {PROCESS.map((step, i) => (
+            {process.map((step, i) => (
               <Reveal key={step.no} delay={i * 90} className="relative">
                 <div className="mb-6 flex items-center gap-4 md:block">
                   <span className="relative z-10 block size-4 rounded-full border border-accent bg-bg">
@@ -302,7 +304,9 @@ const siteSchema = {
         </div>
       </section>
 
-      <ProjectStandards compact />
+      <ProjectStandards compact content={content} />
+
+      <SecurityStandards compact content={content} />
 
       {/* ── 04 · BEYOND THE WEBSITE ─────────────────────────── */}
       <section id="ai-automation" className="relative overflow-hidden border-t border-hairline">

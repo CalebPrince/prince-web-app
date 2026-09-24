@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle, ShieldCheck } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { WebsiteDesignPreview } from "@/components/WebsiteDesignPreview";
 import { cn } from "@/lib/utils";
+import type { ManagedContent } from "@/components/ProjectStandards";
 
 const serviceSlides = [
   {
@@ -37,7 +38,7 @@ function Title({ value }: { value: string }) {
   return <>{value.slice(0, start)}<span className="text-accent">{match[1]}</span>{value.slice(start + match[0].length)}</>;
 }
 
-export function BusinessHeroSlider() {
+export function BusinessHeroSlider({ content }: { content?: ManagedContent }) {
   const slides = serviceSlides;
   const [active, setActive] = useState(0);
 
@@ -80,6 +81,20 @@ export function BusinessHeroSlider() {
             <MessageCircle className="size-4" /> Chat on WhatsApp
           </Link>
         </div>
+
+        <Link
+          href="/working-together#security"
+          className="group mt-8 inline-flex items-center gap-3 border-t border-hairline pt-5 text-sm text-text-2 transition-colors hover:text-text"
+        >
+          <span className="grid size-8 place-items-center rounded-full border border-accent/30 bg-accent/10 text-accent">
+            <ShieldCheck className="size-4" aria-hidden="true" />
+          </span>
+          <span>
+            <strong className="font-semibold text-text">{content?.hero_security_title || "Secure by design."}</strong>{" "}
+            {content?.hero_security_text || "Risk-led scope, minimum access and verified handover."}
+          </span>
+          <ArrowRight className="ml-1 size-3.5 shrink-0 text-accent transition-transform group-hover:translate-x-1" />
+        </Link>
       </div>
 
       <div className="relative mx-auto w-full max-w-2xl lg:ml-auto lg:mr-0">

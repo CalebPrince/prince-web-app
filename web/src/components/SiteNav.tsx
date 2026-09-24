@@ -15,7 +15,7 @@ const NAV: { label: string; to: string; note: string }[] = [
   { label: "Selected work", to: "/work", note: "Projects and case studies" },
   { label: "Pricing", to: "/pricing", note: "What it costs" },
   { label: "About", to: "/about", note: "Who you are hiring" },
-  { label: "Working together", to: "/working-together", note: "Agreement, payment & delivery" },
+  { label: "Working together", to: "/working-together", note: "Scope, security & delivery" },
   { label: "Contact", to: "/contact", note: "Start something" },
 ];
 

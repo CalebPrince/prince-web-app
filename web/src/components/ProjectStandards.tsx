@@ -8,25 +8,38 @@ import { Reveal } from "@/components/Reveal";
 export const PROJECT_STEPS = [
   {
     no: "01",
-    title: "Define the project",
-    body: "We discuss your goals, audience, requirements and budget before I recommend a direction.",
+    title: "Define the outcome and risk",
+    body: "We map the business goal, users, sensitive data, integrations, constraints and budget before I recommend a direction.",
   },
   {
     no: "02",
     title: "Agree in writing",
-    body: "You review the deliverables, exclusions, revisions, timeline and payment schedule. Work starts after you accept the agreement and the initial payment clears.",
+    body: "You review the scope, exclusions, security responsibilities, timeline and payment schedule. Work starts after acceptance and the initial payment.",
   },
   {
     no: "03",
-    title: "Design and develop",
-    body: "You review the design before development, with progress and feedback at the agreed milestones.",
+    title: "Build in controlled stages",
+    body: "Architecture, access and safeguards are decided before sensitive features. You review working milestones as the project develops.",
   },
   {
     no: "04",
-    title: "Review and hand over",
-    body: "We check the agreed requirements together, complete the payment milestones, and arrange launch, access and support.",
+    title: "Verify and hand over",
+    body: "We check the agreed requirements and security controls, then arrange launch, access, documentation and ongoing support.",
   },
 ];
+
+export type ManagedContent = Record<string, string> | null | undefined;
+
+export function resolveProjectSteps(content?: ManagedContent) {
+  return PROJECT_STEPS.map((step, index) => {
+    const number = index + 1;
+    return {
+      ...step,
+      title: content?.[`project_step_${number}_title`] || step.title,
+      body: content?.[`project_step_${number}_body`] || step.body,
+    };
+  });
+}
 
 const ASSURANCES = [
   {
@@ -46,7 +59,7 @@ const ASSURANCES = [
   },
 ];
 
-export function ProjectStandards({ compact = false }: { compact?: boolean }) {
+export function ProjectStandards({ compact = false, content }: { compact?: boolean; content?: ManagedContent }) {
   return (
     <section aria-label="Before your project starts" className="border-y border-hairline bg-bg-2/50">
       <div
@@ -60,11 +73,10 @@ export function ProjectStandards({ compact = false }: { compact?: boolean }) {
                 compact ? "text-[clamp(1.6rem,3vw,2.4rem)]" : "text-[clamp(2rem,4vw,3.5rem)] leading-[1.08]"
               }`}
             >
-              Clear scope. Written agreement. Then we build.
+              {content?.project_standards_title || "Clear scope. Proportionate security. Then we build."}
             </h2>
             <p className="mt-5 max-w-xl leading-relaxed text-text-2">
-              You work directly with me, from the first conversation through to handover. I take on a
-              maximum of six projects a quarter, so each one gets the attention it needs.
+              {content?.project_standards_intro || "You work directly with me, from the first conversation through to handover. I take on a maximum of six projects a quarter, so risks, responsibilities and decisions are not rushed or left implicit."}
             </p>
             <Link
               href="/working-together"

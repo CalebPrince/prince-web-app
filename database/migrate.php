@@ -177,6 +177,55 @@ foreach ($adsOfferInserts as $name => $value) {
     $pricingInsertStmt->execute([$name, $value]);
 }
 
+// Public security and delivery-method copy. INSERT OR IGNORE gives existing
+// installations the current words in Site Content without ever overwriting
+// an edit made there later.
+$securityContentDefaults = [
+    'hero_security_title' => 'Secure by design.',
+    'hero_security_text' => 'Risk-led scope, minimum access and verified handover.',
+    'working_together_title' => 'A good project starts with **clarity and control.**',
+    'working_together_intro' => 'Before design or development starts, we agree the outcome, scope, risks, responsibilities, cost and way of working. Security is shaped around the real system from the beginning, not added after the important decisions have already been made.',
+    'project_standards_title' => 'Clear scope. Proportionate security. Then we build.',
+    'project_standards_intro' => 'You work directly with me, from the first conversation through to handover. I take on a maximum of six projects a quarter, so risks, responsibilities and decisions are not rushed or left implicit.',
+    'project_step_1_title' => 'Define the outcome and risk',
+    'project_step_1_body' => 'We map the business goal, users, sensitive data, integrations, constraints and budget before I recommend a direction.',
+    'project_step_2_title' => 'Agree in writing',
+    'project_step_2_body' => 'You review the scope, exclusions, security responsibilities, timeline and payment schedule. Work starts after acceptance and the initial payment.',
+    'project_step_3_title' => 'Build in controlled stages',
+    'project_step_3_body' => 'Architecture, access and safeguards are decided before sensitive features. You review working milestones as the project develops.',
+    'project_step_4_title' => 'Verify and hand over',
+    'project_step_4_body' => 'We check the agreed requirements and security controls, then arrange launch, access, documentation and ongoing support.',
+    'security_eyebrow' => 'Secure by design',
+    'security_title' => 'Security is a project decision, not a final checklist.',
+    'security_intro' => 'I use a risk-proportional baseline from discovery through handover. Controls become stricter when a project handles sensitive data, money, privileged access, automation or business-critical operations.',
+    'security_control_1_label' => 'Risk before features',
+    'security_control_1_title' => 'Security follows the real project risk.',
+    'security_control_1_body' => 'Before architecture is fixed, I identify the people, data, integrations and failure cases that matter. A brochure site and an operational AI system do not receive the same controls.',
+    'security_control_2_label' => 'Minimum necessary access',
+    'security_control_2_title' => 'Every permission needs a reason.',
+    'security_control_2_body' => 'Accounts, APIs, staff roles and automated tools receive only the access required for the agreed workflow. Secrets stay out of source code and public interfaces.',
+    'security_control_3_label' => 'Human authority',
+    'security_control_3_title' => 'Sensitive actions keep a person in control.',
+    'security_control_3_body' => 'Approval steps, escalation paths and prohibited actions are defined before launch. Automation does not quietly inherit authority it was never given.',
+    'security_control_4_label' => 'Evidence before launch',
+    'security_control_4_title' => 'Controls are checked, not assumed.',
+    'security_control_4_body' => 'The handover covers access, failure behaviour, data handling, logging, recovery and known limitations. Open risks are documented instead of hidden behind a launch date.',
+    'security_ledger_1_label' => 'Outcome',
+    'security_ledger_1_value' => 'Written and testable',
+    'security_ledger_2_label' => 'Data',
+    'security_ledger_2_value' => 'Necessary and accounted for',
+    'security_ledger_3_label' => 'Access',
+    'security_ledger_3_value' => 'Limited by role and task',
+    'security_ledger_4_label' => 'Failure',
+    'security_ledger_4_value' => 'Contained with a human path',
+    'security_ledger_5_label' => 'Launch',
+    'security_ledger_5_value' => 'Reviewed with evidence',
+    'security_disclaimer' => 'The exact controls are agreed for the project. This is a delivery standard, not a claim that every system has the same risk or compliance requirements.',
+];
+foreach ($securityContentDefaults as $name => $value) {
+    $pricingInsertStmt->execute([$name, $value]);
+}
+
 $appointmentColumns = array_column($pdo->query('PRAGMA table_info(appointments)')->fetchAll(), 'name');
 if (!in_array('admin_seen', $appointmentColumns, true)) {
     $pdo->exec('ALTER TABLE appointments ADD COLUMN admin_seen INTEGER NOT NULL DEFAULT 0');
