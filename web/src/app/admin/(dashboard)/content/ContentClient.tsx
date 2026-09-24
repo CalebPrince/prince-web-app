@@ -187,6 +187,16 @@ const SECTIONS: Record<string, Section[]> = {
       ],
     },
     {
+      title: "Trust & service standards",
+      fields: [
+        t("trust_badges_title", "Strip title"),
+        ...[1, 2, 3, 4].flatMap((i) => [
+          t(`trust_badge_${i}_title`, `Badge ${i} title`),
+          ta(`trust_badge_${i}_detail`, `Badge ${i} explanation`),
+        ]),
+      ],
+    },
+    {
       title: "Working Together introduction",
       fields: [
         { key: "working_together_title", label: "Page title", hint: "Wrap one phrase in ** to highlight it in the accent colour." },

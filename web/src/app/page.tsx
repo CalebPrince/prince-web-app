@@ -19,6 +19,7 @@ import { IntakeCta } from "@/components/IntakeCta";
 import { resolveProjectSteps } from "@/components/ProjectStandards";
 import { BusinessHeroSlider } from "@/components/BusinessHeroSlider";
 import { SecurityStandards } from "@/components/SecurityStandards";
+import { TrustStandards } from "@/components/TrustStandards";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
 import {
   SITE_URL, SITE_NAME, SITE_ALTERNATE_NAME, SITE_DESCRIPTION,
@@ -170,6 +171,8 @@ const siteSchema = {
           </div>
         </div>
       </section>
+
+      <TrustStandards content={content} />
 
       <GoogleRatingStrip rating={googleRating} reviewCount={googleReviewCount} reviewUrl={googleReviewUrl} />
 
