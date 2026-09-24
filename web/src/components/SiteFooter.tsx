@@ -36,9 +36,9 @@ const LEGAL_LINKS: { label: string; to: string }[] = [
 
 const SOCIAL: { label: string; href: string; icon: IconType }[] = [
   { label: "GitHub", href: "https://github.com/CalebPrince/prince-web-app", icon: FaGithub },
-  { label: "LinkedIn", href: "https://linkedin.com", icon: FaLinkedinIn },
-  { label: "YouTube", href: "https://youtube.com", icon: FaYoutube },
-  { label: "Twitter", href: "https://x.com", icon: FaXTwitter },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/caleb-akakpo-b7123a89/", icon: FaLinkedinIn },
+  { label: "YouTube", href: "https://www.youtube.com/@prince7caleb", icon: FaYoutube },
+  { label: "X", href: "https://x.com/princecay77", icon: FaXTwitter },
 ];
 
 const LINK_CLASS =

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Send, Mic, X, Volume2, VolumeX, Phone } from "lucide-react";
+import { Send, Mic, X, Volume2, VolumeX } from "lucide-react";
 import { AgentFace } from "@/components/AgentFace";
 import { ChatBubble, type ChatMsg } from "@/components/chat/ChatBubble";
 import { LeaveMessageForm } from "@/components/chat/LeaveMessageForm";
@@ -455,59 +455,28 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Launcher. Modelled on the ElevenLabs help widget: one card that says
-          who is there and then offers the ways in, rather than a stack of
-          floating buttons. The call is the filled pill because talking to
-          Lisa is the thing worth doing; text keeps its own button rather than
-          becoming a mode of the voice one.
-
-          The card is the resting state. There is no bubble to click first:
-          a launcher that only says "there is a launcher here" costs a click
-          to learn what the card says outright. */}
       {!open && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <div className="lisa-card">
-            <div className="flex items-center gap-2.5 px-1.5 pb-3 pt-1">
-              <AgentFace size="sm" />
-              <span className="text-[0.95rem] font-medium text-text">
-                {online === false ? `${assistantName} is away` : "Need help?"}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                // Always the call, even where the browser has no speech
-                // recognition: reading aloud does not need a microphone, and
-                // a silent "Ask anything" is not what the button says.
-                onClick={() => openWidget("voice", { greet: true })}
-                className="lisa-cta"
-              >
-                <Phone className="size-4" />
-                {online === false ? "Leave a message" : "Ask anything"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => openWidget("text")}
-                aria-label={`Chat with ${assistantName}`}
-                className="lisa-round relative"
-              >
-                <svg viewBox="0 0 24 24" fill="none" className="size-5" aria-hidden="true">
-                  <path
-                    d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinejoin="round"
-                  />
-                  <circle cx="8.75" cy="9.5" r="1.05" fill="currentColor" />
-                  <circle cx="12" cy="9.5" r="1.05" fill="currentColor" />
-                  <circle cx="15.25" cy="9.5" r="1.05" fill="currentColor" />
-                </svg>
-                {!badgeSeen && <span className="lisa-badge" aria-hidden="true" />}
-              </button>
-            </div>
-          </div>
+        <div className="fixed bottom-5 right-5 z-50">
+          <button
+            type="button"
+            onClick={() => openWidget("text")}
+            aria-label={online === false ? `Leave a message for ${assistantName}` : `Chat with ${assistantName}`}
+            title={online === false ? `${assistantName} is away — leave a message` : `Chat with ${assistantName}`}
+            className="lisa-round relative size-14 border-accent/30 bg-bg shadow-[0_12px_35px_rgba(0,0,0,0.18)]"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="size-5" aria-hidden="true">
+              <path
+                d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-5 4z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <circle cx="8.75" cy="9.5" r="1.05" fill="currentColor" />
+              <circle cx="12" cy="9.5" r="1.05" fill="currentColor" />
+              <circle cx="15.25" cy="9.5" r="1.05" fill="currentColor" />
+            </svg>
+            {!badgeSeen && <span className="lisa-badge" aria-hidden="true" />}
+          </button>
         </div>
       )}
 

@@ -50,7 +50,20 @@ export function PortfolioShowcase({ featured = false }: { featured?: boolean }) 
     <div aria-live="polite" className="portfolio-status">{systems ? `${shown?.length} project${shown?.length === 1 ? "" : "s"}` : ""}</div>
     {failed ? <div role="alert" className="portfolio-message">Projects couldn’t load. <button onClick={() => { setFailed(false); setAttempt((n) => n + 1); }}>Try again</button></div> : systems === null ? <div className="portfolio-grid" aria-label="Loading projects" aria-busy="true">{Array.from({ length: 6 }, (_, i) => <div className="portfolio-skeleton" key={i} />)}</div> : shown?.length === 0 ? <p className="portfolio-message">No projects to show yet.</p> : <div className="portfolio-grid">{shown?.map((system) => <article className="portfolio-card" key={system.slug}>
       <Link href={`/work/${system.slug}`} aria-label={`Explore ${system.name}`}><ProjectDevices system={system} /></Link>
-      <div className="portfolio-card-body"><h3><Link href={`/work/${system.slug}`}>{system.name}</Link></h3><p>{system.desc}</p><div className="portfolio-card-footer"><div className="portfolio-tags"><span>{system.category}</span>{system.stack.slice(0, 1).map((tag) => <span key={tag.name}>{tag.name}</span>)}</div>{system.live ? <a href={system.live} target="_blank" rel="noopener noreferrer" aria-label={`View ${system.name} live site (opens in new tab)`}>View live site <ArrowRight size={16} /></a> : <Link href={`/work/${system.slug}`}>View project <ArrowRight size={16} /></Link>}</div></div>
+      <div className="portfolio-card-body">
+        <div className="portfolio-tags">
+          <span>{system.category}</span>
+          {system.role && <span>{system.role}</span>}
+          {system.year && <span>{system.year}</span>}
+        </div>
+        <h3><Link href={`/work/${system.slug}`}>{system.name}</Link></h3>
+        <p>{system.desc}</p>
+        {system.result && <p className="border-l-2 border-accent pl-3 text-sm text-text-2"><strong className="block text-text">Verified project note</strong>{system.result}</p>}
+        <div className="portfolio-card-footer">
+          <Link href={`/work/${system.slug}`}>Read case study <ArrowRight size={16} /></Link>
+          {system.live && <a href={system.live} target="_blank" rel="noopener noreferrer" aria-label={`View ${system.name} live site (opens in new tab)`}>Live site <ArrowRight size={16} /></a>}
+        </div>
+      </div>
     </article>)}</div>}
   </div>;
 }

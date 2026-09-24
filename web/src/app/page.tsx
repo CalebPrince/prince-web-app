@@ -16,7 +16,7 @@ import { GoogleRatingStrip } from "@/components/GoogleRatingStrip";
 import { GoogleReviewCard } from "@/components/GoogleReviewCard";
 import { QuarterlyAvailability } from "@/components/QuarterlyAvailability";
 import { IntakeCta } from "@/components/IntakeCta";
-import { ProjectStandards, resolveProjectSteps } from "@/components/ProjectStandards";
+import { resolveProjectSteps } from "@/components/ProjectStandards";
 import { BusinessHeroSlider } from "@/components/BusinessHeroSlider";
 import { SecurityStandards } from "@/components/SecurityStandards";
 import { resolveQuarterlyIntake } from "@/lib/quarterly";
@@ -282,7 +282,7 @@ const siteSchema = {
           <Reveal>
             <SectionLabel index="03">Process</SectionLabel>
             <h2 className="mt-6 max-w-3xl text-[clamp(2.2rem,5vw,4.5rem)] font-bold leading-[1.02] tracking-[-0.03em]">
-              From brief to agreement to launch.
+              Controlled from brief to launch.
             </h2>
           </Reveal>
 
@@ -303,8 +303,6 @@ const siteSchema = {
           </div>
         </div>
       </section>
-
-      <ProjectStandards compact content={content} />
 
       <SecurityStandards compact content={content} />
 
