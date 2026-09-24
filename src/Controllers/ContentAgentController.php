@@ -107,6 +107,7 @@ class ContentAgentController
             self::createFlyerToolDeclaration(),
             self::saveSocialDraftToolDeclaration(),
             self::saveBlogDraftToolDeclaration(),
+            SharedAgentTools::inteliSpaceLookupToolDeclaration(),
         ];
     }
 
@@ -190,6 +191,7 @@ class ContentAgentController
             'create_flyer' => self::toolCreateFlyer($args, $pdo),
             'save_social_draft' => self::toolSaveSocialDraft($args, $pdo),
             'save_blog_draft' => self::toolSaveBlogDraft($args, $pdo),
+            'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
             default => ['error' => 'Unknown tool.'],
         };
     }

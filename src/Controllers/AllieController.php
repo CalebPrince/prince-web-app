@@ -84,6 +84,7 @@ class AllieController
         return [
             SharedAgentTools::siteInfoToolDeclaration(),
             SharedAgentTools::searchContentToolDeclaration(),
+            SharedAgentTools::inteliSpaceLookupToolDeclaration(),
             self::searchWebToolDeclaration(),
             self::browsePageToolDeclaration(),
             self::inspectGitHubRepositoryToolDeclaration(),
@@ -98,6 +99,7 @@ class AllieController
         return fn(string $name, array $args) => match ($name) {
             'get_site_info' => SharedAgentTools::getSiteInfo(),
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+            'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
             'search_web' => self::searchWeb((string) ($args['query'] ?? '')),
             'browse_page' => self::browsePage((string) ($args['url'] ?? '')),
             'inspect_github_repository' => self::inspectGitHubRepository((string) ($args['url'] ?? '')),

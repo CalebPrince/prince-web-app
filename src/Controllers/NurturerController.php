@@ -281,6 +281,7 @@ class NurturerController
             SharedAgentTools::checkAvailabilityToolDeclaration(),
             self::findLeadToolDeclaration(),
             self::listNewLeadsToolDeclaration(),
+            SharedAgentTools::inteliSpaceLookupToolDeclaration(),
         ];
     }
 
@@ -323,6 +324,7 @@ class NurturerController
             'check_availability' => AppointmentController::getAvailableSlots((string) ($args['date'] ?? '')),
             'find_lead' => self::toolFindLead($args, $pdo),
             'list_new_leads' => self::toolListNewLeads($pdo),
+            'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
             default => ['error' => 'Unknown tool.'],
         };
     }

@@ -542,6 +542,7 @@ class BeaconController
             ...self::draftToolDeclarations(),
             self::logQualifiedLeadToolDeclaration(),
             self::getDiscoverySettingsToolDeclaration(),
+            SharedAgentTools::inteliSpaceLookupToolDeclaration(),
         ];
     }
 
@@ -587,6 +588,7 @@ class BeaconController
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
             'log_qualified_lead' => self::toolLogQualifiedLead($args, $pdo),
             'get_discovery_settings' => self::toolGetDiscoverySettings(),
+            'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
             default => ['error' => 'Unknown tool.'],
         };
     }

@@ -192,6 +192,9 @@ class Arch
         $transcript[] = ['role' => 'user', 'text' => $message];
 
         $executor = function (string $name, array $args) use (&$brief): array {
+            if ($name === 'lookup_inteli_space_project') {
+                return SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? ''));
+            }
             if ($name !== 'update_brief') {
                 return ['error' => 'Unknown tool.'];
             }
@@ -201,7 +204,7 @@ class Arch
 
         $result = AiAgentEngine::run(
             self::chatSystemPrompt(),
-            [self::updateBriefToolDeclaration()],
+            [self::updateBriefToolDeclaration(), SharedAgentTools::inteliSpaceLookupToolDeclaration()],
             $executor,
             $transcript
         );

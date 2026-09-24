@@ -94,12 +94,14 @@ class WendyController
             self::resolveObservationToolDeclaration(),
             self::listPendingToolReviewsToolDeclaration(),
             self::submitToolReviewToolDeclaration(),
+            SharedAgentTools::inteliSpaceLookupToolDeclaration(),
         ];
     }
 
     private static function toolDispatcher(\PDO $pdo): \Closure
     {
         return fn(string $name, array $args) => match ($name) {
+            'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
             'team_activity' => Chief::snapshot($pdo, (int) ($args['hours'] ?? 24)),
             'operational_health' => ChloeInvestigator::snapshot($pdo),
             'founder_workload' => self::founderWorkload($pdo),

@@ -339,6 +339,82 @@ class SharedAgentTools
         ];
     }
 
+    /**
+     * Looks up a project by name in Inteli-Space (Prince Caleb's multi-model
+     * project workspace app, https://intelispace.vercel.app) — real current
+     * data (description, status, stats, recent decisions, context items),
+     * not a copy or a guess. Reuses the memory-bridge settings
+     * (model_agnostic_memory_url/_token, the same ones SharedAgentMemory uses)
+     * so there is one shared secret to configure, not two. Fails closed: a
+     * missing bridge setting returns a clear note instead of a fabricated
+     * answer — see SharedAgentMemory's own fail-closed comment for the same
+     * reasoning.
+     *
+     * @return array{projects?: array<int,array<string,mixed>>, note?: string}
+     */
+    public static function inteliSpaceLookup(string $query): array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return ['note' => 'No project name given.'];
+        }
+
+        $token = trim((string) (Settings::get('model_agnostic_memory_token') ?? ''));
+        $baseUrl = rtrim((string) (Settings::get('model_agnostic_memory_url') ?? ''), '/');
+        if ($token === '' || $baseUrl === '') {
+            return ['note' => 'The Inteli-Space bridge is not configured yet — nothing to look up.'];
+        }
+
+        $ch = curl_init($baseUrl . '/v1/agents/lookup?q=' . rawurlencode($query));
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_HTTPHEADER => ['X-Shared-Memory-Token: ' . $token],
+        ]);
+        $raw = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if (!is_string($raw) || $raw === '' || $status !== 200) {
+            error_log(sprintf(
+                'inteliSpaceLookup: status=%s curl_error=%s',
+                $status,
+                $curlError !== '' ? $curlError : 'none'
+            ));
+            return ['note' => 'Could not reach Inteli-Space right now — try again in a moment.'];
+        }
+
+        $decoded = json_decode($raw, true);
+        $projects = is_array($decoded['projects'] ?? null) ? $decoded['projects'] : [];
+        if (!$projects) {
+            return ['note' => 'No project matching "' . $query . '" found in Inteli-Space.'];
+        }
+        return ['projects' => $projects];
+    }
+
+    public static function inteliSpaceLookupToolDeclaration(): array
+    {
+        return [
+            'name' => 'lookup_inteli_space_project',
+            'description' => 'Look up a real project tracked in Inteli-Space (Prince Caleb\'s multi-model '
+                . 'project workspace app) by name — returns its description, status, stats, recent decisions, '
+                . 'and context items. Use this whenever asked about a specific project, tool, or app Prince '
+                . 'Caleb is building or has built, including Inteli-Space itself. Grounds the answer in real, '
+                . 'current data instead of guessing or saying you don\'t know.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'query' => [
+                        'type' => 'STRING',
+                        'description' => 'The project or app name to look up, e.g. "Inteli-Space" or "Haven Mobile App".',
+                    ],
+                ],
+                'required' => ['query'],
+            ],
+        ];
+    }
+
     public static function brandInfoToolDeclaration(): array
     {
         return [

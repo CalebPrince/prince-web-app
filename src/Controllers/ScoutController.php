@@ -60,12 +60,14 @@ class ScoutController
                 SharedAgentTools::searchContentToolDeclaration(),
                 self::searchWebToolDeclaration(),
                 self::inspectGitHubRepositoryToolDeclaration(),
+                SharedAgentTools::inteliSpaceLookupToolDeclaration(),
             ],
             fn(string $name, array $args) => match ($name) {
                 'get_site_info' => SharedAgentTools::getSiteInfo(),
                 'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
                 'search_web' => self::searchWeb((string) ($args['query'] ?? '')),
                 'inspect_github_repository' => self::inspectGitHubRepository((string) ($args['url'] ?? '')),
+                'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
                 default => ['error' => 'Unknown tool.'],
             },
             $transcript

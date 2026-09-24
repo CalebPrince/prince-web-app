@@ -210,6 +210,7 @@ class ProposalAgentController
             self::findInquiryToolDeclaration(),
             self::findProposalToolDeclaration(),
             self::draftProposalToolDeclaration(),
+            SharedAgentTools::inteliSpaceLookupToolDeclaration(),
         ];
     }
 
@@ -272,6 +273,7 @@ class ProposalAgentController
             'find_inquiry' => self::toolFindInquiry($args, $pdo),
             'find_proposal' => self::toolFindProposal($args, $pdo),
             'draft_proposal' => self::toolDraftProposal($args, $pdo),
+            'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
             default => ['error' => 'Unknown tool.'],
         };
     }

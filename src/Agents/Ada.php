@@ -164,6 +164,8 @@ class Ada
                         $drafted = $res['invoice'];
                     }
                     return $res;
+                case 'lookup_inteli_space_project':
+                    return SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? ''));
                 default:
                     return ['error' => 'Unknown tool.'];
             }
@@ -171,7 +173,7 @@ class Ada
 
         $result = AiAgentEngine::run(
             self::systemPrompt($demo, $readErrors),
-            [self::lookupToolDeclaration(), self::draftToolDeclaration()],
+            [self::lookupToolDeclaration(), self::draftToolDeclaration(), SharedAgentTools::inteliSpaceLookupToolDeclaration()],
             $executor,
             $transcript
         );

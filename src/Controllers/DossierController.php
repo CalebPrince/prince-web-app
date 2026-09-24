@@ -160,10 +160,12 @@ class DossierController
             [
                 SharedAgentTools::siteInfoToolDeclaration(),
                 SharedAgentTools::searchContentToolDeclaration(),
+                SharedAgentTools::inteliSpaceLookupToolDeclaration(),
             ],
             fn(string $name, array $args) => match ($name) {
                 'get_site_info' => SharedAgentTools::getSiteInfo(),
                 'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+                'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
                 default => ['error' => 'Unknown tool.'],
             },
             $transcript

@@ -2003,6 +2003,32 @@ if (!in_array('phone', $dripEnrollmentColumns, true)) {
     $pdo->exec('ALTER TABLE drip_enrollments ADD COLUMN phone TEXT');
 }
 
+// Ledger's pricing check keeps its own read-only review history. This is
+// intentionally additive so existing proposals, invoices, and pricing
+// settings are untouched when the feature is deployed.
+$pdo->exec(
+    "CREATE TABLE IF NOT EXISTS pricing_reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_name TEXT NOT NULL,
+        description TEXT,
+        document_name TEXT,
+        document_excerpt TEXT,
+        price_amount INTEGER NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT 'GHS',
+        answers TEXT NOT NULL DEFAULT '{}',
+        verdict TEXT NOT NULL CHECK (verdict IN ('too_low', 'needs_adjustment', 'on_target', 'too_high')),
+        confidence TEXT NOT NULL DEFAULT 'medium' CHECK (confidence IN ('low', 'medium', 'high')),
+        suggested_min INTEGER,
+        suggested_max INTEGER,
+        reasoning TEXT,
+        adjustment_notes TEXT,
+        grounding_source TEXT,
+        grounding_note TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )"
+);
+$pdo->exec('CREATE INDEX IF NOT EXISTS idx_pricing_reviews_created ON pricing_reviews (created_at)');
+
 // The pipeline board's stage moves need their own trigger, but
 // trigger_event is a CHECK constraint SQLite can't ALTER in place — rebuild
 // the table (same approach as the payments 'manual' source above) only when

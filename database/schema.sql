@@ -416,6 +416,32 @@ CREATE TABLE IF NOT EXISTS proposal_milestones (
 );
 CREATE INDEX IF NOT EXISTS idx_proposal_milestones_proposal ON proposal_milestones (proposal_id, sort_order);
 
+-- Ledger's pricing check: Caleb enters (or uploads a doc for) a project and
+-- what he's charging, answers a short structured questionnaire about it, and
+-- gets back a verdict grounded in the real published pricing tiers and past
+-- proposals. answers/document_excerpt are kept so a review can be re-read
+-- later without re-uploading; nothing here is a proposal or invoice record.
+CREATE TABLE IF NOT EXISTS pricing_reviews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_name TEXT NOT NULL,
+  description TEXT,
+  document_name TEXT,
+  document_excerpt TEXT,
+  price_amount INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  answers TEXT NOT NULL DEFAULT '{}',
+  verdict TEXT NOT NULL CHECK (verdict IN ('too_low', 'needs_adjustment', 'on_target', 'too_high')),
+  confidence TEXT NOT NULL DEFAULT 'medium' CHECK (confidence IN ('low', 'medium', 'high')),
+  suggested_min INTEGER,
+  suggested_max INTEGER,
+  reasoning TEXT,
+  adjustment_notes TEXT,
+  grounding_source TEXT,
+  grounding_note TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_pricing_reviews_created ON pricing_reviews (created_at);
+
 CREATE TABLE IF NOT EXISTS newsletter_subscribers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,

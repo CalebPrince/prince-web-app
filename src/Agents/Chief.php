@@ -975,6 +975,8 @@ class Chief
                     return $snap;
                 case 'past_briefs':
                     return ['briefs' => self::pastBriefs($pdo, (int) ($args['limit'] ?? 5))];
+                case 'lookup_inteli_space_project':
+                    return SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? ''));
                 default:
                     return ['error' => 'Unknown tool.'];
             }
@@ -982,7 +984,7 @@ class Chief
 
         $result = AiAgentEngine::run(
             self::chatPrompt(),
-            [self::teamActivityTool(), self::agentActivityTool(), self::pastBriefsTool()],
+            [self::teamActivityTool(), self::agentActivityTool(), self::pastBriefsTool(), SharedAgentTools::inteliSpaceLookupToolDeclaration()],
             $executor,
             $transcript
         );

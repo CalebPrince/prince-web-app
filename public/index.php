@@ -89,6 +89,7 @@ use App\Controllers\ContentAgentController;
 use App\Controllers\ContentIdeasController;
 use App\Controllers\ContentStudioController;
 use App\Controllers\CodingAgentController;
+use App\Controllers\PricingReviewController;
 use App\Controllers\ProposalAgentController;
 use App\Controllers\ProposalController;
 use App\Controllers\ProposalDraftController;
@@ -296,6 +297,9 @@ $router->delete('/api/v1/admin/proposal-drafts/{id}', [ProposalDraftController::
 $router->get('/api/v1/admin/proposals/{id}', [ProposalController::class, 'adminShow']);
 $router->put('/api/v1/admin/proposals/{id}', [ProposalController::class, 'update']);
 $router->delete('/api/v1/admin/proposals/{id}', [ProposalController::class, 'destroy']);
+$router->get('/api/v1/admin/pricing-review', [PricingReviewController::class, 'index']);
+$router->post('/api/v1/admin/pricing-review/generate', [PricingReviewController::class, 'generate']);
+$router->delete('/api/v1/admin/pricing-review/{id}', [PricingReviewController::class, 'destroy']);
 $router->get('/api/v1/admin/contacts', [ContactsController::class, 'index']);
 $router->get('/api/v1/admin/contacts/pipeline-summary', [ContactsController::class, 'pipelineSummary']);
 $router->get('/api/v1/admin/contacts/{email}', [ContactsController::class, 'show']);

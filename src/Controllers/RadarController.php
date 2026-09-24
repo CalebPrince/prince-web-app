@@ -78,10 +78,12 @@ class RadarController
                 self::getPipelineReportToolDeclaration(),
                 self::getPostPerformanceToolDeclaration(),
                 self::saveDmDraftToolDeclaration(),
+                SharedAgentTools::inteliSpaceLookupToolDeclaration(),
             ],
             fn(string $name, array $args) => match ($name) {
                 'get_site_info' => SharedAgentTools::getSiteInfo(),
                 'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
+                'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
                 'analyze_linkedin_url' => self::analyzeLinkedInUrl((string) ($args['url'] ?? '')),
                 'get_tracked_pages_findings' => self::getTrackedPagesFindings($pdo),
                 'get_pipeline_report' => self::getPipelineReport($pdo),

@@ -55,12 +55,14 @@ class ReelController
                 SharedAgentTools::searchContentToolDeclaration(),
                 SharedAgentTools::brandInfoToolDeclaration(),
                 self::browseUrlToolDeclaration(),
+                SharedAgentTools::inteliSpaceLookupToolDeclaration(),
             ],
             fn(string $name, array $args) => match ($name) {
                 'get_site_info' => SharedAgentTools::getSiteInfo(),
                 'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
                 'get_brand_info' => SharedAgentTools::getBrandInfo(),
                 'browse_url' => self::browseUrl((string) ($args['url'] ?? '')),
+                'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
                 default => ['error' => 'Unknown tool.'],
             },
             $transcript

@@ -3059,6 +3059,7 @@ class LiveChatController
                     'required' => ['client_name', 'client_email', 'items'],
                 ],
             ];
+            $tools[] = SharedAgentTools::inteliSpaceLookupToolDeclaration();
         }
         return $tools;
     }
@@ -3110,6 +3111,9 @@ class LiveChatController
                     : ['error' => 'Owner verification is required.'],
                 'create_invoice' => $isOwner
                     ? InvoiceController::createFromAgent($args)
+                    : ['error' => 'Owner verification is required.'],
+                'lookup_inteli_space_project' => $isOwner
+                    ? SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? ''))
                     : ['error' => 'Owner verification is required.'],
                 default => ['error' => 'Unknown tool.'],
             };

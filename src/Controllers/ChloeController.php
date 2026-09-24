@@ -54,9 +54,11 @@ class ChloeController
                 self::listIncidentsToolDeclaration(),
                 self::getIncidentToolDeclaration(),
                 self::investigateNowToolDeclaration(),
+                SharedAgentTools::inteliSpaceLookupToolDeclaration(),
             ],
             fn(string $name, array $args) => match ($name) {
                 'get_site_info' => SharedAgentTools::getSiteInfo(),
+                'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
                 'get_operational_status' => ChloeInvestigator::snapshot($pdo),
                 'list_incidents' => [
                     'incidents' => ChloeInvestigator::listIncidents(
