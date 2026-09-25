@@ -396,20 +396,20 @@ class TeamController
             [
                 'key' => 'allie',
                 'name' => Settings::get('allie_assistant_name') ?: 'Allie',
-                'role' => 'R&D — Tool Adoption Scout',
-                'description' => 'Modeled on the real Allie K. Miller\'s AI-first discipline — runs new AI/dev '
-                    . 'tools through a discover, evaluate, test, and compare pipeline, then hands the '
-                    . 'recommendation to Wendy for a team-impact review before it reaches you for the final '
-                    . 'adopt/reject call.',
+                'role' => 'AI Strategy & Experimentation Advisor',
+                'description' => 'Grounded in the real Allie K. Miller\'s ongoing public posts, interviews, talks, '
+                    . 'and experiments. She turns her day-to-day thinking on AI workflows, business strategy, '
+                    . 'careers, leadership, trust, adoption, agents, and products into practical decisions and '
+                    . 'bounded experiments for your work.',
                 'icon' => 'bi-compass',
                 'status' => $alliePendingApproval > 0 ? 'alert' : ($allieDiscoveryEnabled ? 'active' : 'ondemand'),
                 'status_label' => $alliePendingApproval > 0
                     ? $alliePendingApproval . ' awaiting your call'
                     : ($allieDiscoveryEnabled
-                        ? 'Scouting ' . (Settings::get('allie_discovery_frequency') ?: 'daily')
+                        ? 'Tracking signals ' . (Settings::get('allie_discovery_frequency') ?: 'daily')
                         : 'On demand'),
                 'stat_value' => $allieToolsEvaluated,
-                'stat_label' => 'tools evaluated',
+                'stat_label' => 'items evaluated',
                 'manage_url' => '/admin/allie-evaluations',
                 'manage_label' => 'Allie Reviews',
             ],
