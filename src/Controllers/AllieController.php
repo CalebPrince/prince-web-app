@@ -23,9 +23,9 @@ use App\Support\WhatsAppNotifier;
  * turns Allie's day-to-day thinking about workflows, careers, teams, trust,
  * AI adoption, and business value into practical advice for Caleb.
  *
- * Deliberately not a second Scout. Scout (ScoutController) is a free-form
- * ideation sparring partner — "what could we build with this." Allie brings
- * an evidence-led operating perspective; any concrete tool, workflow, or
+ * Allie also owns the former Scout remit: she is Caleb's live ideation
+ * sparring partner for "what could we build with this?" Her evidence-led
+ * operating perspective keeps those ideas useful; any concrete tool, workflow, or
  * experiment she recommends gets tracked as a real allie_evaluations row and
  * run through the same rubric (3P impact, economic value over novelty, a
  * bounded pilot with a metric/owner/stop-loss) until it reaches a
@@ -34,8 +34,7 @@ use App\Support\WhatsAppNotifier;
  * list_pending_tool_reviews/submit_tool_review) before Caleb makes the last
  * adopt/reject call himself, via the allie-evaluations admin page.
  *
- * No cron/autonomous discovery yet — like Scout and Wendy, she's chat-only,
- * triggered by Caleb actually asking her to look into something.
+ * She supports both live chat and the optional scheduled discovery pass.
  */
 class AllieController
 {
@@ -245,6 +244,13 @@ class AllieController
             . "A quiet news week is not a reason to turn the conversation into a product-release roundup.\n"
             . "- Treat her public thinking as living evidence, not a frozen persona. If newer statements change or "
             . "complicate an older framework, say so.\n\n"
+            . "IDEATION: You also own technical scouting and build brainstorming. When Caleb brings a new tool, "
+            . "framework, model, repository, or rough idea, explore what he could build with it. Verify what is "
+            . "current, connect it to his real stack, services, and past work, then give a short list of sharp, "
+            . "specific, buildable concepts. For each, name the enabling technology, why the opportunity matters "
+            . "now, and what the smallest credible version would be. Be a lively sparring partner, not only an "
+            . "evaluation gate, and do not force early-stage brainstorming into a saved evaluation until an idea "
+            . "becomes a concrete experiment or recommendation.\n\n"
             . "When a tool, workflow, or business experiment lands on your desk, use this practical rubric:\n"
             . "- 3P lens: how does this change People (who does what), Process (how work actually happens), "
             . "and Product (what ships)? Something merely neat that touches none of the three isn't worth "
@@ -365,7 +371,7 @@ class AllieController
 
     /**
      * Real web search via Serper's search endpoint — same implementation as
-     * ScoutController::searchWeb() except for the recency window
+     * Uses a short recency window because Allie's work depends on what is
      * (`tbs: qdr:m`, past month rather than past year): Allie's job is
      * specifically catching what's new *right now* in a fast-moving space,
      * so a query that only turns up year-old results should read as "nothing
@@ -495,7 +501,7 @@ class AllieController
 
     /**
      * Inspect only public github.com repositories through fixed GitHub API
-     * endpoints — same implementation as ScoutController::inspectGitHubRepository().
+     * endpoints, with strict owner/repository extraction to prevent SSRF.
      * Strict owner/repository extraction prevents arbitrary URL fetching and SSRF.
      *
      * @return array<string,mixed>

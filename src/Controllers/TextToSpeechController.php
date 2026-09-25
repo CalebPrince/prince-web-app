@@ -13,14 +13,13 @@ class TextToSpeechController
 {
     /**
      * Every agent that gets a real ElevenLabs voice, mapped to the Settings
-     * key holding its voice ID. Lisa is the original/default; Scout, Chloe,
-     * Wendy, and Allie are the only other agents with a dedicated voice so
+     * key holding its voice ID. Lisa is the original/default; Chloe,
+     * Wendy, and Allie are the other agents with a dedicated voice so
      * far — everyone else still uses the browser's own speechSynthesis (see
      * admin-agent-chat.js).
      */
     private const AGENT_VOICE_SETTING = [
         'lisa' => 'elevenlabs_voice_id',
-        'scout' => 'scout_elevenlabs_voice_id',
         'chloe' => 'chloe_elevenlabs_voice_id',
         'wendy' => 'wendy_elevenlabs_voice_id',
         'allie' => 'allie_elevenlabs_voice_id',
@@ -30,15 +29,11 @@ class TextToSpeechController
      * Max characters synthesized per agent. Lisa's 700 is a deliberate public-
      * abuse guard (this endpoint has no auth check for her — the public
      * widget calls it directly), sized for her short conversational replies.
-     * Scout's admin-console answers run much longer (a brainstormed list with
-     * reasoning easily clears 700 chars), so a text cut off at 700 played as
-     * audio that just stopped mid-sentence — the actual bug reported. Scout
-     * gets a real admin-auth check below instead, so the higher cap can't be
-     * hit by an anonymous caller racking up ElevenLabs cost.
+     * Admin-agent answers can run much longer, so those agents receive a
+     * higher cap behind the authenticated path below.
      */
     private const MAX_TEXT_LENGTH = [
         'lisa' => 700,
-        'scout' => 3000,
         'chloe' => 3000,
         'wendy' => 3000,
         'allie' => 3000,
@@ -67,8 +62,7 @@ class TextToSpeechController
         $maxLength = self::MAX_TEXT_LENGTH[$agent] ?? self::MAX_TEXT_LENGTH['lisa'];
 
         $apiKey = trim((string) Settings::get('elevenlabs_api_key'));
-        // Scout falls back to Lisa's voice ID until an admin sets its own —
-        // still a real, working voice rather than a hard failure.
+        // Admin agents fall back to Lisa's voice ID until their own is set.
         $voiceId = trim((string) Settings::get($voiceSettingKey)) ?: trim((string) Settings::get('elevenlabs_voice_id'));
         $modelId = trim((string) Settings::get('elevenlabs_tts_model'));
         if ($apiKey === '' || $voiceId === '') {

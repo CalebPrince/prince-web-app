@@ -21,6 +21,7 @@ class SettingsController
         'deepseek_api_key', 'deepseek_model',
         'gemini_api_key', 'gemini_model', 'gemini_image_model', 'openrouter_api_key', 'openrouter_model', 'groq_api_key', 'groq_model',
         'openai_api_key', 'openai_model', 'anthropic_api_key', 'anthropic_model', 'serper_api_key', 'hunter_api_key', 'apify_api_key', 'pagespeed_api_key', 'dataforseo_login', 'dataforseo_password', 'slack_webhook_url',
+        'typesafe_api_key', 'typesafe_gate_mode',
         'whatsapp_provider', 'whapi_api_token', 'whapi_webhook_secret', 'owner_whatsapp_number', 'owner_voice_number',
         'wati_api_endpoint', 'wati_api_token', 'wati_webhook_secret',
         'twilio_account_sid', 'twilio_auth_token', 'twilio_whatsapp_number', 'twilio_webhook_url',
@@ -30,7 +31,7 @@ class SettingsController
         'elevenlabs_whatsapp_alert_template_name', 'elevenlabs_whatsapp_alert_template_lang', 'elevenlabs_whatsapp_alert_template_params',
         'elevenlabs_phone_agent_id', 'elevenlabs_phone_number_id',
         'elevenlabs_phone_webhook_secret', 'elevenlabs_phone_postcall_signing_secret',
-        'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model', 'scout_elevenlabs_voice_id',
+        'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model',
         'chloe_elevenlabs_voice_id', 'chloe_min_confidence_to_escalate', 'chloe_min_minutes_before_escalate',
         'wendy_elevenlabs_voice_id', 'allie_elevenlabs_voice_id',
         'liveavatar_enabled', 'liveavatar_api_key', 'liveavatar_avatar_id', 'liveavatar_context_id', 'liveavatar_voice_id',
@@ -158,7 +159,6 @@ class SettingsController
         'chief_assistant_name', 'chief_voice_gender', 'chief_voice_accent',
         'content_assistant_name', 'content_voice_gender', 'content_voice_accent',
         'arch_assistant_name', 'arch_voice_gender', 'arch_voice_accent',
-        'scout_assistant_name', 'scout_voice_gender', 'scout_voice_accent',
         'sage_assistant_name', 'sage_voice_gender', 'sage_voice_accent',
         'reel_assistant_name', 'reel_voice_gender', 'reel_voice_accent',
         'radar_assistant_name', 'radar_voice_gender', 'radar_voice_accent',
@@ -407,7 +407,7 @@ class SettingsController
         AuthMiddleware::requireAgentAuth();
         $keys = [
             'lisa', 'content', 'beacon', 'dossier', 'nurturer', 'proposal', 'arch', 'ada',
-            'chief', 'sketch', 'scout', 'radar', 'reel', 'chloe', 'wendy', 'allie', 'sage',
+            'chief', 'sketch', 'radar', 'reel', 'chloe', 'wendy', 'allie', 'sage',
         ];
         $names = [];
         foreach ($keys as $key) {

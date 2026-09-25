@@ -11,6 +11,7 @@ use App\Support\Database;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\TypeSafeGate;
 
 /**
  * Beacon: reviews a scraped social media post/comment (Reddit, X, LinkedIn
@@ -109,6 +110,16 @@ class BeaconController
         // them while $round < $maxToolRounds - 1, so one round sends none and
         // makes exactly one call.
         $maxToolRounds = $source === 'cron' ? 1 : 2;
+
+        // TypeSafe pre-filter, cron path only (~90% of candidates get rejected
+        // anyway). Fails open on any problem. In the default shadow mode it
+        // only logs its verdict next to the full model's; 'enforce' lets it
+        // skip the call.
+        $gate = $source === 'cron' ? TypeSafeGate::screenPost($platform, $postContent, $postUrl) : null;
+        if (TypeSafeGate::shouldReject($gate)) {
+            return TypeSafeGate::rejection($gate);
+        }
+
         $result = AiAgentEngine::run(
             self::buildSystemPrompt(),
             self::draftToolDeclarations(),
@@ -131,6 +142,7 @@ class BeaconController
         // this qualifies via the structured output above, so there's no
         // decision left for a tool to make (and no risk of it "forgetting").
         $qualified = (bool) $parsed['qualified'];
+        TypeSafeGate::logShadow('post', $gate, $qualified, (int) $parsed['confidence_score']);
 
         // persistIfQualified() is shared with generateForEngagement() — same
         // confidence gate, review queue, and marketing_pitch_sent automation
@@ -176,6 +188,11 @@ class BeaconController
             $engagerName, $engagerHeadline, $engagementType, $commentText, $sourcePostAuthor, $sourcePostTopic
         );
 
+        $gate = TypeSafeGate::screenEngager($engagerName, $engagerHeadline, $engagementType, $commentText);
+        if (TypeSafeGate::shouldReject($gate)) {
+            return TypeSafeGate::rejection($gate);
+        }
+
         // No tools, same reasoning as generateForPost()'s cron branch: this
         // runs unattended over a batch of engagers, and grounding round-trips
         // aren't worth spending on a profile snippet this thin.
@@ -198,6 +215,7 @@ class BeaconController
         }
 
         $qualified = (bool) $parsed['qualified'];
+        TypeSafeGate::logShadow('engagement', $gate, $qualified, (int) $parsed['confidence_score']);
         $postContent = self::engagementDescription(
             $engagerName, $engagerHeadline, $engagementType, $commentText, $sourcePostAuthor, $sourcePostTopic
         );

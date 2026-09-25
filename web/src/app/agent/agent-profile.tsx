@@ -149,20 +149,20 @@ const PROFILES: Record<string, Profile> = {
       ["Alert", "Only meaningful decisions and risks are escalated."],
     ],
   },
-  scout: {
+  allie: {
     mandate:
-      "Track emerging web, mobile, and AI tools and frameworks, and turn them into concrete, buildable project ideas grounded in real, live research rather than guesses.",
+      "Turn Allie K. Miller's ongoing public thinking and live technology research into practical AI strategy, buildable ideas, and bounded experiments.",
     surfaces: [
-      ["Tech scouting", "Checks what is actually new via live web search."],
-      ["Ideation", "Sketches concrete, buildable project concepts on new tooling."],
-      ["Grounding", "Anchors ideas in the studio's real stack and past work."],
-      ["Sparring", "Works through possibilities live with the owner."],
+      ["AI strategy", "Connects public ideas about AI adoption to the studio's real work."],
+      ["Tech scouting", "Checks what is actually new via live web research."],
+      ["Ideation", "Turns new capabilities into concrete, buildable concepts."],
+      ["Experiments", "Defines a metric, owner, and stop-loss before recommending adoption."],
     ],
     path: [
-      ["Prompt", "A question or a spark of curiosity starts the conversation."],
-      ["Check", "A live web search verifies what is current before anything is claimed."],
-      ["Connect", "The finding is matched against real services and past projects."],
-      ["Propose", "A concrete, buildable idea comes back for the owner to weigh."],
+      ["Listen", "Recent posts, interviews, and live technology signals establish the evidence."],
+      ["Connect", "The signal is matched against real services, workflows, and past projects."],
+      ["Imagine", "Allie develops a concrete build or operating experiment."],
+      ["Evaluate", "The idea is tested for people, process, product, and economic value."],
     ],
   },
   reel: {

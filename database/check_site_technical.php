@@ -5,7 +5,7 @@ declare(strict_types=1);
 // Refreshes the Technical/Health tier of the admin Sites page: domain expiry
 // (RDAP, no key needed), PageSpeed scores (Google PSI API, needs
 // 'pagespeed_api_key' under Settings), and last deployment date (GitHub, via
-// GithubClient — reused from Scout's repo-inspection tool). Run once a day
+// GithubClient — shared with Allie's repo-inspection tool). Run once a day
 // on a cPanel cron; unlike check_uptime.php this data barely changes between
 // runs, so there's no value in polling it more often. One bad project never
 // aborts the run — each check is independently best-effort.

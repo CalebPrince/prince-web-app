@@ -47,10 +47,10 @@
       surfaces: [["Reporting", "Summarizes real activity over the selected period."], ["Monitoring", "Watches operational signals and exceptions."], ["Owner alerts", "Sends private decision and handoff notifications."], ["Finance awareness", "Explains cost, revenue, and operating trends privately."]],
       path: [["Observe", "Operational records and agent activity are read."], ["Compare", "Results, exceptions, and changes are evaluated."], ["Explain", "Numbers and activity become a concise owner brief."], ["Alert", "Only meaningful decisions and risks are escalated."]]
     },
-    scout: {
-      mandate: "Track emerging web, mobile, and AI tools and frameworks, and turn them into concrete, buildable project ideas grounded in real, live research rather than guesses.",
-      surfaces: [["Tech scouting", "Checks what is actually new via live web search."], ["Ideation", "Sketches concrete, buildable project concepts on new tooling."], ["Grounding", "Anchors ideas in the studio's real stack and past work."], ["Sparring", "Works through possibilities live with the owner."]],
-      path: [["Prompt", "A question or a spark of curiosity starts the conversation."], ["Check", "A live web search verifies what is current before anything is claimed."], ["Connect", "The finding is matched against real services and past projects."], ["Propose", "A concrete, buildable idea comes back for the owner to weigh."]]
+    allie: {
+      mandate: "Turn Allie K. Miller's ongoing public thinking and live technology research into practical AI strategy, buildable ideas, and bounded experiments.",
+      surfaces: [["AI strategy", "Connects public ideas about AI adoption to the studio's real work."], ["Tech scouting", "Checks what is actually new via live web research."], ["Ideation", "Turns new capabilities into concrete, buildable concepts."], ["Experiments", "Defines a metric, owner, and stop-loss before recommending adoption."]],
+      path: [["Listen", "Recent posts, interviews, and live technology signals establish the evidence."], ["Connect", "The signal is matched against real services, workflows, and past projects."], ["Imagine", "Allie develops a concrete build or operating experiment."], ["Evaluate", "The idea is tested for people, process, product, and economic value."]]
     },
     reel: {
       mandate: "Plan a video before it gets built, concept, scene breakdown, narration script, pacing, and visual style, for videos produced with the studio's HyperFrames pipeline.",

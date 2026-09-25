@@ -32,6 +32,7 @@ class TeamController
             "SELECT COUNT(*) FROM automations WHERE nurturer_enabled = 1 AND is_active = 1"
         )->fetchColumn() > 0;
         $chiefActive = Chief::briefsWritten($pdo) > 0;
+        $allieDiscoveryEnabled = (string) Settings::get('allie_discovery_enabled') === '1';
         $agents = [
             // Lisa gets her own dedicated marketing page (workflows,
             // integrations, and pricing), so — same as Sage below — 'url'
@@ -43,7 +44,7 @@ class TeamController
             ['key' => 'nurturer', 'name' => Settings::get('nurturer_assistant_name') ?: 'Jason', 'role' => 'Email follow-up', 'status' => $nurturerActive ? 'active' : 'standby', 'capabilities' => ['Email sequences', 'Reply tracking', 'Follow-up']],
             ['key' => 'proposal', 'name' => Settings::get('proposal_assistant_name') ?: 'Ledger', 'role' => 'Proposals & commercial workflows', 'status' => 'on demand', 'capabilities' => ['Proposals', 'Scope', 'Payment milestones']],
             ['key' => 'arch', 'name' => Settings::get('arch_assistant_name') ?: 'Arch', 'role' => 'AI website builder', 'status' => 'building', 'capabilities' => ['Websites', 'CMS', 'Deployments']],
-            ['key' => 'scout', 'name' => Settings::get('scout_assistant_name') ?: 'Scout', 'role' => 'Tech & ideation specialist', 'status' => 'on demand', 'capabilities' => ['Tech scouting', 'Ideation', 'Emerging tools']],
+            ['key' => 'allie', 'name' => Settings::get('allie_assistant_name') ?: 'Allie', 'role' => 'AI strategy & experimentation', 'status' => $allieDiscoveryEnabled ? 'active' : 'on demand', 'capabilities' => ['AI strategy', 'Tech scouting', 'Ideation', 'Experiments']],
             ['key' => 'reel', 'name' => Settings::get('reel_assistant_name') ?: 'Reel', 'role' => 'Video-creative specialist', 'status' => 'on demand', 'capabilities' => ['Video concepts', 'Scene breakdowns', 'Narration scripts']],
             // Sage is the one public-facing agent here with its own dedicated
             // page (visitors chat with it directly, no admin auth) rather than
@@ -152,7 +153,7 @@ class TeamController
                 'stat_label' => 'leads captured',
                 'secondary_stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM appointments')->fetchColumn(),
                 'secondary_stat_label' => 'calls booked',
-                'manage_url' => '/admin/inbox.html?source=chat',
+                'manage_url' => '/admin/inbox?source=chat',
                 'manage_label' => 'Open inbox',
             ],
             [
@@ -170,7 +171,7 @@ class TeamController
                     'SELECT (SELECT COUNT(*) FROM drip_sends) + (SELECT COUNT(*) FROM nurturer_sends)'
                 )->fetchColumn(),
                 'stat_label' => 'emails sent',
-                'manage_url' => '/admin/drip.html',
+                'manage_url' => '/admin/drip',
                 'manage_label' => 'Automations',
             ],
             [
@@ -183,7 +184,7 @@ class TeamController
                 'status_label' => $beaconEnabled ? 'Scouting' : 'Paused',
                 'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM beacon_social_leads')->fetchColumn(),
                 'stat_label' => 'leads found',
-                'manage_url' => '/admin/marketing-leads.html',
+                'manage_url' => '/admin/marketing-leads',
                 'manage_label' => 'Marketing leads',
             ],
             [
@@ -199,7 +200,7 @@ class TeamController
                 // work done, not leads that merely could be researched.
                 'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM marketing_leads WHERE researched_at IS NOT NULL')->fetchColumn(),
                 'stat_label' => 'leads researched',
-                'manage_url' => '/admin/marketing-leads.html',
+                'manage_url' => '/admin/marketing-leads',
                 'manage_label' => 'Marketing leads',
             ],
             [
@@ -216,7 +217,7 @@ class TeamController
                 'status_label' => 'On demand',
                 'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM proposals')->fetchColumn(),
                 'stat_label' => 'proposals drafted',
-                'manage_url' => '/admin/proposals.html',
+                'manage_url' => '/admin/proposals',
                 'manage_label' => 'Proposals',
             ],
             [
@@ -229,7 +230,7 @@ class TeamController
                 'status_label' => 'On demand',
                 'stat_value' => $mockupsGenerated,
                 'stat_label' => 'mockups generated',
-                'manage_url' => '/admin/proposals.html',
+                'manage_url' => '/admin/proposals',
                 'manage_label' => 'Proposals',
             ],
             [
@@ -248,7 +249,7 @@ class TeamController
                 // links to.
                 'stat_value' => (int) $pdo->query('SELECT COUNT(*) FROM content_studio_items')->fetchColumn(),
                 'stat_label' => 'drafts created',
-                'manage_url' => '/admin/content-studio.html',
+                'manage_url' => '/admin/content-studio',
                 'manage_label' => 'Content Studio',
             ],
             [
@@ -263,26 +264,8 @@ class TeamController
                 'status_label' => 'Building',
                 'stat_value' => Arch::sitesBuilt($pdo),
                 'stat_label' => 'sites built',
-                'manage_url' => '/chat.html',
+                'manage_url' => '/chat',
                 'manage_label' => 'Open builder',
-            ],
-            [
-                'key' => 'scout',
-                'name' => Settings::get('scout_assistant_name') ?: 'Scout',
-                'role' => 'Tech & Ideation Specialist',
-                'description' => 'Keeps watch on emerging web, mobile, and AI tools and frameworks, and brainstorms cutting-edge project ideas built on them — a live sparring partner, grounded with real web search rather than guessing.',
-                'icon' => 'bi-stars',
-                'status' => 'ondemand',
-                'status_label' => 'On demand',
-                // A real log of exchanges (ActivityLog rows Scout writes on each
-                // reply), not an invented counter — Scout has no artifact table
-                // of its own since it only chats, unlike Sketch/Ledger/Danielle.
-                'stat_value' => (int) $pdo->query(
-                    "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'scout_chat'"
-                )->fetchColumn(),
-                'stat_label' => 'ideas discussed',
-                'manage_url' => '/admin/agent-chat',
-                'manage_label' => 'Talk to Scout',
             ],
             [
                 'key' => 'reel',
@@ -292,7 +275,7 @@ class TeamController
                 'icon' => 'bi-film',
                 'status' => 'ondemand',
                 'status_label' => 'On demand',
-                // Same shape as Scout's own stat — a real log of exchanges, not
+                // A real log of exchanges, not
                 // an invented counter. Reel has no artifact table of its own
                 // since it only chats and never writes composition files.
                 'stat_value' => (int) $pdo->query(
@@ -316,7 +299,7 @@ class TeamController
                     "SELECT COUNT(*) FROM sage_chats WHERE transcript_json != '[]'"
                 )->fetchColumn(),
                 'stat_label' => 'conversations',
-                'manage_url' => '/admin/sage-chats.html',
+                'manage_url' => '/admin/sage-chats',
                 'manage_label' => 'View Sage chats',
             ],
             [
@@ -348,7 +331,7 @@ class TeamController
                 'status_label' => $briefsWritten > 0 ? 'Reporting daily' : 'Awaiting first brief',
                 'stat_value' => $briefsWritten,
                 'stat_label' => 'briefs written',
-                'manage_url' => '/admin/team.html',
+                'manage_url' => '/admin/chief',
                 'manage_label' => 'Latest brief',
             ],
             [

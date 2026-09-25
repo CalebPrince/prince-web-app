@@ -285,19 +285,23 @@ class Chief
                 ["SELECT MAX(created_at) FROM invoices WHERE status = 'draft'"]),
         ];
 
-        // --- Scout ---------------------------------------------------------------
+        // --- Allie -------------------------------------------------------------
         $agents[] = [
-            'key' => 'scout',
-            'name' => Settings::get('scout_assistant_name') ?: 'Scout',
-            'role' => 'Tech & ideation',
-            'runs' => 'on_demand',
-            'state' => 'on demand',
+            'key' => 'allie',
+            'name' => Settings::get('allie_assistant_name') ?: 'Allie',
+            'role' => 'AI strategy, experimentation & ideation',
+            'runs' => (string) Settings::get('allie_discovery_enabled') === '1' ? 'scheduled_and_on_demand' : 'on_demand',
+            'state' => (string) Settings::get('allie_discovery_enabled') === '1' ? 'active' : 'on demand',
             'did' => [
-                ['label' => 'ideas discussed', 'count' => self::num($pdo,
-                    "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type = 'scout_chat' AND created_at >= ?", [$since])],
+                ['label' => 'conversations', 'count' => self::num($pdo,
+                    "SELECT COUNT(*) FROM admin_activity_log WHERE entity_type IN ('allie_chat', 'scout_chat') AND created_at >= ?", [$since])],
+                ['label' => 'items evaluated', 'count' => self::num($pdo,
+                    'SELECT COUNT(*) FROM allie_evaluations WHERE created_at >= ?', [$since])],
             ],
-            'last_active_at' => self::latestOf($pdo,
-                ["SELECT MAX(created_at) FROM admin_activity_log WHERE entity_type = 'scout_chat'"]),
+            'last_active_at' => self::latestOf($pdo, [
+                "SELECT MAX(created_at) FROM admin_activity_log WHERE entity_type IN ('allie_chat', 'scout_chat')",
+                'SELECT MAX(updated_at) FROM allie_evaluations',
+            ]),
         ];
 
         // --- derived per-agent fields ------------------------------------------

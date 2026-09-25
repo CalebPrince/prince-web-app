@@ -904,7 +904,7 @@ src/
                             ContentAgentController, ContentStudioController,
                             ReportController, TeamController, ProposalDraftController,
                             agent controllers: SageController (Sage),
-                            ScoutController (Scout), ReelController (Reel),
+                            AllieController (Allie), ReelController (Reel),
                             BeaconController (Beacon), NurturerController
                             (Nurturer/Jason), OutreachController (Cold
                             Outreach Engine), DossierController (Dossier),
@@ -1924,7 +1924,7 @@ sourced from `Settings` (`brand_primary_color`, `brand_accent_color`,
     need no migration.
 40. **Team** (`/admin/team.html`, `TeamController`): an admin-only,
     read-only roster of the studio, Caleb himself plus the AI agents
-    (Lisa, Jason, Joan, Sharon, Ledger, Danielle, Arch, Sketch, Scout, Ada,
+    (Lisa, Jason, Joan, Sharon, Ledger, Danielle, Arch, Sketch, Allie, Ada,
     Chief), each card showing its
     real role, a live headline stat pulled from its own table (e.g. Ledger
     shows proposals drafted, Danielle shows drafts created from
@@ -2053,27 +2053,29 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     daily-brief panel. `GET /api/v1/admin/chief/dashboard?hours=N` supplies the
     live data and reuses `Chief::snapshot()` rather than introducing a second
     reporting calculation or AI-generated figures.
-47. **Scout, the tech & ideation specialist** (`src/Controllers/ScoutController.php`,
-    `/admin/agent-chat.html` "Scout" tab): a chat-only agent, same shape as
-    Dossier/Danielle, no cron, no discovery pipeline. Its job is to keep
-    watch on emerging web, mobile, and AI tools/frameworks and brainstorm
-    concrete, buildable project ideas with Caleb built on them. Alongside the
-    shared `get_site_info`/`search_content` tools every ideation-style agent
-    gets, Scout has its own `search_web` tool, a real, live Serper search
-    (`google.serper.dev/search`), so a claim about "the latest X" comes from
-    an actual result instead of the model's training data pretending to be
-    current. Degrades quietly (an explanatory note, not a thrown error) with
-    no Serper key configured. Every exchange writes a real
-    `admin_activity_log` row (`entity_type = 'scout_chat'`) rather than
-    inventing a counter, that's what the Team page's "ideas discussed" stat
-    and Chief's daily brief both count, the same "real query, not a guess"
-    discipline every other agent's stat follows. Scout also has its own
-    dedicated ElevenLabs voice (`scout_elevenlabs_voice_id`, Settings → AI
-    providers), `TextToSpeechController::speak()` now takes an `agent` key
-    and maps it to the right voice-ID setting, falling back to Lisa's voice
-    if Scout's is unset, so it's never a hard failure. Assistant
-    name/gender/accent settings ride the same generic `settings` store every
-    other agent persona uses.
+47. **Allie, AI strategy, experimentation & ideation**
+    (`src/Controllers/AllieController.php`, `/admin/agent-chat` "Allie" tab):
+    combines the former Scout remit with Allie's evidence-led advisory role.
+    She follows the real Allie K. Miller's public posts, interviews, talks,
+    and experiments, researches current technology with live web search and
+    repository inspection, and turns those signals into concrete, buildable
+    ideas grounded in Caleb's real stack and past work. Early brainstorming
+    stays conversational; a promising idea becomes a tracked, bounded
+    evaluation with a metric, owner, and stop-loss before it moves through
+    Wendy's team-impact review. The optional discovery pass keeps this work
+    active between chats. Historical `scout_chat` activity remains readable
+    by Chief as part of Allie's merged conversation history.
+47a. **TypeSafe gate for Beacon** (`src/Support/TypeSafeGate.php`): a cheap
+    typed-judgment pre-filter ahead of Beacon's full generative scoring, on the
+    cron post path and the LinkedIn engagement path. Needs `typesafe_api_key`
+    (Settings, Integrations). `typesafe_gate_mode` is `shadow` by default (logs
+    each verdict beside the full model's into `typesafe_gate_log`, rejects
+    nothing), `enforce` skips the generative call on a failed gate, `off`
+    disables it. Fails open on any error. Run `php database/migrate.php` once
+    for the log table, then `php database/typesafe_gate_report.php` after a
+    week of shadow runs to see calls saved vs leads missed at each threshold
+    before switching to `enforce`. `migrate.php` also deletes the dead
+    `scout_*` settings left over from the Scout-into-Allie merge.
 48. **Lisa page & monthly pricing** (`/admin/lisa.html`, `public/lisa-ai-assistant.html`):
     a dedicated admin page for the public Lisa service page, reusing the same
     settings/content API as Site Content and Pricing rather than a new table

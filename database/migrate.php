@@ -2122,4 +2122,8 @@ $pdo->exec(
                        WHERE d.source_type = 'content_idea' AND d.source_id = content_ideas.id)"
 );
 
+// Scout was folded into Allie: its per-agent settings (name, voice, ElevenLabs
+// voice ID) are dead. Historical scout_chat activity rows are kept on purpose.
+$pdo->exec("DELETE FROM settings WHERE name LIKE 'scout\\_%' ESCAPE '\\'");
+
 echo "Schema applied.\n";

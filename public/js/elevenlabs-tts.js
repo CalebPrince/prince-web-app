@@ -4,10 +4,10 @@
   let unlocked = false;
 
   // Mirrors TextToSpeechController::MAX_TEXT_LENGTH, Lisa's public replies
-  // stay short by design; Scout's admin-console ideation answers run much
+  // stay short by design; admin-console agent answers can run much
   // longer, and truncating below what the server will actually synthesize
   // just moves the same "cuts off mid-sentence" bug to the client.
-  const MAX_TEXT_LENGTH = { lisa: 700, scout: 3000 };
+  const MAX_TEXT_LENGTH = { lisa: 700, allie: 3000 };
 
   function release() {
     activeAudio.pause();

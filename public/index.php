@@ -104,7 +104,6 @@ use App\Controllers\ChloeController;
 use App\Controllers\RadarController;
 use App\Controllers\WendyController;
 use App\Controllers\AllieController;
-use App\Controllers\ScoutController;
 use App\Controllers\SageController;
 use App\Controllers\ReelController;
 use App\Controllers\SocialDraftController;
@@ -440,7 +439,6 @@ $router->post('/api/v1/admin/chief/brief', [\App\Agents\Chief::class, 'generate'
 $router->get('/api/v1/admin/chief/briefs', [\App\Agents\Chief::class, 'index']);
 $router->get('/api/v1/admin/chief/dashboard', [\App\Agents\Chief::class, 'dashboard']);
 $router->post('/api/v1/admin/agents/sketch/chat', [SketchController::class, 'chat']);
-$router->post('/api/v1/admin/agents/scout/chat', [ScoutController::class, 'chat']);
 $router->post('/api/v1/admin/agents/radar/chat', [RadarController::class, 'chat']);
 $router->get('/api/v1/admin/radar-dm-drafts', [RadarController::class, 'adminDrafts']);
 $router->delete('/api/v1/admin/radar-dm-drafts/{id}', [RadarController::class, 'destroyDraft']);

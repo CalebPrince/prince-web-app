@@ -28,7 +28,7 @@ final class AgentCapabilities
             'ai_provider' => [
                 'label' => 'AI provider (DeepSeek / Gemini / Anthropic / OpenAI / OpenRouter / Groq)',
                 'available' => $aiProvider,
-                'used_by' => ['Beacon', 'Dossier', 'Sage', 'Scout', 'Lisa', 'Chief', 'Marketing lead pitch drafting'],
+                'used_by' => ['Beacon', 'Dossier', 'Sage', 'Allie', 'Lisa', 'Chief', 'Marketing lead pitch drafting'],
             ],
             'serper' => [
                 'label' => 'Serper (Google search / places)',
@@ -43,7 +43,7 @@ final class AgentCapabilities
             'elevenlabs' => [
                 'label' => 'ElevenLabs (voice)',
                 'available' => $has('elevenlabs_api_key') && Settings::get('elevenlabs_tts_enabled') === '1',
-                'used_by' => ['Lisa voice', 'Scout voice'],
+                'used_by' => ['Lisa voice', 'Allie voice', 'Chloe voice', 'Wendy voice'],
             ],
             'composio' => [
                 'label' => 'Composio (calendar / email / Slack / LinkedIn actions)',

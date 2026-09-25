@@ -1579,3 +1579,18 @@ CREATE TABLE IF NOT EXISTS external_expense_history (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_external_expense_history_month ON external_expense_history (period_month);
+
+-- TypeSafeGate shadow-mode audit: every gate verdict next to the full model's
+-- verdict on the same candidate, with the raw scores kept so thresholds can be
+-- swept offline (database/typesafe_gate_report.php) before 'enforce' is turned on.
+CREATE TABLE IF NOT EXISTS typesafe_gate_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL,
+  score REAL NOT NULL,
+  competitor REAL NOT NULL,
+  gate_passed INTEGER NOT NULL,
+  model_qualified INTEGER NOT NULL,
+  model_confidence INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_typesafe_gate_log_kind ON typesafe_gate_log (kind, created_at);

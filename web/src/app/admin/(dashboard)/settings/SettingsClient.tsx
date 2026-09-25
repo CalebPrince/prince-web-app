@@ -114,7 +114,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
   ],
   voice: [
     "elevenlabs_api_key", "elevenlabs_tts_enabled", "elevenlabs_tts_model",
-    "elevenlabs_voice_id", "scout_elevenlabs_voice_id", "chloe_elevenlabs_voice_id", "wendy_elevenlabs_voice_id",
+    "elevenlabs_voice_id", "chloe_elevenlabs_voice_id", "wendy_elevenlabs_voice_id",
     "allie_elevenlabs_voice_id",
     "elevenlabs_webhook_secret",
     "elevenlabs_postcall_signing_secret", "liveavatar_enabled", "liveavatar_api_key",
@@ -136,7 +136,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "elevenlabs_phone_postcall_signing_secret",
   ],
   integrations: [
-    "serper_api_key", "hunter_api_key", "apify_api_key", "pagespeed_api_key", "dataforseo_login",
+    "serper_api_key", "hunter_api_key", "apify_api_key", "typesafe_api_key", "typesafe_gate_mode", "pagespeed_api_key", "dataforseo_login",
     "dataforseo_password", "slack_webhook_url", "integration_api_key",
     "notification_email", "google_client_id", "composio_api_key",
     "google_places_api_key", "google_place_id",
@@ -201,7 +201,7 @@ const SECRET_KEYS = new Set([
   "liveavatar_api_key", "liveavatar_llm_bridge_secret", "whapi_api_token",
   "whapi_webhook_secret", "wati_api_token", "wati_webhook_secret", "twilio_auth_token", "elevenlabs_phone_webhook_secret",
   "elevenlabs_phone_postcall_signing_secret", "serper_api_key", "hunter_api_key",
-  "apify_api_key", "pagespeed_api_key", "dataforseo_password", "integration_api_key", "composio_api_key",
+  "apify_api_key", "typesafe_api_key", "pagespeed_api_key", "dataforseo_password", "integration_api_key", "composio_api_key",
   "google_places_api_key",
   "model_agnostic_memory_token",
   "model_agnostic_agent_token",
@@ -216,6 +216,7 @@ const CHOICES: Record<string, string[]> = {
   allie_discovery_frequency: ["hourly", "daily", "weekly"],
   wendy_review_frequency: ["hourly", "daily", "weekly"],
 };
+  typesafe_gate_mode: ["shadow", "enforce", "off"],
 
 function labelFor(key: string) {
   return key
@@ -234,6 +235,7 @@ function labelFor(key: string) {
 
 export default function SettingsClient({
   initialSettings,
+    .replace(/\btypesafe\b/gi, "TypeSafe")
   account,
   templateDefaults,
   loadFailed = false,

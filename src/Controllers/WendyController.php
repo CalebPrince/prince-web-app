@@ -224,7 +224,7 @@ class WendyController
         return [
             'name' => 'team_activity',
             'description' => 'Real activity from every business agent (Lisa, Jason/Nurturer, Joan/Beacon, Sharon/'
-                . 'Dossier, Ledger/Proposal, Sketch, Danielle/Content, Arch, Ada, Scout) over the last N hours, '
+                . 'Dossier, Ledger/Proposal, Sketch, Danielle/Content, Arch, Ada, Allie) over the last N hours, '
                 . 'plus command-center activity (Caleb\'s own logged actions, payments, inquiries) and what is '
                 . 'currently waiting on him. Same data Chief\'s daily brief is built from — use this for any '
                 . '"how is the team doing" question.',
