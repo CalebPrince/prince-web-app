@@ -800,7 +800,7 @@ class AiAgentEngine
                 // `content` instead of returning a real tool_calls array — this
                 // codebase's tool_calls-vs-content check below then treats that
                 // hallucinated description as the final reply (leaked into a
-                // live Scout chat as garbled pseudo-XML). Same explicit choice
+                // live agent chat as garbled pseudo-XML). Same explicit choice
                 // chatWithGroq() already makes below, just missed when this
                 // method was first added.
                 $payload['tool_choice'] = 'auto';

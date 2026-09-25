@@ -22,7 +22,7 @@ use App\Support\SharedAgentTools;
  * thinking, Ogilvy-style headline/copy discipline, Cialdini's influence
  * principles, Godin-style positioning and permission marketing — combined,
  * not name-dropped. Public and rate limited in place of admin auth (like
- * Lisa's live chat), unlike ScoutController which this was otherwise modeled
+ * Lisa's live chat), unlike the admin-only agent chats this was modeled
  * on. Every conversation is persisted to sage_chats (mirrors chat_sessions)
  * so Caleb can review who's using it and what they asked, under Admin →
  * Sage Chats — a name/email is only ever recorded if a visitor volunteers
@@ -35,7 +35,7 @@ class SageController
 
     /**
      * POST /api/v1/agents/sage/chat — body: {token?, message, transcript: [{role,text}, ...]}.
-     * The transcript is replayed by the browser each turn (same as Scout/
+     * The transcript is replayed by the browser each turn (same as Allie/
      * Beacon/Nurturer's chat()); the token identifies the sage_chats row so
      * the same conversation keeps accumulating there across turns.
      */
@@ -103,7 +103,7 @@ class SageController
     /**
      * POST /api/v1/admin/agents/sage/chat — body: {message, transcript: [{role,text}, ...]}.
      * The admin-console counterpart to chat(), same "Talk to Agents" pattern as
-     * Danielle/Arch/Scout/etc: stateless (transcript replayed each turn, no
+     * Danielle/Arch/Allie/etc: stateless (transcript replayed each turn, no
      * sage_chats row) and no rate limit since it's behind admin auth already.
      * Always treats the caller as Caleb — this route only runs inside his own
      * logged-in session, never anonymous — and skips log_contact, which only
@@ -294,7 +294,7 @@ class SageController
             . "back, no \"great question\" filler, no closing recap of what you just said.";
     }
 
-    /** Mirrors ScoutController::genderLine — no TTS surface writes to a client here. */
+    /** No TTS surface writes to a client here. */
     private static function genderLine(string $gender): string
     {
         if ($gender === 'male') {

@@ -6,7 +6,7 @@ namespace App\Support;
 
 /**
  * Public, unauthenticated GitHub API access — no token, so subject to GitHub's
- * unauthenticated rate limit (60 requests/hour/IP). Shared by ScoutController
+ * unauthenticated rate limit (60 requests/hour/IP). Shared by AllieController
  * (repo inspection in chat) and database/check_site_technical.php (last
  * deployment date for the Sites Technical tab).
  */

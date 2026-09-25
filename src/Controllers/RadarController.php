@@ -49,7 +49,7 @@ class RadarController
     /**
      * POST /api/v1/admin/agents/radar/chat — body: {message, transcript: [{role,text}, ...]}.
      * Stateless: the transcript lives in the browser and is replayed each
-     * turn, mirroring ScoutController::chat().
+     * turn, mirroring the other agent chat endpoints.
      */
     public static function chat(): void
     {
@@ -136,7 +136,7 @@ class RadarController
             . "number you didn't get from a tool call in this conversation.";
     }
 
-    /** No TTS surface writes to a client here — mirrors ScoutController::genderLine. */
+    /** No TTS surface writes to a client here. */
     private static function genderLine(string $gender): string
     {
         if ($gender === 'male') {

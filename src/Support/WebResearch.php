@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 /**
- * Small best-effort web search (Serper, the same key Allie and Scout use) for
+ * Small best-effort web search (Serper, the same key Allie uses) for
  * grounding a piece of writing in what people are currently saying. Never
  * throws: returns an empty list when no key is set, cURL is missing, or the
  * search fails, so callers simply write without research.

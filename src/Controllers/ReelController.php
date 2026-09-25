@@ -19,7 +19,7 @@ use App\Support\SharedAgentTools;
  * anything itself; it helps Caleb work out a video's concept, scene
  * breakdown, narration script, pacing, and visual style before he hands the
  * result to Claude Code to actually build and render, same shape as
- * ScoutController (admin-gated chat, no automation of its own).
+ * the other admin-gated chat agents (no automation of its own).
  */
 class ReelController
 {
@@ -29,7 +29,7 @@ class ReelController
     /**
      * POST /api/v1/admin/agents/reel/chat — body: {message, transcript: [{role,text}, ...]}.
      * Stateless: the transcript lives in the browser and is replayed each
-     * turn, mirroring ScoutController::chat().
+     * turn, mirroring the other agent chat endpoints.
      */
     public static function chat(): void
     {
@@ -72,7 +72,7 @@ class ReelController
         }
 
         // Real log of an actual exchange, not an invented counter — mirrors
-        // Scout's own stat on the admin Team page.
+        // Reel's real activity stat on the admin Team page.
         ActivityLog::log($user, 'brainstormed', 'reel_chat', null, mb_substr($message, 0, 120));
 
         Response::json(['reply' => SharedAgentTools::stripMarkdown($result['reply'])]);
@@ -218,7 +218,7 @@ class ReelController
         ], fn($v) => $v !== null && $v !== '');
     }
 
-    /** Mirrors ScoutController::genderLine — no TTS surface writes to a client here. */
+    /** No TTS surface writes to a client here. */
     private static function genderLine(string $gender): string
     {
         if ($gender === 'male') {
