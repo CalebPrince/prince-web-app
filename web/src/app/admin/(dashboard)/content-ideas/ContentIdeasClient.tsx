@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api, AdminContentIdea } from "@/lib/api";
 import { Sparkles, X, FileText, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: AdminContentIdea[] }) {
   const [ideas, setIdeas] = useState<AdminContentIdea[]>(initialIdeas);
@@ -17,9 +18,9 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
     try {
       await api.adminGenerateContentIdeas();
       window.location.reload();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message || "Failed to generate plan.");
+      alert(err instanceof Error ? err.message : "Failed to generate plan.");
       setIsGenerating(false);
     }
   };
@@ -43,9 +44,9 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
       setIdeas(prev => prev.map(i => i.id === id ? { ...i, status: 'used' } : i));
       // Redirect to social drafts to see the new draft
       router.push("/admin/social-drafts");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message || "Failed to create draft.");
+      alert(err instanceof Error ? err.message : "Failed to create draft.");
       setDraftingId(null);
     }
   };
@@ -61,6 +62,12 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
           </p>
         </div>
         <div className="flex gap-2">
+          <Link
+            href="/admin/settings?tab=content-sources#linkedin-content-sources"
+            className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md border border-hairline bg-bg px-4 py-2 text-sm font-medium text-text-2 transition-colors hover:bg-bg-2 hover:text-text"
+          >
+            Manage LinkedIn sources
+          </Link>
           <button 
             onClick={handleGenerate}
             disabled={isGenerating}
@@ -83,7 +90,7 @@ export default function ContentIdeasClient({ initialIdeas }: { initialIdeas: Adm
         <div className="text-center py-12 rounded-xl border border-hairline bg-bg-2">
           <Sparkles className="w-8 h-8 text-text-3 mx-auto mb-3" />
           <h3 className="text-lg font-semibold">No content ideas yet</h3>
-          <p className="text-text-3 mt-1">Click "Generate 30-day plan" to create one.</p>
+          <p className="text-text-3 mt-1">Click &quot;Generate 30-day plan&quot; to create one.</p>
         </div>
       )}
 

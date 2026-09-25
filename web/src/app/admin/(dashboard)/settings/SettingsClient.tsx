@@ -103,7 +103,7 @@ const EMAIL_TEMPLATES: [string, string][] = [
 
 type Tab =
   | "account" | "ai" | "voice" | "messaging" | "integrations"
-  | "payments" | "email" | "site" | "booking";
+  | "content-sources" | "payments" | "email" | "site" | "booking";
 
 /** Every settings key this page owns, grouped by the tab that edits it. */
 const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
@@ -150,6 +150,10 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "model_agnostic_memory_url", "model_agnostic_memory_token", "model_agnostic_memory_key",
     "model_agnostic_agent_token",
   ],
+  "content-sources": [
+    "radar_tracked_pages_enabled", "radar_tracked_pages_frequency",
+    "radar_tracked_pages_posts_per_profile", "radar_tracked_pages",
+  ],
   payments: ["paystack_public_key", "paystack_secret_key"],
   site: [
     "default_theme", "animation_style", "splash_screen_enabled", "maintenance_mode",
@@ -178,6 +182,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "voice", label: "Voice & avatar" },
   { value: "messaging", label: "WhatsApp & phone" },
   { value: "integrations", label: "Integrations" },
+  { value: "content-sources", label: "Content sources" },
   { value: "payments", label: "Payments" },
   { value: "email", label: "Email" },
   { value: "site", label: "Site" },
@@ -191,6 +196,7 @@ const BOOLEAN_KEYS = new Set([
   "whatsapp_button_enabled", "chat_hours_enabled", "booking_enabled",
   "social_draft_enabled", "social_draft_auto_approve",
   "allie_discovery_enabled", "wendy_review_enabled",
+  "radar_tracked_pages_enabled",
 ]);
 
 /** Keys whose value is a credential — masked with a password input. */
@@ -210,13 +216,14 @@ const SECRET_KEYS = new Set([
 
 const CHOICES: Record<string, string[]> = {
   whatsapp_provider: ["elevenlabs", "whapi", "wati", "twilio"],
+  typesafe_gate_mode: ["shadow", "enforce", "off"],
   default_theme: ["dark", "light", "midnight", "paper"],
   animation_style: ["full", "subtle", "off"],
   social_draft_frequency: ["daily", "weekly", "monthly"],
   allie_discovery_frequency: ["hourly", "daily", "weekly"],
   wendy_review_frequency: ["hourly", "daily", "weekly"],
+  radar_tracked_pages_frequency: ["hourly", "daily", "weekly"],
 };
-  typesafe_gate_mode: ["shadow", "enforce", "off"],
 
 function labelFor(key: string) {
   return key
@@ -228,6 +235,7 @@ function labelFor(key: string) {
     .replace(/\bsmtp\b/gi, "SMTP")
     .replace(/\bimap\b/gi, "IMAP")
     .replace(/\bpagespeed\b/gi, "PageSpeed")
+    .replace(/\btypesafe\b/gi, "TypeSafe")
     .replace(/\bwati\b/gi, "WATI")
     .replace(/\bsid\b/gi, "SID")
     .replace(/^\w/, (c) => c.toUpperCase());
@@ -235,7 +243,6 @@ function labelFor(key: string) {
 
 export default function SettingsClient({
   initialSettings,
-    .replace(/\btypesafe\b/gi, "TypeSafe")
   account,
   templateDefaults,
   loadFailed = false,
@@ -271,6 +278,13 @@ export default function SettingsClient({
   const [plannedMarketing, setPlannedMarketing] = useState<PlannedMarketing[]>([]);
   const [catalogMsg, setCatalogMsg] = useState<Record<string, { text: string; ok: boolean }>>({});
   const [catalogBusyKey, setCatalogBusyKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    if (requested && TABS.some((item) => item.value === requested)) {
+      setTab(requested as Tab);
+    }
+  }, []);
 
   // Capability status is a convenience panel: a failure here should stay quiet
   // rather than surface as a settings error.
@@ -546,6 +560,23 @@ export default function SettingsClient({
             maxLength={4000}
             value={values[key] ?? ""}
             onChange={(e) => set(key, e.target.value)}
+          />
+        </Field>
+      );
+    }
+
+    if (key === "radar_tracked_pages") {
+      return (
+        <Field
+          key={key}
+          label="LinkedIn profiles and company pages"
+          hint="One full LinkedIn profile or company URL per line. Their recent posts ground the LinkedIn entries in Content Ideas."
+        >
+          <Textarea
+            rows={8}
+            value={values[key] ?? ""}
+            onChange={(e) => set(key, e.target.value)}
+            placeholder={"https://www.linkedin.com/in/example\nhttps://www.linkedin.com/company/example"}
           />
         </Field>
       );
@@ -937,6 +968,23 @@ export default function SettingsClient({
           {/* Live connection state, above the credentials that configure it. */}
           <ComposioAccounts onAuthorUrn={(urn) => set("composio_linkedin_author_urn", urn)} />
           {groupCard("integrations", "Integrations")}
+        </div>
+      )}
+      {tab === "content-sources" && (
+        <div id="linkedin-content-sources" className="space-y-4">
+          <Card title="How LinkedIn Content Ideas are sourced" bodyClassName="p-5 space-y-2">
+            <p className="text-sm text-text-2">
+              Radar refreshes recent posts from the LinkedIn pages below. Content Ideas uses those cached,
+              real posts to produce its LinkedIn recommendations instead of inventing topics.
+            </p>
+            {values.radar_tracked_pages_last_run && (
+              <p className="text-xs text-text-3">Last refresh: {values.radar_tracked_pages_last_run}</p>
+            )}
+            {values.radar_tracked_pages_last_status && (
+              <p className="text-xs text-text-3">Status: {values.radar_tracked_pages_last_status}</p>
+            )}
+          </Card>
+          {groupCard("content-sources", "LinkedIn content sources")}
         </div>
       )}
       {tab === "payments" && groupCard("payments", "Payments")}
