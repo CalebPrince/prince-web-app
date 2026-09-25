@@ -89,10 +89,10 @@ export default function AllieClient({ initialEvaluations }: { initialEvaluations
   return (
     <div className="space-y-8">
       <PageHeader
-        kicker="R&D — Tool Adoption"
+        kicker="AI Strategy & Experiments"
         title="What Allie is tracking."
-        description={"Discover → evaluate → test → compare → recommend — every new AI/dev tool "
-          + "runs through the same rubric before Wendy checks its team impact and it lands here for your final call."}
+        description={"Ideas grounded in Allie K. Miller's public posts and interviews become practical tools, workflows, "
+          + "or bounded experiments before Wendy checks their impact and they land here for your final call."}
         actions={
           <Button variant="outline" onClick={load} disabled={refreshing}>
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
@@ -194,7 +194,7 @@ export default function AllieClient({ initialEvaluations }: { initialEvaluations
                   )}
                   {evaluation.wendy_review_notes && (
                     <p>
-                      <strong className="text-text-3">Wendy's review: </strong>
+                      <strong className="text-text-3">Wendy&apos;s review: </strong>
                       {evaluation.wendy_review_notes}
                       {evaluation.wendy_reviewed_at && ` (${formatDateTime(evaluation.wendy_reviewed_at)})`}
                     </p>

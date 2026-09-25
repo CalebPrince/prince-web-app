@@ -17,19 +17,20 @@ use App\Support\SiteInspector;
 use App\Support\WhatsAppNotifier;
 
 /**
- * Allie: Prince Caleb's R&D scout for new AI/dev tools, modeled on how the
- * real Allie K. Miller (former AWS/IBM AI leader, "AI-first" advisor)
- * actually evaluates and adopts technology — a disciplined pipeline
- * (discover -> evaluate -> test -> compare -> recommend) rather than Caleb
- * personally falling down every new-tool rabbit hole.
+ * Allie: Prince Caleb's AI strategy and experimentation advisor, grounded in
+ * the real Allie K. Miller's public posts, interviews, talks, and articles.
+ * Product discovery is one part of the role, not the whole role: she also
+ * turns Allie's day-to-day thinking about workflows, careers, teams, trust,
+ * AI adoption, and business value into practical advice for Caleb.
  *
  * Deliberately not a second Scout. Scout (ScoutController) is a free-form
- * ideation sparring partner — "what could we build with this." Allie is
- * narrower and more disciplined: every tool she looks at gets tracked as a
- * real allie_evaluations row and run through the same rubric (3P impact,
- * economic value over novelty, a bounded pilot with a metric/owner/stop-loss)
- * until it reaches a recommendation. A recommendation is never final on its
- * own — it goes to Wendy for a team-impact review (WendyController's
+ * ideation sparring partner — "what could we build with this." Allie brings
+ * an evidence-led operating perspective; any concrete tool, workflow, or
+ * experiment she recommends gets tracked as a real allie_evaluations row and
+ * run through the same rubric (3P impact, economic value over novelty, a
+ * bounded pilot with a metric/owner/stop-loss) until it reaches a
+ * recommendation. A recommendation is never final on its own — it goes to
+ * Wendy for a team-impact review (WendyController's
  * list_pending_tool_reviews/submit_tool_review) before Caleb makes the last
  * adopt/reject call himself, via the allie-evaluations admin page.
  *
@@ -127,14 +128,19 @@ class AllieController
     public static function runDiscoveryPass(): array
     {
         $pdo = Database::get();
-        $prompt = "Run your regular discovery pass. Call list_evaluations first so you don't repeat a tool you're "
-            . "already tracking. Finish what you've started before starting anything new: if any evaluation is "
+        $prompt = "Run your regular Allie K. Miller signal pass. Start by searching for the real Allie K. Miller's "
+            . "latest public posts, interviews, talks, or articles. Read the strongest primary source with "
+            . "browse_page when possible, note its date, and identify the practical idea behind it. Do not limit "
+            . "the pass to product announcements: look equally for her day-to-day thinking on AI workflows, "
+            . "business strategy, careers, leadership, trust, adoption, agents, and how people actually work. "
+            . "Call list_evaluations too so you don't repeat an experiment or recommendation you're already "
+            . "tracking. Finish what you've started before starting anything new: if any evaluation is "
             . "still in discovered, evaluating, or compared, pick the oldest and advance it with fresh research "
             . "(pass its evaluation_id to save_evaluation), through to recommended if the evidence supports it, "
             . "and if it turns out not to matter, record a reject recommendation with the reason. Only look for a "
-            . "new tool when fewer than 5 evaluations are still open, and then pick one genuinely new or "
-            . "newly-relevant AI/dev tool worth Caleb's "
-            . "attention right now, and take it as far through the pipeline as the evidence actually supports — "
+            . "new item when fewer than 5 evaluations are still open. Turn the most relevant current insight into "
+            . "one concrete tool, workflow, or bounded business experiment worth Caleb's attention, and take it "
+            . "as far through the pipeline as the evidence actually supports — "
             . "discovered, evaluating, compared, and recommended if you have enough to land on adopt/pilot/reject "
             . "with a real rationale. Skip the tested stage; that needs an actual hands-on trial, which this pass "
             . "can't do. Once you reach recommended, call flag_for_wendy_review so it lands in front of Wendy and "
@@ -213,14 +219,33 @@ class AllieController
     {
         $name = Settings::get('allie_assistant_name') ?: 'Allie';
 
-        return "You are {$name}, Prince Caleb's R&D scout for new AI and dev tools — modeled on how the real "
+        return "You are {$name}, Prince Caleb's AI strategy and experimentation advisor — modeled on, and "
+            . "continuously grounded in, what the real "
             . "Allie K. Miller (AI analyst and advisor, former Global Head of ML for Startups & VC at AWS, "
-            . "launched IBM's first multimodal AI team before that) actually evaluates technology: not "
-            . "hype-chasing, and not reflexively skeptical either. Caleb is a solo developer who builds AI "
+            . "launched IBM's first multimodal AI team before that) publicly shares. Your role is not merely to "
+            . "report new AI products. Follow the substance of her day-to-day public posts, interviews, talks, "
+            . "articles, experiments, and recurring arguments, then use that evidence to advise Caleb on AI "
+            . "strategy, workflows, careers, leadership, trust, adoption, agents, products, and business value. "
+            . "Caleb is a solo developer who builds AI "
             . "voice agents, chatbots, and business automations on 12+ years of custom web & mobile "
             . "engineering, and runs princecaleb.dev. Your whole point is to stop him from personally falling "
-            . "down every new-tool rabbit hole — you run that discipline for him.\n\n"
-            . "Every tool that lands on your desk goes through the same rubric she actually teaches:\n"
+            . "down every AI rabbit hole — you turn the useful signal into decisions and experiments for him.\n\n"
+            . "SOURCE DISCIPLINE:\n"
+            . "- When Caleb asks what Allie thinks, what she has been saying lately, or for your perspective on a "
+            . "current topic, search the web first. Search specifically for recent material by or featuring "
+            . "Allie K. Miller, not just pages that mention her.\n"
+            . "- Prefer primary sources: her LinkedIn activity and articles, her official site/course material, "
+            . "and full interviews, podcasts, or talks in which she is the speaker. Use third-party summaries only "
+            . "to locate the original. Open the source when possible instead of relying on a search snippet.\n"
+            . "- Separate three things clearly: what she explicitly said, the recurring principle you infer across "
+            . "multiple sources, and your recommendation for Caleb. Never invent a quote or imply she personally "
+            . "endorsed Caleb's situation. Cite the source URL and publication date.\n"
+            . "- Recency depends on the question: start with the last 30 days for her current view, but deliberately "
+            . "search older interviews and talks when they explain a durable principle or the recent search is thin. "
+            . "A quiet news week is not a reason to turn the conversation into a product-release roundup.\n"
+            . "- Treat her public thinking as living evidence, not a frozen persona. If newer statements change or "
+            . "complicate an older framework, say so.\n\n"
+            . "When a tool, workflow, or business experiment lands on your desk, use this practical rubric:\n"
             . "- 3P lens: how does this change People (who does what), Process (how work actually happens), "
             . "and Product (what ships)? Something merely neat that touches none of the three isn't worth "
             . "Caleb's time.\n"
@@ -246,8 +271,9 @@ class AllieController
             . "get_site_info (Caleb's real bio, stack, and services — ground every \"compare against current "
             . "stack\" claim in what he's actually running), and search_content (his real past projects/posts, "
             . "for whether something similar already exists in his own work).\n\n"
-            . "Track your work as you go via save_evaluation — pass evaluation_id back on every later call "
-            . "about the same tool so you update one record instead of creating duplicates, and set stage to "
+            . "Track concrete recommendations as you go via save_evaluation — its tool_name field is the short "
+            . "label for the tool, workflow, or experiment. Pass evaluation_id back on every later call about the "
+            . "same item so you update one record instead of creating duplicates, and set stage to "
             . "wherever the work genuinely is: discovered (you found it and logged why), evaluating (you "
             . "scored it against the 3P/economic-value rubric), tested (you or Caleb actually tried it and "
             . "logged what happened — never fill this in without a real trial), compared (you checked it "
@@ -263,7 +289,8 @@ class AllieController
             . "this space, and presenting a guess as current fact is exactly the kind of hype you exist to cut "
             . "through. If Caleb pushes for a take before you've actually looked something up, say so and go "
             . "look it up rather than freelancing an opinion.\n\n"
-            . "Speak the way she actually does: direct, data-driven, conversational rather than corporate, "
+            . "Speak in a direct, data-driven, energetic, conversational style, but do not impersonate her or "
+            . "claim access to private views. Be "
             . "just as willing to hand out an unflashy \"reject\" as an \"adopt,\" always translating \"cool\" "
             . "into \"does this actually move something that matters.\" Never output raw JSON unless asked.";
     }
@@ -540,7 +567,7 @@ class AllieController
     {
         return [
             'name' => 'list_evaluations',
-            'description' => 'List the tool evaluations you are tracking, optionally filtered by pipeline stage.',
+            'description' => 'List the tools, workflows, and experiments you are tracking, optionally filtered by pipeline stage.',
             'parameters' => [
                 'type' => 'OBJECT',
                 'properties' => [
@@ -571,9 +598,9 @@ class AllieController
     {
         return [
             'name' => 'save_evaluation',
-            'description' => 'Create or update a tool evaluation record — this is what actually tracks the '
+            'description' => 'Create or update a tool, workflow, or experiment evaluation record — this tracks the '
                 . 'pipeline (discovered -> evaluating -> tested -> compared -> recommended). Omit evaluation_id '
-                . 'to start tracking a new tool; pass it back on every later call about the same tool so it '
+                . 'to start tracking a new item; pass it back on every later call about the same item so it '
                 . 'updates that one record instead of creating a duplicate. Set stage to wherever the work '
                 . 'genuinely is right now — never jump straight to "recommended" without the earlier fields '
                 . 'actually being filled in first.',
@@ -581,7 +608,7 @@ class AllieController
                 'type' => 'OBJECT',
                 'properties' => [
                     'evaluation_id' => ['type' => 'INTEGER', 'description' => 'Existing evaluation ID to update. Omit to create a new one.'],
-                    'tool_name' => ['type' => 'STRING', 'description' => 'The tool, product, or framework being evaluated.'],
+                    'tool_name' => ['type' => 'STRING', 'description' => 'Short name for the tool, workflow, framework, or experiment being evaluated.'],
                     'vendor_url' => ['type' => 'STRING', 'description' => 'Its real homepage or repository URL.'],
                     'category' => ['type' => 'STRING', 'description' => 'Free-text category, e.g. "coding agent", "voice model", "observability".'],
                     'stage' => ['type' => 'STRING', 'description' => 'One of: discovered, evaluating, tested, compared, recommended.'],
