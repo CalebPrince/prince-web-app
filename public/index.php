@@ -106,6 +106,7 @@ use App\Controllers\WendyController;
 use App\Controllers\AllieController;
 use App\Controllers\SageController;
 use App\Controllers\ReelController;
+use App\Controllers\RoccoController;
 use App\Controllers\SocialDraftController;
 use App\Controllers\SubscriptionController;
 use App\Controllers\TagController;
