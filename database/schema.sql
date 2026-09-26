@@ -1710,3 +1710,42 @@ CREATE TABLE IF NOT EXISTS lisa_quotes (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_lisa_quotes_pending ON lisa_quotes (summary_sent_at, updated_at);
+
+-- Jev as a decision layer across every agent (App\Support\AgentJudgment,
+-- OwnerMessages, CustomerMessages). agent_decisions is the audit trail of every
+-- call Jev shaped: area is 'owner_message', 'customer_message' or 'decision'.
+-- In shadow mode `outcome` records what WOULD have happened; nothing else changed.
+CREATE TABLE IF NOT EXISTS agent_decisions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  area TEXT NOT NULL,
+  agent TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  ref TEXT,
+  mode TEXT NOT NULL DEFAULT 'shadow',
+  jev_json TEXT,
+  decision TEXT NOT NULL,
+  detail TEXT,
+  outcome TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_agent_decisions_agent ON agent_decisions (agent, created_at);
+CREATE INDEX IF NOT EXISTS idx_agent_decisions_ref ON agent_decisions (area, ref, created_at);
+
+-- Alerts to the owner that Jev judged routine. They are held here and go out
+-- together in one digest instead of interrupting. Nothing is dropped:
+-- duplicate_of only groups a repeat under the first occurrence.
+CREATE TABLE IF NOT EXISTS owner_message_queue (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  agent TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  ref TEXT,
+  importance REAL,
+  reason TEXT,
+  duplicate_of INTEGER,
+  status TEXT NOT NULL DEFAULT 'held' CHECK (status IN ('held', 'sent')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  sent_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_owner_message_queue_status ON owner_message_queue (status, created_at);

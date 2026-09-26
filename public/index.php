@@ -38,6 +38,7 @@ if (php_sapi_name() === 'cli-server') {
 require dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\ActivityLogController;
+use App\Controllers\AgentDecisionsController;
 use App\Controllers\AiChatController;
 use App\Controllers\AnalyticsController;
 use App\Controllers\AppointmentController;
@@ -456,6 +457,8 @@ $router->post('/api/v1/admin/content-ideas/{id}/draft', [ContentIdeasController:
 $router->post('/api/v1/admin/agents/reel/chat', [ReelController::class, 'chat']);
 $router->post('/api/v1/admin/agents/rocco/chat', [RoccoController::class, 'chat']);
 $router->get('/api/v1/admin/lisa-decisions', [LisaDecisionsController::class, 'overview']);
+$router->get('/api/v1/admin/agent-decisions', [AgentDecisionsController::class, 'overview']);
+$router->post('/api/v1/admin/agent-decisions/digest', [AgentDecisionsController::class, 'digestNow']);
 $router->post('/api/v1/admin/lisa-decisions/run', [LisaDecisionsController::class, 'runNow']);
 $router->get('/api/v1/admin/rocco/overview', [RoccoController::class, 'overview']);
 $router->post('/api/v1/admin/rocco/review', [RoccoController::class, 'reviewNow']);

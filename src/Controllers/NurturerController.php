@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
+use App\Support\AgentDecisions;
+use App\Support\AgentJudgment;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
 use App\Support\EmailTemplate;
@@ -112,6 +114,29 @@ class NurturerController
         string $inboundSubject,
         string $inboundBody
     ): ?array {
+        // Jev decides what kind of reply this is BEFORE any AI provider is asked anything. In live mode
+        // the provider is only used to write a reply for the classes that want one; the rest need no
+        // provider call at all. In shadow mode the provider decides as it always did and Jev's call is
+        // recorded beside it so the two can be compared.
+        $jev = AgentDecisions::nurturerReply($leadName, $originalPitch, $inboundSubject, $inboundBody);
+        $decisionsMode = AgentJudgment::mode('decisions');
+        if ($jev !== null && $decisionsMode === 'live') {
+            $needsHuman = AgentDecisions::replyNeedsHuman($jev);
+            $class = $needsHuman && $jev['classification'] !== 'needs_review' ? 'needs_review' : $jev['classification'];
+            AgentJudgment::record(
+                'decision', 'nurturer', 'reply_classification', null, 'live', $jev, $class, mb_substr($inboundSubject, 0, 120),
+                $needsHuman ? 'sent to a human (needs review or low confidence), no automatic reply'
+                    : (in_array($class, AgentDecisions::REPLY_NEEDS_DRAFT, true) ? 'Jev decided; provider only drafts the reply' : 'Jev decided; no reply needed, no provider call')
+            );
+            if ($needsHuman || !in_array($class, AgentDecisions::REPLY_NEEDS_DRAFT, true)) {
+                return [
+                    'classification' => $class, 'confidence' => $jev['confidence'], 'needs_review' => $needsHuman,
+                    'subject_line' => '', 'email_body' => '',
+                ];
+            }
+            return self::draftDecidedReply($class, (float) $jev['confidence'], $leadName, $leadIndustry, $originalPitch, $inboundSubject, $inboundBody);
+        }
+
         $system = "You are Jason, Prince Caleb's email follow-up agent. You own cold-email conversations after "
             . "the first outreach message. Read the prospect's real reply and decide what should happen next.\n\n"
             . "Safety rules:\n"
@@ -146,12 +171,50 @@ class NurturerController
             error_log('Nurturer reply continuation: invalid model response: ' . substr($stripped, 0, 800));
             return null;
         }
+        if ($jev !== null) {
+            // Shadow: what the provider decided next to what Jev would have decided.
+            AgentJudgment::record('decision', 'nurturer', 'reply_classification', null, 'shadow', $jev, $jev['classification'], mb_substr($inboundSubject, 0, 120),
+                'shadow: provider said ' . $classification . ($classification === $jev['classification'] ? ' (agrees)' : ' (differs)'));
+        }
         return [
             'classification' => $classification,
             'confidence' => max(0, min(1, (float) ($parsed['confidence'] ?? 0))),
             'needs_review' => !empty($parsed['needs_review']) || $classification === 'needs_review',
             'subject_line' => SharedAgentTools::stripMarkdown((string) ($parsed['subject_line'] ?? '')),
             'email_body' => SharedAgentTools::stripMarkdown((string) ($parsed['email_body'] ?? '')),
+        ];
+    }
+
+    /**
+     * Write the reply for a classification Jev already decided. The provider is told the class is settled
+     * and only produces words; it cannot change the decision.
+     *
+     * @return array{classification:string,confidence:float,needs_review:bool,subject_line:string,email_body:string}|null
+     */
+    private static function draftDecidedReply(string $class, float $confidence, string $leadName, string $leadIndustry, string $originalPitch, string $inboundSubject, string $inboundBody): ?array
+    {
+        $system = "You are Jason, Prince Caleb's email follow-up agent. A prospect replied to a cold email. The reply has "
+            . "ALREADY been classified as '{$class}' and that decision is final: do not reclassify it, do not question it. "
+            . "Your only job is to write a concise, natural reply in the thread that fits that classification. For not_now, acknowledge "
+            . "briefly without pressure. Ground it only in the thread; never invent availability, pricing, case studies or results. "
+            . "The email is sent as Prince Caleb, so sign it Prince Caleb, not Jason. Return JSON only with subject_line and email_body.";
+        $prompt = "Lead: " . ($leadName ?: 'Unknown contact') . "\nIndustry: " . ($leadIndustry ?: 'Unknown') . "\n\n"
+            . "Original outreach:\n" . mb_substr($originalPitch, 0, 5000) . "\n\nInbound subject: " . mb_substr($inboundSubject, 0, 300)
+            . "\nInbound reply:\n" . mb_substr($inboundBody, 0, 6000);
+        $result = AiAgentEngine::run($system, [], fn(string $name, array $args) => ['error' => 'No tools are available for automatic replies.'], [['role' => 'user', 'text' => $prompt]]);
+        if ($result['reply'] === null) {
+            return null;
+        }
+        $stripped = trim(preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $result['reply']));
+        $parsed = json_decode($stripped, true);
+        if (!is_array($parsed) || empty($parsed['email_body'])) {
+            error_log('Nurturer decided reply: could not parse the draft: ' . substr($stripped, 0, 400));
+            return null;
+        }
+        return [
+            'classification' => $class, 'confidence' => $confidence, 'needs_review' => false,
+            'subject_line' => SharedAgentTools::stripMarkdown((string) ($parsed['subject_line'] ?? '')),
+            'email_body' => SharedAgentTools::stripMarkdown((string) $parsed['email_body']),
         ];
     }
 

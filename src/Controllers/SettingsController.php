@@ -61,6 +61,8 @@ class SettingsController
         'rocco_review_enabled', 'rocco_review_frequency', 'rocco_review_last_run',
         'lisa_jev_mode', 'lisa_followup_mode', 'lisa_followup_first_silence_hours', 'lisa_followup_second_silence_hours',
         'lisa_followup_max_days', 'lisa_followup_max_per_episode', 'lisa_quiet_start', 'lisa_quiet_end', 'lisa_owner_alert_daily_cap',
+        'agent_jev_owner_mode', 'agent_jev_customer_mode', 'agent_jev_decisions_mode', 'agent_digest_times',
+        'agent_owner_immediate_daily_cap', 'agent_customer_max_defer_days',
         'lisa_quote_mode', 'lisa_quote_summary_after_hours', 'quote_max_reduction_percent', 'quote_owner_review_above_ghs',
         'quote_addon_booking_ghs', 'quote_addon_payments_ghs', 'quote_addon_accounts_ghs', 'quote_addon_cms_ghs',
         'quote_addon_multilanguage_ghs', 'quote_addon_integrations_ghs', 'quote_addon_custom_design_ghs',

@@ -14,6 +14,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\NurturerController;
+use App\Support\CustomerMessages;
 use App\Support\Database;
 use App\Support\EmailTemplate;
 use App\Support\Mailer;
@@ -49,6 +50,21 @@ foreach ([2 => $sequence2Offset, 3 => $sequence3Offset] as $sequenceNumber => $d
         $name = trim((string) ($row['name'] ?? '')) ?: 'there';
         $leadIndustry = trim((string) ($row['lead_industry'] ?? '')) ?: 'general business';
         $lastAction = trim((string) ($row['last_action'] ?? '')) ?: 'visited princecaleb.dev and was enrolled for follow-up';
+
+        // Jev decides first: has this person gone cold or annoyed, is this the right moment? A skip
+        // also saves the AI call below, which is only there to write the words.
+        $gate = CustomerMessages::check([
+            'agent' => 'nurturer', 'channel' => 'email', 'kind' => 'nurturer_sequence_' . $sequenceNumber,
+            'ref' => "nurturer:enrollment{$row['enrollment_id']}:seq{$sequenceNumber}", 'enrollment_id' => (int) $row['enrollment_id'],
+            'name' => $name, 'industry' => $leadIndustry, 'last_action' => $lastAction,
+        ]);
+        if ($gate['action'] === 'stop') {
+            CustomerMessages::stopEnrollment($pdo, (int) $row['enrollment_id']);
+            continue;
+        }
+        if ($gate['action'] !== 'send') {
+            continue;
+        }
 
         $result = NurturerController::generateFollowUp($name, $leadIndustry, $lastAction, $sequenceNumber);
         if ($result === null) {

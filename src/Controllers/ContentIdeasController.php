@@ -12,6 +12,7 @@ use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\OwnerMessages;
 use App\Support\WhatsAppNotifier;
 
 /**
@@ -182,6 +183,13 @@ class ContentIdeasController
         try {
             $link = 'https://princecaleb.dev/admin/content-ideas';
             $body = $reason . "\n\n" . $summary . "\n\n" . $link;
+            $route = OwnerMessages::route([
+                'agent' => 'content', 'kind' => 'content_plan', 'tier' => 'normal',
+                'subject' => $reason, 'body' => $body, 'ref' => 'content_plan',
+            ]);
+            if ($route['action'] !== 'send') {
+                return; // held for the digest
+            }
             if (WhatsAppNotifier::isOwnerConfigured()) {
                 WhatsAppNotifier::sendOwnerAlert($body, [
                     'name' => 'Content ideas',

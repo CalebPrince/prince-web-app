@@ -42,6 +42,7 @@ const navigation = [
       { name: "Frontend Wording", href: "/admin/frontend-wording", icon: Languages },
       { name: "Lisa", href: "/admin/lisa", icon: Bot },
       { name: "Lisa Decisions", href: "/admin/lisa-decisions", icon: Brain },
+      { name: "Agent Decisions", href: "/admin/agent-decisions", icon: Brain },
     ],
   },
   {

@@ -13,6 +13,7 @@ use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
 use App\Support\TypeSafeGate;
+use App\Support\OwnerMessages;
 use App\Support\WhatsAppNotifier;
 
 /**
@@ -347,6 +348,15 @@ class RoccoController
         $body = $rec['summary'] . "\n\n" . $rec['detail']
             . "\n\nBased on: " . $rec['evidence']
             . "\n\nReview it: https://princecaleb.dev/admin/rocco";
+
+        $route = OwnerMessages::route([
+            'agent' => 'rocco', 'kind' => 'recommendation_attention', 'tier' => 'normal',
+            'subject' => (string) $rec['summary'], 'body' => $body, 'ref' => 'rocco_recommendation:' . $id,
+        ]);
+        if ($route['action'] !== 'send') {
+            $pdo->prepare("UPDATE rocco_recommendations SET emailed_at = COALESCE(emailed_at, datetime('now')), whatsapp_sent_at = COALESCE(whatsapp_sent_at, datetime('now')) WHERE id = ?")->execute([$id]);
+            return;
+        }
 
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         $emailDone = !$to || !empty($rec['emailed_at']);

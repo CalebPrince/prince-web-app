@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
+use App\Support\AgentDecisions;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
 use App\Support\GithubClient;
@@ -14,6 +15,7 @@ use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
 use App\Support\SiteInspector;
+use App\Support\OwnerMessages;
 use App\Support\WhatsAppNotifier;
 
 /**
@@ -182,6 +184,16 @@ class AllieController
             . "\n\n" . ($evaluation['recommendation_rationale'] ?: 'See the full evaluation for details.')
             . "\n\nFlagged to Wendy for a team-impact review before it reaches you for the final call."
             . "\n\nReview it: https://princecaleb.dev/admin/allie-evaluations";
+
+        $route = OwnerMessages::route([
+            'agent' => 'allie', 'kind' => 'evaluation_finding', 'tier' => 'normal',
+            'subject' => $evaluation['tool_name'] . ' - ' . $recommendation, 'body' => $body, 'ref' => 'allie_evaluation:' . $evaluationId,
+        ]);
+        if ($route['action'] !== 'send') {
+            $pdo->prepare("UPDATE allie_evaluations SET emailed_at = COALESCE(emailed_at, datetime('now')), whatsapp_sent_at = COALESCE(whatsapp_sent_at, datetime('now')) WHERE id = ?")
+                ->execute([$evaluationId]);
+            return;
+        }
 
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         $emailDone = !$to || !empty($evaluation['emailed_at']);
@@ -715,6 +727,18 @@ class AllieController
         if ($id <= 0) {
             return ['error' => 'A valid evaluation_id is required.'];
         }
+        // Jev checks the recommendation against Allie's own evidence first. In live mode a gap is sent
+        // back to her as a tool error, so she strengthens it instead of passing a weak one to Wendy.
+        $row = $pdo->prepare("SELECT * FROM allie_evaluations WHERE id = ? AND status = 'recommended' AND recommendation IS NOT NULL");
+        $row->execute([$id]);
+        $evaluation = $row->fetch(\PDO::FETCH_ASSOC);
+        if ($evaluation) {
+            $check = AgentDecisions::allieEvidence($evaluation);
+            if (!$check['ok']) {
+                return ['error' => $check['reason'] . ' Improve it with save_evaluation, then call flag_for_wendy_review again.'];
+            }
+        }
+
         $stmt = $pdo->prepare(
             "UPDATE allie_evaluations SET status = 'wendy_review', updated_at = datetime('now') "
             . "WHERE id = ? AND status = 'recommended' AND recommendation IS NOT NULL"

@@ -271,11 +271,12 @@ class ChloeInvestigator
             if (!empty($existing['escalated_at'])) {
                 $name = self::displayName();
                 $message = 'Error-log activity has returned to its normal rate.';
-                $to = Settings::get('notification_email') ?: Settings::get('social_email');
+                $route = OwnerMessages::route(['agent' => 'chloe', 'kind' => 'recovery', 'tier' => 'normal', 'subject' => 'Error rate back to normal', 'body' => $message, 'ref' => 'chloe_error_rate']);
+                $to = $route['action'] === 'send' ? (Settings::get('notification_email') ?: Settings::get('social_email')) : null;
                 if ($to) {
                     Mailer::send($to, "✅ {$name}: error rate back to normal", "{$name} here — {$message}");
                 }
-                if (WhatsAppNotifier::isOwnerConfigured()) {
+                if ($route['action'] === 'send' && WhatsAppNotifier::isOwnerConfigured()) {
                     WhatsAppNotifier::sendOwnerAlert("✅ {$name} — {$message}", [
                         'name' => $name, 'reason' => 'Error rate back to normal',
                         'summary' => $message, 'message' => $message,
@@ -585,11 +586,12 @@ class ChloeInvestigator
         $siteName = $incident['monitor_name'] ?? 'The site';
         $message = "{$siteName} has recovered and is responding normally again.";
 
-        $to = Settings::get('notification_email') ?: Settings::get('social_email');
+        $route = OwnerMessages::route(['agent' => 'chloe', 'kind' => 'recovery', 'tier' => 'normal', 'subject' => $siteName . ' recovered', 'body' => $message, 'ref' => 'chloe_incident:' . $incident['id']]);
+        $to = $route['action'] === 'send' ? (Settings::get('notification_email') ?: Settings::get('social_email')) : null;
         if ($to) {
             Mailer::send($to, "✅ {$name}: {$siteName} recovered", "{$name} here — {$message}");
         }
-        if (WhatsAppNotifier::isOwnerConfigured()) {
+        if ($route['action'] === 'send' && WhatsAppNotifier::isOwnerConfigured()) {
             WhatsAppNotifier::sendOwnerAlert("✅ {$name} — {$message}", [
                 'name' => $name,
                 'reason' => $siteName . ' recovered',
@@ -615,6 +617,8 @@ class ChloeInvestigator
         }
 
         $name = self::displayName();
+        // Critical by rule: a real incident is never held for a digest. Routed only so it appears in the audit trail.
+        OwnerMessages::route(['agent' => 'chloe', 'kind' => 'incident_escalation', 'tier' => 'critical', 'subject' => (string) $incident['title'], 'body' => (string) $incident['narrative'], 'ref' => 'chloe_incident:' . $incidentId]);
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         $emailDone = !$to || !empty($incident['emailed_at']);
         if (!$emailDone) {
@@ -654,6 +658,16 @@ class ChloeInvestigator
     }
 
     private static function shouldEscalate(array $finding): bool
+    {
+        if (self::escalatesByRules($finding)) {
+            return true;
+        }
+        // Jev may raise an incident her thresholds have not reached, and only raise it: it can never
+        // suppress an escalation her own rules make, and never raises an unconfirmed finding.
+        return AgentDecisions::chloeRaise($finding, 'chloe:' . ($finding['category'] ?? '') . ':' . ($finding['title'] ?? ''));
+    }
+
+    private static function escalatesByRules(array $finding): bool
     {
         if ($finding['confidence'] < self::minConfidence()) {
             return false;

@@ -7,7 +7,9 @@ use App\Support\AiAgentEngine;
 use App\Support\AiText;
 use App\Support\Database;
 use App\Support\EmailTemplate;
+use App\Support\AgentDecisions;
 use App\Support\Mailer;
+use App\Support\OwnerMessages;
 use App\Support\WhatsAppNotifier;
 use App\Support\Response;
 use App\Support\Settings;
@@ -521,7 +523,8 @@ class Chief
                 $out[] = ['label' => $label, 'count' => $count, 'url' => $url];
             }
         }
-        return $out;
+        // Jev ranks them by urgency (live: most urgent first, with an 'urgency' figure; shadow: order kept).
+        return AgentDecisions::chiefRank($out);
     }
 
     // ------------------------------------------------------------ the brief
@@ -787,6 +790,8 @@ class Chief
      */
     public static function emailBrief(PDO $pdo, array $brief): bool
     {
+        // A scheduled summary is never held, but it is recorded in the same audit trail as every other agent message.
+        OwnerMessages::route(['agent' => 'chief', 'kind' => 'daily_brief', 'tier' => 'scheduled', 'subject' => (string) $brief['headline'], 'body' => (string) $brief['body'], 'ref' => 'chief_brief:' . $brief['id']]);
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         $emailDone = !$to || !empty($brief['emailed_at']);
 

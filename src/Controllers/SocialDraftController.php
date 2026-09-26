@@ -16,6 +16,7 @@ use App\Support\Settings;
 use App\Support\SharedAgentTools;
 use App\Support\SocialImage;
 use App\Support\WebResearch;
+use App\Support\OwnerMessages;
 use App\Support\WhatsAppNotifier;
 
 /**
@@ -153,6 +154,14 @@ class SocialDraftController
 \"{$snippet}\"
 
 {$link}";
+
+            $route = OwnerMessages::route([
+                'agent' => 'radar', 'kind' => 'draft_ready', 'tier' => 'normal',
+                'subject' => "LinkedIn draft #{$draftId} is ready to review", 'body' => $body, 'ref' => 'social_draft:' . $draftId,
+            ]);
+            if ($route['action'] !== 'send') {
+                return; // held for the digest
+            }
 
             if (WhatsAppNotifier::isOwnerConfigured()) {
                 WhatsAppNotifier::sendOwnerAlert($body, [

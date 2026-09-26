@@ -14,6 +14,7 @@ use App\Support\Mailer;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
+use App\Support\OwnerMessages;
 use App\Support\WhatsAppNotifier;
 
 /**
@@ -477,6 +478,18 @@ class WendyController
         $body = $observation['summary'] . "\n\n" . $observation['detail']
             . "\n\nBased on: " . $observation['evidence']
             . "\n\nTalk to her: https://princecaleb.dev/admin/agent-chat";
+
+        // Jev rates the alert first. A routine one waits for the digest instead of interrupting;
+        // both channels are marked handled so it is never retried, and it is in owner_message_queue.
+        $route = OwnerMessages::route([
+            'agent' => 'wendy', 'kind' => 'session_request', 'tier' => 'normal',
+            'subject' => (string) $observation['summary'], 'body' => $body, 'ref' => 'wendy_observation:' . $observationId,
+        ]);
+        if ($route['action'] !== 'send') {
+            $pdo->prepare("UPDATE wendy_observations SET emailed_at = COALESCE(emailed_at, datetime('now')), whatsapp_sent_at = COALESCE(whatsapp_sent_at, datetime('now')) WHERE id = ?")
+                ->execute([$observationId]);
+            return;
+        }
 
         $to = Settings::get('notification_email') ?: Settings::get('social_email');
         $emailDone = !$to || !empty($observation['emailed_at']);

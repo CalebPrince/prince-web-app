@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\ActivityLog;
+use App\Support\AgentDecisions;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
 use App\Support\Response;
@@ -70,6 +71,17 @@ class SageController
         if ($owner && empty($session['client_name'])) {
             $pdo->prepare('UPDATE sage_chats SET client_name = ? WHERE id = ?')->execute(['Prince Caleb', $session['id']]);
             $session['client_name'] = 'Prince Caleb';
+        }
+
+        // Jev reads the message first. Spam or a manipulation attempt is answered with a fixed line and
+        // never reaches an AI provider (live mode only; the owner is never checked).
+        $abuse = $owner === null ? AgentDecisions::sageAbuse($message) : null;
+        if ($abuse !== null && $abuse['abusive']) {
+            $reply = "I'm here for marketing questions, offers, funnels and copy. Ask me one of those and I'll gladly dig in.";
+            $transcript[] = ['role' => 'agent', 'text' => $reply];
+            $pdo->prepare("UPDATE sage_chats SET transcript_json = ?, admin_seen = 0, updated_at = datetime('now') WHERE id = ?")
+                ->execute([json_encode($transcript), $session['id']]);
+            Response::json(['reply' => $reply, 'token' => $session['token']]);
         }
 
         $result = AiAgentEngine::run(

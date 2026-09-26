@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/autoload.php';
 
+use App\Support\CustomerMessages;
 use App\Support\Database;
 use App\Support\Settings;
 use App\Support\TwilioClient;
@@ -51,6 +52,20 @@ $due = $pdo->query(
 
 $sent = 0;
 foreach ($due as $row) {
+    // Jev decides first whether this WhatsApp message should go to this person now.
+    $gate = CustomerMessages::check([
+        'agent' => 'drip', 'channel' => 'whatsapp', 'kind' => 'drip_step',
+        'ref' => "drip:enrollment{$row['enrollment_id']}:step{$row['step_id']}", 'enrollment_id' => (int) $row['enrollment_id'],
+        'name' => (string) ($row['name'] ?? ''), 'industry' => (string) ($row['lead_industry'] ?? ''), 'last_action' => (string) ($row['last_action'] ?? ''),
+    ]);
+    if ($gate['action'] === 'stop') {
+        CustomerMessages::stopEnrollment($pdo, (int) $row['enrollment_id']);
+        continue;
+    }
+    if ($gate['action'] !== 'send') {
+        continue;
+    }
+
     $audit = json_decode((string) ($row['audit_findings'] ?? ''), true);
     $research = json_decode((string) ($row['research_findings'] ?? ''), true);
     $tokens = [

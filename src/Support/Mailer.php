@@ -92,8 +92,14 @@ class Mailer
     }
 
     /** @param string[] $headers @param array{address:string,name:string,username:string,password:string,host:string,port:int} $identity */
+    /** Test seam: fn(to, subject, body): bool used instead of sending. Never set in production code. @var callable|null */
+    public static $testTransport = null;
+
     private static function deliver(string $to, string $subject, string $body, array $headers, array $identity): bool
     {
+        if (self::$testTransport !== null) {
+            return (bool) (self::$testTransport)($to, $subject, $body);
+        }
         if (!filter_var($to, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $subject)) {
             return false;
         }

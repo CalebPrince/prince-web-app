@@ -2145,6 +2145,38 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     Tables `lisa_judgments`, `lisa_followups`, `lisa_owner_alerts`, `lisa_quotes`
     and `chat_sessions.lisa_signals_json/lisa_signals_at/opted_out_at` come from
     `migrate.php`.
+47d. **Jev as the decision layer for every agent** (`src/Support/AgentJudgment.php`,
+    `OwnerMessages.php`, `CustomerMessages.php`, `AgentDecisions.php`; admin page
+    `/admin/agent-decisions`; settings tab "Agent decisions"). The rule: Jev decides
+    first, code applies fixed rules to what Jev says, and AI providers only write
+    words afterwards. Three areas, each `shadow` (default: record what would happen,
+    change nothing), `live`, or `off`, and every path fails open if Jev is down:
+    - **Messages to the owner** (`agent_jev_owner_mode`): every agent alert (Wendy,
+      Allie, Rocco, Chloe recoveries, content plan, social drafts) calls
+      `OwnerMessages::route()` first. Jev rates importance, whether it needs an
+      action, and whether it repeats a recent message. Routine ones are held in
+      `owner_message_queue` and go out together in one digest
+      (`database/send_owner_digest.php`, cron every 30 min, at
+      `agent_digest_times`, never in quiet hours, anything held over 24h goes at
+      the next chance). Nothing is dropped. The tier is set by code, never Jev:
+      Chloe incident escalations are `critical` and never held; Chief's brief is
+      `scheduled`; a call site with no tier is treated as critical.
+    - **Messages to customers** (`agent_jev_customer_mode`): Nurturer follow-ups,
+      drip email and drip WhatsApp. Before each send Jev reads what was already
+      sent and what the person replied. Live: skip a message that would be pushy
+      (re-asked, abandoned after `agent_customer_max_defer_days`), or stop the
+      enrollment for someone who lost interest. Cold outreach is deliberately not
+      gated (a human wrote and approved each pitch, and a stranger has no history to
+      judge); transactional messages (invoices, reminders) are outside it too.
+    - **Agent decisions** (`agent_jev_decisions_mode`): Nurturer's reply
+      classification (Jev decides; the provider only drafts, and only for the
+      classes that want a reply), Chloe may escalate an incident earlier than her
+      thresholds (raise only, never suppress, never an unconfirmed finding),
+      Chief orders what is waiting on you by urgency, Allie's recommendation must
+      stand on her own evidence before it goes to Wendy (a gap is sent back to her
+      as a tool error), Sage's public chat answers spam and manipulation attempts
+      with a fixed line and no provider call.
+    Tables `agent_decisions` and `owner_message_queue` come from `migrate.php`.
 48. **Lisa page & monthly pricing** (`/admin/lisa.html`, `public/lisa-ai-assistant.html`):
     a dedicated admin page for the public Lisa service page, reusing the same
     settings/content API as Site Content and Pricing rather than a new table

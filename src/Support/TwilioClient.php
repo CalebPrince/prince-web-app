@@ -28,6 +28,9 @@ final class TwilioClient
     // any logo, screenshot, or brand PDF a client would actually send.
     private const MAX_MEDIA_DOWNLOAD_BYTES = 26_214_400; // 25MB
 
+    /** Test seam: fn(string $kind, array $params): array{ok,id,error} used instead of the network. Never set in production code. @var callable|null */
+    public static $testSender = null;
+
     public static function isConfigured(): bool
     {
         return trim((string) Settings::get('twilio_account_sid')) !== ''
@@ -248,6 +251,9 @@ final class TwilioClient
      */
     private static function createMessage(array $params): array
     {
+        if (self::$testSender !== null) {
+            return (self::$testSender)('message', $params);
+        }
         $accountSid = trim((string) Settings::get('twilio_account_sid'));
         $token = trim((string) Settings::get('twilio_auth_token'));
         if ($accountSid === '' || $token === '') {

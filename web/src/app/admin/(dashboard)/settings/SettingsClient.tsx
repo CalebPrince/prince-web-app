@@ -103,7 +103,7 @@ const EMAIL_TEMPLATES: [string, string][] = [
 
 type Tab =
   | "account" | "ai" | "voice" | "messaging" | "integrations"
-  | "content-sources" | "lisa-decisions" | "lisa-quoting" | "payments" | "email" | "site" | "booking";
+  | "content-sources" | "lisa-decisions" | "lisa-quoting" | "agent-decisions" | "payments" | "email" | "site" | "booking";
 
 /** Every settings key this page owns, grouped by the tab that edits it. */
 const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
@@ -151,6 +151,10 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "composio_linkedin_stats_tool",
     "model_agnostic_memory_url", "model_agnostic_memory_token", "model_agnostic_memory_key",
     "model_agnostic_agent_token",
+  ],
+  "agent-decisions": [
+    "agent_jev_owner_mode", "agent_jev_customer_mode", "agent_jev_decisions_mode",
+    "agent_digest_times", "agent_owner_immediate_daily_cap", "agent_customer_max_defer_days",
   ],
   "lisa-decisions": [
     "lisa_jev_mode", "lisa_followup_mode",
@@ -200,6 +204,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "integrations", label: "Integrations" },
   { value: "content-sources", label: "Content sources" },
   { value: "lisa-decisions", label: "Lisa decisions" },
+  { value: "agent-decisions", label: "Agent decisions" },
   { value: "payments", label: "Payments" },
   { value: "email", label: "Email" },
   { value: "site", label: "Site" },
@@ -233,6 +238,12 @@ const SECRET_KEYS = new Set([
 
 /** Short help under a field. */
 const FIELD_HINTS: Record<string, string> = {
+  agent_jev_owner_mode: "What your agents send to you. Jev rates each message: routine ones wait for one digest, important ones go out at once, and anything critical (an outage, a customer who needs you) is never held. Shadow records what it would do and changes nothing.",
+  agent_jev_customer_mode: "What your agents send to customers on their own (Nurturer follow-ups, drip email and drip WhatsApp). Jev can skip a message that would be pushy, or stop the sequence for someone who has lost interest. Shadow only records.",
+  agent_jev_decisions_mode: "The agents' own judgment calls: Nurturer's reply classification, Chloe raising an escalation, Chief's ordering of what waits on you, Allie's evidence check, Sage's spam check. Shadow only records.",
+  agent_digest_times: "When held routine messages go out together, site time, comma separated (e.g. 09:00,17:00). Never in quiet hours.",
+  agent_owner_immediate_daily_cap: "Most non-critical messages sent to you immediately per 24 hours. Beyond it, only time-critical ones interrupt. Default 12.",
+  agent_customer_max_defer_days: "How many days a message can keep being judged not appropriate before it is abandoned. Default 3.",
   lisa_jev_mode: "Jev reads every customer message before Lisa replies (wants a person, upset, opting out, hot lead, urgent). Shadow records what it would do and changes nothing. Live acts and steers Lisa.",
   lisa_followup_mode: "Follow-ups to WhatsApp conversations that went cold. Shadow lists who it would message and what it would send, and sends nothing. Live sends.",
   lisa_followup_first_silence_hours: "Hours of silence before the first free-text nudge. Default 3.",
@@ -264,6 +275,9 @@ const CHOICES: Record<string, string[]> = {
   whatsapp_provider: ["elevenlabs", "whapi", "wati", "twilio"],
   typesafe_gate_mode: ["shadow", "enforce", "off"],
   lisa_jev_mode: ["shadow", "live", "off"],
+  agent_jev_owner_mode: ["shadow", "live", "off"],
+  agent_jev_customer_mode: ["shadow", "live", "off"],
+  agent_jev_decisions_mode: ["shadow", "live", "off"],
   lisa_followup_mode: ["shadow", "live", "off"],
   lisa_quote_mode: ["shadow", "live", "off"],
   default_theme: ["dark", "light", "midnight", "paper"],
@@ -1024,6 +1038,19 @@ export default function SettingsClient({
           {groupCard("integrations", "Integrations")}
         </div>
       )}
+      {tab === "agent-decisions" && (
+        <div className="space-y-4">
+          <Card title="What these do" bodyClassName="p-5 space-y-2">
+            <p className="text-sm text-text-2">
+              Jev is the decision layer across every agent, and the AI providers only write words afterwards. All three start in shadow
+              mode: they record what they would do and change nothing, so you can review it on the Agent Decisions page before switching
+              any of them to live. Lisa has her own settings under Lisa decisions. Quiet hours are shared and set there.
+            </p>
+          </Card>
+          {groupCard("agent-decisions", "Agent decisions")}
+        </div>
+      )}
+
       {tab === "lisa-decisions" && (
         <div className="space-y-4">
           <Card title="What these do" bodyClassName="p-5 space-y-2">
