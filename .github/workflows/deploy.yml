@@ -22,6 +22,20 @@ jobs:
           php-version: '8.1' # matches the minimum version the app targets
       - name: php -l all PHP files
         run: find src config database public -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      # php -l only catches parse errors. A route pointing at a class that was
+      # never imported (or any other boot-time fatal) still passes it, and
+      # takes down every /api request. Boot the real entrypoint and require
+      # a clean 404 on an unknown route: a boot fatal returns 200 under php -S
+      # and logs "Fatal error". This does not touch the database.
+      - name: Boot smoke test (route registration)
+        run: |
+          php -S 127.0.0.1:8099 -t public public/index.php > /tmp/php-smoke.log 2>&1 &
+          PID=$!
+          sleep 2
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8099/api/v1/__smoke__)
+          kill $PID 2>/dev/null || true
+          if [ "$CODE" != "404" ]; then echo "Unknown route returned $CODE, expected 404"; cat /tmp/php-smoke.log; exit 1; fi
+          if grep -q 'Fatal error' /tmp/php-smoke.log; then cat /tmp/php-smoke.log; exit 1; fi
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
