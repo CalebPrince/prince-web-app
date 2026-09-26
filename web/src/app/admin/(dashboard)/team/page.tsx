@@ -5,7 +5,7 @@ import { ChiefBrief, ChiefDashboard } from "@/components/admin/ChiefReport";
 import TeamClient, { TeamData } from "./TeamClient";
 
 export const metadata: Metadata = {
-  title: "Team — Admin",
+  title: "Team, Admin",
 };
 
 const EMPTY_TEAM: TeamData = {
