@@ -180,7 +180,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "chat_hours_days", "chat_hours_start", "chat_hours_end", "chat_timezone",
     "chat_persona", "social_draft_enabled", "social_draft_frequency",
     "social_draft_auto_approve",
-    "allie_discovery_enabled", "allie_discovery_frequency",
+    "allie_discovery_enabled", "allie_discovery_frequency", "allie_news_sources",
     "wendy_review_enabled", "wendy_review_frequency",
     "rocco_review_enabled", "rocco_review_frequency",
   ],
@@ -235,6 +235,22 @@ const SECRET_KEYS = new Set([
   "model_agnostic_agent_token",
   "paystack_secret_key", "smtp_app_password",
 ]);
+
+/** Allie's built-in news outlets, shown as the placeholder. Keep in step with AllieNewsSources::DEFAULTS in PHP. */
+const ALLIE_NEWS_DEFAULTS = [
+  "techcrunch.com",
+  "theverge.com",
+  "wired.com",
+  "arstechnica.com",
+  "venturebeat.com",
+  "technologyreview.com",
+  "news.ycombinator.com",
+  "producthunt.com",
+  "theinformation.com",
+  "techcabal.com",
+  "techpoint.africa",
+  "restofworld.org",
+];
 
 /** Short help under a field. */
 const FIELD_HINTS: Record<string, string> = {
@@ -628,6 +644,23 @@ export default function SettingsClient({
             maxLength={4000}
             value={values[key] ?? ""}
             onChange={(e) => set(key, e.target.value)}
+          />
+        </Field>
+      );
+    }
+
+    if (key === "allie_news_sources") {
+      return (
+        <Field
+          key={key}
+          label="Allie news sources"
+          hint="News sites Allie can search on purpose, one per line (just the domain, like techcrunch.com). This adds to her open web search and never limits it. Leave it blank to use the built-in list of tech and AI outlets."
+        >
+          <Textarea
+            rows={8}
+            value={values[key] ?? ""}
+            onChange={(e) => set(key, e.target.value)}
+            placeholder={ALLIE_NEWS_DEFAULTS.join("\n")}
           />
         </Field>
       );

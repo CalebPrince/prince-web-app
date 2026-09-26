@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Support\ActivityLog;
 use App\Support\AgentDecisions;
 use App\Support\AiAgentEngine;
+use App\Support\AllieNewsSources;
 use App\Support\Database;
 use App\Support\GithubClient;
 use App\Support\Mailer;
@@ -88,6 +89,7 @@ class AllieController
             SharedAgentTools::searchContentToolDeclaration(),
             SharedAgentTools::inteliSpaceLookupToolDeclaration(),
             self::searchWebToolDeclaration(),
+            self::searchNewsSitesToolDeclaration(),
             self::browsePageToolDeclaration(),
             self::inspectGitHubRepositoryToolDeclaration(),
             self::listEvaluationsToolDeclaration(),
@@ -103,6 +105,7 @@ class AllieController
             'search_content' => SharedAgentTools::searchContent($pdo, (string) ($args['query'] ?? '')),
             'lookup_inteli_space_project' => SharedAgentTools::inteliSpaceLookup((string) ($args['query'] ?? '')),
             'search_web' => self::searchWeb((string) ($args['query'] ?? '')),
+            'search_news_sites' => self::searchNewsSites((string) ($args['query'] ?? '')),
             'browse_page' => self::browsePage((string) ($args['url'] ?? '')),
             'inspect_github_repository' => self::inspectGitHubRepository((string) ($args['url'] ?? '')),
             'list_evaluations' => self::listEvaluations($pdo, isset($args['status']) ? (string) $args['status'] : null),
@@ -134,6 +137,12 @@ class AllieController
             . "browse_page when possible, note its date, and identify the practical idea behind it. Do not limit "
             . "the pass to product announcements: look equally for her day-to-day thinking on AI workflows, "
             . "business strategy, careers, leadership, trust, adoption, agents, and how people actually work. "
+            . "Then take a second lens on the wider industry: run two or three targeted search_news_sites queries "
+            . "(for example on AI agents, workflow automation, or how businesses are adopting AI) to see what the tech press "
+            . "is covering right now. Treat headlines as leads: open the article with browse_page, check its date, and find the "
+            . "primary source behind it. Those outlets are an addition, not a limit. Keep using search_web, GitHub, primary "
+            . "sources and whatever the real Allie K. Miller would actually follow, and a strong idea found outside those "
+            . "outlets is just as valid as one found inside them. "
             . "Call list_evaluations too so you don't repeat an experiment or recommendation you're already "
             . "tracking. Finish what you've started before starting anything new: if any evaluation is "
             . "still in discovered, evaluating, or compared, pick the oldest and advance it with fresh research "
@@ -155,7 +164,7 @@ class AllieController
             [['role' => 'user', 'text' => $prompt]],
             null,
             null,
-            6
+            8
         );
     }
 
@@ -282,7 +291,7 @@ class AllieController
             . "to the past month so this stays about what's actually current, not old news — use it for "
             . "anything about pricing, release dates, benchmarks, or whether something is actually still "
             . "current; always cite the source and its date, and say plainly when the freshest result you "
-            . "found is actually stale), browse_page (open a real URL — a changelog, docs page, pricing page, "
+            . "found is actually stale), search_news_sites (the same live search, restricted to a curated list of tech and AI news outlets such as TechCrunch, The Verge and Hacker News: a good way to see what the industry is talking about right now. It is one lens, not a boundary. search_web stays open to everything, and the real Allie's strongest signals often come from outside any outlet list: primary sources, researchers' and operators' own posts, GitHub, community threads, customers. A news headline is a lead to verify, never a conclusion), browse_page (open a real URL — a changelog, docs page, pricing page, "
             . "or announcement search_web only gave you a snippet of — and read its actual current content "
             . "instead of guessing from the snippet alone), inspect_github_repository (for a specific "
             . "open-source tool — read its real README/metadata rather than guessing what it does), "
@@ -331,6 +340,28 @@ class AllieController
                     'query' => [
                         'type' => 'STRING',
                         'description' => 'Search query, e.g. "Cursor background agents pricing 2026" or "best AI observability tools 2026".',
+                    ],
+                ],
+                'required' => ['query'],
+            ],
+        ];
+    }
+
+    private static function searchNewsSitesToolDeclaration(): array
+    {
+        return [
+            'name' => 'search_news_sites',
+            'description' => 'A live web search restricted to a curated list of tech and AI news outlets (for example TechCrunch, ' .
+                'The Verge, Wired, Ars Technica, VentureBeat, Hacker News, Product Hunt), biased to the past month. Use it to see what the ' .
+                'industry press is covering right now. It is an ADDITIONAL lens, not a limit: use search_web for anything outside those ' .
+                'outlets, and treat a headline as a lead to verify with browse_page and the primary source, checking the date. The result ' .
+                'says which outlets were searched.',
+            'parameters' => [
+                'type' => 'OBJECT',
+                'properties' => [
+                    'query' => [
+                        'type' => 'STRING',
+                        'description' => 'What to look for in the news, e.g. "AI agents enterprise adoption" or "coding assistants pricing". Do not include site: operators.',
                     ],
                 ],
                 'required' => ['query'],
@@ -396,9 +427,42 @@ class AllieController
      */
     private static function searchWeb(string $query): array
     {
+        return self::serperSearch(trim($query));
+    }
+
+    /**
+     * The same search restricted to the configured news outlets. An addition to searchWeb(), never a
+     * replacement: the result names the outlets so Allie knows what it did and did not cover.
+     *
+     * @return array<string,mixed>
+     */
+    private static function searchNewsSites(string $query): array
+    {
         $query = trim($query);
         if ($query === '') {
             return ['note' => 'No search query given.'];
+        }
+        $domains = AllieNewsSources::domains();
+        $result = self::serperSearch(AllieNewsSources::restrictQuery($query, $domains));
+        $result['searched_outlets'] = $domains;
+        if (isset($result['note']) && $result['note'] === 'No results found for that search.') {
+            $result['note'] = 'No recent coverage of that in the listed outlets. That says nothing about whether it matters: try search_web, which is not limited to them.';
+        }
+        return $result;
+    }
+
+    /** Test seam: fn(string $q): ?array standing in for the Serper response body. Never set in production code. @var callable|null */
+    public static $testSearch = null;
+
+    /** @return array<string,mixed> */
+    private static function serperSearch(string $query): array
+    {
+        if ($query === '') {
+            return ['note' => 'No search query given.'];
+        }
+        if (self::$testSearch !== null) {
+            $response = (self::$testSearch)($query);
+            return self::formatSerper($response);
         }
 
         $apiKey = trim((string) Settings::get('serper_api_key'));
@@ -435,7 +499,17 @@ class AllieController
             return ['note' => 'The web search failed — try again in a moment.'];
         }
 
-        $decoded = json_decode((string) $response, true);
+        return self::formatSerper(json_decode((string) $response, true));
+    }
+
+    /**
+     * Turn a Serper response body into Allie's result shape: up to six results with title, link, snippet,
+     * date and the outlet's domain.
+     *
+     * @return array<string,mixed>
+     */
+    private static function formatSerper(?array $decoded): array
+    {
         $items = $decoded['organic'] ?? [];
         if (!is_array($items) || !$items) {
             return ['note' => 'No results found for that search.'];
@@ -452,6 +526,7 @@ class AllieController
                 'link' => !empty($item['link']) ? (string) $item['link'] : null,
                 'snippet' => !empty($item['snippet']) ? (string) $item['snippet'] : null,
                 'date' => !empty($item['date']) ? (string) $item['date'] : null,
+                'source' => !empty($item['link']) ? (preg_replace('/^www\./', '', (string) parse_url((string) $item['link'], PHP_URL_HOST)) ?: null) : null,
             ];
         }
 

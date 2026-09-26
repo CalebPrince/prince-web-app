@@ -2063,7 +2063,15 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     evaluation with a metric, owner, and stop-loss before it moves through
     Wendy's team-impact review. The optional discovery pass keeps this work
     active between chats. Historical `scout_chat` activity remains readable
-    by Chief as part of Allie's merged conversation history.
+    by Chief as part of Allie's merged conversation history. She also has a
+    `search_news_sites` tool: the same live search (past month) restricted to a
+    curated list of tech and AI outlets (`AllieNewsSources`, defaults include
+    TechCrunch, The Verge, Wired, Ars Technica, VentureBeat, Hacker News and
+    African tech press; editable under Settings, Site, "Allie news sources").
+    It is an added lens, never a limit: `search_web`, page browsing, GitHub and
+    her research into the real Allie K. Miller are unchanged, and her prompts
+    say a headline is a lead to verify and that ideas from outside the list
+    count equally.
 47a. **TypeSafe gate for Beacon** (`src/Support/TypeSafeGate.php`): a cheap
     typed-judgment pre-filter ahead of Beacon's full generative scoring, on the
     cron post path and the LinkedIn engagement path. Needs `typesafe_api_key`

@@ -58,7 +58,7 @@ class SettingsController
         'beacon_discovery_enabled', 'beacon_discovery_frequency', 'beacon_discovery_last_run', 'beacon_discovery_keywords', 'beacon_discovery_recency',
         'allie_discovery_enabled', 'allie_discovery_frequency', 'allie_discovery_last_run',
         'wendy_review_enabled', 'wendy_review_frequency', 'wendy_review_last_run',
-        'rocco_review_enabled', 'rocco_review_frequency', 'rocco_review_last_run',
+        'rocco_review_enabled', 'rocco_review_frequency', 'rocco_review_last_run', 'allie_news_sources',
         'lisa_jev_mode', 'lisa_followup_mode', 'lisa_followup_first_silence_hours', 'lisa_followup_second_silence_hours',
         'lisa_followup_max_days', 'lisa_followup_max_per_episode', 'lisa_quiet_start', 'lisa_quiet_end', 'lisa_owner_alert_daily_cap',
         'agent_jev_owner_mode', 'agent_jev_customer_mode', 'agent_jev_decisions_mode', 'agent_digest_times',
@@ -363,6 +363,16 @@ class SettingsController
                 if (!preg_match('/^[A-Z]{3}$/', $value)) {
                     Response::error('Expense currency must be a three-letter code such as USD or GHS.', 422);
                 }
+            }
+            if ($key === 'allie_news_sources' && $value !== '') {
+                $parsed = \App\Support\AllieNewsSources::parse($value);
+                if ($parsed['invalid'] !== []) {
+                    Response::error('These are not valid website domains: ' . implode(', ', array_slice($parsed['invalid'], 0, 5)) . '. Use one per line, like techcrunch.com.', 422);
+                }
+                if (count($parsed['domains']) > \App\Support\AllieNewsSources::MAX_SOURCES) {
+                    Response::error('Use at most ' . \App\Support\AllieNewsSources::MAX_SOURCES . ' news sites.', 422);
+                }
+                $value = implode("\n", $parsed['domains']);
             }
             $maxLength = str_starts_with($key, 'email_tpl_') ? 20000 : 5000;
             if (mb_strlen($value) > $maxLength) {
