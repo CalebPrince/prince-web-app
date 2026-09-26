@@ -2109,6 +2109,42 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     than it saves (enforce is then refused). Run `php database/migrate.php`
     after deploying: it adds the `enforced` column and rebuilds
     `rocco_recommendations` with the threshold action, keeping rows.
+47c. **Jev decision layer for Lisa** (`src/Support/LisaJudgment.php`,
+    `LisaFollowups.php`, `LisaQuoting.php`, admin page `/admin/lisa-decisions`,
+    settings tab "Lisa decisions"). Jev (TypeSafe) makes the decisions and the AI
+    providers only write Lisa's words afterwards; Jev runs BEFORE the reply is
+    generated, inside `LiveChatController::generateReply()`, so it covers the
+    website chat and every WhatsApp provider. All three parts start in `shadow`
+    (record what they would do, change nothing) and are switched to `live`
+    separately: `lisa_jev_mode`, `lisa_followup_mode`, `lisa_quote_mode`.
+    - **Per message:** one Jev call reads intent, wants-a-person, upset, opting
+      out, urgency and buying intent. Code acts: record an opt-out (blocks all
+      follow-ups), hand off, WhatsApp the owner (hot lead, needs you, urgent;
+      once per session per reason per day, daily cap, hot leads wait out quiet
+      hours), and steer Lisa's reply. The owner's own messages are never judged.
+    - **Cold follow-ups** (`database/lisa_followups.php`, cron every 30 to 60
+      min): WhatsApp conversations that went quiet after Lisa's last message.
+      Free-text nudges at 3h and 20h inside the 24 hour window
+      (`last_inbound_at`), then the approved `conversation_followup` template
+      once the window closes (Settings, Templates: create and submit, needs
+      Meta approval). Jev decides whether a check-in is welcome; resolved,
+      declined and opted-out conversations are skipped with the reason
+      recorded. Max 3 per silence, 7 days, never in quiet hours; STOP words
+      are honoured without asking any model. Twilio only.
+    - **Pricing:** anchored on the Pricing page tiers. Code extracts the listed
+      GHS prices, Jev picks the one that applies and how the scope compares:
+      exact list price, reduced (within `quote_max_reduction_percent`, default
+      0), added to (owner's `quote_addon_*_ghs`), or, when no listed price or
+      add-on fits, a band estimate (Jev picks a band, code holds the numbers,
+      bounded by the owner's own prices) that is always sent to the owner now.
+      Unusual, negotiating or over `quote_owner_review_above_ghs` means no
+      number and an immediate alert. Otherwise one quote summary reaches the
+      owner after the conversation has been quiet (`lisa_quote_summary_after_hours`).
+      In live mode Lisa is given the decision as an instruction that
+      explicitly replaces her older pricing guidance.
+    Tables `lisa_judgments`, `lisa_followups`, `lisa_owner_alerts`, `lisa_quotes`
+    and `chat_sessions.lisa_signals_json/lisa_signals_at/opted_out_at` come from
+    `migrate.php`.
 48. **Lisa page & monthly pricing** (`/admin/lisa.html`, `public/lisa-ai-assistant.html`):
     a dedicated admin page for the public Lisa service page, reusing the same
     settings/content API as Site Content and Pricing rather than a new table

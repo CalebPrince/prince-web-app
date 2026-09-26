@@ -59,6 +59,7 @@ use App\Controllers\GrowthRoadmapController;
 use App\Controllers\InquiryController;
 use App\Controllers\IntegrationController;
 use App\Controllers\InvoiceController;
+use App\Controllers\LisaDecisionsController;
 use App\Controllers\LiveChatController;
 use App\Controllers\LiveAvatarController;
 use App\Controllers\MarketingLeadController;
@@ -76,6 +77,7 @@ use App\Controllers\WhatsAppMilestoneUpdateTemplateController;
 use App\Controllers\WhatsAppDeliveryReadyTemplateController;
 use App\Controllers\WhatsAppRenewalReminderTemplateController;
 use App\Controllers\WhatsAppFeedbackRequestTemplateController;
+use App\Controllers\WhatsAppConversationFollowupTemplateController;
 use App\Controllers\WhatsAppDripFollowupTemplateController;
 use App\Controllers\WhatsAppOwnerAlertTemplateController;
 use App\Controllers\WhatsAppTemplateCatalogController;
@@ -409,6 +411,10 @@ $router->post('/api/v1/admin/whatsapp-template/feedback-request/refresh', [Whats
 $router->delete('/api/v1/admin/whatsapp-template/feedback-request', [WhatsAppFeedbackRequestTemplateController::class, 'destroy']);
 
 $router->post('/api/v1/admin/whatsapp/send-drip-followup', [LiveChatController::class, 'sendDripFollowup']);
+$router->post('/api/v1/admin/whatsapp/send-conversation-followup', [LiveChatController::class, 'sendConversationFollowup']);
+$router->get('/api/v1/admin/whatsapp-template/conversation-followup', [WhatsAppConversationFollowupTemplateController::class, 'status']);
+$router->post('/api/v1/admin/whatsapp-template/conversation-followup', [WhatsAppConversationFollowupTemplateController::class, 'create']);
+$router->post('/api/v1/admin/whatsapp-template/conversation-followup/refresh', [WhatsAppConversationFollowupTemplateController::class, 'refresh']);
 $router->get('/api/v1/admin/whatsapp-template/drip-followup',[WhatsAppDripFollowupTemplateController::class, 'status']);
 $router->post('/api/v1/admin/whatsapp-template/drip-followup', [WhatsAppDripFollowupTemplateController::class, 'create']);
 $router->post('/api/v1/admin/whatsapp-template/drip-followup/refresh', [WhatsAppDripFollowupTemplateController::class, 'refresh']);
@@ -449,6 +455,8 @@ $router->patch('/api/v1/admin/content-ideas/{id}', [ContentIdeasController::clas
 $router->post('/api/v1/admin/content-ideas/{id}/draft', [ContentIdeasController::class, 'createDraft']);
 $router->post('/api/v1/admin/agents/reel/chat', [ReelController::class, 'chat']);
 $router->post('/api/v1/admin/agents/rocco/chat', [RoccoController::class, 'chat']);
+$router->get('/api/v1/admin/lisa-decisions', [LisaDecisionsController::class, 'overview']);
+$router->post('/api/v1/admin/lisa-decisions/run', [LisaDecisionsController::class, 'runNow']);
 $router->get('/api/v1/admin/rocco/overview', [RoccoController::class, 'overview']);
 $router->post('/api/v1/admin/rocco/review', [RoccoController::class, 'reviewNow']);
 $router->post('/api/v1/admin/rocco/recommendations/{id}/apply', [RoccoController::class, 'applyRecommendation']);

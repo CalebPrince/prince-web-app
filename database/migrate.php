@@ -2164,4 +2164,13 @@ if ($roccoRecColumns && (!in_array('action_value', $roccoRecColumns, true) || !s
     echo "Rebuilt rocco_recommendations: added threshold and competitor cutoff actions.\n";
 }
 
+// Lisa's Jev decision layer keeps its latest signals on the session itself, plus
+// opted_out_at, which every outbound follow-up honours.
+$chatSessionColumns = array_column($pdo->query('PRAGMA table_info(chat_sessions)')->fetchAll(), 'name');
+foreach (['lisa_signals_json', 'lisa_signals_at', 'opted_out_at'] as $col) {
+    if (!in_array($col, $chatSessionColumns, true)) {
+        $pdo->exec("ALTER TABLE chat_sessions ADD COLUMN {$col} TEXT");
+    }
+}
+
 echo "Schema applied.\n";

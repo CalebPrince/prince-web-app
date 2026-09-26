@@ -14,6 +14,7 @@ use App\Support\AiText;
 use App\Support\Automations;
 use App\Support\Database;
 use App\Support\LisaInstructions;
+use App\Support\LisaJudgment;
 use App\Support\Response;
 use App\Support\Settings;
 use App\Support\SharedAgentTools;
@@ -23,6 +24,7 @@ use App\Support\WhapiClient;
 use App\Support\WhatsAppAssetRequestTemplateManager;
 use App\Support\WhatsAppAppointmentReminderTemplateManager;
 use App\Support\WhatsAppDeliveryReadyTemplateManager;
+use App\Support\WhatsAppConversationFollowupTemplateManager;
 use App\Support\WhatsAppDripFollowupTemplateManager;
 use App\Support\WhatsAppFeedbackRequestTemplateManager;
 use App\Support\WhatsAppInvoiceReadyTemplateManager;
@@ -144,6 +146,8 @@ class LiveChatController
             'name' => $session['client_name'] ?? '',
             'email' => $session['client_email'] ?? '',
             'phone' => $session['client_phone'] ?? '',
+            'channel' => 'web',
+            'session_token' => $session['token'],
         ]);
 
         $transcript[] = ['role' => 'assistant', 'text' => $result['reply'], 'ts' => gmdate('Y-m-d H:i:s')];
@@ -233,6 +237,18 @@ class LiveChatController
         // text, $onExhaustedFallback below can still hand the visitor a real
         // confirmation instead of losing it to a retry on another provider
         // that would re-attempt — and likely reject — the same slot.
+        // Jev reads the newest message first (opt-out, wants a person, upset, hot
+        // lead, urgent). In shadow mode this only records; in live mode it acts and
+        // may add a short steering note to the prompt. Fails open, never throws.
+        $judgment = LisaJudgment::process([
+            'message' => $message,
+            'transcript' => $transcript,
+            'channel' => (string) ($handoffContext['channel'] ?? 'web'),
+            'session_token' => isset($handoffContext['session_token']) ? (string) $handoffContext['session_token'] : null,
+            'name' => (string) ($handoffContext['name'] ?? ''),
+            'phone' => (string) ($handoffContext['phone'] ?? ''),
+            'is_owner' => $isOwner,
+        ]);
         $confirmedBooking = null;
         $confirmedReschedule = null;
         // A created invoice's PDF, ready for the channel to attach to its
@@ -300,7 +316,7 @@ class LiveChatController
         $onGroqFailedGeneration = fn (string $failedGeneration) => self::recoverGroqFailedToolGeneration($failedGeneration, $toolExecutor);
 
         $result = AiAgentEngine::run(
-            self::buildSystemPrompt($projects, $isOwner),
+            self::buildSystemPrompt($projects, $isOwner) . ($judgment['prompt_note'] !== null ? "\n\n" . $judgment['prompt_note'] : ''),
             self::toolDeclarations($isOwner),
             $toolExecutor,
             $transcript,
@@ -385,6 +401,8 @@ class LiveChatController
             $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
                 'name' => $profileName,
                 'phone' => '+' . $digits,
+                'channel' => 'whatsapp',
+                'session_token' => 'whatsapp:+' . $digits,
             ]);
             $sent = WhapiClient::sendText($digits, $result['reply']);
             if (!$sent['ok']) {
@@ -466,6 +484,8 @@ class LiveChatController
             $result = self::generateReply($body, $transcript, $projects, $pdo, $isOwner, [
                 'name' => $senderName,
                 'phone' => '+' . $digits,
+                'channel' => 'whatsapp',
+                'session_token' => 'whatsapp:+' . $digits,
             ]);
             $sent = WatiClient::sendText($digits, $result['reply']);
             if (!$sent['ok']) {
@@ -570,6 +590,8 @@ class LiveChatController
             $result = self::generateReply($turnText, $transcript, $projects, $pdo, $isOwner, [
                 'name' => $profileName,
                 'phone' => '+' . $digits,
+                'channel' => 'whatsapp',
+                'session_token' => $token,
             ]);
             // Reply from whichever sender the message came in on, so an
             // inbound conversation is answered correctly even before
@@ -1605,6 +1627,29 @@ class LiveChatController
      * from Marketing Leads (never by a cron). Twilio-only. Only the contact's
      * name goes into the template.
      */
+    public static function sendConversationFollowup(): void
+    {
+        AuthMiddleware::requireAuth();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $in = self::readTemplateSendInput($data, []);
+
+        $provider = (string) Settings::get('whatsapp_provider');
+        if ($provider !== 'twilio') {
+            Response::error('Templates only go out on the Twilio provider. ' . ($provider !== '' ? $provider : 'no provider') . ' has no template wired up for this.', 422);
+        }
+
+        $vars = ['1' => $in['contact_name']];
+        $sent = self::sendTwilioNamedTemplate(
+            $in['digits'],
+            $vars,
+            'twilio_conversation_followup_content_sid',
+            'twilio_conversation_followup_template_status',
+            'No conversation follow-up template yet. Create one under Settings, WhatsApp & phone, Templates.'
+        );
+
+        self::logAndSendTemplate($in['contact_name'], $in['digits'], $sent, WhatsAppConversationFollowupTemplateManager::renderBody($vars));
+    }
+
     public static function sendDripFollowup(): void
     {
         AuthMiddleware::requireAuth();
@@ -2440,6 +2485,9 @@ class LiveChatController
         }
         if ($sid !== '' && $sid === trim((string) Settings::get('twilio_drip_followup_content_sid'))) {
             return WhatsAppDripFollowupTemplateManager::renderBody(['1' => $contactName]);
+        }
+        if ($sid !== '' && $sid === trim((string) Settings::get('twilio_conversation_followup_content_sid'))) {
+            return WhatsAppConversationFollowupTemplateManager::renderBody(['1' => $contactName]);
         }
         return '[Earlier template message sent — see Marketing Leads → Templates sent for the exact text]';
     }
@@ -3335,6 +3383,19 @@ class LiveChatController
      * the existing webhook queue to his Slack/email in near-real-time, and
      * hands back the WhatsApp link so the model can offer an immediate channel.
      */
+    /**
+     * Lets LisaJudgment record a handoff through the exact path Lisa's own
+     * signal_handoff tool uses, so an inquiry and its notifications look the same
+     * whichever one raised it.
+     */
+    public static function recordJudgmentHandoff(\PDO $pdo, string $name, string $phone, string $reason, string $summary): void
+    {
+        self::toolSignalHandoff(
+            ['reason' => $reason, 'name' => $name, 'phone' => $phone, 'request_summary' => $summary],
+            $pdo
+        );
+    }
+
     private static function toolSignalHandoff(array $args, \PDO $pdo): array
     {
         $reason = trim((string) ($args['reason'] ?? ''));

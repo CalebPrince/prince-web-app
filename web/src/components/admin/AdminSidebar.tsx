@@ -10,7 +10,7 @@ import {
   Mail, Workflow, Mic, Sparkles, CalendarCheck, CreditCard, Receipt, Wallet,
   Tag, Activity, AudioLines, ListChecks, History, AlertTriangle, Settings,
   LogOut, ExternalLink, ShieldAlert, Compass, MessageSquareHeart, Scale,
-  Code2, ShieldCheck,
+  Code2, ShieldCheck, Brain,
 } from "lucide-react";
 import { adminApi, postJson } from "@/lib/api";
 
@@ -41,6 +41,7 @@ const navigation = [
       { name: "Site Content", href: "/admin/content", icon: FileCode },
       { name: "Frontend Wording", href: "/admin/frontend-wording", icon: Languages },
       { name: "Lisa", href: "/admin/lisa", icon: Bot },
+      { name: "Lisa Decisions", href: "/admin/lisa-decisions", icon: Brain },
     ],
   },
   {

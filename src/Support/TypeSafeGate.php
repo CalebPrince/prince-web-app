@@ -22,8 +22,6 @@ namespace App\Support;
  */
 class TypeSafeGate
 {
-    private const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
-
     public static function mode(): string
     {
         $mode = strtolower(trim((string) Settings::get('typesafe_gate_mode')));
@@ -409,45 +407,11 @@ class TypeSafeGate
     /** @return array<string,mixed>|null decoded `answers`, or null on any failure (fail open) */
     private static function ask(array $state, array $questions): ?array
     {
-        $apiKey = Settings::get('typesafe_api_key');
-        if (!$apiKey || !function_exists('curl_init') || self::mode() === 'off') {
+        if (self::mode() === 'off') {
             return null;
         }
-
-        $ch = curl_init(self::ENDPOINT);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 5, // the whole point of the gate is to stay fast: fail open, not slow
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-            ],
-            CURLOPT_POSTFIELDS => json_encode([
-                'model' => 'jev-latest',
-                'state' => json_encode($state),
-                'questions' => $questions,
-            ]),
-        ]);
-        $response = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($response === false || $status !== 200) {
-            error_log(sprintf(
-                'TypeSafeGate: call failed: status=%s body=%s',
-                $status,
-                is_string($response) ? substr($response, 0, 500) : 'n/a'
-            ));
-            return null;
-        }
-
-        $decoded = json_decode($response, true);
-        if (!is_array($decoded['answers'] ?? null)) {
-            error_log('TypeSafeGate: unexpected response shape: ' . substr($response, 0, 500));
-            return null;
-        }
-        return $decoded['answers'];
+        // 5s: the whole point of the gate is to stay fast, so fail open, not slow.
+        return TypeSafeClient::ask($state, $questions, 5, 'TypeSafeGate');
     }
 
     /** @return array{passes_gate:bool,buying_intent_score:float,competitor_probability:float}|null */

@@ -9,6 +9,7 @@ use App\Support\Response;
 use App\Support\WhatsAppAssetRequestTemplateManager;
 use App\Support\WhatsAppAppointmentReminderTemplateManager;
 use App\Support\WhatsAppDeliveryReadyTemplateManager;
+use App\Support\WhatsAppConversationFollowupTemplateManager;
 use App\Support\WhatsAppDripFollowupTemplateManager;
 use App\Support\WhatsAppFeedbackRequestTemplateManager;
 use App\Support\WhatsAppInvoiceReadyTemplateManager;
@@ -134,6 +135,14 @@ final class WhatsAppTemplateCatalogController
             'send' => '/api/v1/admin/whatsapp/send-feedback-request',
             'fields' => ['var2' => 'What was delivered'],
             'deletable' => true,
+        ],
+        'conversation_followup' => [
+            'label' => 'Conversation follow-up',
+            'description' => 'Picks a conversation back up after the 24 hour WhatsApp window has closed, for someone who wrote to Lisa and went quiet. Marketing category. Lisa sends it automatically when the follow-up engine is live, and you can send it by hand too.',
+            'manager' => WhatsAppConversationFollowupTemplateManager::class,
+            'slug' => 'conversation-followup',
+            'send' => '/api/v1/admin/whatsapp/send-conversation-followup',
+            'fields' => [],
         ],
         'drip_followup' => [
             'label' => 'Drip follow-up',

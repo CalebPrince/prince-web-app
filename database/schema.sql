@@ -1630,3 +1630,83 @@ CREATE TABLE IF NOT EXISTS rocco_recommendations (
   resolved_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_rocco_recommendations_status ON rocco_recommendations (status, created_at);
+
+-- Lisa's Jev (TypeSafe) decision layer (App\Support\LisaJudgment, LisaFollowups).
+-- lisa_judgments is the audit trail of inbound assessments: the typed signals
+-- Jev returned and which actions the code took (or, in shadow mode, would
+-- have taken). No message text is stored here; the transcript already is.
+CREATE TABLE IF NOT EXISTS lisa_judgments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_token TEXT,
+  channel TEXT NOT NULL DEFAULT 'web',
+  mode TEXT NOT NULL DEFAULT 'shadow',
+  signals_json TEXT NOT NULL,
+  actions_json TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_lisa_judgments_created ON lisa_judgments (created_at);
+CREATE INDEX IF NOT EXISTS idx_lisa_judgments_session ON lisa_judgments (session_token, created_at);
+
+-- One row per cold-conversation follow-up decision. status: 'shadow' (decided,
+-- not sent because the engine is in shadow mode), 'sent', 'failed', or
+-- 'skipped' (decided NOT to follow up; skip_reason says why). The count of
+-- 'sent' rows since the contact's last inbound message is what caps follow-ups.
+CREATE TABLE IF NOT EXISTS lisa_followups (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL,
+  phone TEXT NOT NULL,
+  contact_name TEXT,
+  mode TEXT NOT NULL DEFAULT 'shadow',
+  window_state TEXT NOT NULL DEFAULT 'in_window' CHECK (window_state IN ('in_window', 'out_of_window')),
+  action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'text', 'template')),
+  template_key TEXT,
+  body_text TEXT,
+  decision_json TEXT,
+  skip_reason TEXT,
+  status TEXT NOT NULL DEFAULT 'shadow' CHECK (status IN ('shadow', 'sent', 'failed', 'skipped')),
+  error TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  sent_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_lisa_followups_session ON lisa_followups (session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_lisa_followups_status ON lisa_followups (status, created_at);
+
+-- Every time Jev decided the owner should be messaged on WhatsApp (or, in
+-- shadow mode, would have been). Doubles as the dedupe and daily-cap ledger.
+CREATE TABLE IF NOT EXISTS lisa_owner_alerts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_token TEXT,
+  reason TEXT NOT NULL,
+  summary TEXT,
+  mode TEXT NOT NULL DEFAULT 'shadow',
+  delivered INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_lisa_owner_alerts_session ON lisa_owner_alerts (session_token, reason, created_at);
+
+-- Lisa's pricing decisions (App\Support\LisaQuoting): one row per conversation,
+-- updated as the scope becomes clearer. decision is what the owner's price list
+-- and rules produced (list, reduced, adjusted_up, estimate, ask_more,
+-- owner_review); quoted_to_customer is 1 only when the engine was live and
+-- Lisa was told she may share the figure. summary_sent_at marks the
+-- after-the-conversation alert to the owner.
+CREATE TABLE IF NOT EXISTS lisa_quotes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_token TEXT UNIQUE NOT NULL,
+  contact_name TEXT,
+  contact_phone TEXT,
+  channel TEXT NOT NULL DEFAULT 'web',
+  project_type TEXT,
+  scope_json TEXT,
+  low_ghs REAL,
+  high_ghs REAL,
+  decision TEXT NOT NULL DEFAULT 'ask_more'
+    CHECK (decision IN ('list', 'reduced', 'adjusted_up', 'estimate', 'ask_more', 'owner_review')),
+  reason TEXT,
+  basis_json TEXT,
+  quoted_to_customer INTEGER NOT NULL DEFAULT 0,
+  summary_sent_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_lisa_quotes_pending ON lisa_quotes (summary_sent_at, updated_at);

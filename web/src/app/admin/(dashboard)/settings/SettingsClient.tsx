@@ -103,7 +103,7 @@ const EMAIL_TEMPLATES: [string, string][] = [
 
 type Tab =
   | "account" | "ai" | "voice" | "messaging" | "integrations"
-  | "content-sources" | "payments" | "email" | "site" | "booking";
+  | "content-sources" | "lisa-decisions" | "lisa-quoting" | "payments" | "email" | "site" | "booking";
 
 /** Every settings key this page owns, grouped by the tab that edits it. */
 const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
@@ -152,6 +152,19 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "model_agnostic_memory_url", "model_agnostic_memory_token", "model_agnostic_memory_key",
     "model_agnostic_agent_token",
   ],
+  "lisa-decisions": [
+    "lisa_jev_mode", "lisa_followup_mode",
+    "lisa_followup_first_silence_hours", "lisa_followup_second_silence_hours",
+    "lisa_followup_max_days", "lisa_followup_max_per_episode",
+    "lisa_quiet_start", "lisa_quiet_end", "lisa_owner_alert_daily_cap",
+  ],
+  "lisa-quoting": [
+    "lisa_quote_mode", "lisa_quote_summary_after_hours",
+    "quote_max_reduction_percent", "quote_owner_review_above_ghs",
+    "quote_addon_booking_ghs", "quote_addon_payments_ghs", "quote_addon_accounts_ghs",
+    "quote_addon_cms_ghs", "quote_addon_multilanguage_ghs", "quote_addon_integrations_ghs",
+    "quote_addon_custom_design_ghs",
+  ],
   "content-sources": [
     "radar_tracked_pages_enabled", "radar_tracked_pages_frequency",
     "radar_tracked_pages_posts_per_profile", "radar_tracked_pages",
@@ -186,6 +199,7 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "messaging", label: "WhatsApp & phone" },
   { value: "integrations", label: "Integrations" },
   { value: "content-sources", label: "Content sources" },
+  { value: "lisa-decisions", label: "Lisa decisions" },
   { value: "payments", label: "Payments" },
   { value: "email", label: "Email" },
   { value: "site", label: "Site" },
@@ -219,6 +233,26 @@ const SECRET_KEYS = new Set([
 
 /** Short help under a field. */
 const FIELD_HINTS: Record<string, string> = {
+  lisa_jev_mode: "Jev reads every customer message before Lisa replies (wants a person, upset, opting out, hot lead, urgent). Shadow records what it would do and changes nothing. Live acts and steers Lisa.",
+  lisa_followup_mode: "Follow-ups to WhatsApp conversations that went cold. Shadow lists who it would message and what it would send, and sends nothing. Live sends.",
+  lisa_followup_first_silence_hours: "Hours of silence before the first free-text nudge. Default 3.",
+  lisa_followup_second_silence_hours: "Hours of silence before the last free-text nudge, still inside WhatsApp's 24 hour window. Default 20.",
+  lisa_followup_max_days: "Stop following up this many days after the customer last wrote. Default 7.",
+  lisa_followup_max_per_episode: "Most follow-ups per silence. A reply from the customer resets it. Default 3.",
+  lisa_quiet_start: "Nothing is sent to customers, and hot-lead pings wait, from this time (24 hour, e.g. 21:00). Uses the chat timezone.",
+  lisa_quiet_end: "Quiet hours end at this time (e.g. 08:00).",
+  lisa_owner_alert_daily_cap: "Most WhatsApp alerts to you per 24 hours from Lisa's decisions. Default 8.",
+  lisa_quote_mode: "Prices from your own Pricing page. Shadow records what Lisa would quote and tells you, but Lisa says nothing new. Live lets Lisa share the figure. Needs Lisa decisions not switched off.",
+  lisa_quote_summary_after_hours: "Hours a conversation must be quiet before you get one summary of the quote. Default 2.",
+  quote_max_reduction_percent: "The most Lisa may take off your listed price for a smaller project, in percent. Leave blank or 0 and she never reduces.",
+  quote_owner_review_above_ghs: "Any figure above this (GHS) is never quoted by Lisa. You are alerted instead. Blank means no limit.",
+  quote_addon_booking_ghs: "Added to your listed price when the project also needs this. Leave blank if unpriced: Lisa then uses a flagged estimate and tells you.",
+  quote_addon_payments_ghs: "Added when the project needs online payments. Blank means unpriced.",
+  quote_addon_accounts_ghs: "Added when the project needs user accounts and logins. Blank means unpriced.",
+  quote_addon_cms_ghs: "Added when the project needs a content management system. Blank means unpriced.",
+  quote_addon_multilanguage_ghs: "Added when the project needs more than one language. Blank means unpriced.",
+  quote_addon_integrations_ghs: "Added when the project needs third-party integrations. Blank means unpriced.",
+  quote_addon_custom_design_ghs: "Added when the project needs fully custom design. Blank means unpriced.",
   typesafe_gate_mode: "Shadow judges and logs but rejects nothing. Enforce skips the expensive AI call for rejects. Rocco can recommend when.",
   typesafe_score_threshold: "Candidates scoring below this are rejected. 0.25 to 1.75, default 1.0, higher is stricter.",
   typesafe_competitor_cutoff: "Candidates at or above this competitor probability are rejected. 0.2 to 0.9, default 0.5, lower is stricter.",
@@ -229,6 +263,9 @@ const FIELD_HINTS: Record<string, string> = {
 const CHOICES: Record<string, string[]> = {
   whatsapp_provider: ["elevenlabs", "whapi", "wati", "twilio"],
   typesafe_gate_mode: ["shadow", "enforce", "off"],
+  lisa_jev_mode: ["shadow", "live", "off"],
+  lisa_followup_mode: ["shadow", "live", "off"],
+  lisa_quote_mode: ["shadow", "live", "off"],
   default_theme: ["dark", "light", "midnight", "paper"],
   animation_style: ["full", "subtle", "off"],
   social_draft_frequency: ["daily", "weekly", "monthly"],
@@ -250,6 +287,9 @@ function labelFor(key: string) {
     .replace(/\bpagespeed\b/gi, "PageSpeed")
     .replace(/\btypesafe\b/gi, "TypeSafe")
     .replace(/\busd\b/gi, "(USD)")
+    .replace(/\bghs\b/gi, "(GHS)")
+    .replace(/\bjev\b/gi, "Jev")
+    .replace(/\bquote addon\b/gi, "Add-on price:")
     .replace(/\bwati\b/gi, "WATI")
     .replace(/\bsid\b/gi, "SID")
     .replace(/^\w/, (c) => c.toUpperCase());
@@ -984,6 +1024,19 @@ export default function SettingsClient({
           {groupCard("integrations", "Integrations")}
         </div>
       )}
+      {tab === "lisa-decisions" && (
+        <div className="space-y-4">
+          <Card title="What these do" bodyClassName="p-5 space-y-2">
+            <p className="text-sm text-text-2">
+              Jev makes the decisions and the AI providers only write Lisa&apos;s words afterwards. Everything here starts in
+              shadow mode: it records what it would do and sends nothing, so you can review it on the Lisa Decisions page first.
+            </p>
+          </Card>
+          {groupCard("lisa-decisions", "Decisions, follow-ups and alerts")}
+          {groupCard("lisa-quoting", "Quoting from your price list")}
+        </div>
+      )}
+
       {tab === "content-sources" && (
         <div id="linkedin-content-sources" className="space-y-4">
           <Card title="How LinkedIn Content Ideas are sourced" bodyClassName="p-5 space-y-2">
