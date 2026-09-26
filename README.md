@@ -967,7 +967,6 @@ database/
   send_newsletters.php            # sends drafted-but-unsent newsletters to all subscribers, once each (cron, after draft_newsletters_from_blog.php)
   send_daily_brief.php            # Chief's daily brief on what every other agent did, emailed (cron, daily)
   dispatch_agent_tasks.php        # leases due durable agent work; retries safely and records outcomes (cron, ~1 min)
-  process_whatsapp_call_followups.php  # sends the post-call WhatsApp follow-up template after a Lisa voice call (cron)
   send_asset_request_nudges.php   # nudges a contact who hasn't sent an asset request's ask at 4h/24h; text if in WhatsApp's 24h session window, else resends the template (cron)
   backup_db.php                   # consistent SQLite snapshot -> storage/backups/, prunes old ones (cron, daily)
   reset_admin_password.php        # CLI escape hatch: reset admin password / disable 2FA
