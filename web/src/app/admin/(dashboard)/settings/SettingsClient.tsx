@@ -115,7 +115,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
   voice: [
     "elevenlabs_api_key", "elevenlabs_tts_enabled", "elevenlabs_tts_model",
     "elevenlabs_voice_id", "chloe_elevenlabs_voice_id", "wendy_elevenlabs_voice_id",
-    "allie_elevenlabs_voice_id",
+    "allie_elevenlabs_voice_id", "rocco_elevenlabs_voice_id",
     "elevenlabs_webhook_secret",
     "elevenlabs_postcall_signing_secret", "liveavatar_enabled", "liveavatar_api_key",
     "liveavatar_avatar_id", "liveavatar_voice_id", "liveavatar_context_id",
@@ -163,6 +163,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "social_draft_auto_approve",
     "allie_discovery_enabled", "allie_discovery_frequency",
     "wendy_review_enabled", "wendy_review_frequency",
+    "rocco_review_enabled", "rocco_review_frequency",
   ],
   booking: [
     "booking_enabled", "booking_days", "booking_start_time", "booking_end_time",
@@ -195,7 +196,7 @@ const BOOLEAN_KEYS = new Set([
   "splash_screen_enabled", "maintenance_mode", "live_chat_enabled",
   "whatsapp_button_enabled", "chat_hours_enabled", "booking_enabled",
   "social_draft_enabled", "social_draft_auto_approve",
-  "allie_discovery_enabled", "wendy_review_enabled",
+  "allie_discovery_enabled", "wendy_review_enabled", "rocco_review_enabled",
   "radar_tracked_pages_enabled",
 ]);
 
@@ -222,6 +223,7 @@ const CHOICES: Record<string, string[]> = {
   social_draft_frequency: ["daily", "weekly", "monthly"],
   allie_discovery_frequency: ["hourly", "daily", "weekly"],
   wendy_review_frequency: ["hourly", "daily", "weekly"],
+  rocco_review_frequency: ["hourly", "daily", "weekly"],
   radar_tracked_pages_frequency: ["hourly", "daily", "weekly"],
 };
 

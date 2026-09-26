@@ -33,7 +33,7 @@ class SettingsController
         'elevenlabs_phone_webhook_secret', 'elevenlabs_phone_postcall_signing_secret',
         'elevenlabs_tts_enabled', 'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_tts_model',
         'chloe_elevenlabs_voice_id', 'chloe_min_confidence_to_escalate', 'chloe_min_minutes_before_escalate',
-        'wendy_elevenlabs_voice_id', 'allie_elevenlabs_voice_id',
+        'wendy_elevenlabs_voice_id', 'allie_elevenlabs_voice_id', 'rocco_elevenlabs_voice_id',
         'liveavatar_enabled', 'liveavatar_api_key', 'liveavatar_avatar_id', 'liveavatar_context_id', 'liveavatar_voice_id',
         'liveavatar_llm_bridge_secret', 'liveavatar_llm_configuration_id', 'liveavatar_sandbox_enabled',
         'integration_api_key', 'notification_email',
@@ -57,6 +57,7 @@ class SettingsController
         'beacon_discovery_enabled', 'beacon_discovery_frequency', 'beacon_discovery_last_run', 'beacon_discovery_keywords', 'beacon_discovery_recency',
         'allie_discovery_enabled', 'allie_discovery_frequency', 'allie_discovery_last_run',
         'wendy_review_enabled', 'wendy_review_frequency', 'wendy_review_last_run',
+        'rocco_review_enabled', 'rocco_review_frequency', 'rocco_review_last_run',
         'beacon_auto_accept_all', 'outreach_auto_accept_all', 'social_draft_auto_approve',
         'beacon_apify_enabled', 'beacon_apify_frequency', 'beacon_apify_last_run', 'beacon_apify_last_status',
         'beacon_apify_profiles', 'beacon_apify_actor_posts', 'beacon_apify_actor_posts_input',
@@ -165,6 +166,7 @@ class SettingsController
         'chloe_assistant_name', 'chloe_voice_gender', 'chloe_voice_accent',
         'wendy_assistant_name', 'wendy_voice_gender', 'wendy_voice_accent',
         'allie_assistant_name', 'allie_voice_gender', 'allie_voice_accent',
+        'rocco_assistant_name', 'rocco_voice_gender', 'rocco_voice_accent',
         'brand_primary_color', 'brand_accent_color', 'brand_font', 'brand_style_note',
         'brand_logo_dark_url', 'brand_logo_white_url',
         'stat_1_value', 'stat_1_suffix', 'stat_1_label',
@@ -407,7 +409,7 @@ class SettingsController
         AuthMiddleware::requireAgentAuth();
         $keys = [
             'lisa', 'content', 'beacon', 'dossier', 'nurturer', 'proposal', 'arch', 'ada',
-            'chief', 'sketch', 'radar', 'reel', 'chloe', 'wendy', 'allie', 'sage',
+            'chief', 'sketch', 'radar', 'reel', 'chloe', 'wendy', 'allie', 'rocco', 'sage',
         ];
         $names = [];
         foreach ($keys as $key) {

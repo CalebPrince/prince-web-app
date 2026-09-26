@@ -33,6 +33,14 @@ class TeamController
         )->fetchColumn() > 0;
         $chiefActive = Chief::briefsWritten($pdo) > 0;
         $allieDiscoveryEnabled = (string) Settings::get('allie_discovery_enabled') === '1';
+        $roccoReviewEnabled = (string) Settings::get('rocco_review_enabled') === '1';
+        try {
+            $roccoNeedsAttention = (int) $pdo->query(
+                "SELECT COUNT(*) FROM rocco_recommendations WHERE status = 'open' AND wants_attention = 1"
+            )->fetchColumn() > 0;
+        } catch (\Throwable $e) {
+            $roccoNeedsAttention = false; // table appears once migrate.php has run
+        }
         $agents = [
             // Lisa gets her own dedicated marketing page (workflows,
             // integrations, and pricing), so — same as Sage below — 'url'
@@ -45,6 +53,7 @@ class TeamController
             ['key' => 'proposal', 'name' => Settings::get('proposal_assistant_name') ?: 'Ledger', 'role' => 'Proposals & commercial workflows', 'status' => 'on demand', 'capabilities' => ['Proposals', 'Scope', 'Payment milestones']],
             ['key' => 'arch', 'name' => Settings::get('arch_assistant_name') ?: 'Arch', 'role' => 'AI website builder', 'status' => 'building', 'capabilities' => ['Websites', 'CMS', 'Deployments']],
             ['key' => 'allie', 'name' => Settings::get('allie_assistant_name') ?: 'Allie', 'role' => 'AI strategy & experimentation', 'status' => $allieDiscoveryEnabled ? 'active' : 'on demand', 'capabilities' => ['AI strategy', 'Tech scouting', 'Ideation', 'Experiments']],
+            ['key' => 'rocco', 'name' => Settings::get('rocco_assistant_name') ?: 'Rocco', 'role' => 'Lead-gate bouncer', 'status' => $roccoNeedsAttention ? 'alert' : ($roccoReviewEnabled ? 'active' : 'on demand'), 'capabilities' => ['Gate reports', 'Recommendations', 'Cost control']],
             ['key' => 'reel', 'name' => Settings::get('reel_assistant_name') ?: 'Reel', 'role' => 'Video-creative specialist', 'status' => 'on demand', 'capabilities' => ['Video concepts', 'Scene breakdowns', 'Narration scripts']],
             // Sage is the one public-facing agent here with its own dedicated
             // page (visitors chat with it directly, no admin auth) rather than
@@ -112,6 +121,19 @@ class TeamController
             $wendyUnresolvedPatterns = 0;
             $wendySessionRequested = false;
         }
+        // Guarded the same way — rocco_recommendations is a new table too.
+        try {
+            $roccoOpenRecommendations = (int) $pdo->query(
+                "SELECT COUNT(*) FROM rocco_recommendations WHERE status = 'open'"
+            )->fetchColumn();
+            $roccoNeedsAttention = (int) $pdo->query(
+                "SELECT COUNT(*) FROM rocco_recommendations WHERE status = 'open' AND wants_attention = 1"
+            )->fetchColumn() > 0;
+        } catch (\Throwable $e) {
+            $roccoOpenRecommendations = 0;
+            $roccoNeedsAttention = false;
+        }
+        $roccoReviewEnabled = (string) Settings::get('rocco_review_enabled') === '1';
         // Guarded like wendyOpenObservations above — allie_evaluations is a
         // new table too.
         try {
@@ -375,6 +397,26 @@ class TeamController
                 'stat_label' => 'open observations',
                 'manage_url' => '/admin/wendy',
                 'manage_label' => "See Wendy's findings",
+            ],
+            [
+                'key' => 'rocco',
+                'name' => Settings::get('rocco_assistant_name') ?: 'Rocco',
+                'role' => 'Bouncer, Lead Gate',
+                'description' => 'Stands at the door of Beacon\'s lead pipeline and owns the TypeSafe gate: a cheap '
+                    . 'pre-check that could turn away obvious non-leads before the expensive AI call. He watches how '
+                    . 'the gate performs in shadow mode, writes reports, and recommends when it is safe to enforce, '
+                    . 'so you only switch it on once it has proven it will not throw real leads away.',
+                'icon' => 'bi-shield-check',
+                'status' => $roccoNeedsAttention ? 'alert' : ($roccoReviewEnabled ? 'active' : 'ondemand'),
+                'status_label' => $roccoNeedsAttention
+                    ? "\u{1F534} Needs your attention"
+                    : ($roccoReviewEnabled
+                        ? 'Reviewing ' . (Settings::get('rocco_review_frequency') ?: 'weekly')
+                        : 'On demand'),
+                'stat_value' => $roccoOpenRecommendations,
+                'stat_label' => 'open recommendations',
+                'manage_url' => '/admin/rocco',
+                'manage_label' => "See Rocco's reports",
             ],
             [
                 'key' => 'allie',

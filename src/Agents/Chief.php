@@ -285,6 +285,25 @@ class Chief
                 ["SELECT MAX(created_at) FROM invoices WHERE status = 'draft'"]),
         ];
 
+        // --- Rocco -------------------------------------------------------------
+        $agents[] = [
+            'key' => 'rocco',
+            'name' => Settings::get('rocco_assistant_name') ?: 'Rocco',
+            'role' => 'Lead gate bouncer',
+            'runs' => (string) Settings::get('rocco_review_enabled') === '1' ? 'scheduled_and_on_demand' : 'on_demand',
+            'state' => (string) Settings::get('rocco_review_enabled') === '1' ? 'active' : 'on demand',
+            'did' => [
+                ['label' => 'gate verdicts logged', 'count' => self::num($pdo,
+                    'SELECT COUNT(*) FROM typesafe_gate_log WHERE created_at >= ?', [$since])],
+                ['label' => 'reports written', 'count' => self::num($pdo,
+                    'SELECT COUNT(*) FROM rocco_reports WHERE created_at >= ?', [$since])],
+            ],
+            'last_active_at' => self::latestOf($pdo, [
+                'SELECT MAX(created_at) FROM rocco_reports',
+                "SELECT MAX(created_at) FROM admin_activity_log WHERE entity_type = 'rocco_chat'",
+            ]),
+        ];
+
         // --- Allie -------------------------------------------------------------
         $agents[] = [
             'key' => 'allie',

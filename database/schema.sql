@@ -1594,3 +1594,34 @@ CREATE TABLE IF NOT EXISTS typesafe_gate_log (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_typesafe_gate_log_kind ON typesafe_gate_log (kind, created_at);
+
+-- Rocco (App\Controllers\RoccoController) owns Beacon's TypeSafe gate. His
+-- reports are periodic plain-language snapshots (with the numbers frozen as
+-- JSON so history stays readable after the live data moves on); his
+-- recommendations wait for Caleb to Apply (performs the gate-mode change,
+-- still safety-checked) or Dismiss on /admin/rocco. wants_attention fires a
+-- real email/WhatsApp alert once, guarded by emailed_at/whatsapp_sent_at.
+CREATE TABLE IF NOT EXISTS rocco_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  verdict TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  total INTEGER NOT NULL DEFAULT 0,
+  mode TEXT NOT NULL,
+  snapshot_json TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS rocco_recommendations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  category TEXT NOT NULL DEFAULT 'mode' CHECK (category IN ('mode', 'threshold', 'data', 'cost')),
+  summary TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  evidence TEXT NOT NULL,
+  action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off')),
+  wants_attention INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'applied', 'resolved', 'dismissed')),
+  emailed_at TEXT,
+  whatsapp_sent_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  resolved_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_rocco_recommendations_status ON rocco_recommendations (status, created_at);

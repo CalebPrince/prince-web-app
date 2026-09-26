@@ -7,7 +7,7 @@
 // widget's only agent; the other voiced agents are used from admin chat,
 // and her longer console answers need the higher cap or they get cut off
 // mid-sentence (the actual bug TextToSpeechController.php's comment cites).
-const MAX_TEXT_LENGTH: Record<string, number> = { lisa: 700, chloe: 3000, wendy: 3000, allie: 3000 };
+const MAX_TEXT_LENGTH: Record<string, number> = { lisa: 700, chloe: 3000, wendy: 3000, allie: 3000, rocco: 3000 };
 
 let activeAudio: HTMLAudioElement | null = null;
 let activeUrl: string | null = null;

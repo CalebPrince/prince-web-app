@@ -131,6 +131,99 @@ class TypeSafeGate
         ));
     }
 
+    /**
+     * Shadow-mode results for the admin report page and the CLI script: per
+     * kind, a threshold sweep of calls saved vs leads the full model
+     * qualified that the gate would have rejected, plus a plain verdict.
+     *
+     * @return array<string,mixed>
+     */
+    public static function report(): array
+    {
+        $pdo = Database::get();
+        $competitorCut = 0.5;
+        $currentThreshold = 1.0;
+        $minSample = 200;
+        $kinds = [];
+
+        try {
+            $total = (int) $pdo->query('SELECT COUNT(*) FROM typesafe_gate_log')->fetchColumn();
+            $first = $pdo->query('SELECT MIN(created_at) FROM typesafe_gate_log')->fetchColumn() ?: null;
+        } catch (\Throwable $e) {
+            return [
+                'mode' => self::mode(), 'has_key' => (bool) Settings::get('typesafe_api_key'),
+                'table_missing' => true, 'total' => 0, 'first_logged_at' => null, 'kinds' => [],
+                'verdict' => 'needs_migration',
+                'verdict_text' => 'The log table does not exist yet. Run php database/migrate.php on the server.',
+            ];
+        }
+
+        foreach (['post', 'engagement'] as $kind) {
+            $stmt = $pdo->prepare('SELECT score, competitor, model_qualified FROM typesafe_gate_log WHERE kind = ?');
+            $stmt->execute([$kind]);
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $n = count($rows);
+            if ($n === 0) {
+                continue;
+            }
+            $qualified = (int) array_sum(array_column($rows, 'model_qualified'));
+            $sweep = [];
+            foreach ([0.25, 0.5, 0.75, 1.0, 1.25, 1.5] as $threshold) {
+                $rejected = 0;
+                $missed = 0;
+                foreach ($rows as $r) {
+                    if ((float) $r['score'] < $threshold || (float) $r['competitor'] >= $competitorCut) {
+                        $rejected++;
+                        $missed += (int) $r['model_qualified'];
+                    }
+                }
+                $sweep[] = [
+                    'threshold' => $threshold, 'rejected' => $rejected,
+                    'saved_pct' => round($rejected / $n * 100), 'missed' => $missed,
+                    'current' => $threshold === $currentThreshold,
+                ];
+            }
+            $kinds[$kind] = ['candidates' => $n, 'qualified' => $qualified, 'sweep' => $sweep];
+        }
+
+        [$verdict, $text] = self::verdict_for($total, $kinds, $currentThreshold, $minSample);
+        return [
+            'mode' => self::mode(), 'has_key' => (bool) Settings::get('typesafe_api_key'),
+            'table_missing' => false, 'total' => $total, 'first_logged_at' => $first,
+            'min_sample' => $minSample, 'kinds' => $kinds, 'verdict' => $verdict, 'verdict_text' => $text,
+        ];
+    }
+
+    /** @return array{0:string,1:string} */
+    private static function verdict_for(int $total, array $kinds, float $currentThreshold, int $minSample): array
+    {
+        if ($total < $minSample) {
+            return ['collecting', sprintf(
+                'Still collecting data: %d of about %d candidates so far. Too early to judge.', $total, $minSample
+            )];
+        }
+        $missed = 0;
+        $qualified = 0;
+        $savedWeighted = 0;
+        foreach ($kinds as $k) {
+            foreach ($k['sweep'] as $row) {
+                if ($row['threshold'] === $currentThreshold) {
+                    $missed += $row['missed'];
+                    $savedWeighted += $row['rejected'];
+                }
+            }
+            $qualified += $k['qualified'];
+        }
+        $savedPct = $total > 0 ? round($savedWeighted / $total * 100) : 0;
+        if ($missed === 0 && $savedPct >= 30) {
+            return ['safe', "Safe to enforce: it would have skipped {$savedPct}% of the expensive AI calls and missed none of the {$qualified} leads the full AI qualified."];
+        }
+        if ($missed === 0) {
+            return ['low_value', "It misses nothing, but would only skip {$savedPct}% of calls, so the saving is small."];
+        }
+        return ['not_yet', "Not safe yet: it would have wrongly rejected {$missed} of {$qualified} real leads. Keep it in shadow mode, or ask to tune the threshold."];
+    }
+
     /** True when the gate should actually skip the generative call. */
     public static function shouldReject(?array $gate): bool
     {

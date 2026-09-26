@@ -13,7 +13,7 @@ import {
 
 type AgentKey =
   | "lisa" | "beacon" | "dossier" | "nurturer" | "proposal" | "content" | "arch"
-  | "sketch" | "ada" | "chief" | "reel" | "sage" | "radar" | "chloe" | "wendy" | "allie";
+  | "sketch" | "ada" | "chief" | "reel" | "sage" | "radar" | "chloe" | "wendy" | "allie" | "rocco";
 
 type AgentSpec = {
   key: AgentKey;
@@ -41,6 +41,7 @@ const AGENTS: AgentSpec[] = [
   { key: "chloe", nameKey: "chloe_assistant_name", fallbackName: "Chloe" },
   { key: "wendy", nameKey: "wendy_assistant_name", fallbackName: "Wendy" },
   { key: "allie", nameKey: "allie_assistant_name", fallbackName: "Allie" },
+  { key: "rocco", nameKey: "rocco_assistant_name", fallbackName: "Rocco" },
 ];
 
 /** Browser-speechSynthesis fallback voice per agent, for the ones whose
@@ -249,7 +250,7 @@ export default function AgentChatClient({ settings }: { settings: Record<string,
       spoken,
       BROWSER_VOICE[active] ?? { gender: "auto", accent: "auto", rate: 1, pitch: 1 }
     );
-    if (active === "lisa" || active === "chloe" || active === "wendy" || active === "allie") {
+    if (active === "lisa" || active === "chloe" || active === "wendy" || active === "allie" || active === "rocco") {
       playTts(spoken, {}, active).catch(fallback);
       return;
     }

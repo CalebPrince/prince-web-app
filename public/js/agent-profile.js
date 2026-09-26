@@ -52,6 +52,11 @@
       surfaces: [["AI strategy", "Connects public ideas about AI adoption to the studio's real work."], ["Tech scouting", "Checks what is actually new via live web research."], ["Ideation", "Turns new capabilities into concrete, buildable concepts."], ["Experiments", "Defines a metric, owner, and stop-loss before recommending adoption."]],
       path: [["Listen", "Recent posts, interviews, and live technology signals establish the evidence."], ["Connect", "The signal is matched against real services, workflows, and past projects."], ["Imagine", "Allie develops a concrete build or operating experiment."], ["Evaluate", "The idea is tested for people, process, product, and economic value."]]
     },
+    rocco: {
+      mandate: "Stand at the door of Beacon's lead pipeline and decide, from real shadow-mode numbers, whether the TypeSafe gate can be trusted to turn away non-leads without losing real ones.",
+      surfaces: [["Gate reports","Plain-language reports on calls saved and leads missed."],["Recommendations","Advice on enforcing, staying in shadow, or turning the gate off."],["Cost control","Keeps the expensive AI call for candidates that earn it."],["Safety check","Refuses to enforce until the numbers say it is safe."]],
+      path: [["Watch","Every gate verdict is logged beside the full AI's verdict."],["Measure","Calls saved and leads missed are counted at each threshold."],["Report","A plain verdict and recommendation are written up."],["Decide","You apply or dismiss the recommendation."]]
+    },
     reel: {
       mandate: "Plan a video before it gets built, concept, scene breakdown, narration script, pacing, and visual style, for videos produced with the studio's HyperFrames pipeline.",
       surfaces: [["Video concepts", "Works through what a video should say and show."], ["Scene breakdowns", "Structures a concrete scene-by-scene plan with rough timings."], ["Narration scripts", "Drafts spoken lines that fit the visual pacing."], ["Visual style", "Anchors choices in the studio's real brand colors and fonts."]],

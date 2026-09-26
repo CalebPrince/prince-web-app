@@ -2076,6 +2076,21 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     week of shadow runs to see calls saved vs leads missed at each threshold
     before switching to `enforce`. `migrate.php` also deletes the dead
     `scout_*` settings left over from the Scout-into-Allie merge.
+47b. **Rocco, the lead-gate bouncer** (`src/Controllers/RoccoController.php`,
+    `/admin/rocco`, "Rocco" tab in `/admin/agent-chat`): a full agent in
+    Wendy's mould that owns the TypeSafe gate. He reads the shadow-mode audit
+    (`TypeSafeGate::report()`), writes plain-language reports with a verdict
+    (collecting / safe / low value / not safe yet), and saves recommendations
+    that wait on his page for Apply (switches the gate mode, still refused
+    unless the verdict is safe) or Dismiss. Scheduled review is
+    `database/rocco_review.php` (cron; gated by `rocco_review_enabled`, off
+    by default, cadence `rocco_review_frequency`, Settings, Site). A
+    recommendation marked "needs attention" sends an email and WhatsApp alert
+    once. In chat he can also change the mode when explicitly asked. Own
+    ElevenLabs voice via `rocco_elevenlabs_voice_id` (Settings, Voice &
+    avatar). Tables `rocco_reports` and `rocco_recommendations` come from
+    `migrate.php`; he does not need a separate report page or script, though
+    `php database/typesafe_gate_report.php` still prints the numbers.
 48. **Lisa page & monthly pricing** (`/admin/lisa.html`, `public/lisa-ai-assistant.html`):
     a dedicated admin page for the public Lisa service page, reusing the same
     settings/content API as Site Content and Pricing rather than a new table

@@ -10,7 +10,7 @@ import {
   Mail, Workflow, Mic, Sparkles, CalendarCheck, CreditCard, Receipt, Wallet,
   Tag, Activity, AudioLines, ListChecks, History, AlertTriangle, Settings,
   LogOut, ExternalLink, ShieldAlert, Compass, MessageSquareHeart, Scale,
-  Code2,
+  Code2, ShieldCheck,
 } from "lucide-react";
 import { adminApi, postJson } from "@/lib/api";
 
@@ -60,6 +60,7 @@ const navigation = [
       { name: "Sage Chats", href: "/admin/sage-chats", icon: Sparkles },
       { name: "Allie Reviews", href: "/admin/allie-evaluations", icon: Compass },
       { name: "Wendy", href: "/admin/wendy", icon: MessageSquareHeart },
+      { name: "Rocco", href: "/admin/rocco", icon: ShieldCheck },
     ],
   },
   {
