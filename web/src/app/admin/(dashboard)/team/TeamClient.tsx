@@ -1,16 +1,14 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
   BrainCircuit,
   CheckCircle2,
   Download,
-  Gauge,
   LayoutGrid,
-  Network,
-  ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -265,6 +263,17 @@ const CAPACITY_TONE: Record<string, string> = {
   full: "text-red-500",
 };
 
+/** The API attaches an empty capacity object to every agent; only show the block when there is real project work. */
+function hasCapacityData(capacity?: Capacity) {
+  return (
+    !!capacity &&
+    (Number(capacity.active_projects || 0) > 0 ||
+      Number(capacity.overdue_projects || 0) > 0 ||
+      Number(capacity.due_soon || 0) > 0 ||
+      (capacity.projects?.length ?? 0) > 0)
+  );
+}
+
 function capacityDate(value?: string | null) {
   if (!value) return "No deadline set";
 
@@ -349,21 +358,85 @@ function CapacityBlock({
 /* Jev                                                                        */
 /* -------------------------------------------------------------------------- */
 
-function JevDecisionLayer() {
+type JevMode = "shadow" | "live" | "off";
+
+/** Real state of the decision layer, read from the two admin decision APIs. */
+export type JevStatus = {
+  has_key: boolean;
+  agents: { owner: JevMode; customer: JevMode; decisions: JevMode };
+  lisa: { decisions: JevMode; followups: JevMode; quoting: JevMode } | null;
+  recorded_7d: number;
+  held: number;
+};
+
+const JEV_CAPABILITIES = [
+  "Lisa message readings",
+  "Cold follow-ups",
+  "Price decisions",
+  "Alert digest",
+  "Customer send checks",
+  "Reply classification",
+  "Escalation assist",
+  "Urgency ranking",
+  "Evidence checks",
+  "Spam checks",
+];
+
+const MODE_STYLE: Record<JevMode, { label: string; dot: string; text: string }> = {
+  live: { label: "Live", dot: "bg-emerald-500", text: "text-emerald-500" },
+  shadow: { label: "Shadow", dot: "bg-amber-500", text: "text-amber-500" },
+  off: { label: "Off", dot: "bg-neutral-500", text: "text-text-3" },
+};
+
+function jevHeadline(status: JevStatus | null): { label: string; dot: string } {
+  if (!status) return { label: "Status unavailable", dot: "bg-neutral-500" };
+  if (!status.has_key) return { label: "No TypeSafe key, idle", dot: "bg-red-500" };
+  const modes: JevMode[] = [
+    status.agents.owner,
+    status.agents.customer,
+    status.agents.decisions,
+    ...(status.lisa ? [status.lisa.decisions, status.lisa.followups, status.lisa.quoting] : []),
+  ];
+  const live = modes.filter((m) => m === "live").length;
+  if (live > 0) return { label: `Live in ${live} of ${modes.length} areas`, dot: "bg-emerald-500" };
+  if (modes.some((m) => m === "shadow")) return { label: "Shadow: recording, not acting", dot: "bg-amber-500" };
+  return { label: "Switched off", dot: "bg-neutral-500" };
+}
+
+function ModeTile({ label, mode }: { label: string; mode: JevMode | null }) {
+  const style = mode ? MODE_STYLE[mode] : null;
+
+  return (
+    <div className="rounded-2xl border border-hairline bg-bg/70 p-4">
+      <div className="text-xs text-text-3">{label}</div>
+
+      <strong
+        className={`mt-2 flex items-center gap-2 text-sm ${style ? style.text : "text-text-3"}`}
+      >
+        <span className={`h-2 w-2 rounded-full ${style ? style.dot : "bg-neutral-500"}`} />
+        {style ? style.label : "Unavailable"}
+      </strong>
+    </div>
+  );
+}
+
+function JevDecisionLayer({ status }: { status: JevStatus | null }) {
+  const headline = jevHeadline(status);
+
   return (
     <section className="relative overflow-hidden rounded-3xl border border-accent/20 bg-bg-2">
       {/* subtle background */}
       <div className="pointer-events-none absolute -right-24 -top-32 h-80 w-80 rounded-full bg-accent/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-32 w-72 rounded-full bg-sky-500/5 blur-3xl" />
 
-      <div className="relative grid gap-8 p-6 md:p-8 xl:grid-cols-[1.3fr_.7fr] xl:items-center">
+      <div className="relative grid gap-8 p-6 md:p-8 xl:grid-cols-[1.2fr_.8fr] xl:items-start">
         <div>
           <div className="mb-5 flex items-center gap-4">
             <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-accent/20 bg-accent-soft text-accent">
               <BrainCircuit className="h-7 w-7" />
 
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-bg-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className={`h-2 w-2 rounded-full ${headline.dot}`} />
               </span>
             </div>
 
@@ -376,8 +449,9 @@ function JevDecisionLayer() {
                 </span>
               </div>
 
-              <p className="text-sm text-text-3">
-                Shared intelligence infrastructure
+              <p className="flex items-center gap-2 text-sm text-text-3">
+                <span className={`h-1.5 w-1.5 rounded-full ${headline.dot}`} />
+                {headline.label}
               </p>
             </div>
           </div>
@@ -387,20 +461,15 @@ function JevDecisionLayer() {
           </h3>
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-text-2 md:text-base">
-            Jev helps the workforce make small, structured decisions before
-            expensive agent work begins: deciding what needs attention, where
-            work belongs, when risk needs review, and whether an outcome is
-            actually complete.
+            Jev makes the small judgments before agent work begins, and the AI providers only write
+            the words afterwards. It reads Lisa&apos;s customer messages, decides which follow-ups
+            and price quotes go out, rates what your agents send you, checks their messages to
+            customers, and backs specific agent calls like escalations and recommendations. Every
+            area starts in shadow mode, which records what it would do and changes nothing.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {[
-              "Task routing",
-              "Prioritisation",
-              "Risk signals",
-              "Escalation",
-              "Completion checks",
-            ].map((item) => (
+            {JEV_CAPABILITIES.map((item) => (
               <span
                 key={item}
                 className="inline-flex items-center gap-1.5 rounded-full border border-hairline bg-bg px-3 py-1.5 text-xs font-medium text-text-2"
@@ -410,35 +479,50 @@ function JevDecisionLayer() {
               </span>
             ))}
           </div>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link
+              href="/admin/agent-decisions"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-hairline bg-bg px-3.5 text-sm font-medium transition-colors hover:border-accent/30 hover:bg-accent-soft hover:text-accent"
+            >
+              Agent decisions
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+
+            <Link
+              href="/admin/lisa-decisions"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-hairline bg-bg px-3.5 text-sm font-medium transition-colors hover:border-accent/30 hover:bg-accent-soft hover:text-accent"
+            >
+              Lisa decisions
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-hairline bg-bg/70 p-4">
-            <Network className="mb-5 h-5 w-5 text-accent" />
-            <div className="text-xs text-text-3">Role</div>
-            <strong className="mt-1 block text-sm">Shared decision layer</strong>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <ModeTile label="Messages to you" mode={status?.agents.owner ?? null} />
+            <ModeTile label="Messages to customers" mode={status?.agents.customer ?? null} />
+            <ModeTile label="Agent decisions" mode={status?.agents.decisions ?? null} />
+            <ModeTile label="Lisa readings" mode={status?.lisa?.decisions ?? null} />
+            <ModeTile label="Lisa follow-ups" mode={status?.lisa?.followups ?? null} />
+            <ModeTile label="Lisa quoting" mode={status?.lisa?.quoting ?? null} />
           </div>
 
-          <div className="rounded-2xl border border-hairline bg-bg/70 p-4">
-            <Gauge className="mb-5 h-5 w-5 text-accent" />
-            <div className="text-xs text-text-3">Mode</div>
-            <strong className="mt-1 block text-sm">Structured decisions</strong>
-          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-hairline bg-bg/70 p-4">
+              <div className="text-xs text-text-3">Recorded, last 7 days</div>
+              <strong className="mt-2 block text-2xl font-semibold tabular-nums">
+                {status ? status.recorded_7d.toLocaleString() : "n/a"}
+              </strong>
+            </div>
 
-          <div className="rounded-2xl border border-hairline bg-bg/70 p-4">
-            <ShieldCheck className="mb-5 h-5 w-5 text-accent" />
-            <div className="text-xs text-text-3">Position</div>
-            <strong className="mt-1 block text-sm">Across the workforce</strong>
-          </div>
-
-          <div className="rounded-2xl border border-hairline bg-bg/70 p-4">
-            <Sparkles className="mb-5 h-5 w-5 text-accent" />
-            <div className="text-xs text-text-3">Status</div>
-
-            <strong className="mt-1 flex items-center gap-2 text-sm">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Available
-            </strong>
+            <div className="rounded-2xl border border-hairline bg-bg/70 p-4">
+              <div className="text-xs text-text-3">Held for the digest</div>
+              <strong className="mt-2 block text-2xl font-semibold tabular-nums">
+                {status ? status.held.toLocaleString() : "n/a"}
+              </strong>
+            </div>
           </div>
         </div>
       </div>
@@ -452,8 +536,10 @@ function JevDecisionLayer() {
 
 function AgentPortrait({ agent }: { agent: Agent }) {
   const profile = AGENT_PROFILES[agent.key];
+  const [failed, setFailed] = useState(false);
 
-  if (!profile) {
+  // No profile, or the image failed to load: show the agent's initial instead of an empty box.
+  if (!profile || failed) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-accent-soft text-3xl font-semibold text-accent">
         {agent.name.trim().charAt(0).toUpperCase()}
@@ -462,16 +548,15 @@ function AgentPortrait({ agent }: { agent: Agent }) {
   }
 
   return (
-    <img
+    <Image
       src={profile.image}
       alt={`${agent.name}, ${agent.role}`}
-      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
-      style={{
-        objectPosition: profile.position || "center",
-      }}
-      onError={(event) => {
-        event.currentTarget.style.display = "none";
-      }}
+      fill
+      unoptimized
+      sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+      className="object-cover transition-transform duration-500 group-hover:scale-[1.035]"
+      style={{ objectPosition: profile.position || "center" }}
+      onError={() => setFailed(true)}
     />
   );
 }
@@ -523,9 +608,11 @@ function AgentCard({ agent }: { agent: Agent }) {
           </p>
         </div>
 
-        <div className="mt-5">
-          <CapacityBlock capacity={agent.capacity ?? {}} compact />
-        </div>
+        {hasCapacityData(agent.capacity) && (
+          <div className="mt-5">
+            <CapacityBlock capacity={agent.capacity ?? {}} compact />
+          </div>
+        )}
 
         <div className="mt-auto pt-5">
           <div className="mb-4 border-t border-hairline pt-4">
@@ -621,10 +708,12 @@ export default function TeamClient({
   team,
   initialBrief,
   initialDashboard,
+  jev,
 }: {
   team: TeamData;
   initialBrief: ChiefBrief | null;
   initialDashboard: ChiefDashboard;
+  jev: JevStatus | null;
 }) {
   const summary = team.capacity_summary ?? {};
 
@@ -656,7 +745,7 @@ export default function TeamClient({
       />
 
       {/* Jev */}
-      <JevDecisionLayer />
+      <JevDecisionLayer status={jev} />
 
       {/* Delivery capacity */}
       <section>
