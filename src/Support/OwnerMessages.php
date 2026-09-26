@@ -239,7 +239,12 @@ final class OwnerMessages
     public static function flushDigest(\PDO $pdo, bool $force = false): array
     {
         $out = ['sent' => 0, 'slot' => null, 'note' => null];
-        $rows = $pdo->query("SELECT * FROM owner_message_queue WHERE status = 'held' ORDER BY created_at ASC, id ASC LIMIT 200")->fetchAll(\PDO::FETCH_ASSOC);
+        try {
+            $rows = $pdo->query("SELECT * FROM owner_message_queue WHERE status = 'held' ORDER BY created_at ASC, id ASC LIMIT 200")->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Throwable $e) {
+            $out['note'] = 'The digest queue table does not exist yet. Run php database/migrate.php.';
+            return $out;
+        }
         if ($rows === []) {
             return $out;
         }
