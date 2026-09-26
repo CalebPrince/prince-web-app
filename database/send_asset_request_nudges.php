@@ -19,6 +19,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/autoload.php';
 
 use App\Controllers\LiveChatController;
+use App\Support\CustomerMessages;
 use App\Support\Database;
 use App\Support\Settings;
 use App\Support\TwilioClient;
@@ -52,7 +53,7 @@ foreach (NUDGE_TIERS as $tier) {
     // DateTime) so it lines up exactly with how last_inbound_at itself was
     // written — both sides of the comparison are SQLite's own datetime('now').
     $candidates = $pdo->prepare(
-        "SELECT wi.id, wi.contact_name, wi.phone_number,
+        "SELECT wi.id, wi.contact_name, wi.phone_number, cs.transcript_json,
                 -- Same reconstruction as LiveChatController::adminIntrosIndex()
                 -- — a row sent before request_text existed still has it encoded
                 -- in note's 'Requested: <text>' shape.
@@ -78,6 +79,23 @@ foreach (NUDGE_TIERS as $tier) {
         }
         $ask = trim((string) $row['request_text']) !== '' ? $row['request_text'] : 'that';
         $contactName = (string) $row['contact_name'];
+
+        // Jev decides first. It reads the thread, so a client who already sent what was asked (which
+        // nobody has marked received yet) or who has gone cold is not chased. A stop closes both nudges
+        // for this request; a skip is asked again later and abandoned after a few days.
+        $gate = CustomerMessages::check([
+            'agent' => 'lisa', 'channel' => 'whatsapp', 'kind' => 'asset_request_nudge_' . $hours . 'h',
+            'ref' => "asset_nudge:intro{$row['id']}:{$hours}h", 'name' => $contactName, 'ask' => (string) $ask,
+            'history' => CustomerMessages::historyFromTranscript(json_decode((string) ($row['transcript_json'] ?? ''), true) ?: []),
+        ]);
+        if ($gate['action'] === 'stop') {
+            $pdo->prepare("UPDATE whatsapp_intros SET nudge_4h_sent_at = COALESCE(nudge_4h_sent_at, datetime('now')), nudge_24h_sent_at = COALESCE(nudge_24h_sent_at, datetime('now')) WHERE id = ?")
+                ->execute([$row['id']]);
+            continue;
+        }
+        if ($gate['action'] !== 'send') {
+            continue;
+        }
 
         // Built either way so a successful send has real text to record into
         // the transcript below — not just a description of what happened.

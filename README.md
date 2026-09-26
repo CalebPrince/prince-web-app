@@ -2162,7 +2162,9 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
       Chloe incident escalations are `critical` and never held; Chief's brief is
       `scheduled`; a call site with no tier is treated as critical.
     - **Messages to customers** (`agent_jev_customer_mode`): Nurturer follow-ups,
-      drip email and drip WhatsApp. Before each send Jev reads what was already
+      drip email, drip WhatsApp and Lisa's asset-request nudges (Jev reads the
+      WhatsApp thread, so a client who already sent the file is not chased; a
+      stop closes both nudges for that request). Before each send Jev reads what was already
       sent and what the person replied. Live: skip a message that would be pushy
       (re-asked, abandoned after `agent_customer_max_defer_days`), or stop the
       enrollment for someone who lost interest. Cold outreach is deliberately not

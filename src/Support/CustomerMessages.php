@@ -31,7 +31,7 @@ final class CustomerMessages
     private const RECHECK_HOURS = 12;
 
     /**
-     * @param array{agent:string,channel:string,kind:string,ref:string,enrollment_id?:int,name?:string,industry?:string,last_action?:string,subject?:string,message?:string} $c
+     * @param array{agent:string,channel:string,kind:string,ref:string,enrollment_id?:int,history?:array,ask?:string,name?:string,industry?:string,last_action?:string,subject?:string,message?:string} $c
      * @return array{action:string,reason:string,mode:string}
      */
     public static function check(array $c): array
@@ -56,7 +56,8 @@ final class CustomerMessages
                 }
             }
 
-            $history = isset($c['enrollment_id']) ? self::history($pdo, (int) $c['enrollment_id']) : ['sent' => [], 'replies' => [], 'days_enrolled' => null];
+            // A caller with no enrollment (a WhatsApp thread) supplies its own history, see historyFromTranscript().
+            $history = $c['history'] ?? (isset($c['enrollment_id']) ? self::history($pdo, (int) $c['enrollment_id']) : ['sent' => [], 'replies' => [], 'days_enrolled' => null]);
             $read = self::read($c, $history);
             if ($read === null) {
                 return $out + ['reason' => 'Jev unavailable'];
@@ -151,6 +152,32 @@ final class CustomerMessages
         return ['sent' => $sent, 'replies' => $replies, 'days_enrolled' => $enrolled ? (int) floor(self::daysAgo((string) $enrolled)) : null];
     }
 
+    /**
+     * The same history shape built from a chat transcript, for messages that belong to a WhatsApp
+     * thread rather than a drip enrollment.
+     *
+     * @param array<int,array<string,mixed>> $transcript
+     * @return array{sent:array<int,array<string,mixed>>,replies:array<int,array<string,mixed>>,days_enrolled:?int}
+     */
+    public static function historyFromTranscript(array $transcript): array
+    {
+        $sent = [];
+        $replies = [];
+        foreach (array_slice($transcript, -10) as $t) {
+            $text = trim(preg_replace('/\s+/', ' ', (string) ($t['text'] ?? '')) ?? '');
+            if ($text === '') {
+                continue;
+            }
+            $days = isset($t['ts']) ? self::daysAgo((string) $t['ts']) : null;
+            if (($t['role'] ?? '') === 'user') {
+                $replies[] = ['days_ago' => $days, 'classified_as' => 'not classified', 'excerpt' => mb_substr($text, 0, 240)];
+            } else {
+                $sent[] = ['type' => 'whatsapp', 'subject' => mb_substr($text, 0, 120), 'days_ago' => $days];
+            }
+        }
+        return ['sent' => array_slice($sent, -6), 'replies' => array_slice($replies, -3), 'days_enrolled' => null];
+    }
+
     private static function daysAgo(string $utc): float
     {
         return round((time() - strtotime($utc . ' UTC')) / 86400, 1);
@@ -168,6 +195,7 @@ final class CustomerMessages
             'days_since_they_joined' => $history['days_enrolled'],
             'messages_already_sent_to_them' => $history['sent'],
             'replies_from_them' => $history['replies'],
+            'what_we_asked_them_for' => $c['ask'] ?? null,
             'message_about_to_be_sent' => ['subject' => mb_substr((string) ($c['subject'] ?? ''), 0, 200), 'text' => mb_substr((string) ($c['message'] ?? ''), 0, 500)],
         ], [
             'disinterested' => AgentJudgment::yesNo(
