@@ -36,7 +36,7 @@ class RoccoController
 {
     private const MAX_MESSAGE_LENGTH = 1000;
     private const MAX_CHAT_TRANSCRIPT_TURNS = 30;
-    private const ACTIONS = ['none', 'enforce', 'shadow', 'off'];
+    private const ACTIONS = ['none', 'enforce', 'shadow', 'off', 'threshold'];
 
     /** POST /api/v1/admin/agents/rocco/chat — body: {message, transcript: [{role,text}, ...]}. */
     public static function chat(): void
@@ -144,7 +144,8 @@ class RoccoController
                         'summary' => ['type' => 'STRING', 'description' => 'One short line: what you recommend.'],
                         'detail' => ['type' => 'STRING', 'description' => 'The fuller read: what it means and why.'],
                         'evidence' => ['type' => 'STRING', 'description' => 'Exactly which numbers back it (e.g. "post: 412 candidates, 68% saved, 0 leads missed at 1.0").'],
-                        'action' => ['type' => 'STRING', 'description' => 'One of: none, enforce, shadow, off. The gate mode Apply should switch to, or none if it is advice only.'],
+                        'action' => ['type' => 'STRING', 'description' => 'One of: none, enforce, shadow, off, threshold. What Apply should do: switch the gate mode, or set the score threshold (then give action_value), or none if it is advice only.'],
+                        'action_value' => ['type' => 'STRING', 'description' => 'Only for action=threshold: the new score threshold as a number, e.g. 1.25. Must be between 0.25 and 1.75.'],
                         'wants_attention' => ['type' => 'BOOLEAN', 'description' => 'True only if Caleb should act now. Sends a real email and WhatsApp message.'],
                     ],
                     'required' => ['summary', 'detail', 'evidence'],
@@ -161,6 +162,20 @@ class RoccoController
             ],
         ];
         if ($withModeChange) {
+            $tools[] = [
+                'name' => 'set_gate_thresholds',
+                'description' => 'Change how strict the gate is. score_threshold: candidates scoring below it are rejected '
+                    . '(0.25 to 1.75, default 1.0, higher is stricter). competitor_cutoff: candidates whose competitor '
+                    . 'probability is at or above it are rejected (0.2 to 0.9, default 0.5, lower is stricter). Only call '
+                    . 'this when Caleb has explicitly asked for the change in this conversation. Out-of-range values are refused.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'score_threshold' => ['type' => 'NUMBER', 'description' => 'New score threshold, optional.'],
+                        'competitor_cutoff' => ['type' => 'NUMBER', 'description' => 'New competitor cutoff, optional.'],
+                    ],
+                ],
+            ];
             $tools[] = [
                 'name' => 'set_gate_mode',
                 'description' => 'Change the gate mode. Only call this when Caleb has explicitly asked for the change '
@@ -196,6 +211,13 @@ class RoccoController
             'set_gate_mode' => $user === null
                 ? ['error' => 'Mode changes are not available in a scheduled review. Save a recommendation instead.']
                 : self::setGateMode($user, (string) ($args['mode'] ?? ''), (bool) ($args['override_safety_check'] ?? false)),
+            'set_gate_thresholds' => $user === null
+                ? ['error' => 'Threshold changes are not available in a scheduled review. Save a recommendation instead.']
+                : self::setGateThresholds(
+                    $user,
+                    isset($args['score_threshold']) && is_numeric($args['score_threshold']) ? (float) $args['score_threshold'] : null,
+                    isset($args['competitor_cutoff']) && is_numeric($args['competitor_cutoff']) ? (float) $args['competitor_cutoff'] : null
+                ),
             default => ['error' => 'Unknown tool.'],
         };
     }
@@ -204,7 +226,7 @@ class RoccoController
     private static function openRecommendations(\PDO $pdo): array
     {
         return $pdo->query(
-            "SELECT id, category, summary, detail, evidence, action, wants_attention, created_at
+            "SELECT id, category, summary, detail, evidence, action, action_value, wants_attention, created_at
              FROM rocco_recommendations WHERE status = 'open' ORDER BY created_at DESC"
         )->fetchAll(\PDO::FETCH_ASSOC) ?: [];
     }
@@ -236,12 +258,20 @@ class RoccoController
         $category = in_array($args['category'] ?? '', ['mode', 'threshold', 'data', 'cost'], true) ? $args['category'] : 'mode';
         $action = in_array($args['action'] ?? '', self::ACTIONS, true) ? $args['action'] : 'none';
         $wants = !empty($args['wants_attention']);
+        $actionValue = null;
+        if ($action === 'threshold') {
+            $value = $args['action_value'] ?? null;
+            if (!is_numeric($value) || (float) $value < TypeSafeGate::SCORE_MIN || (float) $value > TypeSafeGate::SCORE_MAX) {
+                return ['error' => sprintf('action=threshold needs action_value, a number between %.2f and %.2f.', TypeSafeGate::SCORE_MIN, TypeSafeGate::SCORE_MAX)];
+            }
+            $actionValue = (string) (float) $value;
+        }
 
         $stmt = $pdo->prepare(
-            'INSERT INTO rocco_recommendations (category, summary, detail, evidence, action, wants_attention)
-             VALUES (?, ?, ?, ?, ?, ?)'
+            'INSERT INTO rocco_recommendations (category, summary, detail, evidence, action, action_value, wants_attention)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$category, $summary, $detail, $evidence, $action, $wants ? 1 : 0]);
+        $stmt->execute([$category, $summary, $detail, $evidence, $action, $actionValue, $wants ? 1 : 0]);
         $id = (int) $pdo->lastInsertId();
         if ($wants) {
             self::notifyAttention($pdo, $id);
@@ -257,6 +287,16 @@ class RoccoController
         );
         $stmt->execute([$id]);
         return $stmt->rowCount() > 0 ? ['resolved' => true] : ['error' => 'No open recommendation with that ID.'];
+    }
+
+    /** @return array<string,mixed> */
+    private static function setGateThresholds(array $user, ?float $score, ?float $competitor): array
+    {
+        $result = TypeSafeGate::setThresholds($score, $competitor);
+        if (!empty($result['changed'])) {
+            ActivityLog::log($user, 'changed', 'typesafe_gate_thresholds', null, json_encode($result['now']));
+        }
+        return $result;
     }
 
     /**
@@ -355,17 +395,22 @@ class RoccoController
             . "Explain things for a smart non-developer: no jargon, short sentences, concrete numbers. The two numbers "
             . "that matter are calls saved (expensive AI calls that would be skipped) and leads missed (real prospects "
             . "the gate would wrongly have thrown away). Missing leads is the costly mistake; saving fewer calls is "
-            . "only a missed saving. Be honest that the gate's own price per call is not tracked here, so the net "
-            . "saving has to be checked against the TypeSafe bill.\n\n"
+            . "only a missed saving. Money matters too: get_gate_report includes a cost block with the gate's spend and the "
+            . "AI calls saved, but only when Caleb has entered prices in Settings. If the prices are null, say so and ask him to "
+            . "enter the TypeSafe cost per call and the estimated cost of one full Beacon scoring call, never guess a "
+            . "price. When the prices are set, judge whether the gate is actually worth it: a gate that misses no leads "
+            . "but costs more than it saves should be turned off, and you should say so plainly.\n\n"
             . "You keep memory in two ways: save_report writes a report snapshot with a plain summary, and "
             . "save_recommendation writes a recommendation that waits on the Rocco page for Caleb to apply or dismiss. "
             . "Save sparingly and only when backed by the numbers. A recommendation can carry an action (enforce, "
-            . "shadow, off) that the page's Apply button performs, so only set one you would stand behind. You cannot "
-            . "change the score thresholds or code; if the numbers suggest different thresholds, save a threshold "
-            . "recommendation with action none saying what you would try, and that it needs a developer session.\n\n"
+            . "shadow, off) that the page's Apply button performs, so only set one you would stand behind. The gate's strictness is a "
+            . "score threshold (candidates scoring below it are rejected; higher is stricter) and a competitor cutoff. "
+            . "get_gate_report shows a sweep of calls saved vs leads missed at each threshold. If a different threshold "
+            . "would save more calls without missing leads, save a recommendation with action threshold and "
+            . "action_value set to that number, and Caleb can Apply it.\n\n"
             . ($scheduled
-                ? "This is a scheduled review, not a conversation. You cannot change the gate mode here; recommend, and Caleb decides.\n\n"
-                : "You may change the gate mode with set_gate_mode, but only when Caleb explicitly asks in this conversation. "
+                ? "This is a scheduled review, not a conversation. You cannot change the gate mode or thresholds here; recommend, and Caleb decides.\n\n"
+                : "You may change the gate mode with set_gate_mode and its strictness with set_gate_thresholds, but only when Caleb explicitly asks in this conversation. "
                 . "Recommend, do not act on your own. If he asks to enforce and the tool refuses, explain why in plain "
                 . "terms and offer to keep it in shadow. Only override the safety check if he explicitly says to enforce "
                 . "anyway. Confirm afterwards exactly what changed.\n\n")
@@ -446,7 +491,9 @@ class RoccoController
             Response::error('This recommendation is advice only, there is nothing to apply.', 422);
         }
 
-        $result = self::setGateMode($user, (string) $rec['action'], false);
+        $result = $rec['action'] === 'threshold'
+            ? self::setGateThresholds($user, is_numeric($rec['action_value']) ? (float) $rec['action_value'] : null, null)
+            : self::setGateMode($user, (string) $rec['action'], false);
         if (empty($result['changed'])) {
             Response::error((string) ($result['reason'] ?? $result['error'] ?? 'Could not apply.'), 409);
         }

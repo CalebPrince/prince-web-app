@@ -136,7 +136,9 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "elevenlabs_phone_postcall_signing_secret",
   ],
   integrations: [
-    "serper_api_key", "hunter_api_key", "apify_api_key", "typesafe_api_key", "typesafe_gate_mode", "pagespeed_api_key", "dataforseo_login",
+    "serper_api_key", "hunter_api_key", "apify_api_key", "typesafe_api_key", "typesafe_gate_mode",
+    "typesafe_score_threshold", "typesafe_competitor_cutoff",
+    "typesafe_cost_per_call_usd", "beacon_full_call_cost_usd", "pagespeed_api_key", "dataforseo_login",
     "dataforseo_password", "slack_webhook_url", "integration_api_key",
     "notification_email", "google_client_id", "composio_api_key",
     "google_places_api_key", "google_place_id",
@@ -215,6 +217,15 @@ const SECRET_KEYS = new Set([
   "paystack_secret_key", "smtp_app_password",
 ]);
 
+/** Short help under a field. */
+const FIELD_HINTS: Record<string, string> = {
+  typesafe_gate_mode: "Shadow judges and logs but rejects nothing. Enforce skips the expensive AI call for rejects. Rocco can recommend when.",
+  typesafe_score_threshold: "Candidates scoring below this are rejected. 0.25 to 1.75, default 1.0, higher is stricter.",
+  typesafe_competitor_cutoff: "Candidates at or above this competitor probability are rejected. 0.2 to 0.9, default 0.5, lower is stricter.",
+  typesafe_cost_per_call_usd: "What one TypeSafe call costs in US dollars, from your TypeSafe plan. Leave blank if unknown, Rocco will not guess.",
+  beacon_full_call_cost_usd: "Your estimate of what one full Beacon AI scoring call costs in US dollars. Leave blank if unknown.",
+};
+
 const CHOICES: Record<string, string[]> = {
   whatsapp_provider: ["elevenlabs", "whapi", "wati", "twilio"],
   typesafe_gate_mode: ["shadow", "enforce", "off"],
@@ -238,6 +249,7 @@ function labelFor(key: string) {
     .replace(/\bimap\b/gi, "IMAP")
     .replace(/\bpagespeed\b/gi, "PageSpeed")
     .replace(/\btypesafe\b/gi, "TypeSafe")
+    .replace(/\busd\b/gi, "(USD)")
     .replace(/\bwati\b/gi, "WATI")
     .replace(/\bsid\b/gi, "SID")
     .replace(/^\w/, (c) => c.toUpperCase());
@@ -539,7 +551,7 @@ export default function SettingsClient({
 
     if (CHOICES[key]) {
       return (
-        <Field key={key} label={labelFor(key)}>
+        <Field key={key} label={labelFor(key)} hint={FIELD_HINTS[key]}>
           <Select value={values[key] ?? ""} onChange={(e) => set(key, e.target.value)}>
             <option value="">Default</option>
             {CHOICES[key].map((choice) => (
@@ -585,7 +597,7 @@ export default function SettingsClient({
     }
 
     return (
-      <Field key={key} label={labelFor(key)}>
+      <Field key={key} label={labelFor(key)} hint={FIELD_HINTS[key]}>
         <Input
           type={SECRET_KEYS.has(key) ? "password" : "text"}
           autoComplete={SECRET_KEYS.has(key) ? "new-password" : "off"}

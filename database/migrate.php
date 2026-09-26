@@ -2126,4 +2126,37 @@ $pdo->exec(
 // voice ID) are dead. Historical scout_chat activity rows are kept on purpose.
 $pdo->exec("DELETE FROM settings WHERE name LIKE 'scout\\_%' ESCAPE '\\'");
 
+// TypeSafe gate: the log gained an "enforced" flag (spend/skip accounting once
+// the gate is live), and Rocco's recommendations gained a 'threshold' action
+// with its value. The CHECK on action can't be altered in place, so rebuild.
+$gateLogColumns = array_column($pdo->query('PRAGMA table_info(typesafe_gate_log)')->fetchAll(), 'name');
+if ($gateLogColumns && !in_array('enforced', $gateLogColumns, true)) {
+    $pdo->exec('ALTER TABLE typesafe_gate_log ADD COLUMN enforced INTEGER NOT NULL DEFAULT 0');
+}
+$roccoRecColumns = array_column($pdo->query('PRAGMA table_info(rocco_recommendations)')->fetchAll(), 'name');
+if ($roccoRecColumns && !in_array('action_value', $roccoRecColumns, true)) {
+    rebuildTable(
+        $pdo,
+        'rocco_recommendations',
+        "CREATE TABLE %s (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT NOT NULL DEFAULT 'mode' CHECK (category IN ('mode', 'threshold', 'data', 'cost')),
+            summary TEXT NOT NULL,
+            detail TEXT NOT NULL,
+            evidence TEXT NOT NULL,
+            action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off', 'threshold')),
+            action_value TEXT,
+            wants_attention INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'applied', 'resolved', 'dismissed')),
+            emailed_at TEXT,
+            whatsapp_sent_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            resolved_at TEXT
+        )",
+        'id, category, summary, detail, evidence, action, wants_attention, status, emailed_at, whatsapp_sent_at, created_at, resolved_at',
+        ['CREATE INDEX IF NOT EXISTS idx_rocco_recommendations_status ON rocco_recommendations (status, created_at)']
+    );
+    echo "Rebuilt rocco_recommendations: added threshold action.\n";
+}
+
 echo "Schema applied.\n";

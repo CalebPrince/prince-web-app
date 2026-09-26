@@ -2091,6 +2091,20 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     avatar). Tables `rocco_reports` and `rocco_recommendations` come from
     `migrate.php`; he does not need a separate report page or script, though
     `php database/typesafe_gate_report.php` still prints the numbers.
+    **Strictness:** the gate's score threshold (`typesafe_score_threshold`,
+    default 1.0, bounds 0.25 to 1.75, higher is stricter) and competitor cutoff
+    (`typesafe_competitor_cutoff`, default 0.5, bounds 0.2 to 0.9) are
+    settings, not code. Rocco can recommend a new threshold (Apply sets it) and
+    change either in chat when asked; out-of-range values are refused.
+    **Cost:** enter `typesafe_cost_per_call_usd` and `beacon_full_call_cost_usd`
+    (Settings, Integrations). Prices are never guessed; until both are set the
+    cost section is blank. With them, every gate call is logged (also once
+    enforcing, flagged so it stays out of threshold sweeps), the page shows
+    spend, AI calls skipped and net, projects the net for shadow data, and the
+    verdict becomes "safe, but not worth the cost" when the gate would cost more
+    than it saves (enforce is then refused). Run `php database/migrate.php`
+    after deploying: it adds the `enforced` column and rebuilds
+    `rocco_recommendations` with the threshold action, keeping rows.
 48. **Lisa page & monthly pricing** (`/admin/lisa.html`, `public/lisa-ai-assistant.html`):
     a dedicated admin page for the public Lisa service page, reusing the same
     settings/content API as Site Content and Pricing rather than a new table

@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 const EMPTY: RoccoOverview = {
   report: {
     mode: "shadow", has_key: false, table_missing: false, total: 0, first_logged_at: null,
-    min_sample: 200, kinds: {}, verdict: "collecting", verdict_text: "",
+    min_sample: 200, sample: 0, score_threshold: 1, competitor_cutoff: 0.5, kinds: {}, cost: null,
+    verdict: "collecting", verdict_text: "",
   },
   recommendations: [],
   reports: [],

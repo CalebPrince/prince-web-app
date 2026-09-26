@@ -102,22 +102,86 @@ class TypeSafeGate
         return self::verdict($answers, 'icp_fit', 'is_competitor');
     }
 
-    /** Shadow-mode audit line: the gate's call next to the full model's, for threshold tuning. */
-    public static function logShadow(string $kind, ?array $gate, bool $modelQualified, int $modelConfidence): void
+    /** Score below this rejects a candidate. Bounded so a typo cannot make the gate reject everything. */
+    public const SCORE_MIN = 0.25;
+    public const SCORE_MAX = 1.75;
+    public const COMPETITOR_MIN = 0.2;
+    public const COMPETITOR_MAX = 0.9;
+
+    public static function scoreThreshold(): float
     {
-        if ($gate === null || self::mode() !== 'shadow') {
+        $v = Settings::get('typesafe_score_threshold');
+        return is_numeric($v) ? max(self::SCORE_MIN, min(self::SCORE_MAX, (float) $v)) : 1.0;
+    }
+
+    public static function competitorCutoff(): float
+    {
+        $v = Settings::get('typesafe_competitor_cutoff');
+        return is_numeric($v) ? max(self::COMPETITOR_MIN, min(self::COMPETITOR_MAX, (float) $v)) : 0.5;
+    }
+
+    /**
+     * Change either threshold. Rejects values outside the safe bounds instead
+     * of silently clamping, so the caller (Rocco, or the Apply button) can say
+     * exactly what was refused.
+     *
+     * @return array<string,mixed>
+     */
+    public static function setThresholds(?float $score, ?float $competitor): array
+    {
+        if ($score === null && $competitor === null) {
+            return ['error' => 'Give a score threshold, a competitor cutoff, or both.'];
+        }
+        if ($score !== null && ($score < self::SCORE_MIN || $score > self::SCORE_MAX)) {
+            return ['error' => sprintf('Score threshold must be between %.2f and %.2f.', self::SCORE_MIN, self::SCORE_MAX)];
+        }
+        if ($competitor !== null && ($competitor < self::COMPETITOR_MIN || $competitor > self::COMPETITOR_MAX)) {
+            return ['error' => sprintf('Competitor cutoff must be between %.2f and %.2f.', self::COMPETITOR_MIN, self::COMPETITOR_MAX)];
+        }
+        $previous = ['score_threshold' => self::scoreThreshold(), 'competitor_cutoff' => self::competitorCutoff()];
+        if ($score !== null) {
+            Settings::set('typesafe_score_threshold', rtrim(rtrim(number_format($score, 2, '.', ''), '0'), '.'));
+        }
+        if ($competitor !== null) {
+            Settings::set('typesafe_competitor_cutoff', rtrim(rtrim(number_format($competitor, 2, '.', ''), '0'), '.'));
+        }
+        return [
+            'changed' => true, 'previous' => $previous,
+            'now' => ['score_threshold' => self::scoreThreshold(), 'competitor_cutoff' => self::competitorCutoff()],
+        ];
+    }
+
+    /**
+     * What one call costs, in USD, as entered by the owner in Settings. Null
+     * when unset: prices are never guessed, so cost figures stay blank until
+     * both are filled in.
+     *
+     * @return array{gate:?float,full_call:?float}
+     */
+    public static function costs(): array
+    {
+        $read = static function (string $key): ?float {
+            $v = Settings::get($key);
+            return is_numeric($v) && (float) $v >= 0 ? (float) $v : null;
+        };
+        return ['gate' => $read('typesafe_cost_per_call_usd'), 'full_call' => $read('beacon_full_call_cost_usd')];
+    }
+
+    /**
+     * Record one gate outcome next to what the full model decided, for the
+     * report. In shadow mode every row is a clean sample (the full model ran
+     * regardless). In enforce mode rows are marked so they are excluded from
+     * threshold sweeps (only gate-passed candidates reach the model then) but
+     * still count towards spend and calls skipped.
+     */
+    public static function logOutcome(string $kind, ?array $gate, bool $modelQualified, int $modelConfidence): void
+    {
+        if ($gate === null) {
             return;
         }
-        try {
-            Database::get()->prepare(
-                'INSERT INTO typesafe_gate_log (kind, score, competitor, gate_passed, model_qualified, model_confidence)
-                 VALUES (?, ?, ?, ?, ?, ?)'
-            )->execute([
-                $kind, $gate['buying_intent_score'], $gate['competitor_probability'],
-                $gate['passes_gate'] ? 1 : 0, $modelQualified ? 1 : 0, $modelConfidence,
-            ]);
-        } catch (\Throwable $e) {
-            // Table missing until migrate.php runs; the error_log line below still records it.
+        self::insertLog($kind, $gate, $modelQualified, $modelConfidence, false);
+        if (self::mode() !== 'shadow') {
+            return;
         }
         error_log(sprintf(
             'TypeSafeGate shadow [%s]: gate=%s score=%.2f competitor=%.2f | model qualified=%d confidence=%d%s',
@@ -131,35 +195,65 @@ class TypeSafeGate
         ));
     }
 
+    private static function insertLog(string $kind, array $gate, bool $modelQualified, int $modelConfidence, bool $skipped): void
+    {
+        try {
+            Database::get()->prepare(
+                'INSERT INTO typesafe_gate_log (kind, score, competitor, gate_passed, model_qualified, model_confidence, enforced)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)'
+            )->execute([
+                $kind, $gate['buying_intent_score'], $gate['competitor_probability'],
+                $gate['passes_gate'] ? 1 : 0, $modelQualified ? 1 : 0, $modelConfidence,
+                self::mode() === 'enforce' || $skipped ? 1 : 0,
+            ]);
+        } catch (\Throwable $e) {
+            // Table or column missing until migrate.php runs; never break Beacon over an audit row.
+        }
+    }
+
     /**
-     * Shadow-mode results for the admin report page and the CLI script: per
-     * kind, a threshold sweep of calls saved vs leads the full model
-     * qualified that the gate would have rejected, plus a plain verdict.
+     * Shadow and enforce results for the admin page, Rocco and the CLI script:
+     * per kind, a threshold sweep of calls saved vs leads the full model
+     * qualified that the gate would have rejected, real cost figures when the
+     * owner has entered prices, and a plain verdict.
      *
      * @return array<string,mixed>
      */
     public static function report(): array
     {
         $pdo = Database::get();
-        $competitorCut = 0.5;
-        $currentThreshold = 1.0;
+        $competitorCut = self::competitorCutoff();
+        $currentThreshold = self::scoreThreshold();
         $minSample = 200;
         $kinds = [];
+        $base = [
+            'mode' => self::mode(), 'has_key' => (bool) Settings::get('typesafe_api_key'),
+            'score_threshold' => $currentThreshold, 'competitor_cutoff' => $competitorCut,
+            'min_sample' => $minSample,
+        ];
 
         try {
-            $total = (int) $pdo->query('SELECT COUNT(*) FROM typesafe_gate_log')->fetchColumn();
+            $calls = (int) $pdo->query('SELECT COUNT(*) FROM typesafe_gate_log')->fetchColumn();
+            $sample = (int) $pdo->query('SELECT COUNT(*) FROM typesafe_gate_log WHERE enforced = 0')->fetchColumn();
+            $skipped = (int) $pdo->query('SELECT COUNT(*) FROM typesafe_gate_log WHERE enforced = 1 AND gate_passed = 0')->fetchColumn();
             $first = $pdo->query('SELECT MIN(created_at) FROM typesafe_gate_log')->fetchColumn() ?: null;
         } catch (\Throwable $e) {
-            return [
-                'mode' => self::mode(), 'has_key' => (bool) Settings::get('typesafe_api_key'),
-                'table_missing' => true, 'total' => 0, 'first_logged_at' => null, 'kinds' => [],
-                'verdict' => 'needs_migration',
-                'verdict_text' => 'The log table does not exist yet. Run php database/migrate.php on the server.',
+            return $base + [
+                'table_missing' => true, 'total' => 0, 'sample' => 0, 'first_logged_at' => null, 'kinds' => [],
+                'cost' => null, 'verdict' => 'needs_migration',
+                'verdict_text' => 'The log table is not up to date. Run php database/migrate.php on the server.',
             ];
         }
 
+        $thresholds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5];
+        if (!in_array($currentThreshold, $thresholds, true)) {
+            $thresholds[] = $currentThreshold;
+            sort($thresholds);
+        }
+
+        $wouldSkip = 0;
         foreach (['post', 'engagement'] as $kind) {
-            $stmt = $pdo->prepare('SELECT score, competitor, model_qualified FROM typesafe_gate_log WHERE kind = ?');
+            $stmt = $pdo->prepare('SELECT score, competitor, model_qualified FROM typesafe_gate_log WHERE kind = ? AND enforced = 0');
             $stmt->execute([$kind]);
             $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             $n = count($rows);
@@ -168,7 +262,7 @@ class TypeSafeGate
             }
             $qualified = (int) array_sum(array_column($rows, 'model_qualified'));
             $sweep = [];
-            foreach ([0.25, 0.5, 0.75, 1.0, 1.25, 1.5] as $threshold) {
+            foreach ($thresholds as $threshold) {
                 $rejected = 0;
                 $missed = 0;
                 foreach ($rows as $r) {
@@ -177,51 +271,76 @@ class TypeSafeGate
                         $missed += (int) $r['model_qualified'];
                     }
                 }
+                $isCurrent = abs($threshold - $currentThreshold) < 0.001;
+                if ($isCurrent) {
+                    $wouldSkip += $rejected;
+                }
                 $sweep[] = [
                     'threshold' => $threshold, 'rejected' => $rejected,
                     'saved_pct' => round($rejected / $n * 100), 'missed' => $missed,
-                    'current' => $threshold === $currentThreshold,
+                    'current' => $isCurrent,
                 ];
             }
             $kinds[$kind] = ['candidates' => $n, 'qualified' => $qualified, 'sweep' => $sweep];
         }
 
-        [$verdict, $text] = self::verdict_for($total, $kinds, $currentThreshold, $minSample);
-        return [
-            'mode' => self::mode(), 'has_key' => (bool) Settings::get('typesafe_api_key'),
-            'table_missing' => false, 'total' => $total, 'first_logged_at' => $first,
-            'min_sample' => $minSample, 'kinds' => $kinds, 'verdict' => $verdict, 'verdict_text' => $text,
+        $price = self::costs();
+        $cost = [
+            'gate_per_call' => $price['gate'], 'full_per_call' => $price['full_call'],
+            'calls' => $calls, 'skipped' => $skipped, 'would_skip' => $wouldSkip,
+            'gate_spend' => $price['gate'] !== null ? round($calls * $price['gate'], 4) : null,
+            'actual_saved' => $price['full_call'] !== null ? round($skipped * $price['full_call'], 4) : null,
+            'actual_net' => null,
+            'projected_saved' => $price['full_call'] !== null ? round($wouldSkip * $price['full_call'], 4) : null,
+            'projected_net' => null,
+        ];
+        if ($price['gate'] !== null && $price['full_call'] !== null) {
+            $cost['actual_net'] = round($cost['actual_saved'] - $cost['gate_spend'], 4);
+            $cost['projected_net'] = round($cost['projected_saved'] - $sample * $price['gate'], 4);
+        }
+
+        [$verdict, $text] = self::verdict_for($sample, $kinds, $currentThreshold, $minSample, $cost['projected_net']);
+        return $base + [
+            'table_missing' => false, 'total' => $calls, 'sample' => $sample, 'first_logged_at' => $first,
+            'kinds' => $kinds, 'cost' => $cost, 'verdict' => $verdict, 'verdict_text' => $text,
         ];
     }
 
     /** @return array{0:string,1:string} */
-    private static function verdict_for(int $total, array $kinds, float $currentThreshold, int $minSample): array
+    private static function verdict_for(int $sample, array $kinds, float $currentThreshold, int $minSample, ?float $projectedNet): array
     {
-        if ($total < $minSample) {
+        if ($sample < $minSample) {
             return ['collecting', sprintf(
-                'Still collecting data: %d of about %d candidates so far. Too early to judge.', $total, $minSample
+                'Still collecting data: %d of about %d candidates so far. Too early to judge.', $sample, $minSample
             )];
         }
         $missed = 0;
         $qualified = 0;
-        $savedWeighted = 0;
+        $rejectedAtCurrent = 0;
         foreach ($kinds as $k) {
             foreach ($k['sweep'] as $row) {
-                if ($row['threshold'] === $currentThreshold) {
+                if ($row['current']) {
                     $missed += $row['missed'];
-                    $savedWeighted += $row['rejected'];
+                    $rejectedAtCurrent += $row['rejected'];
                 }
             }
             $qualified += $k['qualified'];
         }
-        $savedPct = $total > 0 ? round($savedWeighted / $total * 100) : 0;
-        if ($missed === 0 && $savedPct >= 30) {
-            return ['safe', "Safe to enforce: it would have skipped {$savedPct}% of the expensive AI calls and missed none of the {$qualified} leads the full AI qualified."];
+        $savedPct = $sample > 0 ? round($rejectedAtCurrent / $sample * 100) : 0;
+        if ($missed > 0) {
+            return ['not_yet', "Not safe yet: it would have wrongly rejected {$missed} of {$qualified} real leads. Keep it in shadow mode, or raise the strictness tuning."];
         }
-        if ($missed === 0) {
-            return ['low_value', "It misses nothing, but would only skip {$savedPct}% of calls, so the saving is small."];
+        if ($projectedNet !== null && $projectedNet <= 0) {
+            return ['not_worth_it', sprintf(
+                'Safe, but not worth it: it misses no leads, yet on your entered prices the gate would cost about $%.2f more than the AI calls it skips.',
+                abs($projectedNet)
+            )];
         }
-        return ['not_yet', "Not safe yet: it would have wrongly rejected {$missed} of {$qualified} real leads. Keep it in shadow mode, or ask to tune the threshold."];
+        $netNote = $projectedNet !== null ? sprintf(' On your entered prices that nets about $%.2f saved over this sample.', $projectedNet) : '';
+        if ($savedPct >= 30) {
+            return ['safe', "Safe to enforce: it would have skipped {$savedPct}% of the expensive AI calls and missed none of the {$qualified} leads the full AI qualified.{$netNote}"];
+        }
+        return ['low_value', "It misses nothing, but would only skip {$savedPct}% of calls, so the saving is small.{$netNote}"];
     }
 
     /** True when the gate should actually skip the generative call. */
@@ -231,12 +350,14 @@ class TypeSafeGate
     }
 
     /**
-     * Result Beacon returns for a gate rejection, so both paths reject identically.
+     * Result Beacon returns for a gate rejection, so both paths reject
+     * identically. Also records the skipped call so spend and savings are real.
      *
      * @return array{qualified:bool,confidence_score:int,reasoning:string,drafted_reply:string}
      */
-    public static function rejection(array $gate): array
+    public static function rejection(array $gate, string $kind): array
     {
+        self::insertLog($kind, $gate, false, 0, true);
         return [
             'qualified' => false,
             'confidence_score' => (int) round($gate['buying_intent_score'] * 50),
@@ -319,7 +440,7 @@ class TypeSafeGate
 
         return [
             // score runs 0 (not a lead) .. 2 (genuine prospect), 1.0 = "ambiguous" midpoint.
-            'passes_gate' => (float) $score >= 1.0 && (float) $competitor < 0.5,
+            'passes_gate' => (float) $score >= self::scoreThreshold() && (float) $competitor < self::competitorCutoff(),
             'buying_intent_score' => (float) $score,
             'competitor_probability' => (float) $competitor,
         ];

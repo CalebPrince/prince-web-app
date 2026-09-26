@@ -117,7 +117,7 @@ class BeaconController
         // skip the call.
         $gate = $source === 'cron' ? TypeSafeGate::screenPost($platform, $postContent, $postUrl) : null;
         if (TypeSafeGate::shouldReject($gate)) {
-            return TypeSafeGate::rejection($gate);
+            return TypeSafeGate::rejection($gate, 'post');
         }
 
         $result = AiAgentEngine::run(
@@ -142,7 +142,7 @@ class BeaconController
         // this qualifies via the structured output above, so there's no
         // decision left for a tool to make (and no risk of it "forgetting").
         $qualified = (bool) $parsed['qualified'];
-        TypeSafeGate::logShadow('post', $gate, $qualified, (int) $parsed['confidence_score']);
+        TypeSafeGate::logOutcome('post', $gate, $qualified, (int) $parsed['confidence_score']);
 
         // persistIfQualified() is shared with generateForEngagement() — same
         // confidence gate, review queue, and marketing_pitch_sent automation
@@ -190,7 +190,7 @@ class BeaconController
 
         $gate = TypeSafeGate::screenEngager($engagerName, $engagerHeadline, $engagementType, $commentText);
         if (TypeSafeGate::shouldReject($gate)) {
-            return TypeSafeGate::rejection($gate);
+            return TypeSafeGate::rejection($gate, 'engagement');
         }
 
         // No tools, same reasoning as generateForPost()'s cron branch: this
@@ -215,7 +215,7 @@ class BeaconController
         }
 
         $qualified = (bool) $parsed['qualified'];
-        TypeSafeGate::logShadow('engagement', $gate, $qualified, (int) $parsed['confidence_score']);
+        TypeSafeGate::logOutcome('engagement', $gate, $qualified, (int) $parsed['confidence_score']);
         $postContent = self::engagementDescription(
             $engagerName, $engagerHeadline, $engagementType, $commentText, $sourcePostAuthor, $sourcePostTopic
         );

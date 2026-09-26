@@ -1591,6 +1591,9 @@ CREATE TABLE IF NOT EXISTS typesafe_gate_log (
   gate_passed INTEGER NOT NULL,
   model_qualified INTEGER NOT NULL,
   model_confidence INTEGER NOT NULL,
+  -- 1 once the gate was enforcing: those rows are excluded from threshold sweeps
+  -- (only gate-passed candidates reached the model) but count towards spend.
+  enforced INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_typesafe_gate_log_kind ON typesafe_gate_log (kind, created_at);
@@ -1616,7 +1619,9 @@ CREATE TABLE IF NOT EXISTS rocco_recommendations (
   summary TEXT NOT NULL,
   detail TEXT NOT NULL,
   evidence TEXT NOT NULL,
-  action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off')),
+  action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off', 'threshold')),
+  -- For action = 'threshold': the new score threshold Apply should set.
+  action_value TEXT,
   wants_attention INTEGER NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'applied', 'resolved', 'dismissed')),
   emailed_at TEXT,

@@ -9,6 +9,21 @@ import {
   formatDateTime, formatLabel,
 } from "@/components/admin/ui";
 
+type GateCost = {
+  gate_per_call: number | null;
+  full_per_call: number | null;
+  calls: number;
+  skipped: number;
+  would_skip: number;
+  gate_spend: number | null;
+  actual_saved: number | null;
+  actual_net: number | null;
+  projected_saved: number | null;
+  projected_net: number | null;
+};
+
+const usd = (n: number | null) => (n === null ? "Not set" : `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`);
+
 type SweepRow = { threshold: number; rejected: number; saved_pct: number; missed: number; current: boolean };
 type KindStats = { candidates: number; qualified: number; sweep: SweepRow[] };
 
@@ -20,8 +35,12 @@ export type RoccoOverview = {
     total: number;
     first_logged_at: string | null;
     min_sample: number;
+    sample: number;
+    score_threshold: number;
+    competitor_cutoff: number;
     kinds: Record<string, KindStats>;
-    verdict: "collecting" | "safe" | "low_value" | "not_yet" | "needs_migration";
+    cost: GateCost | null;
+    verdict: "collecting" | "safe" | "low_value" | "not_yet" | "not_worth_it" | "needs_migration";
     verdict_text: string;
   };
   recommendations: Recommendation[];
@@ -37,7 +56,8 @@ type Recommendation = {
   summary: string;
   detail: string;
   evidence: string;
-  action: "none" | "enforce" | "shadow" | "off";
+  action: "none" | "enforce" | "shadow" | "off" | "threshold";
+  action_value: string | null;
   wants_attention: number;
   status: "open" | "applied" | "resolved" | "dismissed";
   created_at: string;
@@ -59,6 +79,7 @@ const VERDICT_STYLE: Record<string, string> = {
   safe: "border-emerald-500/30 bg-emerald-500/10",
   not_yet: "border-red-500/30 bg-red-500/10",
   low_value: "border-amber-500/30 bg-amber-500/10",
+  not_worth_it: "border-amber-500/30 bg-amber-500/10",
   needs_migration: "border-red-500/30 bg-red-500/10",
   collecting: "border-hairline bg-bg-2",
 };
@@ -67,6 +88,7 @@ const VERDICT_TITLE: Record<string, string> = {
   safe: "Safe to enforce",
   not_yet: "Not safe yet",
   low_value: "Safe, but small saving",
+  not_worth_it: "Safe, but not worth the cost",
   needs_migration: "Setup needed",
   collecting: "Still collecting data",
 };
@@ -190,7 +212,7 @@ export default function RoccoClient({ initialOverview }: { initialOverview: Rocc
           label="Verdicts logged"
           value={report.total}
           icon={<ListChecks className="w-4 h-4" />}
-          hint={report.total < report.min_sample ? `Needs about ${report.min_sample}` : undefined}
+          hint={report.sample < report.min_sample ? `${report.sample} of about ${report.min_sample} needed` : undefined}
         />
         <StatCard label="Calls it would save" value={`${current.savedPct}%`} icon={<Gauge className="w-4 h-4" />} />
         <StatCard
@@ -201,12 +223,51 @@ export default function RoccoClient({ initialOverview }: { initialOverview: Rocc
         />
       </div>
 
+      {report.cost && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">What it costs</h2>
+          {report.cost.gate_per_call === null || report.cost.full_per_call === null ? (
+            <Card>
+              <div className="px-6 py-6 text-sm text-text-2 space-y-1">
+                <p>
+                  Rocco does not guess prices. Enter what one TypeSafe call costs and what one full Beacon AI
+                  scoring call costs (both in US dollars) and this section shows whether the gate pays for itself.
+                </p>
+                <p>
+                  <Link href="/admin/settings?tab=integrations" className="underline">
+                    Enter them under Settings, Integrations
+                  </Link>
+                  . Calls made so far: {report.cost.calls}.
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard label="Gate spend so far" value={usd(report.cost.gate_spend)} hint={`${report.cost.calls} calls`} />
+              <StatCard
+                label="Saved so far"
+                value={usd(report.cost.actual_saved)}
+                hint={`${report.cost.skipped} AI calls actually skipped`}
+              />
+              <StatCard label="Net so far" value={usd(report.cost.actual_net)} hint="Saved minus gate spend" />
+              <StatCard
+                label="Projected net (shadow)"
+                value={usd(report.cost.projected_net)}
+                hint={`If enforced over the ${report.sample} judged candidates`}
+              />
+            </div>
+          )}
+        </section>
+      )}
+
       {Object.keys(report.kinds).length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Threshold check</h2>
           <p className="text-sm text-text-3">
             Each row asks: if the gate rejected anything scoring below this number, how many expensive AI calls
-            would be saved, and how many real leads would be lost? The current setting is marked.
+            would be saved, and how many real leads would be lost? The current setting ({report.score_threshold},
+            competitor cutoff {report.competitor_cutoff}) is marked. Change either under Settings, Integrations, or
+            ask Rocco.
           </p>
           {Object.entries(report.kinds).map(([kind, k]) => (
             <Card key={kind} title={`${KIND_LABEL[kind] ?? formatLabel(kind)}: ${k.candidates} judged, ${k.qualified} real leads`}>
@@ -284,10 +345,12 @@ export default function RoccoClient({ initialOverview }: { initialOverview: Rocc
                   <div className="flex flex-wrap gap-2">
                     {r.action !== "none" && (
                       <Button
-                        onClick={() => act(`apply-${r.id}`, `/api/v1/admin/rocco/recommendations/${r.id}/apply`, `Gate mode set to ${r.action}.`)}
+                        onClick={() => act(`apply-${r.id}`, `/api/v1/admin/rocco/recommendations/${r.id}/apply`, r.action === "threshold" ? `Score threshold set to ${r.action_value}.` : `Gate mode set to ${r.action}.`)}
                         disabled={busy === `apply-${r.id}`}
                       >
-                        Apply: set gate to {r.action}
+                        {r.action === "threshold"
+                          ? `Apply: set score threshold to ${r.action_value}`
+                          : `Apply: set gate to ${r.action}`}
                       </Button>
                     )}
                     <Button
