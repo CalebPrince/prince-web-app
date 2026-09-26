@@ -237,7 +237,14 @@ const SECRET_KEYS = new Set([
 ]);
 
 /** Allie's built-in news outlets, shown as the placeholder. Keep in step with AllieNewsSources::DEFAULTS in PHP. */
-const ALLIE_NEWS_DEFAULTS = ["venturebeat.com", "techcrunch.com", "headsupai.io"];
+const ALLIE_NEWS_DEFAULTS = [
+  "venturebeat.com",
+  "techcrunch.com",
+  "headsupai.io",
+  "techlabari.com",
+  "techcabal.com",
+  "cioafrica.co",
+];
 
 /** Short help under a field. */
 const FIELD_HINTS: Record<string, string> = {

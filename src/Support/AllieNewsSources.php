@@ -24,6 +24,10 @@ final class AllieNewsSources
         'venturebeat.com',
         'techcrunch.com',
         'headsupai.io',
+        // Ghana and Africa: the studio is based in Accra.
+        'techlabari.com',
+        'techcabal.com',
+        'cioafrica.co',
     ];
 
     /** The domains Allie searches right now: the saved list, or the defaults when it is blank. */
