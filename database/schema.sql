@@ -1619,7 +1619,7 @@ CREATE TABLE IF NOT EXISTS rocco_recommendations (
   summary TEXT NOT NULL,
   detail TEXT NOT NULL,
   evidence TEXT NOT NULL,
-  action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off', 'threshold')),
+  action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off', 'threshold', 'competitor_cutoff')),
   -- For action = 'threshold': the new score threshold Apply should set.
   action_value TEXT,
   wants_attention INTEGER NOT NULL DEFAULT 0,

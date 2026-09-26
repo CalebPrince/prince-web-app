@@ -2095,7 +2095,11 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     default 1.0, bounds 0.25 to 1.75, higher is stricter) and competitor cutoff
     (`typesafe_competitor_cutoff`, default 0.5, bounds 0.2 to 0.9) are
     settings, not code. Rocco can recommend a new threshold (Apply sets it) and
-    change either in chat when asked; out-of-range values are refused.
+    change either in chat when asked; out-of-range values are refused. The
+    report sweeps both: calls saved vs leads missed at each score threshold
+    and at each competitor cutoff (`competitor_sweep`), and Rocco can
+    recommend either (`threshold` or `competitor_cutoff` action). His agent
+    face (crimson and gold) is in `agent-face.js` and `app.css`.
     **Cost:** enter `typesafe_cost_per_call_usd` and `beacon_full_call_cost_usd`
     (Settings, Integrations). Prices are never guessed; until both are set the
     cost section is blank. With them, every gate call is logged (also once

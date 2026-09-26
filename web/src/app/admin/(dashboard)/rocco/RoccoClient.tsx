@@ -25,7 +25,8 @@ type GateCost = {
 const usd = (n: number | null) => (n === null ? "Not set" : `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`);
 
 type SweepRow = { threshold: number; rejected: number; saved_pct: number; missed: number; current: boolean };
-type KindStats = { candidates: number; qualified: number; sweep: SweepRow[] };
+type CutoffRow = { cutoff: number; rejected: number; saved_pct: number; missed: number; current: boolean };
+type KindStats = { candidates: number; qualified: number; sweep: SweepRow[]; competitor_sweep: CutoffRow[] };
 
 export type RoccoOverview = {
   report: {
@@ -56,7 +57,7 @@ type Recommendation = {
   summary: string;
   detail: string;
   evidence: string;
-  action: "none" | "enforce" | "shadow" | "off" | "threshold";
+  action: "none" | "enforce" | "shadow" | "off" | "threshold" | "competitor_cutoff";
   action_value: string | null;
   wants_attention: number;
   status: "open" | "applied" | "resolved" | "dismissed";
@@ -264,8 +265,9 @@ export default function RoccoClient({ initialOverview }: { initialOverview: Rocc
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Threshold check</h2>
           <p className="text-sm text-text-3">
-            Each row asks: if the gate rejected anything scoring below this number, how many expensive AI calls
-            would be saved, and how many real leads would be lost? The current setting ({report.score_threshold},
+            Each row asks: if the gate rejected anything scoring below this number (first table) or at or above this
+            competitor probability (second table), how many expensive AI calls would be saved, and how many real leads
+            would be lost? The current setting ({report.score_threshold},
             competitor cutoff {report.competitor_cutoff}) is marked. Change either under Settings, Integrations, or
             ask Rocco.
           </p>
@@ -286,6 +288,31 @@ export default function RoccoClient({ initialOverview }: { initialOverview: Rocc
                       <tr key={row.threshold} className={`border-t border-hairline ${row.current ? "bg-bg-3" : ""}`}>
                         <td className="px-5 py-2">
                           {row.threshold.toFixed(2)}
+                          {row.current && <span className="ml-2 text-xs text-text-3">current</span>}
+                        </td>
+                        <td className="px-5 py-2">{row.rejected}</td>
+                        <td className="px-5 py-2">{row.saved_pct}%</td>
+                        <td className={`px-5 py-2 ${row.missed > 0 ? "text-red-400" : ""}`}>{row.missed}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="overflow-x-auto border-t border-hairline">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs uppercase tracking-wider text-text-3">
+                      <th className="px-5 py-2">Competitor cutoff</th>
+                      <th className="px-5 py-2">Rejected</th>
+                      <th className="px-5 py-2">Calls saved</th>
+                      <th className="px-5 py-2">Leads missed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {k.competitor_sweep.map((row) => (
+                      <tr key={row.cutoff} className={`border-t border-hairline ${row.current ? "bg-bg-3" : ""}`}>
+                        <td className="px-5 py-2">
+                          {row.cutoff.toFixed(2)}
                           {row.current && <span className="ml-2 text-xs text-text-3">current</span>}
                         </td>
                         <td className="px-5 py-2">{row.rejected}</td>
@@ -345,12 +372,14 @@ export default function RoccoClient({ initialOverview }: { initialOverview: Rocc
                   <div className="flex flex-wrap gap-2">
                     {r.action !== "none" && (
                       <Button
-                        onClick={() => act(`apply-${r.id}`, `/api/v1/admin/rocco/recommendations/${r.id}/apply`, r.action === "threshold" ? `Score threshold set to ${r.action_value}.` : `Gate mode set to ${r.action}.`)}
+                        onClick={() => act(`apply-${r.id}`, `/api/v1/admin/rocco/recommendations/${r.id}/apply`, r.action === "threshold" ? `Score threshold set to ${r.action_value}.` : r.action === "competitor_cutoff" ? `Competitor cutoff set to ${r.action_value}.` : `Gate mode set to ${r.action}.`)}
                         disabled={busy === `apply-${r.id}`}
                       >
                         {r.action === "threshold"
                           ? `Apply: set score threshold to ${r.action_value}`
-                          : `Apply: set gate to ${r.action}`}
+                          : r.action === "competitor_cutoff"
+                            ? `Apply: set competitor cutoff to ${r.action_value}`
+                            : `Apply: set gate to ${r.action}`}
                       </Button>
                     )}
                     <Button

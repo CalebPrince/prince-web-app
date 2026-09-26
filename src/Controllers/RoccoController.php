@@ -36,7 +36,7 @@ class RoccoController
 {
     private const MAX_MESSAGE_LENGTH = 1000;
     private const MAX_CHAT_TRANSCRIPT_TURNS = 30;
-    private const ACTIONS = ['none', 'enforce', 'shadow', 'off', 'threshold'];
+    private const ACTIONS = ['none', 'enforce', 'shadow', 'off', 'threshold', 'competitor_cutoff'];
 
     /** POST /api/v1/admin/agents/rocco/chat — body: {message, transcript: [{role,text}, ...]}. */
     public static function chat(): void
@@ -144,8 +144,8 @@ class RoccoController
                         'summary' => ['type' => 'STRING', 'description' => 'One short line: what you recommend.'],
                         'detail' => ['type' => 'STRING', 'description' => 'The fuller read: what it means and why.'],
                         'evidence' => ['type' => 'STRING', 'description' => 'Exactly which numbers back it (e.g. "post: 412 candidates, 68% saved, 0 leads missed at 1.0").'],
-                        'action' => ['type' => 'STRING', 'description' => 'One of: none, enforce, shadow, off, threshold. What Apply should do: switch the gate mode, or set the score threshold (then give action_value), or none if it is advice only.'],
-                        'action_value' => ['type' => 'STRING', 'description' => 'Only for action=threshold: the new score threshold as a number, e.g. 1.25. Must be between 0.25 and 1.75.'],
+                        'action' => ['type' => 'STRING', 'description' => 'One of: none, enforce, shadow, off, threshold, competitor_cutoff. What Apply should do: switch the gate mode, set the score threshold, or set the competitor cutoff (the last two need action_value), or none if it is advice only.'],
+                        'action_value' => ['type' => 'STRING', 'description' => 'Only for action=threshold or competitor_cutoff: the new value as a number. Score threshold 0.25 to 1.75 (e.g. 1.25), competitor cutoff 0.2 to 0.9 (e.g. 0.4).'],
                         'wants_attention' => ['type' => 'BOOLEAN', 'description' => 'True only if Caleb should act now. Sends a real email and WhatsApp message.'],
                     ],
                     'required' => ['summary', 'detail', 'evidence'],
@@ -259,10 +259,13 @@ class RoccoController
         $action = in_array($args['action'] ?? '', self::ACTIONS, true) ? $args['action'] : 'none';
         $wants = !empty($args['wants_attention']);
         $actionValue = null;
-        if ($action === 'threshold') {
+        if ($action === 'threshold' || $action === 'competitor_cutoff') {
+            [$min, $max] = $action === 'threshold'
+                ? [TypeSafeGate::SCORE_MIN, TypeSafeGate::SCORE_MAX]
+                : [TypeSafeGate::COMPETITOR_MIN, TypeSafeGate::COMPETITOR_MAX];
             $value = $args['action_value'] ?? null;
-            if (!is_numeric($value) || (float) $value < TypeSafeGate::SCORE_MIN || (float) $value > TypeSafeGate::SCORE_MAX) {
-                return ['error' => sprintf('action=threshold needs action_value, a number between %.2f and %.2f.', TypeSafeGate::SCORE_MIN, TypeSafeGate::SCORE_MAX)];
+            if (!is_numeric($value) || (float) $value < $min || (float) $value > $max) {
+                return ['error' => sprintf('action=%s needs action_value, a number between %.2f and %.2f.', $action, $min, $max)];
             }
             $actionValue = (string) (float) $value;
         }
@@ -405,9 +408,9 @@ class RoccoController
             . "Save sparingly and only when backed by the numbers. A recommendation can carry an action (enforce, "
             . "shadow, off) that the page's Apply button performs, so only set one you would stand behind. The gate's strictness is a "
             . "score threshold (candidates scoring below it are rejected; higher is stricter) and a competitor cutoff. "
-            . "get_gate_report shows a sweep of calls saved vs leads missed at each threshold. If a different threshold "
-            . "would save more calls without missing leads, save a recommendation with action threshold and "
-            . "action_value set to that number, and Caleb can Apply it.\n\n"
+            . "get_gate_report shows, per path, a sweep of calls saved vs leads missed at each score threshold (sweep) and at each "
+            . "competitor cutoff (competitor_sweep). If a different value would save more calls without missing leads, save a "
+            . "recommendation with action threshold or competitor_cutoff and action_value set to that number, and Caleb can Apply it.\n\n"
             . ($scheduled
                 ? "This is a scheduled review, not a conversation. You cannot change the gate mode or thresholds here; recommend, and Caleb decides.\n\n"
                 : "You may change the gate mode with set_gate_mode and its strictness with set_gate_thresholds, but only when Caleb explicitly asks in this conversation. "
@@ -491,9 +494,12 @@ class RoccoController
             Response::error('This recommendation is advice only, there is nothing to apply.', 422);
         }
 
-        $result = $rec['action'] === 'threshold'
-            ? self::setGateThresholds($user, is_numeric($rec['action_value']) ? (float) $rec['action_value'] : null, null)
-            : self::setGateMode($user, (string) $rec['action'], false);
+        $value = is_numeric($rec['action_value']) ? (float) $rec['action_value'] : null;
+        $result = match ($rec['action']) {
+            'threshold' => self::setGateThresholds($user, $value, null),
+            'competitor_cutoff' => self::setGateThresholds($user, null, $value),
+            default => self::setGateMode($user, (string) $rec['action'], false),
+        };
         if (empty($result['changed'])) {
             Response::error((string) ($result['reason'] ?? $result['error'] ?? 'Could not apply.'), 409);
         }

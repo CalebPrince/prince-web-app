@@ -281,7 +281,32 @@ class TypeSafeGate
                     'current' => $isCurrent,
                 ];
             }
-            $kinds[$kind] = ['candidates' => $n, 'qualified' => $qualified, 'sweep' => $sweep];
+            // Same idea for the competitor check: hold the score threshold where it is and vary the cutoff.
+            $cutoffs = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+            if (!in_array($competitorCut, $cutoffs, true)) {
+                $cutoffs[] = $competitorCut;
+                sort($cutoffs);
+            }
+            $competitorSweep = [];
+            foreach ($cutoffs as $cutoff) {
+                $rejected = 0;
+                $missed = 0;
+                foreach ($rows as $r) {
+                    if ((float) $r['score'] < $currentThreshold || (float) $r['competitor'] >= $cutoff) {
+                        $rejected++;
+                        $missed += (int) $r['model_qualified'];
+                    }
+                }
+                $competitorSweep[] = [
+                    'cutoff' => $cutoff, 'rejected' => $rejected,
+                    'saved_pct' => round($rejected / $n * 100), 'missed' => $missed,
+                    'current' => abs($cutoff - $competitorCut) < 0.001,
+                ];
+            }
+            $kinds[$kind] = [
+                'candidates' => $n, 'qualified' => $qualified,
+                'sweep' => $sweep, 'competitor_sweep' => $competitorSweep,
+            ];
         }
 
         $price = self::costs();

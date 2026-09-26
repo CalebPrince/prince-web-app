@@ -35,4 +35,9 @@ foreach ($r['kinds'] as $kind => $k) {
         printf("  %-10.2f %-10d %-8s %d%s\n", $row['threshold'], $row['rejected'], $row['saved_pct'] . '%', $row['missed'],
             $row['current'] ? '   <- current' : '');
     }
+    printf("  %-10s %-10s %-8s %s\n", 'competitor', 'rejected', 'saved', 'leads missed');
+    foreach ($k['competitor_sweep'] as $row) {
+        printf("  >= %-7.2f %-10d %-8s %d%s\n", $row['cutoff'], $row['rejected'], $row['saved_pct'] . '%', $row['missed'],
+            $row['current'] ? '   <- current' : '');
+    }
 }

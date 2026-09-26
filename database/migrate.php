@@ -2134,7 +2134,12 @@ if ($gateLogColumns && !in_array('enforced', $gateLogColumns, true)) {
     $pdo->exec('ALTER TABLE typesafe_gate_log ADD COLUMN enforced INTEGER NOT NULL DEFAULT 0');
 }
 $roccoRecColumns = array_column($pdo->query('PRAGMA table_info(rocco_recommendations)')->fetchAll(), 'name');
-if ($roccoRecColumns && !in_array('action_value', $roccoRecColumns, true)) {
+$roccoRecSql = (string) $pdo->query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'rocco_recommendations'")->fetchColumn();
+// Rebuild when the table predates action_value, or its action CHECK predates 'competitor_cutoff'.
+if ($roccoRecColumns && (!in_array('action_value', $roccoRecColumns, true) || !str_contains($roccoRecSql, 'competitor_cutoff'))) {
+    $roccoCopyColumns = 'id, category, summary, detail, evidence, action, '
+        . (in_array('action_value', $roccoRecColumns, true) ? 'action_value, ' : '')
+        . 'wants_attention, status, emailed_at, whatsapp_sent_at, created_at, resolved_at';
     rebuildTable(
         $pdo,
         'rocco_recommendations',
@@ -2144,7 +2149,7 @@ if ($roccoRecColumns && !in_array('action_value', $roccoRecColumns, true)) {
             summary TEXT NOT NULL,
             detail TEXT NOT NULL,
             evidence TEXT NOT NULL,
-            action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off', 'threshold')),
+            action TEXT NOT NULL DEFAULT 'none' CHECK (action IN ('none', 'enforce', 'shadow', 'off', 'threshold', 'competitor_cutoff')),
             action_value TEXT,
             wants_attention INTEGER NOT NULL DEFAULT 0,
             status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'applied', 'resolved', 'dismissed')),
@@ -2153,10 +2158,10 @@ if ($roccoRecColumns && !in_array('action_value', $roccoRecColumns, true)) {
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             resolved_at TEXT
         )",
-        'id, category, summary, detail, evidence, action, wants_attention, status, emailed_at, whatsapp_sent_at, created_at, resolved_at',
+        $roccoCopyColumns,
         ['CREATE INDEX IF NOT EXISTS idx_rocco_recommendations_status ON rocco_recommendations (status, created_at)']
     );
-    echo "Rebuilt rocco_recommendations: added threshold action.\n";
+    echo "Rebuilt rocco_recommendations: added threshold and competitor cutoff actions.\n";
 }
 
 echo "Schema applied.\n";
