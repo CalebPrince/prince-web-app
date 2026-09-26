@@ -21,18 +21,9 @@ final class AllieNewsSources
 
     /** Used when the setting is blank. Keep in step with the placeholder in SettingsClient.tsx. */
     public const DEFAULTS = [
-        'techcrunch.com',
-        'theverge.com',
-        'wired.com',
-        'arstechnica.com',
         'venturebeat.com',
-        'technologyreview.com',
-        'news.ycombinator.com',
-        'producthunt.com',
-        'theinformation.com',
-        'techcabal.com',
-        'techpoint.africa',
-        'restofworld.org',
+        'techcrunch.com',
+        'headsupai.io',
     ];
 
     /** The domains Allie searches right now: the saved list, or the defaults when it is blank. */

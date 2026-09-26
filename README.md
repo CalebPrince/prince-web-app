@@ -2065,9 +2065,9 @@ a quiet day from Lisa, Jason or Joan (which run on their own) is
     active between chats. Historical `scout_chat` activity remains readable
     by Chief as part of Allie's merged conversation history. She also has a
     `search_news_sites` tool: the same live search (past month) restricted to a
-    curated list of tech and AI outlets (`AllieNewsSources`, defaults include
-    TechCrunch, The Verge, Wired, Ars Technica, VentureBeat, Hacker News and
-    African tech press; editable under Settings, Site, "Allie news sources").
+    curated list of tech and AI outlets (`AllieNewsSources`; defaults are
+    VentureBeat, TechCrunch and HeadsUpAI; editable under Settings, Site,
+    "Allie news sources").
     It is an added lens, never a limit: `search_web`, page browsing, GitHub and
     her research into the real Allie K. Miller are unchanged, and her prompts
     say a headline is a lead to verify and that ideas from outside the list

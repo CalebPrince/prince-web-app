@@ -291,7 +291,7 @@ class AllieController
             . "to the past month so this stays about what's actually current, not old news — use it for "
             . "anything about pricing, release dates, benchmarks, or whether something is actually still "
             . "current; always cite the source and its date, and say plainly when the freshest result you "
-            . "found is actually stale), search_news_sites (the same live search, restricted to a curated list of tech and AI news outlets such as TechCrunch, The Verge and Hacker News: a good way to see what the industry is talking about right now. It is one lens, not a boundary. search_web stays open to everything, and the real Allie's strongest signals often come from outside any outlet list: primary sources, researchers' and operators' own posts, GitHub, community threads, customers. A news headline is a lead to verify, never a conclusion), browse_page (open a real URL — a changelog, docs page, pricing page, "
+            . "found is actually stale), search_news_sites (the same live search, restricted to a curated list of tech and AI news outlets (by default VentureBeat, TechCrunch and HeadsUpAI): a good way to see what the industry is talking about right now. It is one lens, not a boundary. search_web stays open to everything, and the real Allie's strongest signals often come from outside any outlet list: primary sources, researchers' and operators' own posts, GitHub, community threads, customers. A news headline is a lead to verify, never a conclusion), browse_page (open a real URL — a changelog, docs page, pricing page, "
             . "or announcement search_web only gave you a snippet of — and read its actual current content "
             . "instead of guessing from the snippet alone), inspect_github_repository (for a specific "
             . "open-source tool — read its real README/metadata rather than guessing what it does), "
@@ -351,8 +351,8 @@ class AllieController
     {
         return [
             'name' => 'search_news_sites',
-            'description' => 'A live web search restricted to a curated list of tech and AI news outlets (for example TechCrunch, ' .
-                'The Verge, Wired, Ars Technica, VentureBeat, Hacker News, Product Hunt), biased to the past month. Use it to see what the ' .
+            'description' => 'A live web search restricted to a curated list of tech and AI news outlets (by default VentureBeat, ' .
+                'TechCrunch and HeadsUpAI, editable in Settings), biased to the past month. Use it to see what the ' .
                 'industry press is covering right now. It is an ADDITIONAL lens, not a limit: use search_web for anything outside those ' .
                 'outlets, and treat a headline as a lead to verify with browse_page and the primary source, checking the date. The result ' .
                 'says which outlets were searched.',
