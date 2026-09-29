@@ -257,6 +257,7 @@ class DashboardController
             'new_chat_feedback' => $newChatFeedback,
             'rate_limit' => $rateLimit,
             'external_expenses' => $externalExpenses,
+            'monthly_profit' => self::monthlyProfit($pdo, $externalExpenses),
             'payments' => [
                 'revenue_by_currency' => array_map(
                     fn($r) => ['currency' => $r['currency'], 'total' => (int) $r['total']],
@@ -290,6 +291,65 @@ class DashboardController
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Revenue minus recorded expenses for the last 6 months, in the expense
+     * currency. Revenue in the other of USD/GHS is converted with the cached
+     * rate; any other currency is reported as unconverted, never guessed.
+     */
+    private static function monthlyProfit(\PDO $pdo, array $expenses): array
+    {
+        $currency = $expenses['currency'];
+        $rate = (float) (
+            Settings::get('external_fx_usd_ghs_rate_v2')
+            ?: Settings::get('external_fx_ghana_api_usd_ghs_rate')
+            ?: Settings::get('external_fx_usd_ghs_rate')
+            ?: 0
+        );
+        $convert = static function (int $amount, string $from) use ($currency, $rate): ?int {
+            $from = strtoupper($from);
+            if ($from === $currency) return $amount;
+            if ($rate <= 0) return null;
+            if ($from === 'USD' && $currency === 'GHS') return (int) round($amount * $rate);
+            if ($from === 'GHS' && $currency === 'USD') return (int) round($amount / $rate);
+            return null;
+        };
+
+        $months = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $months[date('Y-m', strtotime("first day of -$i month"))] = ['revenue' => 0, 'expenses' => 0, 'unconverted' => false];
+        }
+        $rows = $pdo->query(
+            "SELECT month, currency, SUM(amount) AS total FROM (
+                SELECT strftime('%Y-%m', created_at) AS month, currency, amount FROM payments WHERE status = 'success'
+                UNION ALL
+                SELECT strftime('%Y-%m', paid_at) AS month, currency, amount FROM subscription_charges
+             ) GROUP BY month, currency"
+        )->fetchAll();
+        foreach ($rows as $row) {
+            if (!isset($months[$row['month']])) continue;
+            $value = $convert((int) $row['total'], (string) $row['currency']);
+            if ($value === null) $months[$row['month']]['unconverted'] = true;
+            else $months[$row['month']]['revenue'] += $value;
+        }
+        foreach ($expenses['history'] as $row) {
+            if (!isset($months[$row['period_month']])) continue;
+            $value = $convert($row['total'], $row['currency']);
+            if ($value !== null) $months[$row['period_month']]['expenses'] = $value;
+        }
+
+        $out = [];
+        foreach ($months as $month => $m) {
+            $out[] = [
+                'month' => $month,
+                'revenue' => $m['revenue'],
+                'expenses' => $m['expenses'],
+                'profit' => $m['revenue'] - $m['expenses'],
+                'unconverted_revenue' => $m['unconverted'],
+            ];
+        }
+        return ['currency' => $currency, 'months' => $out];
     }
 
     private static function moneyRows(array $rows): array
