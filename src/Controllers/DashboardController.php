@@ -26,6 +26,16 @@ class DashboardController
 
     private static function respondExchangeRate(): void
     {
+        $r = self::resolveExchangeRate();
+        if ($r['rate'] <= 0) {
+            Response::error('The USD/GHS exchange rate is temporarily unavailable.', 503);
+        }
+        Response::json($r);
+    }
+
+    /** Cached USD/GHS rate, refreshed from the providers when older than 12h. Also called from cron. */
+    public static function resolveExchangeRate(): array
+    {
         $cachedRate = (float) (
             Settings::get('external_fx_usd_ghs_rate_v2')
             ?: Settings::get('external_fx_ghana_api_usd_ghs_rate')
@@ -101,10 +111,7 @@ class DashboardController
             }
         }
 
-        if ($cachedRate <= 0) {
-            Response::error('The USD/GHS exchange rate is temporarily unavailable.', 503);
-        }
-        Response::json([
+        return [
             'base' => 'USD',
             'quote' => 'GHS',
             'rate' => $cachedRate,
@@ -112,7 +119,7 @@ class DashboardController
             'source_timestamp' => $sourceTimestamp,
             'provider' => $provider,
             'cached' => !$isFresh,
-        ]);
+        ];
     }
 
     /**
@@ -318,7 +325,7 @@ class DashboardController
 
         $months = [];
         for ($i = 5; $i >= 0; $i--) {
-            $months[date('Y-m', strtotime("first day of -$i month"))] = ['revenue' => 0, 'expenses' => 0, 'unconverted' => false];
+            $months[date('Y-m', strtotime("first day of -$i month"))] = ['revenue' => 0, 'expenses' => null, 'unconverted' => false];
         }
         $rows = $pdo->query(
             "SELECT month, currency, SUM(amount) AS total FROM (
@@ -344,8 +351,9 @@ class DashboardController
             $out[] = [
                 'month' => $month,
                 'revenue' => $m['revenue'],
+                // null profit = missing expenses or unconvertible revenue: no claim either way.
                 'expenses' => $m['expenses'],
-                'profit' => $m['revenue'] - $m['expenses'],
+                'profit' => ($m['expenses'] === null || $m['unconverted']) ? null : $m['revenue'] - $m['expenses'],
                 'unconverted_revenue' => $m['unconverted'],
             ];
         }
@@ -397,7 +405,8 @@ class DashboardController
         return ['count' => count($items), 'items' => $items, 'value_by_currency' => array_map(static fn(string $currency, int $total): array => compact('currency', 'total'), array_keys($values), array_values($values))];
     }
 
-    private static function externalExpenses(\PDO $pdo): array
+    /** Also snapshots this month's totals; database/snapshot_expenses.php calls it from cron. */
+    public static function externalExpenses(\PDO $pdo): array
     {
         $currency = strtoupper(trim((string) Settings::get('external_expense_currency')) ?: 'USD');
         if (!preg_match('/^[A-Z]{3}$/', $currency)) {
