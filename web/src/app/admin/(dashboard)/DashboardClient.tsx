@@ -90,8 +90,10 @@ export default function DashboardClient({
       {initialData?.monthly_profit?.months?.length > 0 && (() => {
         const { currency, months } = initialData.monthly_profit;
         const current = months[months.length - 1];
-        const isProfit = current.profit >= 0;
-        const fmt = (n: number) => `${n < 0 ? "−" : ""}${formatAmount(Math.abs(n), currency)}`;
+        const known = current.profit !== null;
+        const isProfit = known && current.profit >= 0;
+        const maxAbs = Math.max(...months.map((m: any) => Math.abs(m.profit ?? 0)), 1);
+        const fmt = (n: number | null) => n === null ? "—" : `${n < 0 ? "−" : ""}${formatAmount(Math.abs(n), currency)}`;
         return (
           <div className="bg-bg-2 rounded-xl border border-hairline overflow-hidden">
             <div className="p-5 border-b border-hairline flex flex-wrap items-center justify-between gap-3">
@@ -100,13 +102,34 @@ export default function DashboardClient({
                 Profit / Loss this month
               </h3>
               <span className={`text-xs px-2 py-1 rounded-full border font-medium ${isProfit ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
-                {isProfit ? "Profit" : "Loss"}
+                {!known ? "No expense data" : isProfit ? "Profit" : "Loss"}
               </span>
             </div>
             <div className="p-5 grid grid-cols-3 gap-4">
               <div><p className="text-sm text-text-2">Revenue</p><p className="text-xl font-semibold">{fmt(current.revenue)}</p></div>
               <div><p className="text-sm text-text-2">Expenses</p><p className="text-xl font-semibold">{fmt(current.expenses)}</p></div>
-              <div><p className="text-sm text-text-2">Net</p><p className={`text-xl font-semibold ${isProfit ? 'text-green-500' : 'text-red-500'}`}>{fmt(current.profit)}</p></div>
+              <div><p className="text-sm text-text-2">Net</p><p className={`text-xl font-semibold ${!known ? '' : isProfit ? 'text-green-500' : 'text-red-500'}`}>{fmt(current.profit)}</p></div>
+            </div>
+            <div className="border-t border-hairline p-5">
+              <div className="flex items-stretch gap-2 h-32" role="img" aria-label="Monthly profit and loss, last 6 months">
+                {months.map((m: any) => {
+                  const pct = m.profit === null ? 0 : Math.max(4, (Math.abs(m.profit) / maxAbs) * 50);
+                  const pos = m.profit !== null && m.profit >= 0;
+                  return (
+                    <div key={m.month} className="flex-1 flex flex-col items-center min-w-0" title={`${m.month}: ${fmt(m.profit)}`}>
+                      <div className="flex-1 w-full flex items-end justify-center">
+                        {m.profit !== null && pos && <div className="w-full max-w-10 rounded-t bg-green-500" style={{ height: `${pct * 2}%` }} />}
+                      </div>
+                      <div className="w-full h-px bg-hairline" />
+                      <div className="flex-1 w-full flex items-start justify-center">
+                        {m.profit !== null && !pos && <div className="w-full max-w-10 rounded-b bg-red-500" style={{ height: `${pct * 2}%` }} />}
+                        {m.profit === null && <span className="text-xs text-text-3 pt-1">n/a</span>}
+                      </div>
+                      <span className="text-xs text-text-3 mt-1">{new Date(m.month + "-01T00:00:00").toLocaleDateString(undefined, { month: "short" })}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div className="border-t border-hairline overflow-x-auto">
               <table className="w-full text-sm">
@@ -120,8 +143,8 @@ export default function DashboardClient({
                       <td className="p-3">{new Date(m.month + "-01T00:00:00").toLocaleDateString(undefined, { month: "short", year: "numeric" })}</td>
                       <td className="p-3">{fmt(m.revenue)}</td>
                       <td className="p-3">{fmt(m.expenses)}</td>
-                      <td className={`p-3 font-medium ${m.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {m.profit >= 0 ? "Profit " : "Loss "}{fmt(m.profit)}
+                      <td className={`p-3 font-medium ${m.profit === null ? 'text-text-3' : m.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {m.profit === null ? "No expense data" : <>{m.profit >= 0 ? "Profit " : "Loss "}{fmt(m.profit)}</>}
                         {m.unconverted_revenue && <span title="Some revenue is in a currency that could not be converted" className="text-yellow-500"> *</span>}
                       </td>
                     </tr>

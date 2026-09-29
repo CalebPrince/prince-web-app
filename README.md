@@ -943,6 +943,7 @@ database/
                               # the 52 blog posts + their generated SVG cover art
   generate_sitemap.php       # regenerates public/sitemap.xml
   process_webhooks.php      # drains webhook_queue → Slack/email (run via cron/Task Scheduler)
+  snapshot_expenses.php     # saves this month's expense totals so dashboard profit/loss has every month (cron, daily)
   send_appointment_reminders.php  # ~24h-before booking reminder emails (cron)
   send_milestone_reminders.php    # unpaid proposal milestone nudges (cron)
   send_stale_lead_alerts.php      # Make.com event for quote requests stuck in New/Reviewing (cron)
