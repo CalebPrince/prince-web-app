@@ -144,8 +144,8 @@ export default function DashboardClient({
                       <td className="p-3">{fmt(m.revenue)}</td>
                       <td className="p-3">{fmt(m.expenses)}</td>
                       <td className={`p-3 font-medium ${m.profit === null ? 'text-text-3' : m.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {m.profit === null ? "No expense data" : <>{m.profit >= 0 ? "Profit " : "Loss "}{fmt(m.profit)}</>}
-                        {m.unconverted_revenue && <span title="Some revenue is in a currency that could not be converted" className="text-yellow-500"> *</span>}
+                        {m.profit === null ? (m.expenses === null ? "No expense data" : "Rate unavailable") : <>{m.profit >= 0 ? "Profit " : "Loss "}{fmt(m.profit)}</>}
+  
                       </td>
                     </tr>
                   ))}

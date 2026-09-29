@@ -12,5 +12,8 @@ require_once dirname(__DIR__) . '/src/autoload.php';
 use App\Controllers\DashboardController;
 use App\Support\Database;
 
+// Keep the cached USD/GHS rate fresh too; profit/loss conversion depends on it.
+$fx = DashboardController::resolveExchangeRate();
+echo 'FX rate: ' . ($fx['rate'] > 0 ? round($fx['rate'], 4) . ' (' . $fx['provider'] . ')' : 'unavailable') . "\n";
 $e = DashboardController::externalExpenses(Database::get());
 echo 'Snapshot saved: ' . number_format($e['monthly_total'] / 100, 2) . ' ' . $e['currency'] . "\n";

@@ -26,6 +26,16 @@ class DashboardController
 
     private static function respondExchangeRate(): void
     {
+        $r = self::resolveExchangeRate();
+        if ($r['rate'] <= 0) {
+            Response::error('The USD/GHS exchange rate is temporarily unavailable.', 503);
+        }
+        Response::json($r);
+    }
+
+    /** Cached USD/GHS rate, refreshed from the providers when older than 12h. Also called from cron. */
+    public static function resolveExchangeRate(): array
+    {
         $cachedRate = (float) (
             Settings::get('external_fx_usd_ghs_rate_v2')
             ?: Settings::get('external_fx_ghana_api_usd_ghs_rate')
@@ -101,10 +111,7 @@ class DashboardController
             }
         }
 
-        if ($cachedRate <= 0) {
-            Response::error('The USD/GHS exchange rate is temporarily unavailable.', 503);
-        }
-        Response::json([
+        return [
             'base' => 'USD',
             'quote' => 'GHS',
             'rate' => $cachedRate,
@@ -112,7 +119,7 @@ class DashboardController
             'source_timestamp' => $sourceTimestamp,
             'provider' => $provider,
             'cached' => !$isFresh,
-        ]);
+        ];
     }
 
     /**
@@ -344,9 +351,9 @@ class DashboardController
             $out[] = [
                 'month' => $month,
                 'revenue' => $m['revenue'],
-                // null = no expense snapshot for that month, so no profit claim.
+                // null profit = missing expenses or unconvertible revenue: no claim either way.
                 'expenses' => $m['expenses'],
-                'profit' => $m['expenses'] === null ? null : $m['revenue'] - $m['expenses'],
+                'profit' => ($m['expenses'] === null || $m['unconverted']) ? null : $m['revenue'] - $m['expenses'],
                 'unconverted_revenue' => $m['unconverted'],
             ];
         }
