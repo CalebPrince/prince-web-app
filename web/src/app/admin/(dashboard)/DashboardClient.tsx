@@ -4,7 +4,7 @@ import { formatDate } from "@/components/admin/ui";
 import { useEffect, useState } from "react";
 import { 
   Kanban, Inbox, Calendar, Users, Activity, CreditCard, 
-  CheckCircle2, AlertTriangle, Info, Bell, FileText
+  CheckCircle2, AlertTriangle, Info, Bell, FileText, TrendingUp, TrendingDown
 } from "lucide-react";
 
 export default function DashboardClient({ 
@@ -85,6 +85,53 @@ export default function DashboardClient({
           </div>
         )}
       </div>
+
+      {/* Monthly Profit / Loss */}
+      {initialData?.monthly_profit?.months?.length > 0 && (() => {
+        const { currency, months } = initialData.monthly_profit;
+        const current = months[months.length - 1];
+        const isProfit = current.profit >= 0;
+        const fmt = (n: number) => `${n < 0 ? "−" : ""}${formatAmount(Math.abs(n), currency)}`;
+        return (
+          <div className="bg-bg-2 rounded-xl border border-hairline overflow-hidden">
+            <div className="p-5 border-b border-hairline flex flex-wrap items-center justify-between gap-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                {isProfit ? <TrendingUp className="w-4 h-4 text-green-500" /> : <TrendingDown className="w-4 h-4 text-red-500" />}
+                Profit / Loss this month
+              </h3>
+              <span className={`text-xs px-2 py-1 rounded-full border font-medium ${isProfit ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                {isProfit ? "Profit" : "Loss"}
+              </span>
+            </div>
+            <div className="p-5 grid grid-cols-3 gap-4">
+              <div><p className="text-sm text-text-2">Revenue</p><p className="text-xl font-semibold">{fmt(current.revenue)}</p></div>
+              <div><p className="text-sm text-text-2">Expenses</p><p className="text-xl font-semibold">{fmt(current.expenses)}</p></div>
+              <div><p className="text-sm text-text-2">Net</p><p className={`text-xl font-semibold ${isProfit ? 'text-green-500' : 'text-red-500'}`}>{fmt(current.profit)}</p></div>
+            </div>
+            <div className="border-t border-hairline overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="text-text-3 text-left">
+                  <th className="p-3 font-medium">Month</th><th className="p-3 font-medium">Revenue</th>
+                  <th className="p-3 font-medium">Expenses</th><th className="p-3 font-medium">Result</th>
+                </tr></thead>
+                <tbody className="divide-y divide-hairline">
+                  {[...months].reverse().map((m: any) => (
+                    <tr key={m.month}>
+                      <td className="p-3">{new Date(m.month + "-01T00:00:00").toLocaleDateString(undefined, { month: "short", year: "numeric" })}</td>
+                      <td className="p-3">{fmt(m.revenue)}</td>
+                      <td className="p-3">{fmt(m.expenses)}</td>
+                      <td className={`p-3 font-medium ${m.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {m.profit >= 0 ? "Profit " : "Loss "}{fmt(m.profit)}
+                        {m.unconverted_revenue && <span title="Some revenue is in a currency that could not be converted" className="text-yellow-500"> *</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Top Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
