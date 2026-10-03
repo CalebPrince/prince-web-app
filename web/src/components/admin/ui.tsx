@@ -48,7 +48,9 @@ export function Button({
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: keyof typeof BUTTON_VARIANTS }) {
   return (
-    <button className={`${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${className}`} {...props}>
+    // Default to a plain button: inside a <form> the browser otherwise treats it
+    // as submit, so an "Add row" click would save the form instead.
+    <button type="button" className={`${BUTTON_BASE} ${BUTTON_VARIANTS[variant]} ${className}`} {...props}>
       {children}
     </button>
   );
@@ -72,6 +74,7 @@ export function IconButton({
   };
   return (
     <button
+      type="button"
       title={title}
       aria-label={title}
       className={`p-1.5 text-text-3 rounded hover:bg-bg-3 transition-colors ${tones[tone]} ${className}`}
