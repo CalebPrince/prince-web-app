@@ -59,6 +59,7 @@ use App\Controllers\ErrorLogController;
 use App\Controllers\GrowthRoadmapController;
 use App\Controllers\InquiryController;
 use App\Controllers\IntegrationController;
+use App\Controllers\WhatsAppRelayController;
 use App\Controllers\InvoiceController;
 use App\Controllers\LisaDecisionsController;
 use App\Controllers\LiveChatController;
@@ -202,6 +203,7 @@ $router->post('/api/v1/testimonials/{token}', [TestimonialController::class, 'su
 $router->get('/api/v1/search', [SearchController::class, 'search']);
 $router->get('/api/v1/admin/search', [SearchController::class, 'adminSearch']);
 $router->get('/api/v1/integrations/events', [IntegrationController::class, 'events']);
+$router->post('/api/v1/relay/whatsapp-alert', [WhatsAppRelayController::class, 'send']);
 $router->post('/api/v1/agents/beacon/draft', [BeaconController::class, 'draft']);
 $router->post('/api/v1/agents/nurturer/draft', [NurturerController::class, 'draft']);
 $router->post('/api/v1/agents/sage/chat', [SageController::class, 'chat']);

@@ -50,8 +50,19 @@ class WhatsAppNotifier
      */
     public static function sendOwnerAlert(string $body, array $fields = []): bool
     {
-        $recipient = (string) Settings::get('owner_whatsapp_number');
+        return self::sendAlertTo((string) Settings::get('owner_whatsapp_number'), $body, $fields);
+    }
 
+    /**
+     * The owner-alert path, aimed at any number: same provider routing, same
+     * approved template ("Update from {{1}}: {{2}}. Details: {{3}} ..."), same
+     * free-text fallback. Used by WhatsAppRelayController so client apps can
+     * alert their own members without holding provider credentials.
+     *
+     * @param array<string,string> $fields See sendOwnerAlert().
+     */
+    public static function sendAlertTo(string $recipient, string $body, array $fields = []): bool
+    {
         if (self::provider() === 'elevenlabs') {
             // A template still needs something to say when a caller predates
             // the $fields parameter: fall back to the prose it composed.
