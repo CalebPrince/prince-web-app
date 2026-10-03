@@ -37,7 +37,7 @@ class SettingsController
         'wendy_elevenlabs_voice_id', 'allie_elevenlabs_voice_id', 'rocco_elevenlabs_voice_id',
         'liveavatar_enabled', 'liveavatar_api_key', 'liveavatar_avatar_id', 'liveavatar_context_id', 'liveavatar_voice_id',
         'liveavatar_llm_bridge_secret', 'liveavatar_llm_configuration_id', 'liveavatar_sandbox_enabled',
-        'integration_api_key', 'notification_email',
+        'integration_api_key', 'whatsapp_relay_api_key', 'notification_email',
         'coding_github_token', 'coding_github_repo', 'coding_github_branch',
         'coding_openai_connection', 'coding_anthropic_connection',
         'model_agnostic_memory_url', 'model_agnostic_memory_token', 'model_agnostic_memory_key', 'model_agnostic_agent_token',

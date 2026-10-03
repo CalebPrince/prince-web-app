@@ -1749,3 +1749,15 @@ CREATE TABLE IF NOT EXISTS owner_message_queue (
   sent_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_owner_message_queue_status ON owner_message_queue (status, created_at);
+
+-- Client-app WhatsApp alerts sent through WhatsAppRelayController (also created on first use).
+CREATE TABLE IF NOT EXISTS whatsapp_relay_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  recipient TEXT NOT NULL,
+  source TEXT NOT NULL,
+  title TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  ok INTEGER NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_relay_log_created ON whatsapp_relay_log(created_at);
