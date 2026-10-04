@@ -277,13 +277,20 @@ class Composio
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
+                'Content-Type: application/json; charset=utf-8',
                 'x-api-key: ' . $apiKey,
             ],
             CURLOPT_TIMEOUT => 20,
         ];
         if ($body !== null) {
-            $options[CURLOPT_POSTFIELDS] = json_encode($body);
+            // Raw UTF-8 rather than PHP's default \uXXXX escapes: posts sent
+            // through the LinkedIn proxy came out with the \u2192 arrow bullets
+            // rendered as a stray quote plus "n", so non-ASCII text must not
+            // depend on whatever re-serializes the body on Composio's side.
+            $options[CURLOPT_POSTFIELDS] = json_encode(
+                $body,
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
+            );
         }
         curl_setopt_array($ch, $options);
 
