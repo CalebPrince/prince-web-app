@@ -61,6 +61,12 @@ class ContentIdeasController
      *  are cached. Not a content filter — the actual per-page volume is
      *  governed entirely by Radar's "Posts per page" setting. */
     private const MAX_DAYS = 30;
+    /** Fewest usable ideas worth saving as a plan once malformed or
+     *  ungrounded items are dropped; below this the batch is rejected. */
+    private const MIN_IDEAS = 24;
+
+    /** Why the last parseIdeas() call returned null, shown to the admin. */
+    private static ?string $parseError = null;
 
     /** GET /api/v1/admin/content-ideas — the current 30-day list, ordered by day. */
     public static function index(): void
@@ -122,7 +128,7 @@ class ContentIdeasController
 
         $ideas = self::parseIdeas((string) $text, $built['postsByIndex']);
         if ($ideas === null) {
-            return ['ok' => false, 'error' => 'The AI response could not be parsed into a 30-day plan. Try generating again.', 'count' => 0, 'linkedin' => 0];
+            return ['ok' => false, 'error' => 'The AI response could not be turned into a 30-day plan: ' . (self::$parseError ?? 'unknown reason') . '. Try generating again.', 'count' => 0, 'linkedin' => 0];
         }
 
         $pdo->beginTransaction();
@@ -524,33 +530,50 @@ class ContentIdeasController
      */
     private static function parseIdeas(string $reply, array $postsByIndex): ?array
     {
+        self::$parseError = null;
+
+        // Models sometimes wrap the array in prose, fences, or an object
+        // ({"ideas": [...]}); take the outermost [...] rather than demanding
+        // the reply be nothing but the array.
         $stripped = trim((string) preg_replace('/^```(?:json)?\s*|```\s*$/m', '', $reply));
         $parsed = json_decode($stripped, true);
-        if (!is_array($parsed) || count($parsed) !== self::MAX_DAYS) {
-            error_log('ContentIdeasController: could not parse a ' . self::MAX_DAYS . '-item JSON array from '
-                . 'model output: ' . substr($stripped, 0, 800));
+        if (!is_array($parsed)) {
+            $open = strpos($stripped, '[');
+            $close = strrpos($stripped, ']');
+            if ($open !== false && $close !== false && $close > $open) {
+                $parsed = json_decode(substr($stripped, $open, $close - $open + 1), true);
+            }
+        }
+        if (is_array($parsed) && !array_is_list($parsed)) {
+            $parsed = array_values(array_filter($parsed, 'is_array'))[0] ?? null;
+        }
+        if (!is_array($parsed) || !array_is_list($parsed)) {
+            error_log('ContentIdeasController: could not parse a JSON array from model output: ' . substr($stripped, 0, 800));
+            self::$parseError = 'the reply was not a valid JSON list (it may have been cut off mid-answer)';
             return null;
         }
 
+        // One bad item used to throw away the whole batch. Now a malformed
+        // item, or a LinkedIn idea whose source_post_index is invalid or
+        // reused, is dropped on its own; the grounding guarantee still holds
+        // because nothing ungrounded is ever kept. Days are renumbered 1..N in
+        // the model's order afterward, so a duplicated or skipped day number
+        // can't sink the plan either.
         $ideas = [];
-        $seenDays = [];
         $usedPostIndices = [];
-        foreach ($parsed as $item) {
+        $dropped = 0;
+        foreach ($parsed as $position => $item) {
             if (!is_array($item)) {
-                return null;
+                $dropped++;
+                continue;
             }
-            $day = (int) ($item['day'] ?? 0);
-            $platform = (string) ($item['platform'] ?? '');
+            $platform = strtolower(str_replace(' ', '', trim((string) ($item['platform'] ?? ''))));
             $title = trim((string) ($item['title'] ?? ''));
             $description = trim((string) ($item['description'] ?? ''));
-            $grounded = $platform === 'linkedin' && !empty($item['grounded']);
-            if ($day < 1 || $day > self::MAX_DAYS || isset($seenDays[$day])
-                || !in_array($platform, self::PLATFORMS, true)
-                || $title === '' || $description === ''
-                || ($platform === 'linkedin' && !$grounded)
-            ) {
-                error_log('ContentIdeasController: rejected malformed or ungrounded idea item: ' . json_encode($item));
-                return null;
+            if (!in_array($platform, self::PLATFORMS, true) || $title === '' || $description === '') {
+                error_log('ContentIdeasController: dropped malformed idea item: ' . json_encode($item));
+                $dropped++;
+                continue;
             }
 
             $sourcePostedAt = null;
@@ -559,9 +582,10 @@ class ContentIdeasController
             if ($platform === 'linkedin') {
                 $sourceIndex = (int) ($item['source_post_index'] ?? 0);
                 if (!isset($postsByIndex[$sourceIndex]) || isset($usedPostIndices[$sourceIndex])) {
-                    error_log('ContentIdeasController: rejected LinkedIn idea with invalid/reused '
+                    error_log('ContentIdeasController: dropped LinkedIn idea with invalid/reused '
                         . 'source_post_index: ' . json_encode($item));
-                    return null;
+                    $dropped++;
+                    continue;
                 }
                 $usedPostIndices[$sourceIndex] = true;
                 $sourcePostedAt = $postsByIndex[$sourceIndex]['posted_at'];
@@ -569,26 +593,41 @@ class ContentIdeasController
                 $sourcePostUrl = $postsByIndex[$sourceIndex]['url'] ?? null;
             }
 
-            $seenDays[$day] = true;
             $ideas[] = [
-                'day' => $day,
+                'order' => [(int) ($item['day'] ?? 0) ?: PHP_INT_MAX, $position],
                 'platform' => $platform,
                 'title' => mb_substr($title, 0, 200),
                 'description' => mb_substr($description, 0, 1000),
-                'grounded' => $grounded,
+                'grounded' => $platform === 'linkedin',
                 'source_posted_at' => $sourcePostedAt,
                 'source_post_text' => $sourcePostText,
                 'source_post_url' => $sourcePostUrl,
             ];
         }
 
-        if (count($usedPostIndices) !== count($postsByIndex)) {
-            error_log('ContentIdeasController: expected every one of the ' . count($postsByIndex) . ' real post(s) '
-                . 'to be used exactly once, model used ' . count($usedPostIndices) . ' — rejecting batch.');
+        if (count($ideas) < self::MIN_IDEAS) {
+            self::$parseError = sprintf(
+                'only %d usable idea(s) came back (%d dropped as malformed or ungrounded), fewer than the %d needed',
+                count($ideas),
+                $dropped,
+                self::MIN_IDEAS
+            );
+            error_log('ContentIdeasController: ' . self::$parseError);
             return null;
         }
+        if (count($usedPostIndices) !== count($postsByIndex)) {
+            error_log('ContentIdeasController: ' . (count($postsByIndex) - count($usedPostIndices))
+                . ' real post(s) got no LinkedIn idea this batch; keeping the plan anyway.');
+        }
 
-        usort($ideas, static fn(array $a, array $b): int => $a['day'] <=> $b['day']);
+        usort($ideas, static fn(array $a, array $b): int => $a['order'] <=> $b['order']);
+        $ideas = array_slice($ideas, 0, self::MAX_DAYS);
+        foreach ($ideas as $i => &$idea) {
+            unset($idea['order']);
+            $idea = ['day' => $i + 1] + $idea;
+        }
+        unset($idea);
+
         return $ideas;
     }
 }
