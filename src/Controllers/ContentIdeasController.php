@@ -108,10 +108,14 @@ class ContentIdeasController
         // rather than let it complete. 100s gives ~45s/leg instead. Needs the
         // set_time_limit bump too, or the host's default max_execution_time
         // (often 30s on shared hosting) kills the request before that.
-        set_time_limit(110);
+        // Raised to 150s (~50s/leg) once YouTube/TikTok ideas started carrying
+        // a math cue and closing question: at 100s DeepSeek and Gemini both
+        // hit their 33s leg limit mid-answer and every fallback after them
+        // was left with only the 8s floor.
+        set_time_limit(160);
 
         $built = self::buildPrompt($pdo);
-        $text = AiText::generate($built['text'], self::systemInstruction(), 100);
+        $text = AiText::generate($built['text'], self::systemInstruction(), 150);
         if ($text === null) {
             return ['ok' => false, 'error' => 'Could not generate content ideas — ' . (AiText::lastError() ?? 'no AI provider answered.'), 'count' => 0, 'linkedin' => 0];
         }
@@ -314,18 +318,19 @@ class ContentIdeasController
             . "experience; the agency-vs-product dilemma and the traps founders fall into when a service business "
             . "tries to become a software company.\n"
             . "How to frame each one: prefer a concrete case (an actual project structure or an anonymized client "
-            . "scenario) over theory. Wherever money, time saved, or revenue impact comes up, say in the description "
-            . "what math should be put on screen (e.g. 'show hours per week x hourly cost'), but never state a figure "
-            . "or result as fact; the owner fills in the real numbers. Every description must END with the specific, "
-            . "polarizing either/or question the video closes on (e.g. 'Are you building your internal tools custom "
-            . "or paying for off-the-shelf SaaS, and which one is actually draining more of your budget?'), never a "
-            . "generic 'let me know what you think'.\n"
-            . "YouTube vs TikTok: a YouTube idea is the long-form version (a full teardown, a full build, a full "
-            . "breakdown with the math); its title is a searchable, curiosity-driven video title and the description "
-            . "is the angle plus the closing question. A TikTok idea is a fast, hook-first 15-45 second vertical "
-            . "video: the title is the first line spoken or shown on screen (a bold claim, a costly mistake, a "
-            . "before/after, a myth-bust), and the description is the short beat-by-beat angle plus the closing "
-            . "question, not a script. Never claim something is 'trending', never cite a real trend, sound, or "
+            . "scenario) over theory. Wherever money, time saved, or revenue impact comes up, name in a few words "
+            . "the math to put on screen (e.g. 'math: hours/week x hourly cost'), but never state a figure or result "
+            . "as fact; the owner fills in the real numbers. Every description must END with a short, specific, "
+            . "polarizing either/or question the video closes on (e.g. 'Custom internal tools or off-the-shelf SaaS: "
+            . "which drains more of your budget?'), never a generic 'let me know what you think'.\n"
+            . "KEEP IT COMPACT: the whole 30-day plan must come back in one fast reply, so every title stays under 12 "
+            . "words and every description stays under 35 words in total (angle, optional math cue, closing "
+            . "question). Never pad.\n"
+            . "YouTube vs TikTok: a YouTube idea is the long-form version (a full teardown, build, or breakdown with "
+            . "the math) with a searchable, curiosity-driven title. A TikTok idea is a fast, hook-first 15-45 second "
+            . "vertical video whose title is the first line spoken or shown on screen (a bold claim, a costly "
+            . "mistake, a before/after, a myth-bust) and whose description is the angle in quick beats, not a "
+            . "script. Never claim something is 'trending', never cite a real trend, sound, or "
             . "engagement number you don't actually have. TikTok ideas and YouTube ideas together fill every day "
             . "that isn't used by a grounded LinkedIn idea; split those remaining days between the two platforms in "
             . "a roughly even mix (never dedicate every non-LinkedIn day to just one of them).\n\n"
