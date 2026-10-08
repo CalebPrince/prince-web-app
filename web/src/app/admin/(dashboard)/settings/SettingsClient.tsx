@@ -34,6 +34,34 @@ type CatalogTemplate = {
   fields: Record<string, string>;
 };
 
+/** Lisa's WhatsApp sender name, as WhatsAppDisplayNameManager::status() reports it from Twilio. */
+type DisplayNameStatus = {
+  sender: string;
+  sender_status: string;
+  /** The name clients see right now. */
+  name: string;
+  /** The most recent change and Meta's verdict on it; empty when none was made. */
+  pending_name: string;
+  pending_status: string;
+  pending_status_date: string;
+  messaging_limit: string;
+  quality_rating: string;
+  suggested_name: string;
+  /** Only on a submit: Twilio's immediate answer (updating, no_change, pending_review). */
+  submission?: string;
+};
+
+/** Plain-language reading of Twilio's pending_display_name_status. */
+const DISPLAY_NAME_STATUS: Record<string, { label: string; tone: string; note: string }> = {
+  PENDING_REVIEW: { label: "in review", tone: "bg-bg-3 text-text-2", note: "Meta is reviewing it. Clients see the current name until it is approved." },
+  APPROVED: { label: "approved", tone: "bg-green-500/10 text-green-500", note: "Meta approved it. Twilio is applying it now, nothing to do." },
+  COMPLETED: { label: "live", tone: "bg-green-500/10 text-green-500", note: "Approved and applied. Clients see it as their phones refresh." },
+  DECLINED: { label: "declined", tone: "bg-red-500/10 text-red-400", note: "Meta declined it. Adjust the name so it clearly ties to the business and submit again." },
+  PIN_MISMATCH: { label: "not applied", tone: "bg-red-500/10 text-red-400", note: "Approved, but the number's 2FA PIN didn't match. Reset the PIN in WhatsApp Manager, then submit the same name again (no new review)." },
+  REGISTRATION_FAILED: { label: "not applied", tone: "bg-red-500/10 text-red-400", note: "Approved, but applying it failed. Submit the same name again to retry (no new review)." },
+  EXPIRED: { label: "expired", tone: "bg-red-500/10 text-red-400", note: "Approved, but not applied within Meta's 14-day window. Submit the same name again." },
+};
+
 type TemplateTally = { approved: number; pending: number; rejected: number; notCreated: number };
 
 /** Buckets template statuses for the tracking cards; anything Meta reports that isn't approved/rejected counts as pending. */
@@ -357,6 +385,11 @@ export default function SettingsClient({
   const [catalogMsg, setCatalogMsg] = useState<Record<string, { text: string; ok: boolean }>>({});
   const [catalogBusyKey, setCatalogBusyKey] = useState<string | null>(null);
 
+  const [displayName, setDisplayName] = useState<DisplayNameStatus | null>(null);
+  const [displayNameDraft, setDisplayNameDraft] = useState("");
+  const [displayNameBusy, setDisplayNameBusy] = useState(false);
+  const [displayNameMsg, setDisplayNameMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
   useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get("tab");
     if (requested && TABS.some((item) => item.value === requested)) {
@@ -389,6 +422,50 @@ export default function SettingsClient({
         setPlannedMarketing(data.planned_marketing ?? []);
       })
       .catch(() => {});
+
+  // Read from Twilio only when the Messaging tab is open: it's a live API call.
+  useEffect(() => {
+    if (tab === "messaging" && displayName === null) void refreshDisplayName(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  const refreshDisplayName = async (quiet = false) => {
+    setDisplayNameBusy(true);
+    if (!quiet) setDisplayNameMsg(null);
+    try {
+      const s = await adminApi.get<DisplayNameStatus>("/api/v1/admin/whatsapp-display-name");
+      setDisplayName(s);
+      setDisplayNameDraft((d) => d || s.pending_name || s.suggested_name);
+      if (!quiet) setDisplayNameMsg({ ok: true, text: "Status refreshed from Twilio." });
+    } catch (err) {
+      setDisplayNameMsg({ ok: false, text: err instanceof Error ? err.message : "Could not read the sender from Twilio." });
+    } finally {
+      setDisplayNameBusy(false);
+    }
+  };
+
+  const submitDisplayName = async () => {
+    const name = displayNameDraft.trim();
+    if (!name) return;
+    if (!window.confirm(`Submit "${name}" to Meta as the WhatsApp display name? Meta only allows a few name changes per 30 days.`)) return;
+    setDisplayNameBusy(true);
+    setDisplayNameMsg(null);
+    try {
+      const s = await adminApi.post<DisplayNameStatus>("/api/v1/admin/whatsapp-display-name", { name });
+      setDisplayName(s);
+      setDisplayNameMsg({
+        ok: true,
+        text:
+          s.submission === "no_change"
+            ? "That is already the live name. Nothing was sent to Meta."
+            : "Submitted to Meta for review. The current name stays until it is approved.",
+      });
+    } catch (err) {
+      setDisplayNameMsg({ ok: false, text: err instanceof Error ? err.message : "Twilio rejected the request." });
+    } finally {
+      setDisplayNameBusy(false);
+    }
+  };
 
   /** Shared by every row's Create & submit / Refresh status buttons. */
   const runCatalogAction = async (
@@ -919,6 +996,81 @@ export default function SettingsClient({
       {tab === "messaging" && (
         <div className="space-y-4">
           {groupCard("messaging", "WhatsApp & phone")}
+
+          <Card title="WhatsApp display name" bodyClassName="p-5 space-y-4">
+            <p className="text-sm text-text-2">
+              The name clients see at the top of their chat with Lisa. Twilio&apos;s console and Meta&apos;s WhatsApp
+              Manager won&apos;t edit it for this number, so it is submitted from here: Twilio sends it to Meta for review
+              and applies it once approved. Meta allows only a few changes per 30 days and requires the name to tie to
+              the business (punctuation like commas gets rejected).
+            </p>
+
+            {displayName && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-hairline p-3">
+                  <div className="text-xs text-text-3">Clients see now</div>
+                  <div className="font-medium text-text">{displayName.name || "(not reported)"}</div>
+                  <div className="text-xs text-text-3 mt-1">
+                    {displayName.sender.replace("whatsapp:", "")}
+                    {displayName.messaging_limit && <> · limit {displayName.messaging_limit}</>}
+                    {displayName.quality_rating && <> · quality {displayName.quality_rating.toLowerCase()}</>}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-hairline p-3">
+                  <div className="text-xs text-text-3">Latest change</div>
+                  {displayName.pending_name ? (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-text">{displayName.pending_name}</span>
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+                            DISPLAY_NAME_STATUS[displayName.pending_status]?.tone ?? "bg-bg-3 text-text-2"
+                          }`}
+                        >
+                          <Activity className="w-3 h-3" />
+                          {DISPLAY_NAME_STATUS[displayName.pending_status]?.label ?? (displayName.pending_status.toLowerCase() || "unknown")}
+                        </span>
+                      </div>
+                      <div className="text-xs text-text-3 mt-1">
+                        {DISPLAY_NAME_STATUS[displayName.pending_status]?.note}
+                        {displayName.pending_status_date && <> Updated {new Date(displayName.pending_status_date).toLocaleString()}.</>}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-text-2">None submitted yet.</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="min-w-[16rem] flex-1">
+                <Field label="New display name">
+                  <Input
+                    value={displayNameDraft}
+                    onChange={(e) => setDisplayNameDraft(e.target.value)}
+                    maxLength={255}
+                    placeholder="Lisa - Prince Caleb Support"
+                  />
+                </Field>
+              </div>
+              <Button
+                variant="outline"
+                onClick={submitDisplayName}
+                disabled={displayNameBusy || !displayName || !displayNameDraft.trim()}
+              >
+                <Send className="w-4 h-4" />
+                {displayNameBusy ? "Working…" : "Submit to Meta"}
+              </Button>
+              <Button variant="ghost" onClick={() => refreshDisplayName()} disabled={displayNameBusy}>
+                Refresh status
+              </Button>
+            </div>
+            {!displayName && !displayNameMsg && <p className="text-sm text-text-3">Reading the sender from Twilio…</p>}
+            {displayNameMsg?.text && (
+              <p className={`text-sm ${displayNameMsg.ok ? "text-green-500" : "text-red-400"}`}>{displayNameMsg.text}</p>
+            )}
+          </Card>
 
           <Card title="WhatsApp templates" bodyClassName="p-5 space-y-4">
             <p className="text-sm text-text-2">
