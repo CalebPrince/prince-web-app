@@ -357,7 +357,8 @@ final class LisaFollowups
             "Conversation so far:\n" . implode("\n", $turns) . "\n\nWrite the next WhatsApp message.",
             "You are {$assistant}, the assistant of Prince Caleb, who builds websites, apps and AI automations. The customer went quiet. "
             . "Write ONE short, warm follow-up message (under 280 characters) that picks up what they were discussing and asks one easy question or offers one clear next step. "
-            . "Reply in the same language the customer used. Plain text only, no markdown, no emojis, no prices, no pressure, no promises about timing. "
+            . "Reply in the same language the customer used. Plain text only, no markdown, no prices, no pressure, no promises about timing. "
+            . "Sound like a friendly person texting: one fitting emoji (such as 👋, 🙂 or 🙏) is fine if it feels natural, never more than one. "
             . "Do not say you are an AI unless asked, and do not repeat your earlier message word for word. Output only the message.",
             20,
             200

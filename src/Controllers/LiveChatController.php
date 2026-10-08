@@ -222,6 +222,19 @@ class LiveChatController
      *
      * @return array{reply: string, mode: string, provider: ?string, ready: bool, attachment: ?array{url:string,caption:string}}
      */
+    /**
+     * WhatsApp only: emoji the way a person texting would use them. The web
+     * widget, LiveAvatar and the voice agents share this brain but stay
+     * emoji-free (LiveAvatar and calls speak the reply aloud).
+     */
+    public const WHATSAPP_EMOJI_STYLE = "WHATSAPP STYLE: you are chatting on WhatsApp, so sound like a friendly person "
+        . "texting, not a form letter. Use an emoji where a person naturally would: a greeting or hello (👋 or 😊), "
+        . "saying thank you (🙏 or 😊), good news such as a confirmed booking or a sent invoice (✅ or 🎉), or a light, "
+        . "friendly moment (🙂). Use at most one or two in a message, many messages need none, and place them at the "
+        . "end of a sentence rather than in place of words. Mirror the customer: be a little warmer if they use emoji, "
+        . "keep it minimal if they write formally. Never use emoji in prices, invoice or payment details, dates and "
+        . "times, code, or when the customer is upset, complaining, or reporting a problem.";
+
     public static function generateReply(
         string $message,
         array $transcript,
@@ -316,7 +329,9 @@ class LiveChatController
         $onGroqFailedGeneration = fn (string $failedGeneration) => self::recoverGroqFailedToolGeneration($failedGeneration, $toolExecutor);
 
         $result = AiAgentEngine::run(
-            self::buildSystemPrompt($projects, $isOwner) . ($judgment['prompt_note'] !== null ? "\n\n" . $judgment['prompt_note'] : ''),
+            self::buildSystemPrompt($projects, $isOwner)
+                . (($handoffContext['channel'] ?? 'web') === 'whatsapp' ? "\n\n" . self::WHATSAPP_EMOJI_STYLE : '')
+                . ($judgment['prompt_note'] !== null ? "\n\n" . $judgment['prompt_note'] : ''),
             self::toolDeclarations($isOwner),
             $toolExecutor,
             $transcript,
