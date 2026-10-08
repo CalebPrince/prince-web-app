@@ -458,7 +458,7 @@ export default function SettingsClient({
         text:
           s.submission === "no_change"
             ? "That is already the live name. Nothing was sent to Meta."
-            : "Submitted to Meta for review. The current name stays until it is approved.",
+            : `Submitted to Meta for review (Twilio: ${s.submission ?? "not reported"}). The current name stays until it is approved.`,
       });
     } catch (err) {
       setDisplayNameMsg({ ok: false, text: err instanceof Error ? err.message : "Twilio rejected the request." });

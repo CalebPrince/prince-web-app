@@ -77,7 +77,7 @@ final class WhatsAppDisplayNameManager
 
         // Re-read so the card shows Twilio's own view of the pending change.
         $after = self::summarize(self::findSender());
-        $after['submission'] = $submission !== '' ? $submission : 'updating';
+        $after['submission'] = $submission !== '' ? $submission : 'not reported';
         return $after;
     }
 
@@ -120,9 +120,11 @@ final class WhatsAppDisplayNameManager
             'sender' => (string) ($sender['sender_id'] ?? ''),
             'sender_status' => (string) ($sender['status'] ?? ''),
             'name' => (string) ($profile['name'] ?? ''),
-            'pending_name' => (string) ($profile['pending_display_name'] ?? ''),
-            'pending_status' => (string) ($profile['pending_display_name_status'] ?? ''),
-            'pending_status_date' => (string) ($profile['pending_display_name_status_date'] ?? ''),
+            // Twilio's docs show these under profile in one place and on the
+            // sender itself in another, so accept either.
+            'pending_name' => (string) ($profile['pending_display_name'] ?? $sender['pending_display_name'] ?? ''),
+            'pending_status' => (string) ($profile['pending_display_name_status'] ?? $sender['pending_display_name_status'] ?? ''),
+            'pending_status_date' => (string) ($profile['pending_display_name_status_date'] ?? $sender['pending_display_name_status_date'] ?? ''),
             'messaging_limit' => (string) ($properties['messaging_limit'] ?? ''),
             'quality_rating' => (string) ($properties['quality_rating'] ?? ''),
             'suggested_name' => self::SUGGESTED_NAME,
