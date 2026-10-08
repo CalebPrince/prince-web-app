@@ -94,7 +94,10 @@ final class WhatsAppDisplayNameManager
             $page = self::request('GET', $url);
             foreach ($page['senders'] ?? [] as $sender) {
                 if ((preg_replace('/\D+/', '', (string) ($sender['sender_id'] ?? '')) ?? '') === $digits) {
-                    return $sender;
+                    // The list omits the pending_display_name* fields; only
+                    // fetching the sender itself reports a change in review.
+                    $sid = (string) ($sender['sid'] ?? '');
+                    return $sid !== '' ? self::request('GET', self::SENDERS_API . '/' . rawurlencode($sid)) : $sender;
                 }
             }
             $url = (string) ($page['meta']['next_page_url'] ?? '');
