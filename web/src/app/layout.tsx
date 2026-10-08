@@ -61,6 +61,11 @@ const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("theme");v
 // PageTransition, so nothing there would ever take it back off.
 const SPLASH_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0||p.indexOf("/client")===0)return;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(sessionStorage.getItem("pc-splash"))return;sessionStorage.setItem("pc-splash","1");document.documentElement.setAttribute("data-splash","on");}catch(e){}})();`;
 
+// Admin "Hide client info" (AdminPrivacySwitch): when it is on, the admin content starts blurred in the very first
+// frame and stays so until the switch has loaded the client names and blurred them, so a full page load never shows
+// client details for a moment.
+const PRIVACY_INIT_SCRIPT = `(function(){try{if(location.pathname.indexOf("/admin")!==0)return;if(localStorage.getItem("admin_privacy")==="on")document.documentElement.setAttribute("data-privacy","pending");}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -71,6 +76,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: SPLASH_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: PRIVACY_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-bg text-text antialiased">
         <ThemeSync />

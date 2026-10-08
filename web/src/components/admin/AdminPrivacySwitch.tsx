@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { adminApi } from "@/lib/api";
+import { adminApi, asList } from "@/lib/api";
 
 // "Hide client info": a recording mode for screen shares and walkthrough videos. When it is on, every email address,
 // phone number and client/contact/lead name on an admin page is blurred, along with whole table columns about clients
@@ -36,6 +36,9 @@ const KEEP = new Set(
 
 const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const PHONE = /(?:\+\d{1,3}[\s.-]?\(?\d{1,4}\)?|\b0\d{1,3}|\(\d{3}\))[\s.-]?\d{3}[\s.-]?\d{3,4}\b/g;
+// Web addresses identify a lead's business as surely as its name. The owner's own domain stays readable.
+const WEB = /\b(?:https?:\/\/\S+|www\.\S+|[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|co|io|dev|app|biz|info|me|gh|ng|ke|za|uk|us|ca|au|de|fr|es|in)(?:\.[a-z]{2})?(?:\/\S*)?)/gi;
+const OWN = /(^|\.|\/\/)princecaleb\.dev/i;
 // Table columns that are about a client as a whole.
 const COLUMN = /^(client|contact|customer|lead|business|company|name|email|e-mail|phone|whatsapp|visitor|attendee|recipient)\b/i;
 
@@ -62,6 +65,17 @@ async function loadNames(): Promise<RegExp | null> {
   const names = new Set<string>();
   const answers = await Promise.allSettled(SOURCES.map((p) => adminApi.get<unknown>(p)));
   for (const a of answers) if (a.status === "fulfilled") collect(a.value, names);
+  // Client projects and proposals are titled after the client ("Triple P Medical"), and agents name them in their
+  // write-ups. Only the record's own title counts: titles nested inside it (milestones) are ordinary words.
+  const titled = await Promise.allSettled(
+    ["/api/v1/admin/projects", "/api/v1/admin/proposals"].map((p) => adminApi.get<unknown>(p)),
+  );
+  for (const a of titled) {
+    if (a.status !== "fulfilled") continue;
+    for (const r of asList<{ title?: unknown }>(a.value)) {
+      if (typeof r?.title === "string") collect(r.title, names, "name");
+    }
+  }
   if (names.size === 0) return null;
   const parts = [...names].sort((a, b) => b.length - a.length).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   return new RegExp(`(?<![\\p{L}\\p{N}])(?:${parts.join("|")})(?![\\p{L}\\p{N}])`, "gu");
@@ -101,13 +115,14 @@ function highlightText(names: RegExp | null) {
   });
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node.nodeValue ?? "";
-    for (const re of names ? [EMAIL, PHONE, names] : [EMAIL, PHONE]) {
+    for (const re of names ? [EMAIL, PHONE, WEB, names] : [EMAIL, PHONE, WEB]) {
       re.lastIndex = 0;
       for (let m = re.exec(text); m; m = re.exec(text)) {
         if (!m[0]) {
           re.lastIndex++;
           continue;
         }
+        if (re === WEB && OWN.test(m[0])) continue;
         const r = document.createRange();
         r.setStart(node, m.index);
         r.setEnd(node, m.index + m[0].length);
@@ -125,15 +140,18 @@ function clearAll() {
 }
 
 export function AdminPrivacySwitch() {
-  const [on, setOn] = useState(false);
+  // null until the stored choice is read, so the first render does not undo the pre-paint blur set in the layout.
+  const [on, setOn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => {
+      let stored = false;
       try {
-        setOn(localStorage.getItem(KEY) === "on");
+        stored = localStorage.getItem(KEY) === "on";
       } catch {
         // storage blocked: starts off
       }
+      setOn(stored);
     }, 0);
     const onStorage = (e: StorageEvent) => {
       if (e.key === KEY || e.key === null) setOn(e.newValue === "on");
@@ -146,33 +164,47 @@ export function AdminPrivacySwitch() {
   }, []);
 
   useEffect(() => {
+    if (on === null) return;
     if (!on) {
       clearAll();
       return;
     }
-    document.documentElement.setAttribute(ATTR, "on");
+    // "pending" keeps the whole content blurred until the client names are known, so nothing shows for a moment.
+    document.documentElement.setAttribute(ATTR, "pending");
     let names: RegExp | null = null;
+    const paint = () => {
+      markColumns(document);
+      highlightText(names);
+    };
     // A short timer rather than a paint frame, so the blur keeps up in a tab that is not being drawn.
     let timer: ReturnType<typeof setTimeout> | undefined;
     const run = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        markColumns(document);
-        highlightText(names);
-      }, 40);
+      timer = setTimeout(paint, 40);
     };
-    run();
     let alive = true;
-    loadNames().then((re) => {
-      if (!alive) return;
-      names = re;
-      run();
-    });
+    const ready = (re: RegExp | null) => {
+      if (!alive || document.documentElement.getAttribute(ATTR) === "on") return;
+      names = re ?? names;
+      paint();
+      document.documentElement.setAttribute(ATTR, "on");
+    };
+    loadNames().then(
+      (re) => {
+        names = re;
+        ready(re);
+        run();
+      },
+      () => ready(null),
+    );
+    // If the name lists are slow, show the page anyway after a few seconds; emails, phones and columns are covered.
+    const fallback = setTimeout(() => ready(null), 6000);
     const observer = new MutationObserver(run);
     observer.observe(document.body, { subtree: true, childList: true, characterData: true });
     return () => {
       alive = false;
       clearTimeout(timer);
+      clearTimeout(fallback);
       observer.disconnect();
       clearAll();
     };
@@ -192,7 +224,7 @@ export function AdminPrivacySwitch() {
     <button
       type="button"
       role="switch"
-      aria-checked={on}
+      aria-checked={on === true}
       onClick={toggle}
       className={cn(
         "flex h-9 w-full items-center justify-between gap-2 rounded-[var(--control-radius)] border border-hairline px-3 text-xs font-semibold transition-colors",
