@@ -576,7 +576,7 @@ class Chief
     private static function write(array $snapshot): array
     {
         $text = AiText::generate(
-            "Today's snapshot:\n\n" . json_encode($snapshot, JSON_PRETTY_PRINT),
+            "Today's snapshot:\n\n" . json_encode(self::forPrompt($snapshot), JSON_PRETTY_PRINT),
             self::briefPrompt(),
             self::BRIEF_TIMEOUT_SECONDS
         );
@@ -756,6 +756,32 @@ class Chief
     private static function formatMoney(int $subunits, string $currency): string
     {
         return $currency . ' ' . number_format($subunits / 100, 2);
+    }
+
+    /**
+     * The snapshot as the writing model sees it. private_finance is stored in subunits (pesewas, cents), and a
+     * model reading 322118 writes "GHS 322,118" for what is GHS 3,221.18. So the money fields go to the model in
+     * major units, labelled; the stored snapshot and the deterministic fallback keep using subunits.
+     */
+    private static function forPrompt(array $snapshot): array
+    {
+        $f = $snapshot['private_finance'] ?? [];
+        if (!is_array($f) || $f === []) {
+            return $snapshot;
+        }
+        $major = static fn($v) => $v === null ? null : round(((int) $v) / 100, 2);
+        foreach (['monthly_expenses', 'monthly_budget', 'budget_remaining', 'confirmed_revenue', 'net_position',
+                  'previous_month_expenses', 'month_over_month_change'] as $k) {
+            if (array_key_exists($k, $f)) {
+                $f[$k] = $major($f[$k]);
+            }
+        }
+        if (isset($f['largest_service']['amount'])) {
+            $f['largest_service']['amount'] = $major($f['largest_service']['amount']);
+        }
+        $f['amounts_are'] = 'major currency units, e.g. 3221.18 means ' . ($f['currency'] ?? '') . ' 3,221.18';
+        $snapshot['private_finance'] = $f;
+        return $snapshot;
     }
 
     private static function plainHeadline(array $snapshot): string

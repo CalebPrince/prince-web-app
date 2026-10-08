@@ -302,7 +302,9 @@ export default function PipelineClient({
     try {
       const result = await adminApi.post<{ id: number }>("/api/v1/admin/pipeline", newForm);
       setNewOpen(false);
-      setLeads(asList<PipelineLead>(await adminApi.get("/api/v1/admin/pipeline")));
+      // the endpoint answers { leads, stages }; the list is under `leads`
+      const fresh = await adminApi.get<{ leads?: unknown }>("/api/v1/admin/pipeline");
+      setLeads(asList<PipelineLead>(fresh?.leads));
       setOpenId(result.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add the lead.");
