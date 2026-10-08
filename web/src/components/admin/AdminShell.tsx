@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { CodeAgentSidebar } from "@/components/admin/CodeAgentSidebar";
+import { AdminThemeSwitch } from "@/components/admin/AdminThemeSwitch";
 import { usePathname } from "next/navigation";
 
 export function AdminShell({ children, email }: { children: React.ReactNode; email: string }) {
@@ -75,9 +76,12 @@ export function AdminShell({ children, email }: { children: React.ReactNode; ema
 
         {inCodeWorkspace ? <CodeAgentSidebar onNavigate={closeSidebar} /> : <AdminSidebar onNavigate={closeSidebar} />}
 
-        <div className="flex-shrink-0 border-t border-hairline p-4">
+        <div className="flex-shrink-0 space-y-3 border-t border-hairline p-4">
+          <AdminThemeSwitch />
+          <div>
           <p className="text-xs text-text-2">Logged in as</p>
           <p className="truncate text-sm font-medium">{email}</p>
+          </div>
         </div>
       </aside>
 

@@ -4,6 +4,7 @@ import "./globals.css";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, OG_IMAGE } from "@/lib/site";
 
 import { MarketingUIWrapper } from "@/components/MarketingUIWrapper";
+import { ThemeSync } from "@/components/ThemeSync";
 
 // metadataBase is what turns every relative image and canonical below into an
 // absolute URL. Without it Next emits none of them, which is why this site
@@ -72,6 +73,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: SPLASH_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-bg text-text antialiased">
+        <ThemeSync />
         <MarketingUIWrapper>
           {children}
         </MarketingUIWrapper>

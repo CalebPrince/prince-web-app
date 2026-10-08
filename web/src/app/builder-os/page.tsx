@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Play, Radio, Cpu, ShieldCheck, Activity } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ArrowRight, Play, Activity } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionLabel } from "@/components/SectionLabel";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,18 +10,28 @@ import { IntakeCta } from "@/components/IntakeCta";
 import { cn } from "@/lib/utils";
 import { api, type BuilderOsAgent } from "@/lib/api";
 
-// Builder OS - the topology grid renders the real, currently-configured
+// Builder OS - the "Meet the team" grid renders the real, currently-configured
 // agent roster from /api/v1/builder-os/team (same registry the admin
-// command centre uses), not invented names - grouped into the three zones
-// below by well-known agent key. The workflow simulator's three scenarios
+// command centre uses), not invented names, as portrait cards in the design
+// of the AI workforce video. The workflow simulator's three scenarios
 // and their step copy are carried over verbatim from the live
 // public/js/builder-os.js implementation; only the presentation is new.
 
-const ZONE_DEFS: { code: string; icon: LucideIcon; title: string; keys: string[] | "rest" }[] = [
-  { code: "01 / Conversations", icon: Radio, title: "The front door", keys: ["lisa"] },
-  { code: "02 / Execution", icon: Cpu, title: "The specialists", keys: "rest" },
-  { code: "03 / Control", icon: ShieldCheck, title: "The command centre", keys: ["chief"] },
-];
+// "Meet the team": the card design from the AI workforce video. Each agent gets its real portrait
+// (public/images/agents/<name>.webp, named after the agent, not its registry key) and one signal colour, used only
+// on the portrait ring and the dot before its role so long text stays neutral (DESIGN.md).
+const PORTRAIT: Record<string, string> = {
+  lisa: "lisa", beacon: "joan", dossier: "sharon", nurturer: "jason", proposal: "ledger", arch: "arch",
+  allie: "allie", rocco: "rocco", reel: "reel", sage: "sage", ada: "ada", chief: "chief",
+};
+const SIGNAL: Record<string, string> = {
+  lisa: "#62FF98", beacon: "#FFB547", dossier: "#5EA2FF", nurturer: "#38D9E8", proposal: "#FF7F5C", arch: "#9BE15D",
+  allie: "#B98CFF", rocco: "#F2994A", reel: "#FF6FA5", sage: "#2DD4BF", ada: "#C4A7FF", chief: "#FFD76A",
+};
+
+function portraitSrc(a: BuilderOsAgent): string {
+  return `/images/agents/${PORTRAIT[a.key] ?? a.name.toLowerCase()}.webp`;
+}
 
 const TRAIL = [
   {
@@ -145,16 +154,6 @@ export default function BuilderOS() {
     return agents?.find((a) => a.key === key)?.name ?? key[0].toUpperCase() + key.slice(1);
   }
 
-  const zones = ZONE_DEFS.map((z) => ({
-    ...z,
-    agents:
-      agents === null
-        ? []
-        : z.keys === "rest"
-          ? agents.filter((a) => !ZONE_DEFS.some((zd) => zd.keys !== "rest" && zd.keys.includes(a.key)))
-          : agents.filter((a) => z.keys.includes(a.key)),
-  }));
-
   return (
     <>
       {/* ── HERO ────────────────────────────────────────────── */}
@@ -199,15 +198,18 @@ export default function BuilderOS() {
         </div>
       </section>
 
-      {/* ── TOPOLOGY ────────────────────────────────────────── */}
+      {/* ── MEET THE TEAM ───────────────────────────────────── */}
       <section id="topology" className="scroll-mt-24 border-y border-hairline bg-bg-2/40">
         <div className="mx-auto max-w-[1400px] px-6 py-24 md:px-10 md:py-32">
           <Reveal className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <SectionLabel index="01">Live topology</SectionLabel>
-              <h2 className="mt-6 max-w-3xl text-[clamp(2rem,5vw,4rem)] font-bold tracking-[-0.03em]">
-                The people are AI. The handoffs are real.
+              <p className="font-mono text-sm tracking-[0.14em] text-accent">{"// BUILDER OS"}</p>
+              <h2 className="mt-5 max-w-3xl text-[clamp(2.4rem,6vw,4.75rem)] font-extrabold leading-[0.98] tracking-[-0.04em]">
+                Meet the team
               </h2>
+              <p className="mt-4 max-w-2xl text-lg text-text-2">
+                The AI employees running the studio with Prince Caleb.
+              </p>
             </div>
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-sm text-accent">
               <Activity className="size-4" />
@@ -224,52 +226,57 @@ export default function BuilderOS() {
           )}
 
           {!failed && (
-            <div className="mt-16 grid gap-6 lg:grid-cols-3">
-              {zones.map(({ code, icon: Icon, title, agents: zoneAgents }, i) => (
-                <Reveal
-                  key={code}
-                  delay={i * 90}
-                  className="rounded-[var(--radius)] border border-hairline bg-bg/60 p-7 glass"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="label text-accent">{code}</span>
-                    <Icon className="size-5 text-muted" aria-hidden="true" />
-                  </div>
-                  <p className="mt-4 text-sm text-muted">{title}</p>
-                  <div className="mt-5 space-y-3">
-                    {agents === null &&
-                      Array.from({ length: i === 1 ? 3 : 1 }).map((_, j) => (
-                        <div
-                          key={j}
-                          className="h-[68px] animate-pulse rounded-[var(--radius)] border border-hairline bg-bg-2/60 glass"
-                        />
-                      ))}
-                    {zoneAgents.map((a) => (
-                      <Link
-                        key={a.key}
-                        href={agentHref(a)}
-                        className="flex items-center gap-4 rounded-[var(--radius)] border border-hairline bg-bg-2/60 p-4 transition-colors hover:border-accent/40 glass"
-                      >
-                        <span className="tilt-3d tilt-3d-tile grid size-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-semibold text-accent">
-                          {a.key.slice(0, 2).toUpperCase()}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-text">{a.name}</p>
-                          <p className="truncate text-sm text-text-2">{a.role}</p>
+            <div className="mt-14 grid gap-4 lg:grid-cols-2">
+              {agents === null &&
+                Array.from({ length: 6 }).map((_, j) => (
+                  <div key={j} className="h-[192px] animate-pulse rounded-[20px] border border-hairline bg-bg-2/60" />
+                ))}
+              {agents?.map((a, i) => {
+                const signal = SIGNAL[a.key] ?? "var(--accent)";
+                return (
+                  <Reveal key={a.key} delay={Math.min(i, 8) * 50}>
+                    <Link
+                      href={agentHref(a)}
+                      className="group flex h-full gap-4 rounded-[20px] border border-hairline bg-bg p-3.5 transition-colors duration-200 hover:border-hairline-strong sm:gap-5"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={portraitSrc(a)}
+                        alt={`${a.name}, ${a.role}`}
+                        loading="lazy"
+                        className="h-[148px] w-[118px] shrink-0 rounded-[14px] object-cover object-[center_22%] sm:h-[164px] sm:w-[132px]"
+                        style={{ boxShadow: `0 0 0 2px ${signal}` }}
+                      />
+                      <div className="flex min-w-0 flex-1 flex-col py-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[clamp(1.6rem,2.6vw,2.1rem)] font-extrabold leading-none tracking-[-0.02em] text-text">
+                            {a.name}
+                          </p>
+                          <span
+                            className={cn(
+                              "label shrink-0 rounded-full border px-2.5 py-1 text-[0.58rem]",
+                              isLiveStatus(a.status) ? "border-accent/40 text-accent" : "border-hairline text-muted",
+                            )}
+                          >
+                            {a.status}
+                          </span>
                         </div>
-                        <span
-                          className={cn(
-                            "label rounded-full border px-2.5 py-1 text-[0.58rem]",
-                            isLiveStatus(a.status) ? "border-accent/40 text-accent" : "border-hairline text-muted",
-                          )}
-                        >
-                          {a.status}
+                        <p className="mt-2 flex items-center gap-2 text-[0.95rem] font-semibold text-text">
+                          <span className="size-2 shrink-0 rounded-full" style={{ background: signal }} aria-hidden="true" />
+                          {a.role}
+                        </p>
+                        {a.description && (
+                          <p className="mt-2.5 line-clamp-3 text-[0.95rem] leading-relaxed text-text-2">{a.description}</p>
+                        )}
+                        <span className="mt-auto inline-flex items-center gap-1.5 pt-3 text-sm font-semibold text-text-2 transition-colors group-hover:text-text">
+                          Meet {a.name}
+                          <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                         </span>
-                      </Link>
-                    ))}
-                  </div>
-                </Reveal>
-              ))}
+                      </div>
+                    </Link>
+                  </Reveal>
+                );
+              })}
             </div>
           )}
           <Reveal className="mt-8">

@@ -296,6 +296,8 @@ export type BuilderOsAgent = {
   role: string;
   status: string;
   capabilities: string[];
+  /** One- or two-sentence public description for the team grid (absent on older API deploys). */
+  description?: string;
   url?: string;
 };
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, Sun, Moon, Sunset, Search, Lock, CircleUserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { readTheme, setTheme, subscribeTheme, type Theme } from "@/lib/theme";
 
 // Small utility cluster glued next to the logo - ported from the PHP
 // pages' .utility-dock (public/js/utility-dock.js + theme.js): a trigger
@@ -21,22 +22,19 @@ const THEMES = [
   { id: "dusk", label: "Dusk", icon: Sunset },
 ] as const;
 
-type Theme = (typeof THEMES)[number]["id"];
-
-function readTheme(): Theme {
-  const stamped = document.documentElement.getAttribute("data-theme");
-  if (stamped === "light" || stamped === "dusk") return stamped;
-  return "dark";
-}
-
 export function HeaderUtilityDock() {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setCurrent] = useState<Theme>("dark");
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setTheme(readTheme()), 0);
-    return () => clearTimeout(t);
+    const t = setTimeout(() => setCurrent(readTheme()), 0);
+    // follows a switch made in the admin sidebar or in another tab
+    const off = subscribeTheme(setCurrent);
+    return () => {
+      clearTimeout(t);
+      off();
+    };
   }, []);
 
   useEffect(() => {
@@ -56,10 +54,7 @@ export function HeaderUtilityDock() {
   }, [open]);
 
   function applyTheme(next: Theme) {
-    if (next === "dark") document.documentElement.removeAttribute("data-theme");
-    else document.documentElement.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
-    setTheme(next);
+    setTheme(next); // shared helper: this tab, every other open tab, and the admin backend
   }
 
   return (
