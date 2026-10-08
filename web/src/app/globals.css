@@ -1904,3 +1904,26 @@ html[data-splash] .logo-anim .logo-word {
     opacity: 0;
   }
 }
+
+/* Admin "Hide client info" (AdminPrivacySwitch): blurs client details for screen recordings.
+   Text matches are painted through the Custom Highlight API; whole cells and fields through attributes. */
+::highlight(pii) {
+  color: transparent;
+  text-shadow: 0 0 9px var(--text);
+}
+html[data-privacy="on"] [data-pii],
+html[data-privacy="on"] main input[type="email"],
+html[data-privacy="on"] main input[type="tel"],
+html[data-privacy="on"] main input[name*="name" i],
+html[data-privacy="on"] main input[name*="email" i],
+html[data-privacy="on"] main input[name*="phone" i],
+html[data-privacy="on"] main input[autocomplete="name"],
+html[data-privacy="on"] main input[autocomplete="email"],
+html[data-privacy="on"] main input[autocomplete="tel"],
+html[data-privacy="on"] [role="dialog"] input[type="email"],
+html[data-privacy="on"] [role="dialog"] input[type="tel"],
+html[data-privacy="on"] [role="dialog"] input[name*="name" i],
+html[data-privacy="on"] [role="dialog"] input[name*="email" i],
+html[data-privacy="on"] [role="dialog"] input[name*="phone" i] {
+  filter: blur(6px);
+}
