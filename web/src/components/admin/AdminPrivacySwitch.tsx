@@ -42,7 +42,7 @@ const PHONE = /(?:\+\d{1,3}[\s.-]?\(?\d{1,4}\)?|\b0\d{1,3}|\(\d{3}\))[\s.-]?\d{3
 // Web addresses identify a lead's business as surely as its name. The owner's own domain stays readable.
 const WEB = /\b(?:https?:\/\/\S+|www\.\S+|[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|co|io|dev|app|biz|info|me|gh|ng|ke|za|uk|us|ca|au|de|fr|es|in)(?:\.[a-z]{2})?(?:\/\S*)?)/gi;
 // Money: deal values and the owner's own finances (Chief's brief has a finance paragraph) are not for a recording.
-const MONEY = /(?:GHS|GH₵|USD|US\$|\$|€|£)\s?-?\d[\d,]*(?:\.\d+)?/g;
+const MONEY = /(?:GHS|GH₵|USD|US\$|\$|€|£)\s?-?\d[\d,]*(?:\.\d+)?|-?\d[\d,]*(?:\.\d+)?\s?(?:GHS|GH₵|USD|cedis)\b/g;
 const OWN = /(^|\.|\/\/)princecaleb\.dev/i;
 // Table columns that are about a client as a whole.
 const COLUMN = /^(client|contact|customer|lead|business|company|name|email|e-mail|phone|whatsapp|visitor|attendee|recipient)\b/i;
