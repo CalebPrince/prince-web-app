@@ -64,7 +64,7 @@ const SPLASH_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf
 // Admin "Hide client info" (AdminPrivacySwitch): when it is on, the admin content starts blurred in the very first
 // frame and stays so until the switch has loaded the client names and blurred them, so a full page load never shows
 // client details for a moment.
-const PRIVACY_INIT_SCRIPT = `(function(){try{if(location.pathname.indexOf("/admin")!==0)return;if(localStorage.getItem("admin_privacy")==="on")document.documentElement.setAttribute("data-privacy","pending");}catch(e){}})();`;
+const PRIVACY_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf("/admin")!==0||p.indexOf("/admin/login")===0)return;if(localStorage.getItem("admin_privacy")==="on")document.documentElement.setAttribute("data-privacy","pending");}catch(e){}})();`;
 
 export default function RootLayout({
   children,
