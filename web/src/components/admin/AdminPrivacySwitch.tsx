@@ -12,6 +12,9 @@ import { adminApi, asList } from "@/lib/api";
 // The choice lives in this browser only.
 
 const KEY = "admin_privacy";
+// The client lists take seconds to load (thousands of leads), so the built name pattern is kept for the browser
+// session: a later full page load can blur names at once, then refreshes the list in the background.
+const NAMES_CACHE = "admin_privacy_names";
 const ATTR = "data-privacy";
 
 // Lists whose records belong to clients. Every name-like field in their answers joins the blur list.
@@ -80,7 +83,22 @@ async function loadNames(): Promise<RegExp | null> {
   }
   if (names.size === 0) return null;
   const parts = [...names].sort((a, b) => b.length - a.length).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return new RegExp(`(?<![\\p{L}\\p{N}])(?:${parts.join("|")})(?![\\p{L}\\p{N}])`, "gu");
+  const source = `(?<![\\p{L}\\p{N}])(?:${parts.join("|")})(?![\\p{L}\\p{N}])`;
+  try {
+    sessionStorage.setItem(NAMES_CACHE, source);
+  } catch {
+    // too large or blocked: the next load fetches again
+  }
+  return new RegExp(source, "gu");
+}
+
+function cachedNames(): RegExp | null {
+  try {
+    const source = sessionStorage.getItem(NAMES_CACHE);
+    return source ? new RegExp(source, "gu") : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Marks every table cell under a client column so CSS can blur the whole cell. */
@@ -136,6 +154,11 @@ function highlightText(names: RegExp | null) {
 }
 
 function clearAll() {
+  try {
+    sessionStorage.removeItem(NAMES_CACHE);
+  } catch {
+    // blocked: nothing cached
+  }
   (CSS as unknown as { highlights?: Map<string, unknown> }).highlights?.delete("pii");
   document.documentElement.removeAttribute(ATTR);
   for (const el of document.querySelectorAll("[data-pii]")) el.removeAttribute("data-pii");
@@ -173,7 +196,7 @@ export function AdminPrivacySwitch() {
     }
     // "pending" keeps the whole content blurred until the client names are known, so nothing shows for a moment.
     document.documentElement.setAttribute(ATTR, "pending");
-    let names: RegExp | null = null;
+    let names: RegExp | null = cachedNames();
     const paint = () => {
       markColumns(document);
       highlightText(names);
@@ -191,16 +214,17 @@ export function AdminPrivacySwitch() {
       paint();
       document.documentElement.setAttribute(ATTR, "on");
     };
+    if (names) ready(names);
     loadNames().then(
       (re) => {
-        names = re;
-        ready(re);
+        names = re ?? names;
+        ready(names);
         run();
       },
       () => ready(null),
     );
-    // If the name lists are slow, show the page anyway after a few seconds; emails, phones and columns are covered.
-    const fallback = setTimeout(() => ready(null), 6000);
+    // Only if the name lists never arrive is the page shown without them (emails, phones, columns stay covered).
+    const fallback = setTimeout(() => ready(null), 30000);
     const observer = new MutationObserver(run);
     observer.observe(document.body, { subtree: true, childList: true, characterData: true });
     return () => {
