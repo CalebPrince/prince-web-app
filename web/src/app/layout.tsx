@@ -66,6 +66,13 @@ const SPLASH_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf
 // client details for a moment.
 const PRIVACY_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf("/admin")!==0||p.indexOf("/admin/login")===0)return;if(localStorage.getItem("admin_privacy")==="on")document.documentElement.setAttribute("data-privacy","pending");}catch(e){}})();`;
 
+// Microsoft Clarity (heatmaps and session recordings), project yvq2koly0a.
+// The path guard keeps it off the admin and client apps: a session recording
+// there would send client names and invoices to a third party. Its origins
+// are allow-listed in the CSP in public/.htaccess, without which the tag is
+// blocked outright.
+const CLARITY_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0||p.indexOf("/client")===0)return;}catch(e){}(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","yvq2koly0a");})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -77,6 +84,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: SPLASH_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: PRIVACY_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: CLARITY_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-bg text-text antialiased">
         <ThemeSync />
