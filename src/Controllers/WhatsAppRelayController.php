@@ -11,7 +11,8 @@ use App\Support\WhatsAppNotifier;
 
 /**
  * Sends a WhatsApp alert for one of Prince's own client apps (first user:
- * Church Power Tracker) through this site's configured WhatsApp provider, so
+ * Church Power Tracker, now the LCA Accra church management system with its
+ * member messages and reminders) through this site's configured WhatsApp provider, so
  * the provider credentials and the approved owner-alert template stay in one
  * place and a provider switch here covers every app.
  *
@@ -21,14 +22,18 @@ use App\Support\WhatsAppNotifier;
  * integration events feed and vice versa.
  *
  * Because a leaked key would let anyone message strangers from the business
- * number, sends are capped per rolling 24 hours: DAILY_CAP messages in total,
- * to at most RECIPIENT_CAP distinct numbers. Every attempt is logged in
- * whatsapp_relay_log.
+ * number, sends are capped per rolling 24 hours: a total number of messages,
+ * to at most a number of distinct recipients. Both caps are set in Admin ->
+ * Settings -> Integrations (whatsapp_relay_daily_cap, whatsapp_relay_recipient_cap)
+ * and default to DEFAULT_DAILY_CAP / DEFAULT_RECIPIENT_CAP, sized for a church
+ * messaging its members. Every attempt is logged in whatsapp_relay_log.
  */
 class WhatsAppRelayController
 {
-    private const DAILY_CAP = 40;
-    private const RECIPIENT_CAP = 5;
+    private const DEFAULT_DAILY_CAP = 1000;
+    private const DEFAULT_RECIPIENT_CAP = 300;
+    /** Upper bound on either saved cap, so a typo cannot remove the protection. */
+    private const MAX_CAP = 10000;
 
     /** POST /api/v1/relay/whatsapp-alert  {to, source, title, details} */
     public static function send(): void
@@ -62,7 +67,7 @@ class WhatsAppRelayController
         $since = gmdate('Y-m-d H:i:s', time() - 86400);
         $count = $pdo->prepare('SELECT COUNT(*) FROM whatsapp_relay_log WHERE created_at > ?');
         $count->execute([$since]);
-        if ((int) $count->fetchColumn() >= self::DAILY_CAP) {
+        if ((int) $count->fetchColumn() >= self::cap('whatsapp_relay_daily_cap', self::DEFAULT_DAILY_CAP)) {
             Response::error('Daily WhatsApp relay limit reached. Try again later.', 429);
         }
         $known = $pdo->prepare('SELECT COUNT(*) FROM whatsapp_relay_log WHERE created_at > ? AND recipient = ?');
@@ -70,7 +75,7 @@ class WhatsAppRelayController
         if ((int) $known->fetchColumn() === 0) {
             $distinct = $pdo->prepare('SELECT COUNT(DISTINCT recipient) FROM whatsapp_relay_log WHERE created_at > ?');
             $distinct->execute([$since]);
-            if ((int) $distinct->fetchColumn() >= self::RECIPIENT_CAP) {
+            if ((int) $distinct->fetchColumn() >= self::cap('whatsapp_relay_recipient_cap', self::DEFAULT_RECIPIENT_CAP)) {
                 Response::error('Too many different recipients in 24 hours.', 429);
             }
         }
@@ -93,6 +98,16 @@ class WhatsAppRelayController
             Response::json(['ok' => false, 'error' => 'The WhatsApp provider did not accept the message. Check the provider settings and logs.'], 502);
         }
         Response::json(['ok' => true, 'provider' => WhatsAppNotifier::provider()]);
+    }
+
+    /** A cap saved in admin settings, or the default when blank or not a positive whole number. */
+    private static function cap(string $setting, int $default): int
+    {
+        $saved = trim((string) Settings::get($setting));
+        if ($saved === '' || !ctype_digit($saved) || (int) $saved < 1) {
+            return $default;
+        }
+        return min((int) $saved, self::MAX_CAP);
     }
 
     /** Created on first use, so the relay needs no separate migration step. */
