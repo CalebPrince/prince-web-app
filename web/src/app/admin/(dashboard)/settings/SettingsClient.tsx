@@ -168,6 +168,7 @@ const GROUPS: Record<Exclude<Tab, "account" | "email">, string[]> = {
     "typesafe_score_threshold", "typesafe_competitor_cutoff",
     "typesafe_cost_per_call_usd", "beacon_full_call_cost_usd", "pagespeed_api_key", "dataforseo_login",
     "dataforseo_password", "slack_webhook_url", "integration_api_key", "whatsapp_relay_api_key",
+    "whatsapp_relay_daily_cap", "whatsapp_relay_recipient_cap",
     "notification_email", "google_client_id", "composio_api_key",
     "google_places_api_key", "google_place_id",
     "composio_google_calendar_auth_config_id", "composio_gmail_auth_config_id",
@@ -291,6 +292,8 @@ const FIELD_HINTS: Record<string, string> = {
   lisa_quiet_start: "Nothing is sent to customers, and hot-lead pings wait, from this time (24 hour, e.g. 21:00). Uses the chat timezone.",
   lisa_quiet_end: "Quiet hours end at this time (e.g. 08:00).",
   lisa_owner_alert_daily_cap: "Most WhatsApp alerts to you per 24 hours from Lisa's decisions. Default 8.",
+  whatsapp_relay_daily_cap: "Most WhatsApp messages the relay sends for your client apps (e.g. the LCA Accra church system) per 24 hours. Default 1000, highest 10000. Each message is billed by the WhatsApp provider.",
+  whatsapp_relay_recipient_cap: "Most different phone numbers the relay messages per 24 hours. Default 300, highest 10000. Keeps a leaked relay key from messaging strangers in bulk.
   lisa_quote_mode: "Prices from your own Pricing page. Shadow records what Lisa would quote and tells you, but Lisa says nothing new. Live lets Lisa share the figure. Needs Lisa decisions not switched off.",
   lisa_quote_summary_after_hours: "Hours a conversation must be quiet before you get one summary of the quote. Default 2.",
   quote_max_reduction_percent: "The most Lisa may take off your listed price for a smaller project, in percent. Leave blank or 0 and she never reduces.",
