@@ -293,7 +293,7 @@ const FIELD_HINTS: Record<string, string> = {
   lisa_quiet_end: "Quiet hours end at this time (e.g. 08:00).",
   lisa_owner_alert_daily_cap: "Most WhatsApp alerts to you per 24 hours from Lisa's decisions. Default 8.",
   whatsapp_relay_daily_cap: "Most WhatsApp messages the relay sends for your client apps (e.g. the LCA Accra church system) per 24 hours. Default 1000, highest 10000. Each message is billed by the WhatsApp provider.",
-  whatsapp_relay_recipient_cap: "Most different phone numbers the relay messages per 24 hours. Default 300, highest 10000. Keeps a leaked relay key from messaging strangers in bulk.
+  whatsapp_relay_recipient_cap: "Most different phone numbers the relay messages per 24 hours. Default 300, highest 10000. Keeps a leaked relay key from messaging strangers in bulk.",
   lisa_quote_mode: "Prices from your own Pricing page. Shadow records what Lisa would quote and tells you, but Lisa says nothing new. Live lets Lisa share the figure. Needs Lisa decisions not switched off.",
   lisa_quote_summary_after_hours: "Hours a conversation must be quiet before you get one summary of the quote. Default 2.",
   quote_max_reduction_percent: "The most Lisa may take off your listed price for a smaller project, in percent. Leave blank or 0 and she never reduces.",
