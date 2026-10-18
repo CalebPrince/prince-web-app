@@ -7,6 +7,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS: { label: string; to: string }[] = [
+  { label: "VidKre8 video studio", to: "/vidkre8" },
   { label: "Website design", to: "/website-design" },
   { label: "Working together", to: "/working-together" },
   { label: "Services", to: "/services" },
