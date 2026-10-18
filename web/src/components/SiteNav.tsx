@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const NAV: { label: string; to: string; note: string }[] = [
+  { label: "VidKre8", to: "/vidkre8", note: "Video, ads & motion studio" },
   { label: "Services", to: "/services", note: "Websites, apps, AI & automation" },
   { label: "Website design", to: "/website-design", note: "Design, redesign & development" },
   { label: "Selected work", to: "/work", note: "Projects and case studies" },
