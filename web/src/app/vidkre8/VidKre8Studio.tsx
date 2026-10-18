@@ -114,7 +114,6 @@ export default function VidKre8Studio() {
                   </div>
                 ))}
                 <div className="vk-frame-corners" aria-hidden="true"><span /><span /><span /><span /></div>
-                <div className="vk-frame-topline" aria-hidden="true"><span>VK / CREATIVE STUDIO</span><span>{String(selected + 1).padStart(2, "0")} / 03</span></div>
                 <div className="vk-reel-controls">
                   <button type="button" className="vk-play" aria-label={playing ? "Pause motion preview" : "Play motion preview"} aria-pressed={playing} onClick={() => setPlaying(!playing)}>{playing ? <Pause size={17} aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}</button>
                   <div className="vk-preview-label"><strong>Motion preview</strong><span>Project stills / studio motion</span></div>
@@ -123,7 +122,6 @@ export default function VidKre8Studio() {
                 </div>
               </div>
               <div className="vk-reel-bottom"><span>IDEA → STORY → MOTION</span><span>Sound. Timing. Feeling.</span></div>
-              <div className="vk-orbit" aria-hidden="true">FRAME<br /><b>BY FRAME</b><span>↗</span></div>
             </div>
           </div>
         </section>

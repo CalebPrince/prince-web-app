@@ -34,3 +34,19 @@ jobs:
         run: npx eslint src/app/vidkre8/page.tsx src/app/vidkre8/VidKre8Studio.tsx src/components/MarketingUIWrapper.tsx
       - run: npm run build
         working-directory: web
+
+      - name: Install layout browser
+        working-directory: web
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Check VidKre8 layout and interactions
+        working-directory: web
+        run: node scripts/check-vidkre8-layout.mjs
+      - name: Upload VidKre8 layout screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vidkre8-layout
+          path: web/artifacts/vidkre8/
+          if-no-files-found: ignore
