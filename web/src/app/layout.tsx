@@ -60,7 +60,7 @@ const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem("theme");v
 // Once a session only, and never under reduced motion. The path guard matters
 // — data-splash locks scrolling, and the admin and client apps do not mount
 // PageTransition, so nothing there would ever take it back off.
-const SPLASH_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0||p.indexOf("/client")===0)return;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(sessionStorage.getItem("pc-splash"))return;sessionStorage.setItem("pc-splash","1");document.documentElement.setAttribute("data-splash","on");}catch(e){}})();`;
+const SPLASH_INIT_SCRIPT = `(function(){try{var p=location.pathname;if(p.indexOf("/admin")===0||p.indexOf("/client")===0||p==="/vidkre8"||p.indexOf("/vidkre8/")===0)return;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(sessionStorage.getItem("pc-splash"))return;sessionStorage.setItem("pc-splash","1");document.documentElement.setAttribute("data-splash","on");}catch(e){}})();`;
 
 // Admin "Hide client info" (AdminPrivacySwitch): when it is on, the admin content starts blurred in the very first
 // frame and stays so until the switch has loaded the client names and blurred them, so a full page load never shows
