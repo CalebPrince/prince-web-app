@@ -167,7 +167,7 @@
 .vk-video-filters button:hover { border-color: var(--vk-green); }
 .vk-video-filters button[aria-pressed="true"] { color: #0c1a11; background: var(--vk-green); border-color: var(--vk-green); }
 .vk-cinema { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); border: 1px solid var(--vk-line); border-radius: 6px; overflow: hidden; background: #111d16; scroll-margin-top: 24px; }
-.vk-cinema-screen { position: relative; background: #000; aspect-ratio: 16/10; min-height: 400px; min-width: 0; }
+.vk-cinema-screen { position: relative; background: #000; width: 100%; max-width: 100%; aspect-ratio: 16/10; min-height: 0; min-width: 0; }
 .vk-cinema-screen video { display: block; width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; background: #000; }
 .vk-film-info { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: 20px; padding: 32px; }
 .vk-film-info h3 { font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -.035em; }
@@ -206,6 +206,7 @@
 .vk-player-cover > .vk-thumbnail { width: 100%; height: 100%; aspect-ratio: auto; padding: 30px; grid-template-rows: auto minmax(70px,1fr) auto auto; gap: 18px; }
 .vk-player-cover > .vk-thumbnail .vk-thumbnail-title { font-size: clamp(30px,3.3vw,48px); }
 @media (max-width: 1100px) {
+  .vk-cinema { grid-template-columns: minmax(0,1fr); }
   .vk-project-grid, .vk-services-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .vk-hero-grid { gap: 32px; }.vk-hero h1 { font-size: 72px; }
   .vk-formats, .vk-brief-grid { gap: 40px; }
