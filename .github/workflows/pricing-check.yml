@@ -1,4 +1,4 @@
-name: Validate service pricing
+name: Validate website changes
 
 on:
   pull_request:
@@ -29,5 +29,8 @@ jobs:
       - name: Lint pricing files
         working-directory: web
         run: npx eslint src/lib/service-pricing.ts src/app/pricing/page.tsx src/app/pricing/layout.tsx 'src/app/admin/(dashboard)/pricing/PricingClient.tsx'
+      - name: Lint VidKre8 page
+        working-directory: web
+        run: npx eslint src/app/vidkre8/page.tsx src/app/vidkre8/VidKre8Studio.tsx src/components/MarketingUIWrapper.tsx
       - run: npm run build
         working-directory: web
