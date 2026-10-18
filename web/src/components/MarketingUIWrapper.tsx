@@ -11,6 +11,10 @@ import { QuarterlyIntakeProvider } from "@/components/QuarterlyIntakeProvider";
 
 export function MarketingUIWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  // VidKre8 is a distinct studio landing page with its own navigation and footer.
+  if (pathname === "/vidkre8" || pathname?.startsWith("/vidkre8/")) {
+    return <>{children}</>;
+  }
   
   // Hide the marketing navigation, footer, and chat widgets on admin and client routes
   if (pathname?.startsWith("/admin") || pathname?.startsWith("/client")) {
