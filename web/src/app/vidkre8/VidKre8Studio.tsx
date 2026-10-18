@@ -1,24 +1,21 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Check, Play } from "lucide-react";
 import { api } from "@/lib/api";
 
-const PROJECTS = [
-  { name: "Think of Fashion", category: "Fashion / Brand film", image: "fashion", headline: "Wear your\nown story.", detail: "A beat-led fashion film with kinetic type, fast transitions and a collection of the brand’s own looks.", duration: "30 sec", shape: "9:16", color: "fashion" },
-  { name: "BuineePay", category: "Fintech / Product commercial", image: "payment", headline: "Everyday life.\nOne easy pay.", detail: "A fintech commercial built around everyday moments, notification cards, voice-led storytelling and a clear product reveal.", duration: "36 sec", shape: "9:16", color: "payment" },
-  { name: "The Long Table", category: "Podcast / Season trailer", image: "podcast", headline: "Good stories.\nGreat company.", detail: "A podcast season trailer with an audio-player visual, waveform-led motion, captions and a platform reveal.", duration: "32.6 sec", shape: "9:16 + 16:9", color: "podcast" },
-] as const;
+import VideoShowcase, { VideoHero } from "./VideoShowcase";
 
 const SERVICES = [
-  { no: "01", title: "Ads that get to the point.", category: "Brand & social ads", body: "A sharp hook, a clear offer and a reason to act. Short-form ads for launches, campaigns and everyday business.", tags: "Reels / TikTok / Shorts" },
-  { no: "02", title: "Show what makes it work.", category: "Product & app videos", body: "Turn your product, website or app into a story people can follow, with screen captures, device frames and motion.", tags: "Demos / Launch films / Walkthroughs" },
-  { no: "03", title: "Make the complex click.", category: "Explainers & motion graphics", body: "Scripts, animated type and clear visual sequences that make your idea easier to understand and remember.", tags: "Explainers / Kinetic type / Brand motion" },
-  { no: "04", title: "Give your voice a visual.", category: "Creator & talking-head content", body: "Bring a speaker’s story into focus with purposeful cuts, caption treatments and graphics that support the message.", tags: "Founder stories / Educational clips" },
-  { no: "05", title: "Let the sound lead.", category: "Music & podcast promos", body: "Beat-led edits, lyric animation and podcast trailers that put the audio at the centre of the visual story.", tags: "Lyric videos / Trailers / Promos" },
-  { no: "06", title: "One story. Every screen.", category: "Captions & platform versions", body: "Readable captions and carefully framed versions for vertical, landscape, square and feed placements.", tags: "9:16 / 16:9 / 1:1 / 4:5" },
+  { no: "01", title: "Keep the feeling.", category: "Wedding films & highlights", body: "Cinematic highlights and thoughtful social edits from the wedding footage you provide. Shaped around the moments that matter to you.", tags: "Highlights / Memories / Social cuts" },
+  { no: "02", title: "Ads that get to the point.", category: "Brand & social ads", body: "A sharp hook, a clear offer and a reason to act. Short-form ads for launches, campaigns and everyday business.", tags: "Reels / TikTok / Shorts" },
+  { no: "03", title: "Show what makes it work.", category: "Product & app videos", body: "Turn your product, website or app into a story people can follow, with screen captures, device frames and motion.", tags: "Demos / Launch films / Walkthroughs" },
+  { no: "04", title: "Make the complex click.", category: "Explainers & motion graphics", body: "Scripts, animated type and clear visual sequences that make your idea easier to understand and remember.", tags: "Explainers / Kinetic type / Brand motion" },
+  { no: "05", title: "Give your voice a visual.", category: "Creator & talking-head content", body: "Bring a speaker’s story into focus with purposeful cuts, caption treatments and graphics that support the message.", tags: "Founder stories / Educational clips" },
+  { no: "06", title: "Let the sound lead.", category: "Music & podcast promos", body: "Beat-led edits, lyric animation and podcast trailers that put the audio at the centre of the visual story.", tags: "Lyric videos / Trailers / Promos" },
+  { no: "07", title: "One story. Every screen.", category: "Captions & platform versions", body: "Readable captions and carefully framed versions for vertical, landscape, square and feed placements.", tags: "9:16 / 16:9 / 1:1 / 4:5" },
 ] as const;
 
 const STEPS = [
@@ -29,25 +26,10 @@ const STEPS = [
 ];
 
 export default function VidKre8Studio() {
-  const [selected, setSelected] = useState(0);
-  const [playing, setPlaying] = useState(false);
   const [service, setService] = useState<string>(SERVICES[0].category);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!playing) return;
-    const timer = window.setInterval(() => {
-      if (!document.hidden) setSelected((index) => (index + 1) % PROJECTS.length);
-    }, 4500);
-    return () => window.clearInterval(timer);
-  }, [playing]);
-
-  const selectProject = (index: number) => {
-    setPlaying(false);
-    setSelected((index + PROJECTS.length) % PROJECTS.length);
-  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,8 +59,6 @@ export default function VidKre8Studio() {
     }
   };
 
-  const project = PROJECTS[selected];
-
   return (
     <div className="vk-studio">
       <a href="#vk-main" className="vk-skip">Skip to content</a>
@@ -87,7 +67,7 @@ export default function VidKre8Studio() {
           <Image src="/vidkre8/logo.svg" width={622} height={216} priority alt="VidKre8 by PrinceCaleb.dev" />
         </a>
         <nav aria-label="Studio navigation" className="vk-nav">
-          <a href="#vk-work">The work</a><a href="#vk-services">What we do</a><a href="#vk-process">The process</a>
+          <a href="#vk-work">Watch the work</a><a href="#vk-services">What we do</a><a href="#vk-process">The process</a>
         </nav>
         <a className="vk-button vk-button-small" href="#vk-brief">Start a project <ArrowUpRight size={16} aria-hidden="true" /></a>
       </header>
@@ -98,53 +78,16 @@ export default function VidKre8Studio() {
           <div className="vk-hero-grid">
             <div className="vk-hero-copy">
               <h1>Make them<br /><span>stop.</span><br />Give them<br />a story<span className="vk-period">.</span></h1>
-              <p>Video ads, product films and motion with a point of view. From the first idea to the final frame.</p>
-              <div className="vk-hero-actions"><a href="#vk-brief" className="vk-button">Let’s make something <ArrowUpRight size={18} aria-hidden="true" /></a><a href="#vk-work" className="vk-text-link">Explore the work <ArrowDown size={16} aria-hidden="true" /></a></div>
+              <p>Wedding films, video ads, product stories and motion with a point of view. From the first idea to the final frame.</p>
+              <div className="vk-hero-actions"><a href="#vk-brief" className="vk-button">Let’s make something <ArrowUpRight size={18} aria-hidden="true" /></a><a href="#vk-work" className="vk-text-link">Watch the films <ArrowDown size={16} aria-hidden="true" /></a></div>
             </div>
-            <div className="vk-reel-wrap">
-              <div className="vk-reel-note"><span>STUDIO SELECTS</span><span>VOL. 01 / 2026</span></div>
-              <div className={`vk-reel vk-reel-${project.color}`}>
-                {PROJECTS.map((item, i) => (
-                  <div className={`vk-reel-frame ${selected === i ? "is-selected" : ""}`} key={item.name} aria-hidden={selected !== i}>
-                    <Image src={`/vidkre8/${item.image}.svg`} fill sizes="(max-width: 760px) 90vw, 48vw" priority={i === 0} alt="" className="vk-reel-photo" />
-                    <div className="vk-reel-shade" />
-                    <div className="vk-frame-tag">{item.category}</div>
-                    <p className="vk-frame-headline">{item.headline}</p>
-                    <span className="vk-frame-credit">{item.name}</span>
-                  </div>
-                ))}
-                <div className="vk-frame-corners" aria-hidden="true"><span /><span /><span /><span /></div>
-                <div className="vk-reel-controls">
-                  <button type="button" className="vk-play" aria-label={playing ? "Pause motion preview" : "Play motion preview"} aria-pressed={playing} onClick={() => setPlaying(!playing)}>{playing ? <Pause size={17} aria-hidden="true" /> : <Play size={17} aria-hidden="true" />}</button>
-                  <div className="vk-preview-label"><strong>Motion preview</strong><span>Project stills / studio motion</span></div>
-                  <button type="button" className="vk-arrow" aria-label="Previous project" onClick={() => selectProject(selected - 1)}><ChevronLeft size={20} aria-hidden="true" /></button>
-                  <button type="button" className="vk-arrow" aria-label="Next project" onClick={() => selectProject(selected + 1)}><ChevronRight size={20} aria-hidden="true" /></button>
-                </div>
-              </div>
-              <div className="vk-reel-bottom"><span>IDEA → STORY → MOTION</span><span>Sound. Timing. Feeling.</span></div>
-            </div>
+            <VideoHero />
           </div>
         </section>
 
-        <div className="vk-ticker" aria-label="Ads, explainers, product films and creator content"><div aria-hidden="true">BRAND FILMS <span>✳</span> MOTION DESIGN <span>✳</span> SOCIAL ADS <span>✳</span> PRODUCT STORIES <span>✳</span> CREATOR CONTENT <span>✳</span></div></div>
+        <div className="vk-ticker" aria-label="Ads, explainers, product films and creator content"><div aria-hidden="true">WEDDING FILMS <span>✳</span> BRAND FILMS <span>✳</span> MOTION DESIGN <span>✳</span> SOCIAL ADS <span>✳</span> PRODUCT STORIES <span>✳</span> CREATOR CONTENT <span>✳</span></div></div>
 
-        <section id="vk-work" className="vk-work vk-container">
-          <div className="vk-section-head"><div><span className="vk-eyebrow">01 / Selected projects</span><h2>Different stories.<br />Same attention to detail.</h2></div><p>A few directions from the studio.<br />Real project imagery. Every frame intentional.</p></div>
-          <div className="vk-project-grid">
-            {PROJECTS.map((item, i) => (
-              <article key={item.name} className={`vk-project vk-project-${item.color}`}>
-                <button type="button" className="vk-project-image" aria-label={`Preview ${item.name}`} onClick={() => { selectProject(i); document.getElementById("vk-project-detail")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "nearest" }); }} aria-pressed={selected === i}>
-                  <Image src={`/vidkre8/${item.image}.svg`} fill sizes="(max-width: 640px) 90vw, 30vw" alt={item.name === "Think of Fashion" ? "A look featured in the Think of Fashion project" : item.name === "BuineePay" ? "Shopping imagery from the BuineePay commercial" : "A studio microphone from The Long Table trailer"} />
-                  <span className="vk-project-stamp">{item.duration} / {item.shape}</span>
-                  <span className="vk-project-overlay">{item.headline}</span>
-                  <span className="vk-project-view">Explore project <ArrowUpRight size={18} aria-hidden="true" /></span>
-                </button>
-                <div className="vk-project-title"><h3>{item.name}</h3><span>0{i + 1}</span></div><p>{item.category}</p>
-              </article>
-            ))}
-          </div>
-          <div id="vk-project-detail" className="vk-project-detail" aria-live="polite" aria-atomic="true"><span className="vk-eyebrow">In focus / {project.name}</span><p>{project.detail}</p><a href="#vk-brief" className="vk-text-link">Have something like this in mind? <ArrowUpRight size={17} aria-hidden="true" /></a></div>
-        </section>
+        <VideoShowcase />
 
         <section id="vk-services" className="vk-services">
           <div className="vk-container">
@@ -181,7 +124,7 @@ export default function VidKre8Studio() {
         </section>
       </main>
 
-      <footer className="vk-footer vk-container"><div className="vk-footer-top"><a href="#" aria-label="VidKre8 home"><Image src="/vidkre8/logo.svg" width={622} height={216} alt="VidKre8 by PrinceCaleb.dev" /></a><p>Ideas into frames.<br />Frames into feeling.</p><nav aria-label="Studio footer"><a href="#vk-work">The work</a><a href="#vk-services">Services</a><a href="#vk-brief">Start a project</a></nav></div><div className="vk-footer-bottom"><span>© {new Date().getFullYear()} VidKre8 / PrinceCaleb.dev</span><Link href="/"><ArrowLeft size={14} aria-hidden="true" /> Back to Prince Caleb</Link><Link href="/privacy">Privacy</Link></div></footer>
+      <footer className="vk-footer vk-container"><div className="vk-footer-top"><a href="#" aria-label="VidKre8 home"><Image src="/vidkre8/logo.svg" width={622} height={216} alt="VidKre8 by PrinceCaleb.dev" /></a><p>Ideas into frames.<br />Frames into feeling.</p><nav aria-label="Studio footer"><a href="#vk-work">Watch the work</a><a href="#vk-services">Services</a><a href="#vk-brief">Start a project</a></nav></div><div className="vk-footer-bottom"><span>© {new Date().getFullYear()} VidKre8 / PrinceCaleb.dev</span><Link href="/"><ArrowLeft size={14} aria-hidden="true" /> Back to Prince Caleb</Link><Link href="/privacy">Privacy</Link></div></footer>
     </div>
   );
 }

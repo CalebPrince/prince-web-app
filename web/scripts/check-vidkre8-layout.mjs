@@ -25,6 +25,8 @@ try {
   const page = await browser.newPage();
   let enquiries = 0;
   let payload;
+  const mediaRequests = [];
+  page.on("request", (request) => { if (request.url().endsWith(".mp4")) mediaRequests.push(request.url()); });
   await page.route("**/api/v1/**", async (route) => {
     if (route.request().url().endsWith("/inquiries")) {
       enquiries++;
@@ -61,7 +63,16 @@ try {
         pair(card, "h3", ".vk-service-body");
         pair(card, ".vk-service-body", ".vk-service-tags");
       });
-      pair(document, ".vk-reel-frame.is-selected .vk-frame-headline", ".vk-reel-controls");
+      pair(document, ".vk-cinema-screen", ".vk-film-info");
+      document.querySelectorAll(".vk-thumbnail").forEach((cover) => {
+        pair(cover, ".vk-thumbnail-brand", ".vk-card-play");
+        pair(cover, ".vk-card-play", ".vk-thumbnail-title");
+        pair(cover, ".vk-thumbnail-title", ".vk-thumbnail-meta");
+      });
+      document.querySelectorAll(".vk-brief-form select").forEach((el) => {
+        const style = getComputedStyle(el);
+        if (parseFloat(style.paddingRight) < 48 || !style.backgroundPositionX.includes("18px")) issues.push("Dropdown arrow lacks right inset");
+      });
       pair(document, ".vk-project-detail > p", ".vk-project-detail > a");
       pair(document, ".vk-submit", ".vk-form-privacy");
       const formats = [...document.querySelectorAll(".vk-format")];
@@ -71,13 +82,41 @@ try {
       });
       return issues;
     });
+    assert.equal(await page.locator(".vk-player-cover").count(), 1, "Custom thumbnail must be shown before playback");
     await page.screenshot({ path: `artifacts/vidkre8/${width}.png`, fullPage: true });
     assert.deepEqual(issues, [], `Layout issues at ${width}px`);
   }
-  await page.getByRole("button", { name: "Next project", exact: true }).click();
-  await page.locator(".vk-reel-frame.is-selected").filter({ hasText: "BuineePay" }).waitFor();
-  await page.getByRole("button", { name: "Play motion preview", exact: true }).click();
-  await page.getByRole("button", { name: "Pause motion preview", exact: true }).click();
+  assert.equal(mediaRequests.length, 0, "Sample videos must not download before playback");
+  await page.getByRole("button", { name: "Wedding", exact: true }).click();
+  assert.equal(await page.locator(".vk-project").count(), 1);
+  await page.getByRole("button", { name: "Watch Every love story", exact: true }).click();
+  await page.waitForFunction(() => {
+    const video = document.querySelector(".vk-cinema video");
+    return video && video.readyState >= 2 && video.currentTime > 0;
+  });
+  assert.equal(await page.locator(".vk-cinema video").evaluate((video) => Math.round(video.duration * 10) / 10), 2.2);
+  assert.equal(await page.locator(".vk-player-cover").count(), 0, "Custom thumbnail should clear when playback starts");
+  await page.locator(".vk-cinema video").evaluate((video) => video.pause());
+  await page.getByRole("button", { name: "All work", exact: true }).click();
+  await page.getByRole("button", { name: "Watch LIID Flo", exact: true }).click();
+  await page.waitForFunction(() => {
+    const video = document.querySelector(".vk-cinema video");
+    return video && video.duration > 20 && video.currentTime > 0;
+  });
+  await page.locator(".vk-cinema video").evaluate((video) => video.pause());
+  await page.getByRole("button", { name: "Podcast", exact: true }).click();
+  assert.equal(await page.locator(".vk-project").count(), 1);
+  await page.getByRole("button", { name: "All work", exact: true }).click();
+  assert.equal(await page.locator(".vk-project").count(), 6);
+  assert(!/LCA|walkthrough/i.test(await page.locator(".vk-project-grid").innerText()), "Excluded walkthrough must not appear");
+  await page.route("**/vidkre8/videos/voice.mp4", (route) => route.abort());
+  await page.getByRole("button", { name: "Watch Meet Lisa", exact: true }).click();
+  await page.getByRole("alert").filter({ hasText: "video could not load" }).waitFor();
+  await page.unroute("**/vidkre8/videos/voice.mp4");
+  await page.getByRole("button", { name: "Retry video", exact: true }).click();
+  await page.waitForFunction(() => document.querySelector(".vk-cinema video")?.readyState >= 2);
+  await page.locator(".vk-cinema video").evaluate((video) => video.pause());
+  await page.getByLabel("What are we making?", { exact: true }).selectOption("Wedding films & highlights");
   await page.getByLabel("Your name", { exact: true }).fill("Layout test");
   await page.getByLabel("Email address", { exact: true }).fill("test@example.com");
   await page.getByLabel("The idea", { exact: true }).fill("A product launch video for our mobile app.");
@@ -87,7 +126,8 @@ try {
   await page.getByRole("status").filter({ hasText: "Your story starts here" }).waitFor();
   assert.equal(enquiries, 2);
   assert(payload.message.includes("VidKre8 video enquiry"));
-  console.log("VidKre8: six viewport layouts, readable text, collision checks, preview controls and enquiry retry passed.");
+  assert(payload.message.includes("Wedding films & highlights"));
+  console.log("VidKre8: six viewport layouts, readable text, collision checks, real video playback, wedding/podcast filters, load-on-demand, media-error retry, dropdown spacing and enquiry retry passed.");
 } finally {
   await browser?.close();
   try { process.kill(-server.pid, "SIGTERM"); } catch { /* Server already stopped. */ }
