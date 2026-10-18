@@ -116,7 +116,7 @@ try {
   await page.getByRole("button", { name: "Retry video", exact: true }).click();
   await page.waitForFunction(() => document.querySelector(".vk-cinema video")?.readyState >= 2);
   await page.locator(".vk-cinema video").evaluate((video) => video.pause());
-  await page.getByLabel("What are we making?", { exact: true }).selectOption("Wedding films & highlights");
+  await page.getByRole("combobox", { name: /What are we making/ }).selectOption("Wedding films & highlights");
   await page.getByLabel("Your name", { exact: true }).fill("Layout test");
   await page.getByLabel("Email address", { exact: true }).fill("test@example.com");
   await page.getByLabel("The idea", { exact: true }).fill("A product launch video for our mobile app.");
