@@ -22,6 +22,7 @@ import { getSystems } from "@/lib/systems";
 const STATIC_PATHS: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
   { path: "/", priority: 1.0, changeFrequency: "daily" },
   { path: "/services", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/vidkre8", priority: 0.8, changeFrequency: "monthly" },
   { path: "/website-design", priority: 0.9, changeFrequency: "monthly" },
   { path: "/work", priority: 0.9, changeFrequency: "weekly" },
   { path: "/pricing", priority: 0.8, changeFrequency: "monthly" },
