@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import VidKre8Studio from "./VidKre8Studio";
 import "./studio.css";
 
-const description = "Video ads, product explainers, motion graphics and creator content. VidKre8 turns your brief into a story built for the screen.";
+const description = "Wedding films, video ads, product explainers, motion graphics and creator content. VidKre8 turns your brief into a story built for the screen.";
 
 export const metadata: Metadata = {
   title: { absolute: "VidKre8 — Video & Motion Studio" },
