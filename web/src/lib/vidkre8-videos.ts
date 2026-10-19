@@ -16,6 +16,7 @@ export type StudioVideo = {
 };
 
 export const STUDIO_VIDEOS: StudioVideo[] = [
+  { id: "websummit-2026", title: "Web Summit 2026", category: "Brand & ads", kind: "Event trailer", description: "A fast-moving vertical event trailer built around bold type, speaker energy and a clear countdown to Web Summit 2026.", seconds: 41.2, excerpt: false, silent: false, src: "/vidkre8/videos/websummit-2026.mp4", poster: "/vidkre8/videos/websummit-2026.jpg" },
   { id: "fashion", title: "Think Of Fashion", category: "Brand & ads", kind: "Fashion campaign film", description: "A kinetic 30-second fashion ad built around editorial looks, beat-cut typography and a direct booking finish.", seconds: 30, excerpt: false, silent: false, src: "/vidkre8/videos/fashion.mp4", poster: "/vidkre8/videos/fashion.jpg" },
   { id: "wedding", title: "Every love story", category: "Wedding", kind: "Wedding-film concept", description: "A moment from the VidKre8 wedding-film concept. A glimpse of the mood and visual direction for a wedding highlight.", seconds: 2.2, excerpt: true, silent: true, src: "/vidkre8/videos/wedding.mp4", poster: "/vidkre8/videos/wedding.jpg" },
   { id: "buinee-pay", title: "BuineePay", category: "Product & apps", kind: "Fintech product commercial", description: "A complete product story that turns a simple mobile payment into a polished, character-led commercial.", seconds: 36, excerpt: false, silent: false, src: "/vidkre8/videos/buinee-pay.mp4", poster: "/vidkre8/videos/buinee-pay.jpg" },

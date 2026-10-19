@@ -18,6 +18,8 @@ All media are local website assets, so public playback needs no private GitHub a
 - `videos/websites.mp4`: complete web-sized `showcase/assets/media/website-showcase-ad.mp4`.
 - `videos/voice.mp4`, `videos/team.mp4`, `videos/podcast.mp4`: matching silent 2.2-second excerpts from `pieces/vidkre8-ig-intro/footage/`.
 - `videos/wedding.mp4`: a web-sized copy of the silent wedding excerpt in that same reel. This is the VidKre8 wedding-film concept.
+- `videos/websummit-2026.mp4`: the completed WhatsApp-ready export from `D:\Websites\motion-designs\websummit-2026-trailer\out\websummit-2026-trailer-export-whatsapp.mp4`.
+- `videos/fashion.jpg`, `videos/buinee-pay.jpg`, `videos/solar.jpg`, `videos/websummit-2026.jpg`: poster frames generated locally from their matching completed films.
 - `videos/fashion.mp4`: web-sized complete `pieces/think-of-fashion/out/think-of-fashion-30s.mp4`.
 - `videos/buinee-pay.mp4`: web-sized complete `pieces/buinee-pay/out/buinee-pay-with-sound.mp4`.
 - `videos/solar.mp4`: web-sized complete `showcase/assets/media/ayeko-solar-ad.mp4`.
