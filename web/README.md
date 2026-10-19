@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# princecaleb.dev — Next.js frontend
 
-## Getting Started
+Next.js (App Router) frontend for [princecaleb.dev](https://princecaleb.dev): the public
+marketing site, the AI chat widget ("Lisa"), and the admin dashboard. This is a rebuild of
+an earlier PHP-served site — the frontend here is a restyled, full-parity port of the
+legacy widget (`public/js/ai-widget.js`, `agent-face.js`, `elevenlabs-tts.js`), not a
+fresh implementation.
 
-First, run the development server:
+This app has **no backend of its own**. It's a thin client over the existing backend at
+the repo root (`../`, a Laravel-style PHP app — see its own `database/`, `storage/`,
+`config/`), reached through `/api/v1/*`:
+
+- Dev: `http://localhost:8017`
+- Production: `https://princecaleb.dev` (same origin — proxied/rewritten, not CORS)
+
+See `src/lib/api.ts` for the exact base-URL logic.
+
+## What's actually here
+
+- **Public site** — marketing pages, pricing, case studies.
+- **Chat widget** (`src/components/ChatWidget.tsx`) — "Lisa," with typed and voice input,
+  ElevenLabs text-to-speech read-aloud, and an idle-timeout goodbye sequence. Talks to
+  `/api/v1/chat/*` on the backend above; carries no AI provider logic itself.
+- **Live avatar / voice agent** (`src/components/LisaVideoAgent.tsx`, `VoiceDemo.tsx`) —
+  real-time video/voice agent via LiveAvatar and LiveKit.
+- **Admin dashboard** (`src/app/admin/`) — settings, WhatsApp template management (Twilio/
+  Meta), Composio account connections, and an AI provider test/configuration panel
+  (`AiTestResult` in `SettingsClient.tsx`) covering multiple configured providers.
+
+## Where the AI provider keys live
+
+**Not in this repo, and not in any local `.env` file.** They're stored in the backend's
+production database and managed through the admin dashboard above, the same pattern
+jdlcore uses (a settings table, not environment variables). Grepping this codebase for key
+names or provider URLs will not find them — that's expected, not a misconfiguration.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Runs on [http://localhost:3000](http://localhost:3000). The backend (`../`) needs to be
+running separately on `:8017` for anything that calls `/api/v1/*` to work — the chat
+widget, the admin dashboard, and auth all depend on it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deployed to the same LiteSpeed-hosted infrastructure as the backend, **not Vercel** —
+despite this being a stock `create-next-app` scaffold originally, the default Vercel
+deploy path in the old boilerplate README did not apply here and has been removed.

@@ -1,0 +1,551 @@
+<template>
+  <style>
+    /* — fonts: Inter (display + reading) / IBM Plex Mono (chrome only) — */
+    @font-face {
+      font-family: "Inter";
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: block;
+      src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2)
+        format("woff2");
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      font-style: normal;
+      font-weight: 500;
+      font-display: block;
+      src: url(https://fonts.gstatic.com/s/ibmplexmono/v20/-F6qfjptAgt5VM-kVkqdyU8n3twJwlBFgg.woff2)
+        format("woff2");
+    }
+
+    /* — frame root: never carries the ground (it is clip-gated at assembly) — */
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+    }
+
+    /* — full-duration ground layer — */
+    .r6-ground {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      background: #050708;
+    }
+
+    /* — scene layer: the container every cqw unit is measured against — */
+    .r6-scene {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      container-type: size;
+      font-family: "Inter", sans-serif;
+      color: #f2fff6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .r6-mono {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    /* — chrome — */
+    #r6-kicker {
+      position: absolute;
+      left: 80px;
+      top: 182px;
+      font-size: 2.1cqw;
+      color: #62ff98;
+      opacity: 0;
+    }
+    #r6-cat {
+      position: absolute;
+      right: 140px;
+      top: 182px;
+      font-size: 2.1cqw;
+      color: #a5b4ad;
+      opacity: 0;
+    }
+    #r6-chrome-top {
+      position: absolute;
+      left: 80px;
+      top: 232px;
+      width: 860px;
+      height: 1px;
+      background: #262827;
+      opacity: 0;
+    }
+    #r6-chrome-bot {
+      position: absolute;
+      left: 80px;
+      top: 1430px;
+      width: 860px;
+      height: 1px;
+      background: #262827;
+      opacity: 0;
+    }
+    #r6-note {
+      position: absolute;
+      left: 80px;
+      top: 1448px;
+      font-size: 2.1cqw;
+      color: #48504b;
+      opacity: 0;
+    }
+    #r6-stub {
+      position: absolute;
+      left: 904px;
+      top: 1462px;
+      width: 36px;
+      height: 2px;
+      background: #62ff98;
+      opacity: 0;
+    }
+
+    /* — the one display moment — */
+    #r6-statement {
+      position: absolute;
+      left: 80px;
+      top: 296px;
+      width: 78cqw;
+      font-size: 12.5cqw;
+      font-weight: 900;
+      line-height: 0.88;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      color: #f2fff6;
+      white-space: nowrap;
+    }
+    #r6-line-a,
+    #r6-line-b {
+      display: block;
+      min-height: 0.88em;
+    }
+    #r6-line-b {
+      margin-top: 0.12em;
+    }
+    #r6-caret {
+      display: inline-block;
+      vertical-align: baseline;
+      margin-left: 0.06em;
+    }
+    #r6-caret-bar {
+      display: inline-block;
+      width: 0.11em;
+      height: 0.62em;
+      background: #62ff98;
+    }
+
+    /* — commitment rows (bullet component: orange `/` marker, capped at three) — */
+    .r6-rule {
+      position: absolute;
+      left: 80px;
+      width: 860px;
+      height: 1px;
+      background: #262827;
+      opacity: 0;
+    }
+    .r6-row {
+      position: absolute;
+      left: 0;
+      width: 1080px;
+      height: 180px;
+    }
+    .r6-marker {
+      position: absolute;
+      left: 80px;
+      top: 60px;
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      font-size: 3cqw;
+      line-height: 1;
+      color: #62ff98;
+      opacity: 0;
+    }
+    .r6-label {
+      position: absolute;
+      left: 148px;
+      top: 54px;
+      font-size: 4.2cqw;
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-transform: lowercase;
+      color: #f2fff6;
+      white-space: nowrap;
+    }
+    .r6-label span {
+      display: inline-block;
+      opacity: 0;
+    }
+    .r6-check {
+      position: absolute;
+      left: 872px;
+      top: 44px;
+      width: 68px;
+      height: 68px;
+      overflow: visible;
+    }
+    .r6-check path {
+      fill: none;
+      stroke: #62ff98;
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* — supporting: functional connection lines — */
+    #r6-wires {
+      position: absolute;
+      left: 80px;
+      top: 1010px;
+      width: 860px;
+      height: 185px;
+      overflow: visible;
+    }
+    #r6-wires path {
+      fill: none;
+      stroke: #48504b;
+      stroke-width: 2;
+      stroke-linecap: butt;
+      stroke-linejoin: miter;
+    }
+    #r6-junction {
+      position: absolute;
+      left: 374px;
+      top: 1101px;
+      width: 8px;
+      height: 8px;
+      background: #62ff98;
+      opacity: 0;
+    }
+
+    /* — contact marks, low — */
+    .r6-contact {
+      position: absolute;
+      width: 380px;
+    }
+    .r6-contact svg {
+      width: 76px;
+      height: 76px;
+      overflow: visible;
+    }
+    .r6-contact path {
+      fill: none;
+      stroke: #f2fff6;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .r6-contact-label {
+      margin-top: 24px;
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 2.1cqw;
+      color: #a5b4ad;
+      opacity: 0;
+    }
+  </style>
+
+  <div data-hf-id="hf-rveh" id="root" data-composition-id="06-response" data-start="0" data-duration="8.934" data-width="1080" data-height="1920">
+    <!-- full-bleed ground, full duration, lowest track -->
+    <div data-hf-id="hf-2y0s" class="clip r6-ground" data-start="0" data-duration="8.934" data-track-index="0"></div>
+
+    <div data-hf-id="hf-m4vq" class="clip r6-scene" data-start="0" data-duration="8.934" data-track-index="1">
+      <!-- chrome -->
+      <div data-hf-id="hf-eil9" id="r6-kicker" class="r6-mono">/ after the tap</div>
+      <div data-hf-id="hf-dljq" id="r6-cat" class="r6-mono">no. 06</div>
+      <div data-hf-id="hf-o2yi" id="r6-chrome-top"></div>
+
+      <!-- the one display moment -->
+      <div data-hf-id="hf-dn5l" id="r6-statement">
+        <span data-hf-id="hf-3irj" id="r6-line-a"></span><span data-hf-id="hf-uuvo" id="r6-line-b"></span><span data-hf-id="hf-5qpc" id="r6-caret"><span data-hf-id="hf-iou8" id="r6-caret-bar"></span></span>
+      </div>
+
+      <!-- three commitment rows -->
+      <div data-hf-id="hf-zu6y" id="r6-rule-1" class="r6-rule" style="top: 470px"></div>
+      <div data-hf-id="hf-7beh" class="r6-row" style="top: 470px">
+        <div data-hf-id="hf-337z" id="r6-marker-1" class="r6-marker">/</div>
+        <div data-hf-id="hf-qrwt" class="r6-label">
+          <span data-hf-id="hf-7gbc" id="r6-w1a">reply</span>&#160;<span data-hf-id="hf-75vi" id="r6-w1b">promptly</span>
+        </div>
+        <svg data-hf-id="hf-494o" id="r6-check-1" class="r6-check" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg">
+          <path data-hf-id="hf-mqab" d="M 13 35 L 27 49 L 55 17" />
+        </svg>
+      </div>
+
+      <div data-hf-id="hf-w8tn" id="r6-rule-2" class="r6-rule" style="top: 650px"></div>
+      <div data-hf-id="hf-da0l" class="r6-row" style="top: 650px">
+        <div data-hf-id="hf-3pqq" id="r6-marker-2" class="r6-marker">/</div>
+        <div data-hf-id="hf-ham9" class="r6-label">
+          <span data-hf-id="hf-dgk7" id="r6-w2a">make</span>&#160;<span data-hf-id="hf-7s9x" id="r6-w2b">the</span>&#160;<span data-hf-id="hf-5ui6" id="r6-w2c">next</span>&#160;<span data-hf-id="hf-32te" id="r6-w2d">step</span>&#160;<span data-hf-id="hf-ofku" id="r6-w2e">clear</span>
+        </div>
+        <svg data-hf-id="hf-se6d" id="r6-check-2" class="r6-check" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg">
+          <path data-hf-id="hf-gxrn" d="M 13 35 L 27 49 L 55 17" />
+        </svg>
+      </div>
+
+      <div data-hf-id="hf-mwas" id="r6-rule-3" class="r6-rule" style="top: 830px"></div>
+      <div data-hf-id="hf-2t3t" class="r6-row" style="top: 830px">
+        <div data-hf-id="hf-f22l" id="r6-marker-3" class="r6-marker">/</div>
+        <div data-hf-id="hf-ihjc" class="r6-label">
+          <span data-hf-id="hf-bp0z" id="r6-w3a">keep</span>&#160;<span data-hf-id="hf-7qd0" id="r6-w3b">a</span>&#160;<span data-hf-id="hf-prpq" id="r6-w3c">short</span>&#160;<span data-hf-id="hf-o9k9" id="r6-w3d">form</span>
+        </div>
+        <svg data-hf-id="hf-7wgi" id="r6-check-3" class="r6-check" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg">
+          <path data-hf-id="hf-gjgm" d="M 13 35 L 27 49 L 55 17" />
+        </svg>
+      </div>
+
+      <div data-hf-id="hf-k7g0" id="r6-rule-4" class="r6-rule" style="top: 1010px"></div>
+
+      <!-- functional connection lines -->
+      <svg data-hf-id="hf-dluo" id="r6-wires" viewBox="0 0 860 185" xmlns="http://www.w3.org/2000/svg">
+        <path data-hf-id="hf-elce" id="r6-wire-0" d="M 298 0 L 298 95" />
+        <path data-hf-id="hf-leyg" id="r6-wire-1" d="M 298 95 L 38 95 L 38 185" />
+        <path data-hf-id="hf-d2pp" id="r6-wire-2" d="M 298 95 L 478 95 L 478 185" />
+      </svg>
+      <div data-hf-id="hf-xnza" id="r6-junction"></div>
+
+      <!-- contact marks, low -->
+      <div data-hf-id="hf-mgm4" class="r6-contact" style="left: 80px; top: 1195px">
+        <svg data-hf-id="hf-gw2x" id="r6-icon-msg" viewBox="0 0 76 76" xmlns="http://www.w3.org/2000/svg">
+          <path data-hf-id="hf-4aab" d="M 6 12 L 70 12 L 70 50 L 28 50 L 10 68 L 10 50 L 6 50 Z" />
+        </svg>
+        <div data-hf-id="hf-jn9w" id="r6-lbl-msg" class="r6-contact-label">message</div>
+      </div>
+      <div data-hf-id="hf-n919" class="r6-contact" style="left: 520px; top: 1195px">
+        <svg data-hf-id="hf-paq2" id="r6-icon-call" viewBox="0 0 76 76" xmlns="http://www.w3.org/2000/svg">
+          <path data-hf-id="hf-xabw" d="M 14 18 L 18 12 L 30 12 L 35 28 L 27 34 C 32 44 38 50 48 55 L 54 47 L 70 52 L 70 64 L 58 64 C 34 60 18 42 14 18 Z" />
+        </svg>
+        <div data-hf-id="hf-058e" id="r6-lbl-call" class="r6-contact-label">call</div>
+      </div>
+
+      <!-- bottom chrome -->
+      <div data-hf-id="hf-agnw" id="r6-chrome-bot"></div>
+      <div data-hf-id="hf-8ml0" id="r6-note" class="r6-mono">what makes it work</div>
+      <div data-hf-id="hf-9kgi" id="r6-stub"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var gsap = window.gsap;
+      var F = 1 / 60;
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      window.__timelines["06-response"] = tl;
+
+      var q = function (s) {
+        return document.querySelector(s);
+      };
+
+      /* ---------- Scene 1 (0.0-2.4s): chrome, then the display moment builds ---------- */
+
+      tl.fromTo(
+        "#r6-kicker",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.32, ease: "power1.out" },
+        0.02
+      );
+      gsap.set("#r6-chrome-top", { transformOrigin: "0% 50%", scaleX: 0 });
+      tl.set("#r6-chrome-top", { opacity: 1 }, 0.06);
+      tl.to("#r6-chrome-top", { scaleX: 1, duration: 0.52, ease: "power2.out" }, 0.06);
+      tl.fromTo(
+        "#r6-cat",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power1.out" },
+        0.24
+      );
+
+      /* discrete-text-sequence — sparse whole-state swaps, reverse-searched each frame.
+         Shape: keystroke clusters -> pause -> fork -> one bulk correction that
+         collapses the line onto its point. Jumps are instant; no tween between states. */
+      var SEQ = [
+        { t: 0.0, a: "", b: "" },
+        { t: 0.22, a: "the", b: "" },
+        { t: 0.36, a: "the bu", b: "" },
+        { t: 0.5, a: "the butt", b: "" },
+        { t: 0.62, a: "the button", b: "" },
+        { t: 1.06, a: "the button", b: "is" },
+        { t: 1.2, a: "the button", b: "is o" },
+        { t: 1.33, a: "the button", b: "is onl" },
+        { t: 1.45, a: "the button", b: "is only" },
+        { t: 1.86, a: "only the", b: "beginning" }
+      ];
+
+      var lineA = q("#r6-line-a");
+      var lineB = q("#r6-line-b");
+      var caret = q("#r6-caret");
+      var caretBar = q("#r6-caret-bar");
+
+      function stateAt(time) {
+        for (var i = SEQ.length - 1; i >= 0; i--) {
+          if (time >= SEQ[i].t) return SEQ[i];
+        }
+        return SEQ[0];
+      }
+
+      var driver = { t: 0 };
+      tl.to(
+        driver,
+        {
+          t: 2.3,
+          duration: 2.3,
+          ease: "none",
+          onUpdate: function () {
+            var s = stateAt(driver.t);
+            if (lineA.textContent !== s.a) lineA.textContent = s.a;
+            if (lineB.textContent !== s.b) lineB.textContent = s.b;
+            var host = s.b ? lineB : lineA;
+            if (caret.parentNode !== host) host.appendChild(caret);
+          }
+        },
+        0
+      );
+
+      /* caret blink — deterministic sin square wave (4 cycles over 2.3s) */
+      var blink = { p: 0 };
+      tl.to(
+        blink,
+        {
+          p: Math.PI * 2 * 4,
+          duration: 2.3,
+          ease: "none",
+          onUpdate: function () {
+            caretBar.style.opacity = Math.sin(blink.p) > 0 ? "1" : "0";
+          }
+        },
+        0
+      );
+
+      /* ---------- Scene 2 (2.4-4.2s): the statement demotes, row one confirms ---------- */
+
+      gsap.set("#r6-statement", { transformOrigin: "0% 0%" });
+      tl.to(
+        "#r6-statement",
+        {
+          scale: 0.36,
+          y: -55,
+          color: "#a5b4ad",
+          duration: 0.44,
+          ease: "power3.inOut"
+        },
+        2.3
+      );
+      tl.to("#r6-caret", { opacity: 0, duration: 0.16, ease: "power1.out" }, 2.3);
+
+      /* hairline separators draw left-to-right */
+      function drawRule(sel, at) {
+        gsap.set(sel, { transformOrigin: "0% 50%", scaleX: 0 });
+        tl.set(sel, { opacity: 1 }, at);
+        tl.to(sel, { scaleX: 1, duration: 0.42, ease: "power2.out" }, at);
+      }
+
+      /* waterfall-entry — binary opacity via tl.set, whip up from below, overlapping */
+      function whip(sel, at, offset, dur) {
+        tl.set(sel, { opacity: 1, y: offset }, at);
+        tl.to(sel, { y: 0, duration: dur, ease: "power4.out" }, at);
+      }
+
+      /* svg-path-draw — measured getTotalLength, dashoffset to zero */
+      function draw(sel, at, dur) {
+        var p = q(sel);
+        if (!p) return;
+        var len = 0;
+        if (typeof p.getTotalLength === "function") len = p.getTotalLength();
+        if (!len || !isFinite(len)) len = 400;
+        len = len * 1.02;
+        p.style.strokeDasharray = String(len);
+        p.style.strokeDashoffset = String(len);
+        tl.to(sel, { strokeDashoffset: 0, duration: dur, ease: "power2.out" }, at);
+      }
+
+      drawRule("#r6-rule-1", 2.55);
+      whip("#r6-marker-1", 2.74, 44, 0.13);
+      var r1a = 2.86;
+      whip("#r6-w1a", r1a, 72, 0.18);
+      var r1b = r1a + 0.18 - F;
+      whip("#r6-w1b", r1b, 46, 0.15);
+      draw("#r6-check-1 path", 3.3, 0.55);
+
+      /* ---------- Scene 3 (4.2-6.1s): row two confirms ---------- */
+
+      drawRule("#r6-rule-2", 4.28);
+      whip("#r6-marker-2", 4.46, 44, 0.13);
+      var r2a = 4.58;
+      whip("#r6-w2a", r2a, 70, 0.18);
+      var r2b = r2a + 0.18 - F;
+      whip("#r6-w2b", r2b, 40, 0.12);
+      var r2c = r2b + 0.12 - F;
+      whip("#r6-w2c", r2c, 46, 0.15);
+      var r2d = r2c + 0.15 - 2 * F;
+      whip("#r6-w2d", r2d, 44, 0.14);
+      var r2e = r2d + 0.14 - 2 * F;
+      whip("#r6-w2e", r2e, 52, 0.15);
+      draw("#r6-check-2 path", 5.25, 0.55);
+
+      /* ---------- Scene 4 (6.1-8.934s): row three, contact marks, hold ---------- */
+
+      drawRule("#r6-rule-3", 6.08);
+      whip("#r6-marker-3", 6.26, 44, 0.13);
+      var r3a = 6.38;
+      whip("#r6-w3a", r3a, 70, 0.18);
+      var r3b = r3a + 0.18 - F;
+      whip("#r6-w3b", r3b, 36, 0.11);
+      var r3c = r3b + 0.11 - F;
+      whip("#r6-w3c", r3c, 48, 0.15);
+      var r3d = r3c + 0.15 - 2 * F;
+      whip("#r6-w3d", r3d, 56, 0.16);
+      draw("#r6-check-3 path", 6.95, 0.55);
+
+      drawRule("#r6-rule-4", 6.72);
+
+      /* the stack routes down onto the contact marks */
+      draw("#r6-wire-0", 7.0, 0.3);
+      tl.fromTo(
+        "#r6-junction",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.12, ease: "none" },
+        7.26
+      );
+      draw("#r6-wire-1", 7.3, 0.4);
+      draw("#r6-wire-2", 7.42, 0.4);
+
+      draw("#r6-icon-msg path", 7.5, 0.6);
+      draw("#r6-icon-call path", 7.72, 0.62);
+      tl.fromTo(
+        "#r6-lbl-msg",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power1.out" },
+        8.02
+      );
+      tl.fromTo(
+        "#r6-lbl-call",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power1.out" },
+        8.16
+      );
+
+      /* closing chrome — the last quiet arrival, then hold (no exit: not the final frame) */
+      drawRule("#r6-chrome-bot", 8.3);
+      tl.fromTo(
+        "#r6-note",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.3, ease: "power1.out" },
+        8.44
+      );
+      gsap.set("#r6-stub", { transformOrigin: "0% 50%", scaleX: 0 });
+      tl.set("#r6-stub", { opacity: 1 }, 8.56);
+      tl.to("#r6-stub", { scaleX: 1, duration: 0.26, ease: "power2.out" }, 8.56);
+    })();
+  </script>
+</template>

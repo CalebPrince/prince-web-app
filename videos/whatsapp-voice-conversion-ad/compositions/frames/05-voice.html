@@ -1,0 +1,554 @@
+<template>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+  <style>
+    /* 05-voice — Broadside dark register.
+       ground #050708 · text #f2fff6 · lone accent #62ff98
+       flat plane: 0 radius, no shadow, no gradient, 1px hairlines only. */
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+    }
+
+    /* full-bleed ground rides on a clip layer, never on #root */
+    .f-05-voice-ground {
+      position: absolute;
+      inset: 0;
+      background: #050708;
+      container-type: size;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: #f2fff6;
+      overflow: hidden;
+    }
+
+    .f-05-voice-camera {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* chrome */
+    .f-05-voice-mono {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .f-05-voice-kicker {
+      position: absolute;
+      left: 80px;
+      top: 196px;
+      font-size: 1.9cqw;
+      color: #62ff98;
+    }
+    .f-05-voice-num {
+      position: absolute;
+      right: 140px;
+      top: 196px;
+      font-size: 1.9cqw;
+      color: #48504b;
+    }
+    .f-05-voice-hair {
+      position: absolute;
+      height: 1px;
+      background: #262827;
+      transform-origin: left center;
+    }
+    #f-05-voice-toprule {
+      left: 80px;
+      top: 238px;
+      width: 860px;
+    }
+    #f-05-voice-botrule {
+      left: 80px;
+      top: 1440px;
+      width: 860px;
+    }
+    .f-05-voice-catalog {
+      position: absolute;
+      right: 140px;
+      top: 1398px;
+      font-size: 1.9cqw;
+      color: #48504b;
+    }
+
+    /* the one display moment */
+    #f-05-voice-stub {
+      position: absolute;
+      left: 80px;
+      top: 276px;
+      width: 36px;
+      height: 2px;
+      background: #62ff98;
+      transform-origin: left center;
+    }
+    .f-05-voice-hero {
+      position: absolute;
+      left: 80px;
+      top: 306px;
+      width: 860px;
+    }
+    .f-05-voice-hero-line {
+      display: block;
+      font-size: 16cqw;
+      font-weight: 900;
+      line-height: 0.88;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      transform-origin: left bottom;
+    }
+    #f-05-voice-hero-2 {
+      color: #62ff98;
+      margin-top: 0.12em;
+    }
+
+    /* the held hero panel — states cycle inside it, cursorless */
+    #f-05-voice-panel {
+      position: absolute;
+      left: 80px;
+      top: 664px;
+      width: 860px;
+      height: 580px;
+      background: #181a19;
+      border: 1px solid #262827;
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    .f-05-voice-state-wrap {
+      position: absolute;
+      left: 44px;
+      top: 46px;
+      min-width: 620px;
+      white-space: nowrap;
+    }
+    #f-05-voice-state {
+      display: inline-block;
+      font-size: 4cqw;
+      color: #f2fff6;
+      transform-origin: left center;
+    }
+
+    #f-05-voice-dot {
+      position: absolute;
+      right: 44px;
+      top: 44px;
+      width: 48px;
+      height: 48px;
+    }
+
+    #f-05-voice-check {
+      position: absolute;
+      right: 116px;
+      top: 46px;
+      width: 44px;
+      height: 44px;
+    }
+
+    #f-05-voice-headsweep {
+      position: absolute;
+      left: 44px;
+      top: 132px;
+      width: 772px;
+      height: 1px;
+      background: #262827;
+      transform-origin: left center;
+    }
+
+    #f-05-voice-wave {
+      position: absolute;
+      left: 44px;
+      top: 178px;
+      width: 772px;
+      height: 210px;
+      display: block;
+    }
+    #f-05-voice-baseline {
+      position: absolute;
+      left: 44px;
+      top: 283px;
+      width: 772px;
+      height: 1px;
+      background: #262827;
+      transform-origin: left center;
+    }
+
+    .f-05-voice-caller-label {
+      position: absolute;
+      left: 44px;
+      top: 430px;
+      font-size: 1.9cqw;
+      color: #48504b;
+    }
+    .f-05-voice-caller-line {
+      position: absolute;
+      left: 44px;
+      top: 464px;
+      font-size: 3.2cqw;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #f2fff6;
+    }
+    #f-05-voice-underline {
+      position: absolute;
+      left: 44px;
+      top: 530px;
+      width: 430px;
+      height: 2px;
+      background: #62ff98;
+      transform-origin: left center;
+    }
+
+    /* supporting — functional connection line + state stepper */
+    #f-05-voice-connector {
+      position: absolute;
+      left: 120px;
+      top: 1244px;
+      width: 1px;
+      height: 58px;
+      background: #262827;
+      transform-origin: top center;
+    }
+    .f-05-voice-step-num {
+      position: absolute;
+      top: 1296px;
+      font-size: 1.9cqw;
+      color: #48504b;
+    }
+    .f-05-voice-step-track {
+      position: absolute;
+      top: 1336px;
+      width: 250px;
+      height: 2px;
+      background: #262827;
+    }
+    .f-05-voice-step-bar {
+      position: absolute;
+      top: 1336px;
+      width: 250px;
+      height: 2px;
+      background: #62ff98;
+      transform-origin: left center;
+    }
+  </style>
+
+  <div data-hf-id="hf-cz7b" id="root" data-composition-id="05-voice" data-width="1080" data-height="1920">
+    <div data-hf-id="hf-biff" class="clip f-05-voice-ground" data-start="0" data-duration="9.326" data-track-index="0">
+      <div data-hf-id="hf-0mfo" class="f-05-voice-camera" id="f-05-voice-camera">
+        <!-- chrome -->
+        <div data-hf-id="hf-yj4w" class="f-05-voice-mono f-05-voice-kicker" id="f-05-voice-kicker">VOICE CHANNEL</div>
+        <div data-hf-id="hf-42sj" class="f-05-voice-mono f-05-voice-num" id="f-05-voice-num">NO. 05</div>
+        <div data-hf-id="hf-emn5" class="f-05-voice-hair" id="f-05-voice-toprule"></div>
+        <div data-hf-id="hf-cl8v" class="f-05-voice-hair" id="f-05-voice-botrule"></div>
+        <div data-hf-id="hf-8bsw" class="f-05-voice-mono f-05-voice-catalog" id="f-05-voice-catalog">05 / 07</div>
+
+        <!-- the one display moment -->
+        <div data-hf-id="hf-ttmr" id="f-05-voice-stub"></div>
+        <div data-hf-id="hf-ctlc" class="f-05-voice-hero">
+          <span data-hf-id="hf-6bww" class="f-05-voice-hero-line" id="f-05-voice-hero-1">just</span>
+          <span data-hf-id="hf-bu0d" class="f-05-voice-hero-line" id="f-05-voice-hero-2">call</span>
+        </div>
+
+        <!-- held hero panel -->
+        <div data-hf-id="hf-ge8z" id="f-05-voice-panel">
+          <div data-hf-id="hf-ohqc" class="f-05-voice-state-wrap">
+            <span data-hf-id="hf-mczt" class="f-05-voice-mono" id="f-05-voice-state">CALL US</span>
+          </div>
+
+          <svg data-hf-id="hf-4ijh" id="f-05-voice-check" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+            <path data-hf-id="hf-p4sl" id="f-05-voice-check-path" d="M9 23 L18 32 L35 13" fill="none" stroke="#62ff98" stroke-width="4" stroke-linecap="square" />
+          </svg>
+
+          <svg data-hf-id="hf-ayt6" id="f-05-voice-dot" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <circle data-hf-id="hf-rmrq" id="f-05-voice-dot-ring" cx="24" cy="24" r="18" fill="none" stroke="#62ff98" stroke-width="2" />
+            <circle data-hf-id="hf-905a" id="f-05-voice-dot-core" cx="24" cy="24" r="7" fill="#62ff98" />
+          </svg>
+
+          <div data-hf-id="hf-70kr" id="f-05-voice-headsweep"></div>
+
+          <svg data-hf-id="hf-fh7t" id="f-05-voice-wave" viewBox="0 0 772 210" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" />
+          <div data-hf-id="hf-ngf6" id="f-05-voice-baseline"></div>
+
+          <div data-hf-id="hf-e7xe" class="f-05-voice-mono f-05-voice-caller-label" id="f-05-voice-caller-label">
+            CALLER
+          </div>
+          <div data-hf-id="hf-dhhj" class="f-05-voice-caller-line" id="f-05-voice-caller-line">
+            How soon can you start?
+          </div>
+          <div data-hf-id="hf-2ri9" id="f-05-voice-underline"></div>
+        </div>
+
+        <!-- supporting -->
+        <div data-hf-id="hf-4rnw" id="f-05-voice-connector"></div>
+
+        <div data-hf-id="hf-4du6" class="f-05-voice-mono f-05-voice-step-num" id="f-05-voice-num-1" style="left: 80px">
+          01
+        </div>
+        <div data-hf-id="hf-z068" class="f-05-voice-mono f-05-voice-step-num" id="f-05-voice-num-2" style="left: 385px">
+          02
+        </div>
+        <div data-hf-id="hf-o2l9" class="f-05-voice-mono f-05-voice-step-num" id="f-05-voice-num-3" style="left: 690px">
+          03
+        </div>
+
+        <div data-hf-id="hf-r389" class="f-05-voice-step-track" style="left: 80px"></div>
+        <div data-hf-id="hf-olrh" class="f-05-voice-step-track" style="left: 385px"></div>
+        <div data-hf-id="hf-i4n6" class="f-05-voice-step-track" style="left: 690px"></div>
+
+        <div data-hf-id="hf-y74u" class="f-05-voice-step-bar" id="f-05-voice-bar-1" style="left: 80px"></div>
+        <div data-hf-id="hf-4ejz" class="f-05-voice-step-bar" id="f-05-voice-bar-2" style="left: 385px"></div>
+        <div data-hf-id="hf-ydzl" class="f-05-voice-step-bar" id="f-05-voice-bar-3" style="left: 690px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var DUR = 9.326;
+      var ACCENT = "#62ff98";
+      var CREAM = "#f2fff6";
+      var HAIR = "#262827";
+      var byId = function (id) {
+        return document.getElementById(id);
+      };
+
+      var panel = byId("f-05-voice-panel");
+      var camera = byId("f-05-voice-camera");
+      var stateEl = byId("f-05-voice-state");
+      var waveSvg = byId("f-05-voice-wave");
+      var dotSvg = byId("f-05-voice-dot");
+      var dotCore = byId("f-05-voice-dot-core");
+      var dotRing = byId("f-05-voice-dot-ring");
+      var checkSvg = byId("f-05-voice-check");
+      var checkPath = byId("f-05-voice-check-path");
+
+      /* waveform — DETERMINISTIC baked profile, derived from bar index only */
+      var BAR_N = 40;
+      var BAR_W = 10;
+      var BAR_PITCH = 19.54;
+      var WAVE_MID = 105;
+      var WAVE_MAX = 92;
+      var BASE = [];
+      for (var i = 0; i < BAR_N; i++) {
+        var a = Math.sin(i * 1.37) * 0.5 + 0.5;
+        var b = Math.sin(i * 0.61 + 1.1) * 0.5 + 0.5;
+        var env = Math.sin((i / (BAR_N - 1)) * Math.PI);
+        BASE.push(0.18 + (0.22 + 0.6 * (0.55 * a + 0.45 * b)) * (0.4 + 0.6 * env));
+      }
+
+      var NS = "http://www.w3.org/2000/svg";
+      var bars = [];
+      for (var j = 0; j < BAR_N; j++) {
+        var rect = document.createElementNS(NS, "rect");
+        rect.setAttribute("x", String(j * BAR_PITCH));
+        rect.setAttribute("width", String(BAR_W));
+        rect.setAttribute("y", String(WAVE_MID - 1.5));
+        rect.setAttribute("height", "3");
+        rect.setAttribute("fill", ACCENT);
+        rect.setAttribute("opacity", "0.26");
+        waveSvg.appendChild(rect);
+        bars.push(rect);
+      }
+
+      /* the waveform goes live at 3.85s — analytic ramp, so every seek is exact */
+      var WAVE_LIVE = 3.85;
+      function barAmp(t, idx) {
+        var s = WAVE_LIVE + idx * 0.012;
+        var d = 0.45;
+        if (t <= s) return 0;
+        if (t >= s + d) return 1;
+        var u = (t - s) / d;
+        return 1 - Math.pow(1 - u, 3);
+      }
+
+      /* discrete-text-sequence — the panel's stepping state labels */
+      var STATES = [
+        { t: 0.0, text: "CALL US", accent: false },
+        { t: 2.15, text: "CONNECTED", accent: true },
+        { t: 5.95, text: "DETAILS CLARIFIED", accent: true },
+        { t: 8.35, text: "NEXT STEP", accent: true }
+      ];
+      function stateAt(time) {
+        for (var k = STATES.length - 1; k >= 0; k--) {
+          if (time >= STATES[k].t) return STATES[k];
+        }
+        return STATES[0];
+      }
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      /* collapsed starting states (seek-safe sets, never CSS-hidden) */
+      tl.set([byId("f-05-voice-bar-1"), byId("f-05-voice-bar-2"), byId("f-05-voice-bar-3")], { scaleX: 0 }, 0);
+      tl.set(byId("f-05-voice-underline"), { scaleX: 0 }, 0);
+      tl.set(dotSvg, { opacity: 0, scale: 0 }, 0);
+      tl.set(checkSvg, { opacity: 0 }, 0);
+      tl.set(checkPath, { strokeDasharray: 60, strokeDashoffset: 60 }, 0);
+
+      /* continuous driver — state text, live waveform, status pulse */
+      var drv = { t: 0 };
+      tl.to(
+        drv,
+        {
+          t: DUR,
+          duration: DUR,
+          ease: "none",
+          onUpdate: function () {
+            var t = drv.t;
+
+            var st = stateAt(t);
+            if (stateEl.textContent !== st.text) stateEl.textContent = st.text;
+            stateEl.style.color = st.accent ? ACCENT : CREAM;
+
+            for (var n = 0; n < BAR_N; n++) {
+              var amp = barAmp(t, n);
+              var osc = Math.abs(
+                Math.sin(t * (7.4 + (n % 5) * 0.55) + n * 0.42) * 0.72 +
+                  Math.sin(t * 3.1 + n * 0.19) * 0.28
+              );
+              var h = 3 + WAVE_MAX * BASE[n] * amp * (0.24 + 0.76 * osc);
+              var el = bars[n];
+              el.setAttribute("y", String(WAVE_MID - h / 2));
+              el.setAttribute("height", String(h));
+              el.setAttribute("opacity", String(0.26 + 0.74 * amp));
+            }
+
+            /* svg-icon-enrichment · pulse — SVG transform ATTRIBUTE around an
+               explicit centre; ring lags the core by PI/2 */
+            var p = Math.max(0, t - 2.15) * 3.35;
+            var sC = 1 + Math.sin(p) * 0.12;
+            var sR = 1 + Math.sin(p + Math.PI / 2) * 0.08;
+            dotCore.setAttribute("transform", "translate(24 24) scale(" + sC + ") translate(-24 -24)");
+            dotRing.setAttribute("transform", "translate(24 24) scale(" + sR + ") translate(-24 -24)");
+            dotRing.style.opacity = String(0.5 + Math.sin(p) * 0.35);
+          }
+        },
+        0
+      );
+
+      /* Scene 1 (0–2.1s) — the CALL US panel is held as hero and comes into focus */
+      tl.fromTo(
+        panel,
+        { opacity: 0, scale: 0.94, filter: "blur(20px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.85, ease: "power3.out" },
+        0.12
+      );
+      tl.fromTo(byId("f-05-voice-toprule"), { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power2.out" }, 0.1);
+      tl.fromTo(
+        [byId("f-05-voice-kicker"), byId("f-05-voice-num")],
+        { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.06 },
+        0.14
+      );
+      tl.fromTo(
+        stateEl,
+        { opacity: 0, scale: 0.88 },
+        { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" },
+        0.55
+      );
+      tl.fromTo(byId("f-05-voice-headsweep"), { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power2.out" }, 0.62);
+      tl.fromTo(byId("f-05-voice-baseline"), { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.out" }, 0.95);
+      tl.fromTo(byId("f-05-voice-stub"), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power2.out" }, 1.15);
+      tl.fromTo(byId("f-05-voice-botrule"), { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.out" }, 1.5);
+      tl.fromTo(byId("f-05-voice-catalog"), { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.62);
+
+      /* Scene 2 (2.1–3.8s) — it steps to its connected state; "let them call" at 2.6s */
+      tl.fromTo(
+        stateEl,
+        { scale: 0.86, opacity: 0.25 },
+        { scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+        2.15
+      );
+      tl.fromTo(dotSvg, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" }, 2.15);
+      tl.fromTo(
+        byId("f-05-voice-headsweep"),
+        { backgroundColor: HAIR },
+        { backgroundColor: ACCENT, duration: 0.35, ease: "power2.out" },
+        2.18
+      );
+      tl.fromTo(byId("f-05-voice-bar-1"), { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, 2.2);
+      tl.fromTo(byId("f-05-voice-num-1"), { opacity: 0.35 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 2.2);
+      tl.fromTo(
+        byId("f-05-voice-hero-1"),
+        { opacity: 0, scale: 0.9, y: 26 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: "power3.out" },
+        2.55
+      );
+      tl.fromTo(
+        byId("f-05-voice-hero-2"),
+        { opacity: 0, scale: 0.9, y: 26 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: "power3.out" },
+        2.74
+      );
+      tl.fromTo(byId("f-05-voice-connector"), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power2.out" }, 3.0);
+
+      /* Scene 3 (3.8–5.9s) — the waveform runs live under the caller's question cue */
+      tl.fromTo(
+        byId("f-05-voice-baseline"),
+        { backgroundColor: HAIR },
+        { backgroundColor: "#48504b", duration: 0.4, ease: "power2.out" },
+        3.85
+      );
+      tl.fromTo(
+        byId("f-05-voice-caller-label"),
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
+        4.15
+      );
+      tl.fromTo(
+        byId("f-05-voice-caller-line"),
+        { opacity: 0, y: 22, scale: 0.97 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" },
+        4.3
+      );
+
+      /* Scene 4 (5.9–8.3s) — DETAILS CLARIFIED confirms on "details" (6.0s) */
+      tl.fromTo(
+        stateEl,
+        { scale: 0.86, opacity: 0.25 },
+        { scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+        5.95
+      );
+      /* commit-synced micro push-in, then the camera re-locks */
+      tl.fromTo(camera, { scale: 1 }, { scale: 1.008, duration: 0.7, ease: "power2.out" }, 5.95);
+      tl.fromTo(byId("f-05-voice-bar-2"), { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, 6.0);
+      tl.fromTo(byId("f-05-voice-num-2"), { opacity: 0.35 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 6.0);
+      tl.fromTo(checkSvg, { opacity: 0 }, { opacity: 1, duration: 0.18, ease: "none" }, 6.05);
+      tl.fromTo(
+        checkPath,
+        { strokeDashoffset: 60 },
+        { strokeDashoffset: 0, duration: 0.45, ease: "power2.out" },
+        6.05
+      );
+      tl.fromTo(byId("f-05-voice-underline"), { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power2.out" }, 6.9);
+      tl.fromTo(
+        byId("f-05-voice-caller-label"),
+        { color: "#48504b" },
+        { color: ACCENT, duration: 0.3, ease: "none" },
+        6.95
+      );
+
+      /* Scene 5 (8.3–9.326s) — NEXT STEP lands as the closing state and holds */
+      tl.fromTo(
+        stateEl,
+        { scale: 0.86, opacity: 0.25 },
+        { scale: 1, opacity: 1, duration: 0.42, ease: "power3.out" },
+        8.35
+      );
+      tl.fromTo(byId("f-05-voice-bar-3"), { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, 8.4);
+      tl.fromTo(byId("f-05-voice-num-3"), { opacity: 0.35 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 8.4);
+      tl.fromTo(
+        byId("f-05-voice-connector"),
+        { backgroundColor: HAIR },
+        { backgroundColor: ACCENT, duration: 0.35, ease: "power2.out" },
+        8.45
+      );
+
+      window.__timelines["05-voice"] = tl;
+    })();
+  </script>
+</template>

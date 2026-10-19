@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #f2fff6;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-sw1q" id="root" data-composition-id="main" data-start="0" data-duration="63.034" data-width="1080" data-height="1920">
+      <div data-hf-id="hf-jknu" id="el-01-hook" class="scene" data-composition-id="01-hook" data-composition-src="compositions/frames/01-hook.html" data-start="0" data-duration="7.523" data-track-index="1"></div>
+      <audio data-hf-id="hf-wm32" id="el-01-hook-voice" src="assets/voice/01.wav" data-start="0" data-duration="7.523" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-4a6x" id="el-02-friction" class="scene" data-composition-id="02-friction" data-composition-src="compositions/frames/02-friction.html" data-start="7.523" data-duration="10.606" data-track-index="1"></div>
+      <audio data-hf-id="hf-v85a" id="el-02-friction-voice" src="assets/voice/02.wav" data-start="7.523" data-duration="10.606" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-qann" id="el-03-questions" class="scene" data-composition-id="03-questions" data-composition-src="compositions/frames/03-questions.html" data-start="18.128999999999998" data-duration="7.68" data-track-index="1"></div>
+      <audio data-hf-id="hf-15h1" id="el-03-questions-voice" src="assets/voice/03.wav" data-start="18.128999999999998" data-duration="7.68" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-8moj" id="el-04-whatsapp" class="scene" data-composition-id="04-whatsapp" data-composition-src="compositions/frames/04-whatsapp.html" data-start="25.808999999999997" data-duration="9.613" data-track-index="1"></div>
+      <audio data-hf-id="hf-rhya" id="el-04-whatsapp-voice" src="assets/voice/04.wav" data-start="25.808999999999997" data-duration="9.613" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-s8bu" id="el-05-voice" class="scene" data-composition-id="05-voice" data-composition-src="compositions/frames/05-voice.html" data-start="35.422" data-duration="9.326" data-track-index="1"></div>
+      <audio data-hf-id="hf-xp9c" id="el-05-voice-voice" src="assets/voice/05.wav" data-start="35.422" data-duration="9.326" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-44vj" id="el-06-response" class="scene" data-composition-id="06-response" data-composition-src="compositions/frames/06-response.html" data-start="44.748" data-duration="8.934" data-track-index="1"></div>
+      <audio data-hf-id="hf-d230" id="el-06-response-voice" src="assets/voice/06.wav" data-start="44.748" data-duration="8.934" data-track-index="10" data-volume="1"></audio>
+
+      <div data-hf-id="hf-w8u2" id="el-07-cta" class="scene" data-composition-id="07-cta" data-composition-src="compositions/frames/07-cta.html" data-start="53.681999999999995" data-duration="9.352" data-track-index="1"></div>
+      <audio data-hf-id="hf-visu" id="el-07-cta-voice" src="assets/voice/07.wav" data-start="53.681999999999995" data-duration="9.352" data-track-index="10" data-volume="1"></audio>
+
+      <!-- BGM -->
+      <audio data-hf-id="hf-cst6" id="el-bgm" src="assets/bgm/track.loop.mp3" data-start="0" data-duration="63.034" data-track-index="11" data-volume="0.12"></audio>
+
+      <!-- captions -->
+      <div data-hf-id="hf-6tvl" id="el-captions" class="scene" data-composition-id="captions" data-composition-src="compositions/captions.html" data-start="0" data-duration="63.034" data-track-index="2"></div>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

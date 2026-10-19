@@ -1,0 +1,356 @@
+<template>
+  <style>
+    /* ── 01-hook · Broadside dark register ───────────────────────────────
+       ground #050708 · text #f2fff6 · single accent #62ff98
+       flat plane: 0 radius, no shadow, no gradient. Type in cqw against
+       the #root size container (1080×1920). Content x 84–936, y 180–1510. */
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Inter", sans-serif;
+      color: #f2fff6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .hook01-ground {
+      position: absolute;
+      inset: 0;
+      background: #050708;
+    }
+
+    .hook01-layer {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* ── chrome — mono kicker, uppercase, 0.14em ── */
+    .hook01-kicker {
+      position: absolute;
+      left: 84px;
+      top: 190px;
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 400;
+      font-size: 2cqw;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #62ff98;
+      opacity: 0;
+    }
+
+    /* ── upper-third type stage: clause beats swap out, display lands ── */
+    .hook01-stage {
+      position: absolute;
+      left: 84px;
+      top: 340px;
+      width: 852px;
+      height: 200px;
+    }
+
+    .hook01-clause {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      font-weight: 900;
+      font-size: 7.6cqw;
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      text-transform: lowercase;
+      white-space: nowrap;
+      color: #f2fff6;
+    }
+
+    /* the frame's single display moment */
+    .hook01-display {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      font-weight: 900;
+      font-size: 17cqw;
+      line-height: 0.88;
+      letter-spacing: -0.045em;
+      text-transform: lowercase;
+      white-space: nowrap;
+      color: #f2fff6;
+      transform-origin: 0% 100%;
+      opacity: 0;
+    }
+
+    /* ── the form-field stack — 1px hairlines only ── */
+    .hook01-stack {
+      position: absolute;
+      left: 84px;
+      top: 690px;
+      width: 852px;
+    }
+
+    .hook01-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 104px;
+      border-top: 1px solid #262827;
+      opacity: 0;
+    }
+
+    .hook01-rowlabel {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 400;
+      font-size: 2.1cqw;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #a5b4ad;
+      opacity: 0;
+    }
+
+    .hook01-fieldline {
+      width: 388px;
+      height: 1px;
+      background: #262827;
+      opacity: 0;
+    }
+
+    /* ── the conversation line drawn across the stack ── */
+    .hook01-draw {
+      position: absolute;
+      left: 84px;
+      top: 620px;
+      width: 852px;
+      height: 540px;
+      overflow: visible;
+    }
+
+    .hook01-draw path {
+      fill: none;
+      stroke: #62ff98;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hook01-node {
+      position: absolute;
+      left: 881px;
+      top: 697px;
+      width: 18px;
+      height: 18px;
+      background: #62ff98;
+      transform-origin: 50% 50%;
+      opacity: 0;
+    }
+
+    /* ── payoff, low in the field ── */
+    .hook01-payoff {
+      position: absolute;
+      left: 84px;
+      top: 1236px;
+      width: 852px;
+      font-weight: 900;
+      font-size: 5.4cqw;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      text-transform: lowercase;
+    }
+
+    .hook01-payoff span {
+      display: inline-block;
+      opacity: 0;
+    }
+
+    .hook01-accent {
+      color: #62ff98;
+    }
+  </style>
+
+  <div data-hf-id="hf-qxrg" id="root" data-composition-id="01-hook" data-width="1080" data-height="1920">
+    <div data-hf-id="hf-pp5r" class="clip hook01-ground" data-start="0" data-duration="7.523" data-track-index="0"></div>
+
+    <div data-hf-id="hf-gyh2" class="clip hook01-layer" data-start="0" data-duration="7.523" data-track-index="1">
+      <div data-hf-id="hf-r81a" class="hook01-kicker" id="hook01-kicker">No. 01 — the ask</div>
+
+      <div data-hf-id="hf-6qel" class="hook01-stage">
+        <div data-hf-id="hf-8msy" class="hook01-clause" id="hook01-clause"></div>
+        <div data-hf-id="hf-nk7o" class="hook01-display" id="hook01-display">homework</div>
+      </div>
+
+      <div data-hf-id="hf-ddei" class="hook01-stack" id="hook01-stack">
+        <div data-hf-id="hf-8usg" class="hook01-row" id="hook01-row-1">
+          <div data-hf-id="hf-e02w" class="hook01-rowlabel">Name</div>
+          <div data-hf-id="hf-uma5" class="hook01-fieldline"></div>
+        </div>
+        <div data-hf-id="hf-jqa3" class="hook01-row" id="hook01-row-2">
+          <div data-hf-id="hf-j28x" class="hook01-rowlabel">Email</div>
+          <div data-hf-id="hf-8lfl" class="hook01-fieldline"></div>
+        </div>
+        <div data-hf-id="hf-fs62" class="hook01-row" id="hook01-row-3">
+          <div data-hf-id="hf-vwmy" class="hook01-rowlabel">Company</div>
+          <div data-hf-id="hf-9sco" class="hook01-fieldline"></div>
+        </div>
+        <div data-hf-id="hf-x0gd" class="hook01-row" id="hook01-row-4">
+          <div data-hf-id="hf-2goe" class="hook01-rowlabel">Budget</div>
+          <div data-hf-id="hf-9e1n" class="hook01-fieldline"></div>
+        </div>
+      </div>
+
+      <svg data-hf-id="hf-e8z8" class="hook01-draw" viewBox="0 0 852 540" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path data-hf-id="hf-3bvp" id="hook01-path" d="M 0 434 C 150 430 220 396 300 352 C 380 308 448 246 560 200 C 664 158 742 130 806 86" />
+      </svg>
+      <div data-hf-id="hf-8b6g" class="hook01-node" id="hook01-node"></div>
+
+      <div data-hf-id="hf-t8cy" class="hook01-payoff" id="hook01-payoff">
+        <span data-hf-id="hf-iygr">make</span> <span data-hf-id="hf-jsck">it</span><br data-hf-id="hf-x5px"><span data-hf-id="hf-3tds">the</span>
+        <span data-hf-id="hf-cz0a" class="hook01-accent">easy</span>
+        <span data-hf-id="hf-mf09" class="hook01-accent">part</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var root = document.querySelector('[data-composition-id="01-hook"]');
+      var q = function (sel) {
+        return root.querySelector(sel);
+      };
+
+      var F = 1 / 60;
+      var DUR = 7.523;
+
+      var kicker = q("#hook01-kicker");
+      var clause = q("#hook01-clause");
+      var display = q("#hook01-display");
+      var stack = q("#hook01-stack");
+      var rows = [
+        q("#hook01-row-1"),
+        q("#hook01-row-2"),
+        q("#hook01-row-3"),
+        q("#hook01-row-4"),
+      ];
+      var path = q("#hook01-path");
+      var node = q("#hook01-node");
+      var payoffWords = root.querySelectorAll("#hook01-payoff span");
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      /* ── Scene 1 (0.0-2.4s) — clause beats, discrete-text-sequence.
+         Whole states replace each other at thresholds; only ONE clause is on
+         screen at a time, and the line clears before the display lands. ── */
+      var SEQUENCE = [
+        { t: 0.0, text: "" },
+        { t: 0.1, text: "your" },
+        { t: 0.34, text: "your next" },
+        { t: 0.62, text: "your next customer" },
+        { t: 1.3, text: "has a question" },
+        { t: 2.02, text: "has a question?" },
+        { t: 2.42, text: "" },
+      ];
+
+      function textAt(time) {
+        for (var i = SEQUENCE.length - 1; i >= 0; i--) {
+          if (time >= SEQUENCE[i].t) return SEQUENCE[i].text;
+        }
+        return "";
+      }
+
+      var driver = { t: 0 };
+      tl.to(
+        driver,
+        {
+          t: 2.6,
+          duration: 2.6,
+          ease: "none",
+          onUpdate: function () {
+            clause.textContent = textAt(driver.t);
+          },
+        },
+        0,
+      );
+
+      // one snap per beat so each state change reads as a hit, not a re-render
+      [0.1, 0.62, 1.3, 2.02].forEach(function (t) {
+        tl.fromTo(
+          clause,
+          { x: -16 },
+          { x: 0, duration: 0.18, ease: "power4.out" },
+          t,
+        );
+      });
+
+      tl.fromTo(
+        kicker,
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" },
+        0.04,
+      );
+
+      /* ── Scene 2 (2.4-4.7s) — the display moment lands, then the field
+         rows stack in a waterfall-entry cascade (binary opacity, one axis). ── */
+      tl.fromTo(
+        display,
+        { opacity: 0, scale: 0.9, y: 30 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.34, ease: "power4.out" },
+        2.4,
+      );
+
+      var rowStarts = [2.88, 3.3, 3.7, 4.06];
+      var rowTravel = [76, 60, 50, 44];
+      var rowDur = [0.2, 0.18, 0.16, 0.15];
+
+      rows.forEach(function (row, i) {
+        var t = rowStarts[i];
+        tl.set(row, { opacity: 1, y: rowTravel[i] }, t);
+        tl.to(row, { y: 0, duration: rowDur[i], ease: "power4.out" }, t);
+
+        // light parts overlap the row by a frame — the cascade inside the cascade
+        var label = row.querySelector(".hook01-rowlabel");
+        var line = row.querySelector(".hook01-fieldline");
+        var tLabel = t + rowDur[i] - F;
+        tl.set(label, { opacity: 1, y: 26 }, tLabel);
+        tl.to(label, { y: 0, duration: 0.13, ease: "power4.out" }, tLabel);
+        var tLine = tLabel + 0.13 - 2 * F;
+        tl.set(line, { opacity: 1, y: 20 }, tLine);
+        tl.to(line, { y: 0, duration: 0.12, ease: "power4.out" }, tLine);
+      });
+
+      /* ── Scene 3 (4.7-7.523s) — the stack recedes, the conversation line
+         draws across it (svg-path-draw), lands on a node, payoff arrives. ── */
+      tl.to(stack, { opacity: 0.26, duration: 0.55, ease: "power2.out" }, 4.74);
+
+      var len = path.getTotalLength();
+      path.style.strokeDasharray = String(len);
+      path.style.strokeDashoffset = String(len);
+      tl.to(
+        path,
+        { strokeDashoffset: 0, duration: 0.95, ease: "power2.out" },
+        4.84,
+      );
+
+      tl.fromTo(
+        node,
+        { opacity: 0, scale: 0.35 },
+        { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.2)" },
+        5.7,
+      );
+
+      var wordStarts = [5.98, 6.12, 6.3, 6.44, 6.6];
+      var wordTravel = [56, 40, 40, 58, 64];
+      for (var w = 0; w < payoffWords.length; w++) {
+        tl.set(payoffWords[w], { opacity: 1, y: wordTravel[w] }, wordStarts[w]);
+        tl.to(
+          payoffWords[w],
+          { y: 0, duration: 0.16, ease: "power4.out" },
+          wordStarts[w],
+        );
+      }
+
+      // hold the resolved frame to the end — no exit (the root transition owns it)
+      tl.to({}, { duration: 0.01 }, DUR - 0.01);
+
+      window.__timelines["01-hook"] = tl;
+    })();
+  </script>
+</template>

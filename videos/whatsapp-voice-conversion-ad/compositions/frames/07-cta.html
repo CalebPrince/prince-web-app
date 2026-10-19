@@ -1,0 +1,368 @@
+<template id="cta-template" data-composition-id="07-cta" data-width="1080" data-height="1920">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@500&display=swap");
+
+  /* ---- broadside tokens (frame.md frontmatter, verbatim) ---- */
+  #root {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    container-type: size;
+    overflow: hidden;
+    --ink-black: #050708;
+    --ink-black-alt: #181a19;
+    --fire-orange: #62ff98;
+    --cream: #f2fff6;
+    --cream-muted: #a5b4ad;
+    --cream-hint: #48504b;
+    --border-dark: #262827;
+    --font-display: "Inter", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  /* full-bleed ground — a full-duration clip layer, never a background on #root */
+  #cta-ground {
+    position: absolute;
+    inset: 0;
+    background: var(--ink-black);
+  }
+
+  /* content safe area: x 80–940 (Shorts right keep-out honoured), y 180–1510 */
+  #cta-stage {
+    position: absolute;
+    left: 80px;
+    right: 140px;
+    top: 0;
+    bottom: 0;
+  }
+  .cta-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---- scene 1 · the word swap (the one display moment) ---- */
+  .cta-phrase-wrap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 27.08cqh;
+    height: 7.3cqh;
+  }
+  .cta-phrase {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 10.2cqw;
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    text-transform: lowercase;
+    color: var(--cream);
+    white-space: nowrap;
+    opacity: 0;
+  }
+  #cta-word-b {
+    z-index: 2;
+    color: var(--fire-orange);
+  }
+
+  /* ---- scene 2 · the mark + wordmark lockup ---- */
+  .cta-row-mark {
+    top: 25.52cqh;
+  }
+  #cta-mark {
+    width: 18.5cqw;
+    height: 18.5cqw;
+    background: var(--fire-orange);
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity;
+    opacity: 0;
+  }
+  #cta-mark span {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 13cqw;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--ink-black);
+    /* optical centring of the P inside the plate */
+    margin: -0.06em 0.06em 0 0;
+  }
+
+  .cta-row-word {
+    top: 38.02cqh;
+  }
+  #cta-wordmark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 6.6cqw;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--cream);
+    white-space: nowrap;
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .cta-row-rule {
+    top: 43.75cqh;
+  }
+  #cta-rule {
+    width: 36px;
+    height: 2px;
+    background: var(--fire-orange);
+    transform-origin: 0% 50%;
+    will-change: transform;
+    transform: scaleX(0);
+  }
+
+  /* ---- scene 3 · the contact promise ---- */
+  .cta-row-promise {
+    top: 46.88cqh;
+  }
+  .cta-promise-wrap {
+    position: relative;
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 4.8cqw;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-transform: lowercase;
+    color: var(--cream);
+    white-space: nowrap;
+  }
+  /* the ghost fixes the box to the widest state — no right-edge jitter */
+  .cta-promise-ghost {
+    visibility: hidden;
+  }
+  .cta-promise-live {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  #cta-caret {
+    display: inline-block;
+    width: 0.07em;
+    height: 0.78em;
+    margin-left: 0.14em;
+    background: var(--fire-orange);
+    opacity: 0;
+  }
+  .cta-hl {
+    color: var(--fire-orange);
+  }
+
+  /* ---- supporting · the functional connection line ---- */
+  .cta-row-line {
+    top: 53.65cqh;
+  }
+  #cta-connector {
+    width: 1px;
+    height: 6.25cqh;
+    background: var(--cream-hint);
+    transform-origin: 50% 0%;
+    will-change: transform;
+    transform: scaleY(0);
+  }
+
+  /* ---- scene 4 · the url plate ---- */
+  .cta-row-url {
+    top: 61.46cqh;
+  }
+  #cta-url-plate {
+    border: 1px solid var(--fire-orange);
+    border-radius: 0;
+    padding: 1.15cqh 2.6cqw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    clip-path: inset(0 100% 0 0);
+  }
+  #cta-url {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 3.7cqw;
+    line-height: 1.1;
+    letter-spacing: 0.14em;
+    color: var(--cream);
+    white-space: nowrap;
+    clip-path: inset(0 100% 0 0);
+  }
+</style>
+
+<div data-hf-id="hf-lhdc" id="root" data-composition-id="07-cta" data-start="0" data-duration="9.352" data-width="1080" data-height="1920">
+  <div data-hf-id="hf-aqcb" id="cta-ground" class="clip" data-start="0" data-duration="9.352" data-track-index="0"></div>
+
+  <div data-hf-id="hf-fgzv" id="cta-stage" class="clip" data-start="0" data-duration="9.352" data-track-index="1">
+    <!-- scene 1 — the phrase morphs in place -->
+    <div data-hf-id="hf-zmg5" class="cta-phrase-wrap">
+      <span data-hf-id="hf-pmu3" class="cta-phrase" id="cta-word-a">questions</span>
+      <span data-hf-id="hf-og9n" class="cta-phrase" id="cta-word-b">conversations</span>
+    </div>
+
+    <!-- scene 2 — the lockup -->
+    <div data-hf-id="hf-pp2a" class="cta-row cta-row-mark"><div data-hf-id="hf-yiy1" id="cta-mark"><span data-hf-id="hf-g0yr">P</span></div></div>
+    <div data-hf-id="hf-hnfh" class="cta-row cta-row-word"><div data-hf-id="hf-vh7v" id="cta-wordmark">Prince Caleb</div></div>
+    <div data-hf-id="hf-hilj" class="cta-row cta-row-rule"><div data-hf-id="hf-834s" id="cta-rule"></div></div>
+
+    <!-- scene 3 — the contact promise -->
+    <div data-hf-id="hf-v0ps" class="cta-row cta-row-promise">
+      <div data-hf-id="hf-if6n" class="cta-promise-wrap">
+        <span data-hf-id="hf-fh0y" class="cta-promise-ghost">built to be contacted</span>
+        <span data-hf-id="hf-l8pc" class="cta-promise-live"><span data-hf-id="hf-i2wg" id="cta-promise"></span><span data-hf-id="hf-f6lq" id="cta-caret"></span></span>
+      </div>
+    </div>
+
+    <!-- supporting — the connection line down to the contact point -->
+    <div data-hf-id="hf-gryr" class="cta-row cta-row-line"><div data-hf-id="hf-t8fr" id="cta-connector"></div></div>
+
+    <!-- scene 4 — the url, held dead still -->
+    <div data-hf-id="hf-qhjg" class="cta-row cta-row-url">
+      <div data-hf-id="hf-u8mu" id="cta-url-plate"><div data-hf-id="hf-1is2" id="cta-url">princecaleb.dev</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var DUR = 9.352;
+
+    window.__timelines = window.__timelines || {};
+    var tl = gsap.timeline({ paused: true });
+
+    var wordA = document.getElementById("cta-word-a");
+    var wordB = document.getElementById("cta-word-b");
+    var mark = document.getElementById("cta-mark");
+    var wordmark = document.getElementById("cta-wordmark");
+    var ruleStub = document.getElementById("cta-rule");
+    var promise = document.getElementById("cta-promise");
+    var caret = document.getElementById("cta-caret");
+    var connector = document.getElementById("cta-connector");
+    var plate = document.getElementById("cta-url-plate");
+    var url = document.getElementById("cta-url");
+
+    // left-to-right clip-path wipe, driven by a plain object so every seek is exact
+    function wipe(el, at, dur, ease) {
+      var o = { p: 0 };
+      tl.fromTo(
+        o,
+        { p: 0 },
+        {
+          p: 1,
+          duration: dur,
+          ease: ease,
+          onUpdate: function () {
+            el.style.clipPath = "inset(0 " + ((1 - o.p) * 100).toFixed(3) + "% 0 0)";
+          },
+        },
+        at
+      );
+    }
+
+    /* ---------- Scene 1 (0.0-3.1s) — "questions" swaps in place into
+       "conversations" as one unbroken chain (scale-swap-transition). ---------- */
+    tl.fromTo(
+      wordA,
+      { scale: 0.86, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.5, ease: "power3.out" },
+      0.05
+    );
+    // outgoing rushes away — power2.in, on the beat before "conversations" lands
+    tl.to(wordA, { scale: 0.74, opacity: 0, duration: 0.36, ease: "power2.in" }, 1.62);
+    // incoming arrives with weight, overlapping the exit by 0.15s
+    tl.fromTo(
+      wordB,
+      { scale: 0.74, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.56, ease: "back.out(1.4)" },
+      1.83
+    );
+    // the clear — shrink toward centre + fade, leaving a blank stage for the bloom
+    tl.to(wordB, { scale: 0.62, opacity: 0, duration: 0.4, ease: "power2.in" }, 2.92);
+
+    /* ---------- Scene 2 (3.1-4.5s) — the P mark blooms from zero on the cleared
+       stage, the wordmark reveals beneath it (spring-pop-entrance). ---------- */
+    tl.fromTo(
+      mark,
+      { scale: 0, opacity: 0, rotation: -5 },
+      { scale: 1, opacity: 1, rotation: 0, duration: 0.62, ease: "back.out(1.35)" },
+      3.26
+    );
+    wipe(wordmark, 3.64, 0.55, "power3.out");
+    tl.fromTo(ruleStub, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, 4.3);
+
+    /* ---------- Scene 3 (4.5-7.0s) — the contact promise builds in discrete
+       states on the voiceover cues (discrete-text-sequence). ---------- */
+    var SEQUENCE = [
+      { t: 0, html: "" },
+      { t: 4.62, html: "built" },
+      { t: 5.12, html: "built to" },
+      { t: 5.5, html: "built to be" },
+      { t: 6.02, html: 'built to be <span class="cta-hl">contacted</span>' },
+    ];
+    function htmlAt(time) {
+      for (var i = SEQUENCE.length - 1; i >= 0; i--) {
+        if (time >= SEQUENCE[i].t) return SEQUENCE[i].html;
+      }
+      return "";
+    }
+    var driver = { t: 0 };
+    tl.to(
+      driver,
+      {
+        t: DUR,
+        duration: DUR,
+        ease: "none",
+        onUpdate: function () {
+          var next = htmlAt(driver.t);
+          if (promise.innerHTML !== next) promise.innerHTML = next;
+        },
+      },
+      0
+    );
+
+    // caret — deterministic sin square wave, retired before the final hold
+    tl.set(caret, { opacity: 0 }, 0);
+    var blink = { p: 0 };
+    tl.to(
+      blink,
+      {
+        p: Math.PI * 2 * 3,
+        duration: 2.1,
+        ease: "none",
+        onUpdate: function () {
+          caret.style.opacity = Math.sin(blink.p) > 0 ? "1" : "0";
+        },
+      },
+      4.5
+    );
+    tl.set(caret, { opacity: 0 }, 6.62);
+
+    /* ---------- Scene 4 (7.0-9.352s) — the connection line draws down to the
+       url plate, which wipes in and then holds DEAD STILL to the last frame. --- */
+    tl.fromTo(connector, { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power3.out" }, 6.8);
+    wipe(plate, 7.0, 0.52, "power3.out");
+    wipe(url, 7.26, 0.5, "power3.out");
+    // nothing moves after 7.76s — 1.59s of stillness on princecaleb.dev
+
+    window.__timelines["07-cta"] = tl;
+  })();
+</script>
+</template>

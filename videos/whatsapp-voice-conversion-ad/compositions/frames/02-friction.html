@@ -1,0 +1,456 @@
+<template>
+  <style>
+    /* ── 02-friction · Broadside dark register, spatial-pan-stations ─────
+       ground #050708 · text #f2fff6 · single accent #62ff98
+       ONE oversized world (2160×1920) holds two 1080-wide stations side by
+       side; a single .world wrapper pans -1080px to travel from station 1
+       (our form) to station 2 (the competitor who already answered).
+       Safe area per station, local coords: x 84–936, y 180–1540. */
+
+    @font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/inter-latin-900-normal.woff2") format("woff2");
+      font-weight: 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      src: url("assets/fonts/ibm-plex-mono-latin-500-normal.woff2")
+        format("woff2");
+      font-weight: 500;
+      font-style: normal;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Inter", sans-serif;
+      color: #f2fff6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .fr02-ground {
+      position: absolute;
+      inset: 0;
+      background: #050708;
+    }
+
+    /* ── the virtual camera: one wrapper, translateX only ── */
+    .fr02-world {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 2160px;
+      height: 1920px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .fr02-station {
+      position: absolute;
+      top: 0;
+      width: 1080px;
+      height: 1920px;
+    }
+
+    /* ── chrome — mono kicker, uppercase, 0.14em ── */
+    .fr02-kicker {
+      position: absolute;
+      left: 84px;
+      top: 190px;
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      font-size: 2cqw;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #62ff98;
+      opacity: 0;
+    }
+
+    /* ── station 1: the form panel ── */
+    .fr02-rows {
+      position: absolute;
+      left: 84px;
+      top: 430px;
+      width: 852px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .fr02-row {
+      height: 116px;
+      border-top: 1px solid #262827;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+    }
+
+    .fr02-rowlabel {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      font-size: 2cqw;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #a5b4ad;
+      opacity: 0;
+    }
+
+    .fr02-fieldtrack {
+      position: relative;
+      width: 420px;
+      height: 3px;
+      background: #262827;
+      overflow: hidden;
+      opacity: 0;
+    }
+
+    .fr02-fieldfill {
+      position: absolute;
+      inset: 0;
+      background: #62ff98;
+      transform-origin: 0% 50%;
+      transform: scaleX(0);
+    }
+
+    .fr02-submit {
+      position: absolute;
+      left: 84px;
+      top: 960px;
+      width: 236px;
+      height: 72px;
+      border: 1px solid #262827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+    }
+
+    .fr02-submit-label {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      font-size: 1.7cqw;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #f2fff6;
+      white-space: nowrap;
+    }
+
+    .fr02-waitword {
+      position: absolute;
+      left: 84px;
+      top: 1120px;
+      width: 852px;
+      font-weight: 900;
+      font-size: 8.4cqw;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      text-transform: lowercase;
+      color: #62ff98;
+      opacity: 0;
+    }
+
+    /* ── station 2: the answer ── */
+    .fr02-heroword {
+      position: absolute;
+      left: 84px;
+      top: 420px;
+      font-weight: 900;
+      font-size: 9cqw;
+      line-height: 1.0;
+      letter-spacing: -0.035em;
+      text-transform: lowercase;
+      color: #62ff98;
+      opacity: 0;
+      transform-origin: 0% 100%;
+    }
+
+    .fr02-connect {
+      position: absolute;
+      left: 60px;
+      top: 480px;
+      width: 140px;
+      height: 120px;
+      overflow: visible;
+    }
+
+    .fr02-connect path {
+      fill: none;
+      stroke: #62ff98;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    /* ── the traveling marker — screen space, independent of the camera ── */
+    .fr02-marker-layer {
+      position: absolute;
+      inset: 0;
+    }
+
+    .fr02-marker {
+      position: absolute;
+      left: 140px;
+      top: 560px;
+      width: 20px;
+      height: 20px;
+      background: #62ff98;
+      border-radius: 50%;
+      opacity: 0;
+    }
+  </style>
+
+  <div data-hf-id="hf-7t7i" id="root" data-composition-id="02-friction" data-width="1080" data-height="1920">
+    <div data-hf-id="hf-uho9" class="clip fr02-ground" data-start="0" data-duration="10.606" data-track-index="0"></div>
+
+    <div data-hf-id="hf-tsc2" class="clip fr02-world" id="fr02-world" data-start="0" data-duration="10.606" data-track-index="1">
+      <!-- station 1 — our form (world x 0–1080) -->
+      <div data-hf-id="hf-a0be" class="fr02-station" style="left: 0">
+        <div data-hf-id="hf-i1rs" class="fr02-kicker" id="fr02-kicker1">No. 02 — the wait</div>
+
+        <div data-hf-id="hf-oe6m" class="fr02-rows" id="fr02-rows">
+          <div data-hf-id="hf-swf4" class="fr02-row" id="fr02-row-1">
+            <div data-hf-id="hf-e2w5" class="fr02-rowlabel" id="fr02-label-1">Name</div>
+            <div data-hf-id="hf-do0i" class="fr02-fieldtrack" id="fr02-track-1">
+              <div data-hf-id="hf-5e46" class="fr02-fieldfill" id="fr02-fill-1"></div>
+            </div>
+          </div>
+          <div data-hf-id="hf-1kaz" class="fr02-row" id="fr02-row-2">
+            <div data-hf-id="hf-jzp3" class="fr02-rowlabel" id="fr02-label-2">Email</div>
+            <div data-hf-id="hf-9pwh" class="fr02-fieldtrack" id="fr02-track-2">
+              <div data-hf-id="hf-1g05" class="fr02-fieldfill" id="fr02-fill-2"></div>
+            </div>
+          </div>
+          <div data-hf-id="hf-xm6y" class="fr02-row" id="fr02-row-3">
+            <div data-hf-id="hf-2s43" class="fr02-rowlabel" id="fr02-label-3">Company</div>
+            <div data-hf-id="hf-8y8o" class="fr02-fieldtrack" id="fr02-track-3">
+              <div data-hf-id="hf-0occ" class="fr02-fieldfill" id="fr02-fill-3"></div>
+            </div>
+          </div>
+          <div data-hf-id="hf-euh9" class="fr02-row" id="fr02-row-4">
+            <div data-hf-id="hf-ncv2" class="fr02-rowlabel" id="fr02-label-4">Budget</div>
+            <div data-hf-id="hf-504n" class="fr02-fieldtrack" id="fr02-track-4">
+              <div data-hf-id="hf-o5tv" class="fr02-fieldfill" id="fr02-fill-4"></div>
+            </div>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-nsp0" class="fr02-submit" id="fr02-submit">
+          <div data-hf-id="hf-6a9m" class="fr02-submit-label" id="fr02-submit-label">Submit</div>
+        </div>
+
+        <div data-hf-id="hf-yj6p" class="fr02-waitword" id="fr02-waitword">waiting…</div>
+      </div>
+
+      <!-- station 2 — already answered (world x 1080–2160) -->
+      <div data-hf-id="hf-bbc9" class="fr02-station" style="left: 1080px">
+        <div data-hf-id="hf-i1qb" class="fr02-kicker" id="fr02-kicker2">No. 02 — elsewhere</div>
+
+        <div data-hf-id="hf-8yir" class="fr02-heroword" id="fr02-heroword">answered</div>
+
+        <svg data-hf-id="hf-4tbp" class="fr02-connect" id="fr02-connect" viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path data-hf-id="hf-ocsg" id="fr02-connect-path" d="M 80 100 C 60 78 40 52 24 20" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- the buyer's question, traveling in screen space across the pan -->
+    <div data-hf-id="hf-f0n2" class="clip fr02-marker-layer" data-start="0" data-duration="10.606" data-track-index="2">
+      <svg data-hf-id="hf-p3r6" width="0" height="0" aria-hidden="true" style="position: absolute">
+        <filter data-hf-id="hf-5rmf" id="fr02-streak" x="-80%" y="-80%" width="260%" height="260%">
+          <fegaussianblur data-hf-id="hf-chbs" id="fr02-streak-blur" in="SourceGraphic" stdDeviation="0 0" />
+        </filter>
+      </svg>
+      <div data-hf-id="hf-rnjq" class="fr02-marker" id="fr02-marker" style="filter: url(#fr02-streak)"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var root = document.querySelector('[data-composition-id="02-friction"]');
+      var q = function (sel) {
+        return root.querySelector(sel);
+      };
+
+      var F = 1 / 60;
+      var DUR = 10.606;
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      /* ═══ Scene 1 (0–3.2s) — the form accumulates: waterfall-entry rows,
+         one per spoken field (Name / Email / Company / Budget). ═══ */
+      var kicker1 = q("#fr02-kicker1");
+      tl.fromTo(
+        kicker1,
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
+        0.05,
+      );
+
+      var rowStarts = [0.2, 1.05, 1.85, 2.7];
+      var rowTravel = [60, 48, 46, 44];
+      var rowDur = [0.18, 0.16, 0.15, 0.15];
+
+      for (var i = 1; i <= 4; i++) {
+        var row = q("#fr02-row-" + i);
+        var label = q("#fr02-label-" + i);
+        var track = q("#fr02-track-" + i);
+        var fill = q("#fr02-fill-" + i);
+        var t = rowStarts[i - 1];
+
+        tl.set(row, { opacity: 1, y: rowTravel[i - 1] }, t);
+        tl.to(row, { y: 0, duration: rowDur[i - 1], ease: "power4.out" }, t);
+
+        var tLabel = t + rowDur[i - 1] - F;
+        tl.set(label, { opacity: 1, y: 22 }, tLabel);
+        tl.to(label, { y: 0, duration: 0.13, ease: "power4.out" }, tLabel);
+
+        var tTrack = tLabel + 0.13 - F;
+        tl.set(track, { opacity: 1 }, tTrack);
+
+        var tFill = tTrack + 0.04;
+        tl.to(
+          fill,
+          { scaleX: 1, duration: 0.22, ease: "power2.out" },
+          tFill,
+        );
+      }
+
+      /* ═══ Scene 2 (3.2–6.4s) — submit steps through discrete states to
+         WAITING (discrete-text-sequence); the field panel greys down and
+         a big "waiting…" word lands as the line reaches "silence". ═══ */
+      var submit = q("#fr02-submit");
+      var submitLabel = q("#fr02-submit-label");
+      var rows = q("#fr02-rows");
+      var waitword = q("#fr02-waitword");
+
+      tl.fromTo(
+        submit,
+        { opacity: 0, scale: 0.92 },
+        { opacity: 1, scale: 1, duration: 0.22, ease: "power3.out" },
+        2.98,
+      );
+
+      var SUBMIT_SEQUENCE = [
+        { t: 2.98, text: "Submit" },
+        { t: 3.4, text: "Submitting" },
+        { t: 3.88, text: "Waiting" },
+      ];
+      function submitTextAt(time) {
+        for (var s = SUBMIT_SEQUENCE.length - 1; s >= 0; s--) {
+          if (time >= SUBMIT_SEQUENCE[s].t) return SUBMIT_SEQUENCE[s].text;
+        }
+        return "";
+      }
+      var submitDriver = { t: 2.98 };
+      tl.to(
+        submitDriver,
+        {
+          t: 4.3,
+          duration: 4.3 - 2.98,
+          ease: "none",
+          onUpdate: function () {
+            submitLabel.textContent = submitTextAt(submitDriver.t);
+          },
+        },
+        2.98,
+      );
+
+      tl.to(rows, { opacity: 0.3, duration: 0.62, ease: "power2.out" }, 3.88);
+
+      tl.fromTo(
+        waitword,
+        { opacity: 0, y: 26, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power4.out" },
+        4.05,
+      );
+
+      /* held silence — panel stays grey, waiting word holds through 6.4s
+         (a deliberate stillness beat: the line IS "then, silence"). */
+
+      /* ═══ Scene 3 (6.4–8.1s) — the camera pans laterally to station 2
+         (viewport-change) while the buyer's question streaks across the
+         gap (motion-blur-streak, Path A: directional SVG blur). ═══ */
+      var world = q("#fr02-world");
+      var cam = { x: 0 };
+      function applyCamera() {
+        world.style.transform = "translateX(" + cam.x + "px)";
+      }
+      applyCamera();
+
+      tl.to(
+        cam,
+        { x: -1080, duration: 1.7, ease: "power3.inOut", onUpdate: applyCamera },
+        6.4,
+      );
+
+      var blurNode = q("#fr02-streak-blur");
+      var PEAK_BLUR = 18;
+      var blurProxy = { v: PEAK_BLUR };
+      function writeBlur() {
+        blurNode.setAttribute("stdDeviation", blurProxy.v + " 0");
+      }
+      writeBlur(); // seed frame 0 — a seek before the travel shows blur pre-armed
+
+      var marker = q("#fr02-marker");
+      var MOVE_START = 7.3;
+      var MOVE_DUR = 0.5;
+      tl.fromTo(
+        marker,
+        { x: 780, opacity: 0 },
+        { x: 0, opacity: 1, duration: MOVE_DUR, ease: "power4.out" },
+        MOVE_START,
+      );
+      tl.to(
+        blurProxy,
+        { v: 0, duration: MOVE_DUR, ease: "power4.out", onUpdate: writeBlur },
+        MOVE_START,
+      );
+
+      /* ═══ Scene 4 (8.1–10.606s) — station 2 answers first: kicker,
+         the "answered" word spring-pops in, a hairline connects it to the
+         settled marker. Holds to the end (no exit — not the final frame,
+         but this scene's punchline is a static landing). ═══ */
+      var kicker2 = q("#fr02-kicker2");
+      tl.fromTo(
+        kicker2,
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
+        8.15,
+      );
+
+      var heroword = q("#fr02-heroword");
+      tl.fromTo(
+        heroword,
+        { opacity: 0, scale: 0.72, y: 18 },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.4,
+          ease: "back.out(1.8)",
+        },
+        8.3,
+      );
+
+      var connectPath = q("#fr02-connect-path");
+      var connectLen = connectPath.getTotalLength();
+      connectPath.style.strokeDasharray = String(connectLen);
+      connectPath.style.strokeDashoffset = String(connectLen);
+      tl.to(
+        connectPath,
+        { strokeDashoffset: 0, duration: 0.35, ease: "power2.out" },
+        8.75,
+      );
+
+      // hold the resolved frame to the end — no exit (the root transition owns it)
+      tl.to({}, { duration: 0.01 }, DUR - 0.01);
+
+      window.__timelines["02-friction"] = tl;
+    })();
+  </script>
+</template>

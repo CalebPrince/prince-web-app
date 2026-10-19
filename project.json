@@ -1,0 +1,5 @@
+{
+  "description": "Tailwind CSS build for prince-web-app. CI-only build dependency — the production host runs no Node at runtime; see README.md Setup.",
+  "tags": [],
+  "category": "Web"
+}

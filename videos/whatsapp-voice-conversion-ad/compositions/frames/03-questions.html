@@ -1,0 +1,411 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Inter";
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src:
+        local("Inter Bold"),
+        url("https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/files/inter-latin-700-normal.woff2")
+          format("woff2");
+    }
+    @font-face {
+      font-family: "Inter";
+      font-style: normal;
+      font-weight: 900;
+      font-display: swap;
+      src:
+        local("Inter Black"),
+        url("https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/files/inter-latin-900-normal.woff2")
+          format("woff2");
+    }
+    @font-face {
+      font-family: "IBM Plex Mono";
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src:
+        local("IBM Plex Mono Medium"),
+        url("https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.0.13/files/ibm-plex-mono-latin-500-normal.woff2")
+          format("woff2");
+    }
+
+    #root {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* full-bleed ground: a real full-duration clip layer, never a background on #root */
+    .q3-ground.clip {
+      position: absolute;
+      inset: 0;
+      background: #050708;
+      container-type: size;
+      font-family: "Inter", sans-serif;
+      color: #f2fff6;
+    }
+
+    /* ---- mono chrome (uppercase, 0.14em) ---- */
+    .q3-chrome-kicker,
+    .q3-chrome-num,
+    .q3-count {
+      position: absolute;
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      font-size: 2.1cqw;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .q3-chrome-kicker {
+      top: 10.3cqh;
+      left: 7.4cqw;
+      color: #62ff98;
+    }
+    .q3-chrome-num {
+      top: 10.3cqh;
+      right: 7.4cqw;
+      color: #a5b4ad;
+    }
+    .q3-chrome-bar {
+      position: absolute;
+      top: 13.95cqh;
+      left: 7.4cqw;
+      width: 79.6cqw;
+      height: 1px;
+      background: #262827;
+      transform-origin: 0% 50%;
+    }
+
+    /* ---- swap wrapper: outgoing stack + incoming payoff share one footprint ---- */
+    .q3-swap {
+      position: absolute;
+      inset: 0;
+    }
+    .q3-stack-wrap,
+    .q3-payoff {
+      position: absolute;
+      inset: 0;
+      transform-origin: 50% 50%;
+    }
+    .q3-stack-wrap {
+      z-index: 2;
+    }
+    .q3-payoff {
+      z-index: 3;
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 15.6cqh;
+    }
+
+    /* ---- left rail + the accumulating bubble stack ---- */
+    .q3-rail {
+      position: absolute;
+      left: 8.15cqw;
+      top: 19.4cqh;
+      width: 1px;
+      height: 43.3cqh;
+      background: #262827;
+      transform-origin: 50% 0%;
+    }
+    .q3-stack {
+      position: absolute;
+      top: 20.3cqh;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3.12cqh;
+      padding-left: 12.96cqw;
+      padding-right: 16.66cqw;
+    }
+    .q3-bubble {
+      position: relative;
+      background: #181a19;
+      border: 1px solid #262827;
+      border-radius: 0;
+      padding: 2.3cqh 3.3cqw;
+      transform-origin: 50% 50%;
+      opacity: 0;
+    }
+    .q3-tie {
+      position: absolute;
+      left: -4.85cqw;
+      top: 2.8cqh;
+      width: 4.85cqw;
+      height: 1px;
+      background: #262827;
+      transform-origin: 0% 50%;
+    }
+    .q3-idx {
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 500;
+      font-size: 1.85cqw;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      line-height: 1;
+      color: #62ff98;
+      margin-bottom: 0.85cqh;
+    }
+    .q3-q {
+      font-family: "Inter", sans-serif;
+      font-weight: 700;
+      font-size: 6.2cqw;
+      line-height: 1.16;
+      letter-spacing: -0.02em;
+      text-transform: lowercase;
+      color: #f2fff6;
+    }
+    .q3-w {
+      display: inline-block;
+      opacity: 0;
+      will-change: transform;
+    }
+
+    .q3-base {
+      position: absolute;
+      top: 67.2cqh;
+      left: 7.4cqw;
+      width: 79.6cqw;
+      height: 1px;
+      background: #262827;
+      transform-origin: 0% 50%;
+    }
+    .q3-count {
+      top: 68.3cqh;
+      right: 16.66cqw;
+      color: #a5b4ad;
+      opacity: 0;
+    }
+
+    /* ---- the one display moment ---- */
+    .q3-stub {
+      width: 3.33cqw;
+      height: 2px;
+      background: #62ff98;
+      margin-bottom: 2.3cqh;
+      transform-origin: 50% 50%;
+    }
+    .q3-word {
+      font-family: "Inter", sans-serif;
+      font-weight: 900;
+      font-size: 13cqw;
+      line-height: 0.88;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      color: #62ff98;
+      white-space: nowrap;
+    }
+  </style>
+
+  <div data-hf-id="hf-co3q" id="root" data-composition-id="03-questions" data-width="1080" data-height="1920">
+    <div data-hf-id="hf-rjz7" class="q3-ground clip" data-start="0" data-duration="7.68" data-track-index="0">
+      <div data-hf-id="hf-3mkm" class="q3-chrome-kicker" id="q3-kicker">Inbound</div>
+      <div data-hf-id="hf-i26h" class="q3-chrome-num" id="q3-num">No. 03</div>
+      <div data-hf-id="hf-i33t" class="q3-chrome-bar" id="q3-bar"></div>
+
+      <div data-hf-id="hf-3vug" class="q3-swap">
+        <div data-hf-id="hf-p3d6" class="q3-stack-wrap" id="q3-stack-wrap">
+          <div data-hf-id="hf-1h4g" class="q3-rail" id="q3-rail"></div>
+
+          <div data-hf-id="hf-n8cr" class="q3-stack">
+            <div data-hf-id="hf-1f9h" class="q3-bubble" id="q3-b1">
+              <div data-hf-id="hf-5vcl" class="q3-tie" id="q3-t1"></div>
+              <div data-hf-id="hf-8dy5" class="q3-idx">01</div>
+              <div data-hf-id="hf-ilr2" class="q3-q"><span data-hf-id="hf-fksr" class="q3-w" id="q3-b1w1">can</span>
+                <span data-hf-id="hf-4mxb" class="q3-w" id="q3-b1w2">you</span>
+                <span data-hf-id="hf-m8im" class="q3-w" id="q3-b1w3">deliver</span>
+                <span data-hf-id="hf-mgk2" class="q3-w" id="q3-b1w4">tomorrow?</span></div>
+            </div>
+
+            <div data-hf-id="hf-7kza" class="q3-bubble" id="q3-b2">
+              <div data-hf-id="hf-9tgm" class="q3-tie" id="q3-t2"></div>
+              <div data-hf-id="hf-9kv8" class="q3-idx">02</div>
+              <div data-hf-id="hf-kr5u" class="q3-q"><span data-hf-id="hf-041e" class="q3-w" id="q3-b2w1">what</span>
+                <span data-hf-id="hf-emdq" class="q3-w" id="q3-b2w2">does</span>
+                <span data-hf-id="hf-e26f" class="q3-w" id="q3-b2w3">it</span>
+                <span data-hf-id="hf-4ail" class="q3-w" id="q3-b2w4">cost?</span></div>
+            </div>
+
+            <div data-hf-id="hf-bj3b" class="q3-bubble" id="q3-b3">
+              <div data-hf-id="hf-drkn" class="q3-tie" id="q3-t3"></div>
+              <div data-hf-id="hf-96k7" class="q3-idx">03</div>
+              <div data-hf-id="hf-l5gv" class="q3-q"><span data-hf-id="hf-ga9l" class="q3-w" id="q3-b3w1">are</span>
+                <span data-hf-id="hf-4mkt" class="q3-w" id="q3-b3w2">you</span>
+                <span data-hf-id="hf-fo1b" class="q3-w" id="q3-b3w3">available?</span></div>
+            </div>
+          </div>
+
+          <div data-hf-id="hf-4i8q" class="q3-base" id="q3-base"></div>
+          <div data-hf-id="hf-qf65" class="q3-count" id="q3-count">Count / 03</div>
+        </div>
+
+        <div data-hf-id="hf-fmoa" class="q3-payoff" id="q3-payoff">
+          <div data-hf-id="hf-p7l0" class="q3-stub" id="q3-stub"></div>
+          <div data-hf-id="hf-b77m" class="q3-word" id="q3-word">one answer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var F = 1 / 60;
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      /* ---- chrome establishes the field ---- */
+      tl.fromTo(
+        "#q3-kicker",
+        { opacity: 0, y: -14 },
+        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" },
+        0
+      );
+      tl.fromTo(
+        "#q3-num",
+        { opacity: 0, y: -14 },
+        { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" },
+        0.08
+      );
+      tl.fromTo(
+        "#q3-bar",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.6, ease: "power3.out" },
+        0.05
+      );
+
+      /* waterfall-entry: binary opacity via tl.set, one direction (Y, from below),
+         overlapping whips on power4.out, weight-varied travel + duration */
+      function waterfall(ids, t0, weights) {
+        var t = t0;
+        for (var i = 0; i < ids.length; i++) {
+          var w = weights[i];
+          tl.set(ids[i], { opacity: 1, y: w.y }, t);
+          tl.to(ids[i], { y: 0, duration: w.d, ease: "power4.out" }, t);
+          t = t + w.d - w.o * F;
+        }
+        return t;
+      }
+
+      /* ===== Scene 1 (0.0-1.8s) — bubble 01 arrives on the left rail ===== */
+      tl.fromTo(
+        "#q3-rail",
+        { scaleY: 0 },
+        { scaleY: 0.34, duration: 0.5, ease: "power3.out" },
+        0.1
+      );
+      tl.fromTo(
+        "#q3-t1",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.26, ease: "power3.out" },
+        0.2
+      );
+      /* spring-pop-entrance — smooth power3 settle, no overshoot */
+      tl.fromTo(
+        "#q3-b1",
+        { scale: 0.86, opacity: 0, y: 34 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.58, ease: "power3.out" },
+        0.15
+      );
+      waterfall(["#q3-b1w1", "#q3-b1w2", "#q3-b1w3", "#q3-b1w4"], 0.38, [
+        { y: 78, d: 0.18, o: -2 },
+        { y: 46, d: 0.15, o: 1 },
+        { y: 44, d: 0.14, o: 1 },
+        { y: 66, d: 0.16, o: 2 }
+      ]);
+
+      /* ===== Scene 2 (1.8-3.5s) — bubble 02 slides in beneath, stack holds both ===== */
+      tl.to("#q3-rail", { scaleY: 0.68, duration: 0.5, ease: "power3.out" }, 1.72);
+      tl.fromTo(
+        "#q3-t2",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.26, ease: "power3.out" },
+        1.78
+      );
+      tl.fromTo(
+        "#q3-b2",
+        { scale: 0.86, opacity: 0, y: 34 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.58, ease: "power3.out" },
+        1.84
+      );
+      waterfall(["#q3-b2w1", "#q3-b2w2", "#q3-b2w3", "#q3-b2w4"], 2.04, [
+        { y: 74, d: 0.18, o: -2 },
+        { y: 46, d: 0.15, o: 1 },
+        { y: 40, d: 0.13, o: 2 },
+        { y: 64, d: 0.16, o: 2 }
+      ]);
+      /* dim-by-position — the newest message keeps the light */
+      tl.to("#q3-b1", { opacity: 0.55, duration: 0.5, ease: "power2.out" }, 1.9);
+
+      /* ===== Scene 3 (3.5-5.2s) — bubble 03 completes the three-bubble stack ===== */
+      tl.to("#q3-rail", { scaleY: 1, duration: 0.5, ease: "power3.out" }, 3.42);
+      tl.fromTo(
+        "#q3-t3",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.26, ease: "power3.out" },
+        3.48
+      );
+      tl.fromTo(
+        "#q3-b3",
+        { scale: 0.86, opacity: 0, y: 34 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.58, ease: "power3.out" },
+        3.54
+      );
+      waterfall(["#q3-b3w1", "#q3-b3w2", "#q3-b3w3"], 3.74, [
+        { y: 72, d: 0.18, o: -2 },
+        { y: 44, d: 0.14, o: 1 },
+        { y: 66, d: 0.16, o: 2 }
+      ]);
+      tl.to("#q3-b2", { opacity: 0.55, duration: 0.5, ease: "power2.out" }, 3.6);
+      tl.to("#q3-b1", { opacity: 0.32, duration: 0.5, ease: "power2.out" }, 3.6);
+      /* the group closes: baseline hairline + mono count */
+      tl.fromTo(
+        "#q3-base",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.55, ease: "power3.out" },
+        4.3
+      );
+      tl.fromTo(
+        "#q3-count",
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
+        4.48
+      );
+
+      /* ===== Scene 4 (5.2-7.68s) — scale-swap-transition: stack clears up, payoff lands ===== */
+      /* outgoing: fast power2.in shrink + rise (kept at opacity 0, never display:none) */
+      tl.to(
+        "#q3-stack-wrap",
+        { scale: 0.74, y: -150, opacity: 0, duration: 0.42, ease: "power2.in" },
+        5.15
+      );
+      tl.to("#q3-kicker", { opacity: 0.3, duration: 0.42, ease: "power2.in" }, 5.15);
+      tl.to("#q3-num", { opacity: 0.3, duration: 0.42, ease: "power2.in" }, 5.15);
+      /* incoming: overlaps the exit by 0.16s, arrives with weight, z-index above */
+      tl.fromTo(
+        "#q3-payoff",
+        { scale: 0.74, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.62, ease: "back.out(1.4)" },
+        5.41
+      );
+      /* inner ornament reveals only after the container settles */
+      tl.fromTo(
+        "#q3-stub",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.42, ease: "power3.out" },
+        5.95
+      );
+      /* slow push-in carries the climax dwell to the end — no exit tween */
+      tl.to("#q3-payoff", { scale: 1.035, duration: 1.6, ease: "power1.out" }, 6.05);
+
+      window.__timelines["03-questions"] = tl;
+    })();
+  </script>
+</template>

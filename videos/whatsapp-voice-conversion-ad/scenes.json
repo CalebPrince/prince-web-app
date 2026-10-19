@@ -1,0 +1,72 @@
+[
+  [
+    "hook",
+    8,
+    "Your next customer has a question. Your website gives them homework. Make starting a conversation the easy part.",
+    "hook",
+    "Recognition",
+    "Direct address",
+    "A buyer question hits a wall of form fields.",
+    "0–2.8s: huge question headline reveals in discrete beats. 2.8–5.4s: form fields stack progressively beneath HOMEWORK. 5.4–8s: a green conversation line replaces the friction message."
+  ],
+  [
+    "friction",
+    9,
+    "Name. Email. Company. Budget. A long form, then silence. While they wait, another business is already answering their question.",
+    "pain_point",
+    "Tension",
+    "Causal chain",
+    "Fields accumulate, a pending reply lingers, another business answers.",
+    "0–3s: four required fields enter one by one. 3–5s: submit state becomes WAITING. 5–7s: buyer question travels to another business. 7–9s: answer badge lands; customer moves with it."
+  ],
+  [
+    "questions",
+    7,
+    "Can you deliver tomorrow? What does it cost? Are you available? Often, one answer is all they need.",
+    "product_intro",
+    "Clarity",
+    "Rule of three",
+    "Three oversized buyer questions arrive as message bubbles.",
+    "0–2s: first delivery question enters. 2–3.8s: price bubble slides in. 3.8–5.4s: availability bubble arrives. 5.4–7s: all resolve onto ONE ANSWER."
+  ],
+  [
+    "whatsapp",
+    9,
+    "Give them a direct route. One tap opens WhatsApp. They ask, share a photo, and continue the conversation somewhere familiar.",
+    "feature_showcase",
+    "Momentum",
+    "Demonstration",
+    "Tap-to-WhatsApp opens a clear illustrative chat with a photo card.",
+    "0–2s: large WhatsApp contact button enters. 2–3.5s: tactile tap transforms into a chat. 3.5–5.5s: question bubble arrives. 5.5–7s: product photo attachment card enters. 7–9s: reply bubble appears, conversation line connects both."
+  ],
+  [
+    "voice",
+    9,
+    "Need a quick explanation? Let them call. A real conversation can clear up the details and help them decide what happens next.",
+    "feature_showcase",
+    "Confidence",
+    "Demonstration",
+    "Call button becomes a connected voice interface and waveform.",
+    "0–2.5s: CALL US button comes into focus. 2.5–4s: click and connected state. 4–6s: animated voice waveform and question cue. 6–7.5s: DETAILS CLARIFIED arrives. 7.5–9s: NEXT STEP lands."
+  ],
+  [
+    "response",
+    10,
+    "But the button is only the beginning. Reply promptly. Make the next step clear. Keep a short form for customers who prefer it.",
+    "benefit_highlight",
+    "Trust",
+    "Progressive disclosure",
+    "Three practical commitments build a clear contact experience.",
+    "0–2.8s: BUTTONS ARE THE START typographic beat. 2.8–5s: prompt reply row confirms. 5–7.5s: clear next step row confirms. 7.5–10s: short form option appears beside chat and call."
+  ],
+  [
+    "cta",
+    8,
+    "Turn more questions into conversations. Prince Caleb builds websites that make it easier to reach you. Let’s make yours easier to contact.",
+    "cta",
+    "Resolve",
+    "Callback",
+    "Prince Caleb P mark resolves above a website CTA and URL.",
+    "0–2s: QUESTIONS changes into CONVERSATIONS. 2–4s: P mark and Prince Caleb name assemble. 4–6s: website contact promise arrives. 6–8s: princecaleb.dev with clear final hold."
+  ]
+]
