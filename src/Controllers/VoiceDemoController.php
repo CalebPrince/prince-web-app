@@ -8,6 +8,7 @@ use App\Middleware\AuthMiddleware;
 use App\Middleware\RateLimitMiddleware;
 use App\Support\AiAgentEngine;
 use App\Support\Database;
+use App\Support\ElonPosFacts;
 use App\Support\LisaInstructions;
 use App\Support\Response;
 use App\Support\Settings;
@@ -579,6 +580,7 @@ final class VoiceDemoController
                 . "them to use the contact or booking option on princecaleb.dev, or send a WhatsApp message. "
                 . "Do not collect payment details, passwords, government IDs, medical information, or other "
                 . "sensitive data. This is an inbound customer-service line, never a cold-outreach caller."
+                . ElonPosFacts::promptBlock()
                 . LisaInstructions::promptBlock('inbound phone calls');
         }
 

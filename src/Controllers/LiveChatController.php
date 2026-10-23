@@ -13,6 +13,7 @@ use App\Support\AiAgentEngine;
 use App\Support\AiText;
 use App\Support\Automations;
 use App\Support\Database;
+use App\Support\ElonPosFacts;
 use App\Support\LisaInstructions;
 use App\Support\LisaJudgment;
 use App\Support\Response;
@@ -2861,6 +2862,8 @@ class LiveChatController
             . "still needs Caleb's review. Preserve the visitor's current language in every rescheduling reply.\n\n"
             . "If relevant, you may mention one of these case studies:\n" . $catalog;
 
+        $system .= ElonPosFacts::promptBlock();
+
         $system .= LisaInstructions::promptBlock(
             $isOwner ? 'verified owner chat' : 'live chat and WhatsApp'
         );
@@ -3486,6 +3489,11 @@ class LiveChatController
         if (mb_strlen(trim($message)) < 25
             && preg_match('/^(hi|hello|hey|hiya|yo|good\s+(morning|afternoon|evening))\b/i', trim($message))) {
             return 'Hello! 👋 Which call, message, or repetitive workflow would you like to improve?';
+        }
+
+        // Elon POS is a product Caleb sells, not a portfolio project, so it never goes through the project match
+        if (ElonPosFacts::isAbout($message)) {
+            return ElonPosFacts::fallbackReply();
         }
 
         if (!self::shouldSearchProjectFallback($message)) {
