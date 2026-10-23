@@ -30,8 +30,14 @@ The public site positions Prince Caleb as a website designer and developer
 who takes on a limited number of projects and agrees each one in writing
 before starting. The homepage runs in that order:
 
-1. **Hero**: the positioning line (or the day's generated headline, see
-   below), with a piece of website design work as the panel beside it.
+1. **Hero**: a two-slide slider (`BusinessHeroSlider`, every 8 seconds, with
+   arrows, dots and a pause button; still for reduced motion). Slide one is
+   the positioning line with a piece of website design work beside it. Slide
+   two is Elon POS, which Caleb sells and installs as an authorised agent: the
+   launch offer, the system's real figures, and a laptop and phone mockup drawn
+   in code (`ElonPosHeroMockup`, sample figures in cedis, alerts that pop up in
+   turn). Its "Get Elon POS" button opens `/contact?interest=elon-pos`, where
+   Elon POS is one of the "I'm interested in" choices.
 2. **Google rating strip**: the live star rating, review count and a
    "Leave a review" link, when the rating is published.
 3. **Quarterly availability**: how many of the six project slots this
