@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Clock, MapPin } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -52,6 +52,24 @@ const SOCIAL: { label: string; href: string; icon: IconType }[] = [
   { label: "X", href: "https://x.com/princecay77", icon: FaXTwitter },
 ];
 
+// What the visitor is after. "elon-pos" is also the ?interest= value the homepage's Elon POS slide links with, so the
+// form opens with it already chosen.
+const INTERESTS: { id: string; label: string }[] = [
+  { id: "business-website", label: "Business website" },
+  { id: "web-app", label: "Web app or dashboard" },
+  { id: "mobile-app", label: "Mobile app" },
+  { id: "ai-agent", label: "AI agent or WhatsApp assistant" },
+  { id: "automation", label: "Automation" },
+  { id: "elon-pos", label: "Elon POS" },
+  { id: "other", label: "Something else" },
+];
+
+const noSubscribe = () => () => {};
+function interestFromAddress() {
+  const wanted = new URLSearchParams(window.location.search).get("interest") ?? "";
+  return INTERESTS.some((i) => i.id === wanted) ? wanted : "";
+}
+
 const BUDGETS = [
   "Under GHS 10,000",
   "GHS 10,000 – GHS 50,000",
@@ -61,11 +79,18 @@ const BUDGETS = [
 ];
 
 export default function Contact() {
+  // /contact?interest=elon-pos (the homepage's Elon POS button) opens the form with that choice made. The address
+  // is read on the client only (the server render has none), and the visitor's own pick replaces it.
+  const fromLink = useSyncExternalStore(noSubscribe, interestFromAddress, () => "");
+  const [picked, setPicked] = useState<string | null>(null);
+  const interest = picked ?? fromLink;
+  const setInterest = (id: string) => setPicked(id);
   const [budget, setBudget] = useState<string>("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +104,9 @@ export default function Contact() {
 
     // /api/v1/inquiries only stores name/email/message, so the "what" and the
     // budget chip are folded into the message rather than lost.
+    const interestLabel = INTERESTS.find((i) => i.id === interest)?.label;
     const context = [
+      interestLabel && `Interested in: ${interestLabel}`,
       project && `Looking for: ${project}`,
       budget && `Budget: ${budget}`,
     ].filter(Boolean);
@@ -205,7 +232,7 @@ export default function Contact() {
           {/* Right - form */}
           <div className="lg:col-span-7">
             <Reveal>
-              <div className="rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
+              <div id="contact-form" className="scroll-mt-28 rounded-[var(--radius)] border border-hairline bg-bg-2/50 p-8 md:p-10 glass">
                 {sent ? (
                   <div className="flex flex-col items-center py-16 text-center">
                     <span className="tilt-3d tilt-3d-tile grid size-14 place-items-center rounded-full bg-accent text-on-accent">
@@ -241,6 +268,35 @@ export default function Contact() {
                           className={inputCls}
                         />
                       </Field>
+                    </div>
+
+                    <div>
+                      <p className="label mb-3 text-muted" id="interest-label">I&rsquo;m interested in</p>
+                      <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-labelledby="interest-label">
+                        {INTERESTS.map((i) => (
+                          <button
+                            key={i.id}
+                            type="button"
+                            role="radio"
+                            aria-checked={interest === i.id}
+                            onClick={() => setInterest(interest === i.id ? "" : i.id)}
+                            className={cn(
+                              "rounded-full border px-4 py-2.5 text-sm transition-colors",
+                              interest === i.id
+                                ? "border-accent/60 bg-accent/10 text-accent"
+                                : "border-hairline text-text-2 hover:border-hairline-strong hover:text-text",
+                            )}
+                          >
+                            {i.label}
+                          </button>
+                        ))}
+                      </div>
+                      {interest === "elon-pos" && (
+                        <p className="mt-3 text-sm leading-relaxed text-text-2">
+                          Elon POS software is free on the launch offer: you only pay for installation, with no monthly
+                          subscription. Tell me about your business and I&rsquo;ll arrange a free demonstration.
+                        </p>
+                      )}
                     </div>
 
                     <Field label="What can I build for you?" htmlFor="project">
