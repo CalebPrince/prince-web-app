@@ -38,6 +38,8 @@ const SHOWCASE_CATEGORIES = [
     'simply-my-care' => 'Websites & Apps',
     'benas-hub' => 'Websites & Apps',
     'opskeep' => 'Automations',
+    'sprint-energy' => 'Websites & Apps',
+    'vidkre8-studio' => 'Websites & Apps',
 ];
 
 /** Short descriptor, rephrased from each project's own summary. */
@@ -53,6 +55,8 @@ const TAGLINES = [
     'simply-my-care' => 'Care provider portal',
     'benas-hub' => 'Organic products storefront',
     'opskeep' => 'Open-source agent skills',
+    'sprint-energy' => 'Solar installer website & workspace',
+    'vidkre8-studio' => 'Motion video ad studio',
 ];
 
 /** Tag name -> react-icons key. Unmapped tags still render, without a glyph. */

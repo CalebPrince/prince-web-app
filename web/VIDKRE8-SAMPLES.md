@@ -13,4 +13,6 @@ Initial samples come from the owner's `video-studio` repository. Wedding and The
 
 The expanded set also includes the complete Think Of Fashion campaign, BuineePay commercial and Ayeko Solar brand film. Their public copies are web-sized H.264/AAC exports with fast-start metadata.
 
+The software ads added on 23 Oct 2026 are complete films, web-sized (720 x 1280, H.264 at about 0.85 Mbit/s, AAC 128k, fast start) from the studio's mixed exports: Elon POS (business software, with the system's real figures and its launch offer), Inteli-Space (AI workspace), Qabenji (team and project tool) and English Adventure (children's learning game, coming soon). Their posters are frames from the films. Lisa learns about these ads from the VidKre8 Studio project's summary (`database/seed_real_projects.php`), so keep that list in step with this gallery.
+
 Each sample has a branded custom cover composed from its own poster, title, category and running time. Change `poster` to use a different approved thumbnail image for any film. The cover clears on actual playback and the active film stays in its own card.

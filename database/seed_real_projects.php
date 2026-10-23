@@ -32,6 +32,34 @@ $projects = [
         'cover_image_path' => '/uploads/opskeep-real.png',
         'tags' => ['Node.js', 'Agent Skills', 'MCP', 'Open Source', 'CLI'],
     ],
+    [
+        'slug' => 'sprint-energy',
+        'title' => 'Sprint Energy',
+        'summary' => 'Custom website and staff workspace for Sprint Energy, a Ghana solar installer: quote and contact forms that hand off to WhatsApp, a signed-in workspace for enquiries, site surveys, quotations, installations and maintenance, and two AI assistants.',
+        'case_study_body' =>
+            "Sprint Energy designs and installs solar systems sized to each home and business in Ghana. The website had to do two jobs: explain that clearly to a customer, and give the team one place to run every job behind it.\n\n" .
+            "The public site at sprintenergygh.com follows the owner's own reference design: services, projects, process, about and contact, with a free-quote form and a contact form that save each enquiry, email it and pass it on to WhatsApp with the message already written. A website chat answers questions, takes enquiries and books site visits.\n\n" .
+            "Behind it is a signed-in staff workspace: one inbox for every enquiry, customers, site surveys, quotations with a PDF and a customer link, installations by stage, a calendar and tasks, finance records, inventory, maintenance and warranty reminders, reports, and editable website content, with sixteen automations the team switches on one by one. A workspace assistant drafts the routine work, and nothing it suggests happens without a person approving it.",
+        'category' => 'custom_solution',
+        'live_url' => 'https://sprintenergygh.com',
+        'repo_url' => null,
+        'cover_image_path' => '/uploads/sprint-energy-real.jpg',
+        'tags' => ['PHP', 'Tailwind CSS', 'MySQL', 'WhatsApp', 'AI Agents'],
+    ],
+    [
+        'slug' => 'vidkre8-studio',
+        'title' => 'VidKre8 Studio',
+        'summary' => 'VidKre8 by PrinceCaleb.dev, the studio Prince Caleb built to make motion video ads from a brief: voiced, captioned and sized for Reels, TikTok, Shorts and WhatsApp Status. Software ads made with it include Elon POS, BuineePay, LIID Flo, Inteli-Space, Qabenji and English Adventure, all playable at princecaleb.dev/vidkre8.',
+        'case_study_body' =>
+            "Most small businesses need short videos every week and cannot pay an agency for each one. VidKre8 is the studio Prince Caleb built so a brief becomes a finished ad quickly and the same way every time.\n\n" .
+            "A client sends their idea, their logo, their footage or screens, and a reference they like. VidKre8 turns that into a finished motion ad: the scenes, on-screen text, a voice-over, captions, original or supplied music mixed to platform loudness, and copies ready for Reels, TikTok, YouTube Shorts and WhatsApp Status. Each ad gets its own look rather than a template.\n\n" .
+            "Software and app ads made with it so far include Elon POS (a business software ad with a dashboard, payment alerts and the system's real sales figures), BuineePay (a fintech commercial), LIID Flo (an app launch), Inteli-Space (an AI workspace), Qabenji (a team and project tool) and English Adventure (a children's learning game). They play at princecaleb.dev/vidkre8.",
+        'category' => 'custom_solution',
+        'live_url' => 'https://princecaleb.dev/vidkre8',
+        'repo_url' => null,
+        'cover_image_path' => '/uploads/vidkre8-studio.jpg',
+        'tags' => ['Video Production', 'Motion Graphics', 'Voice-over', 'Captions'],
+    ],
 ];
 
 function upsertTag(\PDO $pdo, string $name): int
