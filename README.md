@@ -1002,7 +1002,12 @@ run `php database/process_webhooks.php` on a schedule to drain it, so a
 4. **AI assistant** is fully optional infrastructure: its JS
    (`ai-widget.js`) only loads the first time a visitor clicks the toggle
    button, and the backend falls back to simple keyword matching against
-   your published projects if no `GEMINI_API_KEY` is configured. The
+   your published projects if no `GEMINI_API_KEY` is configured. Elon POS,
+   which Caleb sells and installs as an authorised agent, is not a project:
+   its verified facts (what it does, the free-software launch offer, the
+   recorded figures, and never quoting an installation price) live in
+   `src/Support/ElonPosFacts.php`, shared by live chat, WhatsApp, the live
+   avatar, inbound calls and the offline keyword fallback. The
    assistant's **name and persona are admin-configurable** from Site Content →
    Live Chat (defaults to *Lisa*): the name drives the widget header, its
    accessibility labels, and how the bot introduces itself when a visitor asks
