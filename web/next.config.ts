@@ -39,6 +39,10 @@ const nextConfig: NextConfig = {
       { source: "/projects/:slug", destination: "/work/:slug", permanent: true },
       { source: "/systems", destination: "/work", permanent: true },
       { source: "/systems/:slug", destination: "/work/:slug", permanent: true },
+      // Articles used to live at /blog/<slug> and are shared on LinkedIn under
+      // those links; they now live at /archive/<slug> with the same slug.
+      { source: "/blog", destination: "/archive", permanent: true },
+      { source: "/blog/:slug", destination: "/archive/:slug", permanent: true },
     ];
   },
 

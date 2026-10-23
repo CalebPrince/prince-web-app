@@ -97,6 +97,9 @@ The showcase route was renamed. `/systems`, `/systems/:slug` and the older
 
 Three invented client quotes on that page were deleted with the rename.
 
+Articles moved the same way: `/blog` and `/blog/:slug` (the links shared on
+LinkedIn) permanently redirect to `/archive` and `/archive/:slug`.
+
 ### Quarterly project intake: a hard limit of six
 
 `QuarterlyIntake::PROJECT_LIMIT` is 6, and `App\Support\QuarterlyIntake` is
